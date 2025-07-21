@@ -520,7 +520,7 @@
 <style scoped lang="scss">
   .node-group-tree {
     padding-top: 4px;
-    height: calc(100vh - 60px);
+    height: 100%;
     background-color: #fff;
     box-shadow: 1px 0 0 0 #EAEBF0;
   }

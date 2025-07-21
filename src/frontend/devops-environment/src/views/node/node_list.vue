@@ -853,7 +853,7 @@
     }
 
     .node-list-wrapper {
-        height: calc(100vh - 146px);
+        height: 100%;
         overflow: hidden;
 
         .sub-view-port {

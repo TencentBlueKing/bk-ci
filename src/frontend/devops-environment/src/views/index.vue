@@ -1,5 +1,8 @@
 <template>
-    <div class="environment-container">
+    <div
+        class="environment-container"
+        ref="environmentContainer"
+    >
         <div class="biz-header">
             <p class="environment-tit">
                 <img
@@ -25,7 +28,7 @@
             </bk-tab>
         </div>
 
-        <router-view class="manage-main"></router-view>
+        <router-view :container-width="containerWidth"></router-view>
     </div>
 </template>
 
@@ -35,7 +38,8 @@
     export default {
         data () {
             return {
-                environmentUrl
+                environmentUrl,
+                containerWidth: 0,
             }
         },
 
@@ -73,7 +77,19 @@
                 })
             }
         },
+        mounted () {
+            this.updateContainerWidth()
+            window.addEventListener('resize', this.updateContainerWidth)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateContainerWidth)
+        },
         methods: {
+            updateContainerWidth () {
+                if (this.$refs.environmentContainer) {
+                    this.containerWidth = this.$refs.environmentContainer.clientWidth
+                }
+            },
             handleChangeTab (name) {
                 if (this.activePanel === name) return
 
@@ -102,7 +118,7 @@
 .environment-container {
     width: 100%;
     box-sizing: border-box;
-    min-height: calc(100vh - 50px);
+    min-height: calc(100% - 210px);
     overflow: hidden;
 
     .biz-header {

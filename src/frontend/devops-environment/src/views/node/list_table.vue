@@ -13,10 +13,10 @@
             @sort-change="handleSortChange"
         >
             <!-- <bk-table-column
-            type="selection"
-            fixed="left"
-            width="40"
-        ></bk-table-column> -->
+                type="selection"
+                fixed="left"
+                width="40"
+            ></bk-table-column> -->
             <bk-table-column
                 :label="$t('environment.nodeInfo.displayName')"
                 sortable="custom"
@@ -108,7 +108,7 @@
                 v-if="allRenderColumnMap.label"
                 :label="$t('environment.tag')"
                 prop="label"
-                :width="200"
+                min-width="200"
                 show-overflow-tooltip
             >
                 <div
@@ -171,7 +171,7 @@
                 v-if="allRenderColumnMap.nodeStatus"
                 :label="`${$t('environment.status')}(${$t('environment.version')})`"
                 sortable="custom"
-                width="180"
+                min-width="180"
                 prop="nodeStatus"
             >
                 <template slot-scope="props">
@@ -262,10 +262,9 @@
             <bk-table-column
                 v-if="allRenderColumnMap.lastModifyTime"
                 :label="$t('environment.nodeInfo.lastModifyTime')"
-                :width="180"
                 sortable="custom"
                 prop="lastModifiedTime"
-                min-width="80"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -275,7 +274,7 @@
             <bk-table-column
                 v-if="allRenderColumnMap.latestBuildPipeline"
                 :label="$t('environment.nodeInfo.lastRunPipeline')"
-                :width="180"
+                min-width="180"
                 sortable="custom"
                 prop="latestBuildPipelineId"
                 show-overflow-tooltip
@@ -291,11 +290,10 @@
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.latestBuildTime"
-                :width="180"
                 :label="$t('environment.nodeInfo.lastRunAs')"
                 prop="latestBuildTime"
                 sortable="custom"
-                min-width="80"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -900,11 +898,6 @@
 
 <style lang="scss">
   @import '@/scss/conf';
-
-  %flex {
-      display: flex;
-      align-items: center;
-  }
 
   .node-table-wrapper {
       margin-top: 20px;
