@@ -28,7 +28,6 @@
 package com.tencent.devops.common.event.annotation
 
 import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import java.lang.annotation.Inherited
 
 /**
@@ -40,6 +39,5 @@ import java.lang.annotation.Inherited
 @Inherited
 annotation class Event(
     val destination: String,
-    val binder: String = StreamBinder.CORE_RABBIT,
-    val type: RabbitQueueType = RabbitQueueType.QUORUM
+    val binder: String = StreamBinder.CORE_RABBIT
 )

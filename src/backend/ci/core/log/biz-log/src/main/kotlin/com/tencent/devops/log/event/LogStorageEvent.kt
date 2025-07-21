@@ -31,12 +31,10 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
 @Event(
     destination = StreamBinding.LOG_STORAGE_EVENT_DESTINATION,
-    binder = StreamBinder.EXTEND_RABBIT,
-    type = RabbitQueueType.CLASSIC
+    binder = StreamBinder.EXTEND_RABBIT
 )
 data class LogStorageEvent(
     override val buildId: String,
