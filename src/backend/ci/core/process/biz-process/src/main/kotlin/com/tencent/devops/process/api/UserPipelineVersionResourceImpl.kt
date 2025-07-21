@@ -392,7 +392,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 creator = creator,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                archiveFlag = archiveFlag
             )
         )
     }
