@@ -556,7 +556,7 @@
                     }
 
                     const params = {
-                        emptyTemplate: this.activeTemp.isEmptyTemplate, // 0 为空模板
+                        emptyTemplate: this.activeTemp.isEmptyTemplate ?? false, // 0 为空模板
                         projectId: this.$route.params.projectId,
                         templateId: this.activeTemp.templateId,
                         templateVersion: this.activeTemp.version,
