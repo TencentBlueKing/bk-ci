@@ -97,7 +97,7 @@ open class TencentAgentUrlServiceImpl constructor(
             gw = "http://$gw"
         }
         if (os == OS.WINDOWS) {
-            var sc = "\$ProgressPreference = 'SilentlyContinue'\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
+            var sc = "\$ProgressPreference = 'SilentlyContinue';\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
                     "\$uri = \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
             var t = "?"
             if (!zoneName.isNullOrBlank()) {
