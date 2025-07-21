@@ -20,11 +20,11 @@
 
 import {
     ARTIFACTORY_API_URL_PREFIX,
+    AUTH_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
-    AUTH_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
 import request from '@/utils/request'
@@ -37,10 +37,10 @@ import {
     REFRESH_QUALITY_LOADING_MUNTATION,
     REPOSITORY_MUTATION,
     SET_PAC_SUPPORT_SCM_TYPE_LIST,
+    SET_PROJECT_PERM,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
-    TEMPLATE_MUTATION,
-    SET_PROJECT_PERM
+    TEMPLATE_MUTATION
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -50,7 +50,7 @@ function rootCommit (commit, ACTION_CONST, payload) {
 export const state = {
     templateCategory: null,
     refreshLoading: false,
-    pipelineTemplateMap: null,
+    pipelineTemplateMap: new Map(),
     storeTemplate: null,
     template: null,
     reposList: null,
