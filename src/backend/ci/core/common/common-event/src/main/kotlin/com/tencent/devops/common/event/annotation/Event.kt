@@ -28,7 +28,6 @@
 package com.tencent.devops.common.event.annotation
 
 import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import java.lang.annotation.Inherited
 
 /**
