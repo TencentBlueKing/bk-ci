@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "添加组件荣誉信息请求报文")
 data class AddStoreHonorRequest(
     @get:Schema(title = "荣誉信息", required = true)
-    val i18nHonorInfoList: List<i18nHonorInfoDTO>,
+    val i18nHonorInfoList: List<I18nHonorInfoDTO>,
     @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
     @get:Schema(title = "组件代码列表", required = true)

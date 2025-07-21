@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.auth.REFERER
-import com.tencent.devops.common.api.auth.USER_LANGUAGE
 import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
@@ -140,16 +139,16 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -274,12 +273,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
-        val language = I18nUtil.getLanguage(userId)
         return executor.submit(Callable<MarketAtomResp> {
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
-            ThreadLocalUtil.set(USER_LANGUAGE, language)
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -322,7 +319,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
-            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
+            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
+                storeType = storeType,
+                storeCodes = atomCodeList,
+                userId = userId
+            )
             val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
@@ -402,7 +403,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
-                ThreadLocalUtil.remove(USER_LANGUAGE)
             }
 
             return@Callable MarketAtomResp(count, page, pageSize, results)

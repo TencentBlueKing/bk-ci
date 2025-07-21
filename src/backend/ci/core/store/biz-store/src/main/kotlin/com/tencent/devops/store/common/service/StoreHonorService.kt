@@ -77,6 +77,7 @@ interface StoreHonorService {
      */
     fun getHonorInfosByStoreCodes(
         storeType: StoreTypeEnum,
-        storeCodes: List<String>
+        storeCodes: List<String>,
+        userId: String? = null
     ): Map<String, List<HonorInfo>>
 }

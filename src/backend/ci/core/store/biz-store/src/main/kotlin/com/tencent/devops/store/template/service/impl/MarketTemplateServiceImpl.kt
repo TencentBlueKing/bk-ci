@@ -252,12 +252,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         pageSize: Int?
     ): Future<MarketTemplateResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
-        val language = I18nUtil.getLanguage(userId)
         return executor.submit(Callable<MarketTemplateResp> {
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
-            ThreadLocalUtil.set(USER_LANGUAGE, language)
             val installedTemplates = mutableListOf<MarketItem>()
             val canInstallTemplates = mutableListOf<MarketItem>()
             val cannotInstallTemplates = mutableListOf<MarketItem>()
@@ -300,7 +298,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeType = storeType.type.toByte(),
                 storeCodeList = templateCodeList
             )
-            val templateHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, templateCodeList)
+            val templateHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
+                storeType = storeType,
+                storeCodes = templateCodeList,
+                userId = userId
+            )
             val templateIndexInfosMap =
                 storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, templateCodeList)
             // 获取成员
@@ -369,7 +371,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
-                ThreadLocalUtil.remove(USER_LANGUAGE)
             }
 
             return@Callable MarketTemplateResp(
