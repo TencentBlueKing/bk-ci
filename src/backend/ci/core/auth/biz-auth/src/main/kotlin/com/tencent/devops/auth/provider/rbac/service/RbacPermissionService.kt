@@ -348,7 +348,13 @@ class RbacPermissionService(
             "[rbac] get user resources|$userId|$action|$projectCode|$resourceType"
         )
         val startEpoch = System.currentTimeMillis()
-        try {
+        // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
+        val useAction = if (!action.contains("_")) {
+            RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+        } else {
+            action
+        }
+        val result = try {
             // 拥有超级管理员权限,返回所有数据
             if (isManager(
                     userId = userId,
@@ -357,19 +363,13 @@ class RbacPermissionService(
                     action = action
                 )
             ) {
-                return authResourceService.listByProjectAndType(
+                authResourceService.listByProjectAndType(
                     projectCode = projectCode,
                     resourceType = resourceType
                 )
             }
-            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
-            val useAction = if (!action.contains("_")) {
-                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
-            } else {
-                action
-            }
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            val result = when {
+            when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
                 // 如果有项目下所有该资源权限,返回资源列表
@@ -413,20 +413,20 @@ class RbacPermissionService(
                     )
                 }
             }
-            bkInternalPermissionComparator.getUserResourceByAction(
-                userId = userId,
-                projectCode = projectCode,
-                action = useAction,
-                resourceType = resourceType,
-                expectedResult = result
-            )
-            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources|" +
                     "$userId|$action|$projectCode|$resourceType"
             )
         }
+        bkInternalPermissionComparator.getUserResourceByAction(
+            userId = userId,
+            projectCode = projectCode,
+            action = useAction,
+            resourceType = resourceType,
+            expectedResult = result
+        )
+        return result
     }
 
     override fun getUserResourcesByActions(
