@@ -369,12 +369,12 @@
             },
             projectedTemplateList () {
                 if (this.pipelineTemplateMap.size) {
-                    return this.pipelineTemplateMap.values().map(item => ({
+                    return Array.from(this.pipelineTemplateMap.values().map(item => ({
                         ...item,
                         installed: true,
                         hasPermission: true,
                         btnText: 'pipelinesPreview'
-                    }))
+                    })))
                 }
                 return []
             },
@@ -556,7 +556,7 @@
                     }
 
                     const params = {
-                        emptyTemplate: this.activeTemp.isEmptyTemplate, // 0 为空模板
+                        emptyTemplate: this.activeTemp.isEmptyTemplate ?? false, // 0 为空模板
                         projectId: this.$route.params.projectId,
                         templateId: this.activeTemp.templateId,
                         templateVersion: this.activeTemp.version,
