@@ -160,8 +160,9 @@ export const actions = {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
             const pipelineTemplateMap = new Map()
             for (const key in (response?.data?.templates ?? {})) {
+                const item = response.data.templates[key]
                 pipelineTemplateMap.set(key, {
-                    ...response.data.templates[key],
+                    ...item,
                     isStore: item.templateType === 'CONSTRAINT'
                 })
             }
