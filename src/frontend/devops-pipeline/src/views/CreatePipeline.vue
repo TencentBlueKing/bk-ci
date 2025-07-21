@@ -369,12 +369,12 @@
             },
             projectedTemplateList () {
                 if (this.pipelineTemplateMap.size) {
-                    return this.pipelineTemplateMap.values().map(item => ({
+                    return Array.from(this.pipelineTemplateMap.values().map(item => ({
                         ...item,
                         installed: true,
                         hasPermission: true,
                         btnText: 'pipelinesPreview'
-                    }))
+                    })))
                 }
                 return []
             },
