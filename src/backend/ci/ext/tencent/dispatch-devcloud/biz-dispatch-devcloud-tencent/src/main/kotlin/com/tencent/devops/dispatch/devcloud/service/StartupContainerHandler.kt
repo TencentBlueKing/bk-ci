@@ -104,7 +104,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                 envs.putAll(customBuildEnv)
             }
 
-            val (_, name, tag) = CiYamlUtils.parseImage(containerPool!!.container!!)
+            val (host, name, tag) = CiYamlUtils.parseImage(containerPool!!.container!!)
 
             envs.putAll(
                 mapOf(
@@ -119,7 +119,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                     ENV_DEVCLOUD_CPU to cpu.toString(),
                     ENV_DEVCLOUD_MEM to memory,
                     ENV_DEVCLOUD_DISK to disk,
-                    ENV_CONTAINER_IMAGE to "$name:$tag",
+                    ENV_CONTAINER_IMAGE to "$host/$name:$tag",
                     ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE to maxAtomFileCacheSize
                 )
             )
