@@ -157,7 +157,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
-        if (event.type == RabbitQueueType.QUORUM) {
+        if (event.type == RabbitQueueType.QUORUM && !consumer.anonymous) {
             setProperty("$rabbitPropPrefix.consumer.quorum.enabled", "true")
         }
     }
