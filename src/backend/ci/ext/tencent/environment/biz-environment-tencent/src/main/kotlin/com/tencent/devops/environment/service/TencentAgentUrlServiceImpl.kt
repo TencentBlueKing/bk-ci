@@ -110,7 +110,7 @@ open class TencentAgentUrlServiceImpl constructor(
                 t = "&"
             }
             if (!loginPassword.isNullOrBlank()) {
-                sc += "${t}loginPassword=$loginPassword"
+                sc += "${t}loginPassword=${URLEncoder.encode(loginPassword, "UTF-8")}"
                 t = "&"
             }
             if (installType != null) {
