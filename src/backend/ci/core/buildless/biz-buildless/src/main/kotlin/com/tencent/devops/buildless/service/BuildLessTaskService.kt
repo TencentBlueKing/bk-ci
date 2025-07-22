@@ -107,12 +107,6 @@ class BuildLessTaskService(
                     return
                 }
 
-                // 检查容器是否存活
-                if (!buildLessContainerService.checkContainerRunning(containerId)) {
-                    logger.info("****>Deferred container: $containerId is not running, skip claim task")
-                    return
-                }
-
                 // 校验当前容器状态是否正常
                 val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
                 if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
@@ -124,6 +118,14 @@ class BuildLessTaskService(
                 if (buildLessTask != null) {
                     logger.info("****>Deferred container: $containerId claim buildLessTask: $buildLessTask")
                     try {
+                        // 检查容器是否存活
+                        if (!buildLessContainerService.checkContainerRunning(containerId)) {
+                            logger.info("****>Deferred container: $containerId is not running, skip claim task")
+                            // 重新放回队列
+                            redisUtils.leftPushBuildLessReadyTask(buildLessTask)
+                            return
+                        }
+
                         dispatchClient.updateContainerId(
                             buildLessTask = buildLessTask,
                             containerId = containerId
