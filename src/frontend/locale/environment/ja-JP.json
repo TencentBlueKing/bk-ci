@@ -304,5 +304,11 @@
     "builtInLabelCannotBeDeleted": "内蔵ラベルは削除できません",
     "builtInLabelCannotBeModified": "内蔵ラベルは修正できません",
     "tagValueDuplicate": "タグ値は重複できません",
-    "noMultipleValuesPerNode": "1つのノードに複数の値を追加することはできません"
+    "noMultipleValuesPerNode": "1つのノードに複数の値を追加することはできません",
+    "batchSetTag": "一括でタグを設定",
+    "batchDeleteNode": "一括削除",
+    "batchOperation": "一括操作",
+    "placeSelectNode": "ノードを選択してください",
+    "deleteNodetips": "{0} 個のノードを削除してもよろしいですか？",
+    "addOrShowTag": "タグを追加/表示"
 }

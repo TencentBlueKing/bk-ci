@@ -11,16 +11,18 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
             @sort-change="handleSortChange"
+            @selection-change="handleSelectionChange"
         >
-            <!-- <bk-table-column
+            <bk-table-column
                 type="selection"
                 fixed="left"
                 width="40"
-            ></bk-table-column> -->
+            ></bk-table-column>
             <bk-table-column
                 :label="$t('environment.nodeInfo.displayName')"
                 sortable="custom"
                 prop="displayName"
+                fixed="left"
                 min-width="160"
             >
                 <template slot-scope="props">
@@ -535,7 +537,7 @@
                     },
                     {
                         id: 'lastModifyBy',
-                        label: this.$t('environment.nodeInfo.lastModifyBy')
+                        label: this.$t('environment.lastModifier')
                     },
                     {
                         id: 'lastModifyTime',
@@ -663,6 +665,9 @@
             },
             handleSortChange (sort) {
                 this.$emit('sort-change', sort)
+            },
+            handleSelectionChange (list) {
+                this.$emit('selected-change', list)
             },
             async saveEdit (node) {
                 const valid = await this.$validator.validate()
@@ -921,7 +926,7 @@
 
   .node-table-wrapper {
       margin-top: 20px;
-      td:nth-child(1) {
+      td:nth-child(2) {
           position: relative;
           color: $primaryColor;
           .node-name {

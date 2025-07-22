@@ -309,5 +309,11 @@
     "builtInLabelCannotBeDeleted": "Built-in labels cannot be deleted",
     "builtInLabelCannotBeModified": "Built-in labels cannot be modified",
     "tagValueDuplicate": "Tag values cannot be duplicated",
-    "noMultipleValuesPerNode": "Multiple values per node are not supported"
+    "noMultipleValuesPerNode": "Multiple values per node are not supported",
+    "batchSetTag": "Batch Set Tags",
+    "batchDeleteNode": "Batch Delete",
+    "batchOperation": "Batch Operation",
+    "placeSelectNode": "Please select nodes",
+    "deleteNodetips": "Are you sure you want to delete {0} nodes?",
+    "addOrShowTag": "Add/Show Tags"
 }

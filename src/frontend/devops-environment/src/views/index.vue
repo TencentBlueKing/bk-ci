@@ -50,7 +50,8 @@
                     nodeList: 'nodeList',
                     createEnv: 'envList',
                     envDetail: 'envList',
-                    nodeDetail: 'nodeList'
+                    nodeDetail: 'nodeList',
+                    setNodeTag: 'nodeList',
                 }
                 
                 return routeMap[this.$route.name] || 'envList'

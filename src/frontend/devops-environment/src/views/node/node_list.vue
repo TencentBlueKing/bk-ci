@@ -28,8 +28,63 @@
                                 {{ $t('environment.nodeInfo.importNode') }}
                             </span>
                         </bk-button>
+                        <bk-dropdown-menu
+                            trigger="click"
+                            ext-cls="batch-menu"
+                            :font-size="'medium'"
+                            @show="batchDropdown"
+                            @hide="batchDropdown"
+                        >
+                            <bk-button
+                                key="batchOperation"
+                                slot="dropdown-trigger"
+                            >
+                                {{ $t('environment.batchOperation') }}
+                                <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isBatchDropdownShow }]"></i>
+                            </bk-button>
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
+                                <li>
+                                    <a
+                                        href="javascript:;"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: projectId,
+                                                action: NODE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                        @click="batchSetTag"
+                                        key="thirdPartyBuildMachine"
+                                    >
+                                        {{ $t('environment.batchSetTag') }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        href="javascript:;"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: projectId,
+                                                action: NODE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                        theme="primary"
+                                        @click="batchDeleteNode"
+                                        key="idcTestMachine"
+                                    >
+                                        {{ $t('environment.batchDeleteNode') }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </bk-dropdown-menu>
                         <bk-button
-                            class="mr10"
+                            
                             @click="handleExportCSV"
                         >
                             {{ $t('environment.export') }}
@@ -82,6 +137,7 @@
                     @updataCurEditNodeItem="updataCurEditNodeItem"
                     @install-agent="installAgent"
                     @clear-filter="clearFilter"
+                    @selected-change="handleSelectedChange"
                 />
             </template>
         </section>
@@ -208,7 +264,9 @@
                 dateTimeRange: [],
                 currentNodeType: '',
                 currentTags: [],
-                tagSearchValue: []
+                tagSearchValue: [],
+                isBatchDropdownShow: false,
+                selectedNodes: []
             }
         },
         computed: {
@@ -378,6 +436,56 @@
         },
         methods: {
             ...mapActions('environment', ['requestGetCounts']),
+            batchDropdown () {
+                this.isBatchDropdownShow = !this.isBatchDropdownShow
+            },
+            batchSetTag () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                } else {
+                    this.$router.push({
+                        name: 'setNodeTag',
+                        params: {
+                            projectId: this.projectId
+                        }
+                    })
+                }
+            },
+            async batchDeleteNode () {
+                this.$bkInfo({
+                    title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
+                    confirmFn: async () => {
+                        try {
+                            const params = this.selectedNodes.map(i=>i.nodeHashId)
+                            await this.$store.dispatch('environment/toDeleteNode', {
+                                projectId: this.projectId,
+                                params
+                            })
+
+                            this.$bkMessage({
+                                message: this.$t('environment.successfullyDeleted'),
+                                theme: 'success'
+                            })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: row.nodeHashId,
+                                    action: NODE_RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        } finally {
+                            this.requestList()
+                            await this.requestGetCounts(this.projectId)
+                        }
+                    }
+                })
+            },
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
@@ -759,6 +867,9 @@
                     this.constructToolConf.importText = this.$t('environment.import')
                 }
             },
+            handleSelectedChange (selection) {
+                this.selectedNodes = selection
+            },
             handlePageChange (page) {
                 this.pagination.current = page
                 this.requestList(this.requestParams)
@@ -967,5 +1078,9 @@
             width: 140px;
             margin-right: 10px;
         }
+    }
+
+    .batch-menu {
+        margin: 0 8px;
     }
 </style>

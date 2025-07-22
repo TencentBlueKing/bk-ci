@@ -304,5 +304,11 @@
     "builtInLabelCannotBeDeleted": "内置标签不能删除",
     "builtInLabelCannotBeModified": "内置标签不能修改",
     "tagValueDuplicate": "标签值不能重复",
-    "noMultipleValuesPerNode": "不支持一个节点添加多个值"
+    "noMultipleValuesPerNode": "不支持一个节点添加多个值",
+    "batchSetTag": "批量设置标签",
+    "batchDeleteNode": "批量删除",
+    "batchOperation": "批量操作",
+    "placeSelectNode": "请选择节点",
+    "deleteNodetips": "确定删除 {0} 个节点？",
+    "addOrShowTag": "添加/展示标签"
 }
