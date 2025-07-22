@@ -403,7 +403,7 @@ open class BkRepoDownloadService(
                 projectId = projectId,
                 repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
                 filePaths = emptyList(),
-                fileNames = listOf("*.hsp"),
+                fileNames = listOf("*.hsp", "*.hap"),
                 metadata = mapOf(ARCHIVE_PROPS_BUILD_ID to buildId),
                 page = 1,
                 pageSize = 1000 // 最多关联1000个HSP
