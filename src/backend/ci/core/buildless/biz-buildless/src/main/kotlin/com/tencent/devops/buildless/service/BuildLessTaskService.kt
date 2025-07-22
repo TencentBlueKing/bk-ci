@@ -29,7 +29,6 @@ package com.tencent.devops.buildless.service
 
 import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.client.DispatchClient
-import com.tencent.devops.buildless.exception.BuildLessException
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.RedisUtils
