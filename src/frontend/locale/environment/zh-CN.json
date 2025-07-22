@@ -297,7 +297,7 @@
     "nextCan": "接下来，你可以：",
     "use": "使用",
     "jobScriptExecution": "作业平台-脚本执行",
-    "jobPushFile": "作业平台-构建分发",
+    "jobPushFile": "作业平台-构件分发",
     "executionJobScript": "插件进行远程脚本执行",
     "executionJobPushFile": "插件进行构件分发",
     "有": "有 ",

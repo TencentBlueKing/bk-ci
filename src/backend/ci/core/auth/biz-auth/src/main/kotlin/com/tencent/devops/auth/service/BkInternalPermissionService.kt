@@ -4,7 +4,6 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
-import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -15,6 +14,7 @@ import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.function.Supplier
 
 /**
@@ -27,7 +27,6 @@ class BkInternalPermissionService(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
-    private val permissionProjectService: PermissionProjectService,
     private val superManagerService: SuperManagerService,
     private val authResourceService: AuthResourceDao,
     private val meterRegistry: MeterRegistry
@@ -108,9 +107,22 @@ class BkInternalPermissionService(
             projectCode = projectCode,
             resourceType = resourceType,
             action = action
-        ) || permissionProjectService.checkProjectManager(
+        ) || hasManagerPermission(
             userId = userId,
             projectCode = projectCode
+        )
+    }
+
+    private fun hasManagerPermission(
+        userId: String,
+        projectCode: String
+    ): Boolean {
+        return authResourceGroupMemberDao.checkResourceManager(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = ResourceTypeId.PROJECT,
+            resourceCode = projectCode,
+            memberId = userId
         )
     }
 
@@ -132,28 +144,46 @@ class BkInternalPermissionService(
         }
     }
 
+    /**
+     * 获取用户在指定项目下对某资源类型的有特定操作权限的资源ID列表。
+     */
     fun getUserResourceByAction(
         userId: String,
         projectCode: String,
         resourceType: String,
         action: String
     ): List<String> {
-        return (createTimer(::getUserResourceByAction.name).record(Supplier {
-            val groupIds = listMemberGroupIdsInProjectWithCache(projectCode, userId)
-            CacheHelper.getOrLoad(userResourceCache, userId, projectCode, resourceType, action) {
-                val isManager = checkManager(
+        val resources = createTimer(::getUserResourceByAction.name).record(Supplier {
+            val isManager = checkManager(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                action = action
+            )
+            val hasProjectLevelPermission by lazy {
+                validateUserResourcePermission(
                     userId = userId,
                     projectCode = projectCode,
-                    resourceType = resourceType,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
                     action = action
                 )
-                if (isManager) {
-                    authResourceService.getResourceCodeByType(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType
-                    )
-                } else {
+            }
+            // 如果是项目管理员或者有项目级权限，直接返回结果
+            if (isManager || hasProjectLevelPermission) {
+                authResourceService.getResourceCodeByType(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType
+                )
+            } else {
+                // 1. 首先获取基于权限的资源列表（会走缓存）。
+                val permissionBasedResources = CacheHelper.getOrLoad(
+                    userResourceCache,
+                    userId, projectCode,
+                    resourceType, action
+                ) {
+                    val groupIds = listMemberGroupIdsInProjectWithCache(projectCode, userId)
                     permissionResourceGroupPermissionService.listResourcesWithPermission(
                         projectCode = projectCode,
                         filterIamGroupIds = groupIds,
@@ -161,12 +191,18 @@ class BkInternalPermissionService(
                         action = action
                     )
                 }
+
+                // 2. 然后获取用户自己创建的资源列表（实时获取，不缓存）。
+                val userCreatedResources = authResourceService.list(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    createUser = userId
+                )
+                (permissionBasedResources + userCreatedResources).distinct()
             }
-        }) ?: emptyList()).also {
-            if (logger.isDebugEnabled) {
-                logger.debug("get user resources by action Internal :$userId|$projectCode|$resourceType|$action|$it")
-            }
-        }
+        }) ?: emptyList()
+        return resources
     }
 
     fun getUserResourcesByActions(
@@ -212,7 +248,7 @@ class BkInternalPermissionService(
         resourceCodes: List<String>
     ): Map<AuthPermission, List<String>> {
         return createTimer(::filterUserResourcesByActions.name).record(Supplier {
-            if (permissionProjectService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+            if (hasManagerPermission(userId = userId, projectCode = projectCode)) {
                 return@Supplier actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resourceCodes
@@ -256,7 +292,7 @@ class BkInternalPermissionService(
         }) ?: emptyMap()
     }
 
-    private fun listMemberGroupIdsInProjectWithCache(
+    fun listMemberGroupIdsInProjectWithCache(
         projectCode: String,
         userId: String
     ): List<Int> {
@@ -296,7 +332,8 @@ class BkInternalPermissionService(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
-            memberId = memberId
+            memberId = memberId,
+            minExpiredTime = LocalDateTime.now()
         ).map { it.iamGroupId.toString() }
         // 通过项目组ID获取人员模板ID
         return authResourceGroupDao.listByRelationId(

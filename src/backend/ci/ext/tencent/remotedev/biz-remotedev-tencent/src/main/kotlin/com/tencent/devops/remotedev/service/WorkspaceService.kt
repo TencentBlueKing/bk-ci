@@ -239,7 +239,7 @@ class WorkspaceService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to modify $workspaceName property")
+                params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
             )
         }
         dslContext.transaction { configuration ->
@@ -1300,7 +1300,7 @@ class WorkspaceService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to get $workspaceName info")
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
             )
         }
         val pageNotNull = page ?: 1

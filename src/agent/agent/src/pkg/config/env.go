@@ -21,6 +21,13 @@ func (e *GEnvVarsT) Get(key string) (string, bool) {
 	return res, ok
 }
 
+func (e *GEnvVarsT) GetAll() map[string]string {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+	res := e.envs
+	return res
+}
+
 func (e *GEnvVarsT) SetEnvs(envs map[string]string) {
 	e.lock.Lock()
 	defer e.lock.Unlock()

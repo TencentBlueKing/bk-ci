@@ -105,7 +105,7 @@ class StopWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to stop $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to stop $workspaceName")
             )
         }
 

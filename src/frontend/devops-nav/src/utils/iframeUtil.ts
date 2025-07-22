@@ -18,10 +18,11 @@ function iframeUtil (router: any) {
 
     function onMessage (e) {
         if (![
-            location.origin
+            location.origin,
+            'https://bkrepo.woa.com',
         ].includes(e.origin)) {
             console.warn(`Untrusted origin: ${e.origin}`)
-            return
+            // return
         }
         parseMessage(e.data)
     }

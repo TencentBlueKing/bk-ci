@@ -91,6 +91,7 @@ import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import jakarta.ws.rs.NotFoundException
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -99,7 +100,6 @@ import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.util.UUID
-import jakarta.ws.rs.NotFoundException
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -902,7 +902,15 @@ class BkRepoClient constructor(
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, projectId, rule, page, pageSize)
+        return query(
+            userId = userId,
+            projectId = projectId,
+            rule = rule,
+            page = page,
+            pageSize = pageSize,
+            sortBy = "lastModifiedDate",
+            direction = Sort.Direction.DESC
+        )
     }
 
     fun queryByPathEqOrNameMatchOrMetadataEqAnd(

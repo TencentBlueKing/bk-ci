@@ -212,7 +212,7 @@ class WhiteListService @Autowired constructor(
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("User($userId) exceeding the limit($limit)")
+            params = arrayOf("We're sorry but User($userId) exceeding the limit($limit)")
         )
     }
 }

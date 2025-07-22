@@ -122,7 +122,10 @@ class ExpertSupportService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
+                params = arrayOf(
+                    "We're sorry but you don't have permission to " +
+                                     "apply for assistance in ${record.workspaceName}"
+                )
             )
         }
         if (record.status.checkDeleted() || record.status.checkInProcess()) {
@@ -290,7 +293,10 @@ class ExpertSupportService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
+                params = arrayOf(
+                    "We're sorry but you don't have permission" +
+                                     " to apply for assistance in ${record.workspaceName}"
+                )
             )
         }
         if (record.status.checkDeleted()) {
@@ -680,7 +686,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
         ActionAuditContext.current()
@@ -824,7 +830,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
         ActionAuditContext.current()
@@ -910,7 +916,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
 
@@ -948,7 +954,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to delete disk in ${data.workspaceName}")
+                params = arrayOf("We're sorry but you don't have permission to delete disk in ${data.workspaceName}")
             )
         }
 
@@ -1028,7 +1034,10 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to sync vm in source ${data.sourceWorkspaceName}")
+                params = arrayOf(
+                    "We're sorry but you don't have permission to" +
+                                     " sync vm in source ${data.sourceWorkspaceName}"
+                )
             )
         }
         if (!permissionService.hasManagerOrOwnerPermission(
@@ -1040,7 +1049,10 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to sync vm in target ${data.targetWorkspaceName}")
+                params = arrayOf(
+                    "We're sorry but you don't have permission " +
+                                     "to sync vm in target ${data.targetWorkspaceName}"
+                )
             )
         }
 
