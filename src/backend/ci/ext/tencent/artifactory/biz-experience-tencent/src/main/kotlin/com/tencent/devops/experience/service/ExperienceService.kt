@@ -115,12 +115,12 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.core.Response
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
-import jakarta.ws.rs.core.Response
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -271,7 +271,11 @@ class ExperienceService @Autowired constructor(
                 creator = it.creator,
                 expired = isExpired,
                 online = it.online,
-                permissions = ExperiencePermission(canExperience, canEdit, canDelete)
+                permissions = ExperiencePermission(canExperience, canEdit, canDelete),
+                repoCreateTime = if (it.repoCreateTime == null) {
+                    logger.warn("repoCreateTime is null, experienceId: ${it.id}")
+                    today.timestamp()
+                } else it.repoCreateTime.timestamp(),
             )
         }
     }
@@ -378,13 +382,13 @@ class ExperienceService @Autowired constructor(
         val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
 
         val experienceId = createExperience(
-            projectId,
-            experience,
-            propertyMap,
-            Source.WEB,
-            userId,
-            isPublic,
-            artifactoryType
+            projectId = projectId,
+            experience = experience,
+            propertyMap = propertyMap,
+            source = Source.WEB,
+            userId = userId,
+            isPublic = isPublic,
+            artifactoryType = artifactoryType
         )
         ActionAuditContext.current()
             .setInstanceId(experienceId.toString())
@@ -564,7 +568,8 @@ class ExperienceService @Autowired constructor(
             scheme = scheme,
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: "",
-            classify = experience.classify ?: ""
+            classify = experience.classify ?: "",
+            repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime)
         )
         // IAM权限
         experiencePermissionService.createTaskResource(

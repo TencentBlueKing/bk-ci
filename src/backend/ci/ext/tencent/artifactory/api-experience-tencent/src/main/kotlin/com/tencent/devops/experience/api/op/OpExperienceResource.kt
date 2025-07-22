@@ -34,11 +34,12 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceExtendBanner
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -193,4 +194,9 @@ interface OpExperienceResource {
         @Parameter(description = "清理的参数")
         experienceClean: ExperienceClean
     ): Result<Boolean>
+
+    @Operation(summary = "体验同步制品库创建时间")
+    @Path("/syncRepoCreateTime")
+    @GET
+    fun syncRepoCreateTime(): Result<Boolean>
 }
