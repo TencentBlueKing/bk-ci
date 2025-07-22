@@ -147,7 +147,7 @@ class RbacPermissionResourceGroupPermissionService(
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
-        // 若filterActions不为空，则本次新增的组权限，只和该操作有关
+        // 若filterActions不为空，则本次新增的组权限，只和该action有关
         // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
         authorizationScopes.addAll(
             when {
