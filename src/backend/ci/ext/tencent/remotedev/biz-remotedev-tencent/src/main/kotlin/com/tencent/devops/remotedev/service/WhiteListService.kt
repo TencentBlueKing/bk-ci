@@ -45,6 +45,28 @@ class WhiteListService @Autowired constructor(
         return whiteListDao.delete(dslContext, whiteList.name, whiteList.type) == 1
     }
 
+    fun apiSetWhiteList(
+        userId: String,
+        type: WhiteListType,
+        delete: Boolean,
+        body: Map<String, String>
+    ): Boolean {
+        val whiteList = when (type) {
+            WhiteListType.PROJECT_ACCESS_DEVICE -> {
+                requireNotNull(body["projectId"]) { "projectId is required" }
+                requireNotNull(body["userId"]) { "userId is required" }
+                WhiteList(name = "${body["projectId"]}::${body["userId"]}", type)
+            }
+
+            else -> null
+        } ?: return false
+        return if (delete) {
+            opDeleteWhiteList(userId, whiteList)
+        } else {
+            opCreateOrUpdateWhiteList(userId, whiteList)
+        }
+    }
+
     fun shareWorkspace(userId: String, whiteListUser: String) {
         addWhiteListUser(userId = userId, whiteListUser = whiteListUser)
         addGPUWhiteListUser(

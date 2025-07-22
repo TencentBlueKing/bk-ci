@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -708,4 +709,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).createCvm(userId, data)
     }
 
+    override fun whitelist(
+        userId: String,
+        type: WhiteListType,
+        delete: Boolean,
+        body: Map<String, String>
+    ): Result<Boolean> {
+        logger.info("whitelist |$userId|$type|$delete|$body")
+        return client.get(ServiceRemoteDevResource::class).whitelist(userId, type, delete, body)
+    }
 }

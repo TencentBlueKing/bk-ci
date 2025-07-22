@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -1025,4 +1026,20 @@ interface ApigwRemoteDevResource {
         userId: String,
         data: CreateCvmData
     ): Result<CreateCvmResp?>
+
+    @Operation(summary = "白名单注册", tags = ["v4_app_remotedev_whitelist"])
+    @POST
+    @Path("/whitelist")
+    fun whitelist(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "白名单类型", required = false)
+        @QueryParam("type")
+        type: WhiteListType,
+        @Parameter(description = "是否是删除", required = false)
+        @QueryParam("delete")
+        delete: Boolean,
+        body: Map<String, String>
+    ): Result<Boolean>
 }

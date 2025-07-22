@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -947,5 +948,14 @@ class ServiceRemoteDevResourceImpl(
 
     override fun createCvm(userId: String, data: CreateCvmData): Result<CreateCvmResp?> {
         return Result(expertSupportService.createCvm(data))
+    }
+
+    override fun whitelist(
+        userId: String,
+        type: WhiteListType,
+        delete: Boolean,
+        body: Map<String, String>
+    ): Result<Boolean> {
+        return Result(whiteListService.apiSetWhiteList(userId, type, delete, body))
     }
 }
