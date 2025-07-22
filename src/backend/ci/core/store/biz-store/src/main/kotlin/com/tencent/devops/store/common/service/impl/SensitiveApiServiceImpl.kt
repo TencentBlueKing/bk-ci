@@ -126,11 +126,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 apiNameList.filter { it.isNotBlank() }
                     .filter { sensitiveApiNameMap.containsKey(it) }
                     .map { apiName ->
-                        val apiStatus = if (shouldAutoApprove(storeType, apiName)) {
-                            ApiStatusEnum.PASS
-                        } else {
-                            ApiStatusEnum.WAIT
-                        }
+                        val config = sensitiveApiNameMap[apiName]!!
                         SensitiveApiCreateDTO(
                             id = UUIDUtil.generate(),
                             userId = userId,
@@ -139,7 +135,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
                             apiName = apiName,
                             aliasName = sensitiveApiNameMap[apiName]!!.aliasNames?.get(language) ?: apiName,
                             applyDesc = applyDesc,
-                            apiStatus = apiStatus,
+                            apiStatus = if (config.needReview) ApiStatusEnum.WAIT else ApiStatusEnum.PASS,
                             apiLevel = ApiLevelEnum.SENSITIVE
                         )
                     }
@@ -290,10 +286,5 @@ class SensitiveApiServiceImpl @Autowired constructor(
             apiName = apiName
         )
         return Result(record != null && record.apiStatus == ApiStatusEnum.PASS.name)
-    }
-
-
-    private fun shouldAutoApprove(storeType: StoreTypeEnum, apiName: String): Boolean {
-        return storeType == StoreTypeEnum.ATOM && "get_credential" == apiName
     }
 }
