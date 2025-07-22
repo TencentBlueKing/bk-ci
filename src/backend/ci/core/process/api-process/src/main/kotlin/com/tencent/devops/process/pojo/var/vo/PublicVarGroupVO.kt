@@ -35,6 +35,6 @@ data class PublicVarGroupVO(
     val groupName: String,
     @get:Schema(title = "变量组描述")
     val desc: String? = null,
-    @get:Schema(title = "变量组列表")
+    @get:Schema(title = "变量列表")
     val publicVars: List<PublicVarVO>
 )
