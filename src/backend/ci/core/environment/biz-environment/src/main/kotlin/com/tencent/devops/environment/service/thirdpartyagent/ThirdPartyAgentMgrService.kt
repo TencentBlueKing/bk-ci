@@ -192,6 +192,108 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return getThirdPartyAgentDetail(agentRecord, userId)
     }
 
+    fun getAgentDetailSimple(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        agentHashId: String?,
+        checkPermission: Boolean
+    ): ThirdPartyAgentDetail? {
+        if (nodeHashId != null) {
+            val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+            if (checkPermission &&
+                !environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.VIEW)
+            ) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+                )
+            }
+            val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
+                ?: return null
+
+            val nodeRecord = nodeDao.get(dslContext, agentRecord.projectId, nodeId = agentRecord.nodeId ?: return null)
+                ?: return null
+            return ThirdPartyAgentDetail(
+                agentId = HashUtil.encodeLongId(agentRecord.id),
+                nodeId = nodeHashId,
+                displayName = nodeRecord.displayName ?: nodeRecord.nodeName,
+                projectId = agentRecord.projectId,
+                status = nodeRecord.nodeStatus,
+                hostname = agentRecord.hostname,
+                os = agentRecord.os,
+                osName = agentRecord.detectOs,
+                ip = agentRecord.ip,
+                createdUser = nodeRecord.createdUser,
+                createdTime = nodeRecord.createdTime?.let { self -> DateTimeUtil.toDateTime(self) } ?: "",
+                agentVersion = agentRecord.masterVersion ?: "",
+                slaveVersion = agentRecord.version ?: "",
+                agentInstallPath = agentRecord.agentInstallPath ?: "",
+                maxParallelTaskCount = MAX_PARALLEL_TASK_COUNT,
+                parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString(),
+                dockerParallelTaskCount = (agentRecord.dockerParallelTaskCount ?: "").toString(),
+                startedUser = agentRecord.startedUser ?: "",
+                agentUrl = agentUrlService.genAgentUrl(agentRecord),
+                agentScript = agentUrlService.genAgentInstallScript(agentRecord),
+                lastHeartbeatTime = "",
+                ncpus = "",
+                memTotal = "",
+                diskTotal = "",
+                currentAgentVersion = agentPropsScope.getAgentVersion(),
+                currentWorkerVersion = agentPropsScope.getWorkerVersion(),
+                exitErrorMsg = null
+            )
+        }
+        if (agentHashId != null) {
+            val agentId = HashUtil.decodeIdToLong(agentHashId)
+            val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id = agentId, projectId = projectId)
+                ?: return null
+            if (checkPermission &&
+                !environmentPermissionService.checkNodePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    nodeId = agentRecord.nodeId,
+                    permission = AuthPermission.VIEW
+                )
+            ) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+                )
+            }
+            val nodeRecord = nodeDao.get(dslContext, agentRecord.projectId, nodeId = agentRecord.nodeId ?: return null)
+                ?: return null
+            return ThirdPartyAgentDetail(
+                agentId = HashUtil.encodeLongId(agentRecord.id),
+                nodeId = nodeRecord.nodeHashId,
+                displayName = nodeRecord.displayName ?: nodeRecord.nodeName,
+                projectId = agentRecord.projectId,
+                status = nodeRecord.nodeStatus,
+                hostname = agentRecord.hostname,
+                os = agentRecord.os,
+                osName = agentRecord.detectOs,
+                ip = agentRecord.ip,
+                createdUser = nodeRecord.createdUser,
+                createdTime = nodeRecord.createdTime?.let { self -> DateTimeUtil.toDateTime(self) } ?: "",
+                agentVersion = agentRecord.masterVersion ?: "",
+                slaveVersion = agentRecord.version ?: "",
+                agentInstallPath = agentRecord.agentInstallPath ?: "",
+                maxParallelTaskCount = MAX_PARALLEL_TASK_COUNT,
+                parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString(),
+                dockerParallelTaskCount = (agentRecord.dockerParallelTaskCount ?: "").toString(),
+                startedUser = agentRecord.startedUser ?: "",
+                agentUrl = agentUrlService.genAgentUrl(agentRecord),
+                agentScript = agentUrlService.genAgentInstallScript(agentRecord),
+                lastHeartbeatTime = "",
+                ncpus = "",
+                memTotal = "",
+                diskTotal = "",
+                currentAgentVersion = agentPropsScope.getAgentVersion(),
+                currentWorkerVersion = agentPropsScope.getWorkerVersion(),
+                exitErrorMsg = null
+            )
+        }
+        return null
+    }
+
     private fun getThirdPartyAgentDetail(
         agentRecord: TEnvironmentThirdpartyAgentRecord,
         userId: String,

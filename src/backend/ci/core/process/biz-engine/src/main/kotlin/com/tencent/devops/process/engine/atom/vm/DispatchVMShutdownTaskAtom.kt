@@ -89,7 +89,9 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildResult = true,
                 dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                 routeKeySuffix = dispatchTypeBuilder.getDispatchType(task, param).routeKeySuffix?.routeKeySuffix,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                jobId = task.jobId,
+                containerHashId = task.containerHashId
             )
         )
         containerBuildRecordService.updateContainerRecord(
@@ -144,7 +146,9 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,
-                        executeCount = task.executeCount
+                        executeCount = task.executeCount,
+                        jobId = task.jobId,
+                        containerHashId = task.containerHashId
                     )
                 )
                 defaultFailAtomResponse

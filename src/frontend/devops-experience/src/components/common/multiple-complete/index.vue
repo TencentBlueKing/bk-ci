@@ -61,7 +61,6 @@
             },
             placeholder: {
                 type: String,
-                default: '请输入'
             },
             disabled: {
                 type: Boolean,

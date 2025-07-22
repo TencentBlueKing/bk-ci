@@ -34,6 +34,8 @@ import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.ci.UserUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
@@ -75,7 +77,9 @@ class UserProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val bkTag: BkTag,
     private val apiPlatformApi: AuthPlatformApi,
-    private val authPermissionApi: AuthPermissionApi
+    private val authPermissionApi: AuthPermissionApi,
+    private val tokenService: ClientTokenService,
+    private val client: Client
 ) : AbsUserProjectServiceServiceImpl(
     dslContext,
     serviceTypeDao,
@@ -86,7 +90,9 @@ class UserProjectServiceImpl @Autowired constructor(
     authProjectApi,
     pipelineAuthServiceCode,
     apiPlatformApi,
-    authPermissionApi
+    authPermissionApi,
+    tokenService,
+    client
 ) {
 
     @Value("\${project.container.url:#{null}}")

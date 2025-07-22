@@ -1,0 +1,54 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.store.pojo.common
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "组织架构信息")
+data class StoreDeptInfo(
+    @get:Schema(title = "BGID", required = true)
+    val bgId: String,
+    @get:Schema(title = "BG名称", required = true)
+    val bgName: String,
+    @get:Schema(title = "部门ID", required = false)
+    val deptId: String?,
+    @get:Schema(title = "部门名称", required = false)
+    val deptName: String?,
+    @get:Schema(title = "中心ID", required = false)
+    val centerId: String?,
+    @get:Schema(title = "中心名称", required = false)
+    val centerName: String?,
+    @get:Schema(title = "组ID", required = false)
+    val groupId: String? = null,
+    @get:Schema(title = "组名称", required = false)
+    val groupName: String? = null,
+    @get:Schema(title = "业务线ID", required = false)
+    val businessLineId: String?,
+    @get:Schema(title = "业务线名称", required = false)
+    val businessLineName: String?
+)

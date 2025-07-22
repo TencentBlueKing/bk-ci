@@ -135,7 +135,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = action.data.getUserId(),
                 projectId = projectId,
                 repoHashId = repoHashId,
-                repoFullName = action.data.setting.projectName,
+                aliasName = action.data.setting.aliasName,
                 directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -249,7 +249,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = action.data.getUserId(),
                 projectId = projectId,
                 repoHashId = repoHashId,
-                repoFullName = action.data.setting.projectName,
+                aliasName = action.data.setting.aliasName,
                 directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -412,7 +412,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                     userId = action.data.getUserId(),
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = action.data.setting.projectName,
+                    aliasName = action.data.setting.aliasName,
                     directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
                 )
                 val gitPushResult = pipelineYamlRepositoryService.releaseYamlPipeline(

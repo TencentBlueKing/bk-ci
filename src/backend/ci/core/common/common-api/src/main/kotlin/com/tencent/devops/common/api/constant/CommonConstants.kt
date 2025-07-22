@@ -92,6 +92,7 @@ const val LABEL = "label" // 标签
 const val NO_LABEL = "noLabel" // 无标题
 const val URL = "url" // url链接
 const val PATH = "path" // 路径
+const val META_DATA = "metadata" // 制品元数据
 const val ARTIFACTORY_TYPE = "artifactoryType" // 归档仓库类型
 const val REPORT_TYPE = "reportType" // 报告类型
 const val DATA = "data" // 数据
@@ -133,6 +134,7 @@ const val BATCH_ID = "batchId" // 批次ID
 const val PARAM = "param" // 参数
 const val ERROR = "error" // 错误
 const val OPERATE = "operate" // 操作
+const val SENSITIVE = "isSensitive"
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

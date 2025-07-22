@@ -239,7 +239,7 @@ class WorkspaceService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to modify $workspaceName property")
+                params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
             )
         }
         dslContext.transaction { configuration ->
@@ -513,6 +513,10 @@ class WorkspaceService @Autowired constructor(
         val windowsWorkspaces = result.filterIsInstance<WorkspaceRecordWithWindows>().associateBy { it.workspaceName }
         val loginUserMap =
             startWorkspaceService.cachingLoginUsers(windowsWorkspaces.map { it.value.hostIp ?: "" }.toSet())
+// 获取CDS对应的母机ip信息
+        val hostIps = windowsWorkspaces.mapNotNull { it.value.hostIp }.filter { it.isNotEmpty() }
+        val cdsInfo = windowsGpuResourceDao.batchFetchWindowsGpuPool(dslContext = dslContext, hostIps = hostIps)
+            .associateBy { it.cgsId }
 
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
@@ -554,7 +558,8 @@ class WorkspaceService @Autowired constructor(
                     createTime = it.createTime.timestamp(),
                     imageId = detail?.imageId ?: "",
                     recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
-                    vmName = allWindows[it.workspaceName]?.vmName
+                    vmName = allWindows[it.workspaceName]?.vmName,
+                    nodeIp = cdsInfo[detail?.hostIp]?.node ?: ""
                 )
             )
         }
@@ -1295,7 +1300,7 @@ class WorkspaceService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to get $workspaceName info")
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
             )
         }
         val pageNotNull = page ?: 1

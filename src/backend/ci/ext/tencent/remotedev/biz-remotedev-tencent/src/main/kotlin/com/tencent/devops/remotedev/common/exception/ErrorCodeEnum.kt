@@ -44,7 +44,7 @@ enum class ErrorCodeEnum(
     FORBIDDEN(
         errorType = ErrorType.USER,
         errorCode = "2132008",
-        formatErrorMessage = "You do not have permission: {0}"
+        formatErrorMessage = "403 Forbidden: {0}"
     ),
     DENIAL_OF_SERVICE(
         errorType = ErrorType.USER,
@@ -59,7 +59,7 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132014",
-        formatErrorMessage = "The workspace has error , please try again later or contact 8000 helper."
+        formatErrorMessage = "500: that is an error, please report your problem to \"Ask IT\"."
     ),
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
@@ -69,8 +69,7 @@ enum class ErrorCodeEnum(
     WORKSPACE_NOT_RUNNING(
         errorType = ErrorType.USER,
         errorCode = "2132016",
-        formatErrorMessage = "Workspace [{0}] is not currently running," +
-            "please try again later or contact 8000 helper."
+        formatErrorMessage = "500: that is an error, please report your problem to \"Ask IT\"."
     ),
     GET_WATERMARK_FAIL(
         errorType = ErrorType.USER,
@@ -225,7 +224,7 @@ enum class ErrorCodeEnum(
     WORKSPACE_CDS_ERROR(
         errorType = ErrorType.SYSTEM,
         errorCode = "2132053",
-        formatErrorMessage = "workspace cds error: {0}"
+        formatErrorMessage = "500: that is an error, please report your problem to \"Ask IT\"."
     ),
     WORKSPACE_LOGGED_IN(
         errorType = ErrorType.SYSTEM,

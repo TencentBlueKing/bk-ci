@@ -563,5 +563,11 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 		envs = append(envs, "DEVOPS_AGENT_JDK_17_PATH="+(targetJreDir+"/bin/java"))
 	}
 
+	// 用户指定的节点环境变量
+	userEnvs := config.GApiEnvVars.GetAll()
+	for k, v := range userEnvs {
+		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
+	}
+
 	return envs
 }

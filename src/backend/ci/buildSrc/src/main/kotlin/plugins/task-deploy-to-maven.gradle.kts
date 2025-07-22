@@ -24,6 +24,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import utils.MavenUtil
+import java.net.URI
 
 plugins {
     `maven-publish`
@@ -107,6 +109,16 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            name = "nexus3"
+            url = URI(MavenUtil.getUrl(project))
+            credentials {
+                username = MavenUtil.getUserName(project)
+                password = MavenUtil.getPassword(project)
+            }
+        }
+    }
 }
 
 signing {
@@ -117,7 +129,7 @@ val shouldPublish = project.the<SourceSetContainer>()["main"].allSource.files.is
         project.name == "common-dependencies"
 
 tasks.forEach {
-    if (it.group == "publish") {
+    if (it.group == "publishing") {
         it.onlyIf { shouldPublish }
     }
 }

@@ -39,12 +39,14 @@ import org.springframework.stereotype.Component
 @ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class MetricsUserRunner @Autowired constructor(
     private val metricsUserService: MetricsUserService,
+    private val metricsEventService: MetricsEventService,
     private val metricsUserConfig: MetricsUserConfig
 ) : ApplicationRunner {
 
     override fun run(args: ApplicationArguments) {
         if (metricsUserConfig.metricsUserEnabled) {
             metricsUserService.init()
+            metricsEventService.init()
         }
     }
 }

@@ -77,8 +77,12 @@
     @import './../scss/conf';
 
     .ext-page-container-wrapper {
-        height: 100%;
+        height: calc(100vh - 98px);
         overflow: hidden;
+
+        .sub-view-port {
+            height: 100%;
+        }
         .env-header {
             display: flex;
             justify-content: space-between;
