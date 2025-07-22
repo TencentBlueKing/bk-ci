@@ -368,6 +368,7 @@ class RbacPermissionService(
                     resourceType = resourceType
                 )
             }
+
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             when {
                 resourceType == AuthResourceType.PROJECT.value ->
