@@ -62,7 +62,17 @@ class ServiceDEVXResourceImpl @Autowired constructor(
         return Result(devxService.getUserDEVXEnv(userId, projectIds))
     }
 
-    override fun getEnvHook(userId: String, projectId: String, envHashId: String): Result<List<DEVXHook>> {
-        return Result(devxService.getEnvHook(userId, projectId, envHashId))
+    override fun getEnvHook(
+        userId: String,
+        projectId: String,
+        envHashId: String?,
+        nodeHashId: String?
+    ): Result<List<DEVXHook>> {
+        val res = when {
+            envHashId != null -> devxService.getEnvHook(userId, projectId, envHashId)
+            nodeHashId != null -> devxService.getEnvHookByNode(userId, projectId, nodeHashId)
+            else -> throw IllegalArgumentException("envHashId or nodeHashId is null")
+        }
+        return Result(res)
     }
 }
