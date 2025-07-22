@@ -134,6 +134,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 // 锁获取失败，消息延迟10秒发送以减少同一条流水线同时间触发大量构建带来的竞争压力
                 event.delayMills = 10000
                 measureEventDispatcher.dispatch(event)
+                return false
             } else {
                 // 流水线model数据解析上报
                 watcher.start("doPipelineModelDataReportBus")
