@@ -145,24 +145,19 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     statisticsTime = statisticsTime
                 )
+                // 流水线级别概览数据上报
+                watcher.start("pipelineOverviewDataReport")
+                pipelineOverviewDataReport(
+                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                    currentTime = currentTime
+                )
+                // 流水线失败数据上报
+                watcher.start("pipelineFailDataReport")
+                pipelineFailDataReport(
+                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                    currentTime = currentTime
+                )
             }
-        }
-        // 流水线级别概览数据上报
-        watcher.start("pipelineOverviewDataReport")
-        withRedisLock("pipeline:$pipelineId:overview", 20) {
-            pipelineOverviewDataReport(
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                currentTime = currentTime
-            )
-        }
-
-        // 流水线失败数据上报
-        watcher.start("pipelineFailDataReport")
-        withRedisLock("pipeline:$pipelineId:fail", 30) {
-            pipelineFailDataReport(
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                currentTime = currentTime
-            )
         }
 
         // 特殊渠道（BS）的项目构建数统计
@@ -283,21 +278,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             if (saveErrorCodeInfoPOs.isNotEmpty()) {
                 metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
             }
-        }
-    }
-
-    private inline fun withRedisLock(
-        lockKey: String,
-        expiredSeconds: Long,
-        action: () -> Unit
-    ) {
-        RedisLock(
-            redisOperation = redisOperation,
-            lockKey = metricsDataReportKey(lockKey),
-            expiredTimeInSeconds = expiredSeconds
-        ).use { lock ->
-            lock.lock()
-            action()
         }
     }
 
