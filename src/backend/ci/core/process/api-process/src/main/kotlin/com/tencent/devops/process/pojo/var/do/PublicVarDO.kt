@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.pojo.`var`.`do`
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -38,10 +40,14 @@ data class PublicVarDO(
     val alias: String,
     @get:Schema(title = "变量组描述")
     val desc: String? = null,
-    @get:Schema(title = "类型")
+    @get:Schema(title = "变量组件类型(常量/变量)")
     val type: PublicVarTypeEnum,
+    @get:Schema(title = "变量值类型", required = true)
+    var valueType: BuildFormPropertyType,
     @get:Schema(title = "默认值")
-    val defaultValue: String? = null,
+    val defaultValue: Any? = null,
     @get:Schema(title = "关联流水线/模板总数")
-    val referCount: Int
+    val referCount: Int,
+    @get:Schema(title = "构建模型")
+    val buildFormProperty: BuildFormProperty
 )
