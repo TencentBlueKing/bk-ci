@@ -1091,6 +1091,6 @@
     id: "5a8a2dff8cc949e9bee711d1c2e3d51a"
     sender: "DevOps"
     title: "研发商店插件审核提醒"
-    body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version}"
+    body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
   creator: "system"
   modifior: "system"

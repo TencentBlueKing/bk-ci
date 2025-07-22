@@ -81,6 +81,13 @@ object VMUtils {
         }
     }
 
+    fun getVmLabel(taskId: String) = when {
+        taskId.startsWith(getStartVmLabel()) -> getStartVmLabel()
+        taskId.startsWith(getStopVmLabel()) -> getStopVmLabel()
+        taskId.startsWith(getEndLabel()) -> getEndLabel()
+        else -> null
+    }
+
     fun isVMTask(taskId: String) = taskId.startsWith(getStartVmLabel()) ||
         taskId.startsWith(getStopVmLabel()) ||
         taskId.startsWith(getEndLabel())

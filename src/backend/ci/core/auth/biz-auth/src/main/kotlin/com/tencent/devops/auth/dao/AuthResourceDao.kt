@@ -316,6 +316,21 @@ class AuthResourceDao {
 
     fun listByResourceCodes(
         dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.`in`(resourceCodes))
+                .fetch().map { convert(it) }
+        }
+    }
+
+    fun listByResourceCodes(
+        dslContext: DSLContext,
         resourceType: String,
         resourceCodes: List<String>
     ): List<AuthResourceInfo> {

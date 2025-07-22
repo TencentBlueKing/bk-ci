@@ -209,7 +209,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 type = DOWNLOAD,
                 host = "$repoPrefixUrl/generic"
             ),
-            bkrepoPrefixUrl = repoPrefixUrl,
+            bkrepoPrefixUrl = bkRepoClientConfig.bkRepoIdcHost,
             userName = bkRepoStoreConfig.bkrepoStoreUserName,
             password = bkRepoStoreConfig.bkrepoStorePassword
         )

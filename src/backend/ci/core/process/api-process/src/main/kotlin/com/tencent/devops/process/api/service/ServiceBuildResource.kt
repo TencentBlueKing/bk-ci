@@ -93,6 +93,18 @@ interface ServiceBuildResource {
         buildId: String
     ): Result<String>
 
+    @Operation(summary = "通过buildId获取流水线版本")
+    @GET
+    @Path("/{projectId}/get_pipeline_version_from_build_id")
+    fun getPipelineVersionFromBuildId(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<Int>
+
     @Operation(summary = "通过buildNumber 和 pipelineId 获取流水线buildId")
     @GET
     @Path("/{projectId}/get_build_id_from_build_number")
