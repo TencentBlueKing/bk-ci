@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreHonorService
+import com.tencent.devops.store.pojo.common.honor.HonorI18nDTO
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -83,5 +84,12 @@ class UserStoreHonorResourceImpl @Autowired constructor(
             storeType = storeType,
             honorId = honorId
         ))
+    }
+
+    override fun batchFillHonorTranslations(
+        userId: String,
+        honorI18nDTOList: List<HonorI18nDTO>
+    ): Result<Boolean> {
+        return Result(storeHonorService.batchFillHonorTranslations(userId, honorI18nDTOList))
     }
 }

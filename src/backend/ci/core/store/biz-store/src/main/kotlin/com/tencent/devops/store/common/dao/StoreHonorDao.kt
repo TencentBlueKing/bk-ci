@@ -32,11 +32,12 @@ import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
 import com.tencent.devops.store.pojo.common.STORE_HONOR_ID
-import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record10
+import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
@@ -227,4 +228,21 @@ class StoreHonorDao {
                 .execute()
         }
     }
+
+    fun getHonorStoreInfos(
+        dslContext: DSLContext,
+        honorTitle: String,
+        honorName: String
+    ): Result<Record3<String, String, Byte>> {
+        val info = TStoreHonorInfo.T_STORE_HONOR_INFO
+        val rel = TStoreHonorRel.T_STORE_HONOR_REL
+
+        return dslContext.select(rel.HONOR_ID,rel.STORE_CODE, rel.STORE_TYPE)
+            .from(info)
+            .join(rel).on(info.ID.eq(rel.HONOR_ID))
+            .where(info.HONOR_TITLE.eq(honorTitle))
+            .and(info.HONOR_NAME.eq(honorName))
+            .fetch()
+    }
+
 }

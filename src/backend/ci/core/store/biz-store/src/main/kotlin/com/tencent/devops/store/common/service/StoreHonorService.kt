@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.HonorI18nDTO
 
 interface StoreHonorService {
 
@@ -80,4 +81,10 @@ interface StoreHonorService {
         storeCodes: List<String>,
         userId: String? = null
     ): Map<String, List<HonorInfo>>
+
+
+    fun batchFillHonorTranslations(
+        userId: String,
+        honorI18nDTOList:List<HonorI18nDTO>
+    ):Boolean
 }
