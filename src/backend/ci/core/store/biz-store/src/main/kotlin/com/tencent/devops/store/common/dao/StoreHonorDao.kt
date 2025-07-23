@@ -236,13 +236,11 @@ class StoreHonorDao {
     ): Result<Record3<String, String, Byte>> {
         val info = TStoreHonorInfo.T_STORE_HONOR_INFO
         val rel = TStoreHonorRel.T_STORE_HONOR_REL
-
-        return dslContext.select(rel.HONOR_ID,rel.STORE_CODE, rel.STORE_TYPE)
+        return dslContext.select(rel.HONOR_ID, rel.STORE_CODE, rel.STORE_TYPE)
             .from(info)
             .join(rel).on(info.ID.eq(rel.HONOR_ID))
             .where(info.HONOR_TITLE.eq(honorTitle))
             .and(info.HONOR_NAME.eq(honorName))
             .fetch()
     }
-
 }

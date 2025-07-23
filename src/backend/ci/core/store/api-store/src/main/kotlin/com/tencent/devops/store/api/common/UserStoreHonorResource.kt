@@ -147,6 +147,5 @@ interface UserStoreHonorResource {
         userId: String,
         @Parameter(description = "荣誉信息", required = true)
         honorI18nDTOList: List<HonorI18nDTO>
-    ):Result<Boolean>
-
+    ): Result<Boolean>
 }
