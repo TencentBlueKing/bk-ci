@@ -82,9 +82,8 @@ interface StoreHonorService {
         userId: String? = null
     ): Map<String, List<HonorInfo>>
 
-
     fun batchFillHonorTranslations(
         userId: String,
-        honorI18nDTOList:List<HonorI18nDTO>
-    ):Boolean
+        honorI18nDTOList: List<HonorI18nDTO>
+    ): Boolean
 }
