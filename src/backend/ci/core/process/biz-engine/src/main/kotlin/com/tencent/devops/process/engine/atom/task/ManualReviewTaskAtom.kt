@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,9 +33,13 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -204,6 +208,7 @@ class ManualReviewTaskAtom(
                 ),
                 position = null,
                 stageId = null,
+                taskId = param.id,
                 callbackData = mapOf(
                     "projectId" to projectCode,
                     "pipelineId" to pipelineId,
@@ -237,6 +242,7 @@ class ManualReviewTaskAtom(
                 )
             )
         }
+        notifyEvent(task, BuildStatus.REVIEWING)
 
         return AtomResponse(BuildStatus.REVIEWING)
     }
@@ -285,6 +291,7 @@ class ManualReviewTaskAtom(
                         stageId = task.stageId, taskId = task.taskId
                     )
                 )
+                notifyEvent(task, BuildStatus.REVIEW_PROCESSED)
                 AtomResponse(BuildStatus.SUCCEED)
             }
             ManualReviewAction.ABORT -> {
@@ -303,6 +310,7 @@ class ManualReviewTaskAtom(
                         stageId = task.stageId, taskId = task.taskId
                     )
                 )
+                notifyEvent(task, BuildStatus.REVIEW_ABORT)
                 AtomResponse(BuildStatus.REVIEW_ABORT)
             }
         }
@@ -327,6 +335,33 @@ class ManualReviewTaskAtom(
         )
         postPrint(param = param, task = task, suggestContent = suggestContent)
         return response
+    }
+
+    private fun notifyEvent(task: PipelineBuildTask, status: BuildStatus) {
+        with(task) {
+            pipelineEventDispatcher.dispatch(
+                // 人工审核插件审核
+                PipelineBuildStatusBroadCastEvent(
+                    source = "review task reviewed with ${status.name}",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = "",
+                    buildId = buildId,
+                    actionType = ActionType.START,
+                    stageId = stageId,
+                    jobId = jobId,
+                    stepId = stepId,
+                    taskId = taskId,
+                    executeCount = executeCount,
+                    buildStatus = status.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_PAUSE,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp()
+                    )
+                )
+            )
+        }
     }
 
     private fun getParamList(taskParam: MutableMap<String, Any>) =

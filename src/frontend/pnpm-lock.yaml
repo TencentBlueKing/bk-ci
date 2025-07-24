@@ -220,8 +220,8 @@ importers:
   bk-permission:
     dependencies:
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       vue:
         specifier: ~2.7.16
         version: 2.7.16
@@ -299,8 +299,8 @@ importers:
   bk-pipeline:
     dependencies:
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       uuid:
         specifier: ~8.1.0
         version: 8.1.0
@@ -389,9 +389,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -401,24 +398,12 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
-      html-webpack-plugin:
-        specifier: ^5.3.2
-        version: 5.6.0(webpack@5.96.1)
       immutable:
         specifier: ^5.0.0-beta.4
         version: 5.0.0-beta.5
@@ -533,9 +518,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -545,15 +527,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -693,9 +669,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -705,15 +678,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -826,9 +793,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -838,15 +802,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -986,9 +944,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -998,18 +953,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1042,19 +988,19 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1147,8 +1093,8 @@ importers:
         specifier: 3.7.0-beta.2
         version: 3.7.0-beta.2(@octokit/core@6.1.2)(@types/babel__core@7.20.5)(bufferutil@4.0.8)(chart.js@4.4.3)(encoding@0.1.13)(tslib@2.8.1)(utf-8-validate@5.0.10)(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1))
       bkui-vue:
-        specifier: 0.0.1-beta.416
-        version: 0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1223,11 +1169,11 @@ importers:
         specifier: ^0.1.13
         version: 0.1.19
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1367,9 +1313,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1379,15 +1322,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1429,13 +1366,13 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1534,11 +1471,11 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1548,6 +1485,9 @@ importers:
       clipboard:
         specifier: ^1.7.1
         version: 1.7.1
+      cron-parser-custom:
+        specifier: 2.13.0
+        version: 2.13.0
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1705,9 +1645,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1717,15 +1654,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1763,8 +1694,8 @@ importers:
   devops-platform:
     dependencies:
       bkui-vue:
-        specifier: 2.0.1-beta.94
-        version: 2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1959,9 +1890,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1971,18 +1899,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2038,14 +1957,14 @@ importers:
         specifier: ^6.0.5
         version: 6.4.2
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       babel-loader:
         specifier: ^8.0.2
         version: 8.3.0(@babel/core@7.24.6)(webpack@5.96.1)
       bk-magic-vue:
-        specifier: 2.5.9-beta.9
-        version: 2.5.9-beta.9(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bkui-pipeline:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
@@ -2315,9 +2234,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2327,15 +2243,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2448,9 +2358,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2460,15 +2367,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2500,11 +2401,11 @@ importers:
   locale:
     dependencies:
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.5
@@ -2599,9 +2500,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2611,15 +2509,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -4310,14 +4202,8 @@ packages:
     resolution: {integrity: sha512-EI552lf0aG2nOV8NnZpTxNo2PcXKPmDbF9K8eCBFQdIZwHNGN/mi815fxtmUMa2wTa1yndotICIDt/V0vpEx2w==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
-  '@floating-ui/core@0.7.3':
-    resolution: {integrity: sha512-buc8BXHmG9l82+OQXOFU3Kr2XQx9ys01U/Q9HMIrZ300iLc8HLMgh7dcCqgYzAzf4BkoQvDcXf5Y+CuEZ5JBYg==}
-
   '@floating-ui/core@1.6.7':
     resolution: {integrity: sha512-yDzVT/Lm101nQ5TCVeK65LtdN7Tj4Qpr9RTXJ2vPFLqtLxwOrpoxAHAJI8J3yYWUc40J0BDBheaitK5SJmno2g==}
-
-  '@floating-ui/dom@0.5.4':
-    resolution: {integrity: sha512-419BMceRLq0RrmTSDxn8hf9R3VCJv2K9PUfugh5JyEFmdjzDo+e8U5EdR8nzKq8Yj1htzLm3b6eQEEam3/rrtg==}
 
   '@floating-ui/dom@1.5.4':
     resolution: {integrity: sha512-jByEsHIY+eEdCjnTVu+E3ephzTOzkQ8hgUfGwos+bg7NlH33Zc5uO+QHz1mrQUOgIKKDD1RtS201P9NvAfq3XQ==}
@@ -7002,8 +6888,8 @@ packages:
   aws4@1.13.2:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
 
-  axios@0.28.0:
-    resolution: {integrity: sha512-Tu7NYoGY4Yoc7I+Npf9HhUMtEEpV7ZiLH9yndTCoNhcpBH0kwcvFbzYN9/u5QKI5A6uefjsNNWaz5olJVYS62Q==}
+  axios@0.30.0:
+    resolution: {integrity: sha512-Z4F3LjCgfjZz8BMYalWdMgAQUnEtKDmpwNHjh/C8pQZWde32TF64cqnSeyL3xD/aTIASRU30RHTNzRiV/NpGMg==}
 
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
@@ -7148,31 +7034,14 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
-  bk-magic-vue@2.5.9-beta.41:
-    resolution: {integrity: sha512-YqOnTiOLLnakron/2BxDO3he/MTZvZAptLMOggJihf10uADQmRyEu+8od8EcobPr9ER3yIoyFzJV+MTa90QKLg==}
+  bk-magic-vue@2.5.10-beta.12:
+    resolution: {integrity: sha512-EfR3t2syrynao0EaEde05D7D5lrCAzPsQjKdse8jadnOz7EblX3iPWUNTk96GvsZh3HU0arMUEIjh337YRe8iw==}
     engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
 
-  bk-magic-vue@2.5.9-beta.9:
-    resolution: {integrity: sha512-Ao/6sBMnvJcw8RnxEdNMq8nFi6Qwjz68a2LMe4x1ovwxiaIwCxynrrCQHqW4PXoDn+fxqd+hIES2dfIJm6ajRw==}
-    peerDependencies:
-      vue: ^2.6.0
-
-  bkui-vue@0.0.1-beta.416:
-    resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.42:
-    resolution: {integrity: sha512-LMhV7imIkSiaOYnHHaFKB1p74itGxuNqjj0hEX8JdwYNJSPYRO/v8VDnJk1QEqTB9ppaIVwrEDEc/TPdrdIapQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.94:
-    resolution: {integrity: sha512-SbJAvGNMNK8tNcUm0JkwVAYxTYYu79i8+kX5HrKuLTLCQP8REg2wRH5IrTbre0prs9GQZ+TqoPUY3xCNnQ+vKA==}
+  bkui-vue@2.0.2-beta.45:
+    resolution: {integrity: sha512-MfHtVZcZrcgo+KcgcYuPUtZOhHLfoE2eaxByk/mqKVFxedoIEqOgHA7fu3AyWYYMFo6s0h8vFj45ujZrH3H9SA==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -7330,10 +7199,6 @@ packages:
 
   call-bind-apply-helpers@1.0.2:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
-    engines: {node: '>= 0.4'}
-
-  call-bind@1.0.7:
-    resolution: {integrity: sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==}
     engines: {node: '>= 0.4'}
 
   call-bind@1.0.8:
@@ -8116,6 +7981,10 @@ packages:
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
+  cron-parser-custom@2.13.0:
+    resolution: {integrity: sha512-703LGihhQflV3Q1end9XWzAELJ6Ohu2vzxZZgSPPJqthcUms/D/4GkXsP6Nqp4WpOtvB85l5on45m1AZOzsmXA==}
+    engines: {node: '>=0.8'}
+
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
@@ -8495,10 +8364,6 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
-
-  date-fns@2.28.0:
-    resolution: {integrity: sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==}
-    engines: {node: '>=0.11'}
 
   date-fns@2.30.0:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
@@ -9028,10 +8893,6 @@ packages:
 
   es-array-method-boxes-properly@1.0.0:
     resolution: {integrity: sha512-wd6JXUmyHmt8T5a2xreUwKcGPq6f1f+WwIJkijUqiGcJz1qqnZgP6XIK+QyIWU5lT7imeNxUll48bziG+TSYcA==}
-
-  es-define-property@1.0.0:
-    resolution: {integrity: sha512-jxayLKShrEqqzJ0eumQbVhTYQM27CfT1T35+gCgDFoL82JLsXqTJ76zv6A0YLOgEnLUMvLzsDsGIrl8NFpT2gQ==}
-    engines: {node: '>= 0.4'}
 
   es-define-property@1.0.1:
     resolution: {integrity: sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==}
@@ -9938,10 +9799,6 @@ packages:
   get-func-name@2.0.2:
     resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
 
-  get-intrinsic@1.2.4:
-    resolution: {integrity: sha512-5uYhsJH8VJBTv7oslg4BznJYhDoRI6waYCxMmCdnTrcCrHA/fCFKoTFz2JKKE0HdDFUF7/oQuhzumXJK7paBRQ==}
-    engines: {node: '>= 0.4'}
-
   get-intrinsic@1.2.7:
     resolution: {integrity: sha512-VW6Pxhsrk0KAOqs3WEd0klDiF/+V7gQOpAvY1jVU/LHmaD/kQO4523aiJuikX/QAKYiW6x8Jh+RJej1almdtCA==}
     engines: {node: '>= 0.4'}
@@ -10153,9 +10010,6 @@ packages:
   good-listener@1.2.2:
     resolution: {integrity: sha512-goW1b+d9q/HIwbVYZzZ6SsTr4IgE+WA44A0GmPIQstuOrgsFcT7VEJ48nmr9GaRtNu0XTKacFLGnBPAM6Afouw==}
 
-  gopd@1.0.1:
-    resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
-
   gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
@@ -10271,10 +10125,6 @@ packages:
 
   has-proto@1.2.0:
     resolution: {integrity: sha512-KIL7eQPfHQRC8+XluaIw7BHUwwqL19bQn4hzNgdr+1wXoU0KKj6rufu47lhY7KbJR2C6T6+PfyN0Ea7wkSS+qQ==}
-    engines: {node: '>= 0.4'}
-
-  has-symbols@1.0.3:
-    resolution: {integrity: sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==}
     engines: {node: '>= 0.4'}
 
   has-symbols@1.1.0:
@@ -10859,6 +10709,10 @@ packages:
 
   is-module@1.0.0:
     resolution: {integrity: sha512-51ypPSPCoTEIN9dy5Oy+h4pShgJmPCygKfyRCISBI+JoWT/2oJvK8QPxmwv7b/p239jXrm9M1mlQbyKJ5A152g==}
+
+  is-nan@1.3.2:
+    resolution: {integrity: sha512-E+zBKpQ2t6MEo1VsonYmluk9NxGrbzpeeLC2xIViuO2EjU2xsXsBPwTr3Ykv9l08UYEVEdWeRZNouaZqF6RN0w==}
+    engines: {node: '>= 0.4'}
 
   is-negated-glob@1.0.0:
     resolution: {integrity: sha512-czXVVn/QEmgvej1f50BZ648vUI+em0xqMq2Sn+QncCLN4zj1UAxlT+kw/6ggQTOaZPd1HqKQGEqbpQVtJucWug==}
@@ -15784,9 +15638,6 @@ packages:
   tinybench@2.8.0:
     resolution: {integrity: sha512-1/eK7zUnIklz4JUUlL+658n58XO2hHLQfSk1Zf2LKieUjxidN16eKFEoDEfjHc3ohofSSqK3X5yO6VGb6iW8Lw==}
 
-  tinycolor2@1.4.2:
-    resolution: {integrity: sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==}
-
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
 
@@ -17211,6 +17062,7 @@ packages:
   yaeti@0.0.6:
     resolution: {integrity: sha512-MvQa//+KcZCUkBTIC9blM+CU9J2GzuTytsOUwf2lidtvkx/6gnEp1QvJv34t9vdjhFmha/mUiNDbN0D0mJWdug==}
     engines: {node: '>=0.10.32'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
@@ -18563,10 +18415,10 @@ snapshots:
     dependencies:
       chalk: 4.1.2
 
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      bkui-vue: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
@@ -19368,15 +19220,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@floating-ui/core@0.7.3': {}
-
   '@floating-ui/core@1.6.7':
     dependencies:
       '@floating-ui/utils': 0.2.7
-
-  '@floating-ui/dom@0.5.4':
-    dependencies:
-      '@floating-ui/core': 0.7.3
 
   '@floating-ui/dom@1.5.4':
     dependencies:
@@ -20094,7 +19940,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 0.2.7
       adm-zip: 0.5.14
       ansi-colors: 4.1.3
-      axios: 1.7.7
+      axios: 1.8.4(debug@4.4.0)
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
@@ -23472,7 +23318,7 @@ snapshots:
 
   array-buffer-byte-length@1.0.1:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       is-array-buffer: 3.0.4
 
   array-buffer-byte-length@1.0.2:
@@ -23492,11 +23338,11 @@ snapshots:
 
   array-includes@3.1.8:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-object-atoms: 1.0.0
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.7
       is-string: 1.0.7
 
   array-initial@1.1.0:
@@ -23528,15 +23374,15 @@ snapshots:
 
   array.prototype.find@2.2.3:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
       es-shim-unscopables: 1.0.2
 
   array.prototype.findlastindex@1.2.5:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-errors: 1.3.0
@@ -23545,14 +23391,14 @@ snapshots:
 
   array.prototype.flat@1.3.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-shim-unscopables: 1.0.2
 
   array.prototype.flatmap@1.3.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-shim-unscopables: 1.0.2
@@ -23570,11 +23416,11 @@ snapshots:
   arraybuffer.prototype.slice@1.0.3:
     dependencies:
       array-buffer-byte-length: 1.0.1
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-errors: 1.3.0
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.7
       is-array-buffer: 3.0.4
       is-shared-array-buffer: 1.0.3
 
@@ -23705,7 +23551,7 @@ snapshots:
 
   aws4@1.13.2: {}
 
-  axios@0.28.0:
+  axios@0.30.0:
     dependencies:
       follow-redirects: 1.15.6(debug@4.4.0)
       form-data: 4.0.0
@@ -23959,7 +23805,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.9-beta.41(vue@2.7.16):
+  bk-magic-vue@2.5.10-beta.12(vue@2.7.16):
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
@@ -23969,29 +23815,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.9-beta.9(vue@2.7.16):
-    dependencies:
-      clipboard: 2.0.11
-      highlight.js: 10.7.3
-      json-formatter-js: 2.5.11
-      marked: 4.2.12
-      spark-md5: 3.0.2
-      tinycolor2: 1.6.0
-      vue: 2.7.16
-
-  bkui-vue@0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
-    dependencies:
-      '@floating-ui/dom': 0.5.4
-      '@popperjs/core': 2.11.8
-      date-fns: 2.28.0
-      highlight.js: 10.7.3
-      js-calendar: 1.2.3
-      lodash: 4.17.21
-      tinycolor2: 1.4.2
-      vue: 3.4.31(typescript@4.9.5)
-      vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
-
-  bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -24004,7 +23828,7 @@ snapshots:
       vue: 3.4.31(typescript@4.9.5)
       vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
 
-  bkui-vue@2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -24243,14 +24067,6 @@ snapshots:
     dependencies:
       es-errors: 1.3.0
       function-bind: 1.1.2
-
-  call-bind@1.0.7:
-    dependencies:
-      es-define-property: 1.0.0
-      es-errors: 1.3.0
-      function-bind: 1.1.2
-      get-intrinsic: 1.2.4
-      set-function-length: 1.2.2
 
   call-bind@1.0.8:
     dependencies:
@@ -25038,6 +24854,11 @@ snapshots:
 
   create-require@1.1.1: {}
 
+  cron-parser-custom@2.13.0:
+    dependencies:
+      is-nan: 1.3.2
+      moment-timezone: 0.5.45
+
   cron-parser@4.9.0:
     dependencies:
       luxon: 3.4.4
@@ -25569,7 +25390,7 @@ snapshots:
 
   data-view-buffer@1.0.1:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
       is-data-view: 1.0.1
 
@@ -25581,7 +25402,7 @@ snapshots:
 
   data-view-byte-length@1.0.1:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
       is-data-view: 1.0.1
 
@@ -25593,7 +25414,7 @@ snapshots:
 
   data-view-byte-offset@1.0.0:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
       is-data-view: 1.0.1
 
@@ -25602,8 +25423,6 @@ snapshots:
       call-bound: 1.0.3
       es-errors: 1.3.0
       is-data-view: 1.0.2
-
-  date-fns@2.28.0: {}
 
   date-fns@2.30.0:
     dependencies:
@@ -26111,23 +25930,23 @@ snapshots:
       array-buffer-byte-length: 1.0.1
       arraybuffer.prototype.slice: 1.0.3
       available-typed-arrays: 1.0.7
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       data-view-buffer: 1.0.1
       data-view-byte-length: 1.0.1
       data-view-byte-offset: 1.0.0
-      es-define-property: 1.0.0
+      es-define-property: 1.0.1
       es-errors: 1.3.0
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
       es-set-tostringtag: 2.0.3
       es-to-primitive: 1.2.1
       function.prototype.name: 1.1.6
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.7
       get-symbol-description: 1.0.2
       globalthis: 1.0.4
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-property-descriptors: 1.0.2
       has-proto: 1.0.3
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
       hasown: 2.0.2
       internal-slot: 1.0.7
       is-array-buffer: 3.0.4
@@ -26211,10 +26030,6 @@ snapshots:
 
   es-array-method-boxes-properly@1.0.0: {}
 
-  es-define-property@1.0.0:
-    dependencies:
-      get-intrinsic: 1.2.4
-
   es-define-property@1.0.1: {}
 
   es-errors@1.3.0: {}
@@ -26233,7 +26048,7 @@ snapshots:
 
   es-set-tostringtag@2.0.3:
     dependencies:
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.7
       has-tostringtag: 1.0.2
       hasown: 2.0.2
 
@@ -26794,10 +26609,6 @@ snapshots:
       eslint: 8.57.0
 
   eslint-plugin-standard@4.0.2(eslint@7.32.0):
-    dependencies:
-      eslint: 7.32.0
-
-  eslint-plugin-standard@5.0.0(eslint@7.32.0):
     dependencies:
       eslint: 7.32.0
 
@@ -27692,7 +27503,7 @@ snapshots:
 
   function.prototype.name@1.1.6:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       functions-have-names: 1.2.3
@@ -27730,14 +27541,6 @@ snapshots:
   get-caller-file@2.0.5: {}
 
   get-func-name@2.0.2: {}
-
-  get-intrinsic@1.2.4:
-    dependencies:
-      es-errors: 1.3.0
-      function-bind: 1.1.2
-      has-proto: 1.0.3
-      has-symbols: 1.0.3
-      hasown: 2.0.2
 
   get-intrinsic@1.2.7:
     dependencies:
@@ -27794,9 +27597,9 @@ snapshots:
 
   get-symbol-description@1.0.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.7
 
   get-symbol-description@1.1.0:
     dependencies:
@@ -28037,10 +27840,6 @@ snapshots:
     dependencies:
       delegate: 3.2.0
 
-  gopd@1.0.1:
-    dependencies:
-      get-intrinsic: 1.2.4
-
   gopd@1.2.0: {}
 
   graceful-fs@4.2.11: {}
@@ -28186,8 +27985,6 @@ snapshots:
   has-proto@1.2.0:
     dependencies:
       dunder-proto: 1.0.1
-
-  has-symbols@1.0.3: {}
 
   has-symbols@1.1.0: {}
 
@@ -28659,8 +28456,8 @@ snapshots:
 
   is-array-buffer@3.0.4:
     dependencies:
-      call-bind: 1.0.7
-      get-intrinsic: 1.2.4
+      call-bind: 1.0.8
+      get-intrinsic: 1.2.7
 
   is-array-buffer@3.0.5:
     dependencies:
@@ -28698,7 +28495,7 @@ snapshots:
 
   is-boolean-object@1.1.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       has-tostringtag: 1.0.2
 
   is-boolean-object@1.2.2:
@@ -28820,6 +28617,11 @@ snapshots:
 
   is-module@1.0.0: {}
 
+  is-nan@1.3.2:
+    dependencies:
+      call-bind: 1.0.8
+      define-properties: 1.2.1
+
   is-negated-glob@1.0.0: {}
 
   is-negative-zero@2.0.3: {}
@@ -28869,7 +28671,7 @@ snapshots:
 
   is-regex@1.1.4:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       has-tostringtag: 1.0.2
 
   is-regex@1.2.1:
@@ -28893,7 +28695,7 @@ snapshots:
 
   is-shared-array-buffer@1.0.3:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
 
   is-shared-array-buffer@1.0.4:
     dependencies:
@@ -28922,7 +28724,7 @@ snapshots:
 
   is-symbol@1.0.4:
     dependencies:
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
 
   is-symbol@1.1.1:
     dependencies:
@@ -28960,7 +28762,7 @@ snapshots:
 
   is-weakref@1.0.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
 
   is-weakref@1.1.1:
     dependencies:
@@ -30821,9 +30623,9 @@ snapshots:
 
   object.assign@4.1.5:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
       object-keys: 1.1.1
 
   object.assign@4.1.7:
@@ -30844,7 +30646,7 @@ snapshots:
 
   object.fromentries@2.0.8:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-object-atoms: 1.0.0
@@ -30861,7 +30663,7 @@ snapshots:
 
   object.groupby@1.0.3:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
 
@@ -30881,7 +30683,7 @@ snapshots:
 
   object.values@1.2.0:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-object-atoms: 1.0.0
 
@@ -33255,11 +33057,11 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.24.7
+      '@babel/runtime': 7.26.7
 
   regexp.prototype.flags@1.5.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-errors: 1.3.0
       set-function-name: 2.0.2
@@ -33597,9 +33399,9 @@ snapshots:
 
   safe-array-concat@1.1.2:
     dependencies:
-      call-bind: 1.0.7
-      get-intrinsic: 1.2.4
-      has-symbols: 1.0.3
+      call-bind: 1.0.8
+      get-intrinsic: 1.2.7
+      has-symbols: 1.1.0
       isarray: 2.0.5
 
   safe-array-concat@1.1.3:
@@ -33621,7 +33423,7 @@ snapshots:
 
   safe-regex-test@1.0.3:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
       is-regex: 1.1.4
 
@@ -33877,9 +33679,9 @@ snapshots:
 
   side-channel@1.0.6:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.7
       object-inspect: 1.13.1
 
   side-channel@1.1.0:
@@ -34266,16 +34068,16 @@ snapshots:
 
   string.prototype.trim@1.2.9:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
       es-abstract: 1.23.3
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
 
   string.prototype.trimend@1.0.8:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       define-properties: 1.2.1
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
 
   string.prototype.trimend@1.0.9:
     dependencies:
@@ -35072,8 +34874,6 @@ snapshots:
 
   tinybench@2.8.0: {}
 
-  tinycolor2@1.4.2: {}
-
   tinycolor2@1.6.0: {}
 
   tinypool@0.8.4: {}
@@ -35345,7 +35145,7 @@ snapshots:
 
   typed-array-buffer@1.0.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       es-errors: 1.3.0
       is-typed-array: 1.1.13
 
@@ -35357,9 +35157,9 @@ snapshots:
 
   typed-array-byte-length@1.0.1:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
@@ -35374,9 +35174,9 @@ snapshots:
   typed-array-byte-offset@1.0.2:
     dependencies:
       available-typed-arrays: 1.0.7
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
@@ -35392,9 +35192,9 @@ snapshots:
 
   typed-array-length@1.0.6:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-proto: 1.0.3
       is-typed-array: 1.1.13
       possible-typed-array-names: 1.0.0
@@ -35474,9 +35274,9 @@ snapshots:
 
   unbox-primitive@1.0.2:
     dependencies:
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       has-bigints: 1.0.2
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
       which-boxed-primitive: 1.0.2
 
   unbox-primitive@1.1.0:
@@ -35649,7 +35449,7 @@ snapshots:
     dependencies:
       define-properties: 1.2.1
       es-abstract: 1.23.3
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
       object.getownpropertydescriptors: 2.1.8
 
   util@0.10.4:
@@ -37357,9 +37157,9 @@ snapshots:
   which-typed-array@1.1.15:
     dependencies:
       available-typed-arrays: 1.0.7
-      call-bind: 1.0.7
+      call-bind: 1.0.8
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-tostringtag: 1.0.2
 
   which-typed-array@1.1.18:

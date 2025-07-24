@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -74,6 +74,7 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgent
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import jakarta.ws.rs.NotFoundException
 import java.time.LocalDateTime
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
@@ -81,7 +82,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -258,10 +258,16 @@ class ThirdPartyAgentService @Autowired constructor(
                         buildStatus = BuildStatus.RUNNING.name,
                         type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
                         labels = mapOf(
-                            "agentId" to build.agentId,
-                            "envHashId" to (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
-                            "nodeHashId" to (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
-                            "agentIp" to build.agentIp
+                            PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                                "SELF_HOST",
+                            PipelineBuildStatusBroadCastEvent.Labels::agentId.name to
+                                build.agentId,
+                            PipelineBuildStatusBroadCastEvent.Labels::envHashId.name to
+                                (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                            PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name to
+                                (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                            PipelineBuildStatusBroadCastEvent.Labels::hostIp.name to
+                                build.agentIp
                         )
                     )
                 )
@@ -410,10 +416,10 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean) {
+    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean, executeCount: Int?) {
         val now = LocalDateTime.now().timestampmilli()
         if (vmSeqId.isNullOrBlank()) {
-            val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
+            val records = thirdPartyAgentBuildDao.list(dslContext, buildId, executeCount)
             if (records.isEmpty()) {
                 return
             }
@@ -431,7 +437,12 @@ class ThirdPartyAgentService @Autowired constructor(
                 finishBuild(record, buildResult)
             }
         } else {
-            val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
+            val record = thirdPartyAgentBuildDao.getWithExecuteCount(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount
+            ) ?: return
             // 取消时兜底结束时间
             commonUtil.updateQueueTime(
                 projectId = record.projectId,
@@ -525,6 +536,32 @@ class ThirdPartyAgentService @Autowired constructor(
             dslContext, record.id,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
         )
+        with(record) {
+            pipelineEventDispatcher.dispatch(
+                // 第三方构建机结束
+                PipelineBuildStatusBroadCastEvent(
+                    source = "third-party-agent-end-$agentId", projectId = projectId,
+                    pipelineId = pipelineId, userId = "",
+                    buildId = buildId, taskId = null, actionType = ActionType.START,
+                    containerHashId = containerHashId, jobId = jobId, stageId = null,
+                    stepId = null, atomCode = null, executeCount = executeCount,
+                    buildStatus = BuildStatus.SUCCEED.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_END,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                            "SELF_HOST",
+                        PipelineBuildStatusBroadCastEvent.Labels::agentId.name to
+                            agentId,
+                        PipelineBuildStatusBroadCastEvent.Labels::envHashId.name to
+                            (envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                        PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name to
+                            (nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                        PipelineBuildStatusBroadCastEvent.Labels::hostIp.name to
+                            agentIp
+                    )
+                )
+            )
+        }
     }
 
     fun workerBuildFinish(projectId: String, agentId: String, secretKey: String, buildInfo: ThirdPartyBuildWithStatus) {
@@ -543,7 +580,12 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
-        val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
+        val buildRecord = thirdPartyAgentBuildDao.getWithExecuteCount(
+            dslContext,
+            buildInfo.buildId,
+            buildInfo.vmSeqId,
+            executeCount = buildInfo.executeCount
+        )
         if (buildRecord != null && (
                 buildRecord.status != PipelineTaskStatus.DONE.status ||
                     buildRecord.status != PipelineTaskStatus.FAILURE.status

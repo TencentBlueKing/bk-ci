@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -49,6 +49,7 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreCreateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreCreateHandlerChain
 import com.tencent.devops.store.common.handler.StoreCreateParamCheckHandler
+import com.tencent.devops.store.common.handler.StoreCreatePostBusHandler
 import com.tencent.devops.store.common.handler.StoreCreatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreUpdateHandlerChain
@@ -120,7 +121,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeUpdatePreBusHandler: StoreUpdatePreBusHandler,
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
     private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
-    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
+    private val storeCreatePostBusHandler: StoreCreatePostBusHandler
 ) : StoreReleaseService {
 
     private val logger = LoggerFactory.getLogger(StoreReleaseServiceImpl::class.java)
@@ -133,7 +135,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val handlerList = mutableListOf(
             storeCreateParamCheckHandler, // 参数检查处理
             storeCreatePreBusHandler, // 前置业务处理
-            storeCreateDataPersistHandler // 数据持久化处理
+            storeCreateDataPersistHandler, // 数据持久化处理,
+            storeCreatePostBusHandler // 后置业务处理
         )
         val bkStoreContext = storeCreateRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
@@ -429,26 +432,26 @@ class StoreReleaseServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeReleaseRequest: StoreReleaseRequest
     ): Boolean {
-        // 查找插件最近一个已经发布的版本
-        val releaseRecords = storeBaseQueryDao.getReleaseComponentsByCode(
+        // 查找插件最近一个已发布的版本
+        val newestReleaseRecord = storeBaseQueryDao.getReleaseComponentsByCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,
             num = 1
-        )
-        val newestReleaseRecord = if (releaseRecords.isNullOrEmpty()) {
-            null
-        } else {
-            releaseRecords[0]
-        }
-        var newestReleaseFlag = false
-        if (newestReleaseRecord != null) {
-            // 比较当前版本是否比最近一个已经发布的版本新
+        )?.firstOrNull()
+
+        return newestReleaseRecord?.let {
+            // 比较当前版本是否比最近一个已发布的版本新
             val requestVersion = storeReleaseRequest.version
-            val newestReleaseVersion = newestReleaseRecord.version
-            newestReleaseFlag = StoreUtils.isGreaterVersion(requestVersion, newestReleaseVersion)
-        }
-        return newestReleaseFlag
+            val requestBusNum = storeBaseQueryDao.getMaxBusNumByCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                version = requestVersion
+            ) ?: 0
+
+            requestBusNum > newestReleaseRecord.busNum
+        } ?: false
     }
 
     override fun offlineComponent(

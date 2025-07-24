@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.service.thirdpartyagent
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
@@ -7,8 +8,10 @@ import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
@@ -36,7 +39,10 @@ class BatchInstallAgentService @Autowired constructor(
         projectId: String,
         userId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -51,7 +57,14 @@ class BatchInstallAgentService @Autowired constructor(
                 os = os,
                 zoneName = zoneName,
                 gateway = gateway,
-                token = record.token
+                token = record.token,
+                loginName = loginName,
+                loginPassword = if (loginPassword.isNullOrBlank()) {
+                    null
+                } else {
+                    AESUtil.encrypt(ASE_SECRET, loginPassword)
+                },
+                installType = installType
             )
         }
 
@@ -73,19 +86,32 @@ class BatchInstallAgentService @Autowired constructor(
             os = os,
             zoneName = zoneName,
             gateway = gateway,
-            token = token
+            token = token,
+            loginName = loginName,
+            loginPassword = if (loginPassword.isNullOrBlank()) {
+                null
+            } else {
+                AESUtil.encrypt(ASE_SECRET, loginPassword)
+            },
+            installType = installType
         )
     }
 
     fun genAgentInstallScript(
         token: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)
         if (errorMsg != null) {
-            throw RuntimeException(errorMsg)
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                defaultMessage = errorMsg
+            )
         }
 
         // 增加下载限制
@@ -104,8 +130,20 @@ class BatchInstallAgentService @Autowired constructor(
         )
         val agentHashId = HashUtil.encodeLongId(agentId)
 
+        val decodePassword = if (loginPassword.isNullOrBlank()) {
+            null
+        } else {
+            AESUtil.decrypt(ASE_SECRET, loginPassword)
+        }
+
         // 生成安装脚本
-        return downloadAgentInstallService.downloadInstallScript(agentHashId, true)
+        return downloadAgentInstallService.downloadInstallScript(
+            agentHashId,
+            true,
+            loginName,
+            decodePassword,
+            installType
+        )
     }
 
     private fun verifyToken(token: String): Triple<String, String, String?> {

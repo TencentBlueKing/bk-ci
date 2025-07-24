@@ -388,7 +388,10 @@
     "concurrentMaxConcurrency": "Maximum Concurrency",
     "concurrentTimeout": "Queue Timeout for Exceeding Limit",
     "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间",
-    "maxConcurrencyPlaceholder": "Default to system settings when not specified"
+    "maxConcurrencyPlaceholder": "Default to system settings when not specified",
+    "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
+    "clearTheValue": "Clear the value and continue running",
+    "errorAndHalt": "Error and terminate running"
   },
   "template": {
     "addTemplate": "New Template",
@@ -1089,7 +1092,9 @@
     "batchCopy": "One-click Copy",
     "randomlyGenerate": "<Randomly generate>",
     "enableVersionControl": "Enable version control",
-    "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name."
+    "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name.",
+    "controlOption": "Control Options",
+    "displayCondition": "Display Condition"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1264,6 +1269,7 @@
   "pipelineGroup": "Pipeline Groups",
   "patchManage": "Batch Operations",
   "searchPipelinePlaceholder": "Pipeline Name / Creator / Pipeline Group Name/ Label",
+  "searchPipelineArchivePlaceholder": "Pipeline Name / Creator",
   "ownGroupName": "Pipeline Group",
   "latestExec": "Last Run",
   "addPipelineGroup": "New Pipeline Group",
@@ -1309,6 +1315,7 @@
   "filterChanged": "Grouping conditions have been updated",
   "refreshPreview": "Refresh Preview",
   "deletePipelineConfirm": "Confirm to delete the following pipeline?",
+  "deleteTheNumberOfPipelineConfirm": "Are you sure you want to delete the following {0} pipelines?",
   "deletePipelineConfirmDesc": "After pipeline is deleted, it can be retrieved in the recycle bin",
   "patchAddTo": "Batch Add to",
   "patchDelete": "Batch Delete",
@@ -1705,7 +1712,49 @@
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
   "addLabels": "Add Label",
+  "archive": {
+    "archive": "Archive",
+    "archiveLibrary": "Archive Library",
+    "batchArchiving": "Batch Archiving",
+    "tips": "Pipeline archiving is irreversible. After archiving:\n1. It can only be viewed, editing and execution are not supported\n2. It can be manually deleted, if not deleted, it will be automatically cleared after two years\n3. Archiving only retains pipeline orchestration and execution history, logs and artifacts are not included",
+    "unableToFile": "The pipeline is running and cannot be archived",
+    "isArchiveConfirmedTitles": "Are you sure you want to archive the following {0} pipelines?",
+    "isArchiveConfirmedTitle": "Are you sure you want to archive the following pipelines?",
+    "archivePipelineFail": "Pipeline archiving failed",
+    "archiveTips1": "After a pipeline is archived, it cannot be edited or executed, and {0}.",
+    "archiveTips2": "Archiving cannot be undone",
+    "archiveTips3": "Only users with {0} can view and delete.",
+    "archiveTips4": "「Manage archived pipelines」 permission",
+    "pipelineDeletionSuccess": "Pipeline deletion successful",
+    "pipelineDeletionFailure": "Pipeline deletion failed",
+    "afterArchivedPipelineDeletion": "After archived pipeline deletion, {0}.",
+    "cannotBeRecovered": "cannot be recovered",
+    "submissionSuccess": "Submission successful",
+    "archivingTaskRunning": "Archiving task is running asynchronously, and the archiving result will be notified upon completion.",
+    "deleteOrMoveYamlInRepoIfPacModeEnabled": "If the pipeline has PAC mode enabled, please delete/move the YAML file in the repository yourself to avoid automatic re-creation of the corresponding pipeline when the repository is triggered.",
+    "onlyDraftVersion": "Only draft version, no need to archive, deletion is recommended",
+    "unableToArchive": "There are {0} pipelines unable to be archived",
+    "archiving": "Archiving, a notification email will be sent upon completion. Please refresh the list manually.",
+    "removeUnarchivablePipelines": "Remove unarchivable pipelines"
+  },
+  "cron": {
+    "分": "Minute",
+    "时": "Hour",
+    "日": "Day",
+    "周": "Week",
+    "月": "Month",
+    "下次：": "Next:",
+    "小时": "Hour"
+  },
+  "enterRepoAlias": "Please enter the repository alias",
+  "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
+  "addParam": "Add",
+  "selectRepo": "Select Repository",
+  "enterAlias": "Enter Alias",
+  "monitorPac": "Monitor PAC",
   "groupLabel": "Group labels",
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
-  "notGrouped": "Not grouped"
+  "notGrouped": "Not grouped",
+  "noArchivedPipelines": "No archived pipelines for now, no action needed",
+  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving."
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -74,23 +74,24 @@ class WebhookGrayCompareService @Autowired constructor(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerMatcher: WebhookTriggerMatcher
 ) {
+
+    private val executor = ThreadPoolUtil.getThreadPoolExecutor(
+        corePoolSize = 1,
+        maximumPoolSize = 1,
+        keepAliveTime = 0L,
+        queue = LinkedBlockingQueue(1),
+        threadNamePrefix = "webhook-gray-compare-%d"
+    )
+
     fun asyncCompareWebhook(
         scmType: ScmType,
         request: WebhookRequest,
         matcher: ScmWebhookMatcher
     ) {
-        val bizId = MDC.get(TraceTag.BIZID)
         ThreadPoolUtil.submitAction(
-            corePoolSize = 5,
-            maximumPoolSize = 10,
-            keepAliveTime = 0L,
-            queue = LinkedBlockingQueue(100),
-            action = {
-                MDC.put(TraceTag.BIZID, bizId)
-                compareWebhook(scmType, request, matcher)
-                MDC.remove(TraceTag.BIZID)
-            },
-            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
+            executor = executor,
+            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}",
+            action = { compareWebhook(scmType, request, matcher) }
         )
     }
 
@@ -207,7 +208,8 @@ class WebhookGrayCompareService @Autowired constructor(
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->

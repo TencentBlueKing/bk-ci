@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
@@ -319,18 +320,22 @@ class AuthResourceGroupMemberDao {
         projectCode: String,
         resourceType: String? = null,
         resourceCode: String? = null,
+        excludeResourceType: String? = null,
         memberId: String? = null,
         memberName: String? = null,
         memberType: String? = null,
         iamGroupId: Int? = null,
         maxExpiredTime: LocalDateTime? = null,
         minExpiredTime: LocalDateTime? = null,
-        groupCode: String? = null
+        groupCode: String? = null,
+        limit: Int? = null,
+        offset: Int? = null
     ): List<AuthResourceGroupMember> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
             resourceType?.let { select.and(RESOURCE_TYPE.eq(resourceType)) }
+            excludeResourceType?.let { select.and(RESOURCE_TYPE.notEqual(excludeResourceType)) }
             memberId?.let { select.and(MEMBER_ID.eq(memberId)) }
             memberName?.let { select.and(MEMBER_NAME.eq(memberName)) }
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
@@ -339,7 +344,13 @@ class AuthResourceGroupMemberDao {
             minExpiredTime?.let { select.and(EXPIRED_TIME.ge(minExpiredTime)) }
             resourceCode?.let { select.and(RESOURCE_CODE.eq(resourceCode)) }
             groupCode?.let { select.and(GROUP_CODE.eq(groupCode)) }
-            select.fetch().map { convert(it) }
+            select.let {
+                if (limit != null && offset != null) {
+                    it.limit(limit).offset(offset)
+                } else {
+                    it
+                }
+            }.fetch().map { convert(it) }
         }
     }
 
@@ -365,8 +376,8 @@ class AuthResourceGroupMemberDao {
         memberType: String?,
         userName: String?,
         deptName: String?,
-        offset: Int,
-        limit: Int
+        offset: Int?,
+        limit: Int?
     ): List<ResourceMemberInfo> {
         val resourceMemberUnionAuthorizationMember = createResourceMemberUnionAuthorizationMember(
             dslContext = dslContext,
@@ -391,7 +402,13 @@ class AuthResourceGroupMemberDao {
                 field(MEMBER_ID)
             )
             .orderBy(field(MEMBER_ID))
-            .offset(offset).limit(limit)
+            .let {
+                if (offset != null && limit != null) {
+                    it.offset(offset).limit(limit)
+                } else {
+                    it
+                }
+            }
             .skipCheck()
             .fetch().map {
                 ResourceMemberInfo(id = it.value1(), name = it.value2(), type = it.value3())
@@ -656,16 +673,38 @@ class AuthResourceGroupMemberDao {
         return conditions
     }
 
+    fun checkResourceManager(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        memberId: String
+    ): Boolean {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(MEMBER_ID.eq(memberId))
+                .and(GROUP_CODE.eq(DefaultGroupType.MANAGER.value))
+                .fetchOne(0, Int::class.java) != 0
+        }
+    }
+
     fun listMemberGroupIdsInProject(
         dslContext: DSLContext,
         projectCode: String,
         memberId: String,
-        iamTemplateIds: List<String>
+        iamTemplateIds: List<String>,
+        memberDeptInfos: List<String>,
     ): List<Int> {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,
             memberId = memberId,
-            iamTemplateIds = iamTemplateIds
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos,
+            minExpiredAt = LocalDateTime.now()
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.select(IAM_GROUP_ID).from(this)
