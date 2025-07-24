@@ -110,7 +110,8 @@
                 loading: this.isLoading,
                 selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: ''
+                displayName: '',
+                timerId: null
             }
         },
         computed: {
@@ -200,6 +201,12 @@
                 this.displayName = this.value
             }
         },
+        beforeDestroy() {
+            if (this.timerId) {
+                clearTimeout(this.timerId)
+                this.timerId = null
+            }
+        },
         methods: {
             handleInput (e) {
                 const { name, value } = e.target
@@ -235,7 +242,7 @@
             handleFocus (e) {
                 this.isFocused = true
                 if (!this.optionListVisible) {
-                    setTimeout(() => {
+                    this.timerId = setTimeout(() => {
                         this.optionListVisible = true
                         this.$emit('focus', e)
                     }, 300)
