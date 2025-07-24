@@ -350,7 +350,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectOperation = ProjectOperation.CREATE,
                     channelCode = projectChannel,
                     productId = productId,
-                    bgId = bgId
+                    productName = productName,
+                    bgId = bgId,
                 )
             )
             validateProjectOrganization(
@@ -687,6 +688,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     userId = userId,
                     projectOperation = ProjectOperation.UPDATE,
                     productId = productId,
+                    productName = productName,
                     bgId = bgId
                 )
             )

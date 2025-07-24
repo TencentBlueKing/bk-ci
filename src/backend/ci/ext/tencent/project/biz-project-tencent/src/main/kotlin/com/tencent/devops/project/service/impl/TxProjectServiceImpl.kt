@@ -493,13 +493,13 @@ class TxProjectServiceImpl @Autowired constructor(
                 ProjectOperation.CREATE -> {
                     if (channelCode == ProjectChannelCode.BS) {
                         validateProductIdNotNull()
-                        validateProductExists()
+                        validateProduct()
                     }
                 }
 
                 ProjectOperation.UPDATE -> {
                     validateProductIdNotNull()
-                    validateProductExists()
+                    validateProduct()
                 }
 
                 else -> {}
@@ -543,7 +543,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun ProjectProductValidateDTO.validateProductExists() {
+    private fun ProjectProductValidateDTO.validateProduct() {
         val products = getOperationalProducts()
         val productInfo = products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
@@ -552,13 +552,14 @@ class TxProjectServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
-        if (bgId == 956L && productInfo.iCosProductCode.isNullOrBlank()) {
+        if (bgId == 956L && (productInfo.iCosProductCode.isNullOrBlank() || productInfo.crosCheck != true)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
                 defaultMessage = MessageUtil.getMessageByLocale(
                     messageCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
                     language = I18nUtil.getLanguage(userId)
-                )
+                ),
+                params = arrayOf(productId?.toString() ?: "", productName?:"")
             )
         }
     }

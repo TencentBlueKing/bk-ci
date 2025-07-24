@@ -21,7 +21,8 @@ class ProjectOperationalProductDao {
                 DEPT_NAME,
                 BG_NAME,
                 ICOS_PRODUCT_CODE,
-                ICOS_PRODUCT_NAME
+                ICOS_PRODUCT_NAME,
+                CROS_CHECK
             ).values(
                 operationalProductVO.productId,
                 operationalProductVO.productName,
@@ -29,7 +30,8 @@ class ProjectOperationalProductDao {
                 operationalProductVO.deptName,
                 operationalProductVO.bgName,
                 operationalProductVO.iCosProductCode,
-                operationalProductVO.iCosProductName
+                operationalProductVO.iCosProductName,
+                operationalProductVO.crosCheck
             ).onDuplicateKeyUpdate()
                 .set(PRODUCT_NAME, operationalProductVO.productName)
                 .set(PLAN_PRODUCT_NAME, operationalProductVO.planProductName)
@@ -37,6 +39,7 @@ class ProjectOperationalProductDao {
                 .set(BG_NAME, operationalProductVO.bgName)
                 .set(ICOS_PRODUCT_CODE, operationalProductVO.iCosProductCode)
                 .set(ICOS_PRODUCT_NAME, operationalProductVO.iCosProductName)
+                .set(CROS_CHECK, operationalProductVO.crosCheck)
                 .execute()
         }
     }

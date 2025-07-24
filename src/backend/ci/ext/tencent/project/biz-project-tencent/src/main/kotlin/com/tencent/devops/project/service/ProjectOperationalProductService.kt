@@ -8,11 +8,13 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.dao.ProjectOperationalProductDao
+import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.ICosProductVO
 import com.tencent.devops.project.pojo.ObsBaseDictDTO
 import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
+import io.swagger.v3.oas.annotations.media.Schema
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,7 +55,10 @@ class ProjectOperationalProductService(
     private val appSecret = ""
 
     @Value("\${bk.costs.url:}")
-    private val url = ""
+    private val bkCostsUrl = ""
+
+    @Value("\${cros.url:}")
+    private val crosUrl = ""
 
     fun syncOperationalProduct(): Boolean {
         logger.info("sync operational product start!")
@@ -71,7 +76,7 @@ class ProjectOperationalProductService(
                 dictType = ProjectProductDictType.BG
             )
             val iCosProductVOs = getICosProduct()
-
+            val crosProductVOs = getCrosProduct()
             // 同步时，清空缓存，防止数据重复
             productInfoList.clear()
             bgName2ProductList.clear()
@@ -90,6 +95,12 @@ class ProjectOperationalProductService(
                 val iCosProductVO = iCosProductVOs.firstOrNull {
                     it.productId == productId
                 }
+                val crosCheck = iCosProductVO?.let { iCosProduct ->
+                    crosProductVOs.firstOrNull {
+                        iCosProduct.iCosProductCode == it.iCosProductCode
+                    }?.crosCheck
+                }
+
                 val operationalProductVO = OperationalProductVO(
                     productId = obsProductInfo.productId!!.toInt(),
                     productName = obsProductInfo.productName ?: "",
@@ -97,7 +108,8 @@ class ProjectOperationalProductService(
                     deptName = deptInfo?.deptName ?: "",
                     bgName = bgInfo?.bgName ?: "",
                     iCosProductCode = iCosProductVO?.iCosProductCode,
-                    iCosProductName = iCosProductVO?.iCosProductName
+                    iCosProductName = iCosProductVO?.iCosProductName,
+                    crosCheck = crosCheck == 1
                 )
 
                 projectOperationalProductDao.createOrUpdate(
@@ -170,13 +182,13 @@ class ProjectOperationalProductService(
         ).replace("\\s".toRegex(), "")
 
         val request = Request.Builder()
-            .url(url)
+            .url(bkCostsUrl)
             .addHeader("x-bkapi-authorization", headerStr)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                logger.warn("request failed, uri:($url)|response: ($it)")
+                logger.warn("request failed, uri:($bkCostsUrl)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
             }
             val responseStr = it.body!!.string()
@@ -184,7 +196,7 @@ class ProjectOperationalProductService(
                 objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<List<ICosProductVO>>>() {})
             if (responseDTO.code != 200L || !responseDTO.result) {
                 // 请求错误
-                logger.warn("request failed, url:($url)|response:($it)")
+                logger.warn("request failed, url:($bkCostsUrl)|response:($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
             }
             if (logger.isDebugEnabled) {
@@ -193,4 +205,36 @@ class ProjectOperationalProductService(
             return responseDTO.data ?: emptyList()
         }
     }
+
+    private fun getCrosProduct(): List<CrosProductVO> {
+        val request = Request.Builder().url(crosUrl).get().build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                logger.warn("request failed, uri:($crosUrl)|response: ($it)")
+                throw RemoteServiceException("request failed, response:($it)")
+            }
+            val responseStr = it.body!!.string()
+            val responseDTO: CrosResponseDTO =
+                objectMapper.readValue(responseStr, object : TypeReference<CrosResponseDTO>() {})
+            if (responseDTO.ret != 0) {
+                // 请求错误
+                logger.warn("request failed, url:($bkCostsUrl)|response:($it)")
+                throw RemoteServiceException("request failed, response:(${responseDTO.msg})")
+            }
+            if (logger.isDebugEnabled) {
+                logger.debug("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            }
+            return responseDTO.data
+        }
+    }
+
+    @Schema(title = "请求返回实体")
+    data class CrosResponseDTO(
+        @get:Schema(title = "返回码")
+        val ret: Int,
+        @get:Schema(title = "返回信息")
+        val msg: String?,
+        @get:Schema(title = "请求返回数据")
+        val data: List<CrosProductVO>
+    )
 }

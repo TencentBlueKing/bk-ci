@@ -30,9 +30,9 @@ data class OperationalProductVO(
     @JsonProperty(value = "BgName", required = false)
     val bgName: String? = null,
     @get:Schema(title = "财务Id")
-    @JsonProperty(value = "icos_product_code", required = false)
     val iCosProductCode: String? = null,
     @get:Schema(title = "财务名称")
-    @JsonProperty(value = "icos_product_name", required = false)
-    val iCosProductName: String? = null
+    val iCosProductName: String? = null,
+    @get:Schema(title = "财务代码是否有效")
+    val crosCheck: Boolean? = null
 )
