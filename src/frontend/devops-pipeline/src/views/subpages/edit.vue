@@ -69,12 +69,12 @@
     } from '@/components/PipelineEditTabs/'
     import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { TEMPLATE_MODE } from '@/store/modules/templates/constants'
     import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { navConfirm } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import YamlPipelineEditor from './YamlPipelineEditor'
-    import { TEMPLATE_MODE } from '@/store/modules/templates/constants'
 
     export default {
         components: {

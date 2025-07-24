@@ -391,7 +391,8 @@
     "maxConcurrencyPlaceholder": "Default to system settings when not specified",
     "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
     "clearTheValue": "Clear the value and continue running",
-    "errorAndHalt": "Error and terminate running"
+    "errorAndHalt": "Error and terminate running",
+    "concurrentTips": "Concurrent execution is not supported for pipelines with the same name in the same project"
   },
   "template": {
     "addTemplate": "New Template",

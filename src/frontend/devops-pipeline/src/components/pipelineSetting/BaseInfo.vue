@@ -46,57 +46,66 @@
                     </bk-radio-button>
                 </bk-radio-group>
             </bk-form-item>
-
+            
             <bk-form-item :required="false">
-                <div class="layout-label">
-                    <label class="ui-inner-label">
-                        <span class="bk-label-text">{{ $t('settings.label') }} </span>
-                    </label>
-                    <label
-                        v-if="editable"
-                        class="ui-inner-label"
-                    >
-                        <span
-                            @click="toManageLabel"
-                            class="bk-label-text link-text"
-                        >{{ $t('settings.manageLabel') }}</span>
-                    </label>
-                </div>
-                <ul class="pipeline-label-selector">
-                    <template v-if="tagGroupList.length > 0">
-                        <li
-                            v-for="(item, index) in tagGroupList"
-                            :key="item.id"
-                        >
+                <constraint-wraper
+                    classify="settingGroups"
+                    field="label"
+                >
+                    <template v-slot="{ isOverride }">
+                        <div class="layout-label">
+                            <label class="ui-inner-label">
+                                <span class="bk-label-text">{{ $t('settings.label') }} {{ isOverride.toString() }} </span>
+                            </label>
                             <label
-                                :title="item.name"
-                                class="pipeline-selector-label"
-                            > {{ item.name }} </label>
-                            <bk-select
-                                class="sub-label-select"
-                                :disabled="!editable"
-                                :value="labelValues[index]"
-                                @selected="handleLabelSelect(index, arguments)"
-                                @clear="handleLabelSelect(index, [[]])"
-                                multiple
+                                v-if="editable"
+                                class="ui-inner-label"
                             >
-                                <bk-option
-                                    v-for="label in item.labels"
-                                    :key="label.id"
-                                    :id="label.id"
-                                    :name="label.name"
+                                <span
+                                    @click="toManageLabel"
+                                    class="bk-label-text link-text"
+                                >{{ $t('settings.manageLabel') }}</span>
+                            </label>
+                        </div>
+                        <ul
+                            class="pipeline-label-selector"
+                        >
+                            <template v-if="tagGroupList.length > 0">
+                                <li
+                                    v-for="(item, index) in tagGroupList"
+                                    :key="item.id"
                                 >
-                                </bk-option>
-                            </bk-select>
-                        </li>
+                                    <label
+                                        :title="item.name"
+                                        class="pipeline-selector-label"
+                                    > {{ item.name }} </label>
+                                    <bk-select
+                                        class="sub-label-select"
+                                        :disabled="!editable || !isOverride"
+                                        :value="labelValues[index]"
+                                        @selected="handleLabelSelect(index, arguments)"
+                                        @clear="handleLabelSelect(index, [[]])"
+                                        multiple
+                                    >
+                                        <bk-option
+                                            v-for="label in item.labels"
+                                            :key="label.id"
+                                            :id="label.id"
+                                            :name="label.name"
+                                        >
+                                        </bk-option>
+                                    </bk-select>
+                                </li>
+                            </template>
+                            <span
+                                class="no-label-placeholder"
+                                v-else
+                            >
+                                {{ $t('noLabels') }}
+                            </span>
+                        </ul>
                     </template>
-                    <span
-                        class="no-label-placeholder"
-                        v-else
-                    >
-                        {{ $t('noLabels') }}
-                    </span>
-                </ul>
+                </constraint-wraper>
             </bk-form-item>
 
             <bk-form-item
@@ -130,6 +139,7 @@
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import Logo from '@/components/Logo'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
@@ -141,8 +151,10 @@
             Logo,
             VuexTextarea,
             VuexInput,
-            SyntaxStyleConfiguration
+            SyntaxStyleConfiguration,
+            ConstraintWraper
         },
+
         props: {
             pipelineSetting: Object,
             editable: {

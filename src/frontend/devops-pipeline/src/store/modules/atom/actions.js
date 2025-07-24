@@ -86,6 +86,7 @@ import {
     UPDATE_CONTAINER,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
+    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -451,6 +452,7 @@ export default {
     setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
+    updatePipelineConstraintGroup: PipelineEditActionCreator(UPDATE_TEMPLATE_CONSTRAINT),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),

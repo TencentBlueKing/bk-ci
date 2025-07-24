@@ -388,7 +388,8 @@
     "maxConcurrencyPlaceholder": "缺省时以系统设置为准",
     "whenVariableExceedsLength": "流水线变量值超长(>4K)时",
     "clearTheValue": "值清空，继续运行",
-    "errorAndHalt": "报错，终止运行"
+    "errorAndHalt": "报错，终止运行",
+    "concurrentTips": "此设置继承自模版，当模版设置变更时将自动变更。"
   },
   "template": {
     "addTemplate": "新建模板",

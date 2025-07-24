@@ -88,6 +88,7 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
+    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -139,17 +140,18 @@ export default {
      */
     [SET_PIPELINE_INFO]: (state, obj) => {
         Vue.set(state, 'pipelineInfo', obj)
-        console.log(obj, 'set123')
     },
     [UPDATE_PIPELINE_INFO]: (state, partOfInfo) => {
         const pipelineInfo = {
             ...(state.pipelineInfo ?? {})
         }
         Object.assign(pipelineInfo, partOfInfo)
-        console.log(pipelineInfo, 123, partOfInfo)
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
+        if (!pipeline.overrideTemplateField) {
+            Object.assign(pipeline, { overrideTemplateField: {} })
+        }
         if (!state.pipeline || !pipeline) {
             Vue.set(state, 'pipeline', pipeline)
             return state
@@ -509,5 +511,18 @@ export default {
         return Object.assign(state, {
             isGetPluginHeadTab
         })
+    },
+    [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, field }) => {
+        const { overrideTemplateField = {} } = state.pipeline
+        const constraintList = overrideTemplateField[classify] || []
+        
+        if (!overrideTemplateField?.[classify]?.includes(field)) {
+            constraintList.push(field)
+        }
+        Object.assign(state.pipeline, { overrideTemplateField: {
+            ...overrideTemplateField,
+            [classify]: constraintList
+        } })
+        return state
     }
 }

@@ -15,189 +15,219 @@
                 :is-error="errors.has('buildNumRule')"
                 :error-msg="errors.first('buildNumRule')"
             >
-                <div class="layout-label">
-                    <label class="ui-inner-label">
-                        <span class="bk-label-text">{{ $t('settings.buildNumberFormat') }}</span>
-                        <span @click="handleGoDocumentInfo">
-                            <i
-                                class="bk-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('buildNumRuleWarn')"
-                            />
-                        </span>
-                    </label>
-                </div>
-                <vuex-input
-                    name="buildNumRule"
-                    :max-length="256"
-                    :disabled="!editable"
-                    :value="pipelineSetting.buildNumRule"
-                    :placeholder="$t('buildDescInputTips')"
-                    v-validate.initial="{ buildNumRule: true }"
-                    :handle-change="handleBaseInfoChange"
-                />
-                <p
-                    class="error-tips"
-                    v-if="errors.has('buildNumRule')"
+                <constraint-wraper
+                    classify="settingGroups"
+                    field="buildNumRule"
                 >
-                    {{ $t('settings.validatebuildNum') }}
-                </p>
+                    <template v-slot="{ isOverride }">
+                        <div class="layout-label">
+                            <label class="ui-inner-label">
+                                <span class="bk-label-text">{{ $t('settings.buildNumberFormat') }}</span>
+                                <span @click="handleGoDocumentInfo">
+                                    <i
+                                        class="bk-icon icon-question-circle-shape"
+                                        v-bk-tooltips="$t('buildNumRuleWarn')"
+                                    />
+                                </span>
+                            </label>
+                        </div>
+                        <vuex-input
+                            name="buildNumRule"
+                            :max-length="256"
+                            :disabled="!editable || !isOverride"
+                            :value="pipelineSetting.buildNumRule"
+                            :placeholder="$t('buildDescInputTips')"
+                            v-validate.initial="{ buildNumRule: true }"
+                            :handle-change="handleBaseInfoChange"
+                        />
+                        <p
+                            class="error-tips"
+                            v-if="errors.has('buildNumRule')"
+                        >
+                            {{ $t('settings.validatebuildNum') }}
+                        </p>
+                    </template>
+                </constraint-wraper>
             </bk-form-item>
             <bk-form-item
                 ext-cls="variable-invalid"
             >
-                <div class="layout-label">
-                    <label class="ui-inner-label">
-                        <span class="bk-label-text">{{ $t('settings.whenVariableExceedsLength') }}</span>
-                    </label>
-                </div>
-                <bk-radio-group
-                    v-model="proxyFailIfVariableInvalid"
-                    @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
+                <constraint-wraper
+                    classify="settingGroups"
+                    field="failIfVariableInvalid"
                 >
-                    <bk-radio :value="false">{{ $t('settings.clearTheValue') }}</bk-radio>
-                    <bk-radio
-                        :value="true"
-                        class="ml20"
-                    >
-                        {{ $t('settings.errorAndHalt') }}
-                    </bk-radio>
-                </bk-radio-group>
+                    <template v-slot="{ isOverride }">
+                        <div class="layout-label">
+                            <label class="ui-inner-label">
+                                <span class="bk-label-text">{{ $t('settings.whenVariableExceedsLength') }}</span>
+                            </label>
+                        </div>
+                        <bk-radio-group
+                            v-model="proxyFailIfVariableInvalid"
+                            @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
+                        >
+                            <bk-radio
+                                :value="false"
+                                :disabled="!editable || !isOverride"
+                            >
+                                {{ $t('settings.clearTheValue') }}
+                            </bk-radio>
+                            <bk-radio
+                                :value="true"
+                                class="ml20"
+                                :disabled="!editable || !isOverride"
+                            >
+                                {{ $t('settings.errorAndHalt') }}
+                            </bk-radio>
+                        </bk-radio-group>
+                    </template>
+                </constraint-wraper>
             </bk-form-item>
-            <bk-form-item :label="$t('template.parallelSetting')">
-                <bk-radio-group
-                    :value="pipelineSetting.runLockType"
-                    @change="handleLockTypeChange"
-                >
-                    <div class="run-lock-radio-item">
-                        <bk-radio
-                            :disabled="!editable"
-                            :value="runTypeMap.MULTIPLE"
-                        >
-                            {{ $t('settings.runningOption.multiple') }}
-                        </bk-radio>
-                    </div>
-                </bk-radio-group>
-                <div
-                    v-if="isMultipleLock"
-                    class="single-lock-sub-form"
-                    :key="pipelineSetting.runLockType"
-                >
-                    <bk-form-item
-                        :label="$t('settings.concurrentMaxConcurrency')"
-                        error-display-type="normal"
-                        property="maxConRunningQueueSize"
-                    >
-                        <bk-input
-                            type="number"
-                            :disabled="!editable"
-                            :placeholder="$t('settings.maxConcurrencyPlaceholder')"
-                            v-model="pipelineSetting.maxConRunningQueueSize"
-                            @change="val => handleBaseInfoChange('maxConRunningQueueSize', val ? Number(val) : null)"
-                        />
-                    </bk-form-item>
-
-                    <bk-form-item
-                        :required="isMultipleLock"
-                        :label="$t('settings.concurrentTimeout')"
-                        error-display-type="normal"
-                        property="waitQueueTimeMinute"
-                    >
-                        <bk-input
-                            type="number"
-                            :disabled="!editable"
-                            :placeholder="$t('settings.itemPlaceholder')"
-                            v-model="pipelineSetting.waitQueueTimeMinute"
-                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', val ? Number(val) : null)"
-                        >
-                            <template slot="append">
-                                <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
-                            </template>
-                        </bk-input>
-                    </bk-form-item>
-                </div>
-                <bk-radio-group
-                    :value="pipelineSetting.runLockType"
-                    @change="handleLockTypeChange"
-                >
-                    <div class="run-lock-radio-item">
-                        <bk-radio
-                            :disabled="!editable"
-                            :value="runTypeMap.GROUP"
-                        >
-                            {{ $t('settings.runningOption.single') }}
-                        </bk-radio>
-                    </div>
-                </bk-radio-group>
-            </bk-form-item>
-
-            <div
-                v-if="isSingleLock"
-                class="single-lock-sub-form"
+            <constraint-wraper
+                classify="settingGroups"
+                field="parallelSetting"
             >
-                <bk-form-item
-                    :required="isSingleLock"
-                    property="concurrencyGroup"
-                    desc-type="icon"
-                    desc-icon="bk-icon icon-question-circle-shape"
-                    :label="$t('settings.groupName')"
-                    :desc="$t('settings.lockGroupDesc')"
-                >
-                    <bk-input
-                        :placeholder="$t('settings.itemPlaceholder')"
-                        :disabled="!editable"
-                        :max-length="128"
-                        :maxlength="128"
-                        v-model="pipelineSetting.concurrencyGroup"
-                        @change="val => handleBaseInfoChange('concurrencyGroup', val)"
-                    />
-                </bk-form-item>
-
-                <bk-form-item property="concurrencyCancelInProgress">
-                    <bk-checkbox
-                        :disabled="!editable"
-                        :checked="pipelineSetting.concurrencyCancelInProgress"
-                        @change="val => handleBaseInfoChange('concurrencyCancelInProgress', val)"
-                    >
-                        {{ $t('settings.stopWhenNewCome') }}
-                    </bk-checkbox>
-                </bk-form-item>
-                <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+                <template v-slot="{ isOverride }">
                     <bk-form-item
-                        :label="$t('settings.largestNum')"
-                        error-display-type="normal"
-                        property="maxQueueSize"
+                        :label="$t('template.parallelSetting')"
                     >
-                        <bk-input
-                            type="number"
-                            :disabled="!editable"
-                            :placeholder="$t('settings.itemPlaceholder')"
-                            v-model="pipelineSetting.maxQueueSize"
-                            @change="val => handleBaseInfoChange('maxQueueSize', val)"
+                        <bk-radio-group
+                            :value="pipelineSetting.runLockType"
+                            :disabled="!editable || !isOverride"
+                            @change="handleLockTypeChange"
                         >
-                            <template slot="append">
-                                <span class="pipeline-setting-unit">{{ $t('settings.item') }}</span>
-                            </template>
-                        </bk-input>
+                            <div class="run-lock-radio-item">
+                                <bk-radio
+                                    :disabled="!editable"
+                                    :value="runTypeMap.MULTIPLE"
+                                >
+                                    {{ $t('settings.runningOption.multiple') }}
+                                </bk-radio>
+                            </div>
+                        </bk-radio-group>
+                        <div
+                            v-if="isMultipleLock"
+                            class="single-lock-sub-form"
+                            :key="pipelineSetting.runLockType"
+                        >
+                            <bk-form-item
+                                :label="$t('settings.concurrentMaxConcurrency')"
+                                error-display-type="normal"
+                                property="maxConRunningQueueSize"
+                            >
+                                <bk-input
+                                    type="number"
+                                    :disabled="!editable || !isOverride"
+                                    :placeholder="$t('settings.maxConcurrencyPlaceholder')"
+                                    v-model="pipelineSetting.maxConRunningQueueSize"
+                                    @change="val => handleBaseInfoChange('maxConRunningQueueSize', val ? Number(val) : null)"
+                                />
+                            </bk-form-item>
+        
+                            <bk-form-item
+                                :required="isMultipleLock"
+                                :label="$t('settings.concurrentTimeout')"
+                                error-display-type="normal"
+                                property="waitQueueTimeMinute"
+                            >
+                                <bk-input
+                                    type="number"
+                                    :disabled="!editable || !isOverride"
+                                    :placeholder="$t('settings.itemPlaceholder')"
+                                    v-model="pipelineSetting.waitQueueTimeMinute"
+                                    @change="val => handleBaseInfoChange('waitQueueTimeMinute', val ? Number(val) : null)"
+                                >
+                                    <template slot="append">
+                                        <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
+                                    </template>
+                                </bk-input>
+                            </bk-form-item>
+                        </div>
+                        <bk-radio-group
+                            :value="pipelineSetting.runLockType"
+                            @change="handleLockTypeChange"
+                        >
+                            <div class="run-lock-radio-item">
+                                <bk-radio
+                                    :disabled="!editable || !isOverride"
+                                    :value="runTypeMap.GROUP"
+                                >
+                                    {{ $t('settings.runningOption.single') }}
+                                </bk-radio>
+                            </div>
+                        </bk-radio-group>
                     </bk-form-item>
-                    <bk-form-item
-                        :label="$t('settings.lagestTime')"
-                        error-display-type="normal"
-                        property="waitQueueTimeMinute"
+                    <div
+                        v-if="isSingleLock"
+                        class="single-lock-sub-form"
                     >
-                        <bk-input
-                            type="number"
-                            :disabled="!editable"
-                            :placeholder="$t('settings.itemPlaceholder')"
-                            v-model="pipelineSetting.waitQueueTimeMinute"
-                            @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
+                        <bk-form-item
+    
+                            :required="isSingleLock"
+                            property="concurrencyGroup"
+                            desc-type="icon"
+                            desc-icon="bk-icon icon-question-circle-shape"
+                            :label="$t('settings.groupName')"
+                            :desc="$t('settings.lockGroupDesc')"
                         >
-                            <template slot="append">
-                                <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
-                            </template>
-                        </bk-input>
-                    </bk-form-item>
+                            <bk-input
+                                :placeholder="$t('settings.itemPlaceholder')"
+                                :disabled="!editable || !isOverride"
+                                :max-length="128"
+                                :maxlength="128"
+                                v-model="pipelineSetting.concurrencyGroup"
+                                @change="val => handleBaseInfoChange('concurrencyGroup', val)"
+                            />
+                        </bk-form-item>
+    
+                        <bk-form-item property="concurrencyCancelInProgress">
+                            <bk-checkbox
+                                :disabled="!editable || !isOverride"
+                                :checked="pipelineSetting.concurrencyCancelInProgress"
+                                @change="val => handleBaseInfoChange('concurrencyCancelInProgress', val)"
+                            >
+                                {{ $t('settings.stopWhenNewCome') }}
+                            </bk-checkbox>
+                        </bk-form-item>
+                        <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+                            <bk-form-item
+                                :label="$t('settings.largestNum')"
+                                error-display-type="normal"
+                                property="maxQueueSize"
+                            >
+                                <bk-input
+                                    type="number"
+                                    :disabled="!editable || !isOverride"
+                                    :placeholder="$t('settings.itemPlaceholder')"
+                                    v-model="pipelineSetting.maxQueueSize"
+                                    @change="val => handleBaseInfoChange('maxQueueSize', val)"
+                                >
+                                    <template slot="append">
+                                        <span class="pipeline-setting-unit">{{ $t('settings.item') }}</span>
+                                    </template>
+                                </bk-input>
+                            </bk-form-item>
+                            <bk-form-item
+                                :label="$t('settings.lagestTime')"
+                                error-display-type="normal"
+                                property="waitQueueTimeMinute"
+                            >
+                                <bk-input
+                                    type="number"
+                                    :disabled="!editable || !isOverride"
+                                    :placeholder="$t('settings.itemPlaceholder')"
+                                    v-model="pipelineSetting.waitQueueTimeMinute"
+                                    @change="val => handleBaseInfoChange('waitQueueTimeMinute', val)"
+                                >
+                                    <template slot="append">
+                                        <span class="pipeline-setting-unit">{{ $t('settings.minutes') }}</span>
+                                    </template>
+                                </bk-input>
+                            </bk-form-item>
+                        </template>
+                    </div>
                 </template>
-            </div>
+            </constraint-wraper>
 
             <!-- <bk-form-item :label="$t('settings.disableSetting')">
                 <span @click="handleLockTypeChange(runTypeMap.LOCK)">
@@ -215,11 +245,13 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
         components: {
-            VuexInput
+            VuexInput,
+            ConstraintWraper
         },
         props: {
             pipelineSetting: Object,
@@ -310,6 +342,7 @@
             }
         },
         methods: {
+            
             handleLockTypeChange (runLockType) {
                 this.handleRunningLockChange({
                     runLockType,

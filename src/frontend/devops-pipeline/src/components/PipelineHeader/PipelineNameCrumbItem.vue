@@ -13,6 +13,12 @@
                 slot="trigger"
             >
                 <span @click="goHistory">{{ pipelineName }}</span>
+                <span
+                    class="template-instance-tag"
+                    v-if="instanceFromTemplate"
+                >
+                    约束
+                </span>
                 <div
                     class="pipeline-pac-indicator"
                     @click.stop.prevent=""
@@ -69,7 +75,8 @@
                 'pipelineInfo'
             ]),
             ...mapGetters({
-                pacEnabled: 'atom/pacEnabled'
+                pacEnabled: 'atom/pacEnabled',
+                instanceFromTemplate: 'atom/instanceFromTemplate'
             }),
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
@@ -167,6 +174,15 @@
 </script>
 
 <style lang="scss">
+    .template-instance-tag {
+        font-size: 12px;
+        line-height: 20px;
+        color: #4D4F56;
+        background: #FAFBFD;
+        border: 1px solid #DCDEE5;
+        border-radius: 2px;
+        padding: 0 8px;
+    }
     .pipeline-name-crumb {
         display: inline-flex;
         &-select {
