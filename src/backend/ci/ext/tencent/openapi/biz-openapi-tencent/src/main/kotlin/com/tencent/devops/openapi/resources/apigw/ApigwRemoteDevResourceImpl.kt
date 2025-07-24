@@ -8,6 +8,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -717,5 +718,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("whitelist |$userId|$type|$delete|$body")
         return client.get(ServiceRemoteDevResource::class).whitelist(userId, type, delete, body)
+    }
+
+    override fun whitelistGet(
+        userId: String,
+        type: WhiteListType,
+        body: Map<String, String>
+    ): Result<List<IWhiteList>> {
+        logger.info("whitelistGet |$userId|$type|$body")
+        return client.get(ServiceRemoteDevResource::class).whitelistGet(userId, type, body)
     }
 }

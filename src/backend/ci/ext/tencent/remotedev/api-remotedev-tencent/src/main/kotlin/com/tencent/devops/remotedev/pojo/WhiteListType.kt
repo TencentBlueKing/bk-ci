@@ -27,10 +27,21 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
+
 data class WhiteList(
     val name: String,
     val type: WhiteListType,
-    val windowsGpuLimit: Int? = null
+    val creator: String,
+    val windowsGpuLimit: Int? = null,
+    @Schema(readOnly = true)
+    val updateTime: LocalDateTime? = null
 )
 
 enum class WhiteListType {
@@ -51,5 +62,26 @@ enum class WhiteListType {
         fun parse(value: String): WhiteListType {
             return values().find { it.name == value } ?: API
         }
+    }
+}
+
+@Schema(description = "提供给API使用的白名单")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = ProjectAccessDeviceWhiteList::class, name = ProjectAccessDeviceWhiteList.TYPE)
+)
+interface IWhiteList{
+    val creator: String
+    val updateTime: LocalDateTime?
+}
+
+data class ProjectAccessDeviceWhiteList(
+    override val creator: String,
+    override val updateTime: LocalDateTime? = null,
+    val projectId: String,
+    val userId: String
+) : IWhiteList {
+    companion object {
+        const val TYPE = "PROJECT_ACCESS_DEVICE"
     }
 }

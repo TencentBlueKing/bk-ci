@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -926,7 +927,7 @@ interface ServiceRemoteDevResource {
 
     @Operation(summary = "白名单注册")
     @POST
-    @Path("/whitelist")
+    @Path("/set_whitelist")
     fun whitelist(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -939,4 +940,17 @@ interface ServiceRemoteDevResource {
         delete: Boolean,
         body: Map<String, String>
     ): Result<Boolean>
+
+    @Operation(summary = "白名单注册")
+    @POST
+    @Path("/get_whitelist")
+    fun whitelistGet(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "白名单类型", required = false)
+        @QueryParam("type")
+        type: WhiteListType,
+        body: Map<String, String>
+    ): Result<List<IWhiteList>>
 }

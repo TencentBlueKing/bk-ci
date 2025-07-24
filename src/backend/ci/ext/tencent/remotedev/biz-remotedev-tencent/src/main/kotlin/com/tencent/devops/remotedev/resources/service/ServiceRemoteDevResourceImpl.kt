@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -957,5 +958,13 @@ class ServiceRemoteDevResourceImpl(
         body: Map<String, String>
     ): Result<Boolean> {
         return Result(whiteListService.apiSetWhiteList(userId, type, delete, body))
+    }
+
+    override fun whitelistGet(
+        userId: String,
+        type: WhiteListType,
+        body: Map<String, String>
+    ): Result<List<IWhiteList>> {
+        return Result(whiteListService.apiGetWhiteList(userId, type, body))
     }
 }
