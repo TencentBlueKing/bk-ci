@@ -139,7 +139,9 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 val defaultGroup = resourceGroup?.defaultGroup ?: false
                 // 默认组名需要支持国际化
                 val groupName =
-                    if ((resourceType == ResourceTypeId.PROJECT && defaultGroup) || resourceType != ResourceTypeId.PROJECT) {
+                    if ((resourceType == ResourceTypeId.PROJECT && defaultGroup) ||
+                        resourceType != ResourceTypeId.PROJECT
+                    ) {
                         getI18nGroupName(resourceGroup!!)
                     } else {
                         it.name
