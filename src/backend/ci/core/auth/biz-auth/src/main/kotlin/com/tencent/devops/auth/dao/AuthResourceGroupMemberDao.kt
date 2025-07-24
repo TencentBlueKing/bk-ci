@@ -688,6 +688,7 @@ class AuthResourceGroupMemberDao {
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(MEMBER_ID.eq(memberId))
                 .and(GROUP_CODE.eq(DefaultGroupType.MANAGER.value))
+                .and(EXPIRED_TIME.gt(LocalDateTime.now()))
                 .fetchOne(0, Int::class.java) != 0
         }
     }
