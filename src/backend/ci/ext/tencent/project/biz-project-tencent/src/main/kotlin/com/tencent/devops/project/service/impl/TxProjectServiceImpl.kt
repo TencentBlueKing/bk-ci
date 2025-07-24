@@ -544,8 +544,7 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun ProjectProductValidateDTO.validateProduct() {
-        val products = getOperationalProducts()
-        val productInfo = products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
+        val productInfo = getProductByProductId(productId!!) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
             defaultMessage = MessageUtil.getMessageByLocale(
                 messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
@@ -560,8 +559,8 @@ class TxProjectServiceImpl @Autowired constructor(
                     language = I18nUtil.getLanguage(userId)
                 ),
                 params = arrayOf(
-                    productId?.toString() ?: "",
-                    (productName ?: productInfo.productName).orEmpty()
+                    productId?.toString().orEmpty(),
+                    productInfo.productName.orEmpty()
                 )
             )
         }
