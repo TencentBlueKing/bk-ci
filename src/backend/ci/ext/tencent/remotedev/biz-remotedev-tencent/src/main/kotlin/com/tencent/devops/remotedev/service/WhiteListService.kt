@@ -1,6 +1,6 @@
 package com.tencent.devops.remotedev.service
 
-import com.tencent.bkrepo.repository.constant.SYSTEM_USER
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WhiteListDao
@@ -141,7 +141,7 @@ class WhiteListService @Autowired constructor(
                 WhiteList(
                     name = userId,
                     type = WhiteListType.WINDOWS_GPU,
-                    creator = SYSTEM_USER,
+                    creator = SYSTEM,
                     windowsGpuLimit = limit + get
                 )
             )

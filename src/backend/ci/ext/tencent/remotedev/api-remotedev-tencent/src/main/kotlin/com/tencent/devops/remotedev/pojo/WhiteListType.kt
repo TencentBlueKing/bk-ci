@@ -29,9 +29,6 @@ package com.tencent.devops.remotedev.pojo
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -47,14 +44,19 @@ data class WhiteList(
 enum class WhiteListType {
     // 限制访问所有 remotedev api
     API,
+
     // 限制访问云桌面
     WINDOWS_GPU,
+
     // 单向网络开关-项目级别开启
     CDS_MESH_PROJECT,
+
     // 单向网络开关-单个实例级别开启
     CDS_MESH_WORKSPACE,
+
     // 单向网络开关-单个实例级别关闭-黑名单
     NOT_CDS_MESH_WORKSPACE,
+
     // 设备管控白名单
     PROJECT_ACCESS_DEVICE;
 
@@ -70,7 +72,7 @@ enum class WhiteListType {
 @JsonSubTypes(
     JsonSubTypes.Type(value = ProjectAccessDeviceWhiteList::class, name = ProjectAccessDeviceWhiteList.TYPE)
 )
-interface IWhiteList{
+interface IWhiteList {
     val creator: String
     val updateTime: LocalDateTime?
 }
