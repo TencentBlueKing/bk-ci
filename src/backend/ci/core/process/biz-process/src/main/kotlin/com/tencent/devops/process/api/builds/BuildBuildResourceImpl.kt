@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
@@ -44,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService,
+    private val vMBuildService: EngineVMBuildService,
     private val pipelineUrlBean: PipelineUrlBean
 ) : BuildBuildResource {
 
@@ -109,5 +111,15 @@ class BuildBuildResourceImpl @Autowired constructor(
 
     override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
         return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, null, null, true))
+    }
+
+    override fun getBuildDispatchType(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): Result<String?> {
+        val container = vMBuildService.getBuildContainer(projectId, pipelineId, buildId, vmSeqId)
+        return Result(container?.dispatchType?.buildType()?.name)
     }
 }

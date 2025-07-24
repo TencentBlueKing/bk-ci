@@ -470,7 +470,7 @@
                     theme="primary"
                     :disabled="!isManage"
                     v-perm="{
-                        hasPermission: props.row.permissions && props.row.permissions.canManage,
+                        hasPermission: isManage,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
