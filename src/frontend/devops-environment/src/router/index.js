@@ -86,11 +86,6 @@ const routes = [
                 component: nodeEntry,
                 children: [
                     {
-                        path: 'setNodeTag',
-                        name: 'setNodeTag',
-                        component: setNodeTag
-                    },
-                    {
                         path: ':nodeType',
                         name: 'nodeList',
                         component: nodeList,
@@ -125,7 +120,12 @@ const routes = [
                             header: 'environmentManage',
                             to: 'envList'
                         }
-                    }
+                    },
+                    {
+                        path: 'setNodeTag',
+                        name: 'setNodeTag',
+                        component: setNodeTag
+                    },
                 ]
             }
         ]

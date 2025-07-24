@@ -14,6 +14,7 @@
         <router-view
             slot="main"
             :style="{ width: `${mainWidth}px` }"
+            :main-width="mainWidth"
         ></router-view>
     </bk-resize-layout>
 </template>
@@ -32,12 +33,17 @@
         props: {
             containerWidth: Number
         },
+        data (){
+            return {
+                isCollapsible: false
+            }
+        },
         computed: {
             initialDivide () {
                 return Number(localStorage.getItem(NODE_LIST_ASIDE_WIDTH_CACHE)) || 240
             },
             mainWidth () {
-                return this.containerWidth - this.initialDivide
+                return this.isCollapsible ? this.containerWidth : this.containerWidth - this.initialDivide
             }
         },
         mounted () {
@@ -47,6 +53,7 @@
         },
         methods: {
             handleCollapseChange (val) {
+                this.isCollapsible = val
                 localStorage.setItem(NODE_LIST_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
             },
             afterResize (width) {

@@ -446,6 +446,7 @@
                         theme: 'error'
                     })
                 } else {
+                    this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
                     this.$router.push({
                         name: 'setNodeTag',
                         params: {
