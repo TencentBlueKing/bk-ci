@@ -96,7 +96,7 @@ class StoreHonorServiceImpl @Autowired constructor(
                 StoreHonorManageInfo(
                     storeCode = it[STORE_CODE] as String,
                     storeName = it[STORE_NAME] as String,
-                    storeType = StoreTypeEnum.getStoreType((it[STORE_TYPE] as Byte).toInt()),
+                    storeType = StoreTypeEnum.getStoreTypeObj((it[STORE_TYPE] as Byte).toInt()),
                     honorId = it[STORE_HONOR_ID] as String,
                     honorTitle = it[STORE_HONOR_TITLE] as String,
                     honorName = it[STORE_HONOR_NAME] as String,
@@ -114,7 +114,7 @@ class StoreHonorServiceImpl @Autowired constructor(
             return false
         }
         val delHonorIds = storeHonorRelList.map { it.honorId }.toMutableList()
-        var hasDelHonorIds = mutableListOf<String>()
+        val hasDelHonorIds = mutableListOf<String>()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeHonorDao.batchDeleteStoreHonorRel(context, storeHonorRelList)

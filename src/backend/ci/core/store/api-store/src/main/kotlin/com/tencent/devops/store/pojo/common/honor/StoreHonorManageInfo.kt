@@ -30,6 +30,7 @@ package com.tencent.devops.store.pojo.common.honor
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -50,7 +51,7 @@ data class StoreHonorManageInfo(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val honorName: String,
     @get:Schema(title = "组件范畴", required = true)
-    val storeType: String,
+    val storeType: StoreTypeEnum,
     @get:Schema(title = "创建者", required = true)
     val creator: String,
     @get:Schema(title = "修改者", required = true)
