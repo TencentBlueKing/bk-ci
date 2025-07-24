@@ -51,6 +51,7 @@ GOTO :service_start
 :service_start
 echo start agent service
 sc start %service_name%
+
 GOTO :finally_label
 
 :start_schtasks
