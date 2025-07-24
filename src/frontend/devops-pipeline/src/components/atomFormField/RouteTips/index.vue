@@ -137,13 +137,13 @@
                     display: inline-block;
                     font-weight: bold;
                     font-size: 14px;
-                    width: 75px;
+                    width: 90px;
                     text-align: right;
                 }
                 .tips-route {
                     display: inline-block;
                     font-size: 12px;
-                    width: calc(100% - 133px);
+                    width: calc(100% - 148px);
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
