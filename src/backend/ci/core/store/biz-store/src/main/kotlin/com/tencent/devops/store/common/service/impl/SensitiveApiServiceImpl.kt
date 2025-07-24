@@ -129,7 +129,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
                         apiName ->
                         val config = sensitiveApiNameMap[apiName]
                             ?: throw ErrorCodeException(
-                                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                                 params = arrayOf(apiName)
                             )
                         SensitiveApiCreateDTO(
