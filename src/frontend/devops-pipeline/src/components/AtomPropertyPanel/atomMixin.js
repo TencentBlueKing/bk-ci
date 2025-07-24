@@ -60,6 +60,7 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
 import FormFieldGroup from './FormFieldGroup'
+import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 
 const atomMixin = {
     props: {
@@ -114,7 +115,8 @@ const atomMixin = {
         EnumButton,
         TipsSimple,
         Tips,
-        SubParameter
+        SubParameter,
+        MetadataNormal
     },
     computed: {
         ...mapGetters('atom', [

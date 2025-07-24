@@ -438,6 +438,17 @@
                 if (error.code === 403) {
                     this.hasNoPermission = true
                 }
+            },
+            '$route.params.type': {
+                handler (newVal) {
+                    if (newVal !== 'outputs') {
+                        const query = { ...this.$route.query }
+                        delete query.metadataKey
+                        delete query.metadataValues
+                        this.$router.replace({ query })
+                    }
+                },
+                immediate: true
             }
         },
         beforeRouteEnter (to, from, next) {
