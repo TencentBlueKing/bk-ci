@@ -552,7 +552,7 @@ class TxProjectServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
-        if (bgId == 956L && (productInfo.iCosProductCode.isNullOrBlank() || productInfo.crosCheck != true)) {
+        if (bgId == IEG_BG_ID && (productInfo.iCosProductCode.isNullOrBlank() || productInfo.crosCheck != true)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
                 defaultMessage = MessageUtil.getMessageByLocale(
@@ -561,7 +561,7 @@ class TxProjectServiceImpl @Autowired constructor(
                 ),
                 params = arrayOf(
                     productId?.toString() ?: "",
-                    productName ?: productInfo.productName ?: ""
+                    (productName ?: productInfo.productName).orEmpty()
                 )
             )
         }
@@ -569,5 +569,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
+        private const val IEG_BG_ID = 956L
     }
 }
