@@ -15,6 +15,7 @@ import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.annotation.PostConstruct
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -60,6 +61,7 @@ class ProjectOperationalProductService(
     @Value("\${cros.url:}")
     private val crosUrl = ""
 
+    @PostConstruct
     fun syncOperationalProduct(): Boolean {
         logger.info("sync operational product start!")
         executor.execute {
