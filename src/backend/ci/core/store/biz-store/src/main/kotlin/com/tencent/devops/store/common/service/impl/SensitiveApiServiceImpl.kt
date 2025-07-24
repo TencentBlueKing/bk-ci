@@ -124,9 +124,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
             val sensitiveApiNameMap = getSensitiveApiConfig(storeType).associateBy { it.apiName }
             val sensitiveApiCreateDTOs =
                 apiNameList.filter { it.isNotBlank() }
-                    .filter { sensitiveApiNameMap.containsKey(it) }
-                    .map {
-                        apiName ->
+                    .map { apiName ->
                         val config = sensitiveApiNameMap[apiName]
                             ?: throw ErrorCodeException(
                                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
