@@ -131,7 +131,13 @@ class BkInternalPermissionComparator(
                 resourceType = resourceType,
                 resourceCodes = expectedResult.filterNot { it == "##NONE##" }.distinct(),
             ).map { it.resourceCode }.toSet()
-            val localSet = localResult.toSet()
+            val localSet = authResourceService.listByResourceCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = localResult,
+            ).map { it.resourceCode }.toSet()
+
             val isConsistent = (expectedSet == localSet)
             consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
             if (!isConsistent) {

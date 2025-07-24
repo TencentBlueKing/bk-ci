@@ -56,7 +56,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
@@ -77,7 +77,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         logger.info("UserImageManageResourceImpl|updateImageName|userId|$userId|projectId|$projectId|data|$data")
