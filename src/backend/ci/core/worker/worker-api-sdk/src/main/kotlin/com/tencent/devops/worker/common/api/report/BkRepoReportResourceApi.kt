@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.api.report
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.pojo.ReportPluginConfig
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
@@ -222,5 +223,26 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         } else {
             null
         }
+    }
+
+
+    override fun getPluginConfig(): ReportPluginConfig {
+        val path = "/ms/artifactory/api/build/artifactories/conf/report"
+        val request = buildGet(path)
+        return try {
+            val responseContent = request(
+                request,
+                "get plugin config fail"
+            )
+            objectMapper.readValue(responseContent)
+        } catch (e: Exception) {
+            logger.warn(e.message)
+            ReportPluginConfig(
+                enableCompress = false,
+                enableCompressPipelines = emptyList(),
+                compressThreshold = Long.MAX_VALUE
+            )
+        }
+
     }
 }

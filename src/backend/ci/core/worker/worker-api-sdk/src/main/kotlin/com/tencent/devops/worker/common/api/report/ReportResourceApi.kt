@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
+import com.tencent.devops.artifactory.pojo.ReportPluginConfig
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -144,6 +145,14 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         expireSeconds: Long
     ): String? {
         return null
+    }
+
+    override fun getPluginConfig(): ReportPluginConfig {
+        return ReportPluginConfig(
+            enableCompress = false,
+            enableCompressPipelines = emptyList(),
+            compressThreshold = Long.MAX_VALUE
+        )
     }
 
     companion object {
