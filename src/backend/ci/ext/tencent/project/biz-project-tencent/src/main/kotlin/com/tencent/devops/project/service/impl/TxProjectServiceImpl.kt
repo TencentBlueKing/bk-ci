@@ -559,7 +559,10 @@ class TxProjectServiceImpl @Autowired constructor(
                     messageCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 ),
-                params = arrayOf(productId?.toString() ?: "", productName?:"")
+                params = arrayOf(
+                    productId?.toString() ?: "",
+                    productName ?: productInfo.productName ?: ""
+                )
             )
         }
     }
