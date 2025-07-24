@@ -43,7 +43,9 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         iamResourceCode: String,
         resourceName: String,
         iamGroupId: Int,
-        registerMonitorPermission: Boolean
+        registerMonitorPermission: Boolean,
+        filterResourceTypes: List<String>,
+        filterActions: List<String>
     ): Boolean = true
 
     override fun grantAllProjectGroupsPermission(
