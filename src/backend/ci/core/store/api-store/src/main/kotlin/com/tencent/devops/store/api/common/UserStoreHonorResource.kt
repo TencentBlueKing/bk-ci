@@ -35,8 +35,8 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.honor.HonorI18nDTO
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.honor.I18nHonorInfoDTO
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import io.swagger.v3.oas.annotations.Operation
@@ -146,6 +146,6 @@ interface UserStoreHonorResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "荣誉信息", required = true)
-        honorI18nDTOList: List<HonorI18nDTO>
+        honorI18nDTOList: List<I18nHonorInfoDTO>
     ): Result<Boolean>
 }

@@ -138,27 +138,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 val resourceGroup = resourceGroupMap[it.id]
                 val defaultGroup = resourceGroup?.defaultGroup ?: false
                 // 默认组名需要支持国际化
-                val groupName = when {
-                    resourceType == ResourceTypeId.PROJECT && defaultGroup -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = "${resourceGroup!!.resourceType}.${resourceGroup.groupCode}" +
-                                    AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
-                            defaultMessage = resourceGroup.groupName
-                        )
-                    }
-
-                    resourceType != ResourceTypeId.PROJECT -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = "${resourceGroup!!.resourceType}.${resourceGroup.groupCode}" +
-                                    AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
-                            defaultMessage = resourceGroup.groupName
-                        )
-                    }
-
-                    else -> {
+                val groupName =
+                    if ((resourceType == ResourceTypeId.PROJECT && defaultGroup) || resourceType != ResourceTypeId.PROJECT) {
+                        getI18nGroupName(resourceGroup!!)
+                    } else {
                         it.name
                     }
-                }
                 IamGroupInfoVo(
                     managerId = resourceInfo.relationId.toInt(),
                     defaultGroup = defaultGroup,
@@ -179,6 +164,14 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 records = iamGroupInfoVoList
             )
         }
+    }
+
+    private fun getI18nGroupName(resourceGroup: AuthResourceGroup): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
+                    AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+            defaultMessage = resourceGroup.groupName
+        )
     }
 
     private fun MutableList<IamGroupInfoVo>.plusAllProjectMemberGroup(

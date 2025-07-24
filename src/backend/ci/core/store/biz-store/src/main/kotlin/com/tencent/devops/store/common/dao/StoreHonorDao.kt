@@ -231,8 +231,7 @@ class StoreHonorDao {
 
     fun getHonorStoreInfos(
         dslContext: DSLContext,
-        honorTitle: String,
-        honorName: String
+        honorTitle: String
     ): Result<Record3<String, String, Byte>> {
         val info = TStoreHonorInfo.T_STORE_HONOR_INFO
         val rel = TStoreHonorRel.T_STORE_HONOR_REL
@@ -240,7 +239,6 @@ class StoreHonorDao {
             .from(info)
             .join(rel).on(info.ID.eq(rel.HONOR_ID))
             .where(info.HONOR_TITLE.eq(honorTitle))
-            .and(info.HONOR_NAME.eq(honorName))
             .fetch()
     }
 }

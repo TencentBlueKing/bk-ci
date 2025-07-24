@@ -60,8 +60,8 @@ import com.tencent.devops.store.pojo.common.STORE_TYPE
 import com.tencent.devops.store.pojo.common.STORE_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.honor.HonorI18nDTO
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.honor.I18nHonorInfoDTO
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import org.jooq.DSLContext
@@ -285,22 +285,22 @@ class StoreHonorServiceImpl @Autowired constructor(
         return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }
 
-    override fun batchFillHonorTranslations(userId: String, honorI18nDTOList: List<HonorI18nDTO>): Boolean {
-        // 按honorTitle和honorName分组，减少数据库查询次数
-        val groupedDTOs = honorI18nDTOList.groupBy { Pair(it.honorTitle, it.honorName) }
+    override fun batchFillHonorTranslations(userId: String, honorI18nDTOList: List<I18nHonorInfoDTO>): Boolean {
+        // 按honorTitle分组，减少数据库查询次数
+        val groupedDTOs = honorI18nDTOList.groupBy {it.honorTitle }
 
         // 批量查询与荣誉信息对应的插件信息
-        val honorRelMap = mutableMapOf<Pair<String, String>, List<Record>>()
-        groupedDTOs.keys.forEach { (title, name) ->
-            val honorRels = storeHonorDao.getHonorStoreInfos(dslContext, title, name)
+        val honorRelMap = mutableMapOf<String, List<Record>>()
+        groupedDTOs.keys.forEach { title ->
+            val honorRels = storeHonorDao.getHonorStoreInfos(dslContext, title)
             if (honorRels.isNotEmpty) {
-                honorRelMap[Pair(title, name)] = honorRels
+                honorRelMap[title] = honorRels
             }
         }
 
-        val i18nMessages = groupedDTOs.flatMap { (titleNamePair, dtos) ->
+        val i18nMessages = groupedDTOs.flatMap { (title, dtos) ->
             // 获取与荣誉信息对应的插件信息
-            val honorRels = honorRelMap[titleNamePair] ?: emptyList()
+            val honorRels = honorRelMap[title] ?: emptyList()
             // 根据插件信息，给每个插件批量构建不同语言的国际化荣誉信息
             honorRels.flatMap { honorRel ->
                 val storeType = StoreTypeEnum.getStoreTypeObj((honorRel[STORE_TYPE] as Byte).toInt())
@@ -313,13 +313,13 @@ class StoreHonorServiceImpl @Autowired constructor(
                             moduleCode = SystemModuleEnum.STORE.name,
                             language = dto.language,
                             key = buildHonorKey(storeType, storeCode, honorId, "honorInfo.honorTitle"),
-                            value = dto.honorTitleI18n
+                            value = dto.honorTitleI18n!!
                         ),
                         I18nMessage(
                             moduleCode = SystemModuleEnum.STORE.name,
                             language = dto.language,
                             key = buildHonorKey(storeType, storeCode, honorId, "honorInfo.honorName"),
-                            value = dto.honorNameI18n
+                            value = dto.honorNameI18n!!
                         )
                     )
                 }
