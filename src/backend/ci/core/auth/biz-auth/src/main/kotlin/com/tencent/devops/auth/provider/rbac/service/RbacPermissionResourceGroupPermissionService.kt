@@ -135,14 +135,48 @@ class RbacPermissionResourceGroupPermissionService(
         iamResourceCode: String,
         resourceName: String,
         iamGroupId: Int,
-        registerMonitorPermission: Boolean
+        registerMonitorPermission: Boolean,
+        filterResourceTypes: List<String>,
+        filterActions: List<String>
     ): Boolean {
-        var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
+        val bkCiAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = authorizationScopesStr,
             projectCode = projectCode,
             projectName = projectName,
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
+        )
+        // 若filterActions不为空，则本次新增的组权限，只和该action有关
+        // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
+        authorizationScopes.addAll(
+            when {
+                filterActions.isNotEmpty() -> {
+                    bkCiAuthorizationScopes.onEach { scope ->
+                        scope.actions.retainAll { action ->
+                            filterActions.contains(action.id)
+                        }
+                    }.filter { it.actions.isNotEmpty() }
+                }
+
+                filterResourceTypes.isNotEmpty() -> {
+                    bkCiAuthorizationScopes.filter { scope ->
+                        val resourceTypeOfScope = scope.resources.firstOrNull()?.type
+                        when {
+                            resourceTypeOfScope == ResourceTypeId.PROJECT -> {
+                                scope.actions.retainAll { action ->
+                                    filterResourceTypes.contains(action.id.substringBeforeLast("_"))
+                                }
+                                scope.actions.isNotEmpty()
+                            }
+
+                            else -> filterResourceTypes.contains(resourceTypeOfScope)
+                        }
+                    }
+                }
+
+                else -> bkCiAuthorizationScopes
+            }
         )
         if (resourceType == AuthResourceType.PROJECT.value && registerMonitorPermission) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
@@ -151,8 +185,10 @@ class RbacPermissionResourceGroupPermissionService(
                 projectCode = projectCode,
                 groupCode = groupCode
             )
-            authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
+            authorizationScopes.addAll(monitorAuthorizationScopes)
         }
+        logger.info("grant group permissions authorization scopes :{}|{}|{}|{}",
+                    projectCode,iamGroupId,resourceType,JsonUtil.toJson(authorizationScopes))
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }

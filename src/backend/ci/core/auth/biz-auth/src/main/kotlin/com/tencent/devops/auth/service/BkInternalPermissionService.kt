@@ -77,7 +77,6 @@ class BkInternalPermissionService(
                 val isManager = checkManager(
                     userId = userId,
                     projectCode = projectCode,
-                    resourceType = resourceType,
                     action = action
                 )
                 if (isManager) {
@@ -99,13 +98,12 @@ class BkInternalPermissionService(
     private fun checkManager(
         userId: String,
         projectCode: String,
-        resourceType: String,
         action: String
     ): Boolean {
         return superManagerService.projectManagerCheck(
             userId = userId,
             projectCode = projectCode,
-            resourceType = resourceType,
+            resourceType = action.substringBeforeLast("_"),
             action = action
         ) || hasManagerPermission(
             userId = userId,
@@ -157,7 +155,6 @@ class BkInternalPermissionService(
             val isManager = checkManager(
                 userId = userId,
                 projectCode = projectCode,
-                resourceType = resourceType,
                 action = action
             )
             val hasProjectLevelPermission by lazy {
