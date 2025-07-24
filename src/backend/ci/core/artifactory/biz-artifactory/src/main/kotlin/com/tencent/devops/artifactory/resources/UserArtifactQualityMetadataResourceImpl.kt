@@ -37,6 +37,8 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import java.time.LocalDateTime
 
 @RestResource
@@ -48,11 +50,17 @@ class UserArtifactQualityMetadataResourceImpl(
         userId: String,
         projectId: String
     ): Result<List<MetadataLabelDetail>> {
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+        val approved = projectInfo?.approvalStatus == ProjectApproveStatus.APPROVED.status
         return Result(
-            bkRepoClient.listArtifactQualityMetadataLabels(
-                userId = userId,
-                projectId = projectId
-            )
+            if (approved) {
+                bkRepoClient.listArtifactQualityMetadataLabels(
+                    userId = userId,
+                    projectId = projectId
+                )
+            } else {
+                emptyList()
+            }
         )
     }
 
