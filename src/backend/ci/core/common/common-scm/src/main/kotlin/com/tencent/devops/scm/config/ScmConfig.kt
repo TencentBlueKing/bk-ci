@@ -41,6 +41,9 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ScmConfig {
 
-    @Value("\${scm.external.common.webhookUrl:/process/api/external/scm/{scmCode}/commit}")
-    val commonHookUrl: String = ""
+    @Value("\${scm.webhook.outerUrl:/process/api/external/scm/{scmCode}/commit}")
+    val outerHookUrl: String = ""
+
+    @Value("\${scm.webhook.innerUrl:/process/api/external/scm/{scmCode}/commit}")
+    val innerHookUrl: String = ""
 }

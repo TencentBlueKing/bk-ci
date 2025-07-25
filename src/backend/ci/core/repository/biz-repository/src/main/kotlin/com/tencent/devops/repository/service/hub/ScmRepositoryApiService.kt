@@ -365,7 +365,7 @@ class ScmRepositoryApiService @Autowired constructor(
             }
 
             ScmType.SCM_GIT, ScmType.SCM_SVN -> {
-                scmConfig.commonHookUrl.replace("{scmCode}", scmCode)
+                scmConfig.outerHookUrl.replace("{scmCode}", scmCode)
             }
 
             else -> {
