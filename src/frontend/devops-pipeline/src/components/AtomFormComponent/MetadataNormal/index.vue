@@ -232,7 +232,7 @@
                     })
                 } catch (e) {
                     console.error(e)
-                    this.parameters = this.value
+                    this.parameters = typeof this.value === 'string' ? JSON.parse(this.value) : this.value
                 } finally {
                     this.loading = false
                 }

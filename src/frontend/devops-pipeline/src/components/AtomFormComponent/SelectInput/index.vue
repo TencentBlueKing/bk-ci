@@ -201,7 +201,7 @@
                 this.displayName = this.value
             }
         },
-        beforeDestroy() {
+        beforeDestroy () {
             if (this.timerId) {
                 clearTimeout(this.timerId)
                 this.timerId = null
