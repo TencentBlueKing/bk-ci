@@ -349,7 +349,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     userId = userId,
                     projectOperation = ProjectOperation.CREATE,
                     channelCode = projectChannel,
-                    productId = productId
+                    productId = productId,
+                    productName = productName,
+                    bgId = bgId,
                 )
             )
             validateProjectOrganization(
@@ -685,7 +687,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     englishName = englishName,
                     userId = userId,
                     projectOperation = ProjectOperation.UPDATE,
-                    productId = productId
+                    productId = productId,
+                    productName = productName,
+                    bgId = bgId
                 )
             )
             validateProjectOrganization(
@@ -1296,7 +1300,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         englishName = englishName,
                         userId = userId,
                         projectOperation = ProjectOperation.ENABLE,
-                        productId = projectInfo.productId
+                        productId = projectInfo.productId,
+                        bgId = projectInfo.bgId
                     )
                 )
             }
