@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
@@ -248,12 +249,12 @@ class RbacPermissionMigrateService(
                     migrateResourceService.migrateResource(
                         projectCode = projectCode,
                         resourceType = it,
-                        projectCreator = migrateCreatorFixService.getProjectCreator(
+                        projectCreator = permissionResourceMemberService.getResourceGroupMembers(
                             projectCode = projectCode,
-                            authSystemType = AuthSystemType.V0_AUTH_TYPE,
-                            projectCreator = projectDetails.creator!!,
-                            projectUpdator = projectDetails.updator
-                        )!!
+                            resourceType = ResourceTypeId.PROJECT,
+                            resourceCode = projectCode,
+                            group = BkAuthGroup.MANAGER
+                        ).random()
                     )
                     // 若迁移流水线模板权限，需要修改项目的properties字段
                     if (it == ResourceTypeId.PIPELINE_TEMPLATE) {
