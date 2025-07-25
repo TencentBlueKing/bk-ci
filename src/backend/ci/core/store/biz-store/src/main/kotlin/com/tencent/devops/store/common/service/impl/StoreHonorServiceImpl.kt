@@ -114,17 +114,17 @@ class StoreHonorServiceImpl @Autowired constructor(
             return false
         }
         val delHonorIds = storeHonorRelList.map { it.honorId }.toMutableList()
-        val hasDelHonorIds = mutableListOf<String>()
         dslContext.transaction { t ->
             val context = DSL.using(t)
+            // 删除组件荣誉关联信息
             storeHonorDao.batchDeleteStoreHonorRel(context, storeHonorRelList)
+            // 查看是否有被其他组件所关联
             val honorIds = storeHonorDao.getByIds(context, delHonorIds)
+            // 删除没有被其他组件关联的荣誉信息
             storeHonorDao.batchDeleteStoreHonorInfo(context, delHonorIds.subtract(honorIds).toList())
-            hasDelHonorIds.addAll(delHonorIds.subtract(honorIds).toList())
         }
-        // 同时清理掉相关联的国际化数据
-        val storeHonorRels = storeHonorRelList.filter { it.honorId in hasDelHonorIds }
-        storeHonorRels.forEach { storeHonorRel ->
+        // 同时清理掉请求相关联组件的国际化数据
+        storeHonorRelList.forEach { storeHonorRel ->
             val key = buildHonorKey(
                 storeType = storeHonorRel.storeType,
                 storeCode = storeHonorRel.storeCode,
