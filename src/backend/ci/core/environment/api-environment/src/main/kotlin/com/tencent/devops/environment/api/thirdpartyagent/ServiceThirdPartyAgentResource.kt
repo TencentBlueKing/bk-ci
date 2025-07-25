@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
@@ -474,4 +475,16 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "修改数据", required = true)
         data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
+
+    @Operation(summary = "查询项目标签和对应节点数")
+    @GET
+    @Path("/projects/{projectId}/fetchTag")
+    fun fetchTag(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<NodeTag>>
 }

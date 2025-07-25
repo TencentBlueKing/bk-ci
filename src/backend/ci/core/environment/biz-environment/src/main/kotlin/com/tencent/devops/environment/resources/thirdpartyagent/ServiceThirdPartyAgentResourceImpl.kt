@@ -40,6 +40,7 @@ import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -57,6 +58,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCrea
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
 import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
@@ -73,6 +75,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val agentPipelineService: AgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
     private val nodeService: NodeService,
+    private val nodeTagService: NodeTagService,
     private val agentService: ThirdPartAgentService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
@@ -336,6 +339,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 type = data.type,
                 data = data.envVars
             )
+        )
+    }
+
+    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+        return Result(
+            nodeTagService.fetchTagAndNodeCount(projectId)
         )
     }
 }
