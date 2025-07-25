@@ -34,7 +34,7 @@ import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
 import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
-import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
+import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -45,14 +45,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class ProcessMigrationDataDeleteService @Autowired constructor(
+class ProcessDataDeleteService @Autowired constructor(
     private val processDao: ProcessDao,
     private val processDataDeleteDao: ProcessDataDeleteDao,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProcessMigrationDataDeleteService::class.java)
+        private val logger = LoggerFactory.getLogger(ProcessDataDeleteService::class.java)
         private const val DEFAULT_PAGE_SIZE = 20
     }
 
@@ -60,27 +60,27 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
     private val clearBaseBuildData: Boolean = false
 
     /**
-     * 删除process数据库数据
-     * @param deleteMigrationDataParam 删除迁移数据参数
+     * 删除process数据库迁移数据
+     * @param deleteDataParam 删除迁移数据参数
      */
-    fun deleteProcessData(
-        deleteMigrationDataParam: DeleteMigrationDataParam
+    fun deleteProcessMigrationData(
+        deleteDataParam: DeleteDataParam
     ) {
-        val migrationLock = deleteMigrationDataParam.migrationLock
-        val projectId = deleteMigrationDataParam.projectId
+        val migrationLock = deleteDataParam.lock
+        val projectId = deleteDataParam.projectId
         try {
             migrationLock?.lock()
             val moduleCode = SystemModuleEnum.PROCESS
             val queryParam = ProjectDataMigrateHistoryQueryParam(
                 projectId = projectId,
-                pipelineId = deleteMigrationDataParam.pipelineId,
+                pipelineId = deleteDataParam.pipelineId,
                 moduleCode = moduleCode,
-                targetClusterName = deleteMigrationDataParam.targetClusterName,
-                targetDataSourceName = deleteMigrationDataParam.targetDataSourceName
+                targetClusterName = deleteDataParam.clusterName,
+                targetDataSourceName = deleteDataParam.dataSourceName
             )
             // 判断是否能删除db中数据
             if (projectDataMigrateHistoryService.isDataCanDelete(queryParam)) {
-                deleteProcessRelData(deleteMigrationDataParam)
+                deleteProcessRelData(deleteDataParam)
             } else {
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
@@ -96,13 +96,29 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         }
     }
 
-    private fun deleteProcessRelData(
-        deleteMigrationDataParam: DeleteMigrationDataParam
+    /**
+     * 删除process数据库数据
+     * @param deleteDataParam 删除迁移数据参数
+     */
+    fun deleteProcessData(
+        deleteDataParam: DeleteDataParam
     ) {
-        val dslContext = deleteMigrationDataParam.dslContext
-        val projectId = deleteMigrationDataParam.projectId
-        val pipelineId = deleteMigrationDataParam.pipelineId
-        val broadcastTableDeleteFlag = deleteMigrationDataParam.broadcastTableDeleteFlag
+        val lock = deleteDataParam.lock
+        try {
+            lock?.lock()
+            deleteProcessRelData(deleteDataParam)
+        } finally {
+            lock?.unlock()
+        }
+    }
+
+    private fun deleteProcessRelData(
+        deleteDataParam: DeleteDataParam
+    ) {
+        val dslContext = deleteDataParam.dslContext
+        val projectId = deleteDataParam.projectId
+        val pipelineId = deleteDataParam.pipelineId
+        val broadcastTableDeleteFlag = deleteDataParam.broadcastTableDeleteFlag
         if (!pipelineId.isNullOrBlank()) {
             // 如果流水线ID不为空，只需清理与流水线直接相关的数据
             deleteProjectPipelineRelData(
@@ -110,7 +126,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 projectId = projectId,
                 pipelineIds = mutableListOf(pipelineId),
                 broadcastTableDeleteFlag = broadcastTableDeleteFlag,
-                archivePipelineFlag = deleteMigrationDataParam.archivePipelineFlag
+                archivePipelineFlag = deleteDataParam.archivePipelineFlag
             )
             return
         }
@@ -135,15 +151,15 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 projectId = projectId,
                 pipelineIds = pipelineIds,
                 broadcastTableDeleteFlag = broadcastTableDeleteFlag,
-                archivePipelineFlag = deleteMigrationDataParam.archivePipelineFlag
+                archivePipelineFlag = deleteDataParam.archivePipelineFlag
             )
         } while (pipelineIds?.size == DEFAULT_PAGE_SIZE)
         // 如果流水线ID为空，与项目直接相关的数据也需要清理
         deleteProjectDirectlyRelData(
             dslContext = dslContext,
             projectId = projectId,
-            targetClusterName = deleteMigrationDataParam.targetClusterName,
-            targetDataSourceName = deleteMigrationDataParam.targetDataSourceName
+            targetClusterName = deleteDataParam.clusterName,
+            targetDataSourceName = deleteDataParam.dataSourceName
         )
     }
 
