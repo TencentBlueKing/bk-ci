@@ -52,8 +52,11 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.exception.RetryMQException
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -78,7 +81,8 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val startCloudClient: StartCloudClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RestartWorkspaceHandler::class.java)
@@ -212,6 +216,15 @@ class RestartWorkspaceHandler @Autowired constructor(
         )
         val owners = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet()
         if (event.status) {
+            val cgsStatus = try {
+                startCloudClient.computerStatus(setOf(workspace.hostIp!!))?.firstOrNull()
+            } catch (e: Exception) {
+                logger.warn("get computerStatus error", e)
+                null
+            }
+            if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
+                throw RetryMQException(60 * 1000)
+            }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(

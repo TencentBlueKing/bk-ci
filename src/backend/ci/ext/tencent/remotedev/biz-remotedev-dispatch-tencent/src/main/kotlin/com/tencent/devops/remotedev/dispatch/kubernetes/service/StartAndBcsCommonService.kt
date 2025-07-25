@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -29,9 +30,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtil
 import com.tencent.devops.remotedev.interfaces.ServiceRemoteDevInterface
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.exception.RetryMQException
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatusEnum
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,15 +77,23 @@ class StartAndBcsCommonService @Autowired constructor(
     }
 
     fun handleEvent(bcsCallbackEvent: BcsCallbackEvent) {
-        with(bcsCallbackEvent) {
-            val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
-                logger.warn("handleEvent|fail with wrong task|$taskStatus")
-                return
+        kotlin.runCatching {
+            with(bcsCallbackEvent) {
+                val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+                    logger.warn("handleEvent|fail with wrong task|$taskStatus")
+                    return
+                }
+                logger.info("StartAndBcsCommonService|handleEvent|task info|$task")
+                when {
+                    task.status == EnvironmentActionStatus.PENDING -> dealWithPending(taskStatus, task)
+                    task.status.needFix() -> dealWithFix(taskStatus, task)
+                }
             }
-            logger.info("StartAndBcsCommonService|handleEvent|task info|$task")
-            when {
-                task.status == EnvironmentActionStatus.PENDING -> dealWithPending(taskStatus, task)
-                task.status.needFix() -> dealWithFix(taskStatus, task)
+        }.onFailure {
+            if (it is RetryMQException && bcsCallbackEvent.retryTime < 3) {
+                dispatcher.dispatch(
+                    bcsCallbackEvent.copy(delayMills = it.delayMills, retryTime = bcsCallbackEvent.retryTime + 1)
+                )
             }
         }
     }
@@ -128,9 +139,6 @@ class StartAndBcsCommonService @Autowired constructor(
         operator: String
     ) {
         if (taskStatus.status == TaskStatusEnum.successed) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, taskStatus.uid, EnvironmentActionStatus.SUCCEEDED
-            )
             dispatchWorkspaceDao.updateWorkspace(
                 workspaceName = workspaceName,
                 envId = taskStatus.vmCreateResp?.envId ?: "",
@@ -150,14 +158,10 @@ class StartAndBcsCommonService @Autowired constructor(
                     macAddress = taskStatus.vmCreateResp?.macAddress
                 )
             )
-        } else {
             dispatchWorkspaceOpHisDao.update(
-                dslContext = dslContext,
-                uid = taskStatus.uid,
-                status = EnvironmentActionStatus.FAILED,
-                fStatus = EnvironmentActionStatus.PENDING,
-                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                dslContext, taskStatus.uid, EnvironmentActionStatus.SUCCEEDED
             )
+        } else {
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = operator,
@@ -172,6 +176,13 @@ class StartAndBcsCommonService @Autowired constructor(
                     errorMsg = JsonUtil.toJson(taskStatus)
                 )
             )
+            dispatchWorkspaceOpHisDao.update(
+                dslContext = dslContext,
+                uid = taskStatus.uid,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+            )
         }
     }
 
@@ -180,9 +191,6 @@ class StartAndBcsCommonService @Autowired constructor(
         task: DispatchWorkspaceOpHisRecord
     ) {
         if (taskStatus.status == TaskStatusEnum.successed) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
-            )
             val workspaceStatus = workspaceBcsClient.startGetWorkspaceInfo(
                 userId = task.operator,
                 environmentOperate = EnvironmentOperate(task.envId)
@@ -197,17 +205,13 @@ class StartAndBcsCommonService @Autowired constructor(
                         environmentIp = workspaceStatus.environmentIP
                     )
                 )
+                dispatchWorkspaceOpHisDao.update(
+                    dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
+                )
                 return
             }
         }
 
-        dispatchWorkspaceOpHisDao.update(
-            dslContext = dslContext,
-            uid = taskStatus.uid,
-            status = EnvironmentActionStatus.FAILED,
-            fStatus = EnvironmentActionStatus.PENDING,
-            actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
-        )
         SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
             event = RemoteDevUpdateEvent(
                 userId = task.operator,
@@ -217,6 +221,13 @@ class StartAndBcsCommonService @Autowired constructor(
                 errorMsg = JsonUtil.toJson(taskStatus)
             )
         )
+        dispatchWorkspaceOpHisDao.update(
+            dslContext = dslContext,
+            uid = taskStatus.uid,
+            status = EnvironmentActionStatus.FAILED,
+            fStatus = EnvironmentActionStatus.PENDING,
+            actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+        )
     }
 
     private fun stopWorkspace(
@@ -224,9 +235,6 @@ class StartAndBcsCommonService @Autowired constructor(
         task: DispatchWorkspaceOpHisRecord
     ) {
         if (taskStatus.status == TaskStatusEnum.successed) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
-            )
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -235,14 +243,10 @@ class StartAndBcsCommonService @Autowired constructor(
                     status = true
                 )
             )
-        } else {
             dispatchWorkspaceOpHisDao.update(
-                dslContext = dslContext,
-                uid = taskStatus.uid,
-                status = EnvironmentActionStatus.FAILED,
-                fStatus = EnvironmentActionStatus.PENDING,
-                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
             )
+        } else {
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -251,6 +255,13 @@ class StartAndBcsCommonService @Autowired constructor(
                     status = false,
                     errorMsg = JsonUtil.toJson(taskStatus)
                 )
+            )
+            dispatchWorkspaceOpHisDao.update(
+                dslContext = dslContext,
+                uid = taskStatus.uid,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
             )
         }
     }
@@ -260,9 +271,6 @@ class StartAndBcsCommonService @Autowired constructor(
         task: DispatchWorkspaceOpHisRecord
     ) {
         if (taskStatus.status == TaskStatusEnum.successed) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
-            )
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -271,14 +279,10 @@ class StartAndBcsCommonService @Autowired constructor(
                     status = true
                 )
             )
-        } else {
             dispatchWorkspaceOpHisDao.update(
-                dslContext = dslContext,
-                uid = taskStatus.uid,
-                status = EnvironmentActionStatus.FAILED,
-                fStatus = EnvironmentActionStatus.PENDING,
-                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
             )
+        } else {
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -287,6 +291,13 @@ class StartAndBcsCommonService @Autowired constructor(
                     status = false,
                     errorMsg = JsonUtil.toJson(taskStatus)
                 )
+            )
+            dispatchWorkspaceOpHisDao.update(
+                dslContext = dslContext,
+                uid = taskStatus.uid,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
             )
         }
     }
@@ -296,9 +307,6 @@ class StartAndBcsCommonService @Autowired constructor(
         task: DispatchWorkspaceOpHisRecord
     ) {
         if (taskStatus.status == TaskStatusEnum.successed) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
-            )
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -307,14 +315,10 @@ class StartAndBcsCommonService @Autowired constructor(
                     status = true
                 )
             )
-        } else {
             dispatchWorkspaceOpHisDao.update(
-                dslContext = dslContext,
-                uid = taskStatus.uid,
-                status = EnvironmentActionStatus.FAILED,
-                fStatus = EnvironmentActionStatus.PENDING,
-                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
             )
+        } else {
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -324,6 +328,13 @@ class StartAndBcsCommonService @Autowired constructor(
                     errorMsg = JsonUtil.toJson(taskStatus)
                 )
             )
+            dispatchWorkspaceOpHisDao.update(
+                dslContext = dslContext,
+                uid = taskStatus.uid,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+            )
         }
     }
 
@@ -332,9 +343,6 @@ class StartAndBcsCommonService @Autowired constructor(
         task: DispatchWorkspaceOpHisRecord
     ) {
         if (taskStatus.status == TaskStatusEnum.successed) {
-            dispatchWorkspaceOpHisDao.update(
-                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
-            )
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -344,14 +352,10 @@ class StartAndBcsCommonService @Autowired constructor(
                     taskUid = task.uid
                 )
             )
-        } else {
             dispatchWorkspaceOpHisDao.update(
-                dslContext = dslContext,
-                uid = taskStatus.uid,
-                status = EnvironmentActionStatus.FAILED,
-                fStatus = EnvironmentActionStatus.PENDING,
-                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+                dslContext, task.uid, EnvironmentActionStatus.SUCCEEDED
             )
+        } else {
             SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceUpdate(
                 event = RemoteDevUpdateEvent(
                     userId = task.operator,
@@ -361,6 +365,13 @@ class StartAndBcsCommonService @Autowired constructor(
                     errorMsg = JsonUtil.toJson(taskStatus),
                     taskUid = task.uid
                 )
+            )
+            dispatchWorkspaceOpHisDao.update(
+                dslContext = dslContext,
+                uid = taskStatus.uid,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
             )
         }
     }

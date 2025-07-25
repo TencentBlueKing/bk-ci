@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -50,7 +51,9 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import java.time.Duration
@@ -69,12 +72,14 @@ class StartControl @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
+    private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val permissionService: PermissionService,
     private val dispatcher: SampleEventDispatcher,
     private val workspaceCommon: WorkspaceCommon,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val startCloudClient: StartCloudClient
 ) {
 
     companion object {
@@ -227,14 +232,28 @@ class StartControl @Autowired constructor(
         workspaceName: String,
         environmentHost: String?,
         errorMsg: String? = null
-    ) {
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(workspaceName)
-            )
-        if (workspace.status.checkRunning()) return
+    ): WorkspaceStatus {
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+        var workspaceStatus = WorkspaceStatus.RUNNING
+        if (workspace.status.checkRunning()) return workspaceStatus
         if (status) {
+            val cgsStatus = try {
+                startCloudClient.computerStatus(setOf(workspace.hostIp!!))?.firstOrNull()
+            } catch (e: Exception) {
+                logger.warn("get computerStatus error", e)
+                null
+            }
+            if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
+                logger.warn("computerStatus is not normal, start failed.")
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_START_FAILED)
+                workspaceStatus = WorkspaceStatus.EXCEPTION_START_FAILED
+            }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
@@ -279,7 +298,7 @@ class StartControl @Autowired constructor(
                 status = WorkspaceStatus.EXCEPTION,
                 dslContext = dslContext
             )
-
+            workspaceStatus = WorkspaceStatus.EXCEPTION
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -307,5 +326,6 @@ class StartControl @Autowired constructor(
             ownerType = workspace.ownerType,
             projectId = workspace.projectId
         )
+        return workspaceStatus
     }
 }
