@@ -18,6 +18,11 @@ class BlackUserFilter : ContainerRequestFilter {
     private val blackUsers: List<String> = listOf("admin")
 
     override fun filter(requestContext: ContainerRequestContext) {
+        val requestUri = requestContext.uriInfo.requestUri
+        logger.info("requestUri:$requestUri")
+        if (requestUri.path.contains("remotedev/get_all_windows_resource_quota")) {
+            return
+        }
         val userId = requestContext.getHeaderString(AUTH_HEADER_USER_ID)
         if (!userId.isNullOrBlank() && blackUsers.contains(userId.lowercase())) {
             logger.warn("User $userId is not allowed to access")
