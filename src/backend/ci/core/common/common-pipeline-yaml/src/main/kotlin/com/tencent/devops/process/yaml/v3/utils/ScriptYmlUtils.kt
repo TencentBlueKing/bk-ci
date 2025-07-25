@@ -663,6 +663,7 @@ object ScriptYmlUtils {
 
         if (preTriggerOn is PreTriggerOnV3) {
             res.repoName = preTriggerOn.repoName
+            res.scmCode = preTriggerOn.scmCode
         }
 
         return res

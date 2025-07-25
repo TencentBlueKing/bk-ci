@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -42,6 +43,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTrig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerData
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerInput
@@ -66,6 +70,7 @@ import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.scm.api.enums.EventAction
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -248,7 +253,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             /*由于存在多个相同代码库并且配置了相同触发条件的触发器，所以需要设计存储多个触发器*/
             val index = indexName.getOrPut("$name-${git.eventType}") { 0 }
             val nowExist = res.getOrPut("$name-$index") {
-                TriggerOn(repoName = repoName)
+                TriggerOn(repoName = repoName, scmCode = git.scmCode)
             }
             indexName["$name-${git.eventType}"] = index + 1
             when (git.eventType) {
@@ -850,6 +855,104 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 ).checkTriggerElementEnable(mr.enable).apply {
                     version = "2.*"
                 }
+            )
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    fun yaml2TriggerScmGit(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
+        triggerOn.push?.let { push ->
+            elementQueue.add(
+                CodeScmGitWebHookTriggerElement(
+                    name = push.name ?: "Git通用事件触发",
+                    data = CodeScmGitWebHookTriggerData(
+                        input = CodeScmGitWebHookTriggerInput(
+                            branchName = push.branches.nonEmptyOrNull()?.join(),
+                            excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
+                            includePaths = push.paths.nonEmptyOrNull()?.join(),
+                            excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
+                            includeUsers = push.users?.joinToString(separator = ","),
+                            excludeUsers = push.usersIgnore?.joinToString(separator = ","),
+                            pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                                ?: PathFilterType.NamePrefixFilter,
+                            eventType = CodeEventType.PUSH,
+                            actions = push.action ?: listOf(
+                                EventAction.PUSH_FILE.value,
+                                EventAction.NEW_BRANCH.value
+                            ),
+                            repositoryType = repositoryType,
+                            repositoryName = triggerOn.repoName,
+                            scmCode = triggerOn.scmCode ?: ScmType.SCM_GIT.name
+                        )
+                    )
+                ).checkTriggerElementEnable(push.enable).apply {
+                    version = "1.*"
+                }
+            )
+        }
+
+        triggerOn.mr?.let { mr ->
+            elementQueue.add(
+                CodeScmGitWebHookTriggerElement(
+                    name = mr.name ?: "Git通用事件触发",
+                    data = CodeScmGitWebHookTriggerData(
+                        input = CodeScmGitWebHookTriggerInput(
+                            branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+                            excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+                            includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+                            excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+                            includePaths = mr.paths.nonEmptyOrNull()?.join(),
+                            excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+                            includeUsers = mr.users?.joinToString(separator = ","),
+                            excludeUsers = mr.usersIgnore?.joinToString(separator = ","),
+                            block = mr.blockMr,
+                            enableCheck = mr.reportCommitCheck,
+                            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                                ?: PathFilterType.NamePrefixFilter,
+                            actions = mr.action ?: listOf(
+                                EventAction.OPEN.value,
+                                EventAction.REOPEN.value,
+                                EventAction.PUSH_UPDATE.value
+                            ),
+                            eventType = CodeEventType.MERGE_REQUEST,
+                            repositoryType = repositoryType,
+                            repositoryName = triggerOn.repoName,
+                            scmCode = triggerOn.scmCode ?: ScmType.SCM_GIT.name
+                        )
+                    )
+                ).checkTriggerElementEnable(mr.enable).apply {
+                    version = "1.*"
+                }
+            )
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    fun yaml2TriggerScmSvn(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
+        triggerOn.push?.let { push ->
+            elementQueue.add(
+                CodeSVNWebHookTriggerElement(
+                    name = push.name ?: "SVN通用事件触发",
+                    relativePath = push.paths.nonEmptyOrNull()?.join(),
+                    excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
+                    includeUsers = push.users,
+                    excludeUsers = push.usersIgnore.nonEmptyOrNull(),
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
+                    // todo action
+                    repositoryType = repositoryType,
+                    repositoryName = triggerOn.repoName
+                ).checkTriggerElementEnable(push.enable)
             )
         }
     }

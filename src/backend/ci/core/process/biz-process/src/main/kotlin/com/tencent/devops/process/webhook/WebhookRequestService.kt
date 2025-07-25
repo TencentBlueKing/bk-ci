@@ -107,11 +107,15 @@ class WebhookRequestService(
             logger.warn("Failed to save webhook request", ignored)
         }
         if (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT) {
-            webhookGrayCompareService.asyncCompareWebhook(
-                scmType = scmType,
-                request = request,
-                matcher = matcher
-            )
+            if (!matcher.preMatch().isMatch) {
+                logger.info("skip compare webhook|preMatch is false")
+            } else {
+                webhookGrayCompareService.asyncCompareWebhook(
+                    scmType = scmType,
+                    request = request,
+                    matcher = matcher
+                )
+            }
         }
         val repoName = matcher.getRepoName()
         // 如果整个仓库都开启灰度，则全部走新逻辑
