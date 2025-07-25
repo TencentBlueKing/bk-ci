@@ -83,7 +83,7 @@ class UserApiPermissionAspect constructor(
         // 参数value
         val parameterValue = jp.args
         // 参数key
-        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        val parameterNames = methodSignature.parameterNames
         var projectId: String? = null
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
