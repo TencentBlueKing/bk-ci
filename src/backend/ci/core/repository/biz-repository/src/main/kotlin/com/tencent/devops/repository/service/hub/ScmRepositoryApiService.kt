@@ -284,7 +284,7 @@ class ScmRepositoryApiService @Autowired constructor(
         return if (existsEvents.contains(event)) {
             existsEvents[event]!!
         } else {
-            val hookEvents = ScmEventType.values().find { it.name == event }?.let {
+            val hookEvents = ScmEventType.values().find { it.value == event }?.let {
                 HookEvents(it)
             }
             val hookInput = HookInput(
@@ -331,7 +331,6 @@ class ScmRepositoryApiService @Autowired constructor(
                 providerRepository = providerRepository,
                 opts = opts
             )
-            logger.info("")
             hooks.forEach { existsHook ->
                 val matchSubPath = subPath?.let { existsHook.path == it } ?: true
                 if (existsHook.url == hookUrl && matchSubPath) {
