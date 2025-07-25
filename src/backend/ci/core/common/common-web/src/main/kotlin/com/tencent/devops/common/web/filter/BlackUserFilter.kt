@@ -19,7 +19,7 @@ class BlackUserFilter : ContainerRequestFilter {
 
     override fun filter(requestContext: ContainerRequestContext) {
         val userId = requestContext.getHeaderString(AUTH_HEADER_USER_ID)
-        if (!userId.isNullOrBlank() && blackUsers.contains(userId)) {
+        if (!userId.isNullOrBlank() && blackUsers.contains(userId.lowercase())) {
             logger.warn("User $userId is not allowed to access")
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_ILLEGAL_ACCESS_USER_ID,
