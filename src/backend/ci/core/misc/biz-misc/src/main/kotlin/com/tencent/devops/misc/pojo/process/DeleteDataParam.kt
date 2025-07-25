@@ -27,24 +27,24 @@
 
 package com.tencent.devops.misc.pojo.process
 
-import com.tencent.devops.misc.lock.MigrationLock
+import com.tencent.devops.common.redis.RedisLock
 import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.DSLContext
 
-@Schema(title = "删除迁移数据参数")
-data class DeleteMigrationDataParam(
+@Schema(title = "删除数据参数")
+data class DeleteDataParam(
     @get:Schema(title = "jooq上下文", required = true)
     val dslContext: DSLContext,
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @get:Schema(title = "迁移集群名称", required = true)
-    val targetClusterName: String,
-    @get:Schema(title = "迁移数据源名称", required = true)
-    val targetDataSourceName: String,
+    @get:Schema(title = "集群名称", required = true)
+    val clusterName: String,
+    @get:Schema(title = "数据源名称", required = true)
+    val dataSourceName: String,
     @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String? = null,
-    @get:Schema(title = "迁移锁", required = false)
-    val migrationLock: MigrationLock? = null,
+    @get:Schema(title = "锁", required = false)
+    val lock: RedisLock? = null,
     @get:Schema(title = "广播表删除标识", required = false)
     val broadcastTableDeleteFlag: Boolean? = true,
     @get:Schema(title = "归档流水线标识", required = false)

@@ -53,7 +53,7 @@ import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
-import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
+import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.service.project.DataSourceService
@@ -82,7 +82,7 @@ class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDataMigrateDao: ProcessDataMigrateDao,
-    private val processMigrationDataDeleteService: ProcessMigrationDataDeleteService,
+    private val processDataDeleteService: ProcessDataDeleteService,
     private val dataSourceService: DataSourceService,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
     private val redisOperation: RedisOperation,
@@ -229,14 +229,14 @@ class ProcessDataMigrateService @Autowired constructor(
             item = projectId
         )
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
-        val deleteMigrationDataParam = DeleteMigrationDataParam(
+        val deleteDataParam = DeleteDataParam(
             dslContext = migratingShardingDslContext,
             projectId = projectId,
-            targetClusterName = clusterName,
-            targetDataSourceName = shardingRoutingRule,
-            migrationLock = migrationLock
+            clusterName = clusterName,
+            dataSourceName = shardingRoutingRule,
+            lock = migrationLock
         )
-        processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+        processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
         // 查询项目下流水线数量
         val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
         // 根据流水线数量计算线程数量
@@ -292,7 +292,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("migrateProjectData doMigrationBus fail|params:[$userId|$projectId]", ignored)
             // 删除迁移库的数据
-            processMigrationDataDeleteService.deleteProjectDirectlyRelData(
+            processDataDeleteService.deleteProjectDirectlyRelData(
                 dslContext = migratingShardingDslContext,
                 projectId = projectId,
                 targetClusterName = clusterName,
@@ -372,14 +372,14 @@ class ProcessDataMigrateService @Autowired constructor(
         try {
             // 删除迁移库的数据
             shardingRoutingRule?.let {
-                val deleteMigrationDataParam = DeleteMigrationDataParam(
+                val deleteDataParam = DeleteDataParam(
                     dslContext = migratingShardingDslContext,
                     projectId = projectId,
-                    targetClusterName = clusterName,
-                    targetDataSourceName = shardingRoutingRule,
-                    migrationLock = migrationLock
+                    clusterName = clusterName,
+                    dataSourceName = shardingRoutingRule,
+                    lock = migrationLock
                 )
-                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
             }
             // 把项目路由规则还原
             val updateShardingRoutingRule = historyShardingRoutingRule
@@ -514,14 +514,14 @@ class ProcessDataMigrateService @Autowired constructor(
                 val context = DSL.using(t)
                 if (migrationSourceDbDataDeleteFlag) {
                     // 开关打开则删除原库的数据
-                    val deleteMigrationDataParam = DeleteMigrationDataParam(
+                    val deleteDataParam = DeleteDataParam(
                         dslContext = context,
                         projectId = projectId,
-                        targetClusterName = clusterName,
-                        targetDataSourceName = shardingRoutingRule,
+                        clusterName = clusterName,
+                        dataSourceName = shardingRoutingRule,
                         broadcastTableDeleteFlag = !migrationProcessDbUnionClusterFlag
                     )
-                    processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                    processDataDeleteService.deleteProcessData(deleteDataParam)
                 }
                 // 更新项目的路由规则
                 updateShardingRoutingRule(

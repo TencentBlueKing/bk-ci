@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,23 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.shardingprocess.p6
+package com.tencent.devops.misc.resources
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.image.api.OpProcessShardingDbResource
 import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service("ds_5")
-class Process6ShardingDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext?
-) : ProcessShardingDataClearService() {
+@RestResource
+class OpProcessShardingDbResourceImpl : OpProcessShardingDbResource {
 
-    override fun getDSLContext(): DSLContext? {
-        return dslContext
-    }
-
-    override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_5" && dslContext != null
+    override fun clearShardingData(
+        userId: String,
+        clusterName: String,
+        dataSourceName: String,
+        projectId: String,
+        broadcastTableDeleteFlag: Boolean
+    ): Result<Boolean> {
+        val processShardingDataClearService = SpringContextUtil.getBean(
+            clazz = ProcessShardingDataClearService::class.java,
+            beanName = dataSourceName
+        )
+        return Result(
+            processShardingDataClearService.clearShardingDataByProjectId(
+                projectId = projectId,
+                clusterName = clusterName,
+                dataSourceName = dataSourceName,
+                broadcastTableDeleteFlag = broadcastTableDeleteFlag
+            )
+        )
     }
 }

@@ -27,21 +27,21 @@
 
 package com.tencent.devops.misc.service.shardingprocess
 
-import com.tencent.devops.misc.dao.process.ProcessDao
-import com.tencent.devops.misc.dao.process.ProcessShardingDataClearDao
+import com.tencent.devops.misc.pojo.process.DeleteDataParam
+import com.tencent.devops.misc.service.process.ProcessDataDeleteService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 abstract class ProcessShardingDataClearService {
 
     private val logger = LoggerFactory.getLogger(ProcessShardingDataClearService::class.java)
 
     @Autowired
-    lateinit var processDao: ProcessDao
-
-    @Autowired
-    lateinit var processShardingDataClearDao: ProcessShardingDataClearDao
+    lateinit var processDataDeleteService: ProcessDataDeleteService
 
     /**
      * 获取DSLContext
@@ -71,10 +71,31 @@ abstract class ProcessShardingDataClearService {
         broadcastTableDeleteFlag: Boolean? = false
     ): Boolean {
         if (!getExecuteFlag(dataSourceName)) {
-           logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
+            logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
             return false
         }
         val dslContext = getDSLContext()
+        val executor = Executors.newFixedThreadPool(1)
+        try {
+            dslContext?.transaction { t ->
+                val context = DSL.using(t)
+                val deleteDataParam = DeleteDataParam(
+                    dslContext = context,
+                    projectId = projectId,
+                    clusterName = clusterName,
+                    dataSourceName = dataSourceName,
+                    broadcastTableDeleteFlag = broadcastTableDeleteFlag
+                )
+                executor.submit {
+                    processDataDeleteService.deleteProcessData(deleteDataParam)
+                }
+            }
+        } finally {
+            executor.shutdown() // 确保线程池关闭
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow()
+            }
+        }
         return true
     }
 }
