@@ -373,25 +373,17 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         creator: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        archiveFlag: Boolean?
     ): Result<Page<PipelineOperationDetail>> {
         checkParam(userId, projectId)
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
+            permission = AuthPermission.VIEW
         )
         return Result(
             pipelineOperationLogService.getOperationLogsInPage(
@@ -400,7 +392,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 creator = creator,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                archiveFlag = archiveFlag
             )
         )
     }
