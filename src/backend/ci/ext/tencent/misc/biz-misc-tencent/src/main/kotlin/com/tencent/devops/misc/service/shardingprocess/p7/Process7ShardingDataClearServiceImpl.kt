@@ -25,56 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.shardingprocess
+package com.tencent.devops.misc.service.shardingprocess.p7
 
-import com.tencent.devops.misc.dao.process.ProcessDao
-import com.tencent.devops.misc.dao.process.ProcessShardingDataClearDao
+import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-abstract class ProcessShardingDataClearService {
+@Service
+class Process7ShardingDataClearServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext?
+) : ProcessShardingDataClearService() {
 
-    private val logger = LoggerFactory.getLogger(ProcessShardingDataClearService::class.java)
+    override fun getDSLContext(): DSLContext? {
+        return dslContext
+    }
 
-    @Autowired
-    lateinit var processDao: ProcessDao
-
-    @Autowired
-    lateinit var processShardingDataClearDao: ProcessShardingDataClearDao
-
-    /**
-     * 获取DSLContext
-     * @return DSLContext
-     */
-    abstract fun getDSLContext(): DSLContext?
-
-    /**
-     * 获取执行条件
-     * @param routingRule 路由规则
-     * @return 布尔值
-     */
-    abstract fun getExecuteFlag(routingRule: String?): Boolean
-
-    /**
-     * 按项目ID清理分片数据
-     * @param projectId 项目ID
-     * @param clusterName 集群名称
-     * @param dataSourceName 数据源名称
-     * @param broadcastTableDeleteFlag 广播表删除标识
-     * @return 布尔值
-     */
-    fun clearShardingDataByProjectId(
-        projectId: String,
-        clusterName: String,
-        dataSourceName: String,
-        broadcastTableDeleteFlag: Boolean? = false
-    ): Boolean {
-        if (!getExecuteFlag(dataSourceName)) {
-           logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
-            return false
-        }
-        val dslContext = getDSLContext()
-        return true
+    override fun getExecuteFlag(routingRule: String?): Boolean {
+        return routingRule != "ds_6" && dslContext != null
     }
 }

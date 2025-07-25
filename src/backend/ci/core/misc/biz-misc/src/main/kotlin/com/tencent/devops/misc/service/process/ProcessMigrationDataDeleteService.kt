@@ -96,7 +96,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         }
     }
 
-    private fun deleteProcessRelData(
+    fun deleteProcessRelData(
         deleteMigrationDataParam: DeleteMigrationDataParam
     ) {
         val dslContext = deleteMigrationDataParam.dslContext

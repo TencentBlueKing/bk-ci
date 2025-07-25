@@ -279,6 +279,84 @@ class ProcessShardingDataSourceConfig {
         }
     }
 
+    @Bean
+    fun p7DataSource(
+        @Value("\${spring.datasource.process.sharding.p7.url:}")
+        datasourceUrl: String = "",
+        @Value("\${spring.datasource.process.sharding.p7.username:}")
+        datasourceUsername: String = "",
+        @Value("\${spring.datasource.process.sharding.p7.password:}")
+        datasourcePassword: String = "",
+        @Value("\${spring.datasource.process.sharding.p7.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.process.sharding.p7.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource? {
+        return createDataSource(
+            datasourcePoolName = "DBPool-Process-P7",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun p7JooqConfiguration(
+        @Qualifier("p7DataSource")
+        p7DataSource: DataSource?
+    ): DefaultConfiguration? {
+        return if (p7DataSource != null) {
+            val configuration = DefaultConfiguration()
+            configuration.set(SQLDialect.MYSQL)
+            configuration.set(p7DataSource)
+            configuration.settings().isRenderSchema = false
+            configuration
+        } else {
+            null
+        }
+    }
+
+    @Bean
+    fun p8DataSource(
+        @Value("\${spring.datasource.process.sharding.p8.url:}")
+        datasourceUrl: String = "",
+        @Value("\${spring.datasource.process.sharding.p8.username:}")
+        datasourceUsername: String = "",
+        @Value("\${spring.datasource.process.sharding.p8.password:}")
+        datasourcePassword: String = "",
+        @Value("\${spring.datasource.process.sharding.p8.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.process.sharding.p8.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource? {
+        return createDataSource(
+            datasourcePoolName = "DBPool-Process-p8",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun p8JooqConfiguration(
+        @Qualifier("p8DataSource")
+        p8DataSource: DataSource?
+    ): DefaultConfiguration? {
+        return if (p8DataSource != null) {
+            val configuration = DefaultConfiguration()
+            configuration.set(SQLDialect.MYSQL)
+            configuration.set(p8DataSource)
+            configuration.settings().isRenderSchema = false
+            configuration
+        } else {
+            null
+        }
+    }
+
     private fun createDataSource(
         datasourcePoolName: String,
         datasourceUrl: String,
