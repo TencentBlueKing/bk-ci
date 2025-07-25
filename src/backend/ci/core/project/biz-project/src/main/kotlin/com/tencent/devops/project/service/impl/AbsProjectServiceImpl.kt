@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -999,9 +999,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String, productIds: String?): List<ProjectVO> {
+    override fun list(
+        userId: String,
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
+        val (offset, limit) = if (page != null && pageSize != null) {
+            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+            sqlLimit.offset to sqlLimit.limit
+        } else {
+            null to null
+        }
         try {
 
             val projects = getProjectFromAuth(userId, null)
@@ -1010,10 +1023,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectDao.listByEnglishName(
                 dslContext = dslContext,
                 englishNameList = projects,
-                offset = null,
-                limit = null,
+                offset = offset,
+                limit = limit,
                 searchName = null,
-                productIds = productIds?.split(",")?.map { it.toInt() }?.toSet() ?: setOf()
+                productIds = splitStr(productIds).map { it.toInt() }.toSet(),
+                channelCodes = splitStr(channelCodes).toSet(),
+                sortType = sort
             ).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
@@ -1699,6 +1714,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun splitStr(str: String?) = if (str.isNullOrBlank()) {
+        listOf()
+    } else {
+        str.split(",")
     }
 
     companion object {

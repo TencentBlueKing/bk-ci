@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -186,6 +186,8 @@ object CommonMessageCode {
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
     const val ERROR_VARIABLE_NOT_FOUND = "2100137" // SVN Token 为空, 请检查代码库的凭证类型
+    const val CUSTOM_MESSAGE_EXCEPTION = "2100138" // 自定义错误信息异常
+    const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2100139" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
@@ -234,6 +236,7 @@ object CommonMessageCode {
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
     const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
     const val GET_SESSION_INFO = "bkGetSessionInfo" // 获取会话详情
+    const val GET_TAG_INFO = "bkGetSessionInfo" // 获取Tag详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签
@@ -260,6 +263,9 @@ object CommonMessageCode {
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
+
+    // 插件{0}输出变量命名空间功能已不推荐使用，请去掉命名空间，通过jobs上下文访问插件输出
+    const val BK_ELEMENT_NAMESPACE_NOT_SUPPORT = "bkElementNamespaceNotSupport"
 
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境

@@ -30,7 +30,7 @@
             >
                 <slot name="content">
                     <div
-                        v-for="([key, list], index) in Object.entries(listMap)"
+                        v-for="(key) in sortedCategories"
                         :key="key"
                     >
                         <div class="group-label">
@@ -42,12 +42,12 @@
                             class="bk-param-drag-list"
                             ghost-class="ghost-item"
                             handle=".drag-area"
-                            :list="list"
+                            :list="listMap[key]"
                             :group="{ name: 'bk-param-list', pull: false, put: false }"
                             @change="(event) => triggerSort(event, key, index)"
                         >
                             <div
-                                v-for="(param) in list"
+                                v-for="(param) in listMap[key]"
                                 :key="param.id"
                                 :class="['variable-item', {
                                     'variable-item-editable': editable
@@ -175,6 +175,10 @@
             listMap: {
                 type: Object,
                 default: () => {}
+            },
+            sortedCategories: {
+                type: Array,
+                default: () => []
             }
         },
         data () {

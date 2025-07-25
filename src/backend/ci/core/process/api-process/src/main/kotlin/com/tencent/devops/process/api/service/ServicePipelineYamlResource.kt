@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -99,5 +99,20 @@ interface ServicePipelineYamlResource {
         @Parameter(description = "代码库类型", required = true)
         @QueryParam("scmType")
         scmType: ScmType
+    ): Result<Boolean>
+
+    @Operation(summary = "判断如果处于PAC模式下的yaml文件是否在默认分支存在")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/yamlExistInDefaultBranch")
+    fun yamlExistInDefaultBranch(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
     ): Result<Boolean>
 }

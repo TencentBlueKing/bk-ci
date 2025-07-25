@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,7 +48,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'string',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [TEXTAREA]: {
         id: 'textarea',
@@ -59,7 +60,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'textarea',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [BOOLEAN]: {
         id: 'bool',
@@ -72,7 +74,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'bool',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [ENUM]: {
         id: 'select',
@@ -86,7 +89,8 @@ export const DEFAULT_PARAM = {
         options: [],
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [MULTIPLE]: {
         id: 'multiple',
@@ -100,7 +104,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'multiple',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [CHECKBOX]: {
         id: 'checkbox',
@@ -112,7 +117,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'checkbox',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [SVN_TAG]: {
         id: 'svntag',
@@ -128,7 +134,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'svntag',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [GIT_REF]: {
         id: 'gitref',
@@ -143,7 +150,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'gitref',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [REPO_REF]: {
         id: 'reporef',
@@ -158,7 +166,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'reporef',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [CODE_LIB]: {
         id: 'codelib',
@@ -173,7 +182,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'codelib',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
@@ -187,7 +197,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'subPipeline',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     },
     [CUSTOM_FILE]: {
         id: 'file',
@@ -201,7 +212,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'custom_file',
         required: true,
         readOnly: false,
-        category: ''
+        category: '',
+        displayCondition: {}
     }
 }
 
@@ -368,3 +380,35 @@ export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
 export const isFileParam = paramType(CUSTOM_FILE)
+
+export const getParamsGroupByLabel = (list) => {
+    // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
+    const notGroupedKey = (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('notGrouped')) || '未分组'
+    const listMap = list.reduce((acc, item) => {
+        const categoryKey = item.category || notGroupedKey
+        if (!acc[categoryKey]) {
+            acc[categoryKey] = []
+        }
+        acc[categoryKey].push(item)
+        return acc
+    }, {})
+    
+    const sortedCategories = Object.keys(listMap).sort((a, b) => {
+        if (a === notGroupedKey) return -1
+        if (b === notGroupedKey) return 1
+        const isEnglishA = /^[a-z]/i.test(a)
+        const isEnglishB = /^[a-z]/i.test(b)
+
+        if (isEnglishA && !isEnglishB) return -1
+        if (!isEnglishA && isEnglishB) return 1
+        return a.localeCompare(b, 'zh-CN', {
+            sensitivity: 'case',
+            numeric: true
+        })
+    })
+    
+    return {
+        listMap,
+        sortedCategories
+    }
+}

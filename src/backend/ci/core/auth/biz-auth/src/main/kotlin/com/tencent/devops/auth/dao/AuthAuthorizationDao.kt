@@ -200,6 +200,9 @@ class AuthAuthorizationDao {
             if (handoverFrom != null) {
                 conditions.add(HANDOVER_FROM.eq(handoverFrom))
             }
+            if (!handoverFroms.isNullOrEmpty()) {
+                conditions.add(HANDOVER_FROM.`in`(handoverFroms))
+            }
             if (greaterThanHandoverTime != null && lessThanHandoverTime != null) {
                 conditions.add(HANDOVER_TIME.ge(Timestamp(greaterThanHandoverTime!!).toLocalDateTime()))
                 conditions.add(HANDOVER_TIME.le(Timestamp(lessThanHandoverTime!!).toLocalDateTime()))

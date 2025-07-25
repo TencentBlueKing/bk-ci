@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,7 +43,9 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         iamResourceCode: String,
         resourceName: String,
         iamGroupId: Int,
-        registerMonitorPermission: Boolean
+        registerMonitorPermission: Boolean,
+        filterResourceTypes: List<String>,
+        filterActions: List<String>
     ): Boolean = true
 
     override fun grantAllProjectGroupsPermission(
@@ -99,6 +101,13 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         action: String
     ): Map<String, List<String>> = emptyMap()
 
+    override fun listResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): List<String> = emptyList()
+
     override fun getGroupPermissionDetail(
         iamGroupId: Int
     ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
@@ -126,4 +135,20 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         resourceType: String,
         resourceCode: String
     ): Boolean = true
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String,
+        iamGroupId: Int
+    ): Boolean = true
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String
+    ): Boolean = true
+
+    override fun syncProjectLevelPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Boolean = true
+
+    override fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String> = emptyList()
 }

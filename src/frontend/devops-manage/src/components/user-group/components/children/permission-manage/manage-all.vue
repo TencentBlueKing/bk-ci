@@ -19,6 +19,8 @@
           @page-change="getAsidePageChange"
           @get-person-list="handleShowPerson"
           @remove-confirm="asideRemoveConfirm"
+          @handle-select-all="asideSelectAll"
+          @update-member-list="updateMemberList"
         />
       </div>
       <div class="manage-content">
@@ -210,10 +212,19 @@
   >
     <template #header>
       <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
-      <h2 class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`])}}</h2>
+      <h2 v-if="!isBatchOperate" class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUsers[0].id}(${removeUserDeptListMap.removeUsers[0].name})`])}}</h2>
+      <h2 v-else class="dialog-header"> {{t('X个组织/用户已成功移出本项目', [removeUserDeptListMap.removeUsers.length])}}</h2>
     </template>
     <template #default>
-      <p>{{ t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id} (${removeUserDeptListMap.removeUser.name})`]) }}</p>
+      <i18n-t
+        tag="p"
+        keypath="用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作："
+      >
+        <span v-for="(item, index) in removeUserDeptListMap.removeUsers">
+          {{ `${item.id} (${item.name})` }}
+          <span v-if="index < removeUserDeptListMap.removeUsers.length - 1">, </span>
+        </span>
+      </i18n-t>
       <p v-for="dept in removeUserDeptListMap.list" :key="dept.id">
         - {{ dept.name }}
       </p>
@@ -472,6 +483,7 @@ const unableText = {
   handover: t('无法移交'),
   remove: t('无法直接移出'),
 }
+const isBatchOperate = ref(false)
 const {
   sourceList,
   isShowRenewal,
@@ -517,6 +529,8 @@ const {
   handleShowPerson,
   handleAsideRemoveConfirm,
   getProjectMembers,
+  asideSelectAll,
+  updateMemberList,
 } = manageAsideStore;
 
 const {
@@ -580,7 +594,6 @@ onMounted(() => {
 watch(projectId, () => {
   init(true);
 });
-
 function init (flag, searchValue) {
   searchGroup.value = searchValue
   memberPagination.value.current = 1;
@@ -590,8 +603,8 @@ function init (flag, searchValue) {
 function asideClick (item) {
   handleAsideClick(item, projectId.value);
 }
-function getAsidePageChange (current, projectId) {
-  handleAsidePageChange(current, projectId, searchGroup.value)
+function getAsidePageChange (current, projectId, selected) {
+  handleAsidePageChange(current, projectId, selected, searchGroup.value)
 }
 async function refresh () {
   manageSearchRef.value?.clearSearch();
@@ -852,8 +865,9 @@ function showMessage (theme, message) {
   });
 }
 
-function asideRemoveConfirm (removeUser, handOverForm) {
-  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
+function asideRemoveConfirm (isBatch, removeUsers, handOverForm) {
+  isBatchOperate.value = isBatch
+  handleAsideRemoveConfirm(isBatch, removeUsers, handOverForm, projectId.value, manageAsideRef.value);
 }
 
 function handleChangeOverFormName ({list, userList}) {
@@ -922,7 +936,7 @@ function goBack() {
 
     .manage-aside {
       position: relative;
-      width: 230px;
+      width: 240px;
       background: #FFFFFF;
       box-shadow: 0 2px 4px 0 #1919290d;
       flex-shrink: 0;
