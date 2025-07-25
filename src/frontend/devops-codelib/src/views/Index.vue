@@ -356,6 +356,7 @@
                     return curUserName
                 } catch (err) {
                     console.error(err)
+                    return this.user.username
                 }
             },
             getDocUrl (url) {
