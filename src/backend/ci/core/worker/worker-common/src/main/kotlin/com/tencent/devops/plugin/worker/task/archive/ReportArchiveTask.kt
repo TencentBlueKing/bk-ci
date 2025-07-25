@@ -182,7 +182,7 @@ class ReportArchiveTask : ITask() {
         api.createReportRecord(
             buildVariables = buildVariables,
             taskId = elementId,
-            indexFile = if (compressed) indexFileParam else COMPRESS_REPORT_FILE_NAME,
+            indexFile = if (!compressed) indexFileParam else COMPRESS_REPORT_FILE_NAME,
             name = reportNameParam,
             reportType = reportType,
             reportEmail = reportEmail,
