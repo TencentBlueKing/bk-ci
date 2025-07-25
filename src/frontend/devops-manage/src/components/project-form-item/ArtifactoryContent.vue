@@ -79,7 +79,7 @@
           :showOverflowTooltip="true"
           :width="180"
         />
-        <bk-table-column
+        <!-- <bk-table-column
           :label="t('是否启用')"
           prop="display"
           :sort="true"
@@ -93,7 +93,7 @@
               @change="updateMetadata"
             />
           </template>
-        </bk-table-column>
+        </bk-table-column> -->
         <bk-table-column
           v-if="type !== 'show'"
           :width="120"
@@ -155,7 +155,7 @@
         property="enumType"
         required
       >
-        <bk-radio-group v-model="metadataForm.enumType">
+        <bk-radio-group size="small" v-model="metadataForm.enumType">
           <bk-radio :label="true">{{ t('枚举值') }}</bk-radio>
           <bk-radio :label="false" :disabled="metadataForm.category === '质量'">{{ t('字符串') }}</bk-radio>
         </bk-radio-group>
@@ -172,6 +172,7 @@
         <div class="enums-enable">
           <bk-switcher
             v-model="metadataForm.enableColorConfig"
+            size="small"
             theme="primary"
           />
           <span>{{ t('开启颜色配置') }}</span>
@@ -227,8 +228,8 @@
       </bk-form-item>
     </bk-form>
     <div class="btn-group">
-      <bk-button theme="primary" @click="handleMetadataSubmit"> {{t('确定')}} </bk-button>
-      <bk-button @click="handleMetadataCancel"> {{t('取消')}} </bk-button>
+      <bk-button theme="primary" size="small" @click="handleMetadataSubmit"> {{t('确定')}} </bk-button>
+      <bk-button size="small" @click="handleMetadataCancel"> {{t('取消')}} </bk-button>
     </div>
   </template>
   </bk-sideslider>
@@ -558,15 +559,18 @@ async function handleDelete (row) {
 .metadata-slider {
   margin: 16px 24px;
   height: calc(100% - 38px);
+  ::v-deep .bk-form-label {
+    font-size: 12px;
+  }
   .tips {
     color: #979BA5;
   }
   .enums {
     position: relative;
   }
-  .enums-enable{
+  .enums-enable {
     color: #4D4F56;
-    font-size: 14px;
+    font-size: 12px;
     position: absolute;
     top: -32px;
     right: 0;
