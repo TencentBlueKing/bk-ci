@@ -18,7 +18,7 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.Path
+import jakarta.ws.rs.Path
 
 /**
  * 项目访问权限拦截器
