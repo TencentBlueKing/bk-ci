@@ -69,15 +69,15 @@
                                 <div class="existing-column-item">
                                     <p
                                         v-for="(tag) in otherTags"
-                                        :key="tag.key"
-                                        v-if="tag && tag.key"
+                                        :key="tag.tagKeyId"
+                                        v-if="tag && tag.tagKeyId"
                                     >
                                         <bk-checkbox
-                                            v-model="selectedNewTags[tag.key]"
+                                            v-model="selectedNewTags[tag.tagKeyId]"
                                             class="new-tag-checkbox"
                                             @change="handleNewTagChange"
                                         >
-                                            {{ tag.label }}
+                                            {{ tag.tagKeyName }}
                                         </bk-checkbox>
                                     </p>
                                 </div>
@@ -126,15 +126,31 @@
                                                 width="240"
                                                 theme="light"
                                                 ext-cls="edit-popover"
+                                                transfer
                                                 placement="bottom"
+                                                :tippy-options="{
+                                                    hideOnClick: 'toggle',
+                                                    interactive: true,
+                                                    arrow: true,
+                                                    onShow: () => handlePopoverShow(colIndex),
+                                                    onHide: () => handlePopoverHide(colIndex)
+                                                }"
                                             >
                                                 <div slot="content">
                                                     <div class="edit-content">
                                                         <p class="content-tit">批量设置 {{ col.label }}</p>
-                                                        <bk-input
-                                                            :clearable="true"
+                                                        <bk-select
                                                             v-model="editColumnValue"
-                                                        ></bk-input>
+                                                            placeholder="请选择"
+                                                            :clearable="true"
+                                                        >
+                                                            <bk-option
+                                                                v-for="option in getColumnTagValues(col.tagKeyId)"
+                                                                :key="option.tagValueId"
+                                                                :id="option.tagValueId"
+                                                                :name="option.tagValueName"
+                                                            ></bk-option>
+                                                        </bk-select>
                                                     </div>
                                                     <div class="edit-btn">
                                                         <span @click="confirmEditColData(colIndex)">确定</span>
@@ -185,23 +201,32 @@
                                     {{ row[col.key] }}
                                 </template>
                                 <template v-else>
-                                    <input
-                                        v-model="row[col.key]"
-                                        type="text"
+                                    <bk-select
+                                        v-model="row.tagDetails[col.key].tagValueId"
                                         :class="[
-                                            'cell-input',
+                                            'cell-select',
                                             getCellStatusClass(rowIndex, col)
                                         ]"
-                                        placeholder="请输入"
+                                        placeholder="请选择"
+                                        :clearable="false"
+                                        :popover-width="260"
+                                        :popover-options="{ boundary: 'viewport' }"
                                         :disabled="isPendingRemove(rowIndex, col.key) || col.disabled"
-                                        @change="handleCellChange(rowIndex, col.key, row[col.key])"
+                                        @change="handleCellChange(rowIndex, col.key, $event, col.tagKeyId)"
                                     >
+                                        <bk-option
+                                            v-for="option in getColumnTagValues(col.tagKeyId)"
+                                            :key="option.tagValueId"
+                                            :id="option.tagValueId"
+                                            :name="option.tagValueName"
+                                        ></bk-option>
+                                    </bk-select>
                                     <div
                                         class="cell-actions"
                                         v-if="cellActionVisibility[rowIndex] && cellActionVisibility[rowIndex][col.key] && colIndex !== 0 && !col.disabled"
                                     >
                                         <i
-                                            v-if="!(cellDisabled[rowIndex] && cellDisabled[rowIndex][col.key]) && row[col.key]"
+                                            v-if="!(cellDisabled[rowIndex] && cellDisabled[rowIndex][col.key]) && row.tagDetails[col.key].tagValueId"
                                             v-bk-tooltips="{ content: '移除' }"
                                             class="devops-icon icon-delete cell-action-btn"
                                             @click.stop="handleCellDelete(rowIndex, col.key)"
@@ -211,7 +236,7 @@
                                             v-bk-tooltips="{ content: '恢复' }"
                                             class="cell-action-btn restore"
                                             src="../../scss/svg/revocation.svg"
-                                            @click.stop="handleCellRestore(rowIndex, col.key)"
+                                            @click.stop="handleCellRestore(rowIndex, col.key, col.tagKeyId)"
                                         >
                                     </div>
                                 </template>
@@ -247,37 +272,22 @@
                     isLoading: false,
                     title: this.$t('environment.loadingTitle')
                 },
-                tableData: [
-                    { tagname: '节点1', id: 1, name: '张三', age: 20, address: '北京' },
-                    { tagname: '节点2', id: 1, name: '张三', age: 20, address: '北京' },
-                    { tagname: '节点3', id: 2, name: '李四', age: 25, address: '上海' },
-                    { tagname: '节点4', id: 3, name: '', age: 30, address: '广州' },
-                ],
-                otherTags: [
-                    { key: 'name1', label: 'wwwww', disabled: false },
-                    { key: 'age2', label: 'aaaa', disabled: false },
-                    { key: 'address3', label: 'bbb', disabled: false }
-                ],
-                tableColumns: [
-                    { key: 'tagname', label: '已选节点', disabled: false, hidden: false },
-                    { key: 'name', label: 'os', disabled: false, hidden: false },
-                    { key: 'age', label: 'architecture', disabled: false, hidden: false },
-                    { key: 'address', label: 'service', disabled: false, hidden: false },
-                ],
-                // 初始化状态相关
-                initialTableColumns: [], // 初始表格列配置（用于对比）
-                initialOtherTags: [], // 初始可用标签（用于对比）
-                cellDisabled: {},   // 单元格禁用状态 - 用于标记待移除的数据
-                cellActionVisibility: {},   // 单元格操作显示状态
-                cellDataStatus: {}, // 单元格数据状态: 新增(new)、修改(modified)、原始(无状态)
-                confirmedRemoved: {}, // 记录已确认移除的单元格
-                originalData: {}, // 原始数据备份
-                // 标签选择相关
+                tableData: [],
+                otherTags: [],
+                tableColumns: [],
+                initialTableColumns: [],
+                initialOtherTags: [],
+                cellDisabled: {},
+                cellActionVisibility: {},
+                cellDataStatus: {},
+                confirmedRemoved: {},
+                originalData: {},
                 selectedExistingTags: {},
                 selectedNewTags: {},
                 checkAllExisting: false,
                 editColumnValue: '',
-                hasVerticalScrollbar: false
+                hasVerticalScrollbar: false,
+                currentOpenPopover: null,
             }
         },
         computed: {
@@ -285,7 +295,6 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            // 检查是否有未确认的移除操作
             hasPendingRemovals () {
                 return this.hasColumnPendingRemovals() || this.hasCellPendingRemovals()
             }
@@ -302,14 +311,158 @@
             }
         },
         mounted () {
-            this.initCellStates()
-            this.saveOriginalData()
-            this.initialTableColumns = JSON.parse(JSON.stringify(this.tableColumns))
-            this.initialOtherTags = JSON.parse(JSON.stringify(this.otherTags))
+            this.getInitData()
+            this.initCellStates()  // 初始化单元格状态
+            this.saveOriginalData() // 保存原始数据
             this.syncSelectedTags()
             this.$nextTick(() => this.checkScrollbar())
+
+            document.addEventListener('click', this.handleDocumentClick)
+        },
+        beforeDestroy () {
+            document.removeEventListener('click', this.handleDocumentClick)
         },
         methods: {
+            getInitData (){
+                const tableList = this.selectionTagList.map(item => ({
+                    nodeId: item.nodeId,
+                    tags: item.tags,
+                    displayName: item.displayName
+                }))
+                const { tableColumns, tableData, otherTags } = this.transformNodeData(tableList, this.nodeTagList)
+                this.tableColumns = tableColumns
+                this.tableData = tableData
+                this.otherTags = otherTags
+
+                this.initialTableColumns = JSON.parse(JSON.stringify(this.tableColumns))
+                this.initialOtherTags = JSON.parse(JSON.stringify(this.otherTags))
+            },
+            
+            saveOriginalData () {
+                this.tableData.forEach((row, rowIndex) => {
+                    this.$set(this.originalData, rowIndex, {
+                        ...row,
+                        tagDetails: JSON.parse(JSON.stringify(row.tagDetails))
+                    })
+                })
+            },
+
+            handlePopoverShow (colIndex) {
+                if (this.currentOpenPopover !== null && this.currentOpenPopover !== colIndex) {
+                    const prevPopoverRef = this.$refs[`editPopover_${this.currentOpenPopover}`]?.[0]
+                    if (prevPopoverRef) {
+                        prevPopoverRef.hideHandler()
+                    }
+                }
+                this.currentOpenPopover = colIndex
+            },
+            handlePopoverHide (colIndex) {
+                if (this.currentOpenPopover === colIndex) {
+                    this.currentOpenPopover = null
+                }
+            },
+            // 监听全局点击，判断是否应该关闭 Popover
+            handleDocumentClick (event) {
+                if (!this.currentOpenPopover) return
+
+                const popoverRef = this.$refs[`editPopover_${this.currentOpenPopover}`]?.[0]
+                if (!popoverRef) return
+
+                const isInsidePopover = event.target.closest('.edit-popover') || event.target.closest('.tippy-content')
+                const isTrigger = event.target.closest('.header-icon')
+
+                if (!isInsidePopover && !isTrigger) {
+                    popoverRef.hideHandler()
+                    this.currentOpenPopover = null
+                }
+            },
+            transformNodeData (originalData, allTags) {
+                const tagKeyMap = new Map()
+                originalData.forEach(item => {
+                    item.tags.forEach(tag => {
+                        if (!tagKeyMap.has(tag.tagKeyName)) {
+                            tagKeyMap.set(tag.tagKeyName, tag.tagKeyId)
+                        }
+                    })
+                })
+    
+                const tableColumns = [
+                    {
+                        key: 'displayName',
+                        label: '已选节点',
+                        disabled: false,
+                        hidden: false
+                    }
+                ]
+
+                tagKeyMap.forEach((tagKeyId, key) => {
+                    tableColumns.push({
+                        key: key,
+                        label: key,
+                        tagKeyId: tagKeyId,
+                        disabled: false,
+                        hidden: false,
+                        isNew: false
+                    })
+                })
+
+                const tableData = originalData.map(item => {
+                    const row = {
+                        displayName: item.displayName,
+                        nodeId: item.nodeId,
+                        tagDetails: {}
+                    }
+
+                    const tagMap = {}
+                    item.tags.forEach(tag => {
+                        const tagValue = tag.tagValues.length > 0
+                            ? tag.tagValues[0].tagValueName
+                            : ''
+                        const tagValueId = tag.tagValues.length > 0
+                            ? tag.tagValues[0].tagValueId
+                            : ''
+                
+                        tagMap[tag.tagKeyName] = {
+                            value: tagValue,
+                            tagValueId: tagValueId,
+                            tagKeyId: tag.tagKeyId
+                        }
+                    })
+
+                    tagKeyMap.forEach((tagKeyId, key) => {
+                        const tagInfo = tagMap[key] || { value: '', tagValueId: '', tagKeyId: tagKeyId }
+                        row[key] = tagInfo.value
+                        row.tagDetails[key] = {
+                            tagValueId: tagInfo.tagValueId,
+                            tagKeyId: tagInfo.tagKeyId || tagKeyId,
+                            originalValue: tagInfo.value,
+                            isNew: false
+                        }
+                    })
+        
+                    return row
+                })
+
+                const tableColumnKeys = new Set(tableColumns.map(col => col.key))
+                const otherTags = allTags.filter(tag => !tableColumnKeys.has(tag.tagKeyName))
+                    .map(tag => ({
+                        tagKeyId: tag.tagKeyId,
+                        tagKeyName: tag.tagKeyName,
+                        disabled: false
+                    }))
+    
+                return {
+                    tableColumns,
+                    tableData,
+                    otherTags
+                }
+            },
+
+            getColumnTagValues (tagKeyId) {
+                const tagInfo = this.nodeTagList.find(tag => tag.tagKeyId === tagKeyId)
+                return tagInfo?.tagValues || []
+            },
+            
             toNodeList () {
                 this.$router.push({ name: 'nodeList' })
             },
@@ -318,14 +471,12 @@
                 const container = this.$refs.scrollContainer
                 this.hasVerticalScrollbar = container?.scrollHeight > container?.clientHeight || false
             },
-            // 同步已选中的标签
+
             syncSelectedTags () {
-                // 清空现有状态
                 Object.keys(this.selectedExistingTags).forEach(key => {
                     this.$delete(this.selectedExistingTags, key)
                 })
             
-                // 为每个列设置初始选中状态（可见列默认选中），跳过第一列
                 this.tableColumns.forEach((col, index) => {
                     if (index !== 0 && col?.key) {
                         this.$set(this.selectedExistingTags, col.key, !col.disabled)
@@ -334,8 +485,7 @@
             
                 this.checkAllStatus()
             },
-        
-            // 检查全选状态（排除第一列）
+
             checkAllStatus () {
                 const selectableColumns = this.tableColumns.filter((col, index) => index !== 0 && col?.key)
                 this.checkAllExisting = selectableColumns.length
@@ -347,27 +497,24 @@
                 this.checkAllStatus()
                 this.updateChangeFlags()
 
-                // 同步列的禁用状态与选择状态，跳过第一列
                 this.tableColumns.forEach((col, index) => {
                     if (index !== 0 && col?.key) {
                         this.$set(col, 'disabled', !this.selectedExistingTags[col.key])
                     }
                 })
             },
-            // 处理新增标签状态变化
+
             handleNewTagChange () {
                 this.updateChangeFlags()
             },
 
-            // 更新变更标记（本次添加/本次移除）
             updateChangeFlags () {
-                // 处理列的移除/添加标记
                 this.tableColumns.forEach((col, index) => {
                     if (index === 0 || !col?.key) return
                     const initialCol = this.initialTableColumns.find(item => item?.key === col.key)
                     this.$set(col, 'removedRecently', !!initialCol && !this.selectedExistingTags[col.key])
                 })
-                // 处理新增标签的添加标记
+                
                 Object.keys(this.selectedNewTags).forEach(tagKey => {
                     if (this.selectedNewTags[tagKey]) {
                         const existingCol = this.tableColumns.find(col => col?.key === tagKey)
@@ -378,23 +525,33 @@
                 })
             },
 
-            
-            // 批量初始化单元格状态，减少重复$set调用
             initCellStates () {
                 this.tableData.forEach((row, rowIndex) => {
-                    const keys = Object.keys(row)
-                    this.$set(this.cellDisabled, rowIndex, Object.fromEntries(keys.map(key => [key, false])))
-                    this.$set(this.cellActionVisibility, rowIndex, Object.fromEntries(keys.map(key => [key, false])))
-                    this.$set(this.confirmedRemoved, rowIndex, Object.fromEntries(keys.map(key => [key, false])))
-                    this.$set(this.cellDataStatus, rowIndex, Object.fromEntries(keys.map(key => [key, ''])))
+                    if (!this.cellDisabled[rowIndex]) {
+                        this.$set(this.cellDisabled, rowIndex, {})
+                    }
+
+                    if (!this.cellActionVisibility[rowIndex]) {
+                        this.$set(this.cellActionVisibility, rowIndex, {})
+                    }
+
+                    if (!this.cellDataStatus[rowIndex]) {
+                        this.$set(this.cellDataStatus, rowIndex, {})
+                    }
+
+                    if (!this.confirmedRemoved[rowIndex]) {
+                        this.$set(this.confirmedRemoved, rowIndex, {})
+                    }
+
+                    Object.keys(row.tagDetails).forEach(key => {
+                        this.$set(this.cellDisabled[rowIndex], key, false)
+                        this.$set(this.cellActionVisibility[rowIndex], key, false)
+                        this.$set(this.confirmedRemoved[rowIndex], key, false)
+                        this.$set(this.cellDataStatus[rowIndex], key, '')
+                    })
                 })
             },
-            saveOriginalData () {
-                this.tableData.forEach((row, rowIndex) => {
-                    this.$set(this.originalData, rowIndex, { ...row })
-                })
-            },
-            // 全选/取消全选已设置标签（排除第一列）
+
             handleCheckAllExisting (checked) {
                 this.tableColumns.forEach((col, index) => {
                     if (index !== 0 && col?.key) {
@@ -405,19 +562,20 @@
                 this.updateChangeFlags()
             },
 
-            // 检查是否为未确认移除状态
             isPendingRemove (rowIndex, colKey) {
                 return this.cellDisabled[rowIndex]?.[colKey] && !this.confirmedRemoved[rowIndex]?.[colKey]
             },
-            // 检查是否为已确认移除状态
+
             isConfirmedRemove (rowIndex, colKey) {
-                return this.confirmedRemoved[rowIndex]?.[colKey] && (this.tableData[rowIndex][colKey] || '') === ''
+                return this.confirmedRemoved[rowIndex]?.[colKey]
+                       && (this.tableData[rowIndex].tagDetails[colKey].tagValueId === ''
+                        || this.tableData[rowIndex].tagDetails[colKey].tagValueId === null)
             },
-            // 检查列级未确认移除
+
             hasColumnPendingRemovals () {
                 return this.tableColumns.some((col, index) => index !== 0 && col?.key && col.disabled)
             },
-            // 检查单元格级未确认移除
+
             hasCellPendingRemovals () {
                 return Object.values(this.cellDisabled).some(row =>
                     Object.values(row).some(isDisabled => isDisabled)
@@ -426,55 +584,76 @@
 
             getCellStatusClass (rowIndex, col) {
                 const { key: colKey, isNew, disabled } = col
+                const cellStatus = this.cellDataStatus[rowIndex]?.[colKey]
 
                 return {
                     'pending-remove': this.isPendingRemove(rowIndex, colKey) || disabled,
                     'confirmed-remove': this.isConfirmedRemove(rowIndex, colKey),
-                    'cell-new': this.cellDataStatus[rowIndex]?.[colKey] === 'new' || isNew,
-                    'cell-modified': this.cellDataStatus[rowIndex]?.[colKey] === 'modified',
+                    'cell-new': cellStatus === 'new' || isNew,
+                    'cell-modified': cellStatus === 'modified'
                 }
             },
 
-            // 处理单元格内容变化
-            handleCellChange (rowIndex, colKey, newValue) {
-                const originalValue = this.originalData[rowIndex]?.[colKey]
-                if ((originalValue || '') === '' && (newValue || '') !== '') {
+            handleCellChange (rowIndex, colKey, newValue, colTagKeyId) {
+                const originalValue = this.originalData[rowIndex]?.tagDetails?.[colKey]?.tagValueId
+                const row = this.tableData[rowIndex]
+
+                this.$set(row.tagDetails[colKey], 'tagKeyId', colTagKeyId)
+                this.$set(row.tagDetails[colKey], 'tagValueId', newValue)
+
+                const tagValues = this.getColumnTagValues(colTagKeyId)
+                const selectedOption = tagValues.find(option => option.tagValueId === newValue)
+                if (selectedOption) {
+                    row[colKey] = selectedOption.tagValueName
+                } else {
+                    row[colKey] = ''
+                }
+
+                if ((originalValue === undefined || originalValue === '') && (newValue !== '' && newValue !== null)) {
                     this.$set(this.cellDataStatus[rowIndex], colKey, 'new')
-                } else if ((originalValue || '') !== (newValue || '')) {
+                } else if (originalValue !== newValue) {
                     this.$set(this.cellDataStatus[rowIndex], colKey, 'modified')
                 } else {
                     this.$set(this.cellDataStatus[rowIndex], colKey, '')
                 }
             },
-            // 确认编辑列数据
+
             confirmEditColData (colIndex) {
                 const col = this.tableColumns[colIndex]
-                if (!col?.key) return
-                // 设置整列的值并更新状态
+                if (!col?.key || !col.tagKeyId) return
+                
+                // 获取选中的值对应的显示文本
+                const tagValues = this.getColumnTagValues(col.tagKeyId)
+                const selectedOption = tagValues.find(option => option.tagValueId === this.editColumnValue)
+                const displayValue = selectedOption ? selectedOption.tagValueName : ''
+
                 this.tableData.forEach((row, rowIndex) => {
-                    row[col.key] = this.editColumnValue
-                    this.handleCellChange(rowIndex, col.key, this.editColumnValue)
+                    this.$set(row.tagDetails[col.key], 'tagKeyId', col.tagKeyId)
+                    this.$set(row.tagDetails[col.key], 'tagValueId', this.editColumnValue)
+                    
+                    row[col.key] = displayValue
+                    this.handleCellChange(rowIndex, col.key, this.editColumnValue, col.tagKeyId)
                 })
-                this.editColumnValue = ''
-                this.$refs[`editPopover_${colIndex}`]?.[0]?.hideHandler()
+
+                this.cancleEditColData(colIndex)
             },
+
             cancleEditColData (colIndex) {
-                this.editColumnValue = ''
                 this.$refs[`editPopover_${colIndex}`]?.[0]?.hideHandler()
+                this.editColumnValue = ''
             },
-            // 处理列删除 - 整列置灰并同步选择状态
+
             handleDeleteCol (colIndex) {
                 if (colIndex === 0) return
                 const col = this.tableColumns[colIndex]
                 if (col?.key) {
-                    // 设置禁用状态并更新选择状态
                     this.$set(col, 'disabled', true)
                     this.$set(this.selectedExistingTags, col.key, false)
                     this.checkAllStatus()
                     this.updateChangeFlags()
                 }
             },
-            // 处理列恢复
+
             handleRestoreCol (colIndex) {
                 if (colIndex === 0) return
                 const col = this.tableColumns[colIndex]
@@ -485,7 +664,7 @@
                     this.updateChangeFlags()
                 }
             },
-            // 显示/隐藏单元格操作按钮
+
             showCellActionsFn (rowIndex, colKey, show) {
                 if (!this.cellActionVisibility[rowIndex]) {
                     this.$set(this.cellActionVisibility, rowIndex, {})
@@ -493,22 +672,25 @@
                 this.$set(this.cellActionVisibility[rowIndex], colKey, show)
             },
 
-            // 处理单元格删除（标记为待移除）
             handleCellDelete (rowIndex, colKey) {
                 this.$set(this.cellDisabled[rowIndex], colKey, true)
                 this.$set(this.confirmedRemoved[rowIndex], colKey, false)
             },
-            // 处理单元格恢复
-            handleCellRestore (rowIndex, colKey) {
+
+            handleCellRestore (rowIndex, colKey, colTagKeyId) {
                 this.$set(this.cellDisabled[rowIndex], colKey, false)
                 this.$set(this.confirmedRemoved[rowIndex], colKey, false)
-                // 恢复原始值
-                if (this.originalData[rowIndex]?.[colKey]) {
-                    this.tableData[rowIndex][colKey] = this.originalData[rowIndex][colKey]
+
+                if (this.originalData[rowIndex]?.tagDetails?.[colKey]) {
+                    this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagKeyId', colTagKeyId)
+                    this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagValueId',this.originalData[rowIndex].tagDetails[colKey].tagValueId)
+                    
+                    this.tableData[rowIndex][colKey] = this.originalData[rowIndex].tagDetails[colKey].originalValue
+                    this.handleCellChange(rowIndex, colKey, this.originalData[rowIndex].tagDetails[colKey].tagValueId, colTagKeyId)
                 }
             },
 
-            // 确认添加列和标签 - 此时才真正执行添加/移除操作
+            // 确认添加/展示标签 - 此时才真正执行添加/移除操作
             confirmAddColumn () {
                 this.handleColumnRemovals() // 处理列移除
                 this.handleCellRemovals() // 处理单元格移除
@@ -525,22 +707,22 @@
                     .filter((col, index) => index !== 0 && col?.key && !this.selectedExistingTags[col.key])
                 if (!tagsToRemove.length) return
 
-                // 从表格列中移除
                 this.tableColumns = this.tableColumns.filter(col =>
-                    !tagsToRemove.some(t => t.key === col.key) || col.key === 'tagname' // 保留第一列
+                    !tagsToRemove.some(t => t.key === col.key) || col.key === 'displayName'
                 )
-                // 移除的标签放回otherTags
+
                 tagsToRemove.forEach(tag => {
-                    if (!this.otherTags.some(t => t.key === tag.key)) {
-                        this.otherTags.push({ key: tag.key, label: tag.label, disabled: false })
+                    if (!this.otherTags.some(t => t.tagKeyName === tag.key)) {
+                        this.otherTags.push({ tagKeyId: tag.tagKeyId, tagKeyName: tag.label, disabled: false })
                     }
                 })
-                // 从数据中删除列
+
                 this.tableData.forEach((row, rowIndex) => {
                     tagsToRemove.forEach(tag => {
                         this.$delete(row, tag.key)
                         this.$delete(this.cellDisabled[rowIndex], tag.key)
                         this.$delete(this.originalData[rowIndex], tag.key)
+                        this.$delete(row.tagDetails, tag.key)
                     })
                 })
             },
@@ -549,10 +731,11 @@
                 this.tableData.forEach((row, rowIndex) => {
                     Object.entries(this.cellDisabled[rowIndex] || {}).forEach(([colKey, isDisabled]) => {
                         if (isDisabled) {
-                            row[colKey] = '' // 清空值
-                            this.$set(this.confirmedRemoved[rowIndex], colKey, true) // 标记已确认
-                            this.$set(this.cellDisabled[rowIndex], colKey, false) // 清除待移除标记
-                            this.$set(this.cellDataStatus[rowIndex], colKey, '') // 清除状态
+                            this.$set(row.tagDetails[colKey], 'tagValueId', '')
+                            row[colKey] = ''
+                            this.$set(this.confirmedRemoved[rowIndex], colKey, true)
+                            this.$set(this.cellDisabled[rowIndex], colKey, false)
+                            this.$set(this.cellDataStatus[rowIndex], colKey, '')
                         }
                     })
                 })
@@ -562,35 +745,47 @@
                 const newTagKeys = Object.keys(this.selectedNewTags).filter(key => this.selectedNewTags[key])
                 if (!newTagKeys.length) return
 
-                const newTagsToAdd = this.otherTags.filter(tag => newTagKeys.includes(tag.key))
-                newTagsToAdd.forEach(tag => {
-                    if (this.tableColumns.some(col => col.key === tag.key)) return
+                const newTagsToAdd = this.otherTags.filter(tag => newTagKeys.includes(String(tag.tagKeyId)))
 
-                    // 添加到表格列（第一列后）
-                    this.tableColumns.splice(1, 0, {
-                        ...tag, hidden: false, disabled: false, isNew: true, addedRecently: true
-                    })
-                    // 为每行添加新列
+                newTagsToAdd.forEach(tag => {
+                    if (this.tableColumns.some(col => col.key === tag.tagKeyName)) return
+
+                    const newCol = {
+                        key: tag.tagKeyName,
+                        label: tag.tagKeyName,
+                        tagKeyId: tag.tagKeyId,
+                        hidden: false,
+                        disabled: false,
+                        isNew: true,
+                        addedRecently: true
+                    }
+                    
+                    this.tableColumns.splice(1, 0, newCol)
+
                     this.tableData.forEach((row, rowIndex) => {
-                        this.$set(row, tag.key, '')
-                        this.$set(this.cellDisabled[rowIndex], tag.key, false)
-                        this.$set(this.originalData[rowIndex], tag.key, '')
+                        this.$set(row, tag.tagKeyName, '')
+                        this.$set(this.cellDisabled[rowIndex], tag.tagKeyName, false)
+                        this.$set(this.originalData[rowIndex], tag.tagKeyName, '')
+                        this.$set(row.tagDetails, tag.tagKeyName, {
+                            tagValueId: '',
+                            tagKeyId: tag.tagKeyId,
+                            originalValue: '',
+                            isNew: true
+                        })
                     })
-                    this.$set(this.selectedExistingTags, tag.key, true)
+                    this.$set(this.selectedExistingTags, tag.tagKeyName, true)
                 })
-                // 从otherTags移除已添加的
-                this.otherTags = this.otherTags.filter(tag => !newTagKeys.includes(tag.key))
+                this.otherTags = this.otherTags.filter(tag => !newTagKeys.includes(String(tag.tagKeyId)))
             },
-            // 重置标签选择状态
+
             resetTagSelection () {
-                // 重置新增标签选择
                 Object.keys(this.selectedNewTags).forEach(key => {
                     this.$delete(this.selectedNewTags, key)
                 })
-                // 保留添加标记以便下次打开弹窗时显示, 只清除移除标记
+
                 this.tableColumns.forEach(col => col && this.$set(col, 'removedRecently', false))
             },
-            // 处理预览并保存
+
             handlePreviewAndSave () {
                 if (this.hasPendingRemovals) {
                     this.$bkInfo({
@@ -598,7 +793,7 @@
                         type: 'warning',
                         title: '是否确定移除数据',
                         confirmFn: () => {
-                            this.confirmAddColumn() // 确认移除
+                            this.confirmAddColumn()
                             console.log('最新表格数据:', JSON.parse(JSON.stringify(this.tableData)))
                         }
                     })
@@ -660,6 +855,7 @@
             border: 1px solid #DCDEE5;
             border-bottom: none;
             padding-bottom: 1px;
+            padding-right: 1px;
             &::-webkit-scrollbar {
                 background-color: #fff;
                 height: 9px;
@@ -691,7 +887,7 @@
                 background-color: #fff;
             }
             .content-td {
-                padding: 0;
+                padding: 2px;
             }
             th {
                 background-color: #F0F1F5;
@@ -735,22 +931,22 @@
                     }
                 }
             }
-            .cell-input {
+            .cell-select {
                 width: 100%;
                 height: 100%;
                 font-size: 12px;
                 border: none;
-                padding: 10px 16px;
                 outline: none;
-                &::placeholder {
-                    color: #C4C6CC;
-                    font-size: 12px;
+                background-color: transparent;
+                ::v-deep .bk-select-selected-value {
+                    padding: 0;
+                    line-height: normal;
                 }
-                &:focus {
-                    outline: none;
+                ::v-deep .bk-select-arrow {
+                    right: 16px;
                 }
             }
-            .content-td:not(.pending-remove):hover .cell-input {
+            .content-td:not(.pending-remove):hover .cell-select {
                 cursor: pointer;
                 background-color: #fafbfd;
             }
@@ -759,25 +955,21 @@
                 background-color: #fafbfd;
                 outline: 1px solid #a3c5fd;
             }
-            .content-td .cell-input:focus {
+            .content-td .cell-select:focus {
                 outline: none;
             }
-            .content-td:focus-within:hover {
-                outline: 1px solid #3A84FF !important;
+            ::v-deep .content-td .bk-select.is-focus {
+                box-shadow: none !important;
             }
-            .content-td:focus-within {
-                z-index: 11;
-                outline: 1px solid #3A84FF;
-            }
-            // 新增
+            // 新增 - 浅绿色背景
             .cell-new {
                 background-color: #F2FFF4;
             }
-            // 修改
+            // 修改 - 浅黄色背景
             .cell-modified {
                 background-color: #FFF3E1;
             }
-            // 新增列
+            // 新增列标题背景色
             .new-column {
                 background-color: #D6F7DB;
             }
@@ -791,7 +983,7 @@
                 background-color: #FAFBFD;
                 color: #C4C6CC;
             }
-            .pending-remove .cell-input:not(:placeholder-shown) {
+            .pending-remove .cell-select:not(:placeholder-shown) {
                 text-decoration: line-through;
             }
             // 已移除
@@ -889,7 +1081,7 @@
     gap: 5px;
     z-index: 12;
     .cell-action-btn {
-        margin: 0 8px;
+        margin-right: 20px;
         font-size: 14px;
         color: #3A84FF;
         vertical-align: middle;
