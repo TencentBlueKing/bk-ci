@@ -19,7 +19,6 @@ class BlackUserFilter : ContainerRequestFilter {
 
     override fun filter(requestContext: ContainerRequestContext) {
         val requestUri = requestContext.uriInfo.requestUri
-        logger.info("requestUri:$requestUri")
         if (requestUri.path.contains("remotedev/get_all_windows_resource_quota")) {
             return
         }
