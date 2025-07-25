@@ -122,7 +122,7 @@ const handleCancelDelete = () => {
 const handleConfirmDelete = () => {
   try {
     isLoading.value = true;
-    http.deleteOauth(scmCode.value).then(res => {
+    http.deleteOauth(scmCode.value, props.oauth?.username).then(res => {
       if (res) {
         Message({
           theme: 'success',
@@ -166,7 +166,7 @@ const handleConfirmRefresh = () => {
   try {
     isLoading.value = true;
     const url = encodeURIComponent(window.location.href.replace('com/permission', `com/console/permission`));
-    http.refreshOauth(scmCode.value, url).then(res => {
+    http.refreshOauth(scmCode.value, props.oauth?.username, url).then(res => {
       if (res.url) {
         window.top.open(res.url, '_self')
       }
