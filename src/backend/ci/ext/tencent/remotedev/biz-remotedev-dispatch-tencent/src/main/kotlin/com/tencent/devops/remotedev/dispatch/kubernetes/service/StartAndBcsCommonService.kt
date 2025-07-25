@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -11,6 +10,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchWorkspaceOp
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.CLONE_VM
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.CREATE
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.CREATE_DISK
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.DELETE
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.DELETE_VM
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.EXPAND_DISK
@@ -22,7 +22,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.S
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.START
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.STOP
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.UPGRADE_VM
-import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.CREATE_DISK
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
@@ -34,7 +33,6 @@ import com.tencent.devops.remotedev.pojo.exception.RetryMQException
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatusEnum
-import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,10 +88,19 @@ class StartAndBcsCommonService @Autowired constructor(
                 }
             }
         }.onFailure {
-            if (it is RetryMQException && bcsCallbackEvent.retryTime < 3) {
-                dispatcher.dispatch(
-                    bcsCallbackEvent.copy(delayMills = it.delayMills, retryTime = bcsCallbackEvent.retryTime + 1)
-                )
+            if (it is RetryMQException) {
+                if (bcsCallbackEvent.retryTime < 3) {
+                    dispatcher.dispatch(
+                        bcsCallbackEvent.copy(delayMills = it.delayMills, retryTime = bcsCallbackEvent.retryTime + 1)
+                    )
+                } else {
+                    // 重试超过3次直接设置为失败
+                    dispatcher.dispatch(
+                        BcsCallbackEvent(
+                            taskStatus = bcsCallbackEvent.taskStatus.copy(status = TaskStatusEnum.failed)
+                        )
+                    )
+                }
             }
         }
     }
