@@ -185,7 +185,7 @@
                             class="command-line"
                             v-if="installModeAsService && !constructImportForm.autoSwitchAccount"
                         >
-                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4') }}
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4', ['{agent_id}']) }}
                         </div>
                     </template>
                 </div>
