@@ -79,7 +79,7 @@ class StoreHonorDao {
             return dslContext.select(HONOR_ID)
                 .from(this)
                 .where(HONOR_ID.`in`(honorIds))
-                .fetchInto(String::class.java)
+                .fetchInto(String::class.java).distinct()
         }
     }
 
