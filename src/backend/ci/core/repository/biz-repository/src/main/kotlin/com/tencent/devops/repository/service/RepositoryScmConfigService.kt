@@ -52,7 +52,10 @@ import com.tencent.devops.repository.pojo.RepositoryScmProvider
 import com.tencent.devops.repository.pojo.RepositoryScmProviderVo
 import com.tencent.devops.repository.pojo.ScmConfigBaseInfo
 import com.tencent.devops.repository.pojo.ScmConfigProps
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepoCredentialType
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType.TOKEN_USERNAME_PASSWORD
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType.USERNAME_PASSWORD
 import com.tencent.devops.repository.pojo.enums.ScmConfigOauthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import com.tencent.devops.scm.api.enums.EventAction
@@ -205,7 +208,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 hosts = it.hosts,
                 logoUrl = it.logoUrl,
                 docUrl = providerMap[it.providerCode]?.docUrl,
-                credentialTypeList = getCredentialTypeVos(it.credentialTypeList),
+                credentialTypeList = getCredentialTypeVos(it.credentialTypeList, it.scmType),
                 pacEnabled = it.pacEnabled
             )
         }
@@ -283,7 +286,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 scmType = it.scmType,
                 logoUrl = it.logoUrl,
                 docUrl = it.docUrl,
-                credentialTypeList = getCredentialTypeVos(it.credentialTypeList),
+                credentialTypeList = getCredentialTypeVos(it.credentialTypeList, it.scmType),
                 api = it.api,
                 merge = it.merge,
                 webhook = it.webhook,
@@ -491,7 +494,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 hosts = hosts,
                 logoUrl = logoUrl,
                 docUrl = providerMap[providerCode]?.docUrl,
-                credentialTypeList = getCredentialTypeVos(credentialTypeList),
+                credentialTypeList = getCredentialTypeVos(credentialTypeList, scmType),
                 oauthType = oauthType,
                 oauthScmCode = oauthScmCode,
                 status = status,
@@ -605,7 +608,10 @@ class RepositoryScmConfigService @Autowired constructor(
         }
     }
 
-    private fun getCredentialTypeVos(credentialTypeList: List<RepoCredentialType>): List<RepoCredentialTypeVo> {
+    private fun getCredentialTypeVos(
+        credentialTypeList: List<RepoCredentialType>,
+        scmType: ScmType
+    ): List<RepoCredentialTypeVo> {
         return credentialTypeList.map { credentialType ->
             RepoCredentialTypeVo(
                 credentialType = credentialType.name,
@@ -613,7 +619,16 @@ class RepositoryScmConfigService @Autowired constructor(
                     messageCode = "$CREDENTIAL_TYPE_PREFIX${credentialType.name}",
                     defaultMessage = credentialType.name
                 ),
-                authType = credentialType.authType
+                authType = if (scmType == ScmType.CODE_SVN || scmType == ScmType.SCM_SVN) {
+                    // SVN 授权类型，需要特殊处理
+                    // 参考 com.tencent.devops.repository.pojo.ScmSvnRepository.SVN_TYPE_HTTP
+                    when (credentialType) {
+                        USERNAME_PASSWORD, TOKEN_USERNAME_PASSWORD -> RepoAuthType.HTTP
+                        else -> RepoAuthType.SSH
+                    }.name.toLowerCase()
+                } else {
+                    credentialType.authType.name
+                }
             )
         }
     }
