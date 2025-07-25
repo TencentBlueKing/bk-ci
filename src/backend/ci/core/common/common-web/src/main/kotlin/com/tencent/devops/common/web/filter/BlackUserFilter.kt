@@ -22,7 +22,7 @@ class BlackUserFilter : ContainerRequestFilter {
         if (!userId.isNullOrBlank() && blackUsers.contains(userId)) {
             logger.warn("User $userId is not allowed to access")
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INVALID_USER_ID,
+                errorCode = CommonMessageCode.ERROR_ILLEGAL_ACCESS_USER_ID,
                 params = arrayOf(userId)
             )
         }
