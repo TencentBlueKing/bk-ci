@@ -96,7 +96,7 @@ class ScmGitRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: ScmGitRepository): Long {
-        val authRepository = AuthRepository(repository)
+        val authRepository = AuthRepository(repository.copy(projectId = projectId))
         repositoryCheckService.checkGitCredential(
             projectId = projectId,
             authRepository = authRepository

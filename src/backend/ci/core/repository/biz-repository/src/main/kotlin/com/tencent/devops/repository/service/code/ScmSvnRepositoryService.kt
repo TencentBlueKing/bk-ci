@@ -68,7 +68,7 @@ class ScmSvnRepositoryService @Autowired constructor(
     override fun create(projectId: String, userId: String, repository: ScmSvnRepository): Long {
         repositoryCheckService.checkSvnCredential(
             projectId = projectId,
-            authRepository = AuthRepository(repository)
+            authRepository = AuthRepository(repository.copy(projectId = projectId))
         )
         var repositoryId = 0L
         dslContext.transaction { configuration ->
