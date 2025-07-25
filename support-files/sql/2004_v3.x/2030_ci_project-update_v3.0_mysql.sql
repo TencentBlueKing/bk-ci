@@ -60,8 +60,8 @@ BEGIN
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_OPERATIONAL_PRODUCT'
                         AND COLUMN_NAME = 'ICOS_PRODUCT_CODE') THEN
-    ALTER TABLE T_OPERATIONAL_PRODUCT
-        ADD COLUMN `ICOS_PRODUCT_CODE` varchar(64) default NULL COMMENT '财务ID';
+        ALTER TABLE T_OPERATIONAL_PRODUCT
+            ADD COLUMN `ICOS_PRODUCT_CODE` varchar(64) default NULL COMMENT '财务ID';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -69,20 +69,20 @@ BEGIN
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_OPERATIONAL_PRODUCT'
                         AND COLUMN_NAME = 'ICOS_PRODUCT_NAME') THEN
-    ALTER TABLE T_OPERATIONAL_PRODUCT
-        ADD COLUMN `ICOS_PRODUCT_NAME` varchar(64) default NULL COMMENT '财务名称'
+        ALTER TABLE T_OPERATIONAL_PRODUCT
+            ADD COLUMN `ICOS_PRODUCT_NAME` varchar(64) default NULL COMMENT '财务名称';
     END IF;
 
     IF NOT EXISTS(SELECT 1
                     FROM information_schema.COLUMNS
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_OPERATIONAL_PRODUCT'
-                        AND COLUMN_NAME = 'CROS_CHECK') THEN
-    ALTER TABLE T_OPERATIONAL_PRODUCT
-        ADD COLUMN `CROS_CHECK` bit(1) DEFAULT NULL COMMENT '是否有效';
+                            AND COLUMN_NAME = 'CROS_CHECK') THEN
+        ALTER TABLE T_OPERATIONAL_PRODUCT
+            ADD COLUMN `CROS_CHECK` bit(1) DEFAULT NULL COMMENT '是否有效';
     END IF;
 
-COMMIT;
+    COMMIT;
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
