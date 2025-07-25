@@ -32,5 +32,7 @@ import com.tencent.devops.common.event.pojo.IEvent
 open class IMeasureEvent(
     open val projectId: String,
     open val pipelineId: String,
-    open val buildId: String
-) : IEvent()
+    open val buildId: String,
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : IEvent(delayMills, retryTime)

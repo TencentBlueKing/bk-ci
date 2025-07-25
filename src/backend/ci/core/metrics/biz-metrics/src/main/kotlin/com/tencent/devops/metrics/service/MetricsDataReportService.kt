@@ -27,18 +27,18 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 
 interface MetricsDataReportService {
 
     /**
      * 上报流水线构建指标数据
-     * @param buildEndPipelineMetricsData 构建结束后流水线指标数据
+     * @param event 构建结束后流水线指标数据消息
      * @return 布尔值
      */
     fun metricsDataReport(
-        buildEndPipelineMetricsData: BuildEndPipelineMetricsData
+        event: BuildEndMetricsBroadCastEvent
     ): Boolean
 
     /**

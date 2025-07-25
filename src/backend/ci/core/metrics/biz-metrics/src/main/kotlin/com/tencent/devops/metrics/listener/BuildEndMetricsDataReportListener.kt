@@ -43,8 +43,7 @@ class BuildEndMetricsDataReportListener @Autowired constructor(
 
     override fun execute(event: BuildEndMetricsBroadCastEvent) {
         try {
-            val buildEndPipelineMetricsData = event.buildEndPipelineMetricsData
-            metricsDataReportService.metricsDataReport(buildEndPipelineMetricsData)
+            metricsDataReportService.metricsDataReport(event)
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert the metrics data", ignored)
             throw ErrorCodeException(
