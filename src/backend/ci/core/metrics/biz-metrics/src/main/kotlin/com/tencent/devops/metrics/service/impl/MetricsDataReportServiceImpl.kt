@@ -233,14 +233,17 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     )
                     // 当构建失败时进行日常统计指标上报
                     if (!buildEndPipelineMetricsData.successFlag) {
-                        atomIndexStatisticsDailyDataReport(
-                            statisticsTime = buildEndPipelineMetricsData.statisticsTime.let {
-                                DateTimeUtil.stringToLocalDateTime(it, YYYY_MM_DD)
-                            },
-                            taskMetricsData = task,
-                            currentTime = currentTime,
-                            startUser = buildEndPipelineMetricsData.startUser
-                        )
+                        RedisLock(redisOperation, metricsDataReportKey(task.atomCode), 40).use { lock ->
+                            lock.lock()
+                            atomIndexStatisticsDailyDataReport(
+                                statisticsTime = buildEndPipelineMetricsData.statisticsTime.let {
+                                    DateTimeUtil.stringToLocalDateTime(it, YYYY_MM_DD)
+                                },
+                                taskMetricsData = task,
+                                currentTime = currentTime,
+                                startUser = buildEndPipelineMetricsData.startUser
+                            )
+                        }
                     }
                 }
             }
