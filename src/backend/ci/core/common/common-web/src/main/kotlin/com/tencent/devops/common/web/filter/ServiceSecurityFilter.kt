@@ -59,11 +59,13 @@ class ServiceSecurityFilter(
 
     override fun filter(requestContext: ContainerRequestContext?) {
         val uri = requestContext!!.uriInfo.requestUri.path
-        if (shouldFilter(uri)) {
-
-            val clientIp = servletRequest?.remoteAddr
-
-            val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
+        val clientIp = servletRequest?.remoteAddr
+        val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
+        val flag = shouldFilter(uri)
+        if (flag && jwtManager.isSendEnable() && jwt.isNullOrBlank()) {
+            logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
+        }
+        if (flag && jwtManager.isAuthEnable()) {
             if (jwt.isNullOrBlank()) {
                 logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
                 throw ErrorCodeException(
@@ -85,9 +87,6 @@ class ServiceSecurityFilter(
     }
 
     private fun shouldFilter(uri: String): Boolean {
-        if (!jwtManager.isAuthEnable()) {
-            return false
-        }
         // 不拦截的接口
         excludeVeritfyPath.forEach {
             if (uri.startsWith(it)) {
