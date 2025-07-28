@@ -31,15 +31,14 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.security.jwt.JwtManager
-import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RequestFilter
-import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.DependsOn
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.container.PreMatching
 import jakarta.ws.rs.ext.Provider
+import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.DependsOn
 
 @Provider
 @PreMatching
@@ -51,7 +50,10 @@ class ServiceSecurityFilter(
 ) : ContainerRequestFilter {
 
     companion object {
-        private val excludeVeritfyPath = listOf("/api/swagger.json", "/api/external/service/versionInfo")
+        private val excludeVeritfyPath = listOf(
+            "/api/swagger.json",
+            "/api/external/service/versionInfo"
+        )
         private val logger = LoggerFactory.getLogger((ServiceSecurityFilter::class.java))
     }
 
@@ -83,7 +85,7 @@ class ServiceSecurityFilter(
     }
 
     private fun shouldFilter(uri: String): Boolean {
-        if (!jwtManager.isAuthEnable() || !EnvironmentUtil.isProdProfileActive()) {
+        if (!jwtManager.isAuthEnable()) {
             return false
         }
         // 不拦截的接口
