@@ -51,6 +51,7 @@
                     </label>
                 </div>
                 <bk-radio-group
+                    class="variable-radio"
                     v-model="proxyFailIfVariableInvalid"
                     @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
                 >
@@ -346,6 +347,10 @@
             color: #63656E;
             font-size: 12px;
             font-weight: 500;
+
+            .variable-radio .bk-form-radio {
+                display: inline-block !important;
+            }
         }
         .single-lock-sub-form {
             margin-bottom: 20px;
