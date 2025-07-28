@@ -33,10 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.common.honor.I18nHonorInfoDTO
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import jakarta.validation.Valid
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
