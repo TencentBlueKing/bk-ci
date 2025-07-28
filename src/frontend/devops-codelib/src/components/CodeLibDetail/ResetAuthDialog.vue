@@ -655,7 +655,7 @@
                 this.isSaveLoading = true
                 this.editRepo({
                     projectId: this.projectId,
-                    repositoryHashId: this.newRepoInfo.repositoryHashId,
+                    repositoryHashId: this.newRepoInfo.repoHashId,
                     params: this.newRepoInfo
                 }).then(() => {
                     this.$bkMessage({
