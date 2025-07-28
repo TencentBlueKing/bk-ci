@@ -108,7 +108,7 @@
 
 .permission-dialog-v3 .permission-table-wrapper {
     width: 590px !important;
-    margin-bottom: 20px;
+    text-align: left;
     border-bottom: 1px solid #dcdee5;
 }
 .permission-dialog-v3  .bk-infobox-footer {
