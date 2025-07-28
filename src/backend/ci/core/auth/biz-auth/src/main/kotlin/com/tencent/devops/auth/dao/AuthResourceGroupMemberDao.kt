@@ -395,7 +395,7 @@ class AuthResourceGroupMemberDao {
                 field(MEMBER_ID, String::class.java),
                 field(MEMBER_NAME, String::class.java),
                 field(MEMBER_TYPE, String::class.java),
-                coalesce(departedField, false).`as`(IS_DEPARTED)
+                coalesce(departedField, true).`as`(IS_DEPARTED)
             )
             .from(resourceMemberUnionAuthorizationMember)
             .leftJoin(tUserInfo).on(field(MEMBER_ID, String::class.java).eq(userIdField))
