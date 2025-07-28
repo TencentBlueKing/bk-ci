@@ -84,7 +84,6 @@ interface OpAtomReplaceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "荣誉信息", required = true)
-        @Valid
         honorI18nDTOList: List<I18nHonorInfoDTO>
     ): Result<Boolean>
 }
