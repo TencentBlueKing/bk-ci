@@ -27,8 +27,9 @@ if ngx.var.http_x_devops_jwt_token == nil then
           header={typ="JWT", alg="RS256"},
           payload={sub = "Gateway", exp = ngx.time() + 60 * 10}
       }
+      local private_key = "-----BEGIN RSA PRIVATE KEY-----\n" .. config.jwtPrivateKey .. "\n-----END RSA PRIVATE KEY-----"
       jwt_token = jwt:sign(
-          config.jwtPrivateKey,
+          private_key,
           table_of_jwt
       )
       -- ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token) 
