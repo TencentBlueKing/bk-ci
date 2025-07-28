@@ -64,12 +64,12 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.tgitHttpRule}`
             aliasIndex = 2
             break
-        case isScmSvn(type) && svnType === 'SSH':
+        case isScmSvn(type) && svnType === 'ssh':
             reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             aliasIndex = 3
             break
-        case isScmSvn(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+        case isScmSvn(type) && (svnType === 'http' || svnType === 'OAUTH'):
             reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             aliasIndex = 4
@@ -166,12 +166,12 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
             nameMatchIndex = 2
             break
-        case isScmSvn(type) && svnType === 'SSH':
+        case isScmSvn(type) && svnType === 'ssh':
             reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             nameMatchIndex = 3
             break
-        case isScmSvn(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+        case isScmSvn(type) && (svnType === 'http' || svnType === 'OAUTH'):
             reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             nameMatchIndex = 4
