@@ -72,6 +72,9 @@ interface ServiceDeptResource {
     @Path("/getUserInfo")
     @Operation(summary = "获取单个用户信息")
     fun getUserInfo(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "用户ID", required = true)
+        userId: String,
         @QueryParam("name")
         @Parameter(description = "用户名称", required = true)
         name: String
