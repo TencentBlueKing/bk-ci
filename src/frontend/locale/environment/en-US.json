@@ -248,7 +248,7 @@
             "tip1": "1. Click the 'Start' button at the bottom left of the screen, search for 'PowerShell' in the Start menu, right-click and select 'Run as administrator' to open PowerShell.",
             "tip2": "2. Create and navigate to a working directory, e.g.: mkdir E:\\landun; cd E:\\landun",
             "tip3": "3. Run the following commands to download and install the Agent:",
-            "tip4": "4. [Optional] To enable user-specific data (e.g., environment variables), run 'services.msc' to open Windows Services, locate the devops_agent_{'{agent_id}'} service, right-click -> Properties, and switch to the logged-in user under the 'Log On' tab."
+            "tip4": "4. [Optional] To enable user-specific data (e.g., environment variables), run 'services.msc' to open Windows Services, locate the devops_agent_{0} service, right-click -> Properties, and switch to the logged-in user under the 'Log On' tab."
         },
         "yes": "Yes",
         "no": "No",
