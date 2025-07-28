@@ -36,10 +36,12 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
+import com.tencent.devops.model.auth.tables.TUserInfo
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupMemberRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Table
+import org.jooq.impl.DSL.coalesce
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.field
@@ -379,6 +381,10 @@ class AuthResourceGroupMemberDao {
         offset: Int?,
         limit: Int?
     ): List<ResourceMemberInfo> {
+        val tUserInfo = TUserInfo.T_USER_INFO
+        val userIdField = tUserInfo.USER_ID
+        val departedField = tUserInfo.DEPARTED
+
         val resourceMemberUnionAuthorizationMember = createResourceMemberUnionAuthorizationMember(
             dslContext = dslContext,
             projectCode = projectCode
@@ -388,9 +394,11 @@ class AuthResourceGroupMemberDao {
             .select(
                 field(MEMBER_ID, String::class.java),
                 field(MEMBER_NAME, String::class.java),
-                field(MEMBER_TYPE, String::class.java)
+                field(MEMBER_TYPE, String::class.java),
+                coalesce(departedField, false).`as`(IS_DEPARTED)
             )
             .from(resourceMemberUnionAuthorizationMember)
+            .leftJoin(tUserInfo).on(field(MEMBER_ID, String::class.java).eq(userIdField))
             .where(
                 buildResourceMemberConditions(
                     memberType = memberType,
@@ -398,10 +406,11 @@ class AuthResourceGroupMemberDao {
                     deptName = deptName
                 )
             )
-            .groupBy(
+            .groupBy(field(MEMBER_ID))
+            .orderBy(
+                field(IS_DEPARTED).desc(),
                 field(MEMBER_ID)
             )
-            .orderBy(field(MEMBER_ID))
             .let {
                 if (offset != null && limit != null) {
                     it.offset(offset).limit(limit)
@@ -411,7 +420,12 @@ class AuthResourceGroupMemberDao {
             }
             .skipCheck()
             .fetch().map {
-                ResourceMemberInfo(id = it.value1(), name = it.value2(), type = it.value3())
+                ResourceMemberInfo(
+                    id = it.value1(),
+                    name = it.value2(),
+                    type = it.value3(),
+                    departed = it.value4()
+                )
             }
     }
 
@@ -847,5 +861,6 @@ class AuthResourceGroupMemberDao {
         private const val MEMBER_ID = "$TABLE_NAME.MEMBER_ID"
         private const val MEMBER_NAME = "$TABLE_NAME.MEMBER_NAME"
         private const val MEMBER_TYPE = "$TABLE_NAME.MEMBER_TYPE"
+        private const val IS_DEPARTED = "is_departed"
     }
 }

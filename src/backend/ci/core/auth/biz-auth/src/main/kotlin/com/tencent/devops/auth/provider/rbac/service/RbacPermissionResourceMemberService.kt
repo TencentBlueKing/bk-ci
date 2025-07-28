@@ -179,12 +179,12 @@ class RbacPermissionResourceMemberService(
             limit = limit.limit
         )
 
-        // 不查询离职相关信息，防止调用用户管理接口，响应慢
-        if (departedFlag == false) {
-            return SQLPage(count = count, records = records)
-        }
+        /* // 不查询离职相关信息，防止调用用户管理接口，响应慢
+         if (departedFlag == false) {
+             return SQLPage(count = count, records = records)
+         }*/
 
-        return SQLPage(count = count, records = addDepartedFlagToMembers(records))
+        return SQLPage(count = count, records = records)
     }
 
     override fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo> {
