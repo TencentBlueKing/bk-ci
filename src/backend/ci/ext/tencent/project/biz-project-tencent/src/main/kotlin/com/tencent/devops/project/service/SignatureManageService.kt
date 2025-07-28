@@ -227,7 +227,7 @@ class SignatureManageService(
     }
 
     private fun getUserNickname(userId: String): String {
-        return client.get(ServiceDeptResource::class).getUserInfo(name = userId)
+        return client.get(ServiceDeptResource::class).getUserInfo(userId = "", name = userId)
             .data?.displayName ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.FAILED_USER_INFORMATION,
             params = arrayOf(userId)
