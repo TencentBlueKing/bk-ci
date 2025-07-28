@@ -76,10 +76,10 @@ class StoreHonorDao {
         honorIds: List<String>
     ): List<String> {
         with(TStoreHonorRel.T_STORE_HONOR_REL) {
-            return dslContext.select(HONOR_ID)
+            return dslContext.selectDistinct(HONOR_ID)
                 .from(this)
                 .where(HONOR_ID.`in`(honorIds))
-                .fetchInto(String::class.java).distinct()
+                .fetchInto(String::class.java)
         }
     }
 
