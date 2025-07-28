@@ -113,7 +113,10 @@
                                 v-if="!col.hidden"
                             >
                                 <div class="header-content">
-                                    <span :class="{ 'strikethrough': col.disabled }">{{ col.label }}</span>
+                                    <span
+                                        :class="{ 'strikethrough': col.disabled, 'content-label': true }"
+                                        v-bk-overflow-tips
+                                    >{{ col.label }}</span>
 
                                     <div
                                         class="header-actions"
@@ -198,7 +201,7 @@
                                 v-if="!col.hidden"
                             >
                                 <template v-if="colIndex === 0">
-                                    {{ row[col.key] }}
+                                    <span :title="row[col.key]">{{ row[col.key] }}</span>
                                 </template>
                                 <template v-else>
                                     <bk-select
@@ -356,6 +359,7 @@
                 }
                 this.currentOpenPopover = colIndex
             },
+
             handlePopoverHide (colIndex) {
                 if (this.currentOpenPopover === colIndex) {
                     this.currentOpenPopover = null
@@ -376,6 +380,7 @@
                     this.currentOpenPopover = null
                 }
             },
+
             transformNodeData (originalData, allTags) {
                 const tagKeyMap = new Map()
                 originalData.forEach(item => {
@@ -880,7 +885,7 @@
             width: 100%;
             border-collapse: collapse;
             th, td {
-                padding: 10px 16px;
+                padding: 10px;
                 text-align: left;
                 border: 1px solid #DCDEE5;
                 position: relative;
@@ -892,11 +897,15 @@
             th {
                 background-color: #F0F1F5;
                 min-width: 280px;
+                max-width: 280px;
             }
             th:first-child, td:first-child {
                 width: 200px;
                 min-width: 200px;
                 max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
                 border-left: none;
                 tbody td:first-child {
                     background-color: #FAFBFD;
@@ -918,16 +927,25 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                .content-label {
+                    max-width: 80%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
                 .header-actions {
                     display: flex;
                     .header-icon {
-                        color: #3A84FF; font-size: 12px;
+                        color: #3A84FF;
+                        font-size: 12px;
                     }
                     .icon-delete {
-                        margin: 0 8px; font-size: 14px;
+                        margin-left: 8px;
+                        font-size: 14px;
                     }
                     .restore-btn {
-                        width: 14px; height: 14px;
+                        width: 14px;
+                        height: 14px;
                     }
                 }
             }
@@ -938,12 +956,8 @@
                 border: none;
                 outline: none;
                 background-color: transparent;
-                ::v-deep .bk-select-selected-value {
-                    padding: 0;
-                    line-height: normal;
-                }
-                ::v-deep .bk-select-arrow {
-                    right: 16px;
+                ::v-deep .icon-angle-down:before {
+                    content: '';
                 }
             }
             .content-td:not(.pending-remove):hover .cell-select {
@@ -960,6 +974,10 @@
             }
             ::v-deep .content-td .bk-select.is-focus {
                 box-shadow: none !important;
+            }
+            .content-td:focus-within {
+                z-index: 11;
+                outline: 1px solid #a3c5fd;
             }
             // 新增 - 浅绿色背景
             .cell-new {
@@ -1074,14 +1092,13 @@
 }
 .cell-actions {
     position: absolute;
-    right: 5px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     gap: 5px;
     z-index: 12;
     .cell-action-btn {
-        margin-right: 20px;
         font-size: 14px;
         color: #3A84FF;
         vertical-align: middle;
