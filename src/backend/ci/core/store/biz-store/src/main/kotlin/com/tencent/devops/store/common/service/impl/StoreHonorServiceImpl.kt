@@ -284,16 +284,13 @@ class StoreHonorServiceImpl @Autowired constructor(
             return emptyMap()
         }
         val userLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId() ?: userId)
-
         val isDefaultLanguage = userLanguage == commonConfig.devopsDefaultLocaleLanguage
-
         val i18nValueMap = fetchRemoteI18nResources(
             isDefaultLanguage = isDefaultLanguage,
             userLanguage = userLanguage,
             storeType = storeType,
             records = records
         )
-
         return records.groupBy { record ->
             record[STORE_CODE].toString()
         }.mapValues { (storeCode, groupRecords) ->
@@ -312,25 +309,8 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun batchFillHonorTranslations(userId: String, honorI18nDTOList: List<I18nHonorInfoDTO>): Boolean {
-
-        // 校验所有DTO的国际化字段是否为空
-        honorI18nDTOList.forEach { dto ->
-            if (dto.honorTitleI18n.isNullOrBlank()) {
-                throw ErrorCodeException(
-                    errorCode = PARAMETER_IS_NULL,
-                    params = arrayOf("honorTitleI18n")
-                )
-            }
-            if (dto.honorNameI18n.isNullOrBlank()) {
-                throw ErrorCodeException(
-                    errorCode = PARAMETER_IS_NULL,
-                    params = arrayOf("honorNameI18n")
-                )
-            }
-        }
         // 按honorTitle分组，减少数据库查询次数
         val groupedDTOs = honorI18nDTOList.groupBy { it.honorTitle }
-
         // 批量查询与荣誉信息对应的插件信息
         val honorRelMap = mutableMapOf<String, List<Record>>()
         groupedDTOs.keys.forEach { title ->
@@ -339,7 +319,6 @@ class StoreHonorServiceImpl @Autowired constructor(
                 honorRelMap[title] = honorRels
             }
         }
-
         val i18nMessages = groupedDTOs.flatMap { (title, dtos) ->
             // 获取与荣誉信息对应的插件信息
             val honorRels = honorRelMap[title] ?: emptyList()
@@ -348,7 +327,6 @@ class StoreHonorServiceImpl @Autowired constructor(
                 val storeType = StoreTypeEnum.getStoreTypeObj((honorRel[STORE_TYPE] as Byte).toInt())
                 val storeCode = honorRel[STORE_CODE].toString()
                 val honorId = honorRel[STORE_HONOR_ID].toString()
-
                 dtos.flatMap { dto ->
                     listOf(
                         I18nMessage(
@@ -408,7 +386,6 @@ class StoreHonorServiceImpl @Autowired constructor(
                     buildHonorKey(storeType, storeCode, honorId, "honorInfo.honorName")
                 )
             }.distinct()
-
             // 调用国际化服务获取翻译值
             try {
                 client.get(ServiceI18nMessageResource::class)

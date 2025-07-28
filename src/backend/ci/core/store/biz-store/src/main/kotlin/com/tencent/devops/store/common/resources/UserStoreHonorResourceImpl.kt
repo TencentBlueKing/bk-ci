@@ -85,11 +85,4 @@ class UserStoreHonorResourceImpl @Autowired constructor(
             honorId = honorId
         ))
     }
-
-    override fun batchFillHonorTranslations(
-        userId: String,
-        honorI18nDTOList: List<I18nHonorInfoDTO>
-    ): Result<Boolean> {
-        return Result(storeHonorService.batchFillHonorTranslations(userId, honorI18nDTOList))
-    }
 }
