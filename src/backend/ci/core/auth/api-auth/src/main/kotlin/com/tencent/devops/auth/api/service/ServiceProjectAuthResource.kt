@@ -183,15 +183,15 @@ interface ServiceProjectAuthResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/{projectCode}/users/{userId}/checkProjectManager/message")
+    @Path("/{projectId}/users/{userId}/checkProjectManager/message")
     @Operation(summary = "判断是否是项目管理员，若不为管理员，抛出异常")
     fun checkProjectManagerAndMessage(
         @PathParam("userId")
         @Parameter(description = "用户Id", required = true)
         userId: String,
-        @PathParam("projectCode")
+        @PathParam("projectId")
         @Parameter(description = "项目Code", required = true)
-        projectCode: String
+        projectId: String
     ): Result<Boolean>
 
     @GET

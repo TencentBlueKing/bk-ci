@@ -161,12 +161,12 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
     @BkManagerCheck
     override fun checkProjectManagerAndMessage(
         userId: String,
-        projectCode: String
+        projectId: String,
     ): Result<Boolean> {
         return Result(
             permissionProjectService.checkProjectManager(
                 userId = userId,
-                projectCode = projectCode
+                projectCode = projectId
             )
         )
     }
