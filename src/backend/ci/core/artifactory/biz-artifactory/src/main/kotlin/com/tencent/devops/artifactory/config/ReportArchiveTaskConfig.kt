@@ -11,7 +11,7 @@ class ReportArchiveTaskConfig {
     @Value("\${report.compress.enabled:false}")
     var enabledCompress: Boolean = false
 
-    @Value("\${report.compress.enabledPipelines:}")
+    @Value("#{'\${report.compress.enabledPipelines}'.split(',')}")
     var enableCompressPipelines: MutableList<String> = mutableListOf()
 
     @Value("\${report.compress.threshold:9223372036854775807}")
