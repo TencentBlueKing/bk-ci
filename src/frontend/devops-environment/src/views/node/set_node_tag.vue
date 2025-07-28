@@ -430,18 +430,25 @@
                         tagMap[tag.tagKeyName] = {
                             value: tagValue,
                             tagValueId: tagValueId,
-                            tagKeyId: tag.tagKeyId
+                            tagKeyId: tag.tagKeyId,
+                            tagValueName: tagValue
                         }
                     })
 
                     tagKeyMap.forEach((tagKeyId, key) => {
-                        const tagInfo = tagMap[key] || { value: '', tagValueId: '', tagKeyId: tagKeyId }
+                        const tagInfo = tagMap[key] || {
+                            value: '',
+                            tagValueId: '',
+                            tagKeyId: tagKeyId,
+                            tagValueName: ''
+                        }
                         row[key] = tagInfo.value
                         row.tagDetails[key] = {
                             tagValueId: tagInfo.tagValueId,
                             tagKeyId: tagInfo.tagKeyId || tagKeyId,
                             originalValue: tagInfo.value,
-                            isNew: false
+                            isNew: false,
+                            tagValueName: tagInfo.tagValueName
                         }
                     })
         
@@ -608,11 +615,10 @@
 
                 const tagValues = this.getColumnTagValues(colTagKeyId)
                 const selectedOption = tagValues.find(option => option.tagValueId === newValue)
-                if (selectedOption) {
-                    row[colKey] = selectedOption.tagValueName
-                } else {
-                    row[colKey] = ''
-                }
+                const displayValue = selectedOption ? selectedOption.tagValueName : ''
+                
+                row[colKey] = displayValue
+                this.$set(row.tagDetails[colKey], 'tagValueName', displayValue)
 
                 if ((originalValue === undefined || originalValue === '') && (newValue !== '' && newValue !== null)) {
                     this.$set(this.cellDataStatus[rowIndex], colKey, 'new')
@@ -635,6 +641,7 @@
                 this.tableData.forEach((row, rowIndex) => {
                     this.$set(row.tagDetails[col.key], 'tagKeyId', col.tagKeyId)
                     this.$set(row.tagDetails[col.key], 'tagValueId', this.editColumnValue)
+                    this.$set(row.tagDetails[col.key], 'tagValueName', displayValue)
                     
                     row[col.key] = displayValue
                     this.handleCellChange(rowIndex, col.key, this.editColumnValue, col.tagKeyId)
@@ -687,11 +694,13 @@
                 this.$set(this.confirmedRemoved[rowIndex], colKey, false)
 
                 if (this.originalData[rowIndex]?.tagDetails?.[colKey]) {
+                    const originalTagValue = this.originalData[rowIndex].tagDetails[colKey]
                     this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagKeyId', colTagKeyId)
-                    this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagValueId',this.originalData[rowIndex].tagDetails[colKey].tagValueId)
+                    this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagValueId', originalTagValue.tagValueId)
+                    this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagValueName', originalTagValue.tagValueName || '')
                     
-                    this.tableData[rowIndex][colKey] = this.originalData[rowIndex].tagDetails[colKey].originalValue
-                    this.handleCellChange(rowIndex, colKey, this.originalData[rowIndex].tagDetails[colKey].tagValueId, colTagKeyId)
+                    this.tableData[rowIndex][colKey] = originalTagValue.originalValue
+                    this.handleCellChange(rowIndex, colKey, originalTagValue.tagValueId, colTagKeyId)
                 }
             },
 
@@ -775,7 +784,8 @@
                             tagValueId: '',
                             tagKeyId: tag.tagKeyId,
                             originalValue: '',
-                            isNew: true
+                            isNew: true,
+                            tagValueName: ''
                         })
                     })
                     this.$set(this.selectedExistingTags, tag.tagKeyName, true)
@@ -791,7 +801,36 @@
                 this.tableColumns.forEach(col => col && this.$set(col, 'removedRecently', false))
             },
 
+            filterModifiedTags (data) {
+                const nodeList = JSON.parse(JSON.stringify(data))
+                const result = []
+
+                nodeList.forEach(node => {
+                    const filteredTags = {}
+        
+                    Object.entries(node.tagDetails).forEach(([key, info]) => {
+                        const original = info.originalValue ?? ''
+                        const tagValue = info.tagValueName ?? ''
+
+                        if (original !== tagValue) {
+                            filteredTags[key] = info
+                        }
+                    })
+
+                    if (Object.keys(filteredTags).length > 0) {
+                        result.push({
+                            ...node,
+                            tagDetails: filteredTags
+                        })
+                    }
+                })
+
+                return result
+            },
+
             handlePreviewAndSave () {
+                const filteredResult = this.filterModifiedTags(this.tableData)
+                console.log("最终预览需处理的数据", filteredResult)
                 if (this.hasPendingRemovals) {
                     this.$bkInfo({
                         theme: 'warning',
@@ -803,10 +842,9 @@
                         }
                     })
                 } else {
-                    console.log('最新表格数据:', JSON.parse(JSON.stringify(this.tableData)))
+                    console.log('最新表格数据:', this.tableData)
                 }
             },
-
             handleCancel () {
                 this.toNodeList()
             }
