@@ -168,10 +168,9 @@ class UserArtifactQualityMetadataResourceImpl(
         labelKey: String,
         metadataLabelUpdate: UserLabelUpdateRequest
     ): Result<Boolean> {
-        client.get(ServiceProjectAuthResource::class).checkProjectManager(
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
             userId = userId,
-            projectCode = projectId,
-            token = tokenService.getSystemToken()
+            projectCode = projectId
         )
         bkRepoClient.updateArtifactQualityMetadataLabel(
             userId = userId,
@@ -187,10 +186,9 @@ class UserArtifactQualityMetadataResourceImpl(
         projectId: String,
         metadataLabels: List<UserLabelCreateRequest>
     ): Result<Boolean> {
-        client.get(ServiceProjectAuthResource::class).checkProjectManager(
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
             userId = userId,
-            projectCode = projectId,
-            token = tokenService.getSystemToken()
+            projectCode = projectId
         )
         bkRepoClient.batchSaveArtifactQualityMetadataLabel(
             userId = userId,
@@ -205,10 +203,9 @@ class UserArtifactQualityMetadataResourceImpl(
         projectId: String,
         metadataLabel: UserLabelCreateRequest
     ): Result<Boolean> {
-        client.get(ServiceProjectAuthResource::class).checkProjectManager(
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
             userId = userId,
-            projectCode = projectId,
-            token = tokenService.getSystemToken()
+            projectCode = projectId
         )
         bkRepoClient.createArtifactQualityMetadataLabel(
             userId = userId,
