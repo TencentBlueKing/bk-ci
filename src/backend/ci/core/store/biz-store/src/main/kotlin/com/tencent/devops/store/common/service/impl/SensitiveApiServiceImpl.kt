@@ -124,17 +124,21 @@ class SensitiveApiServiceImpl @Autowired constructor(
             val sensitiveApiNameMap = getSensitiveApiConfig(storeType).associateBy { it.apiName }
             val sensitiveApiCreateDTOs =
                 apiNameList.filter { it.isNotBlank() }
-                    .filter { sensitiveApiNameMap.containsKey(it) }
                     .map { apiName ->
+                        val config = sensitiveApiNameMap[apiName]
+                            ?: throw ErrorCodeException(
+                                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                                params = arrayOf(apiName)
+                            )
                         SensitiveApiCreateDTO(
                             id = UUIDUtil.generate(),
                             userId = userId,
                             storeType = storeType,
                             storeCode = storeCode,
                             apiName = apiName,
-                            aliasName = sensitiveApiNameMap[apiName]!!.aliasNames?.get(language) ?: apiName,
+                            aliasName = config.aliasNames?.get(language) ?: apiName,
                             applyDesc = applyDesc,
-                            apiStatus = ApiStatusEnum.WAIT,
+                            apiStatus = if (config.needReview) ApiStatusEnum.WAIT else ApiStatusEnum.PASS,
                             apiLevel = ApiLevelEnum.SENSITIVE
                         )
                     }
