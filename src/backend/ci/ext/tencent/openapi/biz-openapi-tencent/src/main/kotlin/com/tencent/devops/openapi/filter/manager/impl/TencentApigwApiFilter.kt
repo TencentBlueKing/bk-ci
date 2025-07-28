@@ -40,8 +40,9 @@ import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
 import jakarta.ws.rs.core.Response
-import org.bouncycastle.jce.provider.JCERSAPublicKey
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
@@ -154,11 +155,12 @@ class TencentApigwApiFilter(
             }
             val bais = ByteArrayInputStream(key)
             reader = PEMParser(InputStreamReader(bais))
-            val keyPair = reader.readObject() as JCERSAPublicKey
-            val jwtParser = Jwts.parser().setSigningKey(keyPair)
+            val publicKeyInfo = SubjectPublicKeyInfo.getInstance(reader.readObject())
+            val publicKey = JcaPEMKeyConverter().setProvider("BC").getPublicKey(publicKeyInfo)
+            val jwtParser = Jwts.parser().verifyWith(publicKey)
             val parse = jwtParser.build().parse(bkApiJwt)
-            logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
-            return JsonUtil.toMap(parse.body)
+            logger.info("Get the parse body(${parse.payload}) and header(${parse.header})")
+            return JsonUtil.toMap(parse.payload)
         } catch (ignored: Exception) {
             logger.error("BKSystemErrorMonitor| Parse jwt failed.", ignored)
             throw ErrorCodeException(

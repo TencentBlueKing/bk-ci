@@ -1,7 +1,10 @@
 package com.tencent.devops.remotedev.utils
 
 import com.tencent.devops.common.api.util.BCProviderUtil
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.security.Signature
@@ -27,7 +30,11 @@ object RsaUtil {
     fun generatePublicKey(publicKey: ByteArray): RSAPublicKey {
         val bais = ByteArrayInputStream(publicKey)
         val reader = PEMParser(InputStreamReader(bais))
-        return reader.use { it.readObject() as RSAPublicKey }
+        return reader.use {
+            val publicKeyInfo = SubjectPublicKeyInfo.getInstance(it.readObject())
+            val publicKey = JcaPEMKeyConverter().setProvider("BC").getPublicKey(publicKeyInfo)
+            publicKey as RSAPublicKey
+        }
     }
 
     /**
@@ -42,7 +49,11 @@ object RsaUtil {
     fun generatePrivateKey(privateKey: ByteArray): RSAPrivateKey {
         val bais = ByteArrayInputStream(privateKey)
         val reader = PEMParser(InputStreamReader(bais))
-        return reader.use { it.readObject() as RSAPrivateKey }
+        return reader.use {
+            val privateKeyInfo = PrivateKeyInfo.getInstance(it.readObject())
+            val privateKey = JcaPEMKeyConverter().getPrivateKey(privateKeyInfo)
+            privateKey as RSAPrivateKey
+        }
     }
 
     /**
