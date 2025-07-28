@@ -42,6 +42,7 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.time.Duration
 import java.time.Instant
 import java.util.Base64
 import java.util.Date
@@ -126,10 +127,10 @@ class JwtManager(
     }
 
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
-        if (isAuthEnable()) {
-            taskRegistrar?.addFixedDelayTask(
+        if (isSendEnable()) {
+            taskRegistrar.addFixedDelayTask(
                 this@JwtManager::refreshToken,
-                5 * 60 * 1000
+                Duration.ofMinutes(5L)
             )
         }
     }
