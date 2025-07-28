@@ -47,8 +47,8 @@ class ServiceDeptResourceImpl @Autowired constructor(
         return Result(deptService.getDeptByName(deptName, userId))
     }
 
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(userId, name))
+    override fun getUserInfo(name: String): Result<UserAndDeptInfoVo?> {
+        return Result(deptService.getUserInfo(name))
     }
 
     override fun checkUserDeparted(name: String): Result<Boolean> {
