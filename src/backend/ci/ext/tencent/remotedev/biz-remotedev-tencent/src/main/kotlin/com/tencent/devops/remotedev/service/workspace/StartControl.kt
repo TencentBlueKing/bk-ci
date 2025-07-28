@@ -251,14 +251,13 @@ class StartControl @Autowired constructor(
             }
             if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 logger.warn("computerStatus is not normal, start failed.")
-                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION_START_FAILED)
                 workspaceStatus = WorkspaceStatus.EXCEPTION_START_FAILED
             }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = workspaceName,
-                    status = WorkspaceStatus.RUNNING,
+                    status = workspaceStatus,
                     dslContext = transactionContext
                 )
 
@@ -266,18 +265,19 @@ class StartControl @Autowired constructor(
                     dslContext = transactionContext,
                     workspaceName = workspaceName
                 )
-
-                val lastSleepTimeCost = if (lastHistory?.endTime != null) {
-                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt()
-                } else {
-                    0
+                if (workspaceStatus.checkRunning()) {
+                    val lastSleepTimeCost = if (lastHistory?.endTime != null) {
+                        Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt()
+                    } else {
+                        0
+                    }
+                    workspaceHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceName = workspaceName,
+                        startUserId = operator,
+                        lastSleepTimeCost = lastSleepTimeCost
+                    )
                 }
-                workspaceHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceName = workspaceName,
-                    startUserId = operator,
-                    lastSleepTimeCost = lastSleepTimeCost
-                )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
@@ -286,7 +286,7 @@ class StartControl @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.RUNNING.name
+                        workspaceStatus
                     )
                 )
             }
