@@ -109,7 +109,7 @@ class JwtManager(
             val expireAt = claims.get("exp", Date::class.java)
             if (expireAt != null) {
                 logger.info("Verify jwt expireAt: $expireAt")
-                tokenCache.put(token, expireAt.time)
+                tokenCache.put(token, expireAt.time / 1000)
             }
         } catch (e: ExpiredJwtException) {
             logger.warn("Token is expire!", e)
