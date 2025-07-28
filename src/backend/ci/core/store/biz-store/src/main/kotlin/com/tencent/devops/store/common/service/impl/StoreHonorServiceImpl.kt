@@ -309,6 +309,22 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun batchFillHonorTranslations(userId: String, honorI18nDTOList: List<I18nHonorInfoDTO>): Boolean {
+
+        // 校验所有DTO的国际化字段是否为空
+        honorI18nDTOList.forEach { dto ->
+            if (dto.honorTitleI18n.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = PARAMETER_IS_NULL,
+                    params = arrayOf("honorTitleI18n")
+                )
+            }
+            if (dto.honorNameI18n.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = PARAMETER_IS_NULL,
+                    params = arrayOf("honorNameI18n")
+                )
+            }
+        }
         // 按honorTitle分组，减少数据库查询次数
         val groupedDTOs = honorI18nDTOList.groupBy { it.honorTitle }
         // 批量查询与荣誉信息对应的插件信息
