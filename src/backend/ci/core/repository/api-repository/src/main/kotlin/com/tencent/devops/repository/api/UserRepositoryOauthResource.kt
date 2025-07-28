@@ -97,8 +97,8 @@ interface UserRepositoryOauthResource {
         @QueryParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要删除的用户名", required = true)
-        @QueryParam("username")
-        username: String
+        @QueryParam("oauthUserId")
+        oauthUserId: String
     ): Result<Boolean>
 
     @POST
@@ -115,8 +115,8 @@ interface UserRepositoryOauthResource {
         @QueryParam("redirectUrl")
         redirectUrl: String,
         @Parameter(description = "需要重置的用户名", required = false)
-        @QueryParam("username")
-        username: String? = ""
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = ""
     ): Result<Oauth2Url>
 
     @GET

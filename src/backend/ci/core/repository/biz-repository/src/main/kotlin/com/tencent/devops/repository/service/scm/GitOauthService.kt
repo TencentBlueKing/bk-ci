@@ -237,7 +237,11 @@ class GitOauthService @Autowired constructor(
         }
         val accessToken = getAccessToken(userId) ?: return null
         // 授权代持人
-        val operator = (accessToken.operator ?: "").ifBlank { userId }
+        val operator = if (accessToken.operator.isNullOrBlank()) {
+            userId
+        } else {
+            accessToken.operator!!
+        }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         val projectUserCheck = authProjectApi.checkProjectUser(
@@ -289,7 +293,8 @@ class GitOauthService @Autowired constructor(
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli(),
                 updateTime = LocalDateTime.now().timestampmilli(),
-                operator = it.operator ?: userId
+                operator = it.operator ?: userId,
+                userId = userId
             )
         }
     }

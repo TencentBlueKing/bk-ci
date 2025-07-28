@@ -119,11 +119,11 @@ class RepositoryOauthService @Autowired constructor(
     fun delete(
         userId: String,
         scmCode: String,
-        username: String
+        oauthUserId: String
     ) {
         val repoCondition = RepoCondition(
             authType = RepoAuthType.OAUTH,
-            oauthUserId = username,
+            oauthUserId = oauthUserId,
             scmCode = scmCode
         )
         val count = codeRepositoryManager.countByCondition(
@@ -137,20 +137,20 @@ class RepositoryOauthService @Autowired constructor(
             )
         }
         // 删除指定用户名的授权信息
-        oauth2TokenStoreManager.delete(username = username, scmCode = scmCode, userId = userId)
+        oauth2TokenStoreManager.delete(username = oauthUserId, scmCode = scmCode, userId = userId)
     }
 
     fun oauthUrl(
         userId: String,
         scmCode: String,
         redirectUrl: String,
-        username: String
+        oauthUserId: String
     ): Oauth2Url {
         val url = when (scmCode) {
             // GITHUB 相关sdk尚未完善，完善后移除这部分代码
             ScmType.GITHUB.name -> {
                 githubOAuthService.getGithubOauth(
-                    userId = username,
+                    userId = oauthUserId,
                     projectId = "",
                     redirectUrlTypeEnum = RedirectUrlTypeEnum.SPEC,
                     specRedirectUrl = redirectUrl,
@@ -160,7 +160,7 @@ class RepositoryOauthService @Autowired constructor(
             }
 
             else -> {
-                val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl, username = username)
+                val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl, username = oauthUserId)
                 scmTokenApiService.authorizationUrl(scmCode = scmCode, state = state)
             }
         }

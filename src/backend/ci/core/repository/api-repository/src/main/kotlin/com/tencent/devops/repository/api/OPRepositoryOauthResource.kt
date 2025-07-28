@@ -25,35 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources.scm
+package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.scm.UserScmRepositoryApiResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.Operation
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-@RestResource
-class UserScmRepositoryApiResourceImpl @Autowired constructor(
-    private val repositoryApiService: ScmRepositoryApiService
-) : UserScmRepositoryApiResource {
+@Path("/op/repo/oauth")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPRepositoryOauthResource {
+    @Operation(summary = "填充操作人信息")
+    @POST
+    @Path("/addGithubOperator")
+    fun addGithubOperator(): Result<Boolean>
 
-    override fun listRepoBaseInfo(
-        userId: String,
-        projectId: String,
-        scmCode: String,
-        search: String?,
-        oauthUserId: String?
-    ): Result<AuthorizeResult> {
-        return Result(
-            repositoryApiService.listRepoBaseInfo(
-                userId = userId,
-                projectId = projectId,
-                scmCode = scmCode,
-                search = search,
-                oauthUserId = oauthUserId
-            )
-        )
-    }
+    @Operation(summary = "填充操作人信息")
+    @POST
+    @Path("/addGitOperator")
+    fun addGitOperator(): Result<Boolean>
 }

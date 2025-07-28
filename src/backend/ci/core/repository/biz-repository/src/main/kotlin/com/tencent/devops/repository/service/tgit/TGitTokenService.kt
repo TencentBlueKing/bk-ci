@@ -77,7 +77,8 @@ class TGitTokenService @Autowired constructor(
                 refreshToken = AESUtil.decrypt(aesKey, it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
-                createTime = it.createTime.timestampmilli()
+                createTime = it.createTime.timestampmilli(),
+                userId = userId
             )
         }
     }

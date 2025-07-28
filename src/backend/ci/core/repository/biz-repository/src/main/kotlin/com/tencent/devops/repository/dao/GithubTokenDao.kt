@@ -157,4 +157,29 @@ class GithubTokenDao {
                     .fetch()
         }
     }
+
+    fun listEmptyToken(
+        dslContext: DSLContext,
+        limit: Int
+    ) : List<TRepositoryGithubTokenRecord> {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(OPERATOR.isNull)
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(limit)
+                    .fetch()
+        }
+    }
+
+    fun updateOperator(
+        dslContext: DSLContext,
+        userIds: Set<String>
+    ) {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            dslContext.update(this)
+                    .set(OPERATOR, USER_ID)
+                    .where(USER_ID.`in`(userIds))
+                    .execute()
+        }
+    }
 }

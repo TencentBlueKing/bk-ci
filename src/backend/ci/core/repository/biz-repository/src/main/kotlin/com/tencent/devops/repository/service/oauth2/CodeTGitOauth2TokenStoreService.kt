@@ -76,7 +76,8 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
-                operator = operator
+                operator = operator,
+                userId = userId
             )
             tGitTokenDao.saveAccessToken(
                 dslContext,

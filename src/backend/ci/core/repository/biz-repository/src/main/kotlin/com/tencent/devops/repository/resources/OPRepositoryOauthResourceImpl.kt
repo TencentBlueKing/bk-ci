@@ -25,35 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources.scm
+package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.scm.UserScmRepositoryApiResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
+import com.tencent.devops.repository.api.OPRepositoryOauthResource
+import com.tencent.devops.repository.service.OPRepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserScmRepositoryApiResourceImpl @Autowired constructor(
-    private val repositoryApiService: ScmRepositoryApiService
-) : UserScmRepositoryApiResource {
+class OPRepositoryOauthResourceImpl @Autowired constructor(
+    private val opRepositoryService: OPRepositoryService
+) : OPRepositoryOauthResource {
+    override fun addGithubOperator(): Result<Boolean> {
+        opRepositoryService.addGithubOperator()
+        return Result(true)
+    }
 
-    override fun listRepoBaseInfo(
-        userId: String,
-        projectId: String,
-        scmCode: String,
-        search: String?,
-        oauthUserId: String?
-    ): Result<AuthorizeResult> {
-        return Result(
-            repositoryApiService.listRepoBaseInfo(
-                userId = userId,
-                projectId = projectId,
-                scmCode = scmCode,
-                search = search,
-                oauthUserId = oauthUserId
-            )
-        )
+    override fun addGitOperator(): Result<Boolean> {
+        opRepositoryService.addGitOperator()
+        return Result(true)
     }
 }

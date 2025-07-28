@@ -47,12 +47,12 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
     override fun delete(
         userId: String,
         scmCode: String,
-        username: String
+        oauthUserId: String
     ): Result<Boolean> {
         repositoryOauthService.delete(
             userId = userId,
             scmCode = scmCode,
-            username = username
+            oauthUserId = oauthUserId
         )
         return Result(true)
     }
@@ -61,14 +61,14 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
         userId: String,
         scmCode: String,
         redirectUrl: String,
-        username: String?
+        oauthUserId: String?
     ): Result<Oauth2Url> {
         return Result(
             repositoryOauthService.oauthUrl(
                 userId = userId,
                 scmCode = scmCode,
                 redirectUrl = redirectUrl,
-                username = (username ?: "").ifBlank { userId }
+                oauthUserId = (oauthUserId ?: "").ifBlank { userId }
             )
         )
     }

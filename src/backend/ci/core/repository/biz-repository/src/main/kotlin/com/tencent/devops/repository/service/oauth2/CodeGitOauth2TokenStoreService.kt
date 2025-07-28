@@ -78,7 +78,8 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
-                operator = operator
+                operator = operator,
+                userId = userId
             )
         }
         gitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)

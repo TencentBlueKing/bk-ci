@@ -128,7 +128,11 @@ class GithubTokenService @Autowired constructor(
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }
         val accessToken = getAccessToken(userId) ?: return null
-        val operator = (accessToken.operator ?: "").ifBlank { userId }
+        val operator = if (!accessToken.operator.isNullOrBlank()) {
+            accessToken.operator!!
+        } else {
+            accessToken.userId!!
+        }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         val projectUserCheck = authProjectApi.checkProjectUser(
@@ -164,6 +168,18 @@ class GithubTokenService @Autowired constructor(
             githubTokenRecord.userId,
             githubTokenRecord.operator
         )
+    }
+
+    fun listEmptyToken(
+        dsl: DSLContext = dslContext,
+        limit: Int
+    ) = githubTokenDao.listEmptyToken(dsl, limit)
+
+    fun updateOperator(
+        dsl: DSLContext = dslContext,
+        userIds: Set<String>
+    ) {
+        githubTokenDao.updateOperator(dsl, userIds)
     }
 
     companion object {

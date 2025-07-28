@@ -73,7 +73,8 @@ class ScmTokenService @Autowired constructor(
         return GitToken(
             accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken),
             tokenType = scmTokenRecord.appType,
-            operator = scmTokenRecord.operator
+            operator = scmTokenRecord.operator,
+            userId = userId
         )
     }
 

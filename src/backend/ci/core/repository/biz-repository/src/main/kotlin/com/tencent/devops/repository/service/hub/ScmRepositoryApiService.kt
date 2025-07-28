@@ -93,14 +93,14 @@ class ScmRepositoryApiService @Autowired constructor(
         projectId: String,
         scmCode: String,
         search: String?,
-        username: String?
+        oauthUserId: String?
     ): AuthorizeResult {
         // 若指定指定授权账号，则以目标账号权限拉取仓库列表
         val oauthTokenInfo = oauth2TokenStoreManager.get(
-            userId = if (username.isNullOrBlank()) {
+            userId = if (oauthUserId.isNullOrBlank()) {
                 userId
             } else {
-                username
+                oauthUserId
             },
             scmCode = scmCode
         ) ?: run {
@@ -109,7 +109,7 @@ class ScmRepositoryApiService @Autowired constructor(
                 userId = userId,
                 scmCode = scmCode,
                 redirectUrl = redirectUrl,
-                username = userId
+                oauthUserId = userId
             )
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }

@@ -66,7 +66,7 @@ interface UserScmRepositoryApiResource {
         @QueryParam("search")
         search: String? = null,
         @Parameter(description = "授权账号", required = false)
-        @QueryParam("username")
-        username: String? = null
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = null
     ): Result<AuthorizeResult>
 }
