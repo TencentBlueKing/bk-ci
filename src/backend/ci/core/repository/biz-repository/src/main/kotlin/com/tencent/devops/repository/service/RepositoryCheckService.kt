@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -86,11 +86,13 @@ class RepositoryCheckService @Autowired constructor(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository
     ) {
-        val opts = BranchListOptions.builder().page(1).pageSize(1).build()
         scmApiManager.listBranches(
             providerProperties = providerProperties,
             providerRepository = providerRepository,
-            opts = opts
+            opts = BranchListOptions(
+                page = 1,
+                pageSize = 1
+            )
         )
     }
 

@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Oauth2State
 import com.tencent.devops.repository.pojo.RepoCondition
@@ -247,7 +248,7 @@ class RepositoryOauthService @Autowired constructor(
                 repoCount = count,
                 scmCode = scmCode,
                 scmType = scmConfig.scmType,
-                name = scmConfig.name,
+                name = generateI18nConfigName(scmConfig.scmCode),
                 operator = operator ?: userId,
                 createTime = createTime,
                 expired = expiresIn?.let { expiresIn ->
@@ -267,10 +268,14 @@ class RepositoryOauthService @Autowired constructor(
                 expired = true,
                 authorized = false,
                 scmType = scmType,
-                name = name,
+                name = generateI18nConfigName(scmCode),
                 operator = userId
             )
         }
+    }
+
+    private fun generateI18nConfigName(scmCode: String): String {
+        return I18nUtil.getCodeLanMessage(scmCode)
     }
 
     companion object {

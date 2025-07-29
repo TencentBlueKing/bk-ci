@@ -144,7 +144,7 @@ class TPACommonUtil @Autowired constructor(
         } else {
             data.projectId
         }
-        val link = "$host/console/environment/$projectId/nodeDetail/$nodeHashId"
+        val link = "$host/console/environment/$projectId/node/nodeDetail/$nodeHashId"
         val msg = if (nodeHashId.isNullOrBlank()) {
             ""
         } else {

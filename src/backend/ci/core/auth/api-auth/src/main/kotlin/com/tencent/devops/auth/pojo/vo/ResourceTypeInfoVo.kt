@@ -15,5 +15,7 @@ data class ResourceTypeInfoVo(
     @get:Schema(title = "父类资源")
     val parent: String = "",
     @get:Schema(title = "所属系统")
-    val system: String = ""
+    val system: String = "",
+    @get:Schema(title = "授权交接失败成员列表")
+    val memberIds: List<String> = emptyList()
 )

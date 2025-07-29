@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,9 +28,11 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPlatformApi
@@ -50,9 +52,13 @@ import com.tencent.devops.repository.pojo.RepositoryScmProvider
 import com.tencent.devops.repository.pojo.RepositoryScmProviderVo
 import com.tencent.devops.repository.pojo.ScmConfigBaseInfo
 import com.tencent.devops.repository.pojo.ScmConfigProps
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepoCredentialType
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType.TOKEN_USERNAME_PASSWORD
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType.USERNAME_PASSWORD
 import com.tencent.devops.repository.pojo.enums.ScmConfigOauthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
+import com.tencent.devops.scm.api.enums.EventAction
 import com.tencent.devops.scm.api.enums.WebhookSecretType
 import com.tencent.devops.scm.spring.properties.HttpClientProperties
 import com.tencent.devops.scm.spring.properties.Oauth2ClientProperties
@@ -182,12 +188,13 @@ class RepositoryScmConfigService @Autowired constructor(
         }
     }
 
-    fun listConfigBaseInfo(userId: String): List<ScmConfigBaseInfo> {
+    fun listConfigBaseInfo(userId: String, scmType: ScmType?): List<ScmConfigBaseInfo> {
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(PageUtil.DEFAULT_PAGE, PageUtil.MAX_PAGE_SIZE)
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val scmConfigs = repositoryScmConfigDao.list(
             dslContext = dslContext,
             excludeStatus = ScmConfigStatus.DISABLED,
+            scmType = scmType,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )
@@ -201,7 +208,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 hosts = it.hosts,
                 logoUrl = it.logoUrl,
                 docUrl = providerMap[it.providerCode]?.docUrl,
-                credentialTypeList = getCredentialTypeVos(it.credentialTypeList),
+                credentialTypeList = getCredentialTypeVos(it.credentialTypeList, it.scmType),
                 pacEnabled = it.pacEnabled
             )
         }
@@ -279,7 +286,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 scmType = it.scmType,
                 logoUrl = it.logoUrl,
                 docUrl = it.docUrl,
-                credentialTypeList = getCredentialTypeVos(it.credentialTypeList),
+                credentialTypeList = getCredentialTypeVos(it.credentialTypeList, it.scmType),
                 api = it.api,
                 merge = it.merge,
                 webhook = it.webhook,
@@ -433,6 +440,44 @@ class RepositoryScmConfigService @Autowired constructor(
         return RepositoryConfigLogoInfo(logoUrl)
     }
 
+    fun supportEvents(
+        userId: String,
+        scmCode: String
+    ): List<IdValue> {
+        return getProviderConfig(scmCode)?.let { provider ->
+            provider.webhookProps?.let { props ->
+                props.eventTypeList?.map { event ->
+                    IdValue(event, eventDesc(provider.providerCode, event))
+                }
+            }
+        } ?: listOf()
+    }
+
+    fun supportEventActions(
+        userId: String,
+        scmCode: String,
+        eventType: String
+    ): List<IdValue> {
+        return getProviderConfig(scmCode)?.let { provider ->
+            provider.webhookProps?.let { props ->
+                props.eventTypeActionMap?.get(eventType)?.map { action ->
+                    IdValue(
+                        EventAction.valueOf(action).value,
+                        eventActionDesc(provider.providerCode, eventType, action)
+                    )
+                }
+            }
+        } ?: listOf()
+    }
+
+    private fun getProviderConfig(scmCode: String): RepositoryScmProvider? {
+        val scmConfig = repositoryScmConfigDao.get(dslContext, scmCode) ?: throw ErrorCodeException(
+            errorCode = RepositoryMessageCode.ERROR_SCM_CONFIG_NOT_FOUND,
+            params = arrayOf(scmCode)
+        )
+        return repositoryScmProviderDao.get(dslContext, scmConfig.providerCode)
+    }
+
     private fun convertScmConfigVo(
         scmConfig: RepositoryScmConfig,
         providerMap: Map<String, RepositoryScmProvider>,
@@ -449,7 +494,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 hosts = hosts,
                 logoUrl = logoUrl,
                 docUrl = providerMap[providerCode]?.docUrl,
-                credentialTypeList = getCredentialTypeVos(credentialTypeList),
+                credentialTypeList = getCredentialTypeVos(credentialTypeList, scmType),
                 oauthType = oauthType,
                 oauthScmCode = oauthScmCode,
                 oauth2Enabled = oauth2Enabled,
@@ -473,18 +518,17 @@ class RepositoryScmConfigService @Autowired constructor(
         oldProviderProperties: ScmProviderProperties? = null
     ): ScmProviderProperties {
         with(request.props) {
-            val providerPropertiesBuilder = ScmProviderProperties.builder()
+            val providerPropertiesBuilder = ScmProviderProperties()
             if (scmProvider.api) {
                 require(!apiUrl.isNullOrEmpty()) { "apiUrl can not empty" }
-                val httpClientProperties = HttpClientProperties.builder()
-                    .apiUrl(apiUrl)
-                    .build()
-                providerPropertiesBuilder.proxyEnabled(proxyEnabled)
-                providerPropertiesBuilder.httpClientProperties(httpClientProperties)
+                providerPropertiesBuilder.proxyEnabled = proxyEnabled
+                providerPropertiesBuilder.httpClientProperties = HttpClientProperties(
+                    apiUrl = apiUrl
+                )
             }
-            providerPropertiesBuilder.providerCode(scmProvider.providerCode)
-            providerPropertiesBuilder.providerType(scmProvider.providerType.name)
-            providerPropertiesBuilder.oauth2Enabled(false)
+            providerPropertiesBuilder.providerCode = scmProvider.providerCode
+            providerPropertiesBuilder.providerType = scmProvider.providerType.name
+            providerPropertiesBuilder.oauth2Enabled = false
             if (request.credentialTypeList.contains(RepoCredentialType.OAUTH)) {
                 when (request.oauthType) {
                     ScmConfigOauthType.NEW -> {
@@ -492,8 +536,8 @@ class RepositoryScmConfigService @Autowired constructor(
                             oldProviderProperties = oldProviderProperties,
                             request = request
                         )
-                        providerPropertiesBuilder.oauth2Enabled(true)
-                        providerPropertiesBuilder.oauth2ClientProperties(oauth2ClientProperties)
+                        providerPropertiesBuilder.oauth2Enabled = true
+                        providerPropertiesBuilder.oauth2ClientProperties = oauth2ClientProperties
                     }
 
                     ScmConfigOauthType.REUSE -> {
@@ -509,7 +553,7 @@ class RepositoryScmConfigService @Autowired constructor(
                     throw IllegalArgumentException("webhookSecret can not empty")
                 }
             }
-            return providerPropertiesBuilder.build()
+            return providerPropertiesBuilder
         }
     }
 
@@ -523,30 +567,27 @@ class RepositoryScmConfigService @Autowired constructor(
         require(oauthCallbackUrl.isNotEmpty()) { "callbackUrl can not empty" }
         // 如果是更新,前端传过来的clientSecret可能是加码后的值
         val encryptClientSecret = if (clientSecret == SECRET_MIXER) {
-            if (oldProviderProperties == null ||
-                oldProviderProperties.oauth2ClientProperties == null ||
-                oldProviderProperties.oauth2ClientProperties.clientSecret.isNullOrEmpty()
-            ) {
+            if (oldProviderProperties?.oauth2ClientProperties?.clientSecret.isNullOrEmpty()) {
                 throw IllegalArgumentException("clientSecret can not empty")
             }
-            oldProviderProperties.oauth2ClientProperties.clientSecret
+            oldProviderProperties?.oauth2ClientProperties?.clientSecret
         } else {
             BkCryptoUtil.encryptSm4ButAes(aesKey, clientSecret!!)
         }
         val redirectUri = String.format(oauthCallbackUrl, request.scmCode)
-        return Oauth2ClientProperties.builder()
-            .webUrl(webUrl)
-            .clientId(clientId)
-            .clientSecret(encryptClientSecret)
-            .redirectUri(redirectUri)
-            .build()
+        return Oauth2ClientProperties(
+            webUrl = webUrl,
+            clientId = clientId,
+            clientSecret = encryptClientSecret,
+            redirectUri = redirectUri
+        )
     }
 
     private fun convertProvideProps(providerProperties: ScmProviderProperties): ScmConfigProps {
         val apiUrl = providerProperties.httpClientProperties?.apiUrl
         val webUrl = providerProperties.oauth2ClientProperties?.webUrl
         val clientId = providerProperties.oauth2ClientProperties?.clientId
-        val proxyEnabled = providerProperties.proxyEnabled
+        val proxyEnabled = providerProperties.proxyEnabled ?: false
         return ScmConfigProps(
             apiUrl = apiUrl,
             webUrl = webUrl,
@@ -558,19 +599,20 @@ class RepositoryScmConfigService @Autowired constructor(
     }
 
     private fun ScmProviderProperties.decrypt(): ScmProviderProperties {
-        if (oauth2Enabled && oauth2ClientProperties != null) {
-            oauth2ClientProperties.decrypt()
-        }
+        oauth2ClientProperties?.takeIf { oauth2Enabled == true }?.decrypt()
         return this
     }
 
     private fun Oauth2ClientProperties.decrypt() {
-        if (clientSecret != null) {
-            clientSecret = BkCryptoUtil.decryptSm4OrAes(aesKey, clientSecret)
+        clientSecret?.let {
+            clientSecret = BkCryptoUtil.decryptSm4OrAes(aesKey, it)
         }
     }
 
-    private fun getCredentialTypeVos(credentialTypeList: List<RepoCredentialType>): List<RepoCredentialTypeVo> {
+    private fun getCredentialTypeVos(
+        credentialTypeList: List<RepoCredentialType>,
+        scmType: ScmType
+    ): List<RepoCredentialTypeVo> {
         return credentialTypeList.map { credentialType ->
             RepoCredentialTypeVo(
                 credentialType = credentialType.name,
@@ -578,7 +620,16 @@ class RepositoryScmConfigService @Autowired constructor(
                     messageCode = "$CREDENTIAL_TYPE_PREFIX${credentialType.name}",
                     defaultMessage = credentialType.name
                 ),
-                authType = credentialType.authType
+                authType = if (scmType == ScmType.CODE_SVN || scmType == ScmType.SCM_SVN) {
+                    // SVN 授权类型，需要特殊处理
+                    // 参考 com.tencent.devops.repository.pojo.ScmSvnRepository.SVN_TYPE_HTTP
+                    when (credentialType) {
+                        USERNAME_PASSWORD, TOKEN_USERNAME_PASSWORD -> RepoAuthType.HTTP
+                        else -> RepoAuthType.SSH
+                    }.name.toLowerCase()
+                } else {
+                    credentialType.authType.name
+                }
             )
         }
     }
@@ -595,6 +646,22 @@ class RepositoryScmConfigService @Autowired constructor(
             )
         }
     }
+
+    /**
+     * 根据平台编码和事件类型获取事件描述
+     */
+    private fun eventDesc(providerCode: String, eventType: String) = I18nUtil.getCodeLanMessage(
+        messageCode = "BK_${providerCode.uppercase()}_${eventType}_DESC",
+        defaultMessage = eventType
+    )
+
+    /**
+     * 根据平台编码和事件类型获取事件动作描述
+     */
+    private fun eventActionDesc(providerCode: String, eventType: String, action: String) = I18nUtil.getCodeLanMessage(
+        messageCode = "BK_${providerCode.uppercase()}_${eventType}_ACTION_${action}_DESC",
+        defaultMessage = action
+    )
 
     companion object {
         const val SECRET_MIXER = "******"

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,8 +42,10 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -227,12 +229,9 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 获取授权人
         val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
             ?: pipelineInfo.lastModifyUser
-        val variables = mutableMapOf<String, String>()
         val container = model.getTriggerContainer()
         // 解析变量
-        container.params.forEach { param ->
-            variables[param.id] = param.defaultValue.toString()
-        }
+        val variables = getDefaultParam(container.params)
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
@@ -422,12 +421,9 @@ class PipelineBuildWebhookService @Autowired constructor(
             )
         }
         val userId = pipelineInfo.lastModifyUser
-        val variables = mutableMapOf<String, String>()
         val container = model.getTriggerContainer()
         // 解析变量
-        container.params.forEach { param ->
-            variables[param.id] = param.defaultValue.toString()
-        }
+        val variables = getDefaultParam(container.params)
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
@@ -657,5 +653,19 @@ class PipelineBuildWebhookService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.error("save auth user metrics", ignored)
         }
+    }
+
+    private fun getDefaultParam(params: List<BuildFormProperty>): MutableMap<String, String> {
+        val variables = mutableMapOf<String, String>()
+        params.forEach { param ->
+            variables[param.id] = if (CascadePropertyUtils.supportCascadeParam(param.type) &&
+                    param.defaultValue is Map<*, *>
+            ) {
+                JsonUtil.toJson(param.defaultValue, false)
+            } else {
+                param.defaultValue.toString()
+            }
+        }
+        return variables
     }
 }

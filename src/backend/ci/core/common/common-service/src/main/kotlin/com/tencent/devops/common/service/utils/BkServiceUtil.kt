@@ -97,7 +97,7 @@ object BkServiceUtil {
             }
         } else {
             // 如果方法没有传class对象和微服务名称，则微服务名称通过yaml配置的应用名称获取
-            var applicationName = environment.getProperty("spring.application.name")
+            var applicationName = getApplicationName()
             if (!serviceSuffix.isNullOrBlank()) {
                 applicationName = applicationName?.removeSuffix(serviceSuffix)
             }
@@ -123,6 +123,8 @@ object BkServiceUtil {
         }
         return environment
     }
+
+    fun getApplicationName() = getEnvironment().getProperty("spring.application.name")
 
     /**
      * 从class对象解析出微服务名称
