@@ -153,7 +153,11 @@
             value: {
                 handler (newVal) {
                     if (newVal) {
-                        this.parameters = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
+                        const value = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
+                        this.parameters = value || [{
+                            key: '',
+                            value: ''
+                        }]
                     } else {
                         this.$nextTick(() => {
                             this.addParam()
@@ -170,7 +174,10 @@
                 this.debounceGetOptionList = debounce(this.getOptionList)
             } else {
                 const value = typeof this.value === 'string' ? JSON.parse(this.value) : this.value
-                this.parameters = value || []
+                this.parameters = value || [{
+                    key: '',
+                    value: ''
+                }]
             }
         },
         methods: {
@@ -232,7 +239,11 @@
                     })
                 } catch (e) {
                     console.error(e)
-                    this.parameters = this.value
+                    const value = typeof this.value === 'string' ? JSON.parse(this.value) : this.value
+                    this.parameters = value || [{
+                        key: '',
+                        value: ''
+                    }]
                 } finally {
                     this.loading = false
                 }

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
 import { RESOURCE_ACTION, RESOURCE_TYPE} from '@/utils/permission.js';
 import { InfoBox, Popover } from 'bkui-vue';
+import { useRoute } from 'vue-router';
 const { t } = useI18n();
 const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProjectData', 'handleUpdate']);
 const props = defineProps({
@@ -14,6 +15,8 @@ const props = defineProps({
   btnLoading: Boolean
 });
 
+const route = useRoute();
+const { projectCode } = route.params;
 const componentsRef = ref();
 const projectData = ref(props.data);
 const initData = JSON.stringify(projectData.value)
@@ -188,16 +191,6 @@ onMounted(() => {
               <Popover
                 :content="statusDisabledTips[projectData?.approvalStatus]"
                 :disabled="![1, 4].includes(projectData?.approvalStatus)"
-                v-perm="{
-                  disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
-                  hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
-                  permissionData: {
-                    projectId: projectCode,
-                    resourceType: RESOURCE_TYPE,
-                    resourceCode: projectCode,
-                    action: RESOURCE_ACTION.EDIT
-                  }
-                }"
               >
                 <span>
                   <bk-button
@@ -206,6 +199,16 @@ onMounted(() => {
                     theme="primary"
                     :loading="btnLoading"
                     @click="handleUpdate"
+                    v-perm="{
+                      disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
+                      hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
+                      permissionData: {
+                        projectId: projectCode,
+                        resourceType: RESOURCE_TYPE,
+                        resourceCode: projectCode,
+                        action: RESOURCE_ACTION.EDIT
+                      }
+                    }"
                   >
                     {{ t('提交更新') }}
                   </bk-button>
