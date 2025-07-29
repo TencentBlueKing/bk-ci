@@ -47,14 +47,14 @@ class UserGithubResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repoHashId: String?,
-        username: String?
+        oauthUserId: String?
     ): Result<AuthorizeResult> {
         return Result(
             githubService.getProject(
                 projectId = projectId,
                 userId = userId,
                 repoHashId = repoHashId,
-                username = username
+                oauthUserId = oauthUserId
             )
         )
     }

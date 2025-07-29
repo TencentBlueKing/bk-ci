@@ -163,16 +163,16 @@ class GithubService @Autowired constructor(
         projectId: String,
         userId: String,
         repoHashId: String?,
-        username: String?
+        oauthUserId: String?
     ): AuthorizeResult {
-        val accessToken = if (username.isNullOrBlank()) {
+        val accessToken = if (oauthUserId.isNullOrBlank()) {
             // 没有指定授权用户，则以当前userId匹配token(旧数据：userId为rtx名)
             // 匹配不到以operator进行匹配（新数据：userId为服务端用户名，operator为rtx名，获取最新授权的token）
             githubTokenService.getAccessToken(userId) ?: githubTokenService.getAccessTokenByOperator(userId)
         } else {
-            githubTokenService.getAccessToken(username) ?: throw ErrorCodeException(
+            githubTokenService.getAccessToken(oauthUserId) ?: throw ErrorCodeException(
                 errorCode = ERROR_AUTHORIZATION_USER_INFO_EXPIRED,
-                params = arrayOf(username)
+                params = arrayOf(oauthUserId)
             )
         }
         if (accessToken == null) {

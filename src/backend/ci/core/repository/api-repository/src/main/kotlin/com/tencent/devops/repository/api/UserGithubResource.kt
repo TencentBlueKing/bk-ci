@@ -64,8 +64,8 @@ interface UserGithubResource {
         @QueryParam("repoHashId")
         repoHashId: String?,
         @Parameter(description = "授权用户名", required = true)
-        @QueryParam("username")
-        username: String?
+        @QueryParam("oauthUserId")
+        oauthUserId: String?
     ): Result<AuthorizeResult>
 
     @Operation(summary = "删除用户的token ID")

@@ -58,7 +58,7 @@ interface IGithubService {
         projectId: String,
         userId: String,
         repoHashId: String?,
-        username: String?
+        oauthUserId: String?
     ): AuthorizeResult
 
     fun getBranch(token: String, projectName: String, branch: String?): GithubBranch?
