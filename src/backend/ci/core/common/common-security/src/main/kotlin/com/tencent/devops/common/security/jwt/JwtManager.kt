@@ -94,7 +94,7 @@ class JwtManager(
         val tokenExpireAt = tokenCache.getIfPresent(token)
         if (tokenExpireAt != null) {
             // 如果未超时
-            if (tokenExpireAt > Instant.now().epochSecond) {
+            if (tokenExpireAt > Instant.now().toEpochMilli()) {
                 logger.info("Verify jwt cache hit, tokenExpireAt: $tokenExpireAt")
                 return true
             }
