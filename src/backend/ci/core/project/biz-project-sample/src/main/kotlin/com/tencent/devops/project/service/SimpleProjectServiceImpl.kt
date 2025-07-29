@@ -118,7 +118,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(
+            CommonUtils.uploadFileToArtifactories(
                 userId = userId,
                 serviceUrlPrefix = serviceUrlPrefix,
                 file = logoFile,

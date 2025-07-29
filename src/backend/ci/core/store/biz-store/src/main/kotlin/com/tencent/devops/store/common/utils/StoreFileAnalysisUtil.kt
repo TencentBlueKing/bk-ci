@@ -37,10 +37,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -151,10 +151,10 @@ object StoreFileAnalysisUtil {
                 "?userId=$userId&storeType=${archiveStorePkgRequest.storeType.name}" +
                 "&storeCode=${archiveStorePkgRequest.storeCode}&version=${archiveStorePkgRequest.version}" +
                 "&releaseType=${archiveStorePkgRequest.releaseType.name}"
-        OkhttpUtils.uploadFile(
+        CommonUtils.uploadFileToService(
             url = serviceUrl,
             uploadFile = file,
-            headers = mapOf(AUTH_HEADER_USER_ID to userId)
+            headers = mutableMapOf(AUTH_HEADER_USER_ID to userId)
         ).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
@@ -183,7 +183,7 @@ object StoreFileAnalysisUtil {
         archiveAtomRequest.os?.let {
             serviceUrl.append("&os=${archiveAtomRequest.os}")
         }
-        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+        CommonUtils.uploadFileToService(serviceUrl.toString(), file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
                 return I18nUtil.generateResponseDataObject(

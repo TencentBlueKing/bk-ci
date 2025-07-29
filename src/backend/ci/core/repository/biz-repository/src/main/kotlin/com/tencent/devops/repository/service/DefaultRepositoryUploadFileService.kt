@@ -45,7 +45,7 @@ class DefaultRepositoryUploadFileService @Autowired constructor(
 ) : RepositoryUploadFileService {
     override fun uploadFile(userId: String, file: File, filePath: String): String {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
+        val logoUrl = CommonUtils.uploadFileToArtifactories(
             userId = userId,
             serviceUrlPrefix = serviceUrlPrefix,
             file = file,

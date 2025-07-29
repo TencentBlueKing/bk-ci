@@ -39,7 +39,7 @@ class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
     override fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String?): Result<String?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
+        val logoUrl = CommonUtils.uploadFileToArtifactories(
             userId = userId,
             serviceUrlPrefix = serviceUrlPrefix,
             file = file,
