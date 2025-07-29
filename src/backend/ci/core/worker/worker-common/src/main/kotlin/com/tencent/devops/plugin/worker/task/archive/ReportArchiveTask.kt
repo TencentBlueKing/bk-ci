@@ -88,6 +88,7 @@ class ReportArchiveTask : ITask() {
             type = TokenType.UPLOAD,
             expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
         )
+        var compressed = false
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
@@ -132,6 +133,7 @@ class ReportArchiveTask : ITask() {
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = getAllFiles(fileDir, buildVariables.pipelineId)
+            compressed = allFileList.size == 1 && allFileList.first().name == COMPRESS_REPORT_FILE_NAME
             if (allFileList.size > 10) {
                 val executors = Executors.newFixedThreadPool(10)
                 allFileList.forEach {
@@ -183,7 +185,8 @@ class ReportArchiveTask : ITask() {
             name = reportNameParam,
             reportType = reportType,
             reportEmail = reportEmail,
-            token = token
+            token = token,
+            compressed = compressed
         )
     }
 
@@ -265,6 +268,6 @@ class ReportArchiveTask : ITask() {
     }
 
     companion object {
-        private const val COMPRESS_REPORT_FILE_NAME = "bkrepo_compressed_report.zip"
+        const val COMPRESS_REPORT_FILE_NAME = "bkrepo_compressed_report.zip"
     }
 }

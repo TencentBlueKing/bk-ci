@@ -59,7 +59,8 @@ interface ReportSDKApi : WorkerRestApiSDK {
         name: String,
         reportType: String? = ReportTypeEnum.INTERNAL.name,
         reportEmail: ReportEmail? = null,
-        token: String?
+        token: String?,
+        compressed: Boolean = false
     ): Result<Boolean>
 
     /**
