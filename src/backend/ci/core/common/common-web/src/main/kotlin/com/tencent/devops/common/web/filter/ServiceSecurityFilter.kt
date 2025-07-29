@@ -56,6 +56,16 @@ class ServiceSecurityFilter(
             "/api/external/service/versionInfo"
         )
         private val logger = LoggerFactory.getLogger((ServiceSecurityFilter::class.java))
+        private val jwtNullError = ErrorCodeException(
+            statusCode = 401,
+            errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
+            defaultMessage = "Unauthorized:devops api jwt it empty."
+        )
+        private val jwtCheckFailError = ErrorCodeException(
+            statusCode = 401,
+            errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
+            defaultMessage = "Unauthorized:devops api jwt it invalid or expired."
+        )
     }
 
     override fun filter(requestContext: ContainerRequestContext?) {
@@ -64,28 +74,30 @@ class ServiceSecurityFilter(
 
         val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
         val flag = shouldFilter(uri, clientIp)
-        if (flag && jwtManager.isSendEnable() && jwt.isNullOrBlank()) {
+        var error: ErrorCodeException? = null
+        if (flag && jwtManager.isSendEnable()) {
+            error = check(jwt, clientIp, uri)
+        }
+        if (error != null && jwtManager.isAuthEnable()) {
+            throw error
+        }
+    }
+
+    private fun check(
+        jwt: String?,
+        clientIp: String?,
+        uri: String?
+    ): ErrorCodeException? {
+        if (jwt.isNullOrBlank()) {
             logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
+            return jwtNullError
         }
-        if (flag && jwtManager.isAuthEnable()) {
-            if (jwt.isNullOrBlank()) {
-                logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
-                throw ErrorCodeException(
-                    statusCode = 401,
-                    errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
-                    defaultMessage = "Unauthorized:devops api jwt it empty."
-                )
-            }
-            val checkResult: Boolean = jwtManager.verifyJwt(jwt)
-            if (!checkResult) {
-                logger.warn("Invalid request, jwt is invalid or expired!Client ip:$clientIp,uri:$uri")
-                throw ErrorCodeException(
-                    statusCode = 401,
-                    errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
-                    defaultMessage = "Unauthorized:devops api jwt it invalid or expired."
-                )
-            }
+        val checkResult: Boolean = jwtManager.verifyJwt(jwt)
+        if (!checkResult) {
+            logger.warn("Invalid request, jwt is invalid or expired!Client ip:$clientIp,uri:$uri")
+            return jwtCheckFailError
         }
+        return null
     }
 
     private fun shouldFilter(uri: String, clientIp: String): Boolean {
