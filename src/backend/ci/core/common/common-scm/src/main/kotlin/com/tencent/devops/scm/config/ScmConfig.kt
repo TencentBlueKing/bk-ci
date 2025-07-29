@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,35 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.scm.config
 
-import com.tencent.devops.common.api.enums.ScmType
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-enum class TriggerType(val alis: String) {
-    CODE_SVN("svn"),
-    CODE_GIT("git"),
-    CODE_GITLAB("gitlab"),
-    GITHUB("github"),
-    CODE_TGIT("tgit"),
-    CODE_P4("p4"),
-    BASE("base"),
-    SCM_GIT("scm_git"),
-    SCM_SVN("scm_svn")
-    ;
+/**
+ * Git通用配置
+ */
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class ScmConfig {
 
-    companion object {
+    @Value("\${scm.webhook.outerUrl:/process/api/external/scm/{scmCode}/commit}")
+    val outerHookUrl: String = ""
 
-        fun parse(alis: String?): TriggerType? {
-            values().forEach {
-                if (alis == it.alis) return it
-            }
-            return null
-        }
-        fun parse(scm: ScmType): TriggerType {
-            values().forEach {
-                if (scm.name == it.name) return it
-            }
-            return BASE
-        }
-    }
+    @Value("\${scm.webhook.innerUrl:/process/api/external/scm/{scmCode}/commit}")
+    val innerHookUrl: String = ""
 }

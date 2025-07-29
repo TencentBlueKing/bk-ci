@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,39 +28,25 @@
 package com.tencent.devops.process.trigger.scm.rule
 
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
-import com.tencent.devops.process.trigger.scm.condition.ActionCondition
-import com.tencent.devops.process.trigger.scm.condition.ActionFilterType
-import com.tencent.devops.process.trigger.scm.condition.BranchCondition
-import com.tencent.devops.process.trigger.scm.condition.BranchFilterType
-import com.tencent.devops.process.trigger.scm.condition.KeyWordType
-import com.tencent.devops.process.trigger.scm.condition.KeywordCondition
 import com.tencent.devops.process.trigger.scm.condition.PathCondition
-import com.tencent.devops.process.trigger.scm.condition.ThirdCondition
+import com.tencent.devops.process.trigger.scm.condition.PathType
 import com.tencent.devops.process.trigger.scm.condition.UserCondition
 import com.tencent.devops.process.trigger.scm.condition.WebhookConditionChain
 import com.tencent.devops.process.trigger.scm.condition.WebhookConditionContext
 import com.tencent.devops.process.trigger.scm.condition.WebhookFactParam
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
-import com.tencent.devops.scm.api.pojo.webhook.git.GitPushHook
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.scm.api.pojo.webhook.svn.PostCommitHook
 import org.springframework.stereotype.Service
 
 /**
  * git push事件触发规则
  */
 @Service
-class GitPushHookRule @Autowired constructor (
-    private val gitScmService: GitScmService,
-    // stream没有这个配置
-    @Autowired(required = false)
-    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry? = null
-) : WebhookRule {
+class SvnPostCommitHookRule : WebhookRule {
     override fun support(webhook: Webhook): Boolean {
-        return webhook is GitPushHook
+        return webhook is PostCommitHook
     }
 
     override fun evaluate(
@@ -69,14 +55,11 @@ class GitPushHookRule @Autowired constructor (
         webHookParams: WebHookParams,
         webhook: Webhook
     ): WebhookMatchResult {
-        val factParam = with(webhook as GitPushHook) {
+        val factParam = with(webhook as PostCommitHook) {
             WebhookFactParam(
                 userId = userName,
                 eventType = eventType,
-                action = action.value,
-                branch = ref,
-                changes = WebhookRuleUtils.getChangeFiles(changes),
-                lastCommitMsg = commit?.message ?: ""
+                changes = WebhookRuleUtils.getChangeFiles(changes)
             )
         }
         val context = WebhookConditionContext(
@@ -87,12 +70,8 @@ class GitPushHookRule @Autowired constructor (
             response = WebhookFilterResponse()
         )
         val conditions = listOf(
-            KeywordCondition(KeyWordType.SKIP_CI),
-            ActionCondition(ActionFilterType.PUSH),
-            BranchCondition(BranchFilterType.BRANCH),
             UserCondition(),
-            PathCondition(),
-            ThirdCondition(webhook, gitScmService, callbackCircuitBreakerRegistry)
+            PathCondition(PathType.SVN)
         )
         return WebhookConditionChain(conditions).match(context)
     }
