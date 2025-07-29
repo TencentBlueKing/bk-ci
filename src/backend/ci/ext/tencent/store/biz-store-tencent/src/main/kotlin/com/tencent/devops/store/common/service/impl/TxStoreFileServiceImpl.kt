@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.pojo.Result
@@ -96,7 +97,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
     ): List<String>? {
         return if (!repositoryHashId.isNullOrBlank()) {
             val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
-                userId = "",
+                userId = AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE,
                 repoId = repositoryHashId,
                 refName = branch,
                 path = i18nDir,
