@@ -29,7 +29,6 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
@@ -41,10 +40,10 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil.isDirectoryNotEmpty
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
-import java.io.File
-import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
+import java.net.URLEncoder
 
 @Service
 class SampleStoreFileServiceImpl : StoreFileService() {
@@ -81,7 +80,6 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         i18nDir?.let { filePath = "$filePath/$i18nDir" }
         logger.info("getFileNames by filePath:$filePath")
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
-            userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
             repoName = REPO_NAME_PLUGIN,
             filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
