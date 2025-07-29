@@ -30,13 +30,13 @@ package com.tencent.devops.misc.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.image.api.OpProcessShardingDbResource
+import com.tencent.devops.misc.api.OpProcessShardingDbResource
 import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
 
 @RestResource
 class OpProcessShardingDbResourceImpl : OpProcessShardingDbResource {
 
-    override fun clearShardingData(
+    override fun clearShardingDataByProjectId(
         userId: String,
         clusterName: String,
         dataSourceName: String,

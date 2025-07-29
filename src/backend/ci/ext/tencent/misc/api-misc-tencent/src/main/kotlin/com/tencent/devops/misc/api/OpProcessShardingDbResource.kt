@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.image.api
+package com.tencent.devops.misc.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -48,10 +48,10 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpProcessShardingDbResource {
 
-    @Operation(summary = "更新组件已安装包文件sha1摘要值")
+    @Operation(summary = "按项目ID清理分片数据")
     @PUT
     @Path("/{dataSourceName}/clusters/{clusterName}/projects/{projectId}/data/clear")
-    fun clearShardingData(
+    fun clearShardingDataByProjectId(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

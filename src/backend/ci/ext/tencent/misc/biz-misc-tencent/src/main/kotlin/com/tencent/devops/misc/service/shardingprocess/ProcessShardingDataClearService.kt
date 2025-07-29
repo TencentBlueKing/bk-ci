@@ -27,6 +27,9 @@
 
 package com.tencent.devops.misc.service.shardingprocess
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.misc.dao.project.TxProjectMiscDao
 import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.service.process.ProcessDataDeleteService
 import org.jooq.DSLContext
@@ -39,6 +42,9 @@ import java.util.concurrent.TimeUnit
 abstract class ProcessShardingDataClearService {
 
     private val logger = LoggerFactory.getLogger(ProcessShardingDataClearService::class.java)
+
+    @Autowired
+    lateinit var txProjectMiscDao: TxProjectMiscDao
 
     @Autowired
     lateinit var processDataDeleteService: ProcessDataDeleteService
@@ -70,14 +76,23 @@ abstract class ProcessShardingDataClearService {
         dataSourceName: String,
         broadcastTableDeleteFlag: Boolean? = false
     ): Boolean {
-        if (!getExecuteFlag(dataSourceName)) {
+        val dslContext = getDSLContext() ?: return false
+        // 查询分片路由规则记录
+        val shardingRuleRecord = txProjectMiscDao.getShardingRoutingRule(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = SystemModuleEnum.PROCESS,
+            type = ShardingRuleTypeEnum.DB,
+            routingName = projectId
+        )
+        // 检查路由规则是否允许执行删除操作
+        if (!getExecuteFlag(shardingRuleRecord?.routingRule)) {
             logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
             return false
         }
-        val dslContext = getDSLContext()
         val executor = Executors.newFixedThreadPool(1)
         try {
-            dslContext?.transaction { t ->
+            dslContext.transaction { t ->
                 val context = DSL.using(t)
                 val deleteDataParam = DeleteDataParam(
                     dslContext = context,
@@ -86,6 +101,7 @@ abstract class ProcessShardingDataClearService {
                     dataSourceName = dataSourceName,
                     broadcastTableDeleteFlag = broadcastTableDeleteFlag
                 )
+                // 提交删除任务到线程池异步执行
                 executor.submit {
                     processDataDeleteService.deleteProcessData(deleteDataParam)
                 }

@@ -42,6 +42,6 @@ class Process3ShardingDataClearServiceImpl @Autowired constructor(
     }
 
     override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_2" && dslContext != null
+        return routingRule != "ds_2" && !routingRule.isNullOrBlank() && dslContext != null
     }
 }
