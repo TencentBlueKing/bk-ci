@@ -29,9 +29,9 @@ package com.tencent.devops.misc.service.shardingprocess
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.misc.dao.project.TxProjectMiscDao
 import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.service.process.ProcessDataDeleteService
+import com.tencent.devops.misc.service.project.TxProjectMiscService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -44,7 +44,7 @@ abstract class ProcessShardingDataClearService {
     private val logger = LoggerFactory.getLogger(ProcessShardingDataClearService::class.java)
 
     @Autowired
-    lateinit var txProjectMiscDao: TxProjectMiscDao
+    lateinit var txProjectMiscService: TxProjectMiscService
 
     @Autowired
     lateinit var processDataDeleteService: ProcessDataDeleteService
@@ -78,15 +78,14 @@ abstract class ProcessShardingDataClearService {
     ): Boolean {
         val dslContext = getDSLContext() ?: return false
         // 查询分片路由规则记录
-        val shardingRuleRecord = txProjectMiscDao.getShardingRoutingRule(
-            dslContext = dslContext,
+        val shardingRule = txProjectMiscService.getProjectShardingRoutingRule(
             clusterName = clusterName,
             moduleCode = SystemModuleEnum.PROCESS,
             type = ShardingRuleTypeEnum.DB,
-            routingName = projectId
+            projectId = projectId
         )
         // 检查路由规则是否允许执行删除操作
-        if (!getExecuteFlag(shardingRuleRecord?.routingRule)) {
+        if (!getExecuteFlag(shardingRule?.routingRule)) {
             logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
             return false
         }

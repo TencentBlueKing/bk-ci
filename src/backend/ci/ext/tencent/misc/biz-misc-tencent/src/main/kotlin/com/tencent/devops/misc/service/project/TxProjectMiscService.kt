@@ -27,6 +27,9 @@
 
 package com.tencent.devops.misc.service.project
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.misc.dao.project.ProjectMiscDao
 import com.tencent.devops.misc.dao.project.TxProjectMiscDao
 import com.tencent.devops.misc.pojo.ProjectShardingInfo
@@ -76,6 +79,33 @@ class TxProjectMiscService @Autowired constructor(
                 )
             }
             projectShardingInfoList
+        }
+    }
+
+    fun getProjectShardingRoutingRule(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        projectId: String
+    ): ShardingRoutingRule? {
+        val shardingRoutingRuleRecord = txProjectMiscDao.getShardingRoutingRule(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            type = ShardingRuleTypeEnum.DB,
+            routingName = projectId
+        )
+        return if (shardingRoutingRuleRecord != null) {
+            ShardingRoutingRule(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                dataSourceName = shardingRoutingRuleRecord.dataSourceName,
+                type = ShardingRuleTypeEnum.DB,
+                routingName = shardingRoutingRuleRecord.routingName,
+                routingRule = shardingRoutingRuleRecord.routingRule
+            )
+        } else {
+            null
         }
     }
 }
