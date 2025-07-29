@@ -35,8 +35,7 @@ import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.constant.MASTER
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil.isDirectoryNotEmpty
@@ -63,8 +62,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
     ) {
         try {
             val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
-                    "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
-            CommonUtils.downloadFileFromService(url, file)
+                "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+            CommonServiceUtils.downloadFileFromService(url, file)
         } catch (ignore: Throwable) {
             logger.warn("FAIL|Download file from $filePath")
         }
@@ -118,7 +117,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             try {
                 if (file.exists()) {
                     val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-                    val fileUrl = CommonUtils.uploadFileToArtifactories(
+                    val fileUrl = CommonServiceUtils.uploadFileToArtifactories(
                         userId = userId,
                         serviceUrlPrefix = serviceUrlPrefix,
                         file = file,
