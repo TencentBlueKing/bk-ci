@@ -277,6 +277,20 @@ class StartControl @Autowired constructor(
                         startUserId = operator,
                         lastSleepTimeCost = lastSleepTimeCost
                     )
+                    // 分发到WS
+                    notifyControl.dispatchWebsocketPushEvent(
+                        userId = operator,
+                        workspaceName = workspaceName,
+                        workspaceHost = environmentHost,
+                        errorMsg = errorMsg,
+                        type = WebSocketActionType.WORKSPACE_START,
+                        status = true,
+                        action = WorkspaceAction.START,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
+                    )
                 }
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
@@ -311,21 +325,6 @@ class StartControl @Autowired constructor(
                 )
             )
         }
-
-        // 分发到WS
-        notifyControl.dispatchWebsocketPushEvent(
-            userId = operator,
-            workspaceName = workspaceName,
-            workspaceHost = environmentHost,
-            errorMsg = errorMsg,
-            type = WebSocketActionType.WORKSPACE_START,
-            status = workspaceStatus.checkRunning(),
-            action = WorkspaceAction.START,
-            systemType = workspace.workspaceSystemType,
-            workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType,
-            projectId = workspace.projectId
-        )
         return workspaceStatus
     }
 }
