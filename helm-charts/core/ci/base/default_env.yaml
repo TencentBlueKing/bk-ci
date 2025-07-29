@@ -56,3 +56,4 @@ bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
 bkCiJwtEnable: false
+bkCiNotifyUserBlackListCacheSize: 50000
