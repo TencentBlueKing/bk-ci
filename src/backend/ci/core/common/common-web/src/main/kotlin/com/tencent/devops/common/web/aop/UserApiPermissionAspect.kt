@@ -113,7 +113,7 @@ class UserApiPermissionAspect constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SensitiveApiPermissionAspect::class.java)
+        private val logger = LoggerFactory.getLogger(UserApiPermissionAspect::class.java)
         private const val CACHE_MAX_SIZE = 50000L
     }
 }
