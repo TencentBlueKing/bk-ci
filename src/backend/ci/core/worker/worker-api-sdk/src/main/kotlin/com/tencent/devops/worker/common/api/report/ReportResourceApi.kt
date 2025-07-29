@@ -147,12 +147,12 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         return null
     }
 
-    override fun getPluginConfig(): ReportPluginConfig {
-        return ReportPluginConfig(
+    override fun getPluginConfig(): Result<ReportPluginConfig> {
+        return Result(ReportPluginConfig(
             enableCompress = false,
             enableCompressPipelines = emptyList(),
             compressThreshold = Long.MAX_VALUE
-        )
+        ))
     }
 
     companion object {

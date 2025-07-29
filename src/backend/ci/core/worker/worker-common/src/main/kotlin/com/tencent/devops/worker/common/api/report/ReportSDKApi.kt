@@ -93,5 +93,5 @@ interface ReportSDKApi : WorkerRestApiSDK {
     /**
      * 获取归档报告插件配置
      */
-    fun getPluginConfig(): ReportPluginConfig
+    fun getPluginConfig(): Result<ReportPluginConfig>
 }

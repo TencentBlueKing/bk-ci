@@ -226,7 +226,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
 
-    override fun getPluginConfig(): ReportPluginConfig {
+    override fun getPluginConfig(): Result<ReportPluginConfig> {
         val path = "/ms/artifactory/api/build/artifactories/conf/report"
         val request = buildGet(path)
         return try {
@@ -237,11 +237,11 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             objectMapper.readValue(responseContent)
         } catch (e: Exception) {
             logger.warn(e.message)
-            ReportPluginConfig(
+            Result(ReportPluginConfig(
                 enableCompress = false,
                 enableCompressPipelines = emptyList(),
                 compressThreshold = Long.MAX_VALUE
-            )
+            ))
         }
 
     }
