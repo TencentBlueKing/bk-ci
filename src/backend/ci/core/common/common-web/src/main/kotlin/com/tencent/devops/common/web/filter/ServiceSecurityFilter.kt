@@ -37,6 +37,7 @@ import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.container.PreMatching
 import jakarta.ws.rs.ext.Provider
+import java.net.InetAddress
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
 
@@ -59,9 +60,10 @@ class ServiceSecurityFilter(
 
     override fun filter(requestContext: ContainerRequestContext?) {
         val uri = requestContext!!.uriInfo.requestUri.path
-        val clientIp = servletRequest?.remoteAddr
+        val clientIp = servletRequest.remoteAddr
+
         val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
-        val flag = shouldFilter(uri)
+        val flag = shouldFilter(uri, clientIp)
         if (flag && jwtManager.isSendEnable() && jwt.isNullOrBlank()) {
             logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
         }
@@ -86,13 +88,22 @@ class ServiceSecurityFilter(
         }
     }
 
-    private fun shouldFilter(uri: String): Boolean {
+    private fun shouldFilter(uri: String, clientIp: String): Boolean {
+        val localhost = kotlin.runCatching {
+            InetAddress.getByName(clientIp).isLoopbackAddress
+        }.getOrNull() ?: false
+        // 不拦截本机请求
+        if (localhost) {
+            return false
+        }
+
         // 不拦截的接口
         excludeVeritfyPath.forEach {
             if (uri.startsWith(it)) {
                 return false
             }
         }
+
         // 拦截api接口
         if (uri.startsWith("/api/")) {
             return true
