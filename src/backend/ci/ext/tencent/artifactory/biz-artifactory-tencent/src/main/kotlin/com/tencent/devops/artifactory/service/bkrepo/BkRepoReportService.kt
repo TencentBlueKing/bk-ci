@@ -30,10 +30,7 @@ package com.tencent.devops.artifactory.service.bkrepo
 import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
-import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.web.utils.I18nUtil
-import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -57,15 +54,6 @@ class BkRepoReportService @Autowired constructor(
             "elementId: $elementId, path: $path")
         val normalizedPath = PathUtils.normalize(path)
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
-        val compressPath = "/$pipelineId/$buildId/$elementId/bkrepo_compressed_report.zip"
-        bkRepoClient.getFileDetail(userId, projectId, RepoUtils.REPORT_REPO, realPath)
-            ?: bkRepoClient.getFileDetail(userId, projectId, RepoUtils.REPORT_REPO, compressPath)
-            ?: throw NotFoundException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = FILE_NOT_EXIST,
-                    params = arrayOf(path)
-                )
-            )
         val host = bkRepoClient.getRkRepoIdcHost()
         val redirectUrlBuilder = StringBuilder()
         redirectUrlBuilder.append(
