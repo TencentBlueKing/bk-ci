@@ -61,6 +61,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -211,7 +213,7 @@ class ReportArchiveTask : ITask() {
 
     private fun getAllFiles(dir: File, pipelineId: String): List<File> {
         val config = api.getPluginConfig().data!!
-        if (config.enableCompress || config.enableCompressPipelines.contains(pipelineId) ) {
+        if (config.enableCompress || config.enableCompressPipelines.contains(pipelineId)) {
             return compress(dir, config.compressThreshold)
         }
         return recursiveGetFiles(dir)
@@ -222,27 +224,36 @@ class ReportArchiveTask : ITask() {
         if (files.size < compressThreshold) {
             return files
         }
-        val zipFile = File(dir, COMPRESS_REPORT_FILE_NAME)
         return try {
-            zipFile.outputStream().use { outputStream ->
-                java.util.zip.ZipOutputStream(outputStream).use { zipOut ->
-                    files.forEach { file ->
-                        if (file.isFile) {
-                            val relativePath = dir.toPath().relativize(file.toPath()).toString()
-                            zipOut.putNextEntry(java.util.zip.ZipEntry(relativePath))
-                            file.inputStream().use { inputStream ->
-                                inputStream.copyTo(zipOut)
-                            }
-                            zipOut.closeEntry()
-                        }
-                    }
-                }
-            }
-            listOf(zipFile)
+            compressDir(dir, files)
         } catch (e: Exception) {
             logger.warn("compress failed: ", e)
             files
         }
+    }
+
+    private fun compressDir(
+        dir: File,
+        files: List<File>
+    ): List<File> {
+        val zipFile = File(dir, COMPRESS_REPORT_FILE_NAME)
+        zipFile.outputStream().use { outputStream ->
+            ZipOutputStream(outputStream).use { zipOut ->
+                files.filter { it.isFile }.forEach { file ->
+                    addFileToZip(dir, file, zipOut)
+                }
+            }
+        }
+        return listOf(zipFile)
+    }
+
+    private fun addFileToZip(dir: File, file: File, zipOut: ZipOutputStream) {
+        val relativePath = dir.toPath().relativize(file.toPath()).toString()
+        zipOut.putNextEntry(ZipEntry(relativePath))
+        file.inputStream().use { inputStream ->
+            inputStream.copyTo(zipOut)
+        }
+        zipOut.closeEntry()
     }
 
     private fun recursiveGetFiles(file: File): List<File> {
