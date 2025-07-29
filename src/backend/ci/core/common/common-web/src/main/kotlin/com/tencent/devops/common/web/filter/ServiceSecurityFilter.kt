@@ -31,29 +31,31 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.security.jwt.JwtManager
-import com.tencent.devops.common.web.RequestFilter
+import jakarta.servlet.Filter
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.ws.rs.container.ContainerRequestContext
-import jakarta.ws.rs.container.ContainerRequestFilter
-import jakarta.ws.rs.container.PreMatching
-import jakarta.ws.rs.ext.Provider
 import java.net.InetAddress
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
+import org.springframework.stereotype.Component
 
-@Provider
-@PreMatching
-@RequestFilter
+@Component
 @DependsOn("environmentUtil")
 class ServiceSecurityFilter(
     private val jwtManager: JwtManager,
     private val servletRequest: HttpServletRequest
-) : ContainerRequestFilter {
+) : Filter {
 
     companion object {
         private val excludeVeritfyPath = listOf(
             "/api/swagger.json",
-            "/api/external/service/versionInfo"
+            "/api/external/service/versionInfo",
+            "/management/health/livenessState",
+            "/management/health/readinessState",
+            "/management/prometheus",
+            "/management/userPrometheus"
         )
         private val logger = LoggerFactory.getLogger((ServiceSecurityFilter::class.java))
         private val jwtNullError = ErrorCodeException(
@@ -68,11 +70,15 @@ class ServiceSecurityFilter(
         )
     }
 
-    override fun filter(requestContext: ContainerRequestContext?) {
-        val uri = requestContext!!.uriInfo.requestUri.path
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        if (request == null || chain == null) {
+            return
+        }
+        val httpServletRequest = request as HttpServletRequest
+        val uri = httpServletRequest.requestURI
         val clientIp = servletRequest.remoteAddr
 
-        val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
+        val jwt = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_JWT_TOKEN)
         val flag = shouldFilter(uri, clientIp)
         var error: ErrorCodeException? = null
         if (flag && jwtManager.isSendEnable()) {
@@ -81,6 +87,7 @@ class ServiceSecurityFilter(
         if (error != null && jwtManager.isAuthEnable()) {
             throw error
         }
+        chain.doFilter(request, response)
     }
 
     private fun check(
@@ -115,12 +122,7 @@ class ServiceSecurityFilter(
                 return false
             }
         }
-
-        // 拦截api接口
-        if (uri.startsWith("/api/")) {
-            return true
-        }
-        // 默认不拦截
-        return false
+        // 其余接口进行拦截
+        return true
     }
 }
