@@ -210,7 +210,7 @@ class ReportArchiveTask : ITask() {
     }
 
     private fun getAllFiles(dir: File, pipelineId: String): Pair<Boolean, List<File>> {
-        val config = api.getPluginConfig()
+        val config = api.getPluginConfig().data!!
         if (config.enableCompress || config.enableCompressPipelines.contains(pipelineId) ) {
             return compress(dir, config.compressThreshold)
         }
