@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.constant.SupportMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -100,7 +101,7 @@ class FileService @Autowired constructor(private val client: Client) {
         val serviceUrl =
             "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
-            OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+            CommonUtils.uploadFileToService(serviceUrl, file).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")

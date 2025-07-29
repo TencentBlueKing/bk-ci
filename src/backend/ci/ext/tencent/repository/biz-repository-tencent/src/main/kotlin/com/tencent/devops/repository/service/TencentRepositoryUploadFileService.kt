@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +25,7 @@ class TencentRepositoryUploadFileService @Autowired constructor(
     override fun uploadFile(userId: String, file: File, filePath: String): String {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         var serviceUrl = "$serviceUrlPrefix/service/file/upload?userId=$userId&fileRepoPath=$filePath"
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+        CommonUtils.uploadFileToService(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")

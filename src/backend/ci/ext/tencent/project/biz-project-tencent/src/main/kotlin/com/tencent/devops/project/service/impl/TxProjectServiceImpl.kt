@@ -50,6 +50,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -215,7 +216,7 @@ class TxProjectServiceImpl @Autowired constructor(
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val serviceUrl =
             "$serviceUrlPrefix/service/file/upload?userId=$userId"
-        OkhttpUtils.uploadFile(serviceUrl, logoFile).use { response ->
+        CommonUtils.uploadFileToService(serviceUrl, logoFile).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${logoFile.name} fail,responseContent:$responseContent")

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.experience.dao.TxMigrateExperienceLogoDao
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperiencePublic
@@ -133,7 +134,7 @@ class TxOpMigrateExperienceLogoService @Autowired constructor(
             val destPath = "file/$fileType/$fileName"
             val serviceUrl =
                 "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
-            OkhttpUtils.uploadFile(serviceUrl, tmpFile).use { response ->
+            CommonUtils.uploadFileToService(serviceUrl, tmpFile).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")

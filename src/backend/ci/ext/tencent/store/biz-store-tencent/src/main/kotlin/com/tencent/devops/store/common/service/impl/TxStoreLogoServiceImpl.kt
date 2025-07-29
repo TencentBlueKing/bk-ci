@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.api.service.ServiceFileResource
 import java.io.File
@@ -52,7 +53,7 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
         fileRepoPath?.let {
             serviceUrl += "&fileRepoPath=$fileRepoPath"
         }
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+        CommonUtils.uploadFileToService(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")
