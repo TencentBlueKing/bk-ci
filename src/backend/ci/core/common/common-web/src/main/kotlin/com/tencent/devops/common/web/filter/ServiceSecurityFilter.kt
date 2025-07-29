@@ -30,12 +30,15 @@ package com.tencent.devops.common.web.filter
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.web.utils.I18nUtil
 import jakarta.servlet.Filter
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import java.net.InetAddress
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
@@ -85,7 +88,19 @@ class ServiceSecurityFilter(
             error = check(jwt, clientIp, uri)
         }
         if (error != null && jwtManager.isAuthEnable()) {
-            throw error
+            response as HttpServletResponse
+            val errorResult = I18nUtil.generateResponseDataObject(
+                messageCode = error.errorCode,
+                params = error.params,
+                data = null,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = error.defaultMessage
+            )
+            response.status = error.statusCode
+            response.contentType = "application/json;charset=UTF-8"
+            response.writer.print(JsonUtil.toJson(errorResult, false))
+            response.writer.flush()
+            return
         }
         chain.doFilter(request, response)
     }
