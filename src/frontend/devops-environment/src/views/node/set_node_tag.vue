@@ -446,9 +446,9 @@
                         row.tagDetails[key] = {
                             tagValueId: tagInfo.tagValueId,
                             tagKeyId: tagInfo.tagKeyId || tagKeyId,
-                            originalValue: tagInfo.value,
+                            originalValue: tagInfo.value || '',
                             isNew: false,
-                            tagValueName: tagInfo.tagValueName
+                            tagValueName: tagInfo.tagValueName || ''
                         }
                     })
         
@@ -594,13 +594,20 @@
                 )
             },
 
+            isOriginalData (rowIndex, colKey) {
+                const originalValue = this.originalData[rowIndex]?.tagDetails?.[colKey]?.tagValueId
+                return originalValue !== '' && originalValue !== null && originalValue !== undefined
+            },
+
             getCellStatusClass (rowIndex, col) {
                 const { key: colKey, isNew, disabled } = col
                 const cellStatus = this.cellDataStatus[rowIndex]?.[colKey]
+                const isConfirmedRemove = this.isConfirmedRemove(rowIndex, colKey)
+                const isOriginal = this.isOriginalData(rowIndex, colKey)
 
                 return {
                     'pending-remove': this.isPendingRemove(rowIndex, colKey) || disabled,
-                    'confirmed-remove': this.isConfirmedRemove(rowIndex, colKey),
+                    'confirmed-remove': isConfirmedRemove && isOriginal,
                     'cell-new': cellStatus === 'new' || isNew,
                     'cell-modified': cellStatus === 'modified'
                 }
@@ -697,9 +704,6 @@
                     const originalTagValue = this.originalData[rowIndex].tagDetails[colKey]
                     this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagKeyId', colTagKeyId)
                     this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagValueId', originalTagValue.tagValueId)
-                    this.$set(this.tableData[rowIndex].tagDetails[colKey], 'tagValueName', originalTagValue.tagValueName || '')
-                    
-                    this.tableData[rowIndex][colKey] = originalTagValue.originalValue
                     this.handleCellChange(rowIndex, colKey, originalTagValue.tagValueId, colTagKeyId)
                 }
             },
@@ -819,7 +823,7 @@
 
                     if (Object.keys(filteredTags).length > 0) {
                         result.push({
-                            ...node,
+                            displayName: node.displayName,
                             tagDetails: filteredTags
                         })
                     }
@@ -828,21 +832,78 @@
                 return result
             },
 
+            groupByTagValueId (data) {
+                const results = []
+                const normalTagMap = {}
+
+                data.forEach(node => {
+                    Object.entries(node.tagDetails).forEach(([tagKey, tagInfo]) => {
+                        const { tagValueId, tagValueName, originalValue } = tagInfo
+                        const isDelete = originalValue !== '' && tagValueName === ''
+
+                        const tagObject = {
+                            tagKeyName: tagKey,
+                            tagValueName: isDelete ? originalValue : (tagValueName || ''),
+                            isDelete
+                        }
+
+                        if (isDelete) {
+                            results.push({
+                                displayName: [node.displayName],
+                                tags: {
+                                    [tagKey]: tagObject
+                                }
+                            })
+                        } else {
+                            const key = String(tagValueId ?? '')
+
+                            if (!normalTagMap[key]) {
+                                normalTagMap[key] = {
+                                    displayName: [],
+                                    tags: {}
+                                }
+                            }
+
+                            if (!normalTagMap[key].tags[tagKey]) {
+                                normalTagMap[key].tags[tagKey] = tagObject
+                            }
+
+                            if (!normalTagMap[key].displayName.includes(node.displayName)) {
+                                normalTagMap[key].displayName.push(node.displayName)
+                            }
+                        }
+                    })
+                })
+
+                return [...results, ...Object.values(normalTagMap)]
+            },
+
             handlePreviewAndSave () {
-                const filteredResult = this.filterModifiedTags(this.tableData)
-                console.log("最终预览需处理的数据", filteredResult)
                 if (this.hasPendingRemovals) {
                     this.$bkInfo({
                         theme: 'warning',
                         type: 'warning',
                         title: '是否确定移除数据',
-                        confirmFn: () => {
-                            this.confirmAddColumn()
-                            console.log('最新表格数据:', JSON.parse(JSON.stringify(this.tableData)))
+                        confirmFn: async () => {
+                            await this.confirmAddColumn()
+
+                            const filteredResult = this.filterModifiedTags(this.tableData)
+                            const previewData = this.groupByTagValueId(filteredResult)
+                            console.log("🚀 ~  previewData:", previewData)
                         }
                     })
                 } else {
-                    console.log('最新表格数据:', this.tableData)
+                    const filteredResult = this.filterModifiedTags(this.tableData)
+                    console.log("最终预览需处理的数据", filteredResult)
+                    if (!filteredResult.length) {
+                        this.$bkMessage({
+                            message: '没有更改数据',
+                            theme: 'warning'
+                        })
+                        return
+                    }
+                    const previewData = this.groupByTagValueId(filteredResult)
+                    console.log(previewData)
                 }
             },
             handleCancel () {
@@ -1017,13 +1078,13 @@
                 z-index: 11;
                 outline: 1px solid #a3c5fd;
             }
-            // 新增 - 浅绿色背景
-            .cell-new {
-                background-color: #F2FFF4;
-            }
             // 修改 - 浅黄色背景
             .cell-modified {
                 background-color: #FFF3E1;
+            }
+            // 新增 - 浅绿色背景
+            .cell-new {
+                background-color: #F2FFF4;
             }
             // 新增列标题背景色
             .new-column {
@@ -1042,7 +1103,6 @@
             .pending-remove .cell-select:not(:placeholder-shown) {
                 text-decoration: line-through;
             }
-            // 已移除
             .confirmed-remove {
                 background-color: #fff0f0;
             }
