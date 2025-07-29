@@ -24,15 +24,14 @@ if ngx.var.http_x_devops_jwt_token == nil then
     local jwt_token = ""
     if config.jwtPrivateKey ~= nil and config.jwtPrivateKey ~= "" then
       local table_of_jwt = {
-          header={typ="JWT", alg="RS256"},
-          payload={sub = "Gateway", exp = ngx.time() + 60 * 10}
+        header = { typ = "JWT", alg = "RS256" },
+        payload = { sub = "Gateway", exp = ngx.time() + 60 * 10 }
       }
-      local private_key = "-----BEGIN RSA PRIVATE KEY-----\n" .. config.jwtPrivateKey .. "\n-----END RSA PRIVATE KEY-----"
       jwt_token = jwt:sign(
-          private_key,
-          table_of_jwt
+        config.jwtPrivateKey,
+        table_of_jwt
       )
-      -- ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token) 
+      -- ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token)
       jwt_token_cache:set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
     end
     return jwt_token
