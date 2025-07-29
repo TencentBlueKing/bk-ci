@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "git tag 信息")
 data class GitTagInfo(
     val name: String = "",
-    val message: String = "",
+    val message: String? = "",
     val description: String? = "",
     @JsonProperty("created_at")
     val createdAt: String? = "",

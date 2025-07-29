@@ -695,12 +695,7 @@ class RbacPermissionManageFacadeServiceImpl(
             conditionDTO = conditionDTO
         )
         logger.debug("listProjectMembersByComplexConditions :$count")
-        // 添加离职标志
-        return if (conditionDTO.departedFlag == false) {
-            SQLPage(count, records)
-        } else {
-            SQLPage(count, permissionResourceMemberService.addDepartedFlagToMembers(records))
-        }
+        return SQLPage(count, records)
     }
 
     override fun listInvalidAuthorizationsAfterOperatedGroups(
