@@ -52,7 +52,7 @@ class ServiceSecurityFilter(
 ) : Filter {
 
     companion object {
-        private val excludeVeritfyPath = listOf(
+        private val excludeVerifyPath = listOf(
             "/api/swagger.json",
             "/api/external/service/versionInfo",
             "/management/health/livenessState",
@@ -132,7 +132,7 @@ class ServiceSecurityFilter(
         }
 
         // 不拦截的接口
-        excludeVeritfyPath.forEach {
+        excludeVerifyPath.forEach {
             if (uri.startsWith(it)) {
                 return false
             }
