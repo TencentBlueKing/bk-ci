@@ -29,7 +29,6 @@ package com.tencent.devops.environment.service.thirdpartyagent
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -50,7 +49,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 @Service
 class BkMonitorMetricsService @Autowired constructor(
@@ -216,18 +214,9 @@ class BkMonitorMetricsService @Autowired constructor(
         return result
     }
 
-    fun queryHostInfo(agentAndProjectId: String): AgentHostInfo {
-        return hostCache.get(agentAndProjectId) ?: emptyInfo
+    fun queryHostInfo(projectId: String, agentHashId: String): AgentHostInfo {
+        return queryHostInfoImpl(projectId, agentHashId)
     }
-
-    // #7479 主机的信息变化不会经常变化，除非更换机器，所以不需要经常进行直接查询，更新缓存即可。
-    private val hostCache = Caffeine.newBuilder()
-        .maximumSize(MAX_CACHE)
-        .expireAfterWrite(1, TimeUnit.HOURS)
-        .build<String, AgentHostInfo> { agentAndProjectId ->
-            val (projectId, agentId) = agentAndProjectId.split(":")
-            queryHostInfoImpl(projectId, agentId)
-        }
 
     private fun queryHostInfoImpl(projectId: String, agentHashId: String): AgentHostInfo {
         val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"

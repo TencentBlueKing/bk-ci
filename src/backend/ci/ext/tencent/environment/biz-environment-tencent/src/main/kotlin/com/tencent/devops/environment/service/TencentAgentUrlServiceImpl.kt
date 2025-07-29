@@ -90,7 +90,8 @@ open class TencentAgentUrlServiceImpl constructor(
         token: String,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): String {
         var gw = fixGateway(gateway)
         if (!gw.startsWith("http")) {
@@ -117,6 +118,10 @@ open class TencentAgentUrlServiceImpl constructor(
                 sc += "${t}installType=$installType"
                 t = "&"
             }
+            if (reInstallId != null) {
+                sc += "${t}reInstallId=$reInstallId"
+                t = "&"
+            }
             sc += "\";\$webClient = New-Object System.Net.WebClient;" +
                     "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};"
             sc += "\$ps = \$webClient.DownloadString(\$uri);Invoke-Expression -Command \$ps"
@@ -124,8 +129,14 @@ open class TencentAgentUrlServiceImpl constructor(
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
                 "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+        var t = "?"
         if (!zoneName.isNullOrBlank()) {
-            url += "?zoneName=$zoneName"
+            url += "${t}zoneName=$zoneName"
+            t = "&"
+        }
+        if (reInstallId != null) {
+            url += "${t}reInstallId=$reInstallId"
+            t = "&"
         }
         return "$url | bash"
     }
