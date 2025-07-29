@@ -41,8 +41,7 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 
 object CommonServiceUtils {
-
-
+    
     private val logger = LoggerFactory.getLogger(CommonServiceUtils::class.java)
 
     fun uploadFileToArtifactories(
