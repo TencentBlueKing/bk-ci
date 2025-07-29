@@ -28,29 +28,32 @@
 package com.tencent.devops.common.service.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.service.PROFILE_DEFAULT
 import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
 import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
-import org.apache.commons.lang3.StringUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.context.i18n.LocaleContextHolder
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
+import okhttp3.Response
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 object CommonUtils {
 
@@ -138,7 +141,7 @@ object CommonUtils {
         }
     }
 
-    fun serviceUploadFile(
+    fun uploadFileToArtifactories(
         userId: String,
         serviceUrlPrefix: String,
         file: File,
@@ -153,7 +156,7 @@ object CommonUtils {
             serviceUrl += "&filePath=$fileRepoPath"
         }
         logger.info("serviceUploadFile serviceUrl is:$serviceUrl")
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+        uploadFileToService(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
@@ -165,6 +168,63 @@ object CommonUtils {
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
         }
+    }
+
+    fun uploadFileToService(
+        url: String,
+        uploadFile: File,
+        headers: MutableMap<String, String> = mutableMapOf(),
+        fileFieldName: String = "file",
+        fileName: String = uploadFile.name
+    ): Response {
+        val jwtManager = SpringContextUtil.getBean(JwtManager::class.java)
+        if (jwtManager.isSendEnable()) {
+            val jwtToken = jwtManager.getToken() ?: ""
+            headers[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+        }
+        return OkhttpUtils.uploadFile(
+            url = url,
+            uploadFile = uploadFile,
+            headers = headers,
+            fileFieldName = fileFieldName,
+            fileName = fileName
+        )
+    }
+
+    fun doPostFromService(
+        url: String,
+        jsonParam: String,
+        headers: MutableMap<String, String> = mutableMapOf()
+    ): Response {
+        val jwtManager = SpringContextUtil.getBean(JwtManager::class.java)
+        if (jwtManager.isSendEnable()) {
+            val jwtToken = jwtManager.getToken() ?: ""
+            headers[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+        }
+        return OkhttpUtils.doPost(url, jsonParam, headers)
+    }
+
+    fun downloadFileFromService(
+        url: String,
+        destPath: File,
+        headers: MutableMap<String, String> = mutableMapOf(),
+        connectTimeoutInSec: Long? = null,
+        readTimeoutInSec: Long? = null,
+        writeTimeoutInSec: Long? = null
+    ) {
+        val jwtManager = SpringContextUtil.getBean(JwtManager::class.java)
+        if (jwtManager.isSendEnable()) {
+            val jwtToken = jwtManager.getToken() ?: ""
+            headers[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+        }
+        OkhttpUtils.downloadFile(
+            url = url,
+            destPath = destPath,
+            headers = headers,
+            connectTimeoutInSec = connectTimeoutInSec,
+            readTimeoutInSec = readTimeoutInSec,
+            writeTimeoutInSec = writeTimeoutInSec
+        )
     }
 
     /**
@@ -229,15 +289,19 @@ object CommonUtils {
             profile.isDev() -> {
                 PROFILE_DEVELOPMENT
             }
+
             profile.isTest() -> {
                 PROFILE_TEST
             }
+
             profile.isProd() -> {
                 getProdDbClusterName(profile)
             }
+
             profile.isLocal() -> {
                 PROFILE_DEFAULT
             }
+
             else -> {
                 PROFILE_PRODUCTION
             }

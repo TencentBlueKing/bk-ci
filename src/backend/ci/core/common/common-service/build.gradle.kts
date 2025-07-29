@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-api"))
+    api(project(":core:common:common-security"))
     api(project(":core:common:common-redis"))
     api("org.springframework.boot:spring-boot-starter-actuator")
     api("org.springframework.boot:spring-boot-starter-logging")

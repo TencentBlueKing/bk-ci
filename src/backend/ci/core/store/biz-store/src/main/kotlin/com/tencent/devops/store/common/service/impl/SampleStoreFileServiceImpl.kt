@@ -64,7 +64,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         try {
             val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
                     "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
-            OkhttpUtils.downloadFile(url, file)
+            CommonUtils.downloadFileFromService(url, file)
         } catch (ignore: Throwable) {
             logger.warn("FAIL|Download file from $filePath")
         }
@@ -118,7 +118,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             try {
                 if (file.exists()) {
                     val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-                    val fileUrl = CommonUtils.serviceUploadFile(
+                    val fileUrl = CommonUtils.uploadFileToArtifactories(
                         userId = userId,
                         serviceUrlPrefix = serviceUrlPrefix,
                         file = file,
