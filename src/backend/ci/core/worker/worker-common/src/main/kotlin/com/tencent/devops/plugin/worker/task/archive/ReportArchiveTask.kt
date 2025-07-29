@@ -88,7 +88,6 @@ class ReportArchiveTask : ITask() {
             type = TokenType.UPLOAD,
             expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
         )
-        var compressed = false
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
@@ -132,9 +131,7 @@ class ReportArchiveTask : ITask() {
             }
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
-            val ret = getAllFiles(fileDir, buildVariables.pipelineId)
-            compressed = ret.first
-            val allFileList = ret.second
+            val allFileList = getAllFiles(fileDir, buildVariables.pipelineId)
             if (allFileList.size > 10) {
                 val executors = Executors.newFixedThreadPool(10)
                 allFileList.forEach {
@@ -182,7 +179,7 @@ class ReportArchiveTask : ITask() {
         api.createReportRecord(
             buildVariables = buildVariables,
             taskId = elementId,
-            indexFile = if (!compressed) indexFileParam else COMPRESS_REPORT_FILE_NAME,
+            indexFile = indexFileParam,
             name = reportNameParam,
             reportType = reportType,
             reportEmail = reportEmail,
@@ -209,18 +206,18 @@ class ReportArchiveTask : ITask() {
         }
     }
 
-    private fun getAllFiles(dir: File, pipelineId: String): Pair<Boolean, List<File>> {
+    private fun getAllFiles(dir: File, pipelineId: String): List<File> {
         val config = api.getPluginConfig().data!!
         if (config.enableCompress || config.enableCompressPipelines.contains(pipelineId) ) {
             return compress(dir, config.compressThreshold)
         }
-        return Pair(false, recursiveGetFiles(dir))
+        return recursiveGetFiles(dir)
     }
 
-    private fun compress(dir: File, compressThreshold: Long): Pair<Boolean, List<File>> {
+    private fun compress(dir: File, compressThreshold: Long): List<File> {
         val files = recursiveGetFiles(dir)
         if (files.size < compressThreshold) {
-            return Pair(false, files)
+            return files
         }
         val zipFile = File(dir, COMPRESS_REPORT_FILE_NAME)
         return try {
@@ -238,10 +235,10 @@ class ReportArchiveTask : ITask() {
                     }
                 }
             }
-            Pair(true, listOf(zipFile))
+            listOf(zipFile)
         } catch (e: Exception) {
             logger.warn("compress failed: ", e)
-            Pair(false, files)
+            files
         }
     }
 
