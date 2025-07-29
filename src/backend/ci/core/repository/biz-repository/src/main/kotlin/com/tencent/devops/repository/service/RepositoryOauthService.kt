@@ -248,7 +248,7 @@ class RepositoryOauthService @Autowired constructor(
                 repoCount = count,
                 scmCode = scmCode,
                 scmType = scmConfig.scmType,
-                name = generateI18nConfigName(scmConfig.scmCode),
+                name = generateI18nConfigName(scmConfig.scmCode).ifBlank { scmConfig.name },
                 operator = operator ?: userId,
                 createTime = createTime,
                 expired = expiresIn?.let { expiresIn ->
