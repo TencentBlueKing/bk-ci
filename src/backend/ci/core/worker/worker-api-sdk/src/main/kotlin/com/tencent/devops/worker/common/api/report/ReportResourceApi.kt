@@ -116,7 +116,8 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         name: String,
         reportType: String?,
         reportEmail: ReportEmail?,
-        token: String?
+        token: String?,
+        compressed: Boolean
     ): Result<Boolean> {
         val indexFileEncode = encode(indexFile)
         val nameEncode = encode(name)

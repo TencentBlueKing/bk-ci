@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.plugin.worker.task.archive.ReportArchiveTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -79,7 +80,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         name: String,
         reportType: String?,
         reportEmail: ReportEmail?,
-        token: String?
+        token: String?,
+        compressed: Boolean,
     ): Result<Boolean> {
         createReportRecordToBkRepo(
             buildVariables = buildVariables,
@@ -87,7 +89,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             indexFile = indexFile,
             reportName = name,
             reportType = reportType,
-            token = token
+            token = token,
+            compressed = compressed
         )
         val indexFileEncode = encode(indexFile)
         val nameEncode = encode(name)
@@ -113,7 +116,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         indexFile: String,
         reportName: String,
         reportType: String?,
-        token: String?
+        token: String?,
+        compressed: Boolean
     ) {
         val userId = buildVariables.variables[PIPELINE_START_USER_ID].toString()
         val projectId = buildVariables.projectId
@@ -132,7 +136,11 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             emptyFile.delete()
             filePath
         } else {
-            "/$pipelineId/$buildId/$taskId/$indexFile"
+            if (compressed) {
+                "/$pipelineId/$buildId/$taskId/${ReportArchiveTask.COMPRESS_REPORT_FILE_NAME}"
+            } else {
+                "/$pipelineId/$buildId/$taskId/$indexFile"
+            }
         }
 
         bkrepoResourceApi.saveMetadata(userId, projectId, "report", fullPath, metadata)
