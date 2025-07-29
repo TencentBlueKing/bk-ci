@@ -292,13 +292,13 @@ class StartControl @Autowired constructor(
             }
         } else {
             // 启动失败,记录为EXCEPTION
+            workspaceStatus = WorkspaceStatus.EXCEPTION
             logger.warn("start workspace $workspaceName failed")
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
-                status = WorkspaceStatus.EXCEPTION,
+                status = workspaceStatus,
                 dslContext = dslContext
             )
-            workspaceStatus = WorkspaceStatus.EXCEPTION
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -307,7 +307,7 @@ class StartControl @Autowired constructor(
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status.name,
-                    WorkspaceStatus.EXCEPTION.name
+                    workspaceStatus.name
                 )
             )
         }
@@ -319,7 +319,7 @@ class StartControl @Autowired constructor(
             workspaceHost = environmentHost,
             errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_START,
-            status = status,
+            status = workspaceStatus.checkRunning(),
             action = WorkspaceAction.START,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
