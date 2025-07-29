@@ -83,7 +83,10 @@ interface UserRepositoryOauthResource {
         page: Int? = null,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        @Parameter(description = "需要重置的用户名", required = false)
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = ""
     ): Result<Page<RepoOauthRefVo>>
 
     @DELETE
