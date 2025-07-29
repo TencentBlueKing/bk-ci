@@ -292,7 +292,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 val id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("T_PIPELINE_OPERATION_LOG").data
                 processDao.addPipelineOperationLog(
-                    dslContext = dslContext,
+                    dslContext = archiveShardingDslContext,
                     pipelineOperationLog = PipelineOperationLog(
                         id = id,
                         operator = userId,

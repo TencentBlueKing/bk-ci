@@ -32,5 +32,6 @@ enum class BkApiHandleType {
     PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
     PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
     API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
+    API_OPEN_TOKEN_CHECK, // open接口token校验
+    PROJECT_MEMBER_CHECK // 项目成员校验
 }

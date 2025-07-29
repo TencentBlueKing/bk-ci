@@ -36,5 +36,7 @@ data class BuildEndMetricsBroadCastEvent(
     override val projectId: String,
     override val pipelineId: String,
     override val buildId: String,
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0,
     val buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-) : IMeasureEvent(projectId, pipelineId, buildId)
+) : IMeasureEvent(projectId, pipelineId, buildId, delayMills, retryTime)

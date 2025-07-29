@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -97,7 +99,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val projectBuildSummaryService: ProjectBuildSummaryService
+    private val projectBuildSummaryService: ProjectBuildSummaryService,
+    private val measureEventDispatcher: SampleEventDispatcher
 ) : MetricsDataReportService {
 
     companion object {
@@ -108,11 +111,12 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     /**
      * 处理流水线构建结束的指标数据上报
      *
-     * @param buildEndPipelineMetricsData 构建结束指标数据对象，包含流水线运行相关信息
+     * @param event 构建结束后流水线指标数据消息
      * @return Boolean 始终返回true，表示处理成功
      */
-    override fun metricsDataReport(buildEndPipelineMetricsData: BuildEndPipelineMetricsData): Boolean {
+    override fun metricsDataReport(event: BuildEndMetricsBroadCastEvent): Boolean {
         // 解构获取关键ID信息
+        val buildEndPipelineMetricsData = event.buildEndPipelineMetricsData
         val (projectId, pipelineId, buildId) = buildEndPipelineMetricsData.run {
             Triple(projectId, pipelineId, buildId)
         }
@@ -120,130 +124,39 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val watcher = Watcher(id = "metricsDataReport|$projectId|$pipelineId|$buildId")
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now() // 统一使用当前时间保证时间一致性
-        // 流水线级别概览数据上报
-        watcher.start("pipelineOverviewDataReport")
-        withRedisLock("pipeline:$pipelineId:overview", 30) {
-            pipelineOverviewDataReport(
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                currentTime = currentTime
-            )
-        }
-
-        // 流水线失败数据上报
-        watcher.start("pipelineFailDataReport")
-        withRedisLock("pipeline:$pipelineId:fail", 30) {
-            pipelineFailDataReport(
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                currentTime = currentTime
-            )
-        }
-        withRedisLock(
-            lockKey = "pipeline:$pipelineId:model:data",
-            expiredSeconds = 100
-        ) {
-            val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
-            val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
-            val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
-            val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
-            val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
-            val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
-            val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
-            val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
-            val saveAtomFailDetailDataPOs = mutableListOf<SaveAtomFailDetailDataPO>()
-            // 遍历流水线所有阶段进行指标上报
-            buildEndPipelineMetricsData.stages.forEach { stage ->
-                val stageTagNames = stage.stageTagNames?.toMutableList() ?: mutableListOf()
-                watcher.start("pipelineStageOverviewDataReport")
-                // 阶段概览数据上报
-                pipelineStageOverviewDataReport(
-                    stageTagNames = stageTagNames,
-                    stageCostTime = stage.costTime,
+        RedisLock(
+            redisOperation = redisOperation,
+            lockKey = metricsDataReportKey("pipeline:$pipelineId:model:data"),
+            expiredTimeInSeconds = 100
+        ).use { lock ->
+            if (!lock.tryLock()) {
+                logger.warn("[$projectId|$pipelineId|$buildId]|try lock failed, resend message")
+                // 锁获取失败，消息延迟10秒发送以减少同一条流水线同时间触发大量构建带来的竞争压力
+                event.delayMills = 10000
+                measureEventDispatcher.dispatch(event)
+                return false
+            } else {
+                // 流水线model数据解析上报
+                watcher.start("doPipelineModelDataReportBus")
+                doPipelineModelDataReportBus(
                     buildEndPipelineMetricsData = buildEndPipelineMetricsData,
                     currentTime = currentTime,
-                    savePipelineStageOverviewDataPOs = savePipelineStageOverviewDataPOs,
-                    updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime
                 )
-                watcher.start("pipelineAtomDataReport")
-                // 遍历阶段内所有任务进行插件数据上报
-                stage.containers.forEach { container ->
-                    val atomOverviewDataRecords = metricsDataQueryDao.getAtomOverviewDatas(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        statisticsTime = statisticsTime,
-                        atomCodes = container.atomCodes
-                    )
-                    container.tasks.forEach { task ->
-                        // 插件概览数据上报
-                        watcher.start("atomOverviewDataReport")
-                        atomOverviewDataReport(
-                            buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                            taskMetricsData = task,
-                            currentTime = currentTime,
-                            atomOverviewDataRecords = atomOverviewDataRecords,
-                            updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
-                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
-                            saveProjectAtomRelationPOs = saveProjectAtomRelationPOs
-                        )
-                        // 插件失败汇总数据上报
-                        watcher.start("atomFailSummaryDataReport")
-                        atomFailSummaryDataReport(
-                            buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                            taskMetricsData = task,
-                            currentTime = currentTime,
-                            updateAtomFailSummaryDataPOs = updateAtomFailSummaryDataPOs,
-                            saveAtomFailSummaryDataPOs = saveAtomFailSummaryDataPOs,
-                            saveAtomFailDetailDataPOs = saveAtomFailDetailDataPOs,
-                            saveErrorCodeInfoPOs = saveErrorCodeInfoPOs
-                        )
-                        // 当构建失败时进行日常统计指标上报
-                        if (!buildEndPipelineMetricsData.successFlag) {
-                            watcher.start("atomIndexStatisticsDailyDataReport")
-                            atomIndexStatisticsDailyDataReport(
-                                statisticsTime = buildEndPipelineMetricsData.statisticsTime.let {
-                                    DateTimeUtil.stringToLocalDateTime(it, YYYY_MM_DD)
-                                },
-                                taskMetricsData = task,
-                                currentTime = currentTime,
-                                startUser = buildEndPipelineMetricsData.startUser
-                            )
-                        }
-                    }
-                }
-            }
-
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                if (savePipelineStageOverviewDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSavePipelineStageOverviewData(context, savePipelineStageOverviewDataPOs)
-                }
-                if (updatePipelineStageOverviewDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchUpdatePipelineStageOverviewData(
-                        dslContext = context,
-                        updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
-                    )
-                }
-                if (saveAtomOverviewDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
-                }
-                if (updateAtomOverviewDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
-                }
-                if (saveProjectAtomRelationPOs.isNotEmpty()) {
-                    projectInfoDao.batchSaveProjectAtomInfo(context, saveProjectAtomRelationPOs)
-                }
-                if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
-                }
-                if (updateAtomFailSummaryDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchUpdateAtomFailSummaryData(context, updateAtomFailSummaryDataPOs)
-                }
-                if (saveAtomFailDetailDataPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveAtomFailDetailData(context, saveAtomFailDetailDataPOs)
-                }
-                if (saveErrorCodeInfoPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
-                }
+                // 流水线级别概览数据上报
+                watcher.start("pipelineOverviewDataReport")
+                pipelineOverviewDataReport(
+                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                    currentTime = currentTime
+                )
+                // 流水线失败数据上报
+                watcher.start("pipelineFailDataReport")
+                pipelineFailDataReport(
+                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                    currentTime = currentTime
+                )
             }
         }
 
@@ -260,18 +173,114 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         return true
     }
 
-    private inline fun withRedisLock(
-        lockKey: String,
-        expiredSeconds: Long,
-        action: () -> Unit
+    private fun doPipelineModelDataReportBus(
+        buildEndPipelineMetricsData: BuildEndPipelineMetricsData,
+        currentTime: LocalDateTime,
+        projectId: String,
+        pipelineId: String,
+        statisticsTime: LocalDateTime
     ) {
-        RedisLock(
-            redisOperation = redisOperation,
-            lockKey = metricsDataReportKey(lockKey),
-            expiredTimeInSeconds = expiredSeconds
-        ).use { lock ->
-            lock.lock()
-            action()
+        val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
+        val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
+        val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
+        val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
+        val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
+        val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
+        val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
+        val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
+        val saveAtomFailDetailDataPOs = mutableListOf<SaveAtomFailDetailDataPO>()
+        // 遍历流水线所有阶段进行指标上报
+        buildEndPipelineMetricsData.stages.forEach { stage ->
+            val stageTagNames = stage.stageTagNames?.toMutableList() ?: mutableListOf()
+            // 阶段概览数据上报
+            pipelineStageOverviewDataReport(
+                stageTagNames = stageTagNames,
+                stageCostTime = stage.costTime,
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                currentTime = currentTime,
+                savePipelineStageOverviewDataPOs = savePipelineStageOverviewDataPOs,
+                updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
+            )
+            // 遍历阶段内所有任务进行插件数据上报
+            stage.containers.forEach { container ->
+                val atomOverviewDataRecords = metricsDataQueryDao.getAtomOverviewDatas(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    atomCodes = container.atomCodes
+                )
+                container.tasks.forEach { task ->
+                    // 插件概览数据上报
+                    atomOverviewDataReport(
+                        buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                        taskMetricsData = task,
+                        currentTime = currentTime,
+                        atomOverviewDataRecords = atomOverviewDataRecords,
+                        updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
+                        saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
+                        saveProjectAtomRelationPOs = saveProjectAtomRelationPOs
+                    )
+                    // 插件失败汇总数据上报
+                    atomFailSummaryDataReport(
+                        buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                        taskMetricsData = task,
+                        currentTime = currentTime,
+                        updateAtomFailSummaryDataPOs = updateAtomFailSummaryDataPOs,
+                        saveAtomFailSummaryDataPOs = saveAtomFailSummaryDataPOs,
+                        saveAtomFailDetailDataPOs = saveAtomFailDetailDataPOs,
+                        saveErrorCodeInfoPOs = saveErrorCodeInfoPOs
+                    )
+                    // 当构建失败时进行日常统计指标上报
+                    if (!buildEndPipelineMetricsData.successFlag) {
+                        RedisLock(redisOperation, metricsDataReportKey(task.atomCode), 40).use { lock ->
+                            lock.lock()
+                            atomIndexStatisticsDailyDataReport(
+                                statisticsTime = buildEndPipelineMetricsData.statisticsTime.let {
+                                    DateTimeUtil.stringToLocalDateTime(it, YYYY_MM_DD)
+                                },
+                                taskMetricsData = task,
+                                currentTime = currentTime,
+                                startUser = buildEndPipelineMetricsData.startUser
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            if (savePipelineStageOverviewDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchSavePipelineStageOverviewData(context, savePipelineStageOverviewDataPOs)
+            }
+            if (updatePipelineStageOverviewDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchUpdatePipelineStageOverviewData(
+                    dslContext = context,
+                    updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
+                )
+            }
+            if (saveAtomOverviewDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
+            }
+            if (updateAtomOverviewDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
+            }
+            if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                projectInfoDao.batchSaveProjectAtomInfo(context, saveProjectAtomRelationPOs)
+            }
+            if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
+            }
+            if (updateAtomFailSummaryDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchUpdateAtomFailSummaryData(context, updateAtomFailSummaryDataPOs)
+            }
+            if (saveAtomFailDetailDataPOs.isNotEmpty()) {
+                metricsDataReportDao.batchSaveAtomFailDetailData(context, saveAtomFailDetailDataPOs)
+            }
+            if (saveErrorCodeInfoPOs.isNotEmpty()) {
+                metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
+            }
         }
     }
 
