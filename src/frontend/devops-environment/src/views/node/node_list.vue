@@ -446,6 +446,8 @@
                         theme: 'error'
                     })
                 } else {
+                    const currentNodeType = this.$route.params.nodeType || 'allNode'
+                    localStorage.setItem('ENV_ACTIVE_NODE_TYPE', currentNodeType)
                     this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
                     this.$router.push({
                         name: 'setNodeTag',

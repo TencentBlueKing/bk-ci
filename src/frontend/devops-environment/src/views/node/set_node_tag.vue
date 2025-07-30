@@ -21,21 +21,22 @@
                 <bk-popconfirm
                     trigger="click"
                     width="422"
+                    ext-cls="add-show-tag"
                     placement="bottom"
                     @confirm="confirmAddColumn"
                     @cancel="resetTagSelection"
                 >
                     <div slot="content">
                         <div class="add-column-content">
-                            <p class="add-title">添加/展示标签</p>
+                            <p class="add-title">{{ $t('environment.addOrShowTag') }}</p>
                             <div class="existing-columns">
                                 <p class="tag-title">
-                                    <span>已设置标签展示</span>
+                                    <span>{{ $t('environment.tagDisplaySet') }}</span>
                                     <bk-checkbox
                                         v-model="checkAllExisting"
                                         @change="handleCheckAllExisting"
                                     >
-                                        全选
+                                        {{ $t('environment.selectAll') }}
                                     </bk-checkbox>
                                 </p>
                                 <div class="existing-column-item">
@@ -48,24 +49,32 @@
                                             v-model="selectedExistingTags[col.key]"
                                             @change="handleTagChange"
                                         >
-                                            <span :class="{ 'disabled-cell': col.removedRecently }">
+                                            <span
+                                                :class="{ 'disabled-cell': col.removedRecently }"
+                                                :title="col.label"
+                                            >
                                                 {{ col.label }}
                                             </span>
                                         </bk-checkbox>
                                         <span
                                             v-if="col.removedRecently"
                                             class="tag-flag removed"
-                                        >本次移除</span>
+                                        >[{{ $t('environment.thisRemoval') }}]</span>
                                         <span
                                             v-else-if="col.addedRecently"
                                             class="tag-flag added"
-                                        >本次添加</span>
+                                        >[{{ $t('environment.thisAddition') }}]</span>
                                     </p>
                                 </div>
                             </div>
 
-                            <div class="new-column-input">
-                                <p class="tag-title">添加标签</p>
+                            <div class="new-column">
+                                <p
+                                    class="tag-title"
+                                    v-if="otherTags.length"
+                                >
+                                    {{ $t('environment.addTags') }}
+                                </p>
                                 <div class="existing-column-item">
                                     <p
                                         v-for="(tag) in otherTags"
@@ -77,7 +86,7 @@
                                             class="new-tag-checkbox"
                                             @change="handleNewTagChange"
                                         >
-                                            {{ tag.tagKeyName }}
+                                            <span :title="tag.tagKeyName">{{ tag.tagKeyName }}</span>
                                         </bk-checkbox>
                                     </p>
                                 </div>
@@ -141,10 +150,15 @@
                                             >
                                                 <div slot="content">
                                                     <div class="edit-content">
-                                                        <p class="content-tit">批量设置 {{ col.label }}</p>
+                                                        <p
+                                                            :title="col.label"
+                                                            class="content-tit"
+                                                        >
+                                                            {{ $t('environment.bulkSet') }} {{ col.label }}
+                                                        </p>
                                                         <bk-select
                                                             v-model="editColumnValue"
-                                                            placeholder="请选择"
+                                                            :placeholder="$t('environment.pleaseSelect')"
                                                             :clearable="true"
                                                         >
                                                             <bk-option
@@ -156,24 +170,24 @@
                                                         </bk-select>
                                                     </div>
                                                     <div class="edit-btn">
-                                                        <span @click="confirmEditColData(colIndex)">确定</span>
-                                                        <span @click="cancleEditColData(colIndex)">取消</span>
+                                                        <span @click="confirmEditColData(colIndex)">{{ $t('environment.comfirm') }}</span>
+                                                        <span @click="cancleEditColData(colIndex)">{{ $t('environment.cancel') }}</span>
                                                     </div>
                                                 </div>
                                                 <i
-                                                    v-bk-tooltips="{ content: '批量编辑' }"
+                                                    v-bk-tooltips="{ content: $t('environment.bulkEdit') }"
                                                     class="devops-icon icon-edit header-icon"
                                                 ></i>
                                             </bk-popover>
                                             <i
-                                                v-bk-tooltips="{ content: '批量移除' }"
+                                                v-bk-tooltips="{ content: $t('environment.bulkRemove') }"
                                                 class="devops-icon icon-delete header-icon"
                                                 @click.stop="handleDeleteCol(colIndex)"
                                             ></i>
                                         </template>
                                         <img
                                             v-else
-                                            v-bk-tooltips="{ content: '批量恢复' }"
+                                            v-bk-tooltips="{ content: $t('environment.bulkRestore') }"
                                             src="../../scss/svg/revocation.svg"
                                             class="restore-btn"
                                             @click.stop="handleRestoreCol(colIndex)"
@@ -210,7 +224,7 @@
                                             'cell-select',
                                             getCellStatusClass(rowIndex, col)
                                         ]"
-                                        placeholder="请选择"
+                                        :placeholder="$t('environment.pleaseSelect')"
                                         :clearable="false"
                                         :popover-width="260"
                                         :popover-options="{ boundary: 'viewport' }"
@@ -230,13 +244,13 @@
                                     >
                                         <i
                                             v-if="!(cellDisabled[rowIndex] && cellDisabled[rowIndex][col.key]) && row.tagDetails[col.key].tagValueId"
-                                            v-bk-tooltips="{ content: '移除' }"
+                                            v-bk-tooltips="{ content: $t('environment.remove') }"
                                             class="devops-icon icon-delete cell-action-btn"
                                             @click.stop="handleCellDelete(rowIndex, col.key)"
                                         ></i>
                                         <img
                                             v-if="cellDisabled[rowIndex] && cellDisabled[rowIndex][col.key]"
-                                            v-bk-tooltips="{ content: '恢复' }"
+                                            v-bk-tooltips="{ content: $t('environment.restore') }"
                                             class="cell-action-btn restore"
                                             src="../../scss/svg/revocation.svg"
                                             @click.stop="handleCellRestore(rowIndex, col.key, col.tagKeyId)"
@@ -251,13 +265,84 @@
             <div :class="['content-btn', { 'has-scroll': hasVerticalScrollbar }]">
                 <bk-button
                     theme="primary"
-                    @click="handlePreviewAndSave"
+                    @click="handleToPreview"
                 >
-                    预览并保存
+                    {{ $t('environment.previewAndSave') }}
                 </bk-button>
-                <bk-button @click="handleCancel">取消</bk-button>
+                <bk-button @click="handleCancel">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>
+
+        <bk-sideslider
+            :is-show.sync="isShowPreview"
+            :title="$t('environment.preview')"
+            :width="640"
+            :quick-close="false"
+            ext-cls="preview-slider"
+            @hidden="handleCancelPreview"
+        >
+            <div
+                slot="content"
+                class="slider-content"
+            >
+                <bk-collapse v-model="activeName">
+                    <bk-collapse-item
+                        v-for="(item, index) in previewData"
+                        hide-arrow
+                        :key="index"
+                        :name="String(index)"
+                        @item-click="collapseClick(index)"
+                    >
+                        <div class="collapse-title">
+                            <p>
+                                <bk-icon
+                                    :type="activeName.find(i => i === String(index)) ? 'down-shape' : 'right-shape'"
+                                />
+                                <span>{{ item.displayName[0] }} {{ item.displayName.length > 1 ? $t('environment.etc') : '' }}</span>
+                            </p>
+
+                            <bk-popover
+                                placement="bottom-end"
+                                theme="light"
+                            >
+                                <p>
+                                    <span :class="item.displayName.length > 1 ? 'light-text' : ''">{{ item.displayName.length }}</span>
+                                    {{ $t('environment.nodeNum') }}
+                                </p>
+                                <div slot="content">
+                                    <p
+                                        v-for="name in item.displayName"
+                                        :key="name"
+                                        class="display-name"
+                                    >
+                                        {{ name }}
+                                    </p>
+                                </div>
+                            </bk-popover>
+                        </div>
+                        <div
+                            slot="content"
+                            class="collapse-content"
+                        >
+                            <p class="title">{{ $t('environment.tag') }}</p>
+                            <bk-tag :theme="item.tags.isDelete ? 'danger' : ''">{{ item.tags.tagKeyName }}: {{ item.tags.tagValueName }}</bk-tag>
+                        </div>
+                    </bk-collapse-item>
+                </bk-collapse>
+            </div>
+            <div slot="footer">
+                <bk-button
+                    theme="primary"
+                    @click="handleBatchSave"
+                    :loading="isSaveLoading"
+                >
+                    {{ $t('environment.save') }}
+                </bk-button>
+                <bk-button @click="handleCancelPreview">
+                    {{ $t('environment.cancel') }}
+                </bk-button>
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 
@@ -284,13 +369,17 @@
                 cellActionVisibility: {},
                 cellDataStatus: {},
                 confirmedRemoved: {},
-                originalData: {},
+                originalData: [],
                 selectedExistingTags: {},
                 selectedNewTags: {},
                 checkAllExisting: false,
                 editColumnValue: '',
                 hasVerticalScrollbar: false,
                 currentOpenPopover: null,
+                isShowPreview: false,
+                isSaveLoading: false,
+                previewData: [],
+                activeName: ['0']
             }
         },
         computed: {
@@ -342,8 +431,9 @@
             },
             
             saveOriginalData () {
-                this.tableData.forEach((row, rowIndex) => {
-                    this.$set(this.originalData, rowIndex, {
+                this.originalData.length = 0
+                this.tableData.forEach((row) => {
+                    this.originalData.push({
                         ...row,
                         tagDetails: JSON.parse(JSON.stringify(row.tagDetails))
                     })
@@ -384,7 +474,7 @@
             transformNodeData (originalData, allTags) {
                 const tagKeyMap = new Map()
                 originalData.forEach(item => {
-                    item.tags.forEach(tag => {
+                    item.tags?.forEach(tag => {
                         if (!tagKeyMap.has(tag.tagKeyName)) {
                             tagKeyMap.set(tag.tagKeyName, tag.tagKeyId)
                         }
@@ -394,7 +484,7 @@
                 const tableColumns = [
                     {
                         key: 'displayName',
-                        label: '已选节点',
+                        label: this.$t('environment.selectedNodes'),
                         disabled: false,
                         hidden: false
                     }
@@ -419,7 +509,7 @@
                     }
 
                     const tagMap = {}
-                    item.tags.forEach(tag => {
+                    item.tags?.forEach(tag => {
                         const tagValue = tag.tagValues.length > 0
                             ? tag.tagValues[0].tagValueName
                             : ''
@@ -476,7 +566,11 @@
             },
             
             toNodeList () {
-                this.$router.push({ name: 'nodeList' })
+                const nodeType = localStorage.getItem('ENV_ACTIVE_NODE_TYPE')
+                this.$router.push({
+                    name: 'nodeList',
+                    params: { nodeType }
+                })
             },
 
             checkScrollbar () {
@@ -523,8 +617,7 @@
             updateChangeFlags () {
                 this.tableColumns.forEach((col, index) => {
                     if (index === 0 || !col?.key) return
-                    const initialCol = this.initialTableColumns.find(item => item?.key === col.key)
-                    this.$set(col, 'removedRecently', !!initialCol && !this.selectedExistingTags[col.key])
+                    this.$set(col, 'removedRecently', !this.selectedExistingTags[col.key])
                 })
                 
                 Object.keys(this.selectedNewTags).forEach(tagKey => {
@@ -646,9 +739,11 @@
                 const displayValue = selectedOption ? selectedOption.tagValueName : ''
 
                 this.tableData.forEach((row, rowIndex) => {
-                    this.$set(row.tagDetails[col.key], 'tagKeyId', col.tagKeyId)
-                    this.$set(row.tagDetails[col.key], 'tagValueId', this.editColumnValue)
-                    this.$set(row.tagDetails[col.key], 'tagValueName', displayValue)
+                    this.$set(row.tagDetails[col.key], {
+                        tagKeyId: col.tagKeyId,
+                        tagValueId: this.editColumnValue,
+                        tagValueName: displayValue
+                    })
                     
                     row[col.key] = displayValue
                     this.handleCellChange(rowIndex, col.key, this.editColumnValue, col.tagKeyId)
@@ -714,15 +809,13 @@
                 this.handleCellRemovals() // 处理单元格移除
                 this.handleNewTags() // 处理新增标签
                 this.resetTagSelection()
-                // 更新初始状态
-                this.initialTableColumns = JSON.parse(JSON.stringify(this.tableColumns))
-                this.initialOtherTags = JSON.parse(JSON.stringify(this.otherTags))
                 this.syncSelectedTags()
             },
             // 处理列级移除
             handleColumnRemovals () {
                 const tagsToRemove = this.tableColumns
                     .filter((col, index) => index !== 0 && col?.key && !this.selectedExistingTags[col.key])
+            
                 if (!tagsToRemove.length) return
 
                 this.tableColumns = this.tableColumns.filter(col =>
@@ -731,7 +824,11 @@
 
                 tagsToRemove.forEach(tag => {
                     if (!this.otherTags.some(t => t.tagKeyName === tag.key)) {
-                        this.otherTags.push({ tagKeyId: tag.tagKeyId, tagKeyName: tag.label, disabled: false })
+                        this.otherTags.push({
+                            tagKeyId: tag.tagKeyId,
+                            tagKeyName: tag.label,
+                            disabled: false
+                        })
                     }
                 })
 
@@ -808,6 +905,9 @@
             filterModifiedTags (data) {
                 const nodeList = JSON.parse(JSON.stringify(data))
                 const result = []
+                const deletedColumns = this.initialTableColumns
+                    .filter(col => col.key !== 'displayName' && col.key)
+                    .filter(initialCol => !this.tableColumns.some(currentCol => currentCol.key === initialCol.key))
 
                 nodeList.forEach(node => {
                     const filteredTags = {}
@@ -818,6 +918,19 @@
 
                         if (original !== tagValue) {
                             filteredTags[key] = info
+                        }
+                    })
+
+                    deletedColumns.forEach(deletedCol => {
+                        const originalValue = this.originalData.find(orig => orig.nodeId === node.nodeId)?.tagDetails?.[deletedCol.key]?.originalValue
+            
+                        if (originalValue && originalValue !== '') {
+                            filteredTags[deletedCol.key] = {
+                                ...deletedCol,
+                                originalValue,
+                                tagValueName: '',
+                                isDeletedColumn: true
+                            }
                         }
                     })
 
@@ -838,6 +951,18 @@
 
                 data.forEach(node => {
                     Object.entries(node.tagDetails).forEach(([tagKey, tagInfo]) => {
+                        if (tagInfo.isDeletedColumn) {
+                            results.push({
+                                displayName: [node.displayName],
+                                tags: {
+                                    tagKeyName: tagKey,
+                                    tagValueName: tagInfo.originalValue,
+                                    isDelete: true
+                                }
+                            })
+                            return
+                        }
+
                         const { tagValueId, tagValueName, originalValue } = tagInfo
                         const isDelete = originalValue !== '' && tagValueName === ''
 
@@ -850,9 +975,7 @@
                         if (isDelete) {
                             results.push({
                                 displayName: [node.displayName],
-                                tags: {
-                                    [tagKey]: tagObject
-                                }
+                                tags: tagObject
                             })
                         } else {
                             const key = String(tagValueId ?? '')
@@ -860,12 +983,10 @@
                             if (!normalTagMap[key]) {
                                 normalTagMap[key] = {
                                     displayName: [],
-                                    tags: {}
+                                    tags: tagObject
                                 }
-                            }
-
-                            if (!normalTagMap[key].tags[tagKey]) {
-                                normalTagMap[key].tags[tagKey] = tagObject
+                            } else {
+                                normalTagMap[key].tags = tagObject
                             }
 
                             if (!normalTagMap[key].displayName.includes(node.displayName)) {
@@ -878,37 +999,81 @@
                 return [...results, ...Object.values(normalTagMap)]
             },
 
-            handlePreviewAndSave () {
+            handleToPreview () {
+                const processPreviewData = () => {
+                    const filteredResult = this.filterModifiedTags(this.tableData)
+                    if (!filteredResult.length) {
+                        this.$bkMessage({
+                            message: this.$t('environment.noDataChangesMade'),
+                            theme: 'warning'
+                        })
+                        return false
+                    }
+                    this.previewData = this.groupByTagValueId(filteredResult)
+                    this.isShowPreview = true
+                    return true
+                }
+
                 if (this.hasPendingRemovals) {
                     this.$bkInfo({
                         theme: 'warning',
                         type: 'warning',
-                        title: '是否确定移除数据',
+                        extCls: 'info-content',
+                        title: this.$t('environment.confirmRemoveData'),
                         confirmFn: async () => {
                             await this.confirmAddColumn()
-
-                            const filteredResult = this.filterModifiedTags(this.tableData)
-                            const previewData = this.groupByTagValueId(filteredResult)
-                            console.log("🚀 ~  previewData:", previewData)
+                            processPreviewData()
                         }
                     })
                 } else {
-                    const filteredResult = this.filterModifiedTags(this.tableData)
-                    console.log("最终预览需处理的数据", filteredResult)
-                    if (!filteredResult.length) {
-                        this.$bkMessage({
-                            message: '没有更改数据',
-                            theme: 'warning'
-                        })
-                        return
-                    }
-                    const previewData = this.groupByTagValueId(filteredResult)
-                    console.log(previewData)
+                    processPreviewData()
                 }
             },
+
             handleCancel () {
                 this.toNodeList()
-            }
+            },
+
+            processNodes (originalData) {
+                return originalData.map(item => {
+                    const tagsToProcess = Object.values(item.tagDetails)
+                        .filter(tag => tag.tagValueId !== "")
+                        .map(tag => ({
+                            tagKeyId: tag.tagKeyId,
+                            tagValueId: tag.tagValueId
+                        }))
+
+                    return {
+                        nodeId: item.nodeId,
+                        tags: tagsToProcess
+                    }
+                })
+            },
+
+            async handleBatchSave () {
+                try {
+                    this.isSaveLoading = true
+                    const params = this.processNodes(this.tableData)
+                    await this.$store.dispatch('environment/batchEditTag', {
+                        projectId: this.projectId,
+                        params
+                    })
+                    this.$bkMessage({
+                        message: this.$t('environment.bulkSetTagsSuccess'),
+                        theme: 'success'
+                    })
+                    this.toNodeList()
+                } catch (error) {
+                    console.log(error)
+                } finally {
+                    this.isSaveLoading = false
+                }
+            },
+
+            handleCancelPreview () {
+                this.isShowPreview = false
+                this.previewData = []
+            },
         }
     }
 </script>
@@ -923,7 +1088,7 @@
     .info-header {
         height: 54px;
         line-height: 54px;
-        background-color: #FAFBFD;
+        background-color: $bgHoverColor;
         border-bottom: none;
         box-shadow: none;
         .icon-arrows-left {
@@ -974,7 +1139,7 @@
             line-height: 48px;
             margin: 0 -20px;
             padding: 0 20px;
-            background: #FAFBFD;
+            background: $bgHoverColor;
             &.has-scroll {
                 box-shadow: 0 -1px 0 0 #DCDEE5;
 
@@ -1007,7 +1172,7 @@
                 white-space: nowrap;
                 border-left: none;
                 tbody td:first-child {
-                    background-color: #FAFBFD;
+                    background-color: $bgHoverColor;
                 }
             }
             th:last-child, td:last-child {
@@ -1016,7 +1181,7 @@
             thead {
                 position: sticky;
                 top: -1px;
-                background: white;
+                background: #fff;
                 z-index: 20;
                 tr:first-child th {
                     border-top: none;
@@ -1061,11 +1226,11 @@
             }
             .content-td:not(.pending-remove):hover .cell-select {
                 cursor: pointer;
-                background-color: #fafbfd;
+                background-color: $bgHoverColor;
             }
             .content-td:not(.pending-remove):hover {
                 z-index: 11;
-                background-color: #fafbfd;
+                background-color: $bgHoverColor;
                 outline: 1px solid #a3c5fd;
             }
             .content-td .cell-select:focus {
@@ -1097,7 +1262,7 @@
             }
             // 待移除（灰线+中划线）
             .pending-remove {
-                background-color: #FAFBFD;
+                background-color: $bgHoverColor;
                 color: #C4C6CC;
             }
             .pending-remove .cell-select:not(:placeholder-shown) {
@@ -1112,8 +1277,63 @@
             }
         }
     }
+    .preview-slider {
+        ::v-deep .bk-sideslider-content {
+            height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+        ::v-deep .bk-sideslider-footer {
+            border-top: 1px solid #DCDEE5 !important;
+            padding-left: 24px;
+        }
+        ::v-deep .bk-collapse-item .bk-collapse-item-content {
+            border: 1px solid #EAEBF0;
+            border-top: none;
+            border-radius: 2px;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+        ::v-deep .bk-collapse-item {
+            margin-bottom: 16px;
+        }
+        ::v-deep .bk-collapse-item .bk-collapse-item-header {
+            height: 32px;
+            line-height: 32px;
+            padding: 0;
+            border: 1px solid #EAEBF0;
+            border-radius: 2px;
+        }
+        ::v-deep .bk-collapse-item .bk-collapse-item-hover:hover {
+            color: #63656E;
+        }
+        .slider-content {
+            padding: 20px 24px 8px 24px;
+        }
+        .collapse-title {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 12px;
+            background: #EAEBF0;
+            font-size: 12px;
+        }
+        .collapse-content {
+            padding: 16px;
+            .title {
+                font-weight: 700;
+                font-size: 14px;
+                color: #63656E;
+                margin-bottom: 8px;
+            }
+            .bk-tag {
+                margin: 0;
+                height: auto;
+                word-break: break-all;
+            }
+        }
+    }
 }
 .add-column-content {
+    padding: 24px;
     .add-title {
         font-size: 20px;
         color: #313238;
@@ -1125,8 +1345,10 @@
     }
     .existing-columns {
         padding-bottom: 16px;
-        margin-bottom: 8px;
-        border-bottom: 1px solid #DCDEE5;
+    }
+    .new-column {
+        border-top: 1px solid #DCDEE5;
+        padding-top: 8px;
     }
     .tag-title {
         margin-bottom: 6px;
@@ -1156,21 +1378,22 @@
 }
 .tag-flag {
     font-size: 12px;
-    padding: 1px 4px;
     border-radius: 3px;
     &.added {
-        background-color: #e6f4ea;
-        color: #34a853;
+        color: #2DCB56;
     }
     &.removed {
-        background-color: #fee;
-        color: #ea4335;
+        color: #FF9C01;
     }
 }
 .edit-popover {
     .edit-content {
         margin-bottom: 12px;
         .content-tit {
+            max-width: 210px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             font-size: 14px;
             color: #63656E;
             margin-bottom: 8px;
@@ -1204,6 +1427,32 @@
             width: 14px;
             height: 14px;
         }
+    }
+}
+.display-name {
+    color: #63656E;
+    line-height: 16px;
+}
+.light-text {
+    color: #3A84FF;
+}
+</style>
+<style lang="scss">
+.add-show-tag {
+    .bk-popconfirm-content.popconfirm-more {
+        padding: 0 !important;
+    }
+    .tippy-tooltip {
+        padding: 0;
+    }
+    .popconfirm-operate {
+        height: 50px;
+        padding-right: 24px;
+        display: flex;
+        border-top: 1px solid #DCDEE5;
+        background: #FAFBFD;
+        align-items: center;
+        justify-content: right;
     }
 }
 </style>

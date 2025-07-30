@@ -130,6 +130,11 @@ const actions = {
             return response
         })
     },
+    batchEditTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/batchEditTag?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
     /**
      * 环境的节点列表
      */

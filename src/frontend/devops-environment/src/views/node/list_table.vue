@@ -402,6 +402,7 @@
                                 v-for="option in tagKeyIdList"
                                 :key="option.tagKeyId"
                                 :id="option.tagKeyId"
+                                :disabled="setTagForm.some(item => item.tagKeyId === option.tagKeyId)"
                                 :name="option.tagKeyName"
                             >
                             </bk-option>
@@ -729,6 +730,8 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
+                    const currentNodeType = this.$route.params.nodeType || 'allNode'
+                    localStorage.setItem('ENV_ACTIVE_NODE_TYPE', currentNodeType)
                     this.$router.push({
                         name: 'nodeDetail',
                         params: {

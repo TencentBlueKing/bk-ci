@@ -138,7 +138,11 @@
         },
         methods: {
             toNodeList () {
-                this.$router.push({ name: 'nodeList' })
+                const nodeType = localStorage.getItem('ENV_ACTIVE_NODE_TYPE')
+                this.$router.push({
+                    name: 'nodeList',
+                    params: { nodeType }
+                })
             },
             async requestNodeDetail () {
                 this.loading.isLoading = true

@@ -26,13 +26,13 @@
                     v-for="item in group.groups"
                     :key="item.id"
                     class="node-item"
-                    :class="{ 'active': $route.params.nodeType === item.id }"
+                    :class="{ 'active': activeNodeType === item.id }"
                     @click="handleNodeClick(item.id)"
                 >
                     <span class="node-name">{{ item.name }}</span>
                     <span
                         class="count-tag"
-                        :class="{ 'active': $route.params.nodeType === item.id }"
+                        :class="{ 'active': activeNodeType === item.id }"
                     >{{ item.nodeCount }}</span>
                 </li>
             </ul>
@@ -130,8 +130,8 @@
                             v-for="child in groupItem.tagValues"
                             :key="child.tagValueId"
                             class="node-item sub-node-item"
-                            :class="{ 'active': $route.params.nodeType === String(child.tagValueId) }"
-                            @click="handleNodeClick(child.tagValueId)"
+                            :class="{ 'active': activeNodeType === String(child.tagValueId) }"
+                            @click="handleSubNodeClick(child)"
                         >
                             <span
                                 class="node-name"
@@ -139,7 +139,7 @@
                             >{{ child.tagValueName }}</span>
                             <span
                                 class="count-tag"
-                                :class="{ 'active': $route.params.nodeType === String(child.tagValueId) }"
+                                :class="{ 'active': activeNodeType === String(child.tagValueId) }"
                             >{{ child.nodeCount }}</span>
                         </li>
                     </ul>
@@ -254,6 +254,7 @@
                 isAdd: false,
                 isShowTagChange: false,
                 dialogTopOffset: null,
+                storedActiveNodeType: localStorage.getItem('ENV_ACTIVE_NODE_TYPE') || 'allNode',
                 formData: {
                     tagKeyName: '',
                     canUpdate: 'TRUE',
@@ -293,6 +294,16 @@
             },
             tagTitle () {
                 return this.isAdd ? this.$t('environment.addTag') : this.$t('environment.updateTag')
+            },
+            activeNodeType () {
+                const stored = localStorage.getItem('ENV_ACTIVE_NODE_TYPE') || 'allNode'
+
+                if (this.$route.name === 'nodeList' && this.$route.params.nodeType) {
+                    return this.$route.params.nodeType
+                } else if (this.isTagValueId(stored)) {
+                    return stored
+                }
+                return stored
             }
         },
         watch: {
@@ -307,6 +318,15 @@
                     }
                 },
                 immediate: true
+            },
+            '$route': {
+                immediate: true,
+                deep: true,
+                handler (to, from) {
+                    if (from?.name === 'setNodeTag' && to.name === 'nodeList') {
+                        this.refreshSidebarData()
+                    }
+                }
             }
         },
         async mounted () {
@@ -316,6 +336,18 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            refreshSidebarData () {
+                this.getTagTypeList()
+            },
+            isTagValueId (value) {
+                if (!value) return false
+                const labelGroup = this.nodeGroup.find(g => g.type === 'tag_type')
+                if (!labelGroup) return false
+        
+                return labelGroup.groups.some(group =>
+                    group.tagValues?.some(v => String(v.tagValueId) === String(value))
+                )
+            },
             findGroupByNodeType () {
                 const nodeType = this.$route.params.nodeType
                 if (!nodeType) return null
@@ -375,9 +407,28 @@
                 }
             },
             handleNodeClick (nodeType) {
+                this.storedActiveNodeType = nodeType
+                localStorage.setItem('ENV_ACTIVE_NODE_TYPE', nodeType)
+            
                 this.$router.push({
                     name: 'nodeList',
-                    params: { nodeType },
+                    params: {
+                        ...this.$route.params,
+                        nodeType
+                    },
+                    query: { ...this.$route.query }
+                })
+            },
+            handleSubNodeClick (child) {
+                this.storedActiveNodeType = String(child.tagValueId)
+                localStorage.setItem('ENV_ACTIVE_NODE_TYPE', this.storedActiveNodeType)
+        
+                this.$router.push({
+                    name: 'nodeList',
+                    params: {
+                        ...this.$route.params,
+                        nodeType: this.storedActiveNodeType
+                    },
                     query: { ...this.$route.query }
                 })
             },
