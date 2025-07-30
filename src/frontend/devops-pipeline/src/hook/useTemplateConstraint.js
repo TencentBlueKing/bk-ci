@@ -11,7 +11,7 @@ export default function useTemplateConstraint () {
     function isOverrideTemplate (classify, field) {
         return !!(instanceFromTemplate.value && overrideTemplateGroups.value?.[classify]?.includes(field))
     }
-    function unConstraint (classify, field) {
+    function toggleConstraint (classify, field) {
         return vm.proxy.$store.dispatch('atom/updatePipelineConstraintGroup', {
             classify,
             field
@@ -22,7 +22,7 @@ export default function useTemplateConstraint () {
         vm,
         instanceFromTemplate,
         isOverrideTemplate,
-        unConstraint,
+        toggleConstraint,
         overrideTemplateGroups,
     }
 }

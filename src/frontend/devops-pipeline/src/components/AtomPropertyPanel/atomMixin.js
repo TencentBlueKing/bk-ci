@@ -20,6 +20,9 @@
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import SubParameter from '@/components/AtomFormComponent/SubParameter'
+import Tips from '@/components/AtomFormComponent/Tips'
+import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import NotifyType from '@/components/AtomFormComponent/notifyType'
 import Accordion from '@/components/atomFormField/Accordion'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
@@ -30,7 +33,10 @@ import AtomMarkdown from '@/components/atomFormField/AtomMarkdown'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
 import CodeModeInput from '@/components/atomFormField/CodeModeInput'
 import CodeModeSelector from '@/components/atomFormField/CodeModeSelector'
+import CompositeInput from '@/components/atomFormField/CompositeInput'
+import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
+import EnumButton from '@/components/atomFormField/EnumButton'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import KeyValue from '@/components/atomFormField/KeyValue'
 import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
@@ -41,6 +47,7 @@ import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import RequestSelector from '@/components/atomFormField/RequestSelector'
 import RouteTips from '@/components/atomFormField/RouteTips'
 import Selector from '@/components/atomFormField/Selector'
+import StaffInput from '@/components/atomFormField/StaffInput'
 import SvnpathInput from '@/components/atomFormField/SvnpathInput'
 import UserInput from '@/components/atomFormField/UserInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
@@ -50,13 +57,6 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
 import FormFieldGroup from './FormFieldGroup'
-import StaffInput from '@/components/atomFormField/StaffInput'
-import CompositeInput from '@/components/atomFormField/CompositeInput'
-import ConditionalInputSelector from '@/components/atomFormField/ConditionalInputSelector'
-import EnumButton from '@/components/atomFormField/EnumButton'
-import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
-import Tips from '@/components/AtomFormComponent/Tips'
-import SubParameter from '@/components/AtomFormComponent/SubParameter'
 
 const atomMixin = {
     props: {
@@ -114,7 +114,8 @@ const atomMixin = {
     computed: {
         ...mapGetters('atom', [
             'isThirdPartyContainer',
-            'atomVersionChangedKeys'
+            'atomVersionChangedKeys',
+            'instanceFromTemplate'
         ]),
         ...mapState('atom', [
             'pipelineCommonSetting'
@@ -244,6 +245,9 @@ const atomMixin = {
                 || { maxSize: 16384 }
 
             return componentItem.maxSize
+        },
+        checkCanOverride (obj) {
+            return this.instanceFromTemplate && obj.canOverride && this.element?.isOverride
         }
     }
 }

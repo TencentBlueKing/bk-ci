@@ -515,9 +515,11 @@ export default {
     [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, field }) => {
         const { overrideTemplateField = {} } = state.pipeline
         const constraintList = overrideTemplateField[classify] || []
-        
-        if (!overrideTemplateField?.[classify]?.includes(field)) {
+        const pos = constraintList.indexOf(field)
+        if (pos === -1) {
             constraintList.push(field)
+        } else {
+            constraintList.splice(pos, 1)
         }
         Object.assign(state.pipeline, { overrideTemplateField: {
             ...overrideTemplateField,

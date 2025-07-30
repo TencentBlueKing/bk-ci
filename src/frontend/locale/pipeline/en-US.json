@@ -392,7 +392,10 @@
     "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
     "clearTheValue": "Clear the value and continue running",
     "errorAndHalt": "Error and terminate running",
-    "concurrentTips": "Concurrent execution is not supported for pipelines with the same name in the same project"
+    "toConstraintTips": "Follow the template: Upgrade the instance, automatically follow the template notification configuration.",
+    "unConstraintTips": "Do not follow the template: Upgrade the instance, do not automatically follow the template notification configuration, and modify it as needed.",
+    "constraintConfTips": "This setting is based on the template. If you need to customize it, please ",
+    "unfollow": "Unfollow Template"
   },
   "template": {
     "addTemplate": "New Template",
@@ -1708,6 +1711,7 @@
   "copyAsTemplateInstance": "Copy As Instance",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
   "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
+  "constraint": "Constraint",
   "copy": "Copy",
   "templateName": "Template",
   "templateVersion": "Template Version",
@@ -1910,5 +1914,16 @@
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
   "notGrouped": "Not grouped",
   "noArchivedPipelines": "No archived pipelines for now, no action needed",
-  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving."
+  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
+  "constraintTriggerTips": "Adding triggers is not supported in template constraint mode",
+  "constraintTriggerUnDeleteTips": "Deleting triggers is not supported in template constraint mode",
+  "toConstraintTips": "Switch to follow template: when upgrading the instance, if the template's new version modifies {0}, the instance will automatically follow the template settings, taking the template as the standard.",
+  "unConstraintTips": "Cancel following template: when upgrading the instance, it won't automatically follow template changes to {0}, modify manually as needed.",
+  "toTriggerConstraintTips": "Switch to follow template: when upgrading the instance, if the template's new version enables triggers/modifies timing rules, the instance will automatically follow the template settings, taking the template as the standard.",
+  "unTriggerConstraintTips": "Cancel following template: when upgrading the instance, whether to enable triggers and timing rules will not automatically follow template settings, modify manually as needed.",
+  "paramDefaultValue": "Variable default value",
+  "noticeConf": "Notification configuration",
+  "constraintConfTips": "This setting follows the template. If customization is needed, you can ",
+  "unfollow": "Unfollow template",
+  "triggerStepIdNotSet": "The trigger step ID is not set, please set it in the plugin configuration"
 }

@@ -52,21 +52,21 @@
                     classify="settingGroups"
                     field="label"
                 >
-                    <template v-slot="{ isOverride }">
-                        <div class="layout-label">
+                    <template v-slot:constraint-title>
+                        <div class="pipeline-label-selector-title">
                             <label class="ui-inner-label">
-                                <span class="bk-label-text">{{ $t('settings.label') }} {{ isOverride.toString() }} </span>
+                                {{ $t('settings.label') }}
                             </label>
-                            <label
+                            <span
                                 v-if="editable"
-                                class="ui-inner-label"
-                            >
-                                <span
-                                    @click="toManageLabel"
-                                    class="bk-label-text link-text"
-                                >{{ $t('settings.manageLabel') }}</span>
-                            </label>
+                                @click="toManageLabel"
+                                :class="['pipeline-label-selector-title-manage', {
+                                    'pipeline-label-selector-title-manage-divider': instanceFromTemplate
+                                }]"
+                            >{{ $t('settings.manageLabel') }}</span>
                         </div>
+                    </template>
+                    <template v-slot:constraint-area="{ props: { isOverride } }">
                         <ul
                             class="pipeline-label-selector"
                         >
@@ -81,7 +81,7 @@
                                     > {{ item.name }} </label>
                                     <bk-select
                                         class="sub-label-select"
-                                        :disabled="!editable || !isOverride"
+                                        :disabled="!(editable || isOverride)"
                                         :value="labelValues[index]"
                                         @selected="handleLabelSelect(index, arguments)"
                                         @clear="handleLabelSelect(index, [[]])"
@@ -174,7 +174,8 @@
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList',
-                isTemplate: 'atom/isTemplate'
+                isTemplate: 'atom/isTemplate',
+                instanceFromTemplate: 'atom/instanceFromTemplate'
             }),
             nameLabel () {
                 return this.isTemplate ? this.$t('template.name') : this.$t('pipelineName')
@@ -307,7 +308,6 @@
             }
         }
         .layout-label {
-            width: 560px;
             height: 24px;
             display: flex;
             justify-content: space-between;
@@ -315,6 +315,25 @@
             .link-text {
                 color: #3A84FF;
                 cursor: pointer;
+            }
+        }
+        .pipeline-label-selector-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            align-items: center;
+            font-size: 12px;
+            flex: 1;
+            .pipeline-label-selector-title-manage {
+                color: #3A84FF;
+                cursor: pointer;
+                &.pipeline-label-selector-title-manage-divider:after {
+                    content: '|';
+                    display: inline-block;
+                    width: 1px;
+                    height: 16px;
+                    padding: 0 8px;
+                }
             }
         }
         .pipeline-label-selector {

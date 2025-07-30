@@ -2,8 +2,11 @@
     <constraint-wraper
         classify="settingGroups"
         field="notices"
+        :label="$t('notifyConf')"
+        :show-constraint-area-bg="false"
+        :space-between="false"
     >
-        <template v-slot="{ isOverride }">
+        <template v-slot:constraint-area="{ props: { isOverride, toggleConstraint } }">
             <bk-card
                 v-for="card in notifyList"
                 :key="card.type"
@@ -18,7 +21,7 @@
                 >
                     <span class="notify-title">{{ card.name }}</span>
                     <bk-link
-                        :disabled="!editable || !isOverride"
+                        :disabled="!(editable || isOverride)"
                         theme="primary"
                         icon="bk-icon icon-plus"
                         @click.stop="handleEdit(card.type, -1)"
@@ -36,22 +39,38 @@
                             v-if="editable"
                             class="operate-icons"
                         >
-                            <i
-                                class="devops-icon icon-edit"
-                                @click="handleEdit(card.type, index)"
-                            ></i>
                             <bk-popover
-                                class="setting-more-dot-menu"
+                                :disabled="isOverride"
+                                ref="noticeEditPopover"
+                                transfer
+                            >
+                                <bk-button
+                                    text
+                                    class="devops-icon icon-edit"
+                                    :disabled="!(editable || isOverride)"
+                                    @click="handleEdit(card.type, index)"
+                                ></bk-button>
+                                <div slot="content">
+                                    <span>{{ $t('constraintConfTips') }}</span>
+                                    <a
+                                        class="text-link"
+                                        @click="toggleConstraint($refs.noticeEditPopover?.[index]?.instance)"
+                                    >{{ $t('unfollow') }}</a>
+                                </div>
+                            </bk-popover>
+                            <bk-popover
+                                :disabled="!(editable || isOverride)"
                                 placement="bottom-start"
                                 theme="project-manage-more-dot-menu light"
                                 trigger="click"
                                 :arrow="false"
                                 :distance="0"
                             >
-                                <span class="more-menu-trigger">
+                                <span
+                                    :class="['notices-more-menu-trigger', { 'notices-more-is-disabled': !(editable || isOverride) }]"
+                                >
                                     <i
                                         class="devops-icon icon-more"
-                                        style="display: inline-block;margin-top: 2px;font-size: 18px"
                                     ></i>
                                 </span>
                                 <ul
@@ -327,12 +346,15 @@
                 padding: 24px 24px 8px;
                 margin-bottom: 16px;
                 .operate-icons {
+                    .notices-more-menu-trigger.notices-more-is-disabled {
+                        cursor: not-allowed;
+                        color: #C4C6CC;
+                    }
                     position: absolute;
                     top: 10px;
-                    right: 12px;
+                    right: 10px;
                     display: flex;
                     align-items: center;
-                    grid-gap: 10px;
                     font-size: 16px;
                 }
                 &:nth-child(odd) {

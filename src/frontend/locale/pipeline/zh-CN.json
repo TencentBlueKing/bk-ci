@@ -388,8 +388,7 @@
     "maxConcurrencyPlaceholder": "缺省时以系统设置为准",
     "whenVariableExceedsLength": "流水线变量值超长(>4K)时",
     "clearTheValue": "值清空，继续运行",
-    "errorAndHalt": "报错，终止运行",
-    "concurrentTips": "此设置继承自模版，当模版设置变更时将自动变更。"
+    "errorAndHalt": "报错，终止运行"
   },
   "template": {
     "addTemplate": "新建模板",
@@ -1713,6 +1712,7 @@
   "copyAsTemplateInstance": "复制为模板实例",
   "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载",
   "pipelineConstraintModeTips": "约束模式下，流水线编排随模板更新，不能自由调整",
+  "constraint": "约束",
   "copy": "复制",
   "templateName": "模板",
   "templateVersion": "模版版本",
@@ -1915,5 +1915,17 @@
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
   "notGrouped": "未分组",
   "noArchivedPipelines": "暂无已存档流水线，不用操作",
-  "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。"
+  "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。",
+  "constraintTriggerTips": "模板约束模式不支持添加触发器",
+  "constraintTriggerUnDeleteTips": "模板约束模式不支持删除触发器",
+  "toConstraintTips": "切换为跟随模板：升级实例时，若模版新版本修改了{0}，实例将自动跟随模版设置，以模版为准。",
+  "unConstraintTips": "取消跟随模板：升级实例时，不自动跟随模版变更{0}，按需手动修改。",
+  "toTriggerConstraintTips": "切换为跟随模板：升级实例时，若模版新版本启用触发器/修改定时规则，实例将自动跟随模版设置，以模版为准。",
+  "unTriggerConstraintTips": "取消跟随模板：升级实例时，是否启用和定时规则不自动跟随模版设置，按需手动修改。",
+  "triggerSetting": "触发器设置",
+  "paramDefaultValue": "变量默认值",
+  "noticeConf": "通知配置",
+  "constraintConfTips": "此设置以模板为准。如需自定义，可 ",
+  "unfollow": "取消跟随模板",
+  "triggerStepIdNotSet": "触发器缺少 Step ID ，请修改模版补全 Step ID"
 }

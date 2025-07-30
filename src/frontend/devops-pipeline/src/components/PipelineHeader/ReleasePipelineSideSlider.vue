@@ -379,7 +379,7 @@
                         {{ $t("release") }}
                     </bk-button>
                     <version-diff-entry
-                        v-if="releaseParams.enablePac && !isTemplateInstanceMode"
+                        v-if="!isTemplateInstanceMode"
                         :text="false"
                         theme=""
                         :disabled="releasing"

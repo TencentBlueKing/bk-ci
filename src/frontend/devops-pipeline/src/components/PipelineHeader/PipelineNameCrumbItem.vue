@@ -17,7 +17,7 @@
                     class="template-instance-tag"
                     v-if="instanceFromTemplate"
                 >
-                    约束
+                    {{ $t('constraint') }}
                 </span>
                 <div
                     class="pipeline-pac-indicator"
