@@ -149,7 +149,7 @@ export default {
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
-        if (!pipeline.overrideTemplateField) {
+        if (pipeline && !pipeline.overrideTemplateField) {
             Object.assign(pipeline, { overrideTemplateField: {} })
         }
         if (!state.pipeline || !pipeline) {

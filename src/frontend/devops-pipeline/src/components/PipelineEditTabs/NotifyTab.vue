@@ -36,7 +36,6 @@
                         class="item-content"
                     >
                         <div
-                            v-if="editable"
                             class="operate-icons"
                         >
                             <bk-popover

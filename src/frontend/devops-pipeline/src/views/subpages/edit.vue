@@ -178,6 +178,7 @@
                         label: this.$t('settings.notify'),
                         component: 'NotifyTab',
                         bindData: {
+                            editable: !this.instanceFromTemplate,
                             failSubscriptionList: this.getPipelineSubscriptions('fail'),
                             successSubscriptionList: this.getPipelineSubscriptions('success'),
                             updateSubscription: (name, value) => {
@@ -197,6 +198,7 @@
                         component: 'BaseSettingTab',
                         bindData: {
                             pipelineSetting: this.pipelineSetting,
+                            editable: !this.instanceFromTemplate,
                             updatePipelineSetting: (...args) => {
                                 this.setPipelineEditing(true)
                                 this.updatePipelineSetting(...args)

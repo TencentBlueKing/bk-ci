@@ -15,7 +15,6 @@
             >
                 <vuex-input
                     v-bk-focus
-                    :disabled="!editable"
                     :placeholder="namePlaceholder"
                     name="pipelineName"
                     :value="pipelineSetting.pipelineName"
