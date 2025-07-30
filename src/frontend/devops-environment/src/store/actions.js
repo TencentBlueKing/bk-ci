@@ -26,8 +26,9 @@ const actions = {
     /**
      * 环境列表
      */
-    requestEnvList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}`).then(response => {
+    requestEnvList ({ commit }, { projectId, params }) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}?${query}`).then(response => {
             return response
         })
     },

@@ -334,5 +334,7 @@
     "confirmRemoveData": "Are you sure you want to remove the data?",
     "noDataChangesMade": "No data changes made",
     "bulkSetTagsSuccess": "Bulk set tags successfully",
-    "nodeNum": "nodes"
+    "nodeNum": "nodes",
+    "environmentName": "Environment Name",
+    "environmentType": "Environment Type"
 }

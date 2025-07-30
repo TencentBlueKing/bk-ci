@@ -329,5 +329,7 @@
     "confirmRemoveData": "是否确定移除数据？",
     "noDataChangesMade": "数据未做更改",
     "bulkSetTagsSuccess": "批量设置标签成功",
-    "nodeNum": "个节点"
+    "nodeNum": "个节点",
+    "environmentName": "环境名称",
+    "environmentType": "环境类型"
 }

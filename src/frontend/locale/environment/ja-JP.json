@@ -329,5 +329,7 @@
     "confirmRemoveData": "データを削除してもよろしいですか？",
     "noDataChangesMade": "データに変更はありません",
     "bulkSetTagsSuccess": "一括でタグを設定しました",
-    "nodeNum": "個のノード"
+    "nodeNum": "個のノード",
+    "environmentName": "環境名",
+    "environmentType": "環境タイプ"
 }
