@@ -34,14 +34,24 @@ data:
         mongodb:
           uri: {{ include "bkci.mongodb.turbo.turboUri" . }}
       rabbitmq:
-        virtual-host: {{ include "bkci.rabbitmqVhost" . }}
-        username: {{ include "bkci.rabbitmqUser" . }}
-        password: {{ include "bkci.rabbitmqPassword" . }}
-        addresses: {{ include "bkci.rabbitmqAddr" . }}
-        listener:
-          simple:
-            concurrency: 2
-            acknowledge-mode: auto
+        core:
+          virtual-host: {{ include "bkci.rabbitmqVhost" . }}
+          username: {{ include "bkci.rabbitmqUser" . }}
+          password: {{ include "bkci.rabbitmqPassword" . }}
+          addresses: {{ include "bkci.rabbitmqAddr" . }}
+          listener:
+            simple:
+              concurrency: 2
+              acknowledge-mode: auto
+        extend:
+          virtual-host: {{ include "bkci.rabbitmqVhost" . }}
+          username: {{ include "bkci.rabbitmqUser" . }}
+          password: {{ include "bkci.rabbitmqPassword" . }}
+          addresses: {{ include "bkci.rabbitmqAddr" . }}
+          listener:
+            simple:
+              concurrency: 2
+              acknowledge-mode: auto
       cloud:
         kubernetes:
           discovery:
