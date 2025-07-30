@@ -190,3 +190,5 @@ const val BK_ATOM_SLA_INDEX = "atomSlaIndex" // 插件SLA指标
 const val BK_ATOM_QUALITY_INDEX = "atomQualityIndex" // 插件质量指标
 const val BK_STORE_TRUSTWORTHY_INDEX = "storeTrustworthyIndex" // 可信组件指标
 const val BK_STORE_TRUSTWORTHY_TIPS = "storeTrustworthyTips" // 可信组件，已纳入工具保障组治理范围
+
+const val USE_REPO_COMMITS_FOR_RELEASE_NOTES="useRepoCommitsForReleaseNotes"
