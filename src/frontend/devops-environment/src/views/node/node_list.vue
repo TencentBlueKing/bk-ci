@@ -211,7 +211,8 @@
                 dateTimeRange: [],
                 currentNodeType: '',
                 currentTags: [],
-                tagSearchValue: []
+                tagSearchValue: [],
+                reInstallId: ''
             }
         },
         computed: {
@@ -350,29 +351,25 @@
                 }
             },
             'constructImportForm.installType' (val) {
-                if (!this.isAgent) {
-                    this.constructImportForm.link = ''
-                    this.requestDevCommand()
-                }
+                this.constructImportForm.link = ''
+                this.requestDevCommand()
             },
             'constructImportForm.autoSwitchAccount' (val) {
-                if (!this.isAgent) {
-                    this.constructImportForm.link = ''
-                    this.requestDevCommand()
-                }
+                this.constructImportForm.link = ''
+                this.requestDevCommand()
             },
             'constructImportForm.location' (val) {
-                if (val && !this.isAgent) {
+                if (val) {
                     this.requestDevCommand()
                 }
             },
             'constructImportForm.loginPassword' (val) {
-                if (!val && !this.isAgent) {
+                if (!val) {
                     this.constructImportForm.link = ''
                 }
             },
             'constructImportForm.loginName' (val) {
-                if (!val && !this.isAgent) {
+                if (!val) {
                     this.constructImportForm.link = ''
                 }
             },
@@ -668,6 +665,12 @@
                                         loginPassword
                                     }
                                     : {}
+                            ),
+                            ...(
+                                this.isAgent ? {
+                                    reInstallId: this.reInstallId
+                                }
+                                : {}
                             )
                         }
                     })
@@ -716,6 +719,7 @@
             },
             installAgent (node) {
                 if (['THIRDPARTY'].includes(node.nodeType)) {
+                    this.reInstallId = node.agentHashId
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = this.$t('environment.comfirm')
@@ -729,6 +733,7 @@
              * 构建机导入节点
              */
             async confirmFn () {
+                this.isAgent = false
                 this.dialogLoading.isLoading = false
                 this.dialogLoading.isShow = false
                 this.constructToolConf.isShow = false
