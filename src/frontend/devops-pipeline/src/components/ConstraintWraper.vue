@@ -184,7 +184,6 @@
                 justify-content: space-between;
             }
             .constraint-title-text {
-                font-weight: bold;
                 font-size: 12px;
             }
             .template-constraint-mode-icon {
