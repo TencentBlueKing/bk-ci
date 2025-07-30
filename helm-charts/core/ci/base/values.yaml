@@ -1097,7 +1097,7 @@ turbo:
   image:
     registry: registry-1.docker.io/bkci
     repository: bkci-turbo
-    tag: 0.0.18
+    tag: 0.0.19
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
