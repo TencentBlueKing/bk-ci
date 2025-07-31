@@ -148,9 +148,9 @@
             }
         },
         async mounted () {
-            await this.getEnableDashboard()
             this.updateContainerWidth()
             window.addEventListener('resize', this.updateContainerWidth)
+            await this.getEnableDashboard()
         },
         beforeDestroy () {
             window.removeEventListener('resize', this.updateContainerWidth)
