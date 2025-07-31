@@ -32,6 +32,7 @@ import com.tencent.devops.common.security.pojo.SecurityJwtInfo
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
 import java.net.InetAddress
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -77,8 +78,9 @@ class JwtManager(
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
         val json = if (securityJwtInfo == null) "X-DEVOPS-JWT-TOKEN AUTH" else JsonUtil.toJson(securityJwtInfo)
-        token = Jwts.builder().subject(json).expiration(Date(expireAt))
-            .signWith(privateKey, Jwts.SIG.RS512).compact()
+        token = Jwts.builder()
+            .setSubject(json).setExpiration(Date(expireAt))
+            .signWith(privateKey, SignatureAlgorithm.RS512).compact()
         return token
     }
 
@@ -100,10 +102,9 @@ class JwtManager(
         }
         try {
             val claims = Jwts.parser()
-                .verifyWith(publicKey)
-                .build()
-                .parseSignedClaims(token)
-                .payload
+                .setSigningKey(publicKey)
+                .parseClaimsJws(token)
+                .body
             logger.info("Verify jwt sub:${claims["sub"]}")
             val expireAt = claims.get("exp", Date::class.java)
             if (expireAt != null) {
@@ -129,7 +130,7 @@ class JwtManager(
         if (isSendEnable()) {
             taskRegistrar.addFixedDelayTask(
                 this@JwtManager::refreshToken,
-                Duration.ofMinutes(5L)
+                Duration.ofMinutes(5L).toMillis()
             )
         }
     }
