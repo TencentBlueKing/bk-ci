@@ -537,7 +537,7 @@ class NodeDao {
             if (!projectId.isNullOrBlank()) {
                 dsl.and(PROJECT_ID.eq(projectId))
             }
-            dsl.execute()
+            return dsl.execute()
         }
     }
 
