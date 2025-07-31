@@ -458,8 +458,16 @@
                 }
             },
             async batchDeleteNode () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                    return
+                }
                 this.$bkInfo({
                     title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
+                    extCls: 'info-content',
                     confirmFn: async () => {
                         try {
                             const params = this.selectedNodes.map(i=>i.nodeHashId)
@@ -811,7 +819,7 @@
                 if (['THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
-                    this.constructToolConf.importText = this.$t('environment.comfirm')
+                    this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
                 }
             },
@@ -824,7 +832,7 @@
             async confirmFn () {
                 if (!this.dialogLoading.isLoading) {
                     this.dialogLoading.isLoading = true
-                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.comfirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
+                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.confirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
 
                     let message, theme
 
@@ -1085,5 +1093,11 @@
 
     .batch-menu {
         margin: 0 8px;
+    }
+    
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
+        }
     }
 </style>

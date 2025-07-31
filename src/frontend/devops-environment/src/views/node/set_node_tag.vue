@@ -170,7 +170,7 @@
                                                         </bk-select>
                                                     </div>
                                                     <div class="edit-btn">
-                                                        <span @click="confirmEditColData(colIndex)">{{ $t('environment.comfirm') }}</span>
+                                                        <span @click="confirmEditColData(colIndex)">{{ $t('environment.confirm') }}</span>
                                                         <span @click="cancleEditColData(colIndex)">{{ $t('environment.cancel') }}</span>
                                                     </div>
                                                 </div>
