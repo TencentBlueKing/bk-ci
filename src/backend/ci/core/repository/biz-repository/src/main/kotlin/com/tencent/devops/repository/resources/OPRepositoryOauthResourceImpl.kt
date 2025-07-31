@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,34 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service.oauth2
+package com.tencent.devops.repository.resources
 
-import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.OPRepositoryOauthResource
+import com.tencent.devops.repository.service.OPRepositoryService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * oauth2 token存储服务
- */
-interface IOauth2TokenStoreService {
-    fun support(scmCode: String): Boolean
+@RestResource
+class OPRepositoryOauthResourceImpl @Autowired constructor(
+    private val opRepositoryService: OPRepositoryService
+) : OPRepositoryOauthResource {
+    override fun addGithubOperator(): Result<Boolean> {
+        opRepositoryService.addGithubOperator()
+        return Result(true)
+    }
 
-    fun get(userId: String, scmCode: String): OauthTokenInfo?
-
-    fun store(
-        scmCode: String,
-        oauthTokenInfo: OauthTokenInfo
-    )
-
-    /**
-     * 删除指定用户名的OAUTH信息
-     * @param username 用户名(server端用户名)
-     * @param scmCode 仓库标识
-     * @param userId 用户ID(蓝盾用户ID)
-     */
-    fun delete(userId: String, scmCode: String, username: String)
-
-    /**
-     * 获取目标用户下管理的所有OAUTH信息
-     * @param userId 用户ID(蓝盾用户ID)
-     */
-    fun list(userId: String, scmCode: String): List<OauthTokenInfo>
+    override fun addGitOperator(): Result<Boolean> {
+        opRepositoryService.addGitOperator()
+        return Result(true)
+    }
 }

@@ -213,7 +213,7 @@ class GitOauthService @Autowired constructor(
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
-        val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+        val authParams = JsonUtil.toMap(authParamDecodeJsonStr).toMutableMap()
         logger.info("gitCallback authParams is: $authParams")
         val userId = authParams["userId"] as String
         val gitProjectId = authParams["gitProjectId"] as String?
@@ -224,7 +224,14 @@ class GitOauthService @Autowired constructor(
         val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
         logger.info("save the git access token for user $oauthUserId, operated by $userId")
         saveAccessToken(oauthUserId, token)
-        val redirectUrl = gitService.getRedirectUrl(state)
+        // 保存当前授权用户，用于代码库重置授权时，将OAUTH用户设置为当前授权用户
+        authParams["username"] = oauthUserId
+        val redirectUrl = gitService.getRedirectUrl(
+            URLEncoder.encode(
+                JsonUtil.toJson(authParams, false),
+                "UTF-8"
+            )
+        )
         logger.info("gitCallback redirectUrl is: $redirectUrl")
         return GitOauthCallback(
             gitProjectId = gitProjectId?.toLong(),
@@ -240,20 +247,27 @@ class GitOauthService @Autowired constructor(
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }
+        val accessToken = getAccessToken(userId) ?: return null
+        // 授权代持人
+        val operator = if (accessToken.operator.isNullOrBlank()) {
+            userId
+        } else {
+            accessToken.operator!!
+        }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         val projectUserCheck = authProjectApi.checkProjectUser(
-            user = userId,
+            user = operator,
             serviceCode = repoAuthServiceCode,
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, buildBasicInfo.projectId)
+                params = arrayOf(operator, buildBasicInfo.projectId)
             )
         }
-        return getAccessToken(userId)
+        return accessToken
     }
 
     override fun getAccessToken(userId: String): GitToken? {
@@ -291,7 +305,8 @@ class GitOauthService @Autowired constructor(
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli(),
                 updateTime = LocalDateTime.now().timestampmilli(),
-                operator = it.operator ?: userId
+                operator = it.operator ?: userId,
+                userId = userId
             )
         }
     }
