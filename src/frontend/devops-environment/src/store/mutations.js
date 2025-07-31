@@ -45,6 +45,9 @@ const mutations = {
             extensionMap,
             extensions
         })
+    },
+    setSelectionTagList (state, list) {
+        state.selectionTagList = list
     }
 }
 

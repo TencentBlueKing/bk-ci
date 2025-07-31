@@ -1,5 +1,8 @@
 <template>
-    <div class="environment-container">
+    <div
+        class="environment-container"
+        ref="environmentContainer"
+    >
         <div class="biz-header">
             <p class="environment-tit">
                 <img
@@ -46,7 +49,7 @@
             </span>
         </div>
 
-        <router-view class="manage-main"></router-view>
+        <router-view :container-width="containerWidth"></router-view>
     </div>
 </template>
 
@@ -59,7 +62,8 @@
             return {
                 environmentUrl,
                 isEnableDashboard: false,
-                bizId: 0
+                bizId: 0,
+                containerWidth: 0,
             }
         },
 
@@ -91,7 +95,8 @@
                     createEnv: 'envList',
                     envDetail: 'envList',
                     nodeDetail: 'nodeList',
-                    extPage: 'extPage'
+                    extPage: 'extPage',
+                    setNodeTag: 'nodeList',
                 }
                 
                 return routeMap[this.$route.name] || 'envList'
@@ -144,11 +149,21 @@
         },
         async mounted () {
             await this.getEnableDashboard()
+            this.updateContainerWidth()
+            window.addEventListener('resize', this.updateContainerWidth)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateContainerWidth)
         },
         methods: {
             ...mapActions('environment', [
                 'getEnvironmentExtensions'
             ]),
+            updateContainerWidth () {
+                if (this.$refs.environmentContainer) {
+                    this.containerWidth = this.$refs.environmentContainer.clientWidth
+                }
+            },
             async getEnableDashboard () {
                 try {
                     const res = await this.$store.dispatch('environment/checkEnableDashboard', {
@@ -192,7 +207,7 @@
 .environment-container {
     width: 100%;
     box-sizing: border-box;
-    min-height: calc(100vh - 50px);
+    min-height: calc(100% - 210px);
     overflow: hidden;
     .biz-header {
         position: relative;

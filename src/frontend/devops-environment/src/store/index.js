@@ -31,7 +31,8 @@ const store = {
         nodeTagList: [],
         nodeCount: {},
         extensionMap: {},
-        extensions: []
+        extensions: [],
+        selectionTagList: []
     },
     getters: {
         asideNavBarExtIds: (_, getters, rootState, rootGetters) => {

@@ -6,14 +6,16 @@
         :border="false"
         :min="240"
         :max="360"
-        class="resize"
+        ext-cls="resize"
         @collapse-change="handleCollapseChange"
         @after-resize="afterResize"
     >
         <GroupAside slot="aside" />
-        <div slot="main">
-            <router-view></router-view>
-        </div>
+        <router-view
+            slot="main"
+            :style="{ width: `${mainWidth}px` }"
+            :main-width="mainWidth"
+        ></router-view>
     </bk-resize-layout>
 </template>
 
@@ -28,9 +30,20 @@
         components: {
             GroupAside
         },
+        props: {
+            containerWidth: Number
+        },
+        data (){
+            return {
+                isCollapsible: false
+            }
+        },
         computed: {
             initialDivide () {
                 return Number(localStorage.getItem(NODE_LIST_ASIDE_WIDTH_CACHE)) || 240
+            },
+            mainWidth () {
+                return this.isCollapsible ? this.containerWidth : this.containerWidth - this.initialDivide
             }
         },
         mounted () {
@@ -40,6 +53,7 @@
         },
         methods: {
             handleCollapseChange (val) {
+                this.isCollapsible = val
                 localStorage.setItem(NODE_LIST_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
             },
             afterResize (width) {
@@ -51,7 +65,7 @@
 
 <style lang="scss" scoped>
 .resize {
-  width: 100vw;
-  height: calc(100vh - 98px);
+  height: calc(100% - 48px);
+  overflow: hidden;
 }
 </style>
