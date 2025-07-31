@@ -147,13 +147,12 @@
             :connect-node-detail="connectNodeDetail"
             :gateway-list="gatewayList"
             :loading="dialogLoading"
-            :requet-construct-node="requetConstructNode"
             :has-permission="hasPermission"
             :empty-tips-config="emptyTipsConfig"
             :confirm-fn="confirmFn"
-            :cancel-fn="cancelFn"
             :is-agent="isAgent"
             :node-ip="nodeIp"
+            :request-dev-command="requestDevCommand"
         ></third-construct>
     </div>
 </template>
@@ -222,7 +221,11 @@
                 constructImportForm: {
                     model: 'Linux',
                     location: '',
-                    link: ''
+                    link: '',
+                    loginName: '',
+                    loginPassword: '',
+                    installType: 'SERVICE',
+                    autoSwitchAccount: true
                 },
                 // 构建机信息
                 connectNodeDetail: {
@@ -376,6 +379,9 @@
             },
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
+            },
+            installModeAsService () {
+                return this.constructImportForm.installType === 'SERVICE'
             }
         },
         watch: {
@@ -401,9 +407,31 @@
                     this.requestGateway()
                 }
             },
+            'constructImportForm.installType' (val) {
+                if (!this.isAgent) {
+                    this.constructImportForm.link = ''
+                    this.requestDevCommand()
+                }
+            },
+            'constructImportForm.autoSwitchAccount' (val) {
+                if (!this.isAgent) {
+                    this.constructImportForm.link = ''
+                    this.requestDevCommand()
+                }
+            },
             'constructImportForm.location' (val) {
                 if (val && !this.isAgent) {
                     this.requestDevCommand()
+                }
+            },
+            'constructImportForm.loginPassword' (val) {
+                if (!val && !this.isAgent) {
+                    this.constructImportForm.link = ''
+                }
+            },
+            'constructImportForm.loginName' (val) {
+                if (!val && !this.isAgent) {
+                    this.constructImportForm.link = ''
                 }
             },
             searchValue (val) {
@@ -645,31 +673,7 @@
             updataCurEditNodeItem (item) {
                 this.curEditNodeItem = item
             },
-            /**
-             * 构建机信息
-             */
-            async requetConstructNode () {
-                this.dialogLoading.isLoading = true
-
-                try {
-                    const res = await this.$store.dispatch('environment/requetConstructNode', {
-                        projectId: this.projectId,
-                        agentId: this.constructImportForm.agentId
-                    })
-
-                    this.connectNodeDetail = Object.assign({}, res)
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    this.dialogLoading.isLoading = false
-                }
-            },
+            
             /**
              * 是否启动了构建机
              */
@@ -718,15 +722,11 @@
              */
             async requestGateway (gateway, node) {
                 try {
-                    const res = await this.$store.dispatch('environment/requestGateway', {
+                    this.gatewayList = await this.$store.dispatch('environment/requestGateway', {
                         projectId: this.projectId,
                         model: this.constructImportForm.model
                     })
-
-                    this.gatewayList.splice(0, this.gatewayList.length)
-                    res.forEach(item => {
-                        this.gatewayList.push(item)
-                    })
+                    this.constructImportForm.location = this.gatewayList[0]?.zoneName
 
                     if (this.gatewayList.length && gateway && gateway === 'shenzhen') {
                         this.constructImportForm.location = 'shenzhen'
@@ -758,20 +758,40 @@
              * 生成链接
              */
             async requestDevCommand () {
-                if (!this.constructImportForm.location && this.gatewayList.length) return
-
+                const { location, model, loginName, loginPassword, autoSwitchAccount, installType } = this.constructImportForm
+                if (!location && this.gatewayList.length) return
+                // 当OS为Windows时，生成安装命令的条件
+                // 1. 如果 installType 为 SERVICE, autoSwitchAccount 为 true 时，需填写 loginName, loginPassword 才可获取生成安装命令
+                // 2. 如果 installType 为 SERVICE, autoSwitchAccount 为 false 时, 直接获取生成安装命令
+                // 3. 如果 installType 为 TASK 时, 直接获取生成安装命令
+                if (model === 'WINDOWS') {
+                    if (this.installModeAsService && autoSwitchAccount && (!loginName || !loginPassword)) return
+                }
                 this.dialogLoading.isLoading = true
 
                 try {
                     const res = await this.$store.dispatch('environment/requestDevCommand', {
                         projectId: this.projectId,
-                        model: this.constructImportForm.model,
-                        zoneName: this.constructImportForm.location || undefined
+                        model: model,
+                        params: {
+                            zoneName: location,
+                            ...(
+                                model === 'WINDOWS' ? {
+                                    installType,
+                                } : {}
+                            ),
+                            ...(
+                                model === 'WINDOWS' && autoSwitchAccount && this.installModeAsService
+                                    ? {
+                                        loginName,
+                                        loginPassword
+                                    }
+                                    : {}
+                            )
+                        }
                     })
 
-                    this.constructImportForm.link = res.link
-                    this.constructImportForm.agentId = res.agentId
-                    this.requetConstructNode()
+                    this.constructImportForm.link = res
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -797,11 +817,9 @@
                     if (res.os === 'WINDOWS' && res.agentUrl) {
                         this.constructImportForm.link = res.agentUrl
                         this.constructImportForm.agentId = res.agentId
-                        this.requetConstructNode()
                     } else if (['MACOS', 'LINUX'].includes(res.os) && res.agentScript) {
                         this.constructImportForm.link = res.agentScript
                         this.constructImportForm.agentId = res.agentId
-                        this.requetConstructNode()
                     } else {
                         this.requestDevCommand()
                     }
@@ -830,53 +848,17 @@
              * 构建机导入节点
              */
             async confirmFn () {
-                if (!this.dialogLoading.isLoading) {
-                    this.dialogLoading.isLoading = true
-                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.confirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
-
-                    let message, theme
-
-                    try {
-                        await this.$store.dispatch('environment/importConstructNode', {
-                            projectId: this.projectId,
-                            agentId: this.constructImportForm.agentId
-                        })
-
-                        message = this.constructToolConf.importText === `${this.$t('environment.submitting')}...` ? this.$t('environment.successfullySubmited') : this.$t('environment.successfullyImported')
-                        theme = 'success'
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-                        this.constructToolConf.isShow = false
-                    } catch (e) {
-                        this.handleError(
-                            e,
-                            {
-                                projectId: this.projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
-                                resourceCode: this.projectId,
-                                action: NODE_RESOURCE_ACTION.CREATE
-                            }
-                        )
-                    } finally {
-                        this.dialogLoading.isLoading = false
-                        this.dialogLoading.isShow = false
-                        this.constructToolConf.importText = this.$t('environment.import')
-                        this.requestList()
-                        await this.requestGetCounts(this.projectId)
-                    }
-                }
-            },
-            cancelFn () {
-                if (!this.dialogLoading.isShow) {
-                    this.isAgent = false
-                    this.constructToolConf.isShow = false
-                    this.dialogLoading.isShow = false
-                    this.constructImportForm.link = ''
-                    this.constructImportForm.location = ''
-                    this.constructToolConf.importText = this.$t('environment.import')
-                }
+                this.dialogLoading.isLoading = false
+                this.dialogLoading.isShow = false
+                this.constructToolConf.isShow = false
+                this.constructImportForm.link = ''
+                this.constructImportForm.loginName = ''
+                this.constructImportForm.loginPassword = ''
+                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.installType = 'SERVICE'
+                this.constructToolConf.importText = this.$t('environment.import')
+                this.requestList()
+                await this.requestGetCounts(this.projectId)
             },
             handleSelectedChange (selection) {
                 this.selectedNodes = selection
