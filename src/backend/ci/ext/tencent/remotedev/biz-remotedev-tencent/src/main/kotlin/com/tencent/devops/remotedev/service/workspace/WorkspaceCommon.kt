@@ -264,8 +264,7 @@ class WorkspaceCommon @Autowired constructor(
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
-                startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
-                return WorkspaceStatus.RUNNING
+                return startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
             }
 
             workspaceInfo.status == EnvStatusEnum.startFailed -> {
@@ -313,6 +312,10 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.expanding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXPANDING)
                 return WorkspaceStatus.EXPANDING
+            }
+            workspaceInfo.status == EnvStatusEnum.operating -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.OPERATING)
+                return WorkspaceStatus.OPERATING
             }
 
             else -> logger.warn(

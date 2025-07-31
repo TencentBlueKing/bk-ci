@@ -9,6 +9,7 @@ interface PipelineOutputService {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        option: PipelineOutputSearchOption?
+        option: PipelineOutputSearchOption?,
+        archiveFlag: Boolean? = false
     ): List<PipelineOutput>
 }

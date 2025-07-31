@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,9 +27,12 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.auth.api.AuthPlatformApi
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.project.dao.FavoriteDao
@@ -49,7 +52,10 @@ class SampleUserProjectServiceServiceImpl(
     redisOperation: RedisOperation,
     authProjectApi: AuthProjectApi,
     pipelineAuthServiceCode: PipelineAuthServiceCode,
-    apiPlatformApi: AuthPlatformApi
+    apiPlatformApi: AuthPlatformApi,
+    authPermissionApi: AuthPermissionApi,
+    private val tokenService: ClientTokenService,
+    private val client: Client
 ) : AbsUserProjectServiceServiceImpl(
     dslContext,
     serviceTypeDao,
@@ -59,5 +65,8 @@ class SampleUserProjectServiceServiceImpl(
     redisOperation,
     authProjectApi,
     pipelineAuthServiceCode,
-    apiPlatformApi
+    apiPlatformApi,
+    authPermissionApi,
+    tokenService,
+    client
 )

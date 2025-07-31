@@ -1,5 +1,5 @@
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
--- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- Copyright (C) 2019 Tencent.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
 -- A copy of the MIT License is included in this file.
 -- Terms of the MIT License:
@@ -39,7 +39,12 @@ function _M:get_tag(ns_config)
     end
 
     -- auto集群项目强制路由
-    if x_gateway_tag ~= nil and (string.find(devops_project_id, "^CODE_") or string.find(devops_project_id, "^CUSTOMPROJ_") or string.find(devops_project_id, "^GITHUB_") or string.find(devops_project_id, "^CLOSED_SOURCE_")) then
+    if x_gateway_tag ~= nil and gateway_project ~= 'codecc' and (
+            string.find(devops_project_id, "^CODE_")
+            or string.find(devops_project_id, "^CUSTOMPROJ_")
+            or string.find(devops_project_id, "^GITHUB_")
+            or string.find(devops_project_id, "^CLOSED_SOURCE_")
+        ) then
         x_gateway_tag = "kubernetes-auto"
     end
 

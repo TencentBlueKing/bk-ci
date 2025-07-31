@@ -137,7 +137,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
         val updatedSearch = search.apply {
-            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING) ?: listOf(WorkspaceStatus.DISTRIBUTING)
+            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
+                ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
@@ -225,17 +226,19 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun projectAccessDevicePermissions(
         userId: String,
-        macAddress: String
+        macAddress: String,
+        projectId: String?
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
-        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress, projectId))
     }
 
     override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceService.checkMoa2fa(userId, workspaceName))
     }
 
-    override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
-        return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
+    @AuditEntry(actionId = TencentActionId.CGS_MOA_2FA)
+    override fun createMoa2faRequest(userId: String, workspaceName: String?, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
+        return Result(workspaceService.createMoa2faRequest(userId = userId, workspaceName, moa2faReqData = moa2faReqData))
     }
 
     override fun verifyMoa2faResult(

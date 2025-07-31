@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -66,11 +66,12 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             } else {
                 EnvUtils.parseEnv(includeUsers!!.joinToString(","), variables)
             }
-            if (branchName == null) {
-                return null
-            }
             params.block = isBlock(element)
-            params.branchName = EnvUtils.parseEnv(branchName!!, variables)
+            params.branchName = if (!branchName.isNullOrBlank()) {
+                EnvUtils.parseEnv(branchName!!, variables)
+            } else {
+                ""
+            }
             params.version = element.version
             when {
                 // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件

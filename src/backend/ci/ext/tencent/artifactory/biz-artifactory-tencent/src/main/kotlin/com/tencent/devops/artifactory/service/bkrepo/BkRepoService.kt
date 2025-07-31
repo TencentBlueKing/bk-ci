@@ -75,17 +75,17 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 @Suppress("ALL")
 @Service
@@ -181,7 +181,7 @@ class BkRepoService @Autowired constructor(
     ) {
         logger.info(
             "setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-                    "argPath: $argPath, properties: $properties"
+                "argPath: $argPath, properties: $properties"
         )
         if (properties.isEmpty()) {
             logger.info("property empty")
@@ -199,7 +199,7 @@ class BkRepoService @Autowired constructor(
     ): List<Property> {
         logger.info(
             "getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
-                    " path: $path"
+                " path: $path"
         )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val matadataMap =
@@ -231,8 +231,8 @@ class BkRepoService @Autowired constructor(
     ): List<FileDetail> {
         logger.info(
             "getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
-                    "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
-                    "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo"
+                "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo"
         )
 
         var targetProjectId = projectId
@@ -272,7 +272,7 @@ class BkRepoService @Autowired constructor(
         ) {
             throw PermissionForbiddenException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    messageCode = ArtifactoryMessageCode.HANDOVER_TO_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId)
                 )
             )
@@ -284,7 +284,7 @@ class BkRepoService @Autowired constructor(
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    messageCode = ArtifactoryMessageCode.HANDOVER_TO_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId, targetPipelineId)
                 )
             )
@@ -340,7 +340,7 @@ class BkRepoService @Autowired constructor(
     ): List<AppFileInfo> {
         logger.info(
             "getBuildFileList, userId: $userId, projectId: $projectId," +
-                    " pipelineId: $pipelineId, buildId: $buildId"
+                " pipelineId: $pipelineId, buildId: $buildId"
         )
         pipelineService.validatePermission(
             userId,
@@ -361,6 +361,7 @@ class BkRepoService @Autowired constructor(
                 repoNames = listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
                 fileNames = listOf(),
                 metadata = mapOf(ARCHIVE_PROPS_PIPELINE_ID to pipelineId, ARCHIVE_PROPS_BUILD_ID to buildId),
+                qualityMetadata = emptyList(),
                 page = 0,
                 pageSize = 10000
             ).records
@@ -443,7 +444,8 @@ class BkRepoService @Autowired constructor(
                     version = it.appVersion,
                     logoUrl = UrlUtil.toOuterPhotoAddr(logoUrl),
                     bundleIdentifier = bundleIdentifier,
-                    md5 = it.md5
+                    md5 = it.md5,
+                    nodeMetadata = it.nodeMetadata?.filter { metadata -> metadata.color != null }
                 )
             }
         } finally {
@@ -539,7 +541,7 @@ class BkRepoService @Autowired constructor(
 
                     logger.info(
                         "pipelineHasPermissionList.contains(pipelineId):" +
-                                " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}"
+                            " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}"
                     )
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
@@ -603,7 +605,8 @@ class BkRepoService @Autowired constructor(
                 properties = properties,
                 appVersion = appVersion,
                 shortUrl = shortUrl,
-                md5 = nodeInfo.md5
+                md5 = nodeInfo.md5,
+                nodeMetadata = nodeInfo.nodeMetadata
             )
         }
     }
@@ -629,7 +632,8 @@ class BkRepoService @Autowired constructor(
                 artifactoryType = RepoUtils.getTypeByRepo(nodeInfo.repoName),
                 properties = properties,
                 appVersion = appVersion,
-                md5 = nodeInfo.md5
+                md5 = nodeInfo.md5,
+                nodeMetadata = nodeInfo.nodeMetadata
             )
         }
     }
@@ -667,7 +671,8 @@ class BkRepoService @Autowired constructor(
                 ).timestamp(),
                 artifactoryType = ArtifactoryType.IMAGE,
                 properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) },
-                registry = dockerRegistry
+                registry = dockerRegistry,
+                nodeMetadata = nodeMetadata
             )
         }
     }
@@ -815,7 +820,7 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info(
             "externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
-                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
+                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
         )
         val shareUri = StringUtil.repoPathUrlEncode(
             bkRepoClient.createShareUri(

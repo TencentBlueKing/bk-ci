@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,14 +40,15 @@ object PageUtil {
         return SQLLimit((oneOffsetPage - 1) * defaultPageSize, defaultPageSize)
     }
 
-    fun convertPageSizeToSQLMAXLimit(page: Int, pageSize: Int): SQLLimit {
+    fun convertPageSizeToSQLMAXLimit(page: Int, pageSize: Int, maxPageSize: Int? = null): SQLLimit {
         val oneOffsetPage = if (page <= 0) DEFAULT_PAGE else page
+        val maxSize = maxPageSize ?: MAX_PAGE_SIZE
         val defaultPageSize = when {
             pageSize <= 0 -> {
                 DEFAULT_PAGE_SIZE
             }
-            pageSize > MAX_PAGE_SIZE -> {
-                MAX_PAGE_SIZE
+            pageSize > maxSize -> {
+                maxSize
             }
             else -> {
                 pageSize

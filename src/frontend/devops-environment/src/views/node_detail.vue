@@ -90,11 +90,11 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import { bus } from '@/utils/bus'
-    import { copyText } from '@/utils/util'
     import nodeDetailTab from '@/components/devops/node-detail-tab'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
+    import { bus } from '@/utils/bus'
+    import { copyText } from '@/utils/util'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
@@ -244,7 +244,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import './../scss/conf';
     .node-detail-wrapper {
         height: 100%;
@@ -264,6 +264,7 @@
                 color: $iconPrimaryColor;
                 font-size: 16px;
                 font-weight: 600;
+                vertical-align: middle;
             }
             .display-name-input {
                 width: 300px;
@@ -321,6 +322,11 @@
                 position: relative;
                 top: 2px;
             }
+        }
+        .sub-view-port {
+            height: calc(100vh - 158px);
+            overflow: auto;
+            padding: 20px;
         }
     }
 </style>

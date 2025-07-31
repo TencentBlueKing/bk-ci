@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,12 +35,14 @@ export const LOG_API_URL_PREFIX = 'log/api'
 export const DEVCLOUD_API_URL_PREFIX = 'dispatch-devcloud/api'
 export const AUTH_URL_PREFIX = 'auth/api'
 export const VERSION_URL_PREFIX = 'version/api'
+export const MERTICS_URL_PREFIX = 'metrics/api'
 
 export const ALL_PIPELINE_VIEW_ID = 'allPipeline'
 export const MY_PIPELINE_VIEW_ID = 'myPipeline'
 export const COLLECT_VIEW_ID_NAME = 'myCollect'
 export const COLLECT_VIEW_ID = 'collect'
 export const DELETED_VIEW_ID = 'recycleBin'
+export const ARCHIVE_VIEW_ID = 'archiveLibrary'
 export const UNCLASSIFIED_PIPELINE_VIEW_ID = 'unclassified'
 export const RECENT_USED_VIEW_ID = 'recentUse'
 

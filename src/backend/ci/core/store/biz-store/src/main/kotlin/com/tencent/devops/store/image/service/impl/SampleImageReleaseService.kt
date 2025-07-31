@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -41,15 +41,20 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.image.service.ImageReleaseService
+import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 
 class SampleImageReleaseService : ImageReleaseService() {
 
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         // 开源版不审核直接发布
         return ImageStatusEnum.RELEASED.status.toByte()
+    }
+
+    override fun handleImageExtend(userId: String, imageCode: String, marketImageRelRequest: MarketImageRelRequest) {
+        return
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

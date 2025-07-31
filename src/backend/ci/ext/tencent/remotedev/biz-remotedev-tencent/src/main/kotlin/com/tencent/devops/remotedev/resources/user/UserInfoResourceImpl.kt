@@ -50,7 +50,8 @@ class UserInfoResourceImpl @Autowired constructor(
                     userId = userId,
                     deviceId = deviceId,
                     token = token
-                   )) {
+            )
+            ) {
                 return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
             }
         }
@@ -61,8 +62,8 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(userInfoCertService.faceRecognition(data))
     }
 
-    override fun asyncAuthCheck(data: UserInfoAuthCheck): Result<Boolean> {
-        userInfoCertService.asyncAuthCheck(data)
+    override fun asyncAuthCheck(userId: String, data: UserInfoAuthCheck): Result<Boolean> {
+        userInfoCertService.asyncAuthCheck(userId, data)
         return Result(true)
     }
 

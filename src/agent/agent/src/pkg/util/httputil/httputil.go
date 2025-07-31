@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,12 +32,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
+	"strconv"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -61,13 +67,16 @@ type HttpResult struct {
 	IgnoreDupLog bool
 }
 
-func IsSuccess(status int) bool {
-	return status >= 200 && status < 400
+var client = &http.Client{}
+
+// newClient 替换客户端，重置连接池
+func newClient() {
+	client = &http.Client{}
 }
 
 func NewHttpClient() *HttpClient {
 	return &HttpClient{
-		client:    http.DefaultClient,
+		client:    client,
 		header:    make(map[string]string),
 		formValue: make(map[string]string),
 	}
@@ -173,8 +182,15 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	req.Form = value
 	resp, err := r.client.Do(req)
 	if err != nil {
+		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
+			logs.Warn("http request time out, replace client")
+			newClient()
+			checkTimeOutExit(err)
+		}
 		result.Error = err
 		return result
+	} else {
+		checkTimeOutExit(nil)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
@@ -196,4 +212,18 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	checkHttpStatusErr(resp.StatusCode, body)
 
 	return result
+}
+
+// checkTimeOutExit 检查是否因为超时直接退出
+func checkTimeOutExit(err error) {
+	enableExitTimeStr, ok := config.FetchEnv(constant.DevopsAgentTimeoutExitTime)
+	if !ok {
+		return
+	}
+	enableExitTime, intErr := strconv.ParseInt(enableExitTimeStr, 10, 32)
+	if intErr != nil {
+		logs.Warnf("enableExitTimeStr %s convert timeout err to int", enableExitTimeStr)
+		return
+	}
+	exitcode.CheckTimeoutError(err, int32(enableExitTime))
 }

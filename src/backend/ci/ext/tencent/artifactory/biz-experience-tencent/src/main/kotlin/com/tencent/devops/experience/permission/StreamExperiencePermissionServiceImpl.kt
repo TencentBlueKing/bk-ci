@@ -27,7 +27,9 @@
 
 package com.tencent.devops.experience.permission
 
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -186,6 +188,12 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
     ): List<Long> = groupRecordIds
 
     override fun deleteExperienceResource(projectId: String, experienceId: Long) = Unit
+    override fun getApplyPermissionInformation(
+        user: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        artifactoryPath: String
+    ): AuthApplyRedirectInfoVo? = null
 
     private fun checkGroupPermission(
         userId: String,

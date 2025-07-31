@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImp
 import com.tencent.devops.common.web.service.impl.BkApiHandleOpenAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandlePipelineAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
+import com.tencent.devops.common.web.service.impl.BkApiHandleProjectMemberCheckServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
 object BkApiHandleFactory {
@@ -71,7 +72,12 @@ object BkApiHandleFactory {
                     bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }
-
+            BkApiHandleType.PROJECT_MEMBER_CHECK -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleProjectMemberCheckServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
             else -> {}
         }
         return bkApiHandleService

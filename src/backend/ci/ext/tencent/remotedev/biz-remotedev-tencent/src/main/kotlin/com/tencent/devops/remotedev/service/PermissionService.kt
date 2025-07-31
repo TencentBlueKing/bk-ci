@@ -134,7 +134,7 @@ class PermissionService @Autowired constructor(
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(projectId: String): List<String> {
-                    return managers(projectId).ifEmpty { managersOld(projectId) }
+                    return managers(projectId)
                 }
             }
         )
@@ -147,14 +147,14 @@ class PermissionService @Autowired constructor(
         if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need owner permission to access workspace $workspaceName")
+                params = arrayOf("We're sorry but you don't have owner permission to access workspace $workspaceName")
             )
         }
 
         if (ownerType.projectUse() && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
@@ -197,14 +197,14 @@ class PermissionService @Autowired constructor(
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need viewer permission to access workspace $workspaceName")
+                params = arrayOf("We're sorry but you don't have viewer permission to access workspace $workspaceName")
             )
         }
 
         if (!checkUserVisitPermission(userId, projectId) && !redisCache.checkExpertSupportUser(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
@@ -218,13 +218,13 @@ class PermissionService @Autowired constructor(
         if (!checkProjectManager) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managers = managers(projectId).ifEmpty { managersOld(projectId) }
+        val managers = managers(projectId)
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = checkTokenService.getSystemToken(),
             userId = userId,
@@ -234,14 +234,13 @@ class PermissionService @Autowired constructor(
         if (!checkProjectManager && userId !in managers) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
 
-    @Deprecated("use managers instead, 暂时保留")
-    fun managersOld(projectId: String): List<String> {
-        logger.warn("use managersOld instead, 暂时保留|$projectId")
+    // 获取云研发审批管理员
+    fun auditManagers(projectId: String): List<String> {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -61,6 +61,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -88,6 +90,7 @@ class ReportArchiveTask : ITask() {
             type = TokenType.UPLOAD,
             expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
         )
+        var compressed = false
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
@@ -131,7 +134,8 @@ class ReportArchiveTask : ITask() {
             }
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
-            val allFileList = recursiveGetFiles(fileDir)
+            val allFileList = getAllFiles(fileDir, buildVariables.pipelineId)
+            compressed = allFileList.size == 1 && allFileList.first().name == COMPRESS_REPORT_FILE_NAME
             if (allFileList.size > 10) {
                 val executors = Executors.newFixedThreadPool(10)
                 allFileList.forEach {
@@ -183,7 +187,8 @@ class ReportArchiveTask : ITask() {
             name = reportNameParam,
             reportType = reportType,
             reportEmail = reportEmail,
-            token = token
+            token = token,
+            compressed = compressed
         )
     }
 
@@ -206,6 +211,51 @@ class ReportArchiveTask : ITask() {
         }
     }
 
+    private fun getAllFiles(dir: File, pipelineId: String): List<File> {
+        val config = api.getPluginConfig().data!!
+        if (config.enableCompress || config.enableCompressPipelines.contains(pipelineId)) {
+            return compress(dir, config.compressThreshold)
+        }
+        return recursiveGetFiles(dir)
+    }
+
+    private fun compress(dir: File, compressThreshold: Long): List<File> {
+        val files = recursiveGetFiles(dir)
+        if (files.size < compressThreshold) {
+            return files
+        }
+        return try {
+            compressDir(dir, files)
+        } catch (e: Exception) {
+            logger.warn("compress failed: ", e)
+            files
+        }
+    }
+
+    private fun compressDir(
+        dir: File,
+        files: List<File>
+    ): List<File> {
+        val zipFile = File(dir, COMPRESS_REPORT_FILE_NAME)
+        zipFile.outputStream().use { outputStream ->
+            ZipOutputStream(outputStream).use { zipOut ->
+                files.filter { it.isFile }.forEach { file ->
+                    addFileToZip(dir, file, zipOut)
+                }
+            }
+        }
+        return listOf(zipFile)
+    }
+
+    private fun addFileToZip(dir: File, file: File, zipOut: ZipOutputStream) {
+        val relativePath = dir.toPath().relativize(file.toPath()).toString()
+        zipOut.putNextEntry(ZipEntry(relativePath))
+        file.inputStream().use { inputStream ->
+            inputStream.copyTo(zipOut)
+        }
+        zipOut.closeEntry()
+    }
+
     private fun recursiveGetFiles(file: File): List<File> {
         val fileList = mutableListOf<File>()
         file.listFiles()?.forEach {
@@ -226,5 +276,9 @@ class ReportArchiveTask : ITask() {
         } else {
             File(workspace, filePath)
         }
+    }
+
+    companion object {
+        const val COMPRESS_REPORT_FILE_NAME = "bkrepo_compressed_report.zip"
     }
 }

@@ -98,7 +98,7 @@ class CloneWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to clone $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
 
@@ -146,8 +146,12 @@ class CloneWorkspaceHandler @Autowired constructor(
 
             val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             // 发起克隆的管理员也创建CDS后台用户
-            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .createStartCloudUser(userId, appName)
+            kotlin.runCatching {
+                SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                    .createStartCloudUser(userId, appName)
+            }.onFailure {
+                logger.warn("create user failed.|${it.message}")
+            }
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -206,7 +210,7 @@ class CloneWorkspaceHandler @Autowired constructor(
         workspaceName: String,
         rebuildReq: WorkspaceCloneReq
     ): TaskResp {
-        logger.info("$userId clone project $projectId workspace $workspaceName|$rebuildReq")
+        logger.info("cloneWorkspaceWithTask $userId clone project $projectId workspace $workspaceName|$rebuildReq")
         val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -221,7 +225,7 @@ class CloneWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to clone $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
 
@@ -268,8 +272,15 @@ class CloneWorkspaceHandler @Autowired constructor(
             )
 
             val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+            // 发起克隆的管理员也创建CDS后台用户
+            kotlin.runCatching {
+                SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                    .createStartCloudUser(userId, appName)
+            }.onFailure {
+                logger.warn("create user failed.|${it.message}")
+            }
             // 需要生成一个新的 pipelineId 进行操作
-            val orderId = "${appName}_${projectId}_${UUIDUtil.generate().takeLast(16)}"
+            val orderId = "${projectId}_${UUIDUtil.generate().takeLast(16)}"
             val resp = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.START).cloneWorkspaceVm(
                 userId = userId,
                 workspaceName = workspaceName,

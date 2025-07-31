@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -91,7 +93,8 @@ class PipelineOperationLogService @Autowired constructor(
         pipelineId: String,
         creator: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        archiveFlag: Boolean? = false
     ): Page<PipelineOperationDetail> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
@@ -99,14 +102,15 @@ class PipelineOperationLogService @Autowired constructor(
         if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val opCount = pipelineOperationLogDao.getCountByPipeline(
-            dslContext = dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = if (creator.isNullOrBlank()) null else creator
         )
         val opList = pipelineOperationLogDao.getListByPipeline(
-            dslContext = dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = if (creator.isNullOrBlank()) null else creator,
@@ -117,7 +121,7 @@ class PipelineOperationLogService @Autowired constructor(
         opList.forEach { versions.add(it.version) }
         val versionMap = mutableMapOf<Int, PipelineVersionSimple>()
         pipelineResourceVersionDao.listPipelineVersionInList(
-            dslContext = dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             versions = versions

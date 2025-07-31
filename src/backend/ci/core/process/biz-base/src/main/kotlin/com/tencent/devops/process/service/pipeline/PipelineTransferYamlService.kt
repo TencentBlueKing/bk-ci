@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
@@ -46,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
@@ -116,7 +118,8 @@ class PipelineTransferYamlService @Autowired constructor(
         actionType: TransferActionType,
         data: TransferBody,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
-        editPermission: Boolean? = null
+        editPermission: Boolean? = null,
+        archiveFlag: Boolean? = false
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         // #8161 蓝盾PAC默认使用V3版本的YAML语言
@@ -148,7 +151,7 @@ class PipelineTransferYamlService @Autowired constructor(
             val pipelineInfo = pipelineId?.let {
                 pipelineInfoDao.convert(
                     t = pipelineInfoDao.getPipelineInfo(
-                        dslContext = dslContext,
+                        dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
                         projectId = projectId,
                         pipelineId = pipelineId
                     ),
@@ -159,7 +162,12 @@ class PipelineTransferYamlService @Autowired constructor(
                 TransferActionType.FULL_MODEL2YAML -> {
                     watcher.start("step_1|FULL_MODEL2YAML start")
                     val invalidElement = mutableListOf<String>()
-                    aspects.addAll(PipelineTransferAspectLoader.checkInvalidElement(invalidElement))
+                    val invalidNameSpaceElement = mutableListOf<String>()
+                    aspects.addAll(
+                        PipelineTransferAspectLoader.checkInvalidElement(
+                            invalidElement, invalidNameSpaceElement
+                        )
+                    )
                     val response = modelTransfer.model2yaml(
                         ModelTransferInput(
                             userId = userId,
@@ -174,6 +182,12 @@ class PipelineTransferYamlService @Autowired constructor(
                         throw PipelineTransferException(
                             ELEMENT_NOT_SUPPORT_TRANSFER,
                             arrayOf(invalidElement.joinToString("\n- ", "- "))
+                        )
+                    }
+                    if (invalidNameSpaceElement.isNotEmpty()) {
+                        throw PipelineTransferException(
+                            ELEMENT_NOT_SUPPORT_TRANSFER,
+                            arrayOf(invalidNameSpaceElement.joinToString("\n- ", "- "))
                         )
                     }
                     watcher.start("step_2|mergeYaml")
@@ -211,6 +225,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         modelAndSetting = PipelineModelAndSetting(model, setting)
                     )
                 }
+
                 else -> {}
             }
         } finally {
@@ -269,14 +284,16 @@ class PipelineTransferYamlService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         resource: PipelineResourceVersion,
-        editPermission: Boolean? = null
+        editPermission: Boolean? = null,
+        archiveFlag: Boolean? = false
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             detailInfo = null,
-            version = resource.settingVersion ?: 1
+            version = resource.settingVersion ?: 1,
+            archiveFlag = archiveFlag
         )
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
@@ -293,7 +310,8 @@ class PipelineTransferYamlService @Autowired constructor(
                 pipelineId = pipelineId,
                 actionType = TransferActionType.FULL_MODEL2YAML,
                 data = TransferBody(modelAndSetting),
-                editPermission = editPermission
+                editPermission = editPermission,
+                archiveFlag = archiveFlag
             ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
         } else {
             resource.yaml

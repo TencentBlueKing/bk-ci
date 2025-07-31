@@ -31,6 +31,7 @@ import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import jakarta.ws.rs.NotFoundException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -41,7 +42,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import jakarta.ws.rs.NotFoundException
 
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
@@ -201,7 +201,8 @@ class ExperienceDao {
         scheme: String,
         buildId: String,
         pipelineId: String,
-        classify: String
+        classify: String,
+        repoCreateTime: LocalDateTime
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -238,7 +239,8 @@ class ExperienceDao {
                 SCHEME,
                 BUILD_ID,
                 PIPELINE_ID,
-                CLASSIFY
+                CLASSIFY,
+                REPO_CREATE_TIME
             ).values(
                 projectId,
                 name,
@@ -271,7 +273,8 @@ class ExperienceDao {
                 scheme,
                 buildId,
                 pipelineId,
-                classify
+                classify,
+                repoCreateTime
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -423,7 +426,8 @@ class ExperienceDao {
         dslContext: DSLContext,
         ids: Set<Long>,
         expireTime: LocalDateTime,
-        online: Boolean
+        online: Boolean,
+        projectId: String? = null
     ): Result<Record1<Long>> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.select(DSL.max(ID))
@@ -431,6 +435,7 @@ class ExperienceDao {
                 .where(ID.`in`(ids))
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
+                .let { if (null != projectId) it.and(PROJECT_ID.eq(projectId)) else it }
                 .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM, CLASSIFY)
                 .fetch()
         }
@@ -609,5 +614,24 @@ class ExperienceDao {
             .fetch(0, Long::class.java)
 
         return result
+    }
+
+    fun listNullRepoCreateTime(dslContext: DSLContext, minId: Long, pageSize: Int): List<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(REPO_CREATE_TIME.isNull())
+                .and(ID.gt(minId))
+                .limit(pageSize)
+                .fetch()
+        }
+    }
+
+    fun updateRepoCreateTime(dslContext: DSLContext, id: Long, repoCreateTime: LocalDateTime): Int {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(REPO_CREATE_TIME, repoCreateTime)
+                .where(ID.eq(id))
+                .execute()
+        }
     }
 }

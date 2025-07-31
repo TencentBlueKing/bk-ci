@@ -1,26 +1,34 @@
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.dao.ProjectOperationalProductDao
+import com.tencent.devops.project.pojo.CrosProductVO
+import com.tencent.devops.project.pojo.ICosProductVO
 import com.tencent.devops.project.pojo.ObsBaseDictDTO
 import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.annotation.PostConstruct
+import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
-import jakarta.annotation.PostConstruct
 
 @Service
-class ProjectOperationalProductService constructor(
+class ProjectOperationalProductService(
     val dslContext: DSLContext,
     val projectOperationalProductDao: ProjectOperationalProductDao,
-    val config: CommonConfig
+    val config: CommonConfig,
+    val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectOperationalProductService::class.java)
@@ -41,10 +49,22 @@ class ProjectOperationalProductService constructor(
     @Value("\${obs.token:#{null}}")
     private var obsToken: String = ""
 
+    @Value("\${esb.appCode:}")
+    private val appCode = ""
+
+    @Value("\${esb.appSecret:}")
+    private val appSecret = ""
+
+    @Value("\${bk.costs.url:}")
+    private val bkCostsUrl = ""
+
+    @Value("\${cros.url:}")
+    private val crosUrl = ""
+
     @PostConstruct
     fun syncOperationalProduct(): Boolean {
-        executor.submit {
-            logger.info("sync operational product start!")
+        logger.info("sync operational product start!")
+        executor.execute {
             val obsProductList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.OBS_PRODUCT
             )
@@ -57,6 +77,8 @@ class ProjectOperationalProductService constructor(
             val bgList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.BG
             )
+            val iCosProductVOs = getICosProduct()
+            val crosProductVOs = getCrosProduct()
             // 同步时，清空缓存，防止数据重复
             productInfoList.clear()
             bgName2ProductList.clear()
@@ -70,13 +92,26 @@ class ProjectOperationalProductService constructor(
                 val bgInfo = bgList.firstOrNull {
                     it.bgId == deptInfo?.bgId
                 }
+                val productId = obsProductInfo.productId!!.toInt()
+
+                val iCosProductVO = iCosProductVOs.firstOrNull {
+                    it.productId == productId
+                }
+                val crosCheck = iCosProductVO?.let { iCosProduct ->
+                    crosProductVOs.firstOrNull {
+                        iCosProduct.iCosProductCode == it.iCosProductCode
+                    }?.crosCheck
+                }
 
                 val operationalProductVO = OperationalProductVO(
                     productId = obsProductInfo.productId!!.toInt(),
                     productName = obsProductInfo.productName ?: "",
                     planProductName = planProductInfo?.planProductName ?: "",
                     deptName = deptInfo?.deptName ?: "",
-                    bgName = bgInfo?.bgName ?: ""
+                    bgName = bgInfo?.bgName ?: "",
+                    iCosProductCode = iCosProductVO?.iCosProductCode,
+                    iCosProductName = iCosProductVO?.iCosProductName,
+                    crosCheck = crosCheck == 1
                 )
 
                 projectOperationalProductDao.createOrUpdate(
@@ -142,4 +177,66 @@ class ProjectOperationalProductService constructor(
             emptyList()
         }
     }
+
+    private fun getICosProduct(): List<ICosProductVO> {
+        val headerStr = objectMapper.writeValueAsString(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
+
+        val request = Request.Builder()
+            .url(bkCostsUrl)
+            .addHeader("x-bkapi-authorization", headerStr)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                logger.warn("request failed, uri:($bkCostsUrl)|response: ($it)")
+                throw RemoteServiceException("request failed, response:($it)")
+            }
+            val responseStr = it.body!!.string()
+            val responseDTO: ResponseDTO<List<ICosProductVO>> =
+                objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<List<ICosProductVO>>>() {})
+            if (responseDTO.code != 200L || !responseDTO.result) {
+                // 请求错误
+                logger.warn("request failed, url:($bkCostsUrl)|response:($it)")
+                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+            }
+            if (logger.isDebugEnabled) {
+                logger.debug("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            }
+            return responseDTO.data ?: emptyList()
+        }
+    }
+
+    private fun getCrosProduct(): List<CrosProductVO> {
+        val request = Request.Builder().url(crosUrl).get().build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                logger.warn("request failed, uri:($crosUrl)|response: ($it)")
+                throw RemoteServiceException("request failed, response:($it)")
+            }
+            val responseStr = it.body!!.string()
+            val responseDTO: CrosResponseDTO =
+                objectMapper.readValue(responseStr, object : TypeReference<CrosResponseDTO>() {})
+            if (responseDTO.ret != 0) {
+                // 请求错误
+                logger.warn("request failed, url:($bkCostsUrl)|response:($it)")
+                throw RemoteServiceException("request failed, response:(${responseDTO.msg})")
+            }
+            if (logger.isDebugEnabled) {
+                logger.debug("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            }
+            return responseDTO.data
+        }
+    }
+
+    @Schema(title = "请求返回实体")
+    data class CrosResponseDTO(
+        @get:Schema(title = "返回码")
+        val ret: Int,
+        @get:Schema(title = "返回信息")
+        val msg: String?,
+        @get:Schema(title = "请求返回数据")
+        val data: List<CrosProductVO>
+    )
 }

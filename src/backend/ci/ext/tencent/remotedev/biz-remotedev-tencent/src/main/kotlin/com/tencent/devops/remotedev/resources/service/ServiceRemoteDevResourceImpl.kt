@@ -57,6 +57,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
@@ -382,7 +384,7 @@ class ServiceRemoteDevResourceImpl(
         if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to get $workspaceName info")
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
             )
         }
         return Result(
@@ -484,7 +486,7 @@ class ServiceRemoteDevResourceImpl(
         if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to get $workspaceName info")
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
             )
         }
         return Result(
@@ -940,6 +942,10 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
-        return Result(expertSupportService.syncVm(data))
+        return Result(expertSupportService.syncVm(userId, data))
+    }
+
+    override fun createCvm(userId: String, data: CreateCvmData): Result<CreateCvmResp?> {
+        return Result(expertSupportService.createCvm(data))
     }
 }

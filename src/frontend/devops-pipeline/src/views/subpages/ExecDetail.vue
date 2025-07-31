@@ -256,6 +256,9 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             panels () {
                 return [
                     {
@@ -265,7 +268,7 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
-                            isLatestBuild: this.isLatestBuild,
+                            isLatestBuild: this.archiveFlag ? !this.archiveFlag : this.isLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
                         }
@@ -375,7 +378,10 @@
                     }
             },
             routerParams () {
-                return this.$route.params
+                return {
+                    ...this.$route.params,
+                    ...this.$route.query
+                }
             },
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
@@ -432,6 +438,17 @@
                 if (error.code === 403) {
                     this.hasNoPermission = true
                 }
+            },
+            '$route.params.type': {
+                handler (newVal) {
+                    if (newVal !== 'outputs') {
+                        const query = { ...this.$route.query }
+                        delete query.metadataKey
+                        delete query.metadataValues
+                        this.$router.replace({ query })
+                    }
+                },
+                immediate: true
             }
         },
         beforeRouteEnter (to, from, next) {
@@ -441,7 +458,8 @@
                     params: {
                         ...to.params,
                         type: 'executeDetail'
-                    }
+                    },
+                    query: to.query
                 })
             } else {
                 next()
@@ -549,7 +567,8 @@
                     params: {
                         ...this.routerParams,
                         type: panel.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             collapseSummary () {

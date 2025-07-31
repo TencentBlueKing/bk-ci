@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -188,7 +188,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         aliasName: String?,
-        enablePac: Boolean?
+        enablePac: Boolean?,
+        scmCode: String?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -215,7 +216,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit,
             aliasName = aliasName,
-            enablePac = enablePac
+            enablePac = enablePac,
+            scmCode = scmCode
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }

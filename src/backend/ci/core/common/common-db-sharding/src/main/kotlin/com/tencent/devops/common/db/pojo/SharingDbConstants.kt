@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,5 +33,5 @@ const val ARCHIVE_DATA_SOURCE_NAME_PREFIX = "archive_ds_"
 const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
 const val DEFAULT_MIGRATING_DATA_SOURCE_NAME = "mig_ds_0"
 const val DEFAULT_ARCHIVE_DATA_SOURCE_NAME = "archive_ds_0"
-const val MIGRATING_SHARDING_DSL_CONTEXT = "migratingShardingDslContext"
-const val ARCHIVE_SHARDING_DSL_CONTEXT = "archiveShardingDslContext"
+const val MIGRATING_SHARDING_DSL_CONTEXT = "migratingShardingDslContext" // 迁移库jooq上下文
+const val ARCHIVE_SHARDING_DSL_CONTEXT = "archiveShardingDslContext" // 归档库jooq上下文

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -63,14 +63,19 @@ class VariableTransfer {
         model.getTriggerContainer().params.forEach {
             if (it.id in ignoredVariable) return@forEach
             var props = when {
+                // 字符串
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
                     type = VariablePropType.VUEX_INPUT.value
                 )
-
+                // 文本框
                 it.type == BuildFormPropertyType.TEXTAREA -> VariableProps(
                     type = VariablePropType.VUEX_TEXTAREA.value
                 )
-
+                // 布尔值
+                it.type == BuildFormPropertyType.BOOLEAN -> VariableProps(
+                    type = VariablePropType.BOOLEAN.value
+                )
+                // 单选框
                 it.type == BuildFormPropertyType.ENUM -> VariableProps(
                     type = VariablePropType.SELECTOR.value,
                     options = it.options?.map { form ->
@@ -78,26 +83,7 @@ class VariableTransfer {
                     },
                     payload = it.payload
                 )
-
-                it.type == BuildFormPropertyType.DATE -> null // not use
-                it.type == BuildFormPropertyType.LONG -> null // not use
-                it.type == BuildFormPropertyType.BOOLEAN -> VariableProps(
-                    type = VariablePropType.BOOLEAN.value
-                )
-
-                it.type == BuildFormPropertyType.SVN_TAG -> null // not use
-                it.type == BuildFormPropertyType.GIT_REF -> VariableProps(
-                    type = VariablePropType.GIT_REF.value,
-                    repoHashId = it.repoHashId
-                )
-
-                CascadePropertyUtils.supportCascadeParam(it.type) -> {
-                    // 级联选择器类型变量
-                    VariableProps(
-                        type = VariablePropType.REPO_REF.value
-                    )
-                }
-
+                // 复选框
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
                     options = it.options?.map { form ->
@@ -105,12 +91,30 @@ class VariableTransfer {
                     },
                     payload = it.payload
                 )
-
+                // SVN分支或TAG
+                it.type == BuildFormPropertyType.SVN_TAG -> VariableProps(
+                    type = VariablePropType.SVN_TAG.value,
+                    repoHashId = it.repoHashId,
+                    relativePath = it.relativePath
+                )
+                // GIT分支或TAG
+                it.type == BuildFormPropertyType.GIT_REF -> VariableProps(
+                    type = VariablePropType.GIT_REF.value,
+                    repoHashId = it.repoHashId
+                )
+                // 代码库和分支
+                CascadePropertyUtils.supportCascadeParam(it.type) -> {
+                    // 级联选择器类型变量
+                    VariableProps(
+                        type = VariablePropType.REPO_REF.value
+                    )
+                }
+                // 代码库
                 it.type == BuildFormPropertyType.CODE_LIB -> VariableProps(
                     type = VariablePropType.CODE_LIB.value,
                     scmType = it.scmType?.alis
                 )
-
+                // 构建资源
                 it.type == BuildFormPropertyType.CONTAINER_TYPE -> VariableProps(
                     type = VariablePropType.CONTAINER_TYPE.value,
                     containerType = with(it.containerType) {
@@ -120,20 +124,39 @@ class VariableTransfer {
                             )
                         }
                     }
-                ) // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
+                )
+                // 版本仓库过滤器
                 it.type == BuildFormPropertyType.ARTIFACTORY -> VariableProps(
                     type = VariablePropType.ARTIFACTORY.value,
                     glob = it.glob,
                     properties = it.properties?.ifEmpty { null }
-                ) // 版本仓库
+                )
+                // 子流水线
                 it.type == BuildFormPropertyType.SUB_PIPELINE -> VariableProps(
                     type = VariablePropType.SUB_PIPELINE.value
-                ) // 子流水线
+                )
+                // 文件
                 it.type == BuildFormPropertyType.CUSTOM_FILE -> VariableProps(
-                    type = VariablePropType.CUSTOM_FILE.value
-                ) // 自定义仓库文件
-                it.type == BuildFormPropertyType.PASSWORD -> null // not use
-                it.type == BuildFormPropertyType.TEMPORARY -> null // not use
+                    type = VariablePropType.CUSTOM_FILE.value,
+                    versionControl = it.enableVersionControl.nullIfDefault(false)
+                )
+                // not use
+                it.type == BuildFormPropertyType.PASSWORD -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.TEMPORARY -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.DATE -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.LONG -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+
                 else -> null
             }
             val const = it.constant.nullIfDefault(false)
@@ -237,7 +260,7 @@ class VariableTransfer {
                     desc = variable.props?.description,
                     category = variable.props?.group,
                     repoHashId = variable.props?.repoHashId,
-                    relativePath = null,
+                    relativePath = variable.props?.relativePath,
                     scmType = ScmType.parse(variable.props?.scmType),
                     containerType = with(variable.props?.containerType) {
                         this?.let {
@@ -246,6 +269,7 @@ class VariableTransfer {
                             )
                         }
                     },
+                    enableVersionControl = variable.props?.versionControl,
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
                     readOnly = if (variable.const == true) true else {

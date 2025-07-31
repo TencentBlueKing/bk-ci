@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,5 +31,6 @@ data class SensitiveApiConfig(
     val apiName: String,
     val apiUrl: String,
     val aliasNames: Map<String /*language*/, String /*aliasName*/>? = null,
-    val hideFlag: Boolean = false
+    val hideFlag: Boolean = false,
+    val needReview: Boolean = true
 )

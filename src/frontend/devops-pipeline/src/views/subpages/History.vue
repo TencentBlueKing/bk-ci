@@ -42,7 +42,7 @@
                 </ul>
             </ul>
             <div
-                v-for="i in [1,2,3,4]"
+                v-for="i in [1,2,3,4,5]"
                 :key="i"
                 ref="disableToolTips"
                 class="disable-nav-child-item-tooltips"
@@ -83,6 +83,7 @@
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import EplusBoard from '@/views/PipelineList/EplusBoard'
 
     export default {
         components: {
@@ -93,7 +94,13 @@
             ChangeLog,
             Logo,
             ShowVariable,
+            EplusBoard,
             DelegationPermission
+        },
+        data () {
+            return {
+                shouldRetainArchiveFlag: false
+            }
         },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
@@ -103,6 +110,12 @@
             },
             activeChild () {
                 return this.getNavComponent(this.activeMenuItem)
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
+            hasAuthSecrecy () {
+                return this.$store.state.curProject.authSecrecy !== 1
             },
             asideNav () {
                 return [
@@ -118,6 +131,17 @@
                                 },
                                 name: 'history'
                             },
+                            this.hasAuthSecrecy
+                                ? {
+                                    title: this.$t('executionAnalysis'),
+                                    disableTooltip: {
+                                        content: this.$refs.disableToolTips?.[4],
+                                        disabled: this.isReleaseVersion || this.isBranchVersion,
+                                        delay: [300, 0]
+                                    },
+                                    name: 'EplusBoard'
+                                }
+                                : {},
                             {
                                 title: this.$t('triggerEvent'),
                                 disableTooltip: {
@@ -131,7 +155,7 @@
                             //     title: this.$t('details.outputs'),
                             //     name: 'artifactory'
                             // }
-                        ].map((child) => ({
+                        ].filter((child) => child.name !== 'triggerEvent' || !this.archiveFlag).map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion && !this.isBranchVersion,
                             active: this.activeMenuItem === child.name
@@ -189,7 +213,7 @@
                                 },
                                 name: 'changeLog'
                             }
-                        ].map((child) => ({
+                        ].filter(child => !this.archiveFlag || child.name === 'changeLog').map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
@@ -202,9 +226,15 @@
             }
         },
         beforeDestroy () {
-            this.resetHistoryFilterCondition()
+            this.resetHistoryFilterCondition({ retainArchiveFlag: this.shouldRetainArchiveFlag })
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
+        },
+        beforeRouteLeave (to, from, next) {
+            // 判断目标路由是否需要保留 archiveFlag
+            const routesToKeepArchiveFlag = ['pipelinesDetail', 'draftDebugRecord']
+            this.shouldRetainArchiveFlag = routesToKeepArchiveFlag.includes(to.name) && to.query.archiveFlag !== undefined
+            next()
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
@@ -217,6 +247,10 @@
                     case 'triggerEvent':
                         return {
                             component: 'TriggerEvent'
+                        }
+                    case 'EplusBoard':
+                        return {
+                            component: 'EplusBoard'
                         }
                     // case 'artifactory':
                     //     return {
@@ -263,7 +297,8 @@
                     params: {
                         ...this.$route.params,
                         type: child.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             switchToReleaseVersion () {
@@ -271,7 +306,8 @@
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.releaseVersion
-                    }
+                    },
+                    query: this.$route.query
                 })
             }
         }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.pojo
 
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 
 @Schema(title = "版本仓库-文件信息-APP")
 data class AppFileInfo(
@@ -59,5 +60,7 @@ data class AppFileInfo(
     @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String? = null,
     @get:Schema(title = "MD5", required = false)
-    var md5: String? = null
+    var md5: String? = null,
+    @get:Schema(title = "nodeMetadata数据", required = false)
+    val nodeMetadata: List<MetadataModel>? = emptyList()
 )

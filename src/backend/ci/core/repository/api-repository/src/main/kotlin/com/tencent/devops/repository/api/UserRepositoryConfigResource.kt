@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,9 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
@@ -67,7 +69,10 @@ interface UserRepositoryConfigResource {
     fun list(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "代码库类型", required = false)
+        @QueryParam("scmType")
+        scmType: ScmType?
     ): Result<List<ScmConfigBaseInfo>>
 
     @Operation(summary = "获取代码库提供者")
@@ -176,4 +181,31 @@ interface UserRepositoryConfigResource {
         @FormDataParam("logo")
         disposition: FormDataContentDisposition
     ): Result<RepositoryConfigLogoInfo?>
+
+    @Operation(summary = "获取目标代码库支持的触发事件")
+    @GET
+    @Path("/{scmCode}/events")
+    fun supportEvents(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String
+    ): Result<List<IdValue>>
+
+    @Operation(summary = "获取目标代码库支持的事件动作")
+    @GET
+    @Path("/{scmCode}/events/{eventType}/actions")
+    fun supportEventActions(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "eventType", required = false)
+        @PathParam("eventType")
+        eventType: String
+    ): Result<List<IdValue>>
 }

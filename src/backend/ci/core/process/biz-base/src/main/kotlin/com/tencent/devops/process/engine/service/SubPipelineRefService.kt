@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,11 +55,19 @@ class SubPipelineRefService @Autowired constructor(
         logger.info("delete sub pipeline ref|$projectId|$pipelineId|$changeCount")
     }
 
-    fun list(transaction: DSLContext? = null, projectId: String, pipelineId: String): Result<TPipelineSubRefRecord> {
+    fun list(
+        transaction: DSLContext? = null,
+        projectId: String,
+        pipelineId: String,
+        subProjectId: String? = null,
+        subPipelineId: String? = null
+    ): Result<TPipelineSubRefRecord> {
         return subPipelineRefDao.list(
             dslContext = transaction ?: dslContext,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            subProjectId = subProjectId,
+            subPipelineId = subPipelineId
         )
     }
 
@@ -109,4 +117,19 @@ class SubPipelineRefService @Autowired constructor(
             infos = needDelInfos
         )
     }
+
+    /**
+     * 是否存在调用链路
+     */
+    fun exists(
+        projectId: String,
+        pipelineId: String,
+        subProjectId: String,
+        subPipelineId: String
+    ) = list(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        subProjectId = subProjectId,
+        subPipelineId = subPipelineId
+    ).isNotEmpty
 }

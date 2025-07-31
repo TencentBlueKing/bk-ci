@@ -28,35 +28,35 @@
             nav () {
                 return {
                     icon: 'experience',
-                    title: '版本体验',
+                    title: this.$t('experience.experience'),
                     menu: [{
                                id: 'experienceList',
-                               name: '体验管理',
+                               name: this.$t('experience.mobileRelease'),
                                icon: 'devops-icon icon-release',
                                showChildren: false,
                                children: [
                                    {
                                        id: 'experienceDetail',
-                                       name: '发布详情',
+                                       name: this.$t('experience.releaseDetail'),
                                        icon: 'devops-icon icon-release'
                                    },
                                    {
                                        id: 'editExperience',
-                                       name: '编辑发布',
+                                       name: this.$t('experience.editRelease'),
                                        icon: 'devops-icon icon-release'
                                    }
                                ]
                            },
                            {
                                id: 'createExperience',
-                               name: '新增体验',
+                               name: this.$t('experience.addExp'),
                                icon: 'devops-icon icon-experience',
                                showChildren: false,
                                children: []
                            },
                            {
                                id: 'setting',
-                               name: '设置',
+                               name: this.$t('experience.setting'),
                                icon: 'devops-icon icon-cog',
                                showChildren: false,
                                children: []

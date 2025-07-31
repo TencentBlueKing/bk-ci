@@ -10,14 +10,15 @@
         >
             <template v-if="sortCategory">
                 <renderSortCategoryParams
-                    v-for="(list, key) in renderParamList"
+                    v-for="key in sortedCategories"
                     :key="key"
                     :name="key"
                 >
                     <template slot="content">
                         <form-field
-                            v-for="param in list"
+                            v-for="param in paramsListMap[key]"
                             :key="param.id"
+                            v-if="param.show"
                             :required="param.required"
                             :is-error="errors.has('devops' + param.name)"
                             :error-msg="errors.first('devops' + param.name)"
@@ -125,6 +126,7 @@
         CONTAINER_TYPE,
         ENUM,
         getBranchOption,
+        getParamsGroupByLabel,
         GIT_REF,
         isArtifactoryParam,
         isBuildResourceParam,
@@ -287,33 +289,36 @@
                                     childrenOptions: this.getBranchOption(this.paramValues?.[param.id]?.['repo-name'])
                                 }
                                 : {}
-                        )
+                        ),
+                        // eslint-disable-next-line
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        
                     }
                 })
             },
-            renderParamList () {
-                // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
-                const key = this.$t('notGrouped')
-                const listMap = this.paramList.reduce((acc, item) => {
-                    const categoryKey = item.category || key
-                    if (!acc[categoryKey]) {
-                        acc[categoryKey] = []
-                    }
-                    acc[categoryKey].push(item)
-                    return acc
-                }, {})
-
-                if (!(key in listMap)) {
-                    return listMap
-                }
-                const { [key]: value, ...rest } = listMap
-                return { [key]: value, ...rest }
+            paramsListMap () {
+                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+            },
+            sortedCategories () {
+                return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
             }
+            
         },
         methods: {
             isArtifactoryParam,
             isObject,
             getBranchOption,
+            isEqual (a, b) {
+                try {
+                    // hack: 处理 undefined 和 '' 的情况
+                    if (typeof a === 'undefined' && b === '') {
+                        return true
+                    }
+                    return String(a) === String(b)
+                } catch (error) {
+                    return false
+                }
+            },
             getParamComponentType (param) {
                 if (isRemoteType(param) || isBuildResourceParam(param.type)) {
                     return 'request-selector'

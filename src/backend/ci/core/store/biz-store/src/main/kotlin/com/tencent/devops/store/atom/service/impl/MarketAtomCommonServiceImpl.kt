@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -109,12 +109,12 @@ import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import jakarta.ws.rs.core.Response
+import kotlin.reflect.KClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import kotlin.reflect.KClass
 
 @Suppress("ALL")
 @Service
@@ -527,13 +527,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            validateTaskJsonField(
-                dataMap = executionInfoMap,
-                fieldName = KEY_TARGET,
-                promptName = "$KEY_EXECUTION.$KEY_TARGET",
-                expectedType = String::class
-            )
-            val target = executionInfoMap[KEY_TARGET] as String
+            val target = executionInfoMap[KEY_TARGET] as? String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,

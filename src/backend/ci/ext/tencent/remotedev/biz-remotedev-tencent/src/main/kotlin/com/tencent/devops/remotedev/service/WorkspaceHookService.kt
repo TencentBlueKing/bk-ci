@@ -148,10 +148,28 @@ class WorkspaceHookService @Autowired constructor(
         return ips
     }
 
+    fun hookLoad(userId: String, projectId: String, nodeHashId: String) {
+        logger.info("hookLoad|$userId|$projectId|$nodeHashId")
+        val load = kotlin.runCatching {
+            client.get(ServiceDEVXResource::class)
+                .getEnvHook(userId = userId, projectId = projectId, envHashId = null, nodeHashId = nodeHashId).data!!
+        }.onFailure {
+            logger.error("hookLoad|getEnvHook|error|${it.message}", it)
+        }.getOrNull() ?: return
+        installHook(
+            ip = getIpByNodeHashId(projectId = projectId, nodeHashIds = setOf(nodeHashId)) ?: emptySet(),
+            hooks = load
+        )
+    }
+
     fun hookLoad(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>?) {
         logger.info("hookLoad|$userId|$projectId|$envHashId|$nodeHashIds")
-        val load = client.get(ServiceDEVXResource::class)
-            .getEnvHook(userId = userId, projectId = projectId, envHashId = envHashId).data!!
+        val load = kotlin.runCatching {
+            client.get(ServiceDEVXResource::class)
+                .getEnvHook(userId = userId, projectId = projectId, envHashId = envHashId, nodeHashId = null).data!!
+        }.onFailure {
+            logger.error("hookLoad|getEnvHook|error|${it.message}", it)
+        }.getOrNull() ?: return
         installHook(
             ip = getIpByNodeHashId(projectId = projectId, nodeHashIds = nodeHashIds?.toSet()) ?: getEnvAllIp(
                 userId = userId,
@@ -175,7 +193,8 @@ class WorkspaceHookService @Autowired constructor(
 
     private fun installHook(ip: Set<String>, hooks: List<DEVXHook>) {
         if (ip.isEmpty() || hooks.isEmpty()) {
-            logger.warn("installHook|ip: $ip, hooks: $hooks")
+            logger.warn("installHook|empty install|ip: $ip, hooks: $hooks")
+            return
         }
         val actions = hooks.filter { it.enable }.groupBy { it.executionType }.map { (executionType, group) ->
             val executables = group.map { it.executableCommand() }

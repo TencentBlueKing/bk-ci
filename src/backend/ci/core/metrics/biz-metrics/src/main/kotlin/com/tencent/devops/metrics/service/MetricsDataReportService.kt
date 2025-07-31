@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,18 +27,18 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 
 interface MetricsDataReportService {
 
     /**
      * 上报流水线构建指标数据
-     * @param buildEndPipelineMetricsData 构建结束后流水线指标数据
+     * @param event 构建结束后流水线指标数据消息
      * @return 布尔值
      */
     fun metricsDataReport(
-        buildEndPipelineMetricsData: BuildEndPipelineMetricsData
+        event: BuildEndMetricsBroadCastEvent
     ): Boolean
 
     /**

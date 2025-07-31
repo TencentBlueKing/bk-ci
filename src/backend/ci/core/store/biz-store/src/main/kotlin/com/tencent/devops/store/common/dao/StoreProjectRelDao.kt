@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -640,6 +640,22 @@ class StoreProjectRelDao {
                 .where(conditions)
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun listStoreInitProjectCode(
+        dslContext: DSLContext,
+        storeType: Byte,
+        offset: Int,
+        limit: Int
+    ): Result<Record2<String, String>> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this)
+                .where(STORE_TYPE.eq(storeType))
+                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                .orderBy(CREATE_TIME.asc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 }

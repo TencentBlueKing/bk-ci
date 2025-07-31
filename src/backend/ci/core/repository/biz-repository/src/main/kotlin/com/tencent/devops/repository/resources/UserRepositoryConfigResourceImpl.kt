@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,9 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
@@ -48,9 +50,9 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     private val repositoryScmConfigService: RepositoryScmConfigService
 ) : UserRepositoryConfigResource {
 
-    override fun list(userId: String): Result<List<ScmConfigBaseInfo>> {
+    override fun list(userId: String, scmType: ScmType?): Result<List<ScmConfigBaseInfo>> {
         return Result(
-            repositoryScmConfigService.listConfigBaseInfo(userId)
+            repositoryScmConfigService.listConfigBaseInfo(userId, scmType)
         )
     }
 
@@ -132,6 +134,25 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
                 contentLength = contentLength,
                 inputStream = inputStream,
                 disposition = disposition
+            )
+        )
+    }
+
+    override fun supportEvents(userId: String, scmCode: String): Result<List<IdValue>> {
+        return Result(
+            repositoryScmConfigService.supportEvents(
+                userId = userId,
+                scmCode = scmCode
+            )
+        )
+    }
+
+    override fun supportEventActions(userId: String, scmCode: String, eventType: String): Result<List<IdValue>> {
+        return Result(
+            repositoryScmConfigService.supportEventActions(
+                userId = userId,
+                scmCode = scmCode,
+                eventType = eventType
             )
         )
     }

@@ -91,8 +91,10 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="280"
                         :label="$t('operate')"
+                        :width="320"
+                        prop="operate"
+                        fixed="right"
                     >
                         <div
                             slot-scope="props"
@@ -106,7 +108,7 @@
                                 {{ $t('draftExecRecords') }}
                             </bk-button>
                             <rollback-entry
-                                v-if="props.row.canRollback"
+                                v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
                                 :pipeline-id="$route.params.pipelineId"
@@ -120,10 +122,12 @@
                             />
                             <version-diff-entry
                                 v-if="props.row.version !== releaseVersion"
-                                :version="props.row.version"
-                                :latest-version="releaseVersion"
+                                :version="props.row.currentDiffVersion"
+                                :latest-version="props.row.latestDiffVersion"
+                                :archive-flag="archiveFlag"
                             />
                             <bk-button
+                                v-if="!archiveFlag"
                                 text
                                 theme="primary"
                                 :disabled="releaseVersion === props.row.version"
@@ -186,10 +190,12 @@
             columns () {
                 return [{
                     prop: 'versionName',
+                    width: 120,
                     label: this.$t('versionNum'),
                     showOverflowTooltip: true
                 }, {
                     prop: 'description',
+                    width: 120,
                     label: this.$t('versionDesc'),
                     showOverflowTooltip: true
                 }, {
@@ -202,7 +208,7 @@
                     }
                 }, {
                     prop: 'creator',
-                    width: 90,
+                    width: 120,
                     label: this.$t('creator')
                 }, {
                     prop: 'updateTime',
@@ -214,7 +220,7 @@
                     }
                 }, {
                     prop: 'updater',
-                    width: 90,
+                    width: 120,
                     label: this.$t('audit.operator')
                 }]
             },
@@ -241,6 +247,9 @@
             },
             emptyType () {
                 return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         mounted () {
@@ -254,7 +263,8 @@
             ...mapActions({
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
-                deletePipelineVersion: 'pipelines/deletePipelineVersion'
+                deletePipelineVersion: 'pipelines/deletePipelineVersion',
+                setHistoryPageStatus: 'pipelines/setHistoryPageStatus'
             }),
             handleShown () {
                 this.handlePageChange(1)
@@ -292,6 +302,7 @@
                     pipelineId,
                     page,
                     pageSize: this.pagination.limit,
+                    archiveFlag: this.archiveFlag,
                     ...this.filterQuery
                 })
                 Object.assign(this.pagination, {
@@ -306,7 +317,9 @@
                         isDraft,
                         canRollback: !isDraft,
                         isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName]),
+                        currentDiffVersion: !isDraft ? item.version : this.releaseVersion,
+                        latestDiffVersion: !isDraft ? this.releaseVersion : item.version
                     }
                 })
             },
@@ -353,7 +366,10 @@
             },
             goDebugRecords () {
                 this.$router.push({
-                    name: 'draftDebugRecord'
+                    name: 'draftDebugRecord',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 })
             }
         }

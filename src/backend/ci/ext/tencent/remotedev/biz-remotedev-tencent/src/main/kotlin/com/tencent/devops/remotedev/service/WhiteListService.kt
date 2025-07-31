@@ -24,7 +24,25 @@ class WhiteListService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
+        private const val CONFIG_CDS_DOMAIN_DEFAULT_KEY = "remotedev:cdsDomainDefault"
+        private const val CONFIG_CDS_DOMAIN_PROJECT_KEY_PREFIX = "remotedev:cdsDomainProject:"
+        const val CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX = "remotedev:cdsDomainWorkspace:"
         private const val taiUser = "@tai"
+    }
+
+    fun opFetch(userId: String, whiteListType: WhiteListType): List<WhiteList> {
+        logger.info("userId($userId) wants to fetch whiteListType($whiteListType)")
+        return whiteListDao.fetch(dslContext, whiteListType)
+    }
+
+    fun opCreateOrUpdateWhiteList(userId: String, whiteList: WhiteList): Boolean {
+        logger.info("userId($userId) wants to add whiteList($whiteList)")
+        return whiteListDao.addOrUpdate(dslContext, whiteList) == 1
+    }
+
+    fun opDeleteWhiteList(userId: String, whiteList: WhiteList): Boolean {
+        logger.info("userId($userId) wants to delete whiteList($whiteList)")
+        return whiteListDao.delete(dslContext, whiteList.name, whiteList.type) == 1
     }
 
     fun shareWorkspace(userId: String, whiteListUser: String) {
@@ -84,6 +102,28 @@ class WhiteListService @Autowired constructor(
             )
         }
         return limit + get
+    }
+
+    fun checkInCdsMeshWhiteList(
+        projectId: String,
+        workspaceName: String
+    ): Int {
+        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE) != null) {
+            return 0
+        }
+        if (whiteListDao.get(dslContext, projectId, WhiteListType.CDS_MESH_PROJECT) != null) {
+            return 1
+        }
+        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_MESH_WORKSPACE) != null) {
+            return 1
+        }
+        return 0
+    }
+
+    fun getCdsDomain(projectId: String, workspaceName: String): String? {
+        return cacheService.get(CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + workspaceName)
+            ?: cacheService.get(CONFIG_CDS_DOMAIN_PROJECT_KEY_PREFIX + projectId)
+            ?: cacheService.get(CONFIG_CDS_DOMAIN_DEFAULT_KEY)
     }
 
     fun addGPUWhiteListUser(
@@ -162,7 +202,7 @@ class WhiteListService @Autowired constructor(
         如果value大于指定key中id规定的数量，则抛出异常
         如果没有白名单，则抛出异常
         如果白名单中没有对应id，则抛出异常
-        */
+     */
     fun windowsNumberLimit(userId: String, value: Long) {
         val limit = cacheService.checkWindowsGpuLimit(userId)
         logger.info("numberLimit|$value|$limit")
@@ -172,7 +212,7 @@ class WhiteListService @Autowired constructor(
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("User($userId) exceeding the limit($limit)")
+            params = arrayOf("We're sorry but User($userId) exceeding the limit($limit)")
         )
     }
 }
