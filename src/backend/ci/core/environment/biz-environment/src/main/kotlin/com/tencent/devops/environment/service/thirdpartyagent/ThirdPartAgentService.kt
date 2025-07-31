@@ -161,6 +161,7 @@ class ThirdPartAgentService @Autowired constructor(
 
     fun updateAgentInfo(
         userId: String,
+        projectId: String,
         data: UpdateAgentInfo
     ): Boolean {
         if (data.nodeHashId.isNullOrBlank() && data.agentHashId.isNullOrBlank()) {
@@ -168,7 +169,7 @@ class ThirdPartAgentService @Autowired constructor(
         }
 
         val nodeId = if (data.nodeHashId.isNullOrBlank() && !data.displayName.isNullOrBlank()) {
-            agentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(data.agentHashId!!), data.projectId)?.nodeId
+            agentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(data.agentHashId!!), projectId)?.nodeId
                 ?: return false
         } else {
             null
@@ -181,12 +182,12 @@ class ThirdPartAgentService @Autowired constructor(
                     nodeId = nodeId!!,
                     nodeName = data.displayName!!,
                     userId = userId,
-                    projectId = data.projectId
+                    projectId = projectId
                 )
             }
             agentDao.updateAgentInfo(
                 dslContext = dslContext,
-                projectId = data.projectId,
+                projectId = projectId,
                 agentId = if (data.agentHashId.isNullOrBlank()) {
                     null
                 } else {

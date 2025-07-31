@@ -342,8 +342,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun updateAgentInfo(
         userId: String,
+        projectId: String,
         data: UpdateAgentInfo
     ): Result<Boolean> {
-        return Result(agentService.updateAgentInfo(userId, data))
+        return Result(agentService.updateAgentInfo(userId, projectId, data))
     }
 }
