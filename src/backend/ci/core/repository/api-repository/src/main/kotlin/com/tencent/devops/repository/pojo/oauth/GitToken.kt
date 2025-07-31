@@ -50,5 +50,5 @@ data class GitToken(
     val updateTime: Long? = 0L,
     @get:Schema(title = "操作人")
     var operator: String? = "",
-    var userId : String
+    var userId: String
 )

@@ -161,7 +161,7 @@ class GithubTokenDao {
     fun listEmptyToken(
         dslContext: DSLContext,
         limit: Int
-    ) : List<TRepositoryGithubTokenRecord> {
+    ): List<TRepositoryGithubTokenRecord> {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             return dslContext.selectFrom(this)
                     .where(OPERATOR.isNull)

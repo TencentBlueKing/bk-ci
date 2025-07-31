@@ -104,11 +104,11 @@ class GitTokenDao {
 
     fun listEmptyToken(dslContext: DSLContext, limit: Int): List<TRepositoryGitTokenRecord> {
         return with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
-             dslContext.selectFrom(this)
-                .where(OPERATOR.isNull())
-                .orderBy(CREATE_TIME.desc())
-                .limit(limit)
-                .fetch()
+            dslContext.selectFrom(this)
+                    .where(OPERATOR.isNull())
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(limit)
+                    .fetch()
         }
     }
 
