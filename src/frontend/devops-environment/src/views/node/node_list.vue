@@ -603,8 +603,16 @@
                 }
             },
             async batchDeleteNode () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                    return
+                }
                 this.$bkInfo({
                     title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
+                    extCls: 'info-content',
                     confirmFn: async () => {
                         try {
                             const params = this.selectedNodes.map(i=>i.nodeHashId)
@@ -1300,5 +1308,11 @@
 
     .batch-menu {
         margin-right: 8px;
+    }
+
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
+        }
     }
 </style>
