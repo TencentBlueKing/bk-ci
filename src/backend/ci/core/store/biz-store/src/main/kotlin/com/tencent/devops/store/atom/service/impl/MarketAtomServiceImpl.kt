@@ -46,7 +46,6 @@ import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
 import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -1686,7 +1685,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 记录日志 不抛异常 避免影响核心组件发布业务
             logger.error(
                 "Plugin configuration file has incorrect format. " +
-                        "File name: ${TASK_JSON_NAME}, Error reason: ${e.message}", e
+                        "File name: $TASK_JSON_NAME, Error reason: ${e.message}", e
             )
             emptyMap()
         }
