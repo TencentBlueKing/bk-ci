@@ -5,7 +5,7 @@ import { computed, getCurrentInstance, ref } from 'vue'
 export default function useTemplateConstraint () {
     const fieldMap = {
         buildNumRule: 'CUSTOM_BUILD_NUM',
-        label: 'LABEL',
+        labels: 'LABEL',
         notices: 'NOTICES',
         parallelSetting: 'CONCURRENCY',
         failIfVariableInvalid: 'FAIL_IF_VARIABLE_INVALID'

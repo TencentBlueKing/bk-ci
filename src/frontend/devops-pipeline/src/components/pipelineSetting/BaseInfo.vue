@@ -49,7 +49,7 @@
             <bk-form-item :required="false">
                 <constraint-wraper
                     classify="settingGroups"
-                    field="label"
+                    field="labels"
                 >
                     <template v-slot:constraint-title>
                         <div class="pipeline-label-selector-title">
