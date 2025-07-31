@@ -1095,7 +1095,7 @@ websocket:
 turbo:
   enabled: false
   image:
-    registry: registry-1.docker.io/bkci
+    registry: bkci
     repository: bkci-turbo
     tag: 0.0.21
     pullPolicy: IfNotPresent
