@@ -132,7 +132,7 @@ importers:
         version: 4.1.2
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.101.0)
+        version: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       core-js:
         specifier: 3.26.0
         version: 3.26.0
@@ -306,8 +306,8 @@ importers:
   bk-pipeline:
     dependencies:
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       uuid:
         specifier: ~8.1.0
         version: 8.1.0
@@ -383,7 +383,7 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.101.0)
+        version: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -396,9 +396,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -408,24 +405,12 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
-      html-webpack-plugin:
-        specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0(webpack-cli@5.1.4))
       immutable:
         specifier: ^5.0.0-beta.4
         version: 5.0.0-beta.5
@@ -527,7 +512,7 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.101.0)
+        version: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -540,9 +525,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -552,15 +534,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -703,9 +679,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -715,15 +688,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -836,9 +803,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -848,15 +812,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -996,9 +954,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1008,18 +963,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1052,7 +998,7 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
@@ -1063,8 +1009,8 @@ importers:
         specifier: workspace:bk-permission
         version: link:../bk-permission
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.49
+        version: 2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1157,8 +1103,8 @@ importers:
         specifier: 3.7.0-beta.2
         version: 3.7.0-beta.2(@octokit/core@6.1.2)(@types/babel__core@7.20.5)(bufferutil@4.0.8)(chart.js@4.4.3)(encoding@0.1.13)(tslib@2.8.1)(utf-8-validate@5.0.10)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))
       bkui-vue:
-        specifier: 0.0.1-beta.416
-        version: 0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1180,7 +1126,7 @@ importers:
         version: 7.24.6
       '@blueking/eslint-config-bk':
         specifier: 2.1.0-beta.6
-        version: 2.1.0-beta.6(@babel/core@7.24.6)(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(prettier@2.8.8)(webpack@5.101.0(webpack-cli@5.1.4))
+        version: 2.1.0-beta.6(@babel/core@7.24.6)(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(prettier@2.8.8)(webpack@5.101.0(webpack-cli@5.1.4))
       '@blueking/stylelint-config-bk':
         specifier: ^2.0.0
         version: 2.0.0
@@ -1236,8 +1182,8 @@ importers:
         specifier: 0.30.0
         version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1267,7 +1213,7 @@ importers:
         version: 6.3.2
       vue-i18n:
         specifier: ~8.26.1
-        version: 8.26.8(vue@2.7.16)
+        version: 8.26.1(vue@2.7.16)
       vue-i18n-bridge:
         specifier: ^9.14.1
         version: 9.14.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
@@ -1367,7 +1313,7 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: ^9.0.1
-        version: 9.0.1(webpack@5.101.0)
+        version: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1380,9 +1326,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1392,15 +1335,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1442,13 +1379,13 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       axios:
         specifier: 0.30.0
         version: 0.30.0
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1550,8 +1487,8 @@ importers:
         specifier: 0.30.0
         version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1611,7 +1548,7 @@ importers:
         version: 6.7.2(@vue/composition-api@1.7.2(vue@2.7.16))(@vue/runtime-core@3.5.13)(echarts@5.5.0)(vue@2.7.16)
       vue-i18n:
         specifier: ~8.26.1
-        version: 8.26.8(vue@2.7.16)
+        version: 8.26.1(vue@2.7.16)
       vue-i18n-bridge:
         specifier: ~9.4.1
         version: 9.4.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
@@ -1711,7 +1648,7 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.101.0)
+        version: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1724,9 +1661,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1736,15 +1670,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1782,8 +1710,8 @@ importers:
   devops-platform:
     dependencies:
       bkui-vue:
-        specifier: 2.0.1-beta.94
-        version: 2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1978,9 +1906,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1990,18 +1915,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2063,8 +1979,8 @@ importers:
         specifier: ^8.0.2
         version: 8.3.0(@babel/core@7.24.6)(webpack@5.101.0)
       bk-magic-vue:
-        specifier: 2.5.9-beta.9
-        version: 2.5.9-beta.9(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bkui-pipeline:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
@@ -2334,9 +2250,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2346,15 +2259,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2467,9 +2374,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2479,15 +2383,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2522,8 +2420,8 @@ importers:
         specifier: 0.30.0
         version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.5
@@ -2608,7 +2506,7 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.101.0)
+        version: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -2621,9 +2519,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2633,15 +2528,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.101.0)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -4547,14 +4436,8 @@ packages:
     resolution: {integrity: sha512-EI552lf0aG2nOV8NnZpTxNo2PcXKPmDbF9K8eCBFQdIZwHNGN/mi815fxtmUMa2wTa1yndotICIDt/V0vpEx2w==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
-  '@floating-ui/core@0.7.3':
-    resolution: {integrity: sha512-buc8BXHmG9l82+OQXOFU3Kr2XQx9ys01U/Q9HMIrZ300iLc8HLMgh7dcCqgYzAzf4BkoQvDcXf5Y+CuEZ5JBYg==}
-
   '@floating-ui/core@1.6.7':
     resolution: {integrity: sha512-yDzVT/Lm101nQ5TCVeK65LtdN7Tj4Qpr9RTXJ2vPFLqtLxwOrpoxAHAJI8J3yYWUc40J0BDBheaitK5SJmno2g==}
-
-  '@floating-ui/dom@0.5.4':
-    resolution: {integrity: sha512-419BMceRLq0RrmTSDxn8hf9R3VCJv2K9PUfugh5JyEFmdjzDo+e8U5EdR8nzKq8Yj1htzLm3b6eQEEam3/rrtg==}
 
   '@floating-ui/dom@1.5.4':
     resolution: {integrity: sha512-jByEsHIY+eEdCjnTVu+E3ephzTOzkQ8hgUfGwos+bg7NlH33Zc5uO+QHz1mrQUOgIKKDD1RtS201P9NvAfq3XQ==}
@@ -7346,31 +7229,20 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
-  bk-magic-vue@2.5.9-beta.41:
-    resolution: {integrity: sha512-YqOnTiOLLnakron/2BxDO3he/MTZvZAptLMOggJihf10uADQmRyEu+8od8EcobPr9ER3yIoyFzJV+MTa90QKLg==}
+  bk-magic-vue@2.5.10-beta.12:
+    resolution: {integrity: sha512-EfR3t2syrynao0EaEde05D7D5lrCAzPsQjKdse8jadnOz7EblX3iPWUNTk96GvsZh3HU0arMUEIjh337YRe8iw==}
     engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
 
-  bk-magic-vue@2.5.9-beta.9:
-    resolution: {integrity: sha512-Ao/6sBMnvJcw8RnxEdNMq8nFi6Qwjz68a2LMe4x1ovwxiaIwCxynrrCQHqW4PXoDn+fxqd+hIES2dfIJm6ajRw==}
-    peerDependencies:
-      vue: ^2.6.0
-
-  bkui-vue@0.0.1-beta.416:
-    resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
+  bkui-vue@2.0.2-beta.45:
+    resolution: {integrity: sha512-MfHtVZcZrcgo+KcgcYuPUtZOhHLfoE2eaxByk/mqKVFxedoIEqOgHA7fu3AyWYYMFo6s0h8vFj45ujZrH3H9SA==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
 
-  bkui-vue@2.0.1-beta.42:
-    resolution: {integrity: sha512-LMhV7imIkSiaOYnHHaFKB1p74itGxuNqjj0hEX8JdwYNJSPYRO/v8VDnJk1QEqTB9ppaIVwrEDEc/TPdrdIapQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.94:
-    resolution: {integrity: sha512-SbJAvGNMNK8tNcUm0JkwVAYxTYYu79i8+kX5HrKuLTLCQP8REg2wRH5IrTbre0prs9GQZ+TqoPUY3xCNnQ+vKA==}
+  bkui-vue@2.0.2-beta.49:
+    resolution: {integrity: sha512-1JCYz5e6CTAcCIH5j5tChkCFWi9mofv097fxrvPKZl9wf2td4bjXy26BP8gdQII3u9NzGM9na0OsgskEj9z+EQ==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -8672,10 +8544,6 @@ packages:
   data-view-byte-offset@1.0.0:
     resolution: {integrity: sha512-t/Ygsytq+R995EJ5PZlD4Cu56sWa8InXySaViRzw9apusqsOO2bQP+SbYzAhR0pFKoB+43lYy8rWban9JSuXnA==}
     engines: {node: '>= 0.4'}
-
-  date-fns@2.28.0:
-    resolution: {integrity: sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==}
-    engines: {node: '>=0.11'}
 
   date-fns@2.30.0:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
@@ -15740,9 +15608,6 @@ packages:
   tinybench@2.8.0:
     resolution: {integrity: sha512-1/eK7zUnIklz4JUUlL+658n58XO2hHLQfSk1Zf2LKieUjxidN16eKFEoDEfjHc3ohofSSqK3X5yO6VGb6iW8Lw==}
 
-  tinycolor2@1.4.2:
-    resolution: {integrity: sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==}
-
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
 
@@ -16594,12 +16459,6 @@ packages:
 
   vue-i18n@8.26.1:
     resolution: {integrity: sha512-N6GpogueNQqmAye6lkUySlrXAZqBs9DYz8+8LHxm4IV7hEP/KWQL9VUCV8oJ0DS1asUTlvI2qKm2MydRgoPJFQ==}
-    peerDependencies:
-      vue: ^2
-
-  vue-i18n@8.26.8:
-    resolution: {integrity: sha512-BN2OXolO15AKS95yNF8oOtARibaO6RxyKkAYNV4XpOmL7S4eVZYMIDtyvDv+XGZaiUmBJSH9mdNqzexvGMnK2A==}
-    deprecated: Vue I18n v8.x has reached EOL and is no longer actively maintained. About maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
     peerDependencies:
       vue: ^2
 
@@ -18344,10 +18203,17 @@ snapshots:
     dependencies:
       chalk: 4.1.2
 
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      bkui-vue: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      dayjs: 1.11.11
+      vue: 3.4.31(typescript@4.9.5)
+
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
+    dependencies:
+      '@blueking/bkui-library': 0.0.0-beta.6
+      bkui-vue: 2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
@@ -18380,7 +18246,7 @@ snapshots:
       '@vue/eslint-config-standard': 6.1.0(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(less-loader@12.2.0(less@4.2.0)(webpack@5.101.0(webpack-cli@5.1.4)))(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(webpack@5.101.0(webpack-cli@5.1.4))
       '@vue/eslint-config-typescript': 10.0.0(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(typescript@4.6.4)
       eslint: 8.57.0
-      eslint-config-tencent: 1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@8.57.0))(eslint@8.57.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8)
+      eslint-config-tencent: 1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@8.57.0))(eslint@8.57.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)
       eslint-plugin-node: 11.1.0(eslint@8.57.0)
       eslint-plugin-promise: 6.0.1(eslint@8.57.0)
@@ -18397,15 +18263,15 @@ snapshots:
       - supports-color
       - webpack
 
-  '@blueking/eslint-config-bk@2.1.0-beta.6(@babel/core@7.24.6)(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(prettier@2.8.8)(webpack@5.101.0(webpack-cli@5.1.4))':
+  '@blueking/eslint-config-bk@2.1.0-beta.6(@babel/core@7.24.6)(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(prettier@2.8.8)(webpack@5.101.0(webpack-cli@5.1.4))':
     dependencies:
       '@babel/eslint-parser': 7.24.6(@babel/core@7.24.6)(eslint@8.57.0)
       '@typescript-eslint/eslint-plugin': 5.20.0(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@4.9.5))(eslint@7.32.0)(typescript@4.9.5)
       '@typescript-eslint/parser': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
-      '@vue/eslint-config-standard': 6.1.0(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(webpack@5.101.0(webpack-cli@5.1.4))
+      '@vue/eslint-config-standard': 6.1.0(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(webpack@5.101.0(webpack-cli@5.1.4))
       '@vue/eslint-config-typescript': 10.0.0(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(typescript@4.6.4)
       eslint: 8.57.0
-      eslint-config-tencent: 1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8)
+      eslint-config-tencent: 1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)
       eslint-plugin-node: 11.1.0(eslint@8.57.0)
       eslint-plugin-promise: 6.0.1(eslint@8.57.0)
@@ -19284,15 +19150,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@floating-ui/core@0.7.3': {}
-
   '@floating-ui/core@1.6.7':
     dependencies:
       '@floating-ui/utils': 0.2.7
-
-  '@floating-ui/dom@0.5.4':
-    dependencies:
-      '@floating-ui/core': 0.7.3
 
   '@floating-ui/dom@1.5.4':
     dependencies:
@@ -20546,7 +20406,7 @@ snapshots:
       chalk: 4.1.2
       enquirer: 2.3.6
       nx: 19.5.1
-      tslib: 2.6.2
+      tslib: 2.8.1
       yargs-parser: 21.1.1
     transitivePeerDependencies:
       - '@swc-node/register'
@@ -21278,15 +21138,15 @@ snapshots:
     dependencies:
       '@typescript-eslint/parser': 4.33.0(eslint@7.32.0)(typescript@4.9.5)
       '@typescript-eslint/scope-manager': 5.20.0
-      '@typescript-eslint/type-utils': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
-      '@typescript-eslint/utils': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
+      '@typescript-eslint/type-utils': 5.20.0(eslint@7.32.0)(typescript@4.9.5)
+      '@typescript-eslint/utils': 5.20.0(eslint@7.32.0)(typescript@4.9.5)
       debug: 4.4.0
       eslint: 7.32.0
       functional-red-black-tree: 1.0.1
       ignore: 5.3.1
       regexpp: 3.2.0
       semver: 7.6.2
-      tsutils: 3.21.0(typescript@4.6.4)
+      tsutils: 3.21.0(typescript@4.9.5)
     optionalDependencies:
       typescript: 4.9.5
     transitivePeerDependencies:
@@ -21297,7 +21157,7 @@ snapshots:
       '@typescript-eslint/parser': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
       '@typescript-eslint/scope-manager': 5.20.0
       '@typescript-eslint/type-utils': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
-      '@typescript-eslint/utils': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
+      '@typescript-eslint/utils': 5.20.0(eslint@8.57.0)(typescript@4.9.5)
       debug: 4.4.0
       eslint: 8.57.0
       functional-red-black-tree: 1.0.1
@@ -21480,9 +21340,20 @@ snapshots:
       '@typescript-eslint/types': 8.30.1
       '@typescript-eslint/visitor-keys': 8.30.1
 
+  '@typescript-eslint/type-utils@5.20.0(eslint@7.32.0)(typescript@4.9.5)':
+    dependencies:
+      '@typescript-eslint/utils': 5.20.0(eslint@7.32.0)(typescript@4.9.5)
+      debug: 4.4.0
+      eslint: 7.32.0
+      tsutils: 3.21.0(typescript@4.9.5)
+    optionalDependencies:
+      typescript: 4.9.5
+    transitivePeerDependencies:
+      - supports-color
+
   '@typescript-eslint/type-utils@5.20.0(eslint@8.57.0)(typescript@4.6.4)':
     dependencies:
-      '@typescript-eslint/utils': 5.20.0(eslint@8.57.0)(typescript@4.6.4)
+      '@typescript-eslint/utils': 5.20.0(eslint@8.57.0)(typescript@4.9.5)
       debug: 4.4.0
       eslint: 8.57.0
       tsutils: 3.21.0(typescript@4.6.4)
@@ -21569,6 +21440,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript-eslint/typescript-estree@5.20.0(typescript@4.9.5)':
+    dependencies:
+      '@typescript-eslint/types': 5.20.0
+      '@typescript-eslint/visitor-keys': 5.20.0
+      debug: 4.4.0
+      globby: 11.1.0
+      is-glob: 4.0.3
+      semver: 7.6.2
+      tsutils: 3.21.0(typescript@4.6.4)
+    optionalDependencies:
+      typescript: 4.9.5
+    transitivePeerDependencies:
+      - supports-color
+
   '@typescript-eslint/typescript-estree@6.21.0(typescript@5.4.5)':
     dependencies:
       '@typescript-eslint/types': 6.21.0
@@ -21613,7 +21498,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@5.20.0(eslint@8.57.0)(typescript@4.6.4)':
+  '@typescript-eslint/utils@5.20.0(eslint@7.32.0)(typescript@4.9.5)':
+    dependencies:
+      '@types/json-schema': 7.0.15
+      '@typescript-eslint/scope-manager': 5.20.0
+      '@typescript-eslint/types': 5.20.0
+      '@typescript-eslint/typescript-estree': 5.20.0(typescript@4.9.5)
+      eslint: 7.32.0
+      eslint-scope: 5.1.1
+      eslint-utils: 3.0.0(eslint@7.32.0)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  '@typescript-eslint/utils@5.20.0(eslint@8.57.0)(typescript@4.9.5)':
     dependencies:
       '@types/json-schema': 7.0.15
       '@typescript-eslint/scope-manager': 5.20.0
@@ -21924,9 +21822,9 @@ snapshots:
       - encoding
     optional: true
 
-  '@vue/cli-plugin-router@5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(encoding@0.1.13)':
+  '@vue/cli-plugin-router@5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(encoding@0.1.13)':
     dependencies:
-      '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)
+      '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)
       '@vue/cli-shared-utils': 5.0.8(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
@@ -21942,9 +21840,9 @@ snapshots:
       '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@4.10.0)(webpack-sources@3.3.3)
     optional: true
 
-  '@vue/cli-plugin-vuex@5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))':
+  '@vue/cli-plugin-vuex@5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))':
     dependencies:
-      '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)
+      '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)
     optional: true
 
   '@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(less-loader@12.2.0(less@4.2.0)(webpack@5.101.0(webpack-cli@5.1.4)))(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)':
@@ -21960,7 +21858,7 @@ snapshots:
       '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.13)(css-loader@6.11.0(webpack@5.101.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.0(webpack-cli@5.1.4))
       '@vue/web-component-wrapper': 1.3.0
-      acorn: 8.14.0
+      acorn: 8.15.0
       acorn-walk: 8.3.2
       address: 1.2.2
       autoprefixer: 10.4.19(postcss@8.5.3)
@@ -21969,7 +21867,7 @@ snapshots:
       cli-highlight: 2.1.11
       clipboardy: 2.3.0
       cliui: 7.0.4
-      copy-webpack-plugin: 9.0.1(webpack@5.101.0)
+      copy-webpack-plugin: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       css-loader: 6.11.0(webpack@5.101.0(webpack-cli@5.1.4))
       css-minimizer-webpack-plugin: 3.4.1(webpack@5.101.0(webpack-cli@5.1.4))
       cssnano: 5.1.15(postcss@8.5.3)
@@ -21993,7 +21891,7 @@ snapshots:
       postcss-loader: 6.2.1(postcss@8.5.3)(webpack@5.101.0(webpack-cli@5.1.4))
       progress-webpack-plugin: 1.0.16(webpack@5.101.0(webpack-cli@5.1.4))
       ssri: 8.0.1
-      terser-webpack-plugin: 5.3.10(webpack@5.101.0)
+      terser-webpack-plugin: 5.3.14(webpack@5.101.0(webpack-cli@5.1.4))
       thread-loader: 3.0.4(webpack@5.101.0(webpack-cli@5.1.4))
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.13)(vue@3.4.31(typescript@4.9.5))(webpack@5.101.0(webpack-cli@5.1.4))
       vue-style-loader: 4.1.3
@@ -22091,7 +21989,7 @@ snapshots:
       '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.13)(css-loader@6.11.0(webpack@5.101.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.0(webpack-cli@5.1.4))
       '@vue/web-component-wrapper': 1.3.0
-      acorn: 8.14.0
+      acorn: 8.15.0
       acorn-walk: 8.3.2
       address: 1.2.2
       autoprefixer: 10.4.19(postcss@8.5.3)
@@ -22100,7 +21998,7 @@ snapshots:
       cli-highlight: 2.1.11
       clipboardy: 2.3.0
       cliui: 7.0.4
-      copy-webpack-plugin: 9.0.1(webpack@5.101.0)
+      copy-webpack-plugin: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       css-loader: 6.11.0(webpack@5.101.0(webpack-cli@5.1.4))
       css-minimizer-webpack-plugin: 3.4.1(webpack@5.101.0)
       cssnano: 5.1.15(postcss@8.5.3)
@@ -22124,7 +22022,7 @@ snapshots:
       postcss-loader: 6.2.1(postcss@8.5.3)(webpack@5.101.0)
       progress-webpack-plugin: 1.0.16(webpack@5.101.0)
       ssri: 8.0.1
-      terser-webpack-plugin: 5.3.10(webpack@5.101.0)
+      terser-webpack-plugin: 5.3.14(webpack@5.101.0(webpack-cli@5.1.4))
       thread-loader: 3.0.4(webpack@5.101.0)
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.13)(vue@2.7.16)(webpack@5.101.0)
       vue-style-loader: 4.1.3
@@ -22208,20 +22106,20 @@ snapshots:
       - whiskers
     optional: true
 
-  '@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)':
+  '@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)':
     dependencies:
       '@babel/helper-compilation-targets': 7.24.6
       '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.101.0(webpack-cli@5.1.4))
       '@soda/get-current-script': 1.0.2
       '@types/minimist': 1.2.5
       '@vue/cli-overlay': 5.0.8
-      '@vue/cli-plugin-router': 5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(encoding@0.1.13)
-      '@vue/cli-plugin-vuex': 5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))
+      '@vue/cli-plugin-router': 5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(encoding@0.1.13)
+      '@vue/cli-plugin-vuex': 5.0.8(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))
       '@vue/cli-shared-utils': 5.0.8(encoding@0.1.13)
       '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
-      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.13)(css-loader@6.11.0(webpack@5.101.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.0(webpack-cli@5.1.4))
+      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.13)(css-loader@6.11.0(webpack@5.101.0))(vue-template-compiler@2.7.16)(webpack@5.101.0(webpack-cli@5.1.4))
       '@vue/web-component-wrapper': 1.3.0
-      acorn: 8.14.0
+      acorn: 8.15.0
       acorn-walk: 8.3.2
       address: 1.2.2
       autoprefixer: 10.4.19(postcss@8.5.3)
@@ -22230,7 +22128,7 @@ snapshots:
       cli-highlight: 2.1.11
       clipboardy: 2.3.0
       cliui: 7.0.4
-      copy-webpack-plugin: 9.0.1(webpack@5.101.0)
+      copy-webpack-plugin: 9.0.1(webpack@5.101.0(webpack-cli@5.1.4))
       css-loader: 6.11.0(webpack@5.101.0(webpack-cli@5.1.4))
       css-minimizer-webpack-plugin: 3.4.1(webpack@5.101.0(webpack-cli@5.1.4))
       cssnano: 5.1.15(postcss@8.5.3)
@@ -22254,7 +22152,7 @@ snapshots:
       postcss-loader: 6.2.1(postcss@8.5.3)(webpack@5.101.0(webpack-cli@5.1.4))
       progress-webpack-plugin: 1.0.16(webpack@5.101.0(webpack-cli@5.1.4))
       ssri: 8.0.1
-      terser-webpack-plugin: 5.3.10(webpack@5.101.0)
+      terser-webpack-plugin: 5.3.14(webpack@5.101.0(webpack-cli@5.1.4))
       thread-loader: 3.0.4(webpack@5.101.0(webpack-cli@5.1.4))
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.13)(vue@3.4.31(typescript@4.9.5))(webpack@5.101.0(webpack-cli@5.1.4))
       vue-style-loader: 4.1.3
@@ -22588,7 +22486,7 @@ snapshots:
       - supports-color
       - webpack
 
-  '@vue/eslint-config-standard@6.1.0(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(webpack@5.101.0(webpack-cli@5.1.4))':
+  '@vue/eslint-config-standard@6.1.0(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(webpack@5.101.0(webpack-cli@5.1.4))':
     dependencies:
       eslint: 8.57.0
       eslint-config-standard: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0)
@@ -22599,7 +22497,7 @@ snapshots:
       eslint-plugin-promise: 6.0.1(eslint@8.57.0)
       eslint-plugin-vue: 8.7.1(eslint@8.57.0)
     optionalDependencies:
-      '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)
+      '@vue/cli-service': 5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.0.4)(webpack@5.101.0))(webpack-sources@3.3.3)
     transitivePeerDependencies:
       - supports-color
       - webpack
@@ -23632,7 +23530,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.9-beta.41(vue@2.7.16):
+  bk-magic-vue@2.5.10-beta.12(vue@2.7.16):
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
@@ -23642,29 +23540,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.9-beta.9(vue@2.7.16):
-    dependencies:
-      clipboard: 2.0.11
-      highlight.js: 10.7.3
-      json-formatter-js: 2.5.11
-      marked: 4.2.12
-      spark-md5: 3.0.2
-      tinycolor2: 1.6.0
-      vue: 2.7.16
-
-  bkui-vue@0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
-    dependencies:
-      '@floating-ui/dom': 0.5.4
-      '@popperjs/core': 2.11.8
-      date-fns: 2.28.0
-      highlight.js: 10.7.3
-      js-calendar: 1.2.3
-      lodash: 4.17.21
-      tinycolor2: 1.4.2
-      vue: 3.4.31(typescript@4.9.5)
-      vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
-
-  bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -23677,7 +23553,7 @@ snapshots:
       vue: 3.4.31(typescript@4.9.5)
       vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
 
-  bkui-vue@2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -23689,6 +23565,19 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 3.5.13(typescript@5.4.5)
       vue-types: 4.1.1(vue@3.5.13(typescript@5.4.5))
+
+  bkui-vue@2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+    dependencies:
+      '@floating-ui/dom': 1.5.4
+      '@popperjs/core': 2.11.8
+      date-fns: 2.30.0
+      highlight.js: 10.7.3
+      js-calendar: 1.2.3
+      json-formatter-js: 2.3.4
+      lodash: 4.17.21
+      tinycolor2: 1.6.0
+      vue: 3.4.31(typescript@4.9.5)
+      vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
 
   bl@4.1.0:
     dependencies:
@@ -24550,7 +24439,7 @@ snapshots:
       glob-parent: 5.1.2
       globby: 13.2.2
       normalize-path: 3.0.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.2
       serialize-javascript: 6.0.2
       webpack: 5.101.0(webpack-cli@5.1.4)
 
@@ -24570,7 +24459,7 @@ snapshots:
       webpack: 5.101.0(webpack-cli@4.10.0)
       webpack-log: 2.0.0
 
-  copy-webpack-plugin@9.0.1(webpack@5.101.0):
+  copy-webpack-plugin@9.0.1(webpack@5.101.0(webpack-cli@5.1.4)):
     dependencies:
       fast-glob: 3.3.2
       glob-parent: 5.1.2
@@ -24789,7 +24678,7 @@ snapshots:
       cssnano: 5.1.15(postcss@8.5.3)
       jest-worker: 27.5.1
       postcss: 8.5.3
-      schema-utils: 4.2.0
+      schema-utils: 4.3.2
       serialize-javascript: 6.0.2
       source-map: 0.6.1
       webpack: 5.101.0(webpack-cli@5.1.4)
@@ -24800,7 +24689,7 @@ snapshots:
       cssnano: 5.1.15(postcss@8.5.3)
       jest-worker: 27.5.1
       postcss: 8.5.3
-      schema-utils: 4.2.0
+      schema-utils: 4.3.2
       serialize-javascript: 6.0.2
       source-map: 0.6.1
       webpack: 5.101.0(webpack-cli@4.10.0)
@@ -25164,8 +25053,6 @@ snapshots:
       call-bind: 1.0.8
       es-errors: 1.3.0
       is-data-view: 1.0.1
-
-  date-fns@2.28.0: {}
 
   date-fns@2.30.0:
     dependencies:
@@ -25954,7 +25841,7 @@ snapshots:
       eslint-plugin-n: 15.7.0(eslint@8.57.0)
       eslint-plugin-promise: 6.2.0(eslint@8.57.0)
 
-  eslint-config-tencent@1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8):
+  eslint-config-tencent@1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@7.32.0))(eslint@7.32.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8):
     dependencies:
       '@babel/core': 7.24.6
       '@babel/eslint-parser': 7.24.6(@babel/core@7.24.6)(eslint@8.57.0)
@@ -25970,7 +25857,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-config-tencent@1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@8.57.0))(eslint@8.57.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8):
+  eslint-config-tencent@1.0.4(@babel/core@7.24.6)(@typescript-eslint/eslint-plugin@5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)(typescript@4.6.4))(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-plugin-prettier@5.2.6(@types/eslint@8.56.10)(eslint-config-prettier@8.10.0(eslint@8.57.0))(eslint@8.57.0)(prettier@2.8.8))(eslint@8.57.0)(prettier@2.8.8):
     dependencies:
       '@babel/core': 7.24.6
       '@babel/eslint-parser': 7.24.6(@babel/core@7.24.6)(eslint@8.57.0)
@@ -26093,7 +25980,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -26215,7 +26102,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -26328,10 +26215,6 @@ snapshots:
       eslint: 8.57.0
 
   eslint-plugin-standard@4.0.2(eslint@7.32.0):
-    dependencies:
-      eslint: 7.32.0
-
-  eslint-plugin-standard@5.0.0(eslint@7.32.0):
     dependencies:
       eslint: 7.32.0
 
@@ -26456,7 +26339,7 @@ snapshots:
       jest-worker: 29.7.0
       micromatch: 4.0.8
       normalize-path: 3.0.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.2
       webpack: 5.101.0(webpack-cli@5.1.4)
 
   eslint@7.32.0:
@@ -26596,7 +26479,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
 
@@ -29760,7 +29643,7 @@ snapshots:
 
   mlly@1.7.1:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.15.0
       pathe: 1.1.2
       pkg-types: 1.1.3
       ufo: 1.5.4
@@ -32797,7 +32680,7 @@ snapshots:
       jest-worker: 26.6.2
       rollup: 4.24.4
       serialize-javascript: 4.0.0
-      terser: 5.31.0
+      terser: 5.43.1
 
   rollup-pluginutils@2.8.2:
     dependencies:
@@ -33593,20 +33476,20 @@ snapshots:
     dependencies:
       browserslist: 4.24.2
       postcss: 8.4.47
-      postcss-selector-parser: 6.1.0
+      postcss-selector-parser: 6.1.2
 
   stylehacks@5.1.1(postcss@8.5.3):
     dependencies:
       browserslist: 4.24.2
       postcss: 8.5.3
-      postcss-selector-parser: 6.1.0
+      postcss-selector-parser: 6.1.2
     optional: true
 
   stylehacks@6.1.1(postcss@8.4.47):
     dependencies:
       browserslist: 4.24.2
       postcss: 8.4.47
-      postcss-selector-parser: 6.1.0
+      postcss-selector-parser: 6.1.2
 
   stylelint-config-recommended-scss@8.0.0(postcss@8.4.47)(stylelint@14.16.1):
     dependencies:
@@ -34147,7 +34030,7 @@ snapshots:
       terser: 5.31.0
       webpack: 5.101.0(webpack-cli@5.1.4)
 
-  terser-webpack-plugin@5.3.14(webpack@5.101.0):
+  terser-webpack-plugin@5.3.14(webpack@5.101.0(webpack-cli@5.1.4)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
@@ -34158,7 +34041,7 @@ snapshots:
 
   terser@4.8.1:
     dependencies:
-      acorn: 8.14.0
+      acorn: 8.15.0
       commander: 2.20.3
       source-map: 0.6.1
       source-map-support: 0.5.21
@@ -34222,7 +34105,7 @@ snapshots:
       json-parse-better-errors: 1.0.2
       loader-runner: 4.3.0
       neo-async: 2.6.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.2
       webpack: 5.101.0(webpack-cli@5.1.4)
 
   through2-filter@3.1.0:
@@ -34258,8 +34141,6 @@ snapshots:
   tiny-emitter@2.1.0: {}
 
   tinybench@2.8.0: {}
-
-  tinycolor2@1.4.2: {}
 
   tinycolor2@1.6.0: {}
 
@@ -35233,10 +35114,6 @@ snapshots:
     dependencies:
       vue: 2.7.16
 
-  vue-i18n@8.26.8(vue@2.7.16):
-    dependencies:
-      vue: 2.7.16
-
   vue-i18n@9.1.10(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@intlify/core-base': 9.1.10
@@ -35453,6 +35330,74 @@ snapshots:
       - velocityjs
       - walrus
       - whiskers
+
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.13)(css-loader@6.11.0(webpack@5.101.0))(vue-template-compiler@2.7.16)(webpack@5.101.0(webpack-cli@5.1.4)):
+    dependencies:
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
+      css-loader: 6.11.0(webpack@5.101.0(webpack-cli@5.1.4))
+      hash-sum: 1.0.2
+      loader-utils: 1.4.2
+      vue-hot-reload-api: 2.3.4
+      vue-style-loader: 4.1.3
+      webpack: 5.101.0(webpack-cli@5.1.4)
+    optionalDependencies:
+      '@vue/compiler-sfc': 3.5.13
+      vue-template-compiler: 2.7.16
+    transitivePeerDependencies:
+      - arc-templates
+      - atpl
+      - babel-core
+      - bracket-template
+      - coffee-script
+      - dot
+      - dust
+      - dustjs-helpers
+      - dustjs-linkedin
+      - eco
+      - ect
+      - ejs
+      - haml-coffee
+      - hamlet
+      - hamljs
+      - handlebars
+      - hogan.js
+      - htmling
+      - jade
+      - jazz
+      - jqtpl
+      - just
+      - liquid-node
+      - liquor
+      - lodash
+      - marko
+      - mote
+      - mustache
+      - nunjucks
+      - plates
+      - pug
+      - qejs
+      - ractive
+      - razor-tmpl
+      - react
+      - react-dom
+      - slm
+      - squirrelly
+      - swig
+      - swig-templates
+      - teacup
+      - templayed
+      - then-jade
+      - then-pug
+      - tinyliquid
+      - toffee
+      - twig
+      - twing
+      - underscore
+      - vash
+      - velocityjs
+      - walrus
+      - whiskers
+    optional: true
 
   vue-loader@17.4.2(@vue/compiler-sfc@3.5.13)(vue@2.7.16)(webpack@5.101.0):
     dependencies:
@@ -35782,7 +35727,7 @@ snapshots:
       memfs: 3.5.3
       mime-types: 2.1.35
       range-parser: 1.2.1
-      schema-utils: 4.2.0
+      schema-utils: 4.3.2
       webpack: 5.101.0(webpack-cli@4.10.0)
 
   webpack-dev-middleware@7.2.1(webpack@5.101.0):
@@ -36013,7 +35958,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.14(webpack@5.101.0)
+      terser-webpack-plugin: 5.3.14(webpack@5.101.0(webpack-cli@5.1.4))
       watchpack: 2.4.1
       webpack-sources: 3.3.3
     optionalDependencies:
@@ -36047,7 +35992,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.14(webpack@5.101.0)
+      terser-webpack-plugin: 5.3.14(webpack@5.101.0(webpack-cli@5.1.4))
       watchpack: 2.4.1
       webpack-sources: 3.3.3
     optionalDependencies:

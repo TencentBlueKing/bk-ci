@@ -91,8 +91,10 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="280"
                         :label="$t('operate')"
+                        :width="320"
+                        prop="operate"
+                        fixed="right"
                     >
                         <div
                             slot-scope="props"
@@ -120,8 +122,8 @@
                             />
                             <version-diff-entry
                                 v-if="props.row.version !== releaseVersion"
-                                :version="props.row.version"
-                                :latest-version="releaseVersion"
+                                :version="props.row.currentDiffVersion"
+                                :latest-version="props.row.latestDiffVersion"
                                 :archive-flag="archiveFlag"
                             />
                             <bk-button
@@ -189,10 +191,12 @@
             columns () {
                 return [{
                     prop: 'versionName',
+                    width: 120,
                     label: this.$t('versionNum'),
                     showOverflowTooltip: true
                 }, {
                     prop: 'description',
+                    width: 120,
                     label: this.$t('versionDesc'),
                     showOverflowTooltip: true
                 }, {
@@ -205,7 +209,7 @@
                     }
                 }, {
                     prop: 'creator',
-                    width: 90,
+                    width: 120,
                     label: this.$t('creator')
                 }, {
                     prop: 'updateTime',
@@ -217,7 +221,7 @@
                     }
                 }, {
                     prop: 'updater',
-                    width: 90,
+                    width: 120,
                     label: this.$t('audit.operator')
                 }]
             },
@@ -318,7 +322,9 @@
                         isDraft,
                         canRollback: !isDraft,
                         isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName]),
+                        currentDiffVersion: !isDraft ? item.version : this.releaseVersion,
+                        latestDiffVersion: !isDraft ? this.releaseVersion : item.version
                     }
                 })
             },

@@ -35,6 +35,7 @@ import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
+import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
@@ -72,6 +73,7 @@ Vue.use(VeeValidate, {
     i18n,
     fieldsBagName: 'veeFields',
     dictionary: {
+        'ja-JP': validationJAMessages,
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }

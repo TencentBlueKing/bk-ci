@@ -464,7 +464,10 @@ class ScmApiManager constructor(
         providerProperties: ScmProviderProperties,
         request: HookRequest
     ): Webhook {
-        return scmProviderManager.webhookParser(providerProperties).parse(request)
+        return scmProviderManager.webhookParser(providerProperties)
+                .parse(request) ?: throw UnsupportedOperationException(
+            "unsupported webhook request ${providerProperties.providerCode} [${request.body}]"
+        )
     }
 
     fun webhookEnrich(

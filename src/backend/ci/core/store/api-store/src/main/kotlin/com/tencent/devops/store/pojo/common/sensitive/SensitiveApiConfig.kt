@@ -31,5 +31,6 @@ data class SensitiveApiConfig(
     val apiName: String,
     val apiUrl: String,
     val aliasNames: Map<String /*language*/, String /*aliasName*/>? = null,
-    val hideFlag: Boolean = false
+    val hideFlag: Boolean = false,
+    val needReview: Boolean = true
 )

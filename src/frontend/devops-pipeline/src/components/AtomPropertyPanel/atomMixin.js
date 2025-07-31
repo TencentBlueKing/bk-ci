@@ -19,6 +19,7 @@
 
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
+import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
 import SubParameter from '@/components/AtomFormComponent/SubParameter'
 import Tips from '@/components/AtomFormComponent/Tips'
@@ -109,7 +110,8 @@ const atomMixin = {
         EnumButton,
         TipsSimple,
         Tips,
-        SubParameter
+        SubParameter,
+        MetadataNormal
     },
     computed: {
         ...mapGetters('atom', [

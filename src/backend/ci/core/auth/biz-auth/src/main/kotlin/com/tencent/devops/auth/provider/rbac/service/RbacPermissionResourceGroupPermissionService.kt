@@ -30,7 +30,6 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -69,11 +68,11 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -82,7 +81,6 @@ import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
@@ -126,10 +124,7 @@ class RbacPermissionResourceGroupPermissionService(
         )
     }
 
-    private val projectCodeAndPipelineId2ViewIds = Caffeine.newBuilder()
-        .maximumSize(50000) // 最大Key数量
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, List<String>>()
+    private val projectCodeAndPipelineId2ViewIds = CacheHelper.createCache<String, List<String>>(duration = 10)
 
     override fun grantGroupPermission(
         authorizationScopesStr: String,
@@ -140,14 +135,48 @@ class RbacPermissionResourceGroupPermissionService(
         iamResourceCode: String,
         resourceName: String,
         iamGroupId: Int,
-        registerMonitorPermission: Boolean
+        registerMonitorPermission: Boolean,
+        filterResourceTypes: List<String>,
+        filterActions: List<String>
     ): Boolean {
-        var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
+        val bkCiAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = authorizationScopesStr,
             projectCode = projectCode,
             projectName = projectName,
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
+        )
+        // 若filterActions不为空，则本次新增的组权限，只和该action有关
+        // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
+        authorizationScopes.addAll(
+            when {
+                filterActions.isNotEmpty() -> {
+                    bkCiAuthorizationScopes.onEach { scope ->
+                        scope.actions.retainAll { action ->
+                            filterActions.contains(action.id)
+                        }
+                    }.filter { it.actions.isNotEmpty() }
+                }
+
+                filterResourceTypes.isNotEmpty() -> {
+                    bkCiAuthorizationScopes.filter { scope ->
+                        val resourceTypeOfScope = scope.resources.firstOrNull()?.type
+                        when {
+                            resourceTypeOfScope == ResourceTypeId.PROJECT -> {
+                                scope.actions.retainAll { action ->
+                                    filterResourceTypes.contains(action.id.substringBeforeLast("_"))
+                                }
+                                scope.actions.isNotEmpty()
+                            }
+
+                            else -> filterResourceTypes.contains(resourceTypeOfScope)
+                        }
+                    }
+                }
+
+                else -> bkCiAuthorizationScopes
+            }
         )
         if (resourceType == AuthResourceType.PROJECT.value && registerMonitorPermission) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
@@ -156,8 +185,10 @@ class RbacPermissionResourceGroupPermissionService(
                 projectCode = projectCode,
                 groupCode = groupCode
             )
-            authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
+            authorizationScopes.addAll(monitorAuthorizationScopes)
         }
+        logger.info("grant group permissions authorization scopes :{}|{}|{}|{}",
+                    projectCode,iamGroupId,resourceType,JsonUtil.toJson(authorizationScopes))
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
@@ -316,6 +347,13 @@ class RbacPermissionResourceGroupPermissionService(
     ): Boolean {
         if (filterIamGroupIds.isEmpty())
             return false
+        if (relatedResourceType == ResourceTypeId.PROJECT) {
+            return isGroupsHasProjectLevelPermission(
+                projectCode = projectCode,
+                filterIamGroupIds = filterIamGroupIds,
+                action = action
+            )
+        }
         val resourceType = rbacCommonService.getActionInfo(action).relatedResourceType
         val pipelineGroupIds = listPipelineGroupIds(
             projectCode = projectCode,
@@ -417,8 +455,7 @@ class RbacPermissionResourceGroupPermissionService(
         relatedResourceCode: String?
     ): List<String> {
         return if (relatedResourceCode != null && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-            val cacheKey = DigestUtils.md5Hex(projectCode.plus("_").plus(relatedResourceCode))
-            projectCodeAndPipelineId2ViewIds.get(cacheKey) {
+            CacheHelper.getOrLoad(projectCodeAndPipelineId2ViewIds, projectCode, relatedResourceCode) {
                 client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
                     projectId = projectCode,
                     pipelineId = relatedResourceCode

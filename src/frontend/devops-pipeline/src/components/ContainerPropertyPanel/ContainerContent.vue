@@ -693,6 +693,9 @@
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
+            },
+            systemVersion () {
+                this.toggleXcode()
             }
         },
         created () {
@@ -911,11 +914,12 @@
                     })
                     .finally(() => (this.isLoadingMac = false))
             },
-            async toggleXcode (show) {
-                if (show) {
-                    const res = await this.getMacXcodeVersion(this.systemVersion)
-                    this.xcodeVersionList = res.data?.versionList || []
-                }
+            async toggleXcode () {
+                const res = await this.getMacXcodeVersion(this.systemVersion)
+                this.xcodeVersionList = res.data?.versionList.map(i => ({
+                    id: i,
+                    name: i
+                })) || []
             },
             chooseMacSystem (item) {
                 if (item !== this.systemVersion) {
@@ -1090,7 +1094,7 @@
                     : `export ${env.name}=/data/soda/apps/${key}/${value}/${env.path}`
             },
             addThirdSlave () {
-                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
+                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/node/allNode?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },
             changeShowPerformance (isShow = false) {

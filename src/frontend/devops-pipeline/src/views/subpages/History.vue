@@ -135,7 +135,7 @@
                             //     title: this.$t('details.outputs'),
                             //     name: 'artifactory'
                             // }
-                        ].map((child) => ({
+                        ].filter((child) => child.name !== 'triggerEvent' || !this.archiveFlag).map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion && !this.isBranchVersion,
                             active: this.activeMenuItem === child.name

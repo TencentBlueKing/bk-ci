@@ -28,8 +28,8 @@
 package com.tencent.devops.metrics.pojo.po
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.pipeline.event.CallBackEvent
-import com.tencent.devops.common.pipeline.utils.EventUtils.toEventType
+import com.tencent.devops.common.pipeline.event.MetricsEvent
+import com.tencent.devops.common.pipeline.utils.EventUtils.toMetricsEventType
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -43,7 +43,7 @@ data class MetricsUserPO(
     val stepId: String?,
     val status: String,
     val atomCode: String?,
-    val eventType: CallBackEvent,
+    val eventType: MetricsEvent,
     var endTime: LocalDateTime?,
     val labels: String?
 ) {
@@ -56,7 +56,7 @@ data class MetricsUserPO(
         stepId = event.stepId,
         status = checkNotNull(event.buildStatus),
         atomCode = event.atomCode,
-        eventType = checkNotNull(event.toEventType()),
+        eventType = checkNotNull(event.toMetricsEventType()),
         endTime = null,
         labels = event.labels?.entries?.joinToString(separator = ";") { "${it.key}=${it.value}" }
     )
@@ -76,7 +76,7 @@ data class MetricsUserPO(
                 list[5].ifEmpty { null },
                 list[6],
                 list[7].ifEmpty { null },
-                CallBackEvent.valueOf(list[8]),
+                MetricsEvent.valueOf(list[8]),
                 list[9].ifEmpty { null }?.let {
                     LocalDateTime.ofInstant(Instant.ofEpochSecond(it.toLong()), ZoneOffset.ofHours(8))
                 },

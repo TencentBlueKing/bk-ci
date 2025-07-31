@@ -241,7 +241,7 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
-    import ConstraintWraper from '@/components/ConstraintWraper.vue'
+import ConstraintWraper from '@/components/ConstraintWraper.vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
@@ -375,6 +375,10 @@
             color: #63656E;
             font-size: 12px;
             font-weight: 500;
+
+            .variable-radio .bk-form-radio {
+                display: inline-block !important;
+            }
         }
         .single-lock-sub-form {
             margin-bottom: 20px;
