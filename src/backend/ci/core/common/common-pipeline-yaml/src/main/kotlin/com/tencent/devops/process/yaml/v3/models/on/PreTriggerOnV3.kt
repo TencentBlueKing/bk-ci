@@ -40,6 +40,9 @@ data class PreTriggerOnV3(
     @get:Schema(title = "repo-name")
     var repoName: String? = null,
     var type: String? = null,
+    @JsonProperty("scm-code")
+    @get:Schema(title = "scm-code")
+    val scmCode: String? = null,
     override val push: Any? = null,
     override val tag: Any? = null,
     override val mr: Any? = null,

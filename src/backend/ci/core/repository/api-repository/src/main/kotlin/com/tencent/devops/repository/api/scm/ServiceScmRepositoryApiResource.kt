@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.Perm
 import com.tencent.devops.scm.api.pojo.Reference
@@ -127,4 +128,18 @@ interface ServiceScmRepositoryApiResource {
         @QueryParam("pageSize")
         pageSize: Int = 20
     ): Result<List<Reference>>
+
+    @Operation(summary = "注册webhook")
+    @POST
+    @Path("/registerWebhook")
+    fun registerWebhook(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "事件类型", required = true)
+        @QueryParam("eventType")
+        eventType: String,
+        @Parameter(description = "代码库模型", required = true)
+        repository: Repository
+    )
 }

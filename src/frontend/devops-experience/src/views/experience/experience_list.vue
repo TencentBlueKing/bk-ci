@@ -96,7 +96,7 @@
                         prop="creator"
                     ></bk-table-column>
                     <bk-table-column
-                        :label="$t('experience.create_time')"
+                        :label="$t('experience.versionCreateTime')"
                         prop="formatRepoCreateTime"
                     ></bk-table-column>
                     <bk-table-column

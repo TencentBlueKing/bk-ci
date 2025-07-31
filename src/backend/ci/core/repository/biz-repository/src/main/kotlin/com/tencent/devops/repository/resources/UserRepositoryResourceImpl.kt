@@ -188,7 +188,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         aliasName: String?,
-        enablePac: Boolean?
+        enablePac: Boolean?,
+        scmCode: String?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -215,7 +216,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit,
             aliasName = aliasName,
-            enablePac = enablePac
+            enablePac = enablePac,
+            scmCode = scmCode
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }

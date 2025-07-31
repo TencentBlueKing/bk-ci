@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,9 +32,11 @@ import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelUpdateRequest
 import com.tencent.devops.artifactory.api.user.UserArtifactQualityMetadataResource
 import com.tencent.devops.artifactory.pojo.MetadataLabelSimpleInfo
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -44,7 +46,8 @@ import java.time.LocalDateTime
 @RestResource
 class UserArtifactQualityMetadataResourceImpl(
     private val bkRepoClient: BkRepoClient,
-    private val client: Client
+    private val client: Client,
+    private val tokenService: ClientTokenService
 ) : UserArtifactQualityMetadataResource {
     override fun list(
         userId: String,
@@ -146,6 +149,11 @@ class UserArtifactQualityMetadataResourceImpl(
         projectId: String,
         labelKey: String
     ): Result<Boolean> {
+        client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            userId = userId,
+            projectCode = projectId,
+            token = tokenService.getSystemToken()
+        )
         bkRepoClient.deleteArtifactQualityMetadataLabel(
             userId = userId,
             projectId = projectId,
@@ -160,6 +168,10 @@ class UserArtifactQualityMetadataResourceImpl(
         labelKey: String,
         metadataLabelUpdate: UserLabelUpdateRequest
     ): Result<Boolean> {
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
+            userId = userId,
+            projectId = projectId
+        )
         bkRepoClient.updateArtifactQualityMetadataLabel(
             userId = userId,
             projectId = projectId,
@@ -174,6 +186,10 @@ class UserArtifactQualityMetadataResourceImpl(
         projectId: String,
         metadataLabels: List<UserLabelCreateRequest>
     ): Result<Boolean> {
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
+            userId = userId,
+            projectId = projectId
+        )
         bkRepoClient.batchSaveArtifactQualityMetadataLabel(
             userId = userId,
             projectId = projectId,
@@ -187,6 +203,10 @@ class UserArtifactQualityMetadataResourceImpl(
         projectId: String,
         metadataLabel: UserLabelCreateRequest
     ): Result<Boolean> {
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
+            userId = userId,
+            projectId = projectId
+        )
         bkRepoClient.createArtifactQualityMetadataLabel(
             userId = userId,
             projectId = projectId,

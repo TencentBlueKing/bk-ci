@@ -205,5 +205,6 @@
         "PIPELINE": "流水线",
         "WEB": "手动创建"
     },
-    "save_success": "保存成功"
+    "save_success": "保存成功",
+    "versionCreateTime": "体验包创建时间"
 }

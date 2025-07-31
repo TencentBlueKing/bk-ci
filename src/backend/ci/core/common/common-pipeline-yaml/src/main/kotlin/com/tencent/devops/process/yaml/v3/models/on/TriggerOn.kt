@@ -73,7 +73,10 @@ data class TriggerOn(
     var shelveCommit: PushRule? = null,
     @JsonProperty("shelve-submit")
     @get:Schema(title = "shelve-submit")
-    var shelveSubmit: PushRule? = null
+    var shelveSubmit: PushRule? = null,
+    @JsonProperty("scm-code")
+    @get:Schema(title = "scm-code")
+    var scmCode: String? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
@@ -121,7 +124,8 @@ data class TriggerOn(
         changeContent = changeContent,
         changeSubmit = changeSubmit,
         shelveCommit = shelveCommit,
-        shelveSubmit = shelveSubmit
+        shelveSubmit = shelveSubmit,
+        scmCode = scmCode
     )
 
     private fun simpleManual() = when {
