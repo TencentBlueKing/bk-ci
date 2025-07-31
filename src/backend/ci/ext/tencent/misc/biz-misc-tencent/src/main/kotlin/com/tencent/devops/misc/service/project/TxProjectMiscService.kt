@@ -92,20 +92,19 @@ class TxProjectMiscService @Autowired constructor(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
-            type = ShardingRuleTypeEnum.DB,
+            type = type,
             routingName = projectId
         )
-        return if (shardingRoutingRuleRecord != null) {
+        return shardingRoutingRuleRecord?.let {
             ShardingRoutingRule(
                 clusterName = clusterName,
                 moduleCode = moduleCode,
                 dataSourceName = shardingRoutingRuleRecord.dataSourceName,
-                type = ShardingRuleTypeEnum.DB,
+                tableName = shardingRoutingRuleRecord.tableName,
+                type = type,
                 routingName = shardingRoutingRuleRecord.routingName,
                 routingRule = shardingRoutingRuleRecord.routingRule
             )
-        } else {
-            null
         }
     }
 }

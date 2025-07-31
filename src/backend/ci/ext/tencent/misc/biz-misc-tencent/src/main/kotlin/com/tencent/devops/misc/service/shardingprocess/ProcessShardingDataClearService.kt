@@ -35,7 +35,8 @@ import com.tencent.devops.misc.service.project.TxProjectMiscService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 abstract class ProcessShardingDataClearService {
@@ -63,6 +64,7 @@ abstract class ProcessShardingDataClearService {
 
     /**
      * 按项目ID清理分片数据
+     * @param userId 用户ID
      * @param projectId 项目ID
      * @param clusterName 集群名称
      * @param dataSourceName 数据源名称
@@ -70,11 +72,16 @@ abstract class ProcessShardingDataClearService {
      * @return 布尔值
      */
     fun clearShardingDataByProjectId(
+        userId: String,
         projectId: String,
         clusterName: String,
         dataSourceName: String,
         broadcastTableDeleteFlag: Boolean? = false
     ): Boolean {
+        logger.info(
+            "User($userId) start clearing sharding data for project $projectId, cluster $clusterName, " +
+                    "dataSource $dataSourceName, broadcastTableDeleteFlag: $broadcastTableDeleteFlag"
+        )
         val dslContext = getDSLContext() ?: return false
         // 查询分片路由规则记录
         val shardingRule = txProjectMiscService.getProjectShardingRoutingRule(
@@ -88,7 +95,11 @@ abstract class ProcessShardingDataClearService {
             logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
             return false
         }
-        val executor = Executors.newFixedThreadPool(1)
+        val executor = ThreadPoolExecutor(
+            1, 1, 0L, TimeUnit.MILLISECONDS,
+            LinkedBlockingQueue(100),
+            ThreadPoolExecutor.AbortPolicy()
+        )
         try {
             val deleteDataParam = DeleteDataParam(
                 dslContext = dslContext,
@@ -99,7 +110,14 @@ abstract class ProcessShardingDataClearService {
             )
             // 提交删除任务到线程池异步执行
             executor.submit {
-                processDataDeleteService.deleteProcessData(deleteDataParam)
+                try {
+                    processDataDeleteService.deleteProcessData(deleteDataParam)
+                } catch (ignored: Throwable) {
+                    logger.error(
+                        "Failed to delete process data for project $projectId, cluster $clusterName, " +
+                                "dataSource $dataSourceName", ignored
+                    )
+                }
             }
         } finally {
             executor.shutdown() // 确保线程池关闭

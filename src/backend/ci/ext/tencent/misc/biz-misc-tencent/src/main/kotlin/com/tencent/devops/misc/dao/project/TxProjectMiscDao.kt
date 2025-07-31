@@ -95,7 +95,7 @@ class TxProjectMiscDao {
                 add(MODULE_CODE.eq(moduleCode.name))
                 add(TYPE.eq(type.name))
                 add(ROUTING_NAME.eq(routingName))
-                tableName?.takeUnless { it.isBlank() }?.let {
+                tableName?.takeIf { it.isNotBlank() }?.let {
                     add(TABLE_NAME.eq(it))
                 }
             }
