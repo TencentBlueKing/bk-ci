@@ -4,8 +4,6 @@ import com.tencent.devops.environment.pojo.EnvVar
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateAgentInfo(
-    @get:Schema(title = "项目ID", required = true)
-    val projectId: String,
     @get:Schema(title = "Agent Hash ID", required = true)
     val agentHashId: String?,
     @get:Schema(title = "Node Hash ID", required = true)
