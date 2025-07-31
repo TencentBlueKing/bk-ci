@@ -35,7 +35,7 @@ spec:
               done
               
               # 生成jwt_token
-              JWT_TOKEN=$(../../scripts/bk-ci-gen-jwt-token.sh {{ .Values.config.bkCiJwtRsaPrivateKey}})
+              JWT_TOKEN=$(../../scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-iam")
 
               # 调用接口
               services="auth"
