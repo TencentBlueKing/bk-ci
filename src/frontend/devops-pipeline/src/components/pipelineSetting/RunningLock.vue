@@ -95,7 +95,7 @@
                         >
                             <div class="run-lock-radio-item">
                                 <bk-radio
-                                    :disabled="!editable"
+                                    :disabled="!(editable || isOverride)"
                                     :value="runTypeMap.MULTIPLE"
                                 >
                                     {{ $t('settings.runningOption.multiple') }}
