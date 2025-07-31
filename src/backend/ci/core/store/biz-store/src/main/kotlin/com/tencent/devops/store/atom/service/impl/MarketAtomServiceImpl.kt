@@ -1683,17 +1683,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return try {
             JsonUtil.toMap(taskJson)
         } catch (e: Exception) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
-                params = arrayOf(TASK_JSON_NAME)
+            // 记录日志 不抛异常 避免影响核心组件发布业务
+            logger.error(
+                "Plugin configuration file has incorrect format. " +
+                        "File name: ${TASK_JSON_NAME}, Error reason: ${e.message}", e
             )
+            emptyMap()
         }
     }
 
     private fun getGitRecentCommitMessage(userId: String, codeSrc: String, branch: String): String? {
         // 获取用户Git授权Token
         val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
-            ?: throw OauthForbiddenException("用户[$userId]尚未进行OAUTH授权，请先授权。")
+        if (accessToken.isNullOrBlank()) {
+            // 记录日志 不抛异常 避免影响核心组件发布业务
+            logger.warn("User [$userId] has not performed OAUTH authorization. Please authorize first.")
+            return null
+        }
         // 调用Git服务获取提交信息
         return client.get(ServiceGitResource::class)
             .getRepoRecentCommitInfo(
