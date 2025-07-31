@@ -91,6 +91,7 @@ spec:
               done
 
               # 生成jwt_token
+              chmod +x ../../scripts/bk-ci-gen-jwt-token.sh
               JWT_TOKEN=$(../../scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-bkrepo")
 
               # 打开制品库入口
