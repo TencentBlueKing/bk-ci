@@ -560,6 +560,7 @@ class RepositoryService @Autowired constructor(
         createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         // 新接入的代码源需额外手动设置webhook触发白名单，后续完全灰度完成后，移除此部分逻辑
+        // 参考: com.tencent.devops.process.trigger.scm.PipelineWebHookEventListener.onEvent
         enableWebhookTrigger(repository)
         return repositoryId
     }
@@ -1656,9 +1657,10 @@ class RepositoryService @Autowired constructor(
     }
 
     fun enableWebhookTrigger(repository: Repository) {
-        val scmConfig = repositoryScmConfigDao.get(dslContext, repository.scmCode) ?: return
+        val scmCode = repository.scmCode
+        val scmConfig = repositoryScmConfigDao.get(dslContext, scmCode) ?: return
         // 仅有新接入的仓库需要手动加入白名单
-        val needAddWhitelist = listOf(
+        val needAddWhitelist = !ScmType.values().any { it.name == scmCode } && listOf(
             ScmProviderCodes.TSVN.name,
             ScmProviderCodes.GITEE.name
         ).contains(scmConfig.providerCode)
