@@ -63,6 +63,7 @@ import com.tencent.devops.misc.utils.MiscUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -70,11 +71,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import jakarta.annotation.PostConstruct
-import java.util.concurrent.ExecutorService
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList", "ComplexMethod")
 @Service
@@ -239,56 +239,60 @@ class ProcessDataMigrateService @Autowired constructor(
         processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
         // 查询项目下流水线数量
         val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
-        // 根据流水线数量计算线程数量
-        val threadNum = if (pipelineNum < DEFAULT_THREAD_NUM) {
-            pipelineNum
-        } else {
-            DEFAULT_THREAD_NUM
-        }
-        // 根据线程数量创建线程池
-        val executor = Executors.newFixedThreadPool(threadNum)
-        // 根据线程数量创建信号量
-        val semaphore = Semaphore(threadNum)
-        // 根据流水线数量创建计数器
-        val doneSignal = CountDownLatch(pipelineNum)
-        var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
-        do {
-            val pipelineIdList = processDao.getPipelineIdListByProjectId(
-                dslContext = dslContext,
-                projectId = projectId,
-                minId = minPipelineInfoId,
-                limit = DEFAULT_PAGE_SIZE.toLong()
-            )?.map { it.getValue(0).toString() }
-            if (!pipelineIdList.isNullOrEmpty()) {
-                // 重置minId的值
-                minPipelineInfoId = (processDao.getPipelineInfoByPipelineId(
+        var executor: ExecutorService? = null
+        var doneSignal: CountDownLatch? = null
+        if (pipelineNum > 0) {
+            // 根据流水线数量计算线程数量
+            val threadNum = if (pipelineNum < DEFAULT_THREAD_NUM) {
+                pipelineNum
+            } else {
+                DEFAULT_THREAD_NUM
+            }
+            // 根据线程数量创建线程池
+            executor = Executors.newFixedThreadPool(threadNum)
+            // 根据线程数量创建信号量
+            val semaphore = Semaphore(threadNum)
+            // 根据流水线数量创建计数器
+            doneSignal = CountDownLatch(pipelineNum)
+            var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
+            do {
+                val pipelineIdList = processDao.getPipelineIdListByProjectId(
                     dslContext = dslContext,
                     projectId = projectId,
-                    pipelineId = pipelineIdList[pipelineIdList.size - 1]
-                )?.id ?: 0L) + 1
-            }
-            pipelineIdList?.forEach { pipelineId ->
-                // 开启异步任务迁移项目下流水线数据
-                executor.submit(
-                    MigratePipelineDataTask(
-                        migratePipelineDataParam = MigratePipelineDataParam(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            cancelFlag = cancelFlag,
-                            semaphore = semaphore,
-                            doneSignal = doneSignal,
-                            dslContext = dslContext,
-                            migratingShardingDslContext = migratingShardingDslContext,
-                            processDao = processDao,
-                            processDataMigrateDao = processDataMigrateDao
+                    minId = minPipelineInfoId,
+                    limit = DEFAULT_PAGE_SIZE.toLong()
+                )?.map { it.getValue(0).toString() }
+                if (!pipelineIdList.isNullOrEmpty()) {
+                    // 重置minId的值
+                    minPipelineInfoId = (processDao.getPipelineInfoByPipelineId(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineIdList[pipelineIdList.size - 1]
+                    )?.id ?: 0L) + 1
+                }
+                pipelineIdList?.forEach { pipelineId ->
+                    // 开启异步任务迁移项目下流水线数据
+                    executor.submit(
+                        MigratePipelineDataTask(
+                            migratePipelineDataParam = MigratePipelineDataParam(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                cancelFlag = cancelFlag,
+                                semaphore = semaphore,
+                                doneSignal = doneSignal,
+                                dslContext = dslContext,
+                                migratingShardingDslContext = migratingShardingDslContext,
+                                processDao = processDao,
+                                processDataMigrateDao = processDataMigrateDao
+                            )
                         )
                     )
-                )
-            }
-        } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
+                }
+            } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
+        }
         try {
             // 迁移与项目直接相关的数据
-            doMigrationBus(migratingShardingDslContext, projectId)
+            doProjectMigrationBus(migratingShardingDslContext, projectId)
         } catch (ignored: Throwable) {
             logger.warn("migrateProjectData doMigrationBus fail|params:[$userId|$projectId]", ignored)
             // 删除迁移库的数据
@@ -297,7 +301,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 projectId = projectId,
                 targetClusterName = clusterName,
                 targetDataSourceName = shardingRoutingRule,
-                migrationLock = migrationLock
+                lock = migrationLock
             )
             return
         }
@@ -309,7 +313,7 @@ class ProcessDataMigrateService @Autowired constructor(
             ).data
         try {
             // 等待所有任务执行完成
-            doneSignal.await(migrationTimeout, TimeUnit.HOURS)
+            doneSignal?.await(migrationTimeout, TimeUnit.HOURS)
             logger.info("migrateProjectData all pipeline tasks have been completed|params:[$userId|$projectId]")
             // 执行迁移完成后的逻辑
             doAfterMigrationBus(
@@ -339,8 +343,8 @@ class ProcessDataMigrateService @Autowired constructor(
                 errorMsg = errorMsg
             )
         } finally {
-            executor.shutdown() // 确保线程池关闭
-            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+            executor?.shutdown() // 确保线程池关闭
+            if (executor?.awaitTermination(60, TimeUnit.SECONDS) == false) {
                 executor.shutdownNow()
             }
         }
@@ -363,8 +367,8 @@ class ProcessDataMigrateService @Autowired constructor(
         if (projectCurrentExecuteCount != projectLatestExecuteCount) {
             logger.warn(
                 "migrateProjectData project:[$projectId] executeCount validate fail|" +
-                    "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
-                    "projectLatestExecuteCount:$projectLatestExecuteCount"
+                        "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
+                        "projectLatestExecuteCount:$projectLatestExecuteCount"
             )
             return
         }
@@ -423,7 +427,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn(
                 "migrateProjectData project:[$projectId] send msg" +
-                    " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
+                        " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
             )
         }
     }
@@ -433,6 +437,17 @@ class ProcessDataMigrateService @Autowired constructor(
         sourceDataSourceName: String,
         dataTag: String? = null
     ): Triple<String, Int, Map<String, String>> {
+        // 判断项目是否正在迁移中
+        val migratingFlag = redisOperation.isMember(
+            key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+            item = projectId
+        )
+        if (migratingFlag) {
+            throw ErrorCodeException(
+                errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                params = arrayOf(projectId)
+            )
+        }
         // 判断同时迁移的项目数量是否超过限制
         val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY)?.toInt() ?: 0
         if (migrationProjectCount >= migrationMaxProjectCount) {
@@ -477,7 +492,7 @@ class ProcessDataMigrateService @Autowired constructor(
         return "MIGRATE_PROJECT_PROCESS_DATA_EXECUTE_COUNT:$projectId"
     }
 
-    private fun doMigrationBus(migratingShardingDslContext: DSLContext, projectId: String) {
+    private fun doProjectMigrationBus(migratingShardingDslContext: DSLContext, projectId: String) {
         migrateAuditResourceData(migratingShardingDslContext, projectId)
         migratePipelineGroupData(migratingShardingDslContext, projectId)
         migratePipelineJobMutexGroupData(migratingShardingDslContext, projectId)
@@ -566,7 +581,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.info(
                 "migrateProjectData project:[$projectId] send msg" +
-                    " template(MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE) fail!"
+                        " template(MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE) fail!"
             )
         }
     }
@@ -653,7 +668,7 @@ class ProcessDataMigrateService @Autowired constructor(
         finishServiceIps?.let { serviceIps?.removeAll(finishServiceIps) }
         logger.info(
             "confirmCacheIsUpdated service[$serviceName] cacheKey:$cacheKey retryNum:$retryNum " +
-                "serviceIps:$serviceIps finishServiceIps:$finishServiceIps"
+                    "serviceIps:$serviceIps finishServiceIps:$finishServiceIps"
         )
         return if (serviceIps.isNullOrEmpty()) {
             true
