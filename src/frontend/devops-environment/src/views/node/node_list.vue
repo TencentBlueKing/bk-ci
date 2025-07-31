@@ -14,6 +14,7 @@
                             <bk-dropdown-menu
                                 trigger="click"
                                 class="mr10"
+                                :font-size="'medium'"
                                 @show="dropdown"
                                 @hide="dropdown"
                             >
@@ -1298,6 +1299,6 @@
     }
 
     .batch-menu {
-        margin: 0 8px;
+        margin-right: 8px;
     }
 </style>

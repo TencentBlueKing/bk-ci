@@ -173,15 +173,19 @@
                         children: [
                             {
                                 id: 'DEV',
-                                name: this.$t('environment.envInfo.devEnvType')
+                                name: this.$t('environment.envInfo.DEVEnvType')
                             },
                             {
                                 id: 'PROD',
-                                name: this.$t('environment.envInfo.testEnvType')
+                                name: this.$t('environment.envInfo.PRODEnvType')
+                            },
+                            {
+                                id: 'DEVX',
+                                name: this.$t('environment.envInfo.DEVXEnvType')
                             },
                             {
                                 id: 'BUILD',
-                                name: this.$t('environment.envInfo.buildEnvType')
+                                name: this.$t('environment.envInfo.BUILDEnvType')
                             }
                         ]
                     },
