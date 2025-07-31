@@ -113,7 +113,6 @@
                 :error-msg="errors.first('desc')"
             >
                 <vuex-textarea
-                    :disabled="!editable"
                     name="desc"
                     :value="pipelineSetting.desc"
                     :maxlength="100"

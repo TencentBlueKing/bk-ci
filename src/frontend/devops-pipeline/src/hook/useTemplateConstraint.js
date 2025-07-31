@@ -34,6 +34,19 @@ export default function useTemplateConstraint () {
                 failSubscriptionList: setting.failSubscriptionList,
                 successSubscriptionList: setting.successSubscriptionList
             })
+        } else if (field === 'parallelSetting') {
+            Object.assign(param, [
+                'maxConRunningQueueSize',
+                'maxQueueSize',
+                'runLockType',
+                'waitQueueTimeMinute',
+                'concurrencyCancelInProgress',
+                'concurrencyGroup'
+            ].reduce((acc, cur) => {
+                acc[cur] = setting[cur]
+                return acc
+            }, {})
+            )
         } else {
             param[field] = setting[field]
         }
