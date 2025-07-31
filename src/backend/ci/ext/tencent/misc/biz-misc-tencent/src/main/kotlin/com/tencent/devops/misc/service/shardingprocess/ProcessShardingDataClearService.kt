@@ -33,7 +33,6 @@ import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.service.process.ProcessDataDeleteService
 import com.tencent.devops.misc.service.project.TxProjectMiscService
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
@@ -91,19 +90,16 @@ abstract class ProcessShardingDataClearService {
         }
         val executor = Executors.newFixedThreadPool(1)
         try {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                val deleteDataParam = DeleteDataParam(
-                    dslContext = context,
-                    projectId = projectId,
-                    clusterName = clusterName,
-                    dataSourceName = dataSourceName,
-                    broadcastTableDeleteFlag = broadcastTableDeleteFlag
-                )
-                // 提交删除任务到线程池异步执行
-                executor.submit {
-                    processDataDeleteService.deleteProcessData(deleteDataParam)
-                }
+            val deleteDataParam = DeleteDataParam(
+                dslContext = dslContext,
+                projectId = projectId,
+                clusterName = clusterName,
+                dataSourceName = dataSourceName,
+                broadcastTableDeleteFlag = broadcastTableDeleteFlag
+            )
+            // 提交删除任务到线程池异步执行
+            executor.submit {
+                processDataDeleteService.deleteProcessData(deleteDataParam)
             }
         } finally {
             executor.shutdown() // 确保线程池关闭
