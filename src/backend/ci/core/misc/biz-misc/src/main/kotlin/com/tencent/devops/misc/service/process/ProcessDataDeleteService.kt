@@ -29,10 +29,10 @@ package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
-import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
@@ -66,10 +66,10 @@ class ProcessDataDeleteService @Autowired constructor(
     fun deleteProcessMigrationData(
         deleteDataParam: DeleteDataParam
     ) {
-        val migrationLock = deleteDataParam.lock
+        val lock = deleteDataParam.lock
         val projectId = deleteDataParam.projectId
         try {
-            migrationLock?.lock()
+            lock?.lock()
             val moduleCode = SystemModuleEnum.PROCESS
             val queryParam = ProjectDataMigrateHistoryQueryParam(
                 projectId = projectId,
@@ -92,7 +92,7 @@ class ProcessDataDeleteService @Autowired constructor(
                 )
             }
         } finally {
-            migrationLock?.unlock()
+            lock?.unlock()
         }
     }
 
@@ -367,7 +367,7 @@ class ProcessDataDeleteService @Autowired constructor(
      * @param projectId 项目ID
      * @param targetClusterName 迁移集群
      * @param targetDataSourceName 迁移数据源名称
-     * @param migrationLock 项目迁移锁
+     * @param lock 锁
      * @return 字段列表
      */
     fun deleteProjectDirectlyRelData(
@@ -375,10 +375,10 @@ class ProcessDataDeleteService @Autowired constructor(
         projectId: String,
         targetClusterName: String,
         targetDataSourceName: String,
-        migrationLock: MigrationLock? = null
+        lock: RedisLock? = null
     ) {
         try {
-            migrationLock?.lock()
+            lock?.lock()
             val queryParam = ProjectDataMigrateHistoryQueryParam(
                 projectId = projectId,
                 moduleCode = SystemModuleEnum.PROCESS,
@@ -399,7 +399,7 @@ class ProcessDataDeleteService @Autowired constructor(
                 )
             }
         } finally {
-            migrationLock?.unlock()
+            lock?.unlock()
         }
     }
 
