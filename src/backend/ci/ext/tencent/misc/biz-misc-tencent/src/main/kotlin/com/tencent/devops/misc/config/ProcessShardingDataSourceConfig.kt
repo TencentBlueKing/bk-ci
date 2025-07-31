@@ -36,7 +36,6 @@ import org.jooq.impl.DefaultConfiguration
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor
@@ -52,9 +51,6 @@ import javax.sql.DataSource
 class ProcessShardingDataSourceConfig(
     private val properties: ProcessShardingDataSourceProperties
 ) : BeanDefinitionRegistryPostProcessor {
-
-    override fun postProcessBeanFactory(beanFactory: ConfigurableListableBeanFactory) {
-    }
 
     override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
         properties.sharding.forEach { (shardId, config) ->
@@ -104,8 +100,7 @@ class ProcessShardingDataSourceConfig(
     fun createDataSource(
         poolName: String,
         config: DataSourceConfig
-    ): HikariDataSource? {
-        if (config.url.isBlank()) return null
+    ): HikariDataSource {
         return HikariDataSource().apply {
             this.poolName = poolName
             jdbcUrl = config.url
