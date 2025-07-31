@@ -205,12 +205,12 @@ export default {
             return response.data
         })
     },
-    handleCheckAtom: ({ commit }, { projectId, pipelineId, buildId, elementId, postData }) => {
+    handleCheckAtom: (_, { projectId, pipelineId, buildId, elementId, postData }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/review/`, postData).then(response => {
             return response.data
         })
     },
-    requestTemplate: async ({ commit, dispatch, getters, state }, { projectId, templateId, version, query }) => {
+    requestTemplate: async ({ dispatch }, { projectId, templateId, version, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
             dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {

@@ -116,6 +116,7 @@
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             classify="paramIds"
             :field="param.id"
+            @toggleConstraint="handleToggleConstraint"
         >
             <template #constraint-area="{ props: { isOverride } }">
                 <form-field
@@ -318,7 +319,7 @@
         isTextareaParam,
         SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import SelectTypeParam from './select-type-param'
 
     const BOOLEAN = [
@@ -356,11 +357,19 @@
                 type: Boolean,
                 default: false
             },
+            initParamItem: {
+                type: Object,
+                default: () => ({})
+            },
             param: {
                 type: Object,
                 default: () => ({})
             },
             handleChange: {
+                type: Function,
+                default: () => {}
+            },
+            resetEditItem: {
                 type: Function,
                 default: () => {}
             }
@@ -374,7 +383,10 @@
         },
         computed: {
             ...mapGetters('atom', [
-                'osList'
+                'osList',
+            ]),
+            ...mapState('atom', [
+                'pipeline'
             ]),
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
@@ -540,6 +552,15 @@
                     ...this.param.defaultValue,
                     branch: value
                 })
+            },
+            handleToggleConstraint (isOverride) {
+                if (!isOverride) {
+                    const param = this.pipeline.stages[0].containers[0].params.find(item => item.id === this.param.id)
+                    this.handleChange('defaultValue', param.defaultValue)
+                } else {
+                    this.handleChange('defaultValue', this.initParamItem.defaultValue)
+                }
+                
             }
         }
     }

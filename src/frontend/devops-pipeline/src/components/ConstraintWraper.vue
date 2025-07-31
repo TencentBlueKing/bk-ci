@@ -27,7 +27,13 @@
                     :class="['template-constraint-mode-icon', { 'is-override': isOverrideField }]"
                     @click="toggleConstraint"
                 >
+                    <span
+                        v-if="reverting"
+                        class="bk-icon icon-circle-2-1 spin-icon"
+                    >
+                    </span>
                     <logo
+                        v-else
                         name="template-mode"
                         size="12"
                     />
@@ -94,17 +100,11 @@
             }
         },
         setup (props, ctx) {
-            const { isOverrideTemplate, toggleConstraint } = useTemplateConstraint()
+            const { isOverrideTemplate, toggleConstraint, fieldMap, labelMap, reverting } = useTemplateConstraint()
             const vm = getCurrentInstance()
             const { t } = useI18n()
             const constraintTips = ref(null)
-            const fieldMap = {
-                buildNumRule: 'CUSTOM_BUILD_NUM',
-                label: 'LABEL',
-                notices: 'NOTICES',
-                parallelSetting: 'CONCURRENCY',
-                failIfVariableInvalid: 'FAIL_IF_VARIABLE_INVALID'
-            }
+            
             const instanceFromTemplate = computed(() => {
                 return vm.proxy.$store.getters['atom/instanceFromTemplate'] ?? false
             })
@@ -117,11 +117,7 @@
                     return t('noticeConf')
                 }
             
-                const labelMap = {
-                    triggerStepIds: 'triggerSetting',
-                    paramIds: 'paramDefaultValue',
-                    settingGroups: 'template.settings',
-                }
+                
                 return t(labelMap[classify] ?? 'unknown')
             })
             const isOverrideField = computed(() => {
@@ -154,7 +150,7 @@
                         return
                     }
                     if (fieldAlias.value) {
-                        toggleConstraint(props.classify, fieldAlias.value)
+                        toggleConstraint(props.classify, fieldAlias.value, props.field)
                         instance?.hide?.()
                     }
                     
@@ -162,7 +158,8 @@
                 instanceFromTemplate,
                 constraintTips,
                 isOverrideField,
-                constraintTipsContent
+                constraintTipsContent,
+                reverting
             }
         }
     }
@@ -211,6 +208,7 @@
         }
         .bk-tooltip-ref {
             width: 100%;
+            display: flex;
         }
     }
     

@@ -61,6 +61,7 @@
                 :disabled="disabled"
                 :value-required="paramType === 'constant'"
                 :handle-change="handleUpdateParam"
+                :init-param-item="initParamItem"
             >
             </param-value-option>
 

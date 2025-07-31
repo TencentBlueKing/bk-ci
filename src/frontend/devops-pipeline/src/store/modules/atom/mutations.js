@@ -512,17 +512,10 @@ export default {
             isGetPluginHeadTab
         })
     },
-    [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, field }) => {
-        const { overrideTemplateField = {} } = state.pipeline
-        const constraintList = overrideTemplateField[classify] || []
-        const pos = constraintList.indexOf(field)
-        if (pos === -1) {
-            constraintList.push(field)
-        } else {
-            constraintList.splice(pos, 1)
-        }
+    [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {
+       
         Object.assign(state.pipeline, { overrideTemplateField: {
-            ...overrideTemplateField,
+            ...state.pipeline.overrideTemplateField,
             [classify]: constraintList
         } })
         return state
