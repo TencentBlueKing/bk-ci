@@ -27,6 +27,7 @@ spec:
             - "-c"
             - |
               # 生成jwt_token
+              chmod +x ./scripts/bk-ci-gen-jwt-token.sh
               JWT_TOKEN=$(./scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-plugin")
 
               # 调用接口
