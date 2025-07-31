@@ -323,8 +323,8 @@
     "item": "Items",
     "minutes": "Minutes",
     "itemPlaceholder": "Please enter",
-    "defaultSuc": "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} build success, Takes ${{ci.pipeline_execute_time}}, Trigger user: ${{ci.actor}.",
-    "defaultFail": "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} build fail, Takes ${{ci.pipeline_execute_time}}, Trigger user: ${{ci.actor}}.",
+    "defaultSuc": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} build success, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor}.",
+    "defaultFail": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} build fail, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor{'}}'}.",
     "runningOption": {
       "multiple": "Can run concurrently",
       "lock": "Disable the pipeline, it cannot be run by any triggering method",
