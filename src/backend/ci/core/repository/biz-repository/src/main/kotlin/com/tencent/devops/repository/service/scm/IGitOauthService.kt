@@ -42,7 +42,7 @@ interface IGitOauthService {
         projectId: String,
         repoHashId: String?,
         search: String? = null,
-        username: String? = null
+        oauthUserId: String? = null
     ): AuthorizeResult
     fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project>
     fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>

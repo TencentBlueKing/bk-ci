@@ -70,8 +70,8 @@ interface UserGitResource {
         @QueryParam("search")
         search: String? = null,
         @Parameter(description = "授权账号", required = false)
-        @QueryParam("username")
-        username: String? = null
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = null
     ): Result<AuthorizeResult>
 
     @Operation(summary = "根据用户ID, 通过oauth方式获取项目")

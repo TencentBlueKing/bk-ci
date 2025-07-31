@@ -72,7 +72,7 @@ class UserGitResourceImpl @Autowired constructor(
         projectId: String,
         repoHashId: String?,
         search: String?,
-        username: String?
+        oauthUserId: String?
     ): Result<AuthorizeResult> {
         return Result(
             gitOauthService.getProject(
@@ -80,7 +80,7 @@ class UserGitResourceImpl @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 search = search,
-                username = username
+                oauthUserId = oauthUserId
             )
         )
     }
