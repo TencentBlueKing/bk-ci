@@ -71,6 +71,11 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<RemoteDevSettings>
 
+    @Operation(summary = "获取文件上传网关配置")
+    @GET
+    @Path("/fileGateway")
+    fun getFileGateway(): Result<Map<String,String>>
+
     @Operation(summary = "更新远程开发环境配置")
     @POST
     @Path("/settings")

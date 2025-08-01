@@ -79,6 +79,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
     }
 
+    override fun getFileGateway(): Result<Map<String, String>> {
+        return Result(remoteDevSettingService.getFileGateway())
+    }
+
     override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
         return Result(remoteDevSettingService.updateRemoteDevSettings(userId, remoteDevSettings))
     }

@@ -57,6 +57,4 @@ data class RemoteDevSettings(
     var companyName: String = "",
     @get:Schema(title = "平台维护的用户管理设置")
     val userSetting: RemoteDevUserSettings = RemoteDevUserSettings(),
-    @get:Schema(title = "制品库地址")
-    var bkrepoHost: Map<String, String> = emptyMap()
 )

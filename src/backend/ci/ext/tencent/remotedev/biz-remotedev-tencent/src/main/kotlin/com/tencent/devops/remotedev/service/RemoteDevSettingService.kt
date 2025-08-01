@@ -76,12 +76,15 @@ class RemoteDevSettingService @Autowired constructor(
                 setting.projectId = it?.data?.englishName ?: ""
             }
         }
+        return setting
+    }
+
+    fun getFileGateway(): Map<String, String> {
         // 配置示例  zone1=https://zone1.bkrepo.com,zone2=https://zone2.bkrepo.com
-        setting.bkrepoHost = configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.associate {
-            val (left, right) = it.split("=")
+        return configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.associate {
+            val (left, right) = it.split("=", limit = 2)
             left to right
         } ?: emptyMap()
-        return setting
     }
 
     fun userWinTimeLeft(userId: String): Int {
