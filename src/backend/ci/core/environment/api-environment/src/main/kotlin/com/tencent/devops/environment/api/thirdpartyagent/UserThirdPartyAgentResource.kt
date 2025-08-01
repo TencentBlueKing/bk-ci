@@ -117,7 +117,10 @@ interface UserThirdPartyAgentResource {
         loginPassword: String?,
         @Parameter(description = "Agent安装模式", required = false)
         @QueryParam("installType")
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        @Parameter(description = "重装使用的AgentHashId", required = false)
+        @QueryParam("reInstallId")
+        reInstallId: String?
     ): Result<String>
 
     @Operation(summary = "获取网关列表")

@@ -42,7 +42,8 @@ class BatchInstallAgentService @Autowired constructor(
         zoneName: String?,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -64,7 +65,8 @@ class BatchInstallAgentService @Autowired constructor(
                 } else {
                     AESUtil.encrypt(ASE_SECRET, loginPassword)
                 },
-                installType = installType
+                installType = installType,
+                reInstallId = reInstallId
             )
         }
 
@@ -93,7 +95,8 @@ class BatchInstallAgentService @Autowired constructor(
             } else {
                 AESUtil.encrypt(ASE_SECRET, loginPassword)
             },
-            installType = installType
+            installType = installType,
+            reInstallId = reInstallId
         )
     }
 
@@ -103,7 +106,8 @@ class BatchInstallAgentService @Autowired constructor(
         zoneName: String?,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)
@@ -122,13 +126,17 @@ class BatchInstallAgentService @Autowired constructor(
         }
 
         // 直接创建新agent
-        val agentId = genNewAgent(
-            projectId = projectId,
-            userId = userId,
-            os = os,
-            zoneName = zoneName
-        )
-        val agentHashId = HashUtil.encodeLongId(agentId)
+        val agentHashId = if (reInstallId.isNullOrBlank()) {
+            val agentId = genNewAgent(
+                projectId = projectId,
+                userId = userId,
+                os = os,
+                zoneName = zoneName
+            )
+            HashUtil.encodeLongId(agentId)
+        } else {
+            reInstallId
+        }
 
         val decodePassword = if (loginPassword.isNullOrBlank()) {
             null
