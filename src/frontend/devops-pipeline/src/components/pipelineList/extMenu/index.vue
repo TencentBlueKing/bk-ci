@@ -158,7 +158,12 @@
             }
         }
         .is-disable {
-            cursor: not-allowed
+            cursor: not-allowed;
+            color: #C4C6CC;
+            &:hover {
+                background-color: #fff;
+                color: #C4C6CC;
+            }
         }
     }
 </style>

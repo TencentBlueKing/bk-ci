@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,7 +55,6 @@ import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class MetricsDataReportDao {
@@ -113,7 +112,7 @@ class MetricsDataReportDao {
         savePipelineStageOverviewDataPOs: List<SavePipelineStageOverviewDataPO>
     ) {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
-            savePipelineStageOverviewDataPOs.forEach { savePipelineStageOverviewDataPO ->
+            val addStep = savePipelineStageOverviewDataPOs.map { savePipelineStageOverviewDataPO ->
                 dslContext.insertInto(this)
                     .set(ID, savePipelineStageOverviewDataPO.id)
                     .set(PROJECT_ID, savePipelineStageOverviewDataPO.projectId)
@@ -128,8 +127,8 @@ class MetricsDataReportDao {
                     .set(MODIFIER, savePipelineStageOverviewDataPO.modifier)
                     .set(UPDATE_TIME, savePipelineStageOverviewDataPO.updateTime)
                     .set(CREATE_TIME, savePipelineStageOverviewDataPO.createTime)
-                    .execute()
             }
+            dslContext.batch(addStep).execute()
         }
     }
 
@@ -138,7 +137,7 @@ class MetricsDataReportDao {
         updatePipelineStageOverviewDataPOs: List<UpdatePipelineStageOverviewDataPO>
     ) {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
-            updatePipelineStageOverviewDataPOs.forEach { updatePipelineStageOverviewDataPO ->
+            val updateStep = updatePipelineStageOverviewDataPOs.map { updatePipelineStageOverviewDataPO ->
                 dslContext.update(this)
                     .set(AVG_COST_TIME, updatePipelineStageOverviewDataPO.avgCostTime)
                     .set(EXECUTE_COUNT, updatePipelineStageOverviewDataPO.executeCount)
@@ -148,8 +147,8 @@ class MetricsDataReportDao {
                         PROJECT_ID.eq(updatePipelineStageOverviewDataPO.projectId)
                             .and(ID.eq(updatePipelineStageOverviewDataPO.id))
                     )
-                    .execute()
             }
+            dslContext.batch(updateStep).execute()
         }
     }
 
@@ -227,7 +226,7 @@ class MetricsDataReportDao {
         saveAtomOverviewDataPOs: List<SaveAtomOverviewDataPO>
     ) {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            saveAtomOverviewDataPOs.forEach { saveAtomOverviewDataPO ->
+            val addStep = saveAtomOverviewDataPOs.map { saveAtomOverviewDataPO ->
                 dslContext.insertInto(this)
                     .set(ID, saveAtomOverviewDataPO.id)
                     .set(PROJECT_ID, saveAtomOverviewDataPO.projectId)
@@ -248,8 +247,8 @@ class MetricsDataReportDao {
                     .set(MODIFIER, saveAtomOverviewDataPO.modifier)
                     .set(UPDATE_TIME, saveAtomOverviewDataPO.updateTime)
                     .set(CREATE_TIME, saveAtomOverviewDataPO.createTime)
-                    .execute()
             }
+            dslContext.batch(addStep).execute()
         }
     }
 
@@ -269,19 +268,6 @@ class MetricsDataReportDao {
                 .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
                 .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
                 .execute()
-        }
-    }
-
-    fun getAtomIndexStatisticsDailyData(
-        dslContext: DSLContext,
-        atomCode: String,
-        statisticsTime: LocalDateTime
-    ): Long? {
-        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
-            return dslContext.select(ID).from(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .and(STATISTICS_TIME.eq(statisticsTime))
-                .fetchOne(0, Long::class.java)
         }
     }
 
@@ -305,7 +291,7 @@ class MetricsDataReportDao {
         updateAtomOverviewDataPOs: List<UpdateAtomOverviewDataPO>
     ) {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            updateAtomOverviewDataPOs.forEach { updateAtomOverviewDataPO ->
+            val updateStep = updateAtomOverviewDataPOs.map { updateAtomOverviewDataPO ->
                 dslContext.update(this)
                     .set(SUCCESS_RATE, updateAtomOverviewDataPO.successRate)
                     .set(AVG_COST_TIME, updateAtomOverviewDataPO.avgCostTime)
@@ -318,8 +304,8 @@ class MetricsDataReportDao {
                         PROJECT_ID.eq(updateAtomOverviewDataPO.projectId)
                             .and(ID.eq(updateAtomOverviewDataPO.id))
                     )
-                    .execute()
             }
+            dslContext.batch(updateStep).execute()
         }
     }
 
@@ -328,7 +314,7 @@ class MetricsDataReportDao {
         saveAtomFailSummaryDataPOs: List<SaveAtomFailSummaryDataPO>
     ) {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            saveAtomFailSummaryDataPOs.forEach { saveAtomFailSummaryDataPO ->
+            val addStep = saveAtomFailSummaryDataPOs.map { saveAtomFailSummaryDataPO ->
                 dslContext.insertInto(this)
                     .set(ID, saveAtomFailSummaryDataPO.id)
                     .set(PROJECT_ID, saveAtomFailSummaryDataPO.projectId)
@@ -346,8 +332,8 @@ class MetricsDataReportDao {
                     .set(MODIFIER, saveAtomFailSummaryDataPO.modifier)
                     .set(UPDATE_TIME, saveAtomFailSummaryDataPO.updateTime)
                     .set(CREATE_TIME, saveAtomFailSummaryDataPO.createTime)
-                    .execute()
             }
+            dslContext.batch(addStep).execute()
         }
     }
 
@@ -356,7 +342,7 @@ class MetricsDataReportDao {
         updateAtomFailSummaryDataPOs: List<UpdateAtomFailSummaryDataPO>
     ) {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            updateAtomFailSummaryDataPOs.forEach { updateAtomFailSummaryDataPO ->
+            val updateStep = updateAtomFailSummaryDataPOs.map { updateAtomFailSummaryDataPO ->
                 dslContext.update(this)
                     .set(ERROR_COUNT, updateAtomFailSummaryDataPO.errorCount)
                     .set(MODIFIER, updateAtomFailSummaryDataPO.modifier)
@@ -365,8 +351,8 @@ class MetricsDataReportDao {
                         PROJECT_ID.eq(updateAtomFailSummaryDataPO.projectId)
                             .and(ID.eq(updateAtomFailSummaryDataPO.id))
                     )
-                    .execute()
             }
+            dslContext.batch(updateStep).execute()
         }
     }
 
@@ -375,7 +361,7 @@ class MetricsDataReportDao {
         saveAtomFailDetailDataPOs: List<SaveAtomFailDetailDataPO>
     ) {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
-            saveAtomFailDetailDataPOs.forEach { saveAtomFailDetailDataPO ->
+            val addStep = saveAtomFailDetailDataPOs.map { saveAtomFailDetailDataPO ->
                 dslContext.insertInto(this)
                     .set(ID, saveAtomFailDetailDataPO.id)
                     .set(PROJECT_ID, saveAtomFailDetailDataPO.projectId)
@@ -400,8 +386,8 @@ class MetricsDataReportDao {
                     .set(MODIFIER, saveAtomFailDetailDataPO.modifier)
                     .set(UPDATE_TIME, saveAtomFailDetailDataPO.updateTime)
                     .set(CREATE_TIME, saveAtomFailDetailDataPO.createTime)
-                    .execute()
             }
+            dslContext.batch(addStep).execute()
         }
     }
 
@@ -409,31 +395,24 @@ class MetricsDataReportDao {
         dslContext: DSLContext,
         saveErrorCodeInfoPOs: Set<SaveErrorCodeInfoPO>
     ) {
-        saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-            saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
-        }
-    }
-
-    fun saveErrorCodeInfo(
-        dslContext: DSLContext,
-        saveErrorCodeInfoPO: SaveErrorCodeInfoPO
-    ) {
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            dslContext.insertInto(this)
-                .set(ID, saveErrorCodeInfoPO.id)
-                .set(ERROR_TYPE, saveErrorCodeInfoPO.errorType)
-                .set(ERROR_CODE, saveErrorCodeInfoPO.errorCode)
-                .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
-                .set(CREATOR, saveErrorCodeInfoPO.creator)
-                .set(MODIFIER, saveErrorCodeInfoPO.modifier)
-                .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
-                .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
-                .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
-                .onDuplicateKeyUpdate()
-                .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
-                .set(MODIFIER, saveErrorCodeInfoPO.modifier)
-                .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
-                .execute()
+            val addStep = saveErrorCodeInfoPOs.map { saveErrorCodeInfoPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveErrorCodeInfoPO.id)
+                    .set(ERROR_TYPE, saveErrorCodeInfoPO.errorType)
+                    .set(ERROR_CODE, saveErrorCodeInfoPO.errorCode)
+                    .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
+                    .set(CREATOR, saveErrorCodeInfoPO.creator)
+                    .set(MODIFIER, saveErrorCodeInfoPO.modifier)
+                    .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
+                    .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
+                    .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
+                    .onDuplicateKeyUpdate()
+                    .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
+                    .set(MODIFIER, saveErrorCodeInfoPO.modifier)
+                    .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
+            }
+            dslContext.batch(addStep).execute()
         }
     }
 

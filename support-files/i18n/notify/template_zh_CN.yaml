@@ -906,7 +906,7 @@
 - index: 42
   id: "ea98239a51a74f8db0a012a809bc2018"
   templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
-  templateName: "项目下流水线的数据迁移失败提醒"
+  templateName: "项目下流水线的数据迁移或归档失败提醒"
   notifyTypeScope:
     - "WEWORK"
   priority: 0
@@ -914,14 +914,14 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2003"
     sender: "DevOps"
-    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败"
-    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败，失败原因: ${failMsg}"
+    title: "项目【${projectId}】下流水线【${pipelineId}】的数据${operate}失败"
+    body: "项目【${projectId}】下流水线【${pipelineId}】的数据${operate}失败， 失败原因： ${failMsg}"
   creator: "system"
   modifior: "system"
 - index: 43
   id: "ea98239a51a74f8db0a012a809bc2019"
   templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
-  templateName: "项目下流水线的数据迁移成功提醒"
+  templateName: "项目下流水线的数据迁移或归档成功提醒"
   notifyTypeScope:
     - "WEWORK"
   priority: 0
@@ -929,8 +929,8 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2004"
     sender: "DevOps"
-    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功"
-    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功，迁移成功的流水线一共1条。"
+    title: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据"
+    body: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据，共计${operate}流水线 1 条。"
   creator: "system"
   modifior: "system"
 - index: 44
@@ -1053,5 +1053,44 @@
     sender: "DevOps"
     title: "蓝盾权限交接申请 - ${result}"
     body: "你好，${handoverFrom} \n${weworkContent} \n审核意见：${remark} \n更多详情查看：${url}"
+  creator: "system"
+  modifior: "system"
+- index: 50
+  id: "168b9b44b7104647b2102355180a2888"
+  templateCode: "BATCH_TASK_FINISH_COMMON_NOTIFY_TEMPLATE"
+  templateName: "批量任务完成执行通用通知模板"
+  notifyTypeScope:
+    - "WEWORK"
+    - "EMAIL"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "7ff93f9e4d3d4359a1bd7898bb3c1cc7"
+    title: "${startTime}触发的【${name}】批量任务（批次号：${batchId}）已完成执行"
+    body: "\n<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n               <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n                                                <img src=\"\" width=\"52\" style=\"display: block\">\n                                            </td>\n                                            <td style=\"padding-left: 6px;\">\n                                                <img src=\"\" width=\"176\" style=\"display: block\">\n                                            </td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t${startTime}触发的【${name}】批量任务（批次号：${batchId}）已完成执行</font>\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <!-- 表格内容 -->\n                                                <tr class=\"email-information\">\n                                                    <td class=\"table-info\">\n                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                            <tr>\n                                                                <td>\n                                                                       <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t   \n   <tr>\n       <td style=\"text-align: left;width: 500px;padding: 10px;font-weight: normal;color: #707070;\">您已成功执行 ${successNum} 个任务，共有 ${failNum} 个任务执行失败，失败原因:</td>\n       <td style=\"padding: 10px;font-weight: normal;color: #707070;\">${failMsg}</td>\n   </tr>\n\n                                                                   </table>\n                                                                </td>\n                                                            </tr>\n                                                        </table>\n                                                    </td>\n                                                </tr>\n\n                                                <tr class=\"prompt-tips\">\n                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                        </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你触发了批量任务执行。</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n               </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "d6c50c2989944c9f8a16aa029ed811b0"
+    sender: "DevOps"
+    title: "${startTime}触发的【${name}】批量任务（批次号：${batchId}）已完成执行"
+    body: "您已成功执行 ${successNum} 个任务，共有 ${failNum} 个任务执行失败，失败原因: \n${failMsg}"
+  creator: "system"
+  modifior: "system"
+
+- index: 51
+  id: "e166ee7f4dde4d96b2bb32addc6dd51c"
+  templateCode: "BK_STORE_ATOM_AUDIT_NOTIFY"
+  templateName: "研发商店插件上架审核通知模版"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d51a"
+    sender: "DevOps"
+    title: "研发商店插件审核提醒"
+    body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
   creator: "system"
   modifior: "system"

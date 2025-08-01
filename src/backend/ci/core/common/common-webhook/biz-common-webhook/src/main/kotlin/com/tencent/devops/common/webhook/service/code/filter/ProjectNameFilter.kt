@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory
 class ProjectNameFilter(
     private val pipelineId: String,
     private val projectName: String,
-    private val triggerOnProjectName: String
+    private val triggerOnProjectNames: Set<String>
 ) : WebhookFilter {
 
     companion object {
@@ -41,9 +41,11 @@ class ProjectNameFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
-            "$pipelineId|triggerOnProjectName:$triggerOnProjectName|projectName:$projectName|project name filter"
+            "$pipelineId|triggerOnProjectNames:$triggerOnProjectNames|projectNames:$projectName|project name filter"
         )
-        return projectName == triggerOnProjectName || getProjectName(projectName) == triggerOnProjectName
+        return triggerOnProjectNames.find { triggerOnProjectName ->
+            projectName == triggerOnProjectName || getProjectName(projectName) == triggerOnProjectName
+        } != null
     }
 
     private fun getProjectName(projectName: String): String {

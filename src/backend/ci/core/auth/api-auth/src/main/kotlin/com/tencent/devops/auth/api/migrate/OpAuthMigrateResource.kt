@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -87,17 +87,9 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/migrateSpecificResource")
-    @Operation(summary = "迁移特定资源类型资源")
-    fun migrateSpecificResource(
-        @Parameter(description = "迁移资源实体类", required = true)
-        migrateResourceDTO: MigrateResourceDTO
-    ): Result<Boolean>
-
-    @POST
-    @Path("/migrateSpecificResourceOfAllProject")
-    @Operation(summary = "迁移所有项目的特定资源类型资源")
-    fun migrateSpecificResourceOfAllProject(
+    @Path("/resetProjectPermissions")
+    @Operation(summary = "重置项目权限")
+    fun resetProjectPermissions(
         @Parameter(description = "迁移资源实体类", required = true)
         migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>

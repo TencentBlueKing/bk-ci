@@ -194,7 +194,7 @@
                     </header>
 
                     <bk-form-item
-                        required
+                        :required="releaseParams.enablePac"
                         :label="$t('versionDesc')"
                         property="description"
                     >
@@ -428,7 +428,7 @@
                     ],
                     description: [
                         {
-                            required: true,
+                            required: this.releaseParams.enablePac,
                             message: this.$t('stageReview.requireRule', [this.$t('versionDesc')]),
                             trigger: 'blur'
                         }

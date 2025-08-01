@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -67,10 +67,12 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -105,7 +107,9 @@ class NodeService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val slaveGatewayDao: SlaveGatewayDao
+    private val slaveGatewayDao: SlaveGatewayDao,
+    private val nodeTagDao: NodeTagDao,
+    private val nodeTagService: NodeTagService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -154,6 +158,8 @@ class NodeService @Autowired constructor(
             existNodeIdList.forEach {
                 environmentPermissionService.deleteNode(projectId, it)
             }
+            // 删除节点相关标签
+            nodeTagDao.deleteByNodes(dslContext, existNodeIdList)
         }
     }
 
@@ -202,11 +208,21 @@ class NodeService @Autowired constructor(
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        data: NodeFetchReq?
     ): Page<NodeWithPermission> {
+        val tagValues = if (data?.tags.isNullOrEmpty()) {
+            null
+        } else {
+            val t = mutableSetOf<Long>()
+            data?.tags?.forEach { tag ->
+                t.addAll(tag.tagValues ?: return@forEach)
+            }
+            t
+        }
         val nodeRecordList =
             if (-1 != page) {
-                val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
+                val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(page ?: 1, pageSize ?: 20, 200)
                 nodeDao.listNodesWithPageLimitAndSearchCondition(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -225,7 +241,8 @@ class NodeService @Autowired constructor(
                     latestBuildTimeStart = latestBuildTimeStart,
                     latestBuildTimeEnd = latestBuildTimeEnd,
                     sortType = sortType,
-                    collation = collation
+                    collation = collation,
+                    tagValueIds = tagValues
                 )
             } else {
                 nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
@@ -249,7 +266,8 @@ class NodeService @Autowired constructor(
             latestBuildTimeStart = latestBuildTimeStart,
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
-            collation = collation
+            collation = collation,
+            tagValueIds = tagValues
         ).toLong()
         val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
         if (-1 != page) {
@@ -289,6 +307,10 @@ class NodeService @Autowired constructor(
         )
     }
 
+    fun fetchNodesCount(projectId: String): Map<NodeType, Int> {
+        return nodeDao.fetchProjectNodeCount(dslContext, projectId)
+    }
+
     fun listNewExport(
         userId: String,
         projectId: String,
@@ -306,6 +328,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
         var page = 1
@@ -331,7 +354,8 @@ class NodeService @Autowired constructor(
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                data = data
             )
             count = res.count
             page++
@@ -413,6 +437,11 @@ class NodeService @Autowired constructor(
         } else {
             emptyMap()
         }
+        val tagMaps = if (thirdPartyAgentNodeIds.isNotEmpty()) {
+            nodeTagService.fetchNodeTags(projectId, thirdPartyAgentNodeIds.toSet())
+        } else {
+            emptyMap()
+        }
 
         val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
         val envInfos = envDao.listServerEnvByIdsAllType(
@@ -473,7 +502,8 @@ class NodeService @Autowired constructor(
                     ""
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                }
+                },
+                tags = tagMaps[it.nodeId]
             )
         }
     }

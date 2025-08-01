@@ -1,8 +1,10 @@
 package com.tencent.devops.auth.rbac.service
 
+import com.tencent.devops.auth.pojo.UserProjectPermission
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class ResourceGroupPermissionTest {
     @Test
@@ -34,5 +36,25 @@ class ResourceGroupPermissionTest {
             relatedIamResourceCode = "9683"
         )
         Assertions.assertTrue(oldResourceGroupPermissionDTO == newResourceGroupPermissionDTO)
+    }
+
+    @Test
+    fun testUserProjectPermission() {
+        val now = LocalDateTime.now()
+        val u1 = UserProjectPermission(
+            memberId = "admin",
+            projectCode = "test",
+            action = "project_visit",
+            iamGroupId = 1,
+            expireTime = now
+        )
+        val u2 = UserProjectPermission(
+            memberId = "admin",
+            projectCode = "test",
+            action = "project_visit",
+            iamGroupId = 1,
+            expireTime = now
+        )
+        Assertions.assertTrue(u1 == u2)
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -68,6 +68,14 @@ interface OpAuthResourceGroupPermSyncResource {
     @Path("/syncByCondition")
     @Operation(summary = "按条件同步组权限")
     fun syncByCondition(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/syncUserProjectPermissionsByCondition")
+    @Operation(summary = "按条件同步用户项目级权限")
+    fun syncUserProjectPermissionsByCondition(
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>

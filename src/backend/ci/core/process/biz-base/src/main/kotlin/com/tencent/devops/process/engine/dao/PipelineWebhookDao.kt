@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -160,15 +160,15 @@ class PipelineWebhookDao {
         }
     }
 
-    fun getByProjectNameAndType(
+    fun getByProjectNamesAndType(
         dslContext: DSLContext,
-        projectName: String,
+        projectNames: Set<String>,
         repositoryType: String,
         yamlPipelineIds: List<String>?
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .where(PROJECT_NAME.eq(projectName))
+                .where(PROJECT_NAME.`in`(projectNames))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
                 .let {

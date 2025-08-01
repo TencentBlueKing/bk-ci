@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,6 +45,8 @@ data class PipelineAgentShutdownEvent(
     val executeCount: Int?,
     val dockerRoutingType: String? = "VM",
     val dispatchType: DispatchType,
+    val jobId: String? = null,
+    val containerHashId: String? = null,
     override var routeKeySuffix: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0

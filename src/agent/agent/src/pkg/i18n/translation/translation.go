@@ -68,6 +68,66 @@ func init() {
 		{
 			ID: "WorkerExit", Other: "worker pid[%d] exit"},
 	}
+	Translations["ja-JP"] = []*i18n.Message{
+		{
+			ID: "AttemptToRestoreFailed", Other: "\n{{.filename}} 実行ファイルの復元に失敗しました。{{.dir}} ディレクトリで install.sh を実行するか agent.zip を解凍しインストールディレクトリを復元してください"},
+		{
+			ID: "BuildProcessErr", Other: "ビルドプロセス実行エラー, プロセスID: {{.pid}}, エラー: {{.err}}."},
+		{
+			ID: "BuilderProcessWasKilled", Other: "ビルドプロセス異常終了。OS/他プロセスによる強制終止の可能性あり。負荷低減後再試行、または agent.zip 解凍→復元→再起動"},
+		{
+			ID: "CheckDockerInitScriptAuthError", Other: "Docker起動スクリプト権限検証失敗|{{.err}}"},
+		{
+			ID: "ContainerExitCodeNotZero", Other: "コンテナ終了状態コード {{.code}} (0以外) \n {{.msg}}"},
+		{
+			ID: "CreateContainerError", Other: "コンテナ作成失敗 {{.name}} |{{.err}}"},
+		{
+			ID: "CreateDockerTmpDirError", Other: "Docker一時ディレクトリ作成失敗: {{.err}}"},
+		{
+			ID: "CreateStartScriptFailed", Other: "ビルドスクリプト生成失敗: {{.err}}"},
+		{
+			ID: "CreateTmpDirectory极Failed", Other: "一時ディレクトリ作成失敗: {{.err}}"},
+		{
+			ID: "DockerContainerLog", Other: "Dockerコンテナログ: \n"},
+		{
+			ID: "DockerImageDebugError", Other: "dockerログイン・デバッグ起動失敗: {{.err}}"},
+		{
+			ID: "DockerOnlySupportLinux", Other: "現在LinuxシステムでのみDockerビルドエージェント利用可"},
+		{
+			ID: "DownloadDockerInitScriptError", Other: "Docker初期化スクリプト取得失敗|{{.err}}"},
+		{
+			ID: "ExecutableFileMissing", Other: "\n{{.filename}} 実行ファイルが欠損しています。{{.dir}} ディレクトリで install.sh を実行するか agent.zip を再解凍しインストールディレクトリを復元してください"},
+		{
+			ID: "FirstPullTips", Other: "[注意]イメージサイズ大の場合，初回取得時間長。ビルドエージェント事前取得でパイプライン起動速度向上可"},
+		{
+			ID: "GetDockerCertError", Other: "dockerクレデンシャル取得エラー|{{.err}}"},
+		{
+			ID: "GetDockerImagesError", Other: "dockerイメージリスト取得エラー|{{.err}}"},
+		{
+			ID: "GetPullImageLogError", Other: "イメージ取得情報ログ取得失敗：{{.err}}"},
+		{
+			ID: "LinkDockerError", Other: "dockerクライアント接続エラー|{{.err}}"},
+		{
+			ID: "LocalExistImage", Other: "ローカルイメージ検出。ビルド環境起動準備中..."},
+		{
+			ID: "PullImageError", Other: "イメージ取得失敗 {{.name}} |{{.err}}"},
+		{
+			ID: "PullLatest", Other: "latestバージョン: 最新版自動取得"},
+		{
+			ID: "ReadDockerMountsError", Other: "Dockerマウントディレクトリ準備失敗: {{.err}}"},
+		{
+			ID: "StartContainerError", Other: "コンテナ起動失敗 {{.name}} |{{.err}}"},
+		{
+			ID: "StartPullImage", Other: "イメージ取得開始，イメージ名：{{.name}}"},
+		{
+			ID: "StartWorkerProcessFailed", Other: "ビルドプロセス起動失敗: {{.err}}"},
+		{
+			ID: "StatDockerInitScriptError", Other: "Docker初期化スクリプト状態取得失敗|{{.err}}"},
+		{
+			ID: "WaitContainerError", Other: "コンテナ終了待機エラー {{.name}} |{{.err}}"},
+		{
+			ID: "WorkerExit", Other: "ビルドプロセス {{.pid}} 終了"},
+	}
 	Translations["zh-CN"] = []*i18n.Message{
 		{
 			ID: "AttemptToRestoreFailed", Other: "\n尝试恢复 {{.filename}} 执行文件失败，请到 {{.dir}} 目录下执行 install.sh 或解压 agent.zip 还原安装目录"},

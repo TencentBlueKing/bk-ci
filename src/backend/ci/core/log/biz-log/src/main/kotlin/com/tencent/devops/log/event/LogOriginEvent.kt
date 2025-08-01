@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,7 +32,10 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(StreamBinding.LOG_ORIGIN_EVENT_DESTINATION, binder = StreamBinder.EXTEND_RABBIT)
+@Event(
+    destination = StreamBinding.LOG_ORIGIN_EVENT_DESTINATION,
+    binder = StreamBinder.EXTEND_RABBIT
+)
 data class LogOriginEvent(
     override val buildId: String,
     val logs: List<LogMessage>,

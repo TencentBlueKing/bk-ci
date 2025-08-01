@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,13 +29,14 @@ package systemutil
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net"
 	"net/url"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -162,7 +163,6 @@ func GetAgentIp(ignoreIps []string) string {
 	ip, err := getLocalIp()
 	if err == nil {
 		defaultIp = ip
-		logs.Infof("get local ip %s", defaultIp)
 	} else {
 		logs.Warn("failed to get ip by udp", err)
 	}
@@ -172,8 +172,12 @@ func GetAgentIp(ignoreIps []string) string {
 		return defaultIp
 	}
 	for _, nc := range ncs {
-		if nc.HardwareAddr == nil { // #3626 二次确认，需要排除虚拟网卡情况
-			logs.Infof("%s have no MAC, skip!", nc.Name)
+		// 忽略没有启用的接口
+		if nc.Flags&net.FlagUp == 0 {
+			continue
+		}
+		// #3626 二次确认，需要排除虚拟网卡情况
+		if nc.HardwareAddr == nil {
 			continue
 		}
 		addresses, err := nc.Addrs()
@@ -192,7 +196,6 @@ func GetAgentIp(ignoreIps []string) string {
 				continue
 			}
 
-			logs.Infof("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
 			if util.Contains(ignoreIps, ipNet.IP.String()) {
 				logs.Infof("skipIp=%s", ipNet.IP)
 				continue
@@ -200,7 +203,6 @@ func GetAgentIp(ignoreIps []string) string {
 			if ip == ipNet.IP.String() {
 				return ip // 匹配到该通信IP是真正的网卡IP
 			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
-				logs.Infof("localIp=%s|change defaultIp [%s] to [%s]", ip, defaultIp, ipNet.IP.String())
 				defaultIp = ipNet.IP.String()
 			}
 		}

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -57,11 +57,11 @@ class SamplePermissionMigrateService(
         return true
     }
 
-    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
+    override fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean {
         return true
     }
 
-    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean {
+    override fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean {
         return true
     }
 

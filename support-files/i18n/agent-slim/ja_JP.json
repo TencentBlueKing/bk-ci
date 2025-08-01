@@ -1,0 +1,38 @@
+{
+   "BuilderProcessWasKilled": {
+      "other": "ビルドプロセス異常終了。OS/他プログラムによる強制終止の可能性あり。負荷低減後再試行、または agent.zip 解凍→復元→再起動"
+   },
+   "BuildProcessErr": {
+      "other": "ビルドプロセス実行エラー, プロセスID: {{.pid}}, エラー: {{.err}}."
+   },
+   "WorkerExit": {
+      "other": "ビルドプロセス {{.pid}} 終了"
+   },
+   "ExecutableFileMissing": {
+      "other": "\n{{.filename}} 実行ファイル欠損。{{.dir}} ディレクトリで install.sh 実行または agent.zip 再解凍で復元"
+   },
+   "CreateTmpDirectoryFailed": {
+      "other": "一時ディレクトリ作成失敗: {{.err}}"
+   },
+   "CreateStartScriptFailed": {
+      "other": "ビルドスクリプト生成失敗: {{.err}}"
+   },
+   "StartWorkerProcessFailed": {
+      "other": "ビルドプロセス起動失敗: {{.err}}"
+   },
+   "EC_BuildProcessRunError": {
+      "other": "ビルドプロセス実行エラー"
+   },
+   "EC_LoseRunFileError": {
+      "other": "実行ファイル喪失エラー"
+   },
+   "EC_MakeTmpDirError": {
+      "other": "一時ディレクトリ作成失敗"
+   },
+   "EC_BuildProcessStartError": {
+      "other": "ビルドプロセス起動失敗"
+   },
+   "EC_PrepareScriptCreateError": {
+      "other": "事前ビルドスクリプト作成失敗"
+   }
+}

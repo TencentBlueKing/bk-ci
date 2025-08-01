@@ -2,11 +2,12 @@ package exitcode
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"sync/atomic"
 	"syscall"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -25,6 +26,7 @@ const (
 	ExitNoPermissionDenied               = "THIRD_AGENT_EXIT_PERMISSION_DENIED"
 	ExitJdkError                         = "THIRD_AGENT_EXIT_JDK_ERROR"
 	ExitWorkerError                      = "THIRD_AGENT_EXIT_WORKER_ERROR"
+	ExitTimeOutError                     = "THIRD_AGENT_EXIT_TIMEOUT_ERROR"
 )
 
 var exitError *ExitErrorType = nil
@@ -46,6 +48,10 @@ func GetAndResetExitError() *ExitErrorType {
 func Exit(exitError *ExitErrorType) {
 	if exitError != nil {
 		logs.Errorf("ExitError|%s|%s", exitError.ErrorEnum, exitError.Message)
+		// 超时退出是为了 daemon 拉起来刷新，所以不退出 daemon
+		if exitError.ErrorEnum == ExitTimeOutError {
+			os.Exit(1)
+		}
 	}
 	os.Exit(constant.DaemonExitCode)
 }
@@ -136,6 +142,28 @@ func CheckSignalWorkerError(err error) {
 		msg := fmt.Sprintf("signworker err %s time 10, will exit", err.Error())
 		logs.Error(msg)
 		AddExitError(ExitWorkerError, msg)
+		return
+	}
+}
+
+var timeoutSignFlag = atomic.Int32{}
+
+// CheckTimeoutError 检测连续出现几次超时就退出
+func CheckTimeoutError(timeoutErr error, exitTimeoutTime int32) {
+	if timeoutErr == nil {
+		if timeoutSignFlag.Load() > 0 {
+			timeoutSignFlag.Add(-1)
+			logs.Warn("signtimeout err nil add -1")
+		}
+		return
+	}
+
+	timeoutSignFlag.Add(1)
+	logs.Warn(fmt.Sprintf("signtimeout err %s add 1", timeoutErr.Error()))
+	if timeoutSignFlag.Load() >= exitTimeoutTime {
+		msg := fmt.Sprintf("signtimeout err %s time %d, will exit", timeoutErr.Error(), exitTimeoutTime)
+		logs.Error(msg)
+		AddExitError(ExitTimeOutError, msg)
 		return
 	}
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,13 +32,14 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	languageUtil "golang.org/x/text/language"
 	"gopkg.in/ini.v1"
@@ -113,6 +114,8 @@ type AgentEnv struct {
 	AgentInstallPath string
 	// WinTask 启动windows进程的组件如 服务/执行计划
 	WinTask string
+	// OsVersion 系统版本信息
+	OsVersion string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -120,8 +123,11 @@ func (e *AgentEnv) GetAgentIp() string {
 }
 
 func (e *AgentEnv) SetAgentIp(ip string) {
+	if e.agentIp == ip {
+		return
+	}
 	// IP变更时发送事件
-	if e.agentIp != "" && e.agentIp != ip && ip != "127.0.0.1" {
+	if e.agentIp != "" && ip != "127.0.0.1" {
 		EBus.Publish(IpEvent, ip)
 	}
 	e.agentIp = ip
@@ -152,21 +158,27 @@ func Init(isDebug bool) {
 // LoadAgentEnv 加载Agent环境
 func LoadAgentEnv() {
 	GAgentEnv = new(AgentEnv)
+	LoadAgentIp()
+	GAgentEnv.HostName = systemutil.GetHostName()
+	GAgentEnv.OsName = systemutil.GetOsName()
+	GAgentEnv.AgentVersion = DetectAgentVersion()
+	GAgentEnv.WinTask = GetWinTaskType()
+	if osVersion, err := GetOsVersion(); err != nil {
+		logs.WithError(err).Warn("get os version err")
+		GAgentEnv.OsVersion = ""
+	} else {
+		GAgentEnv.OsVersion = osVersion
+	}
+}
 
-	/*
-	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
-	   更像是一些路由器的192开头的IP，属于干扰IP，安装了这类软件的windows机器IP都会变成相同，所以需要忽略掉
-	*/
+// LoadAgentIp 忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
+// 更像是一些路由器的192开头的IP，属于干扰IP，安装了这类软件的windows机器IP都会变成相同，所以需要忽略掉
+func LoadAgentIp() {
 	var splitIps []string
 	if len(GAgentConfig.IgnoreLocalIps) > 0 {
 		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
 	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
-
-	GAgentEnv.HostName = systemutil.GetHostName()
-	GAgentEnv.OsName = systemutil.GetOsName()
-	GAgentEnv.AgentVersion = DetectAgentVersion()
-	GAgentEnv.WinTask = GetWinTaskType()
 }
 
 // DetectAgentVersion 检测Agent版本

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -129,8 +129,12 @@ export default {
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
     },
-    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+    requestPipelineSummary ({ commit }, { projectId, pipelineId, archiveFlag }) {
+        let url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
 
         return request.get(url).then(response => {
             commit(SET_PIPELINE_INFO, response.data)
@@ -194,11 +198,17 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch, getters, state }, { projectId, pipelineId, version }) => {
+    requestPipeline: async ({ commit, dispatch, getters, state }, { projectId, pipelineId, version, archiveFlag }) => {
         try {
+            let url1 = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
+            let url2 = `/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                url1 += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+                url2 += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+            }
             const [pipelineRes, atomPropRes] = await Promise.all([
-                request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`),
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                request.get(url1),
+                request.get(url2, {
                     params: version ? { version } : {}
                 })
             ])
@@ -239,8 +249,12 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
+        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return request.get(url).then(res => {
             return res.data
         })
     },
@@ -339,9 +353,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
+    requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId, archiveFlag }) => {
         try {
-            const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
+            let url = `/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+            }
+            const { data } = await request.get(url)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -671,9 +689,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version }) => {
+    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`, {
+            let url = `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+            }
+            return request.get(url, {
                 params: {
                     version
                 }
@@ -954,8 +976,12 @@ export default {
     setSwitchingPipelineVersion ({ commit }, isSwitching) {
         commit(SWITCHING_PIPELINE_VERSION, isSwitching)
     },
-    getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version }) {
-        return request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
+    getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
+        let url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return request.get(url)
     },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)

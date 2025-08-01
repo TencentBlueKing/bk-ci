@@ -1,6 +1,5 @@
 packages:
   - "devops-*"
-  - "!devops-codecc"
   - "!devops-repo"
   - bk-pipeline
   - bk-permission

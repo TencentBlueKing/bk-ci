@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -63,14 +63,20 @@ interface PermissionMigrateService {
     fun compareResult(projectCode: String): Boolean
 
     /**
-     * 迁移特定资源类型资源
+     * 根据条件重置项目权限
+     * 场景一：为流水线增加某个操作，如归档流水线权限，此时需要修改分级管理员范围、重置项目级用户组权限、重置流水线级别组权限
+     * 此时参数组合：migrateResource:true;filterResourceTypes:listOf(pipeline);filterActions:listOf(pipeline_archive)
+     * 场景二：新增服务需要接入权限中心，如SCC任务，只需要重置分级管员范围/项目级别用户组权限，不需要迁移资源，因为没有存量数据
+     * 此时参数组合：migrateResource:false;filterResourceTypes:listOf(scc_task);
+     * 场景三：已有的服务需要接入权限中心，如流水线模板，只需要重置分级管员范围/项目级别用户组权限/迁移资源，因为有存量数据
+     * 此时参数组合：migrateResource:true;filterResourceTypes:listOf(pipeline_template);
+     * 场景四：增加一个项目级别的操作，如project_manage-archived-pipeline/project_api-operate
+     * 此时参数组合：migrateResource:false;filterResourceTypes:listOf(project);
+     * filterActions:listOf(project_api-operate,project_api-operate)
      */
-    fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean
+    fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean
 
-    /**
-     * 迁移所有项目特定资源类型资源
-     */
-    fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean
+    fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean
 
     /**
      * 授予项目下自定义用户组RBAC新增的权限

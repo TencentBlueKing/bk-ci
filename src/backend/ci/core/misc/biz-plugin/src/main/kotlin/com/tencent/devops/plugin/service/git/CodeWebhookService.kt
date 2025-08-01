@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,9 +39,11 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
@@ -401,7 +403,17 @@ class CodeWebhookService @Autowired constructor(
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
             val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
+            val webhookMrEventAction = variables[PIPELINE_GIT_MR_ACTION]
+            // GIT触发器v2, MR合并操作时将webhookEventType置为 [MERGE_REQUEST_ACCEPT]
+            val finalEventType = if (webhookEventType == CodeEventType.MERGE_REQUEST.name &&
+                    webhookMrEventAction == TGitMergeActionKind.MERGE.value
+            ) {
+                CodeEventType.MERGE_REQUEST_ACCEPT.name
+            } else {
+                webhookEventType ?: ""
+            }
             val context = "$pipelineName@$webhookEventType"
+            val newContext = "$pipelineName@$finalEventType"
 
             if (buildNum == null) {
                 logger.warn("Build($buildId) number is null")
@@ -434,7 +446,7 @@ class CodeWebhookService @Autowired constructor(
                         pipelineId = pipelineId,
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
-                        context = context,
+                        context = newContext,
                         targetBranch = targetBranch
                     ) ?: pluginGitCheckDao.getOrNull(
                         dslContext = dslContext,
@@ -442,14 +454,14 @@ class CodeWebhookService @Autowired constructor(
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
                         context = context,
-                        targetBranch = null
+                        targetBranch = targetBranch
                     )
                     // 新提交，直接添加commit check
                     if (record == null) {
                         scmCheckService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
-                            context = context,
+                            context = newContext, // 统一用新的Context
                             description = description,
                             targetBranch = if (targetBranch != null) {
                                 mutableListOf(targetBranch!!)
@@ -466,7 +478,7 @@ class CodeWebhookService @Autowired constructor(
                                 repositoryHashId = repositoryConfig.repositoryHashId,
                                 repositoryName = repositoryConfig.repositoryName,
                                 commitId = commitId,
-                                context = context,
+                                context = newContext, // 统一用新的Context
                                 targetBranch = targetBranch
                             )
                         )

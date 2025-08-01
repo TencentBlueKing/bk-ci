@@ -231,7 +231,8 @@
                                     startTimeStartTime: pathQuery.startTimeStartTime,
                                     endTimeEndTime: pathQuery.endTimeEndTime
                                 }
-                                : {})
+                                : {}),
+                            ...(pathQuery.archiveFlag ? { archiveFlag: pathQuery.archiveFlag } : {})
                         },
                         searchKey: newSearchKey.filter(item => !!item)
                     })

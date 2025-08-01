@@ -5,3 +5,8 @@ enum class ThirdPartAgentUpdateType {
     REMOVE,
     UPDATE
 }
+
+enum class TPAInstallType {
+    SERVICE,
+    TASK
+}

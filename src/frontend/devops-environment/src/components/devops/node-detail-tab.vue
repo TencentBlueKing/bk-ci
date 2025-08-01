@@ -2,7 +2,7 @@
     <div class="node-details-tab">
         <bk-tab
             :active.sync="activeName"
-            :type="currentType"
+            type="card"
             style="margin-top: 20px;"
         >
             <bk-tab-panel
@@ -35,8 +35,6 @@
         data () {
             return {
                 active: 'mission',
-                type: ['card', 'border-card', 'unborder-card'],
-                currentType: 'card',
                 activeName: 'base',
                 menuList: [
                     { name: 'base', label: this.$t('environment.basicInfo') },
@@ -65,6 +63,23 @@
         }
         .bk-tab-section {
             padding: 0;
+        }
+        .bk-tab-label-wrapper {
+            text-align: left;
+        }
+        .bk-tab-content {
+            border: 1px solid #dcdee5;
+            border-top: none
+        }
+        .bk-tab.bk-tab-unborder-card .bk-tab-label-list {
+            border-top: 1px solid #dcdee5 !important;
+        }
+        .bk-tab.bk-tab-card .bk-tab-label-list .bk-tab-label-item {
+            border-right: 1px solid #dcdee5 !important;
+            border-top: 1px solid #dcdee5 !important;
+        }
+        .bk-tab.bk-tab-card .bk-tab-label-list .bk-tab-label-item.is-first {
+            border-left: 1px solid #dcdee5 !important;
         }
     }
 </style>

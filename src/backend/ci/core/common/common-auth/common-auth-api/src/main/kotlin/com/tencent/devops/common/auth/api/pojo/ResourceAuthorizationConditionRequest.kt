@@ -18,6 +18,8 @@ open class ResourceAuthorizationConditionRequest(
     open var excludeResourceCodes: List<String>? = null,
     @get:Schema(title = "授予人")
     open val handoverFrom: String? = null,
+    @get:Schema(title = "授予人列表")
+    open val handoverFroms: List<String>? = null,
     @get:Schema(title = "greaterThanHandoverTime")
     open val greaterThanHandoverTime: Long? = null,
     @get:Schema(title = "lessThanHandoverTime")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -54,6 +54,12 @@ interface OpPipelineVersionResource {
         projectChannelCode: String,
         @Parameter(description = "项目路由TAG", required = false)
         @QueryParam("routerTag")
-        routerTag: AuthSystemType? = null
+        routerTag: AuthSystemType? = null,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null,
+        @Parameter(description = "是否查询关联状态未知的版本", required = false)
+        @QueryParam("queryUnknownRelatedFlag")
+        queryUnknownRelatedFlag: Boolean? = null
     ): Result<Boolean>
 }

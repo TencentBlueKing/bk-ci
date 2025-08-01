@@ -1134,6 +1134,8 @@
                 font-size: 12px;
                 cursor: pointer;
                 width: 70px;
+                flex-shrink: 0;
+                white-space: nowrap;
             }
         }
         .service-list {

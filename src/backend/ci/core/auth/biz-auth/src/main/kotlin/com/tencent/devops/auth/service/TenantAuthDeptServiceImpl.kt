@@ -2,6 +2,9 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
+import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -48,6 +51,10 @@ class TenantAuthDeptServiceImpl : DeptService {
         return retrieveUser(userId, tenantId).toVo()
     }
 
+    override fun getUserInfo(userId: String, tenantId: String?): UserAndDeptInfoVo? {
+        return retrieveUser(userId, tenantId).toVo()
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum,
@@ -88,6 +95,18 @@ class TenantAuthDeptServiceImpl : DeptService {
             memberIds = listOf(userId),
             memberType = ManagerScopesEnum.USER
         ).isEmpty()
+    }
+
+    override fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): DeptInfoVo {
+        TODO("Not yet implemented")
+    }
+
+    override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): BkUserInfoVo {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUserDeptDetails(userId: String, tenantId: String?): BkDeptDetailsVo? {
+        TODO("Not yet implemented")
     }
 
     /**

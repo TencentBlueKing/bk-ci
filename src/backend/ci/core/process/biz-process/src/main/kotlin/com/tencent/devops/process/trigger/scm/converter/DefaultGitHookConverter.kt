@@ -29,9 +29,10 @@ class DefaultGitHookConverter @Autowired constructor(
     ): List<PipelineYamlFileEvent> {
         val projectId = repository.projectId!!
         val serverRepo = webhook.repository() as GitScmServerRepository
+        val defaultBranch = serverRepo.defaultBranch!!
         val fileTrees = pipelineYamlFileService.listFileTree(
             projectId = projectId,
-            ref = serverRepo.defaultBranch,
+            ref = defaultBranch,
             authRepository = AuthRepository(repository)
         )
         return fileTrees.map { tree ->
@@ -42,10 +43,10 @@ class DefaultGitHookConverter @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 repository = repository,
-                defaultBranch = serverRepo.defaultBranch,
+                defaultBranch = defaultBranch,
                 actionType = YamlFileActionType.TRIGGER,
                 filePath = filePath,
-                ref = serverRepo.defaultBranch,
+                ref = defaultBranch,
                 blobId = tree.blobId,
                 authRepository = AuthRepository(repository),
                 fork = false

@@ -3,7 +3,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,8 +30,11 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
 	"github.com/capnspacehook/taskmaster"
+	"golang.org/x/sys/windows"
 )
 
 func GetWinTaskType() string {
@@ -50,4 +53,12 @@ func GetWinTaskType() string {
 		}
 	}
 	return string(wintask.ManualStart)
+}
+
+func GetOsVersion() (string, error) {
+	version := windows.RtlGetVersion()
+	if version == nil {
+		return "", fmt.Errorf("failed to get Windows version is nil")
+	}
+	return fmt.Sprintf("%d.%d.%d", version.MajorVersion, version.MinorVersion, version.BuildNumber), nil
 }

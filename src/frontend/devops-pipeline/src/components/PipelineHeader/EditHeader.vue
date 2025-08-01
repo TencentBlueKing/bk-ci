@@ -208,8 +208,8 @@
                     {
                         component: VersionDiffEntry,
                         componentProps: {
-                            version: this.currentVersion,
-                            latestVersion: this.activeVersion,
+                            version: this.activeVersion,
+                            latestVersion: this.currentVersion,
                             theme: 'normal',
                             size: 'small',
                             showButton: false

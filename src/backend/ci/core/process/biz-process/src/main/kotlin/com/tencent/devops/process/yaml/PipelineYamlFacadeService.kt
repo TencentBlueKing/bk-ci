@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,9 +30,13 @@ package com.tencent.devops.process.yaml
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -109,7 +113,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
-            scmType = scmType
+            scmType = scmType,
+            authUserId = repository.userName
         )
         val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
 
@@ -130,7 +135,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = action.data.getUserId(),
                 projectId = projectId,
                 repoHashId = repoHashId,
-                repoFullName = action.data.setting.projectName,
+                aliasName = action.data.setting.aliasName,
                 directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -244,7 +249,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = action.data.getUserId(),
                 projectId = projectId,
                 repoHashId = repoHashId,
-                repoFullName = action.data.setting.projectName,
+                aliasName = action.data.setting.aliasName,
                 directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -353,7 +358,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                scmType = scmType
+                scmType = scmType,
+                authUserId = repository.userName
             )
             val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
             if (!action.checkPushPermission()) {
@@ -397,7 +403,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    scmType = scmType
+                    scmType = scmType,
+                    authUserId = repository.userName
                 )
                 val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
                 // 发布时创建流水线
@@ -405,7 +412,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                     userId = action.data.getUserId(),
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = action.data.setting.projectName,
+                    aliasName = action.data.setting.aliasName,
                     directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
                 )
                 val gitPushResult = pipelineYamlRepositoryService.releaseYamlPipeline(
@@ -457,10 +464,29 @@ class PipelineYamlFacadeService @Autowired constructor(
                 params = arrayOf(repoHashId)
             )
             val authRepository = AuthRepository(repository)
-            val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                projectId = projectId,
-                authRepository = authRepository
-            ).data
+            val serverRepository = try {
+                client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = authRepository
+                ).data
+            } catch (ignored: RemoteServiceException) {
+                throw when (ignored.errorCode) {
+                    // 目标仓库被删除
+                    HTTP_404 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                        params = arrayOf(repository.projectName)
+                    )
+
+                    HTTP_401, HTTP_403 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                        params = arrayOf(repository.userName, repository.projectName)
+                    )
+
+                    else -> ignored
+                }
+            } catch (ignored: Exception) {
+                throw ignored
+            }
             if (serverRepository !is GitScmServerRepository) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC

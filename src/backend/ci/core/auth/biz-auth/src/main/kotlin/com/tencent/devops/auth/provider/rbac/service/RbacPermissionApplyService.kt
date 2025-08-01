@@ -28,6 +28,7 @@ import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
@@ -68,7 +70,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val permissionService: PermissionService,
     val itsmService: ItsmService,
     val deptService: DeptService,
-    val authResourceGroupApplyDao: AuthResourceGroupApplyDao
+    val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+    val permissionResourceMemberService: PermissionResourceMemberService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -160,7 +163,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun isUserExists(userId: String) {
         // 校验新用户信息是否同步完成
-        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        val userExists = deptService.getUserInfo(userId) != null
         if (!userExists) {
             logger.warn("user($userId) does not exist")
             throw ErrorCodeException(
@@ -552,6 +555,13 @@ class RbacPermissionApplyService @Autowired constructor(
                 defaultMessage = "Failed to get redirect url"
             )
         }
+        val managers = permissionResourceMemberService.getResourceGroupMembers(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            group = BkAuthGroup.MANAGER
+        )
+
         return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
             resourceTypeName = resourceTypeName,
@@ -562,7 +572,8 @@ class RbacPermissionApplyService @Autowired constructor(
                     defaultMessage = it.actionName
                 )
             },
-            groupInfoList = groupInfoList
+            groupInfoList = groupInfoList,
+            managers = managers
         )
     }
 
@@ -610,7 +621,8 @@ class RbacPermissionApplyService @Autowired constructor(
                             resourceCode = resourceCode,
                             groupCode = it.groupCode,
                             iamResourceCode = iamResourceCode,
-                            iamRelatedResourceType = iamRelatedResourceType
+                            iamRelatedResourceType = iamRelatedResourceType,
+                            groupDesc = it.desc
                         )
                     }
                 }
@@ -624,7 +636,10 @@ class RbacPermissionApplyService @Autowired constructor(
                     resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value,
                     iamResourceCode = iamResourceCode,
-                    iamRelatedResourceType = iamRelatedResourceType
+                    iamRelatedResourceType = iamRelatedResourceType,
+                    groupDesc = rbacCommonService.getGroupConfigAction(finalResourceType).firstOrNull {
+                        it.groupCode == DefaultGroupType.MANAGER.value
+                    }?.desc
                 )
             }
         }
@@ -639,7 +654,8 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceCode: String,
         groupCode: String,
         iamResourceCode: String,
-        iamRelatedResourceType: String
+        iamRelatedResourceType: String,
+        groupDesc: String? = null
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
@@ -662,7 +678,9 @@ class RbacPermissionApplyService @Autowired constructor(
                         messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
                                 AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                         defaultMessage = resourceGroup.groupName
-                    )
+                    ),
+                    groupId = resourceGroup.relationId,
+                    groupDesc = groupDesc
                 )
             )
         }

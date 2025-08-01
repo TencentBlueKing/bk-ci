@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,15 +33,15 @@ import com.google.common.collect.MapMaker
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.MetricsEvent
 import com.tencent.devops.metrics.config.MetricsUserConfig
 import com.tencent.devops.metrics.pojo.po.MetricsLocalPO
 import com.tencent.devops.metrics.pojo.po.MetricsUserPO
+import com.tencent.devops.metrics.utils.MetricsUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.Meter
-import io.micrometer.core.instrument.Tag
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.time.Duration
 import java.time.LocalDateTime
@@ -63,7 +63,6 @@ class MetricsUserService @Autowired constructor(
     private val registry: PrometheusMeterRegistry,
     private val metricsCacheService: MetricsCacheService,
     private val metricsUserConfig: MetricsUserConfig,
-    private val metricsEventService: MetricsEventService,
     private val client: Client
 ) {
     private val local = MapMaker()
@@ -120,7 +119,10 @@ class MetricsUserService @Autowired constructor(
                 ).data
             }.getOrNull() ?: return@forEach
             logger.info("checkBuildStatusJob|check|$chunk|${res.mapValues { it.value.status }}")
-            ready2delete.addAll(res.filter { it.value.status?.isFinish() == true }.map { it.key })
+            ready2delete.addAll(res.filter {
+                // status == null 时表示构建不存在。为可能存在的特殊异常情况。
+                it.value.status?.isFinish() == true || it.value.status == null
+            }.map { it.key })
         }
         // 生成local快照
         val keys = local.keys.toList()
@@ -185,7 +187,6 @@ class MetricsUserService @Autowired constructor(
         metricsCacheService.updateFunction = this::metricsUpdate
         metricsCacheService.init(uncheckArray)
         Thread(DeleteDelayProcess()).start()
-        metricsEventService.init()
     }
 
     private fun check(event: PipelineBuildStatusBroadCastEvent): Boolean {
@@ -193,41 +194,24 @@ class MetricsUserService @Autowired constructor(
     }
 
     @Suppress("ComplexMethod")
-    fun execute(event: PipelineBuildStatusBroadCastEvent) {
+    // 指标
+    fun metricsExecute(event: PipelineBuildStatusBroadCastEvent) {
         if (!check(event) || !metricsUserConfig.metricsUserEnabled) return
         val date = MetricsUserPO(event)
         /*防止mq队列堆积导致的延迟信息进入处理，如果生产超过5分钟就丢弃*/
         if (date.startTime < LocalDateTime.now().plusMinutes(-5)) return
         when (date.eventType) {
-            CallBackEvent.BUILD_QUEUE -> {
+            MetricsEvent.BUILD_QUEUE -> {
                 date.startTime = checkNotNull(event.eventTime)
-                metricsEventService.registerBuildStatusEvent(
-                    projectId = date.projectId,
-                    pipelineId = date.pipelineId,
-                    buildId = date.buildId,
-                    status = date.status,
-                    type = date.eventType,
-                    time = checkNotNull(event.eventTime),
-                    labels = deserializeTag(date.labels)
-                )
                 metricsCacheService.buildQueue(date.buildId, checkNotNull(event.executeCount), date)
             }
 
-            CallBackEvent.BUILD_START -> {
+            MetricsEvent.BUILD_START -> {
                 date.startTime = checkNotNull(event.eventTime)
-                metricsEventService.registerBuildStatusEvent(
-                    projectId = date.projectId,
-                    pipelineId = date.pipelineId,
-                    buildId = date.buildId,
-                    status = date.status,
-                    type = date.eventType,
-                    time = checkNotNull(event.eventTime),
-                    labels = deserializeTag(date.labels)
-                )
                 metricsCacheService.buildStart(date.buildId, checkNotNull(event.executeCount), date)
             }
 
-            CallBackEvent.BUILD_JOB_QUEUE -> {
+            MetricsEvent.BUILD_JOB_QUEUE -> {
                 if (date.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
@@ -241,7 +225,7 @@ class MetricsUserService @Autowired constructor(
                 )
             }
 
-            CallBackEvent.BUILD_JOB_START -> {
+            MetricsEvent.BUILD_JOB_START -> {
                 if (date.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
@@ -255,7 +239,7 @@ class MetricsUserService @Autowired constructor(
                 )
             }
 
-            CallBackEvent.BUILD_AGENT_START -> {
+            MetricsEvent.BUILD_AGENT_START -> {
                 if (date.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
@@ -269,24 +253,12 @@ class MetricsUserService @Autowired constructor(
                 )
             }
 
-            CallBackEvent.BUILD_TASK_START -> {
+            MetricsEvent.BUILD_TASK_START -> {
                 if (date.stepId.isNullOrBlank() || date.jobId.isNullOrBlank()) {
                     // stepId id 用户没填写将不会上报指标
                     return
                 }
                 date.startTime = checkNotNull(event.eventTime)
-                metricsEventService.registerBuildStepStatusEvent(
-                    projectId = date.projectId,
-                    pipelineId = date.pipelineId,
-                    buildId = date.buildId,
-                    stageId = event.stageId ?: "",
-                    jobId = checkNotNull(date.jobId),
-                    stepId = checkNotNull(date.stepId),
-                    status = date.status,
-                    type = date.eventType,
-                    time = checkNotNull(event.eventTime),
-                    labels = deserializeTag(date.labels)
-                )
                 metricsCacheService.stepCacheStart(
                     date.buildId,
                     checkNotNull(date.stepId),
@@ -295,21 +267,12 @@ class MetricsUserService @Autowired constructor(
                 )
             }
 
-            CallBackEvent.BUILD_END -> {
+            MetricsEvent.BUILD_END -> {
                 date.endTime = checkNotNull(event.eventTime)
-                metricsEventService.registerBuildStatusEvent(
-                    projectId = date.projectId,
-                    pipelineId = date.pipelineId,
-                    buildId = date.buildId,
-                    status = date.status,
-                    type = date.eventType,
-                    time = checkNotNull(event.eventTime),
-                    labels = deserializeTag(date.labels)
-                )
                 metricsCacheService.buildEnd(date.buildId, checkNotNull(event.executeCount), date)
             }
 
-            CallBackEvent.BUILD_JOB_END -> {
+            MetricsEvent.BUILD_JOB_END -> {
                 if (date.jobId.isNullOrBlank()) {
                     // job id 用户没填写将不会上报指标
                     return
@@ -333,24 +296,12 @@ class MetricsUserService @Autowired constructor(
                 )
             }
 
-            CallBackEvent.BUILD_TASK_END -> {
+            MetricsEvent.BUILD_TASK_END -> {
                 date.endTime = checkNotNull(event.eventTime)
                 if (date.stepId.isNullOrBlank() || date.jobId.isNullOrBlank()) {
                     // stepId id 用户没填写将不会上报指标
                     return
                 }
-                metricsEventService.registerBuildStepStatusEvent(
-                    projectId = date.projectId,
-                    pipelineId = date.pipelineId,
-                    buildId = date.buildId,
-                    stageId = event.stageId ?: "",
-                    jobId = checkNotNull(date.jobId),
-                    stepId = checkNotNull(date.stepId),
-                    status = date.status,
-                    type = date.eventType,
-                    time = checkNotNull(event.eventTime),
-                    labels = deserializeTag(date.labels)
-                )
                 metricsCacheService.stepCacheEnd(
                     date.buildId,
                     checkNotNull(date.stepId),
@@ -369,7 +320,7 @@ class MetricsUserService @Autowired constructor(
         logger.debug("metricsAdd|key={}|value={}|localSize={}", key, value, local.size)
         with(value) {
             when (eventType) {
-                CallBackEvent.BUILD_QUEUE -> {
+                MetricsEvent.BUILD_QUEUE -> {
                     val buildGauge = registerBuildQueueGauge(
                         key = key,
                         projectId = projectId,
@@ -381,7 +332,7 @@ class MetricsUserService @Autowired constructor(
                     local[key]?.meters?.add(buildGauge)
                 }
 
-                CallBackEvent.BUILD_START -> {
+                MetricsEvent.BUILD_START -> {
                     val buildGauge = registerBuildGauge(
                         key = key,
                         projectId = projectId,
@@ -393,7 +344,7 @@ class MetricsUserService @Autowired constructor(
                     local[key]?.meters?.add(buildGauge)
                 }
 
-                CallBackEvent.BUILD_JOB_QUEUE -> {
+                MetricsEvent.BUILD_JOB_QUEUE -> {
                     val buildJobGauge = registerBuildJobQueueGauge(
                         key = key,
                         projectId = projectId,
@@ -406,7 +357,7 @@ class MetricsUserService @Autowired constructor(
                     local[key]?.meters?.add(buildJobGauge)
                 }
 
-                CallBackEvent.BUILD_JOB_START -> {
+                MetricsEvent.BUILD_JOB_START -> {
                     val buildJobGauge = registerBuildJobGauge(
                         key = key,
                         projectId = projectId,
@@ -419,7 +370,7 @@ class MetricsUserService @Autowired constructor(
                     local[key]?.meters?.add(buildJobGauge)
                 }
 
-                CallBackEvent.BUILD_AGENT_START -> {
+                MetricsEvent.BUILD_AGENT_START -> {
                     val buildJobGauge = registerBuildAgentGauge(
                         key = key,
                         projectId = projectId,
@@ -432,7 +383,7 @@ class MetricsUserService @Autowired constructor(
                     local[key]?.meters?.add(buildJobGauge)
                 }
 
-                CallBackEvent.BUILD_TASK_START -> {
+                MetricsEvent.BUILD_TASK_START -> {
                     val buildStepGauge = registerBuildStepGauge(
                         key = key,
                         projectId = projectId,
@@ -479,7 +430,7 @@ class MetricsUserService @Autowired constructor(
             metrics.data = newValue
             with(newValue) {
                 when (eventType) {
-                    CallBackEvent.BUILD_START -> {
+                    MetricsEvent.BUILD_START -> {
                         /*去掉构建排队指标*/
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildQueueKey }?.run {
                             metricsCacheService.removeCache(key)
@@ -489,25 +440,25 @@ class MetricsUserService @Autowired constructor(
                         }
                     }
 
-                    CallBackEvent.BUILD_END -> {
+                    MetricsEvent.BUILD_END -> {
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildStatusKey }?.run {
                             registry.remove(this)
                         }
                         metricsCacheService.removeCache(key)
                     }
 
-                    CallBackEvent.BUILD_JOB_START -> {
+                    MetricsEvent.BUILD_JOB_START -> {
                         /*去掉job排队指标*/
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildJobQueueKey }?.run {
                             metricsCacheService.removeCache(key)
                         }
                     }
 
-                    CallBackEvent.BUILD_JOB_END -> {
+                    MetricsEvent.BUILD_JOB_END -> {
                         metricsCacheService.removeCache(key)
                     }
 
-                    CallBackEvent.BUILD_TASK_END -> {
+                    MetricsEvent.BUILD_TASK_END -> {
                         metrics.meters.find { it.id.name == MetricsUserConfig.gaugeBuildStepStatusKey }?.run {
                             registry.remove(this)
                         }
@@ -518,14 +469,6 @@ class MetricsUserService @Autowired constructor(
                 }
             }
         }
-    }
-
-    private fun deserializeTag(labels: String?): List<Tag> {
-        return labels?.split(";")
-            ?.mapNotNull {
-                val parts = it.split("=")
-                if (parts.size == 2) Tag.of(parts[0], parts[1]) else null
-            } ?: emptyList()
     }
 
     private fun registerBuildQueueGauge(
@@ -545,7 +488,7 @@ class MetricsUserService @Autowired constructor(
                 "pipeline_id", pipelineId,
                 "build_id", buildId
             )
-            .tags(deserializeTag(labels))
+            .tags(MetricsUtils.deserializeTag(labels))
             .description(description)
             .register(registry)
     }
@@ -567,7 +510,7 @@ class MetricsUserService @Autowired constructor(
                 "pipeline_id", pipelineId,
                 "build_id", buildId
             )
-            .tags(deserializeTag(labels))
+            .tags(MetricsUtils.deserializeTag(labels))
             .description(description)
             .register(registry)
     }
@@ -613,7 +556,7 @@ class MetricsUserService @Autowired constructor(
                 "build_id", buildId,
                 "job_id", jobId
             )
-            .tags(deserializeTag(labels))
+            .tags(MetricsUtils.deserializeTag(labels))
             .description(description)
             .register(registry)
     }
@@ -637,7 +580,7 @@ class MetricsUserService @Autowired constructor(
                 "build_id", buildId,
                 "job_id", jobId
             )
-            .tags(deserializeTag(labels))
+            .tags(MetricsUtils.deserializeTag(labels))
             .description(description)
             .register(registry)
     }
@@ -661,7 +604,7 @@ class MetricsUserService @Autowired constructor(
                 "build_id", buildId,
                 "job_id", jobId
             )
-            .tags(deserializeTag(labels))
+            .tags(MetricsUtils.deserializeTag(labels))
             .description(description)
             .register(registry)
     }
@@ -689,7 +632,7 @@ class MetricsUserService @Autowired constructor(
                 "step_id", stepId,
                 "plugin_id", atomCode
             )
-            .tags(deserializeTag(labels))
+            .tags(MetricsUtils.deserializeTag(labels))
             .description(description)
             .register(registry)
     }

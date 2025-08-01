@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,6 +45,8 @@ import com.tencent.devops.process.api.user.UserPipelineTransferResource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.TransferResponseResult
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,25 +61,17 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         actionType: TransferActionType,
+        archiveFlag: Boolean?,
         data: TransferBody
     ): Result<TransferResponseResult> {
         if (pipelineId != null) {
-            val permission = AuthPermission.VIEW
-            pipelinePermissionService.validPipelinePermission(
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
+                permission = AuthPermission.VIEW
             )
         }
         val editPermission = pipelineId?.let {
@@ -95,7 +89,8 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 actionType = actionType,
                 data = data,
-                editPermission = editPermission
+                editPermission = editPermission,
+                archiveFlag = archiveFlag
             )
         } catch (e: PipelineTransferException) {
             val elementMsg = I18nUtil.getCodeLanMessage(

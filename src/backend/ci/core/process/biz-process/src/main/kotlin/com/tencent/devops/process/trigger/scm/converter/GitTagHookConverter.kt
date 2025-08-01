@@ -39,6 +39,7 @@ class GitTagHookConverter @Autowired constructor(
             authRepository = AuthRepository(repository)
         )
         val serverRepo = webhook.repo as GitScmServerRepository
+        val defaultBranch = serverRepo.defaultBranch!!
         return fileTrees.map { tree ->
             val filePath = GitActionCommon.getCiFilePath(tree.path)
             PipelineYamlFileEvent(
@@ -47,7 +48,7 @@ class GitTagHookConverter @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 repository = repository,
-                defaultBranch = serverRepo.defaultBranch,
+                defaultBranch = defaultBranch,
                 actionType = YamlFileActionType.TRIGGER,
                 filePath = filePath,
                 ref = tag,

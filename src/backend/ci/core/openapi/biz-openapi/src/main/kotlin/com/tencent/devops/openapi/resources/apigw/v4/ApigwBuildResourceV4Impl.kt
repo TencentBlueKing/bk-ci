@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -266,6 +266,28 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
+    override fun batchGetBuildStatus(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        buildIdSet: Set<String>
+    ): Result<List<BuildHistory>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|batch get build status|$projectId|$pipelineId")
+        return client.get(ServiceBuildResource::class).batchGetBuildStatus(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            buildIdSet = buildIdSet,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }

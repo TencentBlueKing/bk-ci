@@ -105,7 +105,8 @@
                         pipelineId,
                         creator: this.filterCreator,
                         page: page ?? current,
-                        pageSize: limit ?? pageSize
+                        pageSize: limit ?? pageSize,
+                        archiveFlag: this.$route.query.archiveFlag
                     })
                     Object.assign(this.pagination, {
                         current: changeLogs.page,
@@ -127,7 +128,8 @@
                         this.getChangelogs(page, limit),
                         this.requestPipelineOperatorList({
                             projectId,
-                            pipelineId
+                            pipelineId,
+                            archiveFlag: this.$route.query.archiveFlag
                         })
                     ])
                     this.operatorList = operatorList

@@ -58,8 +58,9 @@
                                         v-for="label in row.value"
                                         :key="label"
                                         class="base-info-block-row-value-label"
+                                        @click="goPipelineManageList(row.key, label.id)"
                                     >
-                                        {{ label }}
+                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>
@@ -82,8 +83,9 @@
 </template>
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import { mapState, mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
-    
+
     export default {
         components: {
             NamingConventionTip
@@ -100,10 +102,14 @@
                 namingStyle: {
                     CLASSIC: this.$t('CLASSIC'),
                     CONSTRAINED: this.$t('CONSTRAINED')
-                }
+                },
+                currentGroups: []
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'allPipelineGroup'
+            ]),
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -117,6 +123,8 @@
                 const { basicInfo } = this
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
+                const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
+                const viweNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
                 return [
                     {
                         key: 'pipelineName',
@@ -128,7 +136,7 @@
                     },
                     {
                         key: 'pipelineGroup',
-                        value: basicInfo?.viewNames ?? []
+                        value: viweNameList ?? []
                     },
                     {
                         key: 'desc',
@@ -224,6 +232,27 @@
                         : []
                     )
                 ]
+            }
+        },
+        async mounted () {
+            if (!this.allPipelineGroup.length) {
+                const res = await this.requestAllPipelineGroup({
+                    projectId: this.$route.params.projectId
+                })
+                this.currentGroups = res.data
+            }
+        },
+        methods: {
+            ...mapActions('pipelines', ['requestAllPipelineGroup']),
+            goPipelineManageList (key, viewId) {
+                if (key === 'pipelineGroup') {
+                    this.$router.push({
+                        name: 'PipelineManageList',
+                        params: {
+                            viewId
+                        }
+                    })
+                }
             }
         }
     }

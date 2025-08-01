@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -117,6 +117,23 @@ interface UserArchivePipelineResource {
         @Parameter(description = "取消正在运行构建标识", required = true)
         @QueryParam("cancelFlag")
         cancelFlag: Boolean = false
+    ): Result<Boolean>
+
+    @Operation(summary = "批量迁移归档流水线数据")
+    @POST
+    @Path("/projects/{projectId}/data/migrate")
+    fun batchMigrateArchivePipelineData(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam(value = "projectId")
+        projectId: String,
+        @Parameter(description = "取消正在运行构建标识", required = true)
+        @QueryParam("cancelFlag")
+        cancelFlag: Boolean = false,
+        @Parameter(description = "流水线ID集合", required = true)
+        pipelineIds: Set<String>
     ): Result<Boolean>
 
     @Operation(summary = "获取已归档流水线列表")

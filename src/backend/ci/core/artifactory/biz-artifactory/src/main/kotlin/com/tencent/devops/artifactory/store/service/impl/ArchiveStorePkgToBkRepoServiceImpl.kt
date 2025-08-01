@@ -1,7 +1,7 @@
 package com.tencent.devops.artifactory.store.service.impl
 
+import com.tencent.bkrepo.auth.pojo.token.TokenType.DOWNLOAD
 import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
-import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
@@ -14,10 +14,10 @@ import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
+import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
-import jakarta.ws.rs.NotFoundException
 
 abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl() {
 
@@ -206,10 +206,10 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 repoName = getBkRepoName(storeType),
                 fullPathSet = setOf(pkgPath),
                 expireSeconds = 3600L,
-                type = TokenType.DOWNLOAD,
+                type = DOWNLOAD,
                 host = "$repoPrefixUrl/generic"
             ),
-            bkrepoPrefixUrl = repoPrefixUrl,
+            bkrepoPrefixUrl = bkRepoClientConfig.bkRepoIdcHost,
             userName = bkRepoStoreConfig.bkrepoStoreUserName,
             password = bkRepoStoreConfig.bkrepoStorePassword
         )

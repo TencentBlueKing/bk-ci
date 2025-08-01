@@ -2216,6 +2216,345 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "scc_scan_schema_create",
+        "name": "SCC扫描方案创建",
+        "name_en": "SCC Scan Schema Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_scan_schema_list",
+        "name": "SCC扫描方案列表",
+        "name_en": "SCC Scan Schema List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_create",
+        "name": "创建SCC任务",
+        "name_en": "SCC Task Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_list",
+        "name": "SCC任务列表",
+        "name_en": "SCC Task List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_view",
+        "name": "查看SCC任务",
+        "name_en": "SCC Task View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_edit",
+        "name": "编辑SCC任务",
+        "name_en": "SCC Task Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_delete",
+        "name": "删除SCC任务",
+        "name_en": "SCC Task Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_execute",
+        "name": "执行SCC任务",
+        "name_en": "SCC Task Execute",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_enable",
+        "name": "禁用/启用SCC任务",
+        "name_en": "SCC Task Enable",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_manage",
+        "name": "SCC任务权限管理",
+        "name_en": "SCC Task Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_manage-defect",
+        "name": "管理SCC任务告警",
+        "name_en": "Manage SCC Task Defect",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "scc_task_view-defect",
+        "name": "SCC任务告警查看",
+        "name_en": "View SCC Task Defect",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "scc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "scc_task_list",
+          "scc_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "cgs_manage",
         "name": "云桌面管理",
         "name_en": "Cgs Manage",

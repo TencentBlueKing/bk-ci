@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,8 +30,11 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -42,6 +45,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.PipelineListQueryParamService
+import com.tencent.devops.process.util.BuildMsgUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -57,8 +61,13 @@ class ArchivePipelineManageService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineListQueryParamService: PipelineListQueryParamService,
     private val pipelineStatusService: PipelineStatusService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) {
+
+    companion object {
+        private const val PIPELINE_BATCH_ARCHIVE_EXPIRED_IN_HOUR = 36L // 流水线批量归档过期时间
+    }
 
     fun migrateData(
         userId: String,
@@ -74,6 +83,25 @@ class ArchivePipelineManageService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 cancelFlag = cancelFlag
+            )
+        )
+        return true
+    }
+
+    fun batchMigrateData(
+        userId: String,
+        projectId: String,
+        cancelFlag: Boolean = false,
+        pipelineIds: Set<String>
+    ): Boolean {
+        sampleEventDispatcher.dispatch(
+            PipelineBatchArchiveEvent(
+                source = "batch_archive_pipeline",
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                userId = userId,
+                cancelFlag = cancelFlag,
+                expiredInHour = PIPELINE_BATCH_ARCHIVE_EXPIRED_IN_HOUR
             )
         )
         return true
@@ -100,7 +128,6 @@ class ArchivePipelineManageService @Autowired constructor(
             dslContext = archiveShardingDslContext,
             projectId = projectId,
             pipelineFilterParamList = pipelineFilterParamList,
-            includeDelete = true,
             userId = userId
         )
         val pipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
@@ -110,7 +137,6 @@ class ArchivePipelineManageService @Autowired constructor(
             pipelineFilterParamList = pipelineFilterParamList,
             page = page,
             pageSize = pageSize,
-            includeDelete = true,
             collation = collation ?: PipelineCollation.DEFAULT,
             userId = userId
         )
@@ -170,6 +196,13 @@ class ArchivePipelineManageService @Autowired constructor(
         pipelineInfo.latestBuildId = pipelineBuildSummaryRecord?.latestBuildId
         val pipelineBuildHistoryRecord = pipelineBuildMap[pipelineRecord.pipelineId]
         pipelineInfo.trigger = pipelineBuildHistoryRecord?.trigger
+        pipelineBuildHistoryRecord?.let {
+            pipelineInfo.lastBuildMsg = BuildMsgUtils.getBuildMsg(
+                buildMsg = pipelineBuildHistoryRecord.buildMsg,
+                startType = StartType.toStartType(pipelineBuildHistoryRecord.trigger),
+                channelCode = pipelineBuildHistoryRecord.channelCode
+            )
+        }
         pipelineInfos.add(pipelineInfo)
     }
 }

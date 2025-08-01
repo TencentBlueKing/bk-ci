@@ -2,72 +2,53 @@
   <bk-loading class="aside" :loading="manageAsideStore.isLoading">
     <div class="aside-header">
       {{t("组织/用户")}}
-      <span class="refresh" @click="refresh">
-        <spinner v-if="syncStatus === 'PENDING'" class="manage-icon" />
-        <i v-else class="manage-icon manage-icon-refresh"></i>
-        {{ syncStatus === 'PENDING' ? t('同步中') : t('刷新') }}
-      </span>
+      <div class="aside-right">
+        <template v-if="isBatchOperate">
+          <span class="refresh" @click="goBatchOperate">{{ t("退出批量操作") }}</span>
+        </template>
+        <template v-else>
+          <img class="edit-icon" src="../../../svg/batch-edit.svg" @click="goBatchOperate">
+          <span class="refresh" @click="refresh">
+            <spinner v-if="syncStatus === 'PENDING'" class="manage-icon" />
+            <i v-else class="manage-icon manage-icon-refresh"></i>
+            {{ syncStatus === 'PENDING' ? t('同步中') : t('刷新') }}
+          </span>
+        </template>
+      </div>
     </div>
     <div ref="groupWrapperRef" class="group-wrapper">
+      <div v-if="isBatchOperate"  class="label-item select-all">
+        <bk-checkbox
+          class="checkbox"
+          v-model="selectAll"
+          @change="handleBatchAll"
+        >{{ t("全选") }}</bk-checkbox>
+        <bk-button
+          size="small"
+          @click="handleOpenbatchDialog"
+        >
+          {{ t("批量移出项目(X)", [checkedMembers.length]) }}
+        </bk-button>
+      </div>
       <div
-        :class="{'group-active': activeTab == item.id }"
-        class="group-item"
+        :class="{'user-group-active': activeTab == item.id }"
+        class="user-group-item"
         v-for="item in memberList"
         :key="item.id"
-        @click="handleClick(item)"
       >
-        <i 
-          :class="{
-            'group-icon': true,
-            'manage-icon manage-icon-organization': item.type === 'department',
-            'manage-icon manage-icon-user-shape': item.type === 'user',
-            'active': activeTab === item.id
-          }"
+        <bk-checkbox
+          class="checkbox"
+          v-if="isBatchOperate"
+          v-model="item.checked"
+          @change="handleCheckChange(item)"
         />
-        <p class="item" v-if="item.type === 'user'">
-          <bk-overflow-title type="tips">
-            {{ item.id }}
-            <span v-if="item.name && !item.departed"> ({{ item.name }}) </span>
-            <bk-tag v-else size="small" theme="danger"> {{ t("已离职")}}</bk-tag>
-          </bk-overflow-title>
-        </p>
-        <p
-          v-else
-          class="item"
-          v-bk-tooltips="{
-            content: item.name,
-            placement: 'top',
-            disabled: !truncateMiddleText(item.name).includes(' ... ')
-          }"
-        >
-          {{truncateMiddleText(item.name)}}
-        </p>
-        <bk-popover
-          :arrow="false"
-          placement="bottom"
-          trigger="click"
-          theme="light dot-menu"
-        >
-          <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
-          <template #content>
-            <div class="menu-content">
-              <!-- <bk-button
-                v-if="item.type === 'department'"
-                class="btn"
-                text
-                @click="handleShowPerson(item)"
-              >
-                {{t("人员列表")}}
-              </bk-button> -->
-              <bk-button
-                class="btn"
-                text
-                @click="handleRemoval(item)">
-                {{t("移出项目")}}
-              </bk-button>
-            </div>
-          </template>
-        </bk-popover>
+        <MemberItem
+          :member="item"
+          :activeTab="activeTab"
+          :isBatchOperate="isBatchOperate"
+          @handle-removal="handleRemoval"
+          @handle-click="handleClick"
+        />
       </div>
     </div>
 
@@ -83,28 +64,50 @@
       @change="pageChange"
     />
   </bk-loading>
+
   <bk-dialog
     :is-show="isShowHandOverDialog"
     :width="640"
     @closed="handOverClose"
+    :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
   >
     <template #header>
-      {{ t("移出项目") }}
-      <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }} ({{ removeUser.name }}) </span>
+      <p v-if="!isBatchOperate">
+        {{ t("移出项目") }}
+        <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser?.id }} ({{ removeUser?.name }}) </span>
+      </p>
+      <p v-else>{{ t('批量移出项目') }}</p>
     </template>
     <bk-loading :loading="removeCheckLoading">
       <template #default>
         <template v-if="removeMemberChecked">
-          <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id} (${removeUser.name})`]) }}</p>
+          <p v-if="!isBatchOperate" class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser?.id} (${removeUser?.name})`]) }}</p>
+          <p v-else class="remove-tips">{{ t('用户拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？') }}</p>
         </template>
         <template v-else>
           <div class="dialog">
             <p class="text-tag">
               <i class="manage-icon manage-icon-info-line"></i>
               <span>
-                {{t("将用户移出项目时需指定移交人，确认后将自动移交有效的权限/授权；已过期权限不交接，将自动清理。")}}
+                {{t("将用户移出项目时需指定移交人，确认后将自动移交有效的权限/授权；已过期权限不交接，将自动清理")}}
               </span>
+              <span v-if="isBatchOperate">{{ t("组织的权限不交接，将自动清理") }}</span>
             </p>
+
+            <ul
+              v-if="isBatchOperate"
+              class="select-list"
+              :style="{ 'max-height': `${ulMaxHeight}px` }"
+            >
+              <p class="title">{{ t("已选择以下X个组织/用户", [checkedMembers.length]) }}</p>
+              <li v-for="member in checkedMembers">
+                <MemberItem
+                  :member="member"
+                  :isBatchOperate="isBatchOperate"
+                />
+              </li>
+            </ul>
+
             <bk-form
               ref="formRef"
               :rules="rules"
@@ -118,6 +121,7 @@
                 labelWidth=""
               >
                 <project-user-selector
+                  ref="tagInput"
                   @change="handleChangeOverFormName"
                   @removeAll="handOverInputClear"
                 >
@@ -153,7 +157,7 @@
                 <p class="hand-over-table-item">
                   {{item.name}}({{ item.resourceType }})
                 </p>
-                <p class="blue-text" @click="goAuthorization(item.resourceType)">
+                <p class="blue-text" @click="goAuthorization(item)">
                   <i class="manage-icon manage-icon-jump"></i>
                   <span>{{t("前往处理")}}</span>
                 </p>
@@ -192,7 +196,7 @@
   >
     <template #header>
       {{t("人员列表")}}
-      <span class="dialog-header"> {{ removeUser.name }} </span>
+      <span class="dialog-header"> {{ removeUser?.name }} </span>
     </template>
     <template #default>
         <bk-table
@@ -206,6 +210,7 @@
         </bk-table>
     </template>
   </bk-dialog>
+
   <bk-dialog
     :width="450"
     header-align="center"
@@ -215,12 +220,29 @@
   >
     <template #header>
       <img src="@/css/svg/warninfo.svg" class="manage-icon-tishi">
-      <p class="dialog-header-text"> {{t("确认将组织移出本项目吗")}}？ </p>
+      <p class="dialog-header-text">
+        <span v-if="!isBatchOperate">{{t("确认将组织移出本项目吗")}}？</span>
+        <span v-else>{{t("确认将以下组织移出本项目吗")}}？</span>
+        
+      </p>
     </template>
     <template #default>
-        <p class="remove-text">
-          <span>{{t("待移出组织")}}：</span> {{ removeUser.name }}
+        <p v-if="!isBatchOperate" class="remove-text">
+          <span>{{t("待移出组织")}}：</span> {{ removeUser?.name }}
         </p>
+        <ul
+          v-else
+          class="select-list"
+          :style="{ 'max-height': `${ulMaxHeight}px` }"
+        >
+          <p class="title">{{ t("已选择以下X个组织/用户", [checkedMembers.length]) }}</p>
+          <li v-for="member in checkedMembers">
+            <MemberItem
+              :member="member"
+              :isBatchOperate="isBatchOperate"
+            />
+          </li>
+        </ul>
     </template>
     <template #footer>
       <bk-button
@@ -246,10 +268,28 @@ import { Message } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
+import MemberItem from './MemberItem.vue';
 import useManageAside from "@/store/manageAside";
 import { Success, Spinner } from 'bkui-vue/lib/icon';
 import ProjectUserSelector from '@/components/project-user-selector'
-import { ref, defineProps, defineEmits, computed, defineExpose, onMounted, onUnmounted } from 'vue';
+import { ref, defineProps, defineEmits, computed, defineExpose, onMounted, onUnmounted, watch } from 'vue';
+
+const props = defineProps({
+  memberList: {
+    type: Array,
+    default: () => [],
+  },
+  personList: {
+    type: Array,
+    default: () => [],
+  },
+  tableLoading: Boolean,
+  activeTab: String,
+});
+const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh', 'handleSelectAll', 'updateMemberList']);
+defineExpose({
+  handOverClose,
+});
 
 const { t } = useI18n();
 const route = useRoute();
@@ -288,43 +328,46 @@ const removeUser = ref(null);
 const isChecking = ref(false);
 const overTable = ref([]);
 const userListData = ref([]);
+const isBatchOperate = ref(false);
+const dialogTopOffset = ref();
+const ulMaxHeight = computed(() => window.innerHeight * 0.8 - 256);
+const tagInput = ref(null);
+const checkedMembers = ref([]);
+const selectAll = ref(false);
 
-const props = defineProps({
-  memberList: {
-    type: Array,
-    default: () => [],
+watch(
+  [
+    () => props.memberList,
+    () => checkedMembers.value
+  ],
+  ([memberList, checkedMembers]) => {
+    const currentPageIds = new Set(memberList?.map(member => member.id));
+    const current = checkedMembers?.filter(item => currentPageIds.has(item.id));
+
+    selectAll.value = memberList.length === current?.length
   },
-  personList: {
-    type: Array,
-    default: () => [],
-  },
-  tableLoading: Boolean,
-  activeTab: String,
-});
-const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh']);
-
-defineExpose({
-  handOverClose,
-});
-
-function truncateMiddleText(text) {
-  if (text.length <= 15) {
-    return text;
+  {
+    immediate: true,
+    deep: true
   }
+);
 
-  const separator = ' ... ';
-  const charsToShow = 15 - separator.length;
-  const frontChars = Math.ceil(charsToShow / 2);
-  const backChars = Math.floor(charsToShow / 2);
+watch(isShowHandOverDialog, (newVal) => {
+  if (newVal) {
+    const ITEM_HEIGHT = 30
+    const DIALOG_EXTRA_HEIGHT = 256
+    const totalListHeight = checkedMembers.value.length * ITEM_HEIGHT
+    const listHeight = Math.min(totalListHeight, ulMaxHeight.value)
+    dialogTopOffset.value = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
+  }
+})
 
-  return text.substr(0, frontChars) + separator + text.substr(text.length - backChars);
-}
 function handleClick(item) {
   emit('handleClick', item);
 }
 function pageChange(current) {
   groupWrapperRef.value?.scrollTo(0, 0)
-  emit('pageChange', current, projectId.value);
+  emit('pageChange', current, projectId.value, checkedMembers.value);
 }
 async function handleRemoval(item) {
   removeUser.value = item;
@@ -333,49 +376,51 @@ async function handleRemoval(item) {
   } else {
     handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
     isShowHandOverDialog.value = true;
-    await removeMemberFromProjectCheck(item);
+    await removeMemberFromProjectCheck([item]);
     formRef.value?.clearValidate();
   }
 }
 
 async function removeMemberFromProjectCheck (payload) {
+  const targetMembers = isBatchOperate.value ? checkedMembers.value : payload;
   try {
     removeCheckLoading.value = true;
-    removeMemberChecked.value = await http.removeMemberFromProjectCheck(projectId.value, {
-      targetMember: payload
-    })
+    removeMemberChecked.value = await http.removeMemberFromProjectCheck(projectId.value, targetMembers);
     removeCheckLoading.value = false;
   } catch (e) {
     removeCheckLoading.value = false;
     console.error(e)
   }
-
 }
 /**
  *  移出项目弹窗关闭
  */
 function handOverClose() {
   isShowHandOverDialog.value = false;
-  isShowRemoveDialog.value = false
+  isShowRemoveDialog.value = false;
   handOverInputClear();
+  tagInput.value?.removeAll();
 }
 /**
  *  移出项目弹窗提交
  */
 async function handConfirm (flag) {
+  const targetMembers = isBatchOperate.value ? checkedMembers.value : [removeUser.value]
   try {
     if (flag === 'user') {
       if (removeMemberChecked.value) {
-        emit('removeConfirm', removeUser.value, {});
+        emit('removeConfirm', isBatchOperate.value, targetMembers, {});
       } else {
         const isValidate = await formRef.value?.validate();
         if(!isValidate) return;
-        emit('removeConfirm', removeUser.value, handOverForm.value);
+        emit('removeConfirm', isBatchOperate.value, targetMembers, handOverForm.value);
       }
     } else {
-      emit('removeConfirm', removeUser.value, {});
+      emit('removeConfirm', isBatchOperate.value, targetMembers, {});
     }
-  } catch (error) {}
+  } catch (error) {} finally {
+    tagInput.value?.removeAll()
+  }
 }
 function handOverInputClear(){
   isChecking.value = false;
@@ -388,8 +433,11 @@ async function handleChangeOverFormName ({list, userList}){
     return;
   }
   userListData.value = userList;
-  handOverForm.value = userList.find(i => i.id === list[0]);
-  if(removeUser.value.id === handOverForm.value?.id){
+  handOverForm.value = userList?.find(i => i.id === list[0]);
+  const checkedMemberFroms = checkedMembers.value.map(item => item.id)
+  const handoverFroms = isBatchOperate.value ? checkedMemberFroms : [removeUser.value?.id]
+
+  if(handoverFroms.includes(handOverForm.value?.id)){
     Message({
       theme: 'error',
       message: t('目标对象和交接人不允许相同。')
@@ -399,9 +447,10 @@ async function handleChangeOverFormName ({list, userList}){
 
   const params = {
     projectCode: projectId.value,
-    handoverFrom: removeUser.value?.id,
+    handoverFroms,
     handoverTo: handOverForm.value?.id,
-    preCheck: true
+    preCheck: true,
+    checkPermission: true
   }
   if (!params.handoverTo) return
   isChecking.value = true;
@@ -466,8 +515,9 @@ function refreshHandOverfail () {
   }
   handleChangeOverFormName(param);
 }
-function goAuthorization(resourceType) {
-  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${removeUser.value.id}`, '_blank')
+function goAuthorization(item) {
+  const { resourceType, memberIds} = item
+  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${memberIds}`, '_blank')
 }
 /**
  * 获取人员列表数据
@@ -479,6 +529,51 @@ function handleShowPerson (item) {
 }
 function handlePersonClose () {
   isShowPersonDialog.value = false;
+}
+
+function goBatchOperate() {
+  isBatchOperate.value = !isBatchOperate.value;
+  checkedMembers.value = [];
+  emit('handleSelectAll', false);
+}
+
+function handleBatchAll(value) {
+  if (value) {
+    const memberIds = new Set(checkedMembers.value.map(item => item.id));
+    const newMembers = props.memberList.filter(item => !memberIds.has(item.id));
+    checkedMembers.value = [...checkedMembers.value, ...newMembers];
+  } else {
+    const memberIds = props.memberList.map(m => m.id);
+    checkedMembers.value = checkedMembers.value.filter(m =>!memberIds.includes(m.id));
+  }
+  emit('handleSelectAll', value);
+}
+
+async function handleOpenbatchDialog() {
+  if (!checkedMembers.value.length) {
+    Message({
+      theme: 'error',
+      message: t('请选择组织/用户')
+    });
+    return
+  }
+  const allAreGroups = checkedMembers.value.every(member => member.type === 'department');
+  if (allAreGroups) {
+    isShowRemoveDialog.value = true;
+  } else {
+    isShowHandOverDialog.value = true;
+    await removeMemberFromProjectCheck();
+  }
+}
+function handleCheckChange(item) {
+  if (item.checked) {
+    if (!checkedMembers.value.find(m => m.id === item.id)) {
+      checkedMembers.value.push(item);
+    }
+  } else {
+    checkedMembers.value = checkedMembers.value.filter(m => m.id !== item.id);
+  }
+  emit('updateMemberList', item)
 }
 
 onMounted(() => {
@@ -510,16 +605,28 @@ onUnmounted(() => {
   letter-spacing: 0;
   line-height: 22px;
 
-  .refresh{
+  .aside-right {
     display: flex;
     align-items: center;
-    font-size: 12px;
-    font-weight: 400;
-    color: #3A84FF;
-    cursor: pointer;
 
-    .manage-icon {
-      margin-right: 5px;
+    .edit-icon {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .refresh{
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+      font-size: 12px;
+      font-weight: 400;
+      color: #3A84FF;
+      cursor: pointer;
+  
+      .manage-icon {
+        margin-right: 5px;
+      }
     }
   }
 }
@@ -539,76 +646,57 @@ onUnmounted(() => {
     height: 4px !important;
   }
 }
+.select-all {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 18px 4px;
+  font-size: 12px;
+  color: #63656E;
+  height: 50px;
+  border-bottom: 1px solid #e4e5eb;
+}
+.checkbox {
+  margin-right: 10px;
+}
+.select-list {
+  margin-bottom: 24px;
+  border: 1px solid #f1f1f5;
+  border-radius: 2px;
+  overflow-y: auto;
 
-.group-item {
+  .title {
+    background-color: #EAEBF0;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 0 18px;
+    height: 32px;
+    line-height: 32px;
+  }
+
+  li {
+    padding: 5px 18px;
+    font-size: 12px;
+    // background-color: #fafbfd;
+    &:hover {
+      background-color: #fafbfd;
+    }
+  }
+}
+.user-group-item {
   display: flex;
   width: 100%;
   padding: 0 18px;
   height: 40px;
-  align-items: center;
+  align-items: center;flex: 1;
   font-size: 14px;
   color: #63656E;
   cursor: pointer;
-
-  .item {
-    width: 150px;
-    flex: 1;
-    height: 20px;
-    font-family: MicrosoftYaHei;
-    font-size: 12px;
-    color: #63656E;
-    letter-spacing: 0;
-    line-height: 20px;
-
-    .bk-tag {
-      line-height: 16px;
-      display: inline-block !important;
-    }
-  }
-
-  .group-icon {
-    width: 15px;
-    margin-right: 8px;
-    color: #9ea0a4;
-    &.active {
-      color: #0b76ff;
-    }
-  }
-
-  .more-icon {
-    border-radius: 50%;
-    color: #63656e;
-    padding: 1px;
-    display: none;
-  }
-
-  .more-icon:hover {
-    background-color: #DCDEE5;
-    color: #3A84FF !important;
-  }
-
-  &:hover .more-icon{
-    display: block;
-    padding: 1px;
-  }
-
-  
-  &:hover {
-    background-color: #eaebf0;
-  }
 }
 
-.group-active {
+.user-group-active {
   background-color: #E1ECFF !important;
   border-right: 2px solid #3A84FF;
-
-  p{
-    color: #3A84FF;
-  }
-
-  .group-icon {
-    filter: invert(100%) sepia(0%) saturate(90%) hue-rotate(180deg) brightness(90%) contrast(180%);
-  }
 }
 
 .dialog-header {
@@ -778,5 +866,30 @@ onUnmounted(() => {
 .check-checking-icon {
   color: #3A84FF;
   margin-right: 5px;
+}
+</style>
+
+<style>
+.user-group-item {
+  &:hover .more-icon{
+    display: block;
+    padding: 1px;
+  }
+
+  &:hover {
+    background-color: #eaebf0;
+  }
+}
+.user-group-active {
+  background-color: #E1ECFF !important;
+  border-right: 2px solid #3A84FF;
+
+  p{
+    color: #3A84FF;
+  }
+
+  .group-icon {
+    filter: invert(100%) sepia(0%) saturate(90%) hue-rotate(180deg) brightness(90%) contrast(180%);
+  }
 }
 </style>

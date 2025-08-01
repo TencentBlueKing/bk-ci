@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -67,6 +67,7 @@ class RbacPermissionService(
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator,
     private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
@@ -225,6 +226,14 @@ class RbacPermissionService(
                     operate = useAction
                 )
             }
+            bkInternalPermissionComparator.validateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode,
+                action = useAction,
+                expectedResult = result
+            )
             return result
         } finally {
             watcher.stop()
@@ -317,6 +326,14 @@ class RbacPermissionService(
                     operate = action
                 )
             }
+            bkInternalPermissionComparator.batchValidateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode,
+                actions = actions,
+                expectedResult = result
+            )
             return result
         } finally {
             logger.info(
@@ -336,7 +353,13 @@ class RbacPermissionService(
             "[rbac] get user resources|$userId|$action|$projectCode|$resourceType"
         )
         val startEpoch = System.currentTimeMillis()
-        try {
+        // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
+        val useAction = if (!action.contains("_")) {
+            RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+        } else {
+            action
+        }
+        val result = try {
             // 拥有超级管理员权限,返回所有数据
             if (isManager(
                     userId = userId,
@@ -345,23 +368,17 @@ class RbacPermissionService(
                     action = action
                 )
             ) {
-                return authResourceService.listByProjectAndType(
+                authResourceService.listByProjectAndType(
                     projectCode = projectCode,
                     resourceType = resourceType
                 )
-            }
-            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
-            val useAction = if (!action.contains("_")) {
-                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
-            } else {
-                action
             }
             val instanceMap = authHelper.groupRbacInstanceByType(
                 userId,
                 useAction,
                 TenantUtils.getTenantIdByEnglishName(projectCode)
             )
-            return when {
+            when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
                 // 如果有项目下所有该资源权限,返回资源列表
@@ -411,6 +428,14 @@ class RbacPermissionService(
                         "$userId|$action|$projectCode|$resourceType"
             )
         }
+        bkInternalPermissionComparator.getUserResourceByAction(
+            userId = userId,
+            projectCode = projectCode,
+            action = useAction,
+            resourceType = resourceType,
+            expectedResult = result
+        )
+        return result
     }
 
     override fun getUserResourcesByActions(
@@ -491,9 +516,9 @@ class RbacPermissionService(
             "[rbac] filter user resources|$userId|$actions|$projectCode|$resourceType"
         )
         val startEpoch = System.currentTimeMillis()
-        try {
+        val result = try {
             if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
-                return actions.associate {
+                actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
@@ -548,13 +573,22 @@ class RbacPermissionService(
                     )
                 }
             }
-            return permissionMap
+            permissionMap
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
                         "$userId|$actions|$projectCode|$resourceType"
             )
         }
+        bkInternalPermissionComparator.filterUserResourcesByActions(
+            userId = userId,
+            actions = actions,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCodes = resources.map { it.resourceCode },
+            expectedResult = result
+        )
+        return result
     }
 
     private fun buildAuthResourceInstance(

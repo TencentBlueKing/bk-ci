@@ -470,6 +470,28 @@
                                             :value="param.desc"
                                         />
                                     </bk-form-item>
+                                    <Accordion
+                                        show-content
+                                        show-checkbox
+                                    >
+                                        <header slot="header">
+                                            {{ $t('editPage.controlOption') }}
+                                        </header>
+                                        <article slot="content">
+                                            <SubParameter
+                                                :title="$t('editPage.displayCondition')"
+                                                name="displayCondition"
+                                                :param="displayConditionList"
+                                                :atom-value="{
+                                                    displayCondition: Object.keys(param.displayCondition ?? {}).map(key => ({
+                                                        key,
+                                                        value: param.displayCondition[key]
+                                                    }))
+                                                }"
+                                                :handle-change="(name, value) => handleUpdateDisplayCondition(name, value, index)"
+                                            />
+                                        </article>
+                                    </Accordion>
                                 </bk-form>
                             </accordion>
                         </draggable>
@@ -489,10 +511,11 @@
 </template>
 
 <script>
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import SubParameter from '@/components/AtomFormComponent/SubParameter'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -506,10 +529,10 @@
         PARAM_LIST,
         STRING,
         SUB_PIPELINE_OPTION,
+        getBranchOption,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
-        getBranchOption,
         isBooleanParam,
         isBuildResourceParam,
         isCodelibParam,
@@ -517,11 +540,11 @@
         isFileParam,
         isGitParam,
         isMultipleParam,
+        isRepoParam,
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
-        isTextareaParam,
-        isRepoParam
+        isTextareaParam
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy } from '@/utils/util'
@@ -552,7 +575,8 @@
             VuexTextarea,
             RequestSelector,
             FileParamInput,
-            SelectTypeParam
+            SelectTypeParam,
+            SubParameter
         },
         mixins: [validMixins],
         props: {
@@ -646,6 +670,16 @@
                     handle: '.icon-move',
                     animation: 200,
                     disabled: this.disabled
+                }
+            },
+            displayConditionList () {
+                return {
+                    paramType: 'list',
+                    list: this.globalParams.map(item => ({
+                        ...item,
+                        key: item.id
+                    }))
+                    
                 }
             }
         },
@@ -862,11 +896,10 @@
 
             getCodeUrl (type) {
                 type = type || 'CODE_GIT'
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.$route.params.projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
-
             getSearchUrl (type) {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+                return `${this.getCodeUrl(type)}&aliasName={keyword}`
             },
             
             getSearchBranchUrl (param) {
@@ -921,6 +954,13 @@
                         return false
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
+            },
+            handleUpdateDisplayCondition (key, value, paramIndex) {
+                const displayCondition = JSON.parse(value).reduce((acc, cur) => {
+                    acc[cur.key] = cur.value
+                    return acc
+                }, {})
+                this.handleUpdateParam(key, displayCondition, paramIndex)
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -107,11 +107,15 @@ class WebhookRequestService(
             logger.warn("Failed to save webhook request", ignored)
         }
         if (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT) {
-            webhookGrayCompareService.asyncCompareWebhook(
-                scmType = scmType,
-                request = request,
-                matcher = matcher
-            )
+            if (!matcher.preMatch().isMatch) {
+                logger.info("skip compare webhook|preMatch is false")
+            } else {
+                webhookGrayCompareService.asyncCompareWebhook(
+                    scmType = scmType,
+                    request = request,
+                    matcher = matcher
+                )
+            }
         }
         val repoName = matcher.getRepoName()
         // 如果整个仓库都开启灰度，则全部走新逻辑

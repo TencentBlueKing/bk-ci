@@ -37,7 +37,12 @@
                                 'icon-right-shape': !block.show
                             }]"
                         />
-                        <span class="pipeline-group-header-name">{{ block.title }}</span>
+                        <span
+                            class="pipeline-group-header-name"
+                            v-bk-overflow-tips
+                        >
+                            {{ block.title }}
+                        </span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
                                 v-perm="block.isCheckPermission ?
@@ -132,17 +137,27 @@
             </article>
         </div>
         <footer
-            :class="['recycle-pipeline-group-footer', {
-                active: $route.params.viewId === DELETED_VIEW_ID
-            }]"
-            @click="goRecycleBin"
+            class="recycle-pipeline-group-footer"
+            :key="projectId"
         >
-            <logo
-                class="pipeline-group-item-icon"
-                name="delete"
-                size="16"
-            ></logo>
-            <span>{{ $t('restore.recycleBin') }}</span>
+            <div
+                v-for="(item, idx) in footerBtns"
+                :key="projectId + idx"
+                :class="['footer-item',{
+                    active: $route.params.viewId === item.viewId
+                }]"
+                v-perm="item.isCheckPermission ? {
+                    permissionData: item.permissionData
+                } : {}"
+                @click="item.handler"
+            >
+                <logo
+                    class="pipeline-group-item-icon"
+                    :name="item.logo"
+                    size="14"
+                ></logo>
+                <span>{{ item.title }}</span>
+            </div>
         </footer>
         <bk-dialog
             v-model="isAddPipelineGroupDialogShow"
@@ -214,6 +229,7 @@
     import {
         CACHE_PIPELINE_GROUP_NAV_STATUS,
         DELETED_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         UNCLASSIFIED_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import {
@@ -258,6 +274,12 @@
                 'fixedGroupIdSet',
                 'groupNamesMap'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            currentViewId () {
+                return this.$route.params.viewId
+            },
             groupNameRules () {
                 return [{
                     validator: this.checkGroupNameValid,
@@ -307,9 +329,9 @@
                     hasPermission: this.isManage,
                     disablePermissionApi: true,
                     permissionData: {
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         resourceType: 'project',
-                        resourceCode: this.$route.params.projectId,
+                        resourceCode: this.projectId,
                         action: PROJECT_RESOURCE_ACTION.MANAGE
                     }
                 }]
@@ -324,6 +346,30 @@
                 const viewId = this.$route.params.viewId
                 const currentGroup = this.groupMap[viewId]
                 return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount ?? 0
+            },
+            footerBtns () {
+                return [
+                    {
+                        logo: 'archive',
+                        title: this.$t('archive.archiveLibrary'),
+                        viewId: ARCHIVE_VIEW_ID,
+                        handler: this.goArchiveLibrary,
+                        isCheckPermission: true,
+                        permissionData: {
+                            projectId: this.projectId,
+                            resourceType: 'project',
+                            resourceCode: this.projectId,
+                            action: PROJECT_RESOURCE_ACTION.ARCHIVED
+                        }
+                    },
+                    {
+                        logo: 'delete',
+                        title: this.$t('restore.recycleBin'),
+                        viewId: DELETED_VIEW_ID,
+                        handler: this.goRecycleBin,
+                        isCheckPermission: false
+                    }
+                ]
             }
         },
         watch: {
@@ -356,6 +402,9 @@
             },
             goRecycleBin () {
                 this.switchViewId(DELETED_VIEW_ID)
+            },
+            goArchiveLibrary () {
+                this.switchViewId(ARCHIVE_VIEW_ID)
             },
             async refreshPipelineGroup () {
                 this.isLoading = true
@@ -396,9 +445,9 @@
                                     hasPermission: this.isManage,
                                     disablePermissionApi: true,
                                     permissionData: {
-                                        projectId: this.$route.params.projectId,
+                                        projectId: this.projectId,
                                         resourceType: 'project',
-                                        resourceCode: this.$route.params.projectId,
+                                        resourceCode: this.projectId,
                                         action: PROJECT_RESOURCE_ACTION.MANAGE
                                     }
                                 }
@@ -453,7 +502,7 @@
                     }
                     this.renaming = true
                     await this.updatePipelineGroup({
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         id: view.id,
                         projected: view.projected,
                         name: this.newViewName
@@ -478,7 +527,7 @@
                 try {
                     this.isSticking = true
                     await this.toggleStickyTop({
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         viewId: view.id,
                         enabled: !view.top
                     })
@@ -502,7 +551,7 @@
                 try {
                     this.isDeleting = true
                     await this.deletePipelineGroup({
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         ...view
                     })
                     this.requestGetGroupLists(this.$route.params)
@@ -533,20 +582,22 @@
             },
             updateGroupPipelineCount (viewId) {
                 this.requestGroupPipelineCount({
-                    projectId: this.$route.params.projectId,
+                    projectId: this.projectId,
                     viewId
                 })
             },
             switchViewId (viewId) {
                 if (viewId !== this.$route.params.viewId) {
                     this.updateGroupPipelineCount(viewId)
+                    
+                    cacheViewId(this.projectId, viewId)
+                    const newParams = this.currentViewId === 'archiveLibrary'
+                        ? { ...this.$route.params, viewId, type: undefined }
+                        : { ...this.$route.params, viewId }
 
-                    cacheViewId(this.$route.params.projectId, viewId)
                     this.$router.push({
-                        params: {
-                            ...this.$route.params,
-                            viewId
-                        }
+                        name: 'PipelineManageList',
+                        params: newParams
                     })
                 }
             },
@@ -563,7 +614,7 @@
                     this.isAdding = true
                     const viewId = await this.addPipelineGroup({
                         ...this.newPipelineGroup,
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         viewType: 2,
                         logic: 'AND',
                         filters: [],
@@ -661,21 +712,36 @@
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
-            height: 52px;
+            height: 56px;
             border-top: 1px solid #DCDEE5;
-            padding: 0 0 0 32px;
+            padding: 0 6px;
             cursor: pointer;
             font-size: 14px;
             width: 100%;
             flex-shrink: 0;
+            text-align: center;
             &.expended {
                 width: 100%;
             }
-            &:hover,
-            &.active {
-                color: $primaryColor;
-                .pipeline-group-item-icon {
+            .footer-item {
+                flex: 1;
+                line-height: 32px;
+                padding: 2px 0;
+                
+                svg {
+                    vertical-align: middle;
+                }
+
+                &:hover,
+                &.active {
                     color: $primaryColor;
+                    .pipeline-group-item-icon {
+                        color: $primaryColor;
+                    }
+                }
+
+                &:last-child {
+                    border-left: 1px solid #DCDEE5;
                 }
             }
         }

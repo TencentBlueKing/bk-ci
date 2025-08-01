@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -82,7 +82,11 @@ class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
 
     fun checkUserPermission(userId: String, projectId: String) {
         val projectSet = client.get(ServiceProjectResource::class)
-            .list(userId, null, TenantUtils.getTenantIdByEnglishName(projectId)).data!!.map { it.projectCode }.toSet()
+            .list(
+                userId = userId,
+                productIds = null,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+            ).data!!.map { it.projectCode }.toSet()
         if (!projectSet.contains(projectId)) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(

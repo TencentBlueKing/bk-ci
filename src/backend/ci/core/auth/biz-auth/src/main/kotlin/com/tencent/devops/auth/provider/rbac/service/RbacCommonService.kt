@@ -165,7 +165,8 @@ class RbacCommonService(
                             actions = JsonUtil.to(
                                 actions,
                                 object : TypeReference<List<String>>() {}
-                            )
+                            ),
+                            desc = description
                         )
                     }
                 }

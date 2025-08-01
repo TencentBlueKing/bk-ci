@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -49,5 +49,6 @@ enum class BkStyleEnum(val style: String) {
     STORE_FIELD_TYPE_STYLE("^BACKEND|FRONTEND|ALL\$"), // 研发商店私有配置字段类型正则表达式
     PAGE_SIZE_STYLE("^100\$|^([1-9]|[1-9]\\d)\$"), // 页码正则表达式
     IP_STYLE("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"), // IPv4
-    VERSION_STYLE("^(?=.{1,256}\$)(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){2,}(?:\\.[^\\s.]+)*\$") // 版本号正则表达式
+    VERSION_STYLE("^(?=.{1,256}\$)(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){2,}(?:\\.[^\\s.]+)*\$"), // 普通版本号正则表达式
+    DEVX_VERSION_STYLE("^[0-9][\\w.-]{0,31}\$") // 云研发版本号正则表达式
 }

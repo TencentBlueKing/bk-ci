@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -326,7 +326,7 @@ class ThirdPartyAgentDao {
         dslContext: DSLContext,
         projectId: String,
         nodeIds: Set<Long>,
-        os: OS?,
+        os: OS?
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
@@ -373,7 +373,9 @@ class ThirdPartyAgentDao {
     }
 
     fun saveAgentEnvs(dslContext: DSLContext, agentIds: Set<Long>, envStr: String) {
-        if (agentIds.isEmpty()) { throw IllegalArgumentException("The agent IDs must be non-empty") }
+        if (agentIds.isEmpty()) {
+            throw IllegalArgumentException("The agent IDs must be non-empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
@@ -422,6 +424,12 @@ class ThirdPartyAgentDao {
                 }
                 from
             }.fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun fetchByProjectId(dslContext: DSLContext, projectId: String): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
         }
     }
 }
