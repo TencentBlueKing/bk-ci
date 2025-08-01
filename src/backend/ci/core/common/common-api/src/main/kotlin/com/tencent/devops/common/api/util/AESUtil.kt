@@ -29,7 +29,6 @@ package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.exception.EncryptException
 import java.security.SecureRandom
-import java.security.Security
 import java.util.Base64
 import javax.crypto.KeyGenerator
 import org.bouncycastle.crypto.CipherParameters
@@ -39,7 +38,6 @@ import org.bouncycastle.crypto.paddings.PKCS7Padding
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher
 import org.bouncycastle.crypto.params.KeyParameter
 import org.bouncycastle.crypto.params.ParametersWithIV
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 object AESUtil {
 
@@ -48,7 +46,7 @@ object AESUtil {
     private const val SEED = 256
 
     init {
-        Security.addProvider(BouncyCastleProvider())
+        BCProviderUtil
     }
 
     private fun generateKeyParameter(key: String): KeyParameter {
