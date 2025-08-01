@@ -102,7 +102,7 @@ config = {
         enabled = __BK_TENANT_ENABLED__
     },
     bk_login = {
-        host = "__BK_LOGIN_HOST__",
+        host = "__BK_PAAS_PRIVATE_URL__",
         path = "__BK_LOGIN_PATH__"
     },
     apigw = {

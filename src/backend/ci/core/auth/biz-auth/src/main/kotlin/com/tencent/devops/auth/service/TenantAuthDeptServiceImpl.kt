@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -98,15 +99,35 @@ class TenantAuthDeptServiceImpl : DeptService {
     }
 
     override fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): DeptInfoVo {
-        TODO("Not yet implemented")
+        logger.warn("listDeptInfos isn`t support in tenant environment: $searchUserEntity, $tenantId")
+        return DeptInfoVo(count = 0, results = emptyList())
     }
 
     override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): BkUserInfoVo {
-        TODO("Not yet implemented")
+        logger.warn("listUserInfos isn`t support in tenant environment: $searchUserEntity, $tenantId")
+        return BkUserInfoVo(count = 0, results = emptyList())
     }
 
     override fun getUserDeptDetails(userId: String, tenantId: String?): BkDeptDetailsVo? {
-        TODO("Not yet implemented")
+        val departmentInfos = listUserDepartment(userId, true, tenantId).data
+        if (departmentInfos.isEmpty()) {
+            val department = departmentInfos[0]
+            return BkDeptDetailsVo(
+                id = department.id,
+                name = department.name,
+                family = department.ancestors.map {
+                    BkUserDeptInfo(
+                        id = it.id.toString(),
+                        name = it.name,
+                        fullName = null
+                    )
+                }
+            )
+        } else {
+            logger.warn("getUserDeptDetails isn`t support in tenant environment: $userId, $tenantId")
+            return null
+        }
+
     }
 
     /**

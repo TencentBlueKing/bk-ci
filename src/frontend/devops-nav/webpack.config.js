@@ -93,7 +93,7 @@ module.exports = (env = {}, argv) => {
             publicPath: `${isDev ? '' : '__BK_CI_PUBLIC_PATH__'}/console/`,
             templateParameters: {
                 PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__',
-                BK_APIGW_USER_WEB_URL: isDev ? '' : '__BK_APIGW_USER_WEB_URL__'
+                BK_APIGW_USER_WEB_URL: isDev ? '' : '__BK_CI_USER_WEB_APIGW_URL__'
             },
             minify: {
                 removeComments: false
