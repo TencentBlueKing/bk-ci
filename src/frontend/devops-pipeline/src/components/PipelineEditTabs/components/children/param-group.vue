@@ -83,7 +83,7 @@
                                                 class="default-value"
                                                 v-bk-overflow-tips
                                             >
-                                                {{ param.defaultValue || '--' }}
+                                                {{ param.defaultValue ?? '--' }}
                                             </span>
                                         </div>
                                         <div
@@ -133,8 +133,8 @@
 </template>
 
 <script>
-    import vueDraggable from 'vuedraggable'
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import vueDraggable from 'vuedraggable'
     export default {
         components: {
             vueDraggable

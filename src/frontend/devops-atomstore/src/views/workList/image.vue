@@ -21,8 +21,6 @@
         <main class="g-scroll-pagination-table">
             <bk-table
                 style="margin-top: 15px;"
-                :outer-border="false"
-                :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
                 :data="renderList"
                 :pagination="pagination"
@@ -508,7 +506,7 @@
 
             goToImageDetail (code) {
                 this.$router.push({
-                    name: 'version',
+                    name: 'releaseManage',
                     params: {
                         code,
                         type: 'image'
@@ -723,5 +721,10 @@
     }
     .lh30 {
         line-height: 30px;
+    }
+    .g-scroll-pagination-table {
+        .bk-table {
+            height: auto;
+        }
     }
 </style>

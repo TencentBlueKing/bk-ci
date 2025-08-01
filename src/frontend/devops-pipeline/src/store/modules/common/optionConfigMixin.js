@@ -36,7 +36,8 @@ const optionConfigMixin = {
                 type: 'boolean',
                 component: 'atom-checkbox',
                 text: this.$t('storeMap.enableAtom'),
-                default: true
+                default: true,
+                canOverride: true
             },
             continueWhenFailed: {
                 isHidden: true,

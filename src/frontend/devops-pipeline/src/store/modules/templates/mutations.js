@@ -1,0 +1,60 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+import Vue from 'vue'
+import { deepClone } from '@/utils/util'
+import {
+    SET_INSTANCE_LIST,
+    SET_TEMPLATE_DETAIL,
+    UPDATE_INSTANCE_LIST,
+    UPDATE_USE_TEMPLATE_SETTING,
+    SET_RELEASE_ING,
+    SET_RELEASE_BASE_ID,
+    SHOW_TASK_DETAIL,
+    SET_TASK_DETAIL
+} from './constants'
+export default {
+    [SET_INSTANCE_LIST]: (state, list) => {
+        Vue.set(state, 'instanceList', list)
+        Vue.set(state, 'initialInstanceList', deepClone(list))
+    },
+    [UPDATE_INSTANCE_LIST]: (state, { index, value }) => {
+        const newList = state.instanceList.map(i => JSON.parse(JSON.stringify(i)))
+        newList[index] = JSON.parse(JSON.stringify(value))
+        Vue.set(state, 'instanceList', newList)
+    },
+    [UPDATE_USE_TEMPLATE_SETTING]: (state, value) => {
+        Vue.set(state, 'useTemplateSettings', value)
+    },
+    [SET_TEMPLATE_DETAIL]: (state, data) => {
+        Vue.set(state, 'templateDetail', data.templateDetail)
+        Vue.set(state, 'templateVersion', data.templateVersion)
+    },
+    [SET_RELEASE_ING]: (state, value) => {
+        Vue.set(state, 'isInstanceReleasing', value)
+    },
+    [SET_RELEASE_BASE_ID]: (state, value) => {
+        Vue.set(state, 'releaseBaseId', value)
+    },
+    [SHOW_TASK_DETAIL]: (state, value) => {
+        Vue.set(state, 'showTaskDetail', value)
+    },
+    [SET_TASK_DETAIL]: (state, value) => {
+        Vue.set(state, 'instanceTaskDetail', value)
+    }
+}

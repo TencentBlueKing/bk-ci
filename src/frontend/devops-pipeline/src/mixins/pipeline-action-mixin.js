@@ -18,10 +18,10 @@
  */
 
 import {
+    handleProjectNoPermission,
     PROJECT_RESOURCE_ACTION,
     RESOURCE_ACTION,
-    TEMPLATE_RESOURCE_ACTION,
-    handleProjectNoPermission
+    TEMPLATE_RESOURCE_ACTION
 } from '@/utils/permission'
 
 import { statusAlias } from '@/utils/pipelineStatus'
@@ -30,14 +30,15 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
 import {
     ALL_PIPELINE_VIEW_ID,
+    ARCHIVE_VIEW_ID,
     COLLECT_VIEW_ID,
     DELETED_VIEW_ID,
-    ARCHIVE_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
-import { ORDER_ENUM, PIPELINE_SORT_FILED, VERSION_STATUS_ENUM, pipelineTabIdMap } from '@/utils/pipelineConst'
+import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+
 
 export default {
     data () {

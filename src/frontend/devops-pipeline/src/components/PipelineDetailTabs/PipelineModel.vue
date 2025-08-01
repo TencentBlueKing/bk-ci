@@ -20,7 +20,7 @@
             Pipeline
         },
         computed: {
-            ...mapState('atom', ['pipelineWithoutTrigger', 'pipeline'])
+            ...mapState('atom', ['pipelineWithoutTrigger'])
         }
     }
 </script>

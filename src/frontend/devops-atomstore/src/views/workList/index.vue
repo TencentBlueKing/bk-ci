@@ -7,6 +7,7 @@
 
         <transition-tab
             :panels="tabList"
+            :active-tab="currentTabName"
             @tab-change="tabChange"
         >
             <template v-slot:tool>
@@ -41,7 +42,6 @@
 
         data () {
             return {
-                currentTabName: this.$route.name,
                 tabList: [
                     {
                         name: 'atomWork',
@@ -92,6 +92,9 @@
         },
 
         computed: {
+            currentTabName () {
+                return this.$route.name
+            },
             currentTab () {
                 return this.tabList.find(x => x.name === this.currentTabName)
             },
@@ -120,15 +123,13 @@
             }
         },
 
-        watch: {
-            currentTabName (name) {
-                this.$router.push({ name })
-            }
-        },
-
         methods: {
             tabChange (name) {
-                this.currentTabName = name
+                console.log('ctab change', name)
+                if (this.currentTabName !== name) {
+                    this.currentTabName = name
+                    this.$router.push({ name })
+                }
             }
         }
     }

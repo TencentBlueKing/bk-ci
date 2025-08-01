@@ -91,6 +91,12 @@ module.exports = class BundleWebpackPlugin {
                     }
                 }
                 if (this.isDev) {
+                    const dirname = path.dirname(this.DEBUG_ASSETS_BUNDLE_JSON_FILE)
+                    if (!fs.existsSync(dirname)) {
+                        fs.mkdirSync(dirname, {
+                            recursive: true,
+                        })
+                    }
                     fs.writeFileSync(this.DEBUG_ASSETS_BUNDLE_JSON_FILE, JSON.stringify(assetsMap))
                 } 
                 

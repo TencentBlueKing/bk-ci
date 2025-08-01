@@ -46,8 +46,8 @@
 </template>
 
 <script>
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     export default {
         name: 'codelib-selector',

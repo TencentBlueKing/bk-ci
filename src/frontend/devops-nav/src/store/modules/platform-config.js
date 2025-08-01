@@ -1,6 +1,7 @@
 import { getPlatformConfig, setShortcutIcon } from '@blueking/platform-config'
+import Vue from 'vue'
 import createLocale from '../../../../locale'
-const { i18n } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { i18n } = createLocale(require.context('@locale/nav/', false, /\.json$/), Vue, true)
 const locale = i18n.locale.replace('_', '-')
 const messages = i18n.messages[locale]
 

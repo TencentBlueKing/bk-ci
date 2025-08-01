@@ -280,12 +280,12 @@
     import Pipeline from '@/components/Pipeline'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import VersionSelector from '../../components/PipelineDetailTabs/VersionSelector.vue'
-    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
 
     export default {
         components: {
@@ -504,6 +504,17 @@
                             ...this.versionParamValues
                         }
                     })
+                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
+                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
+                        this.buildNo.isChanged = true
+
+                        this.setExecuteParams({
+                            pipelineId: this.pipelineId,
+                            params: {
+                                buildNo: this.buildNo
+                            }
+                        })
+                    }
                 }
             },
             async handleValidate () {

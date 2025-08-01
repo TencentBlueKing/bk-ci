@@ -28,7 +28,6 @@ module.exports = (env = {}, argv) => {
             'vee-validate',
             'echarts',
             'vue-echarts',
-            'vue-i18n',
             'js-cookie',
             'dayjs'
         ],

@@ -5,8 +5,12 @@
     >
         <bk-form-item>
             <label class="pipeline-execute-version-label">
-                <span>{{ $t('versionNum') }}</span>
+                <span :class="{ 'deleted': isDelete }">{{ $t('versionNum') }}</span>
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
+
+                <span :class="['status-tag', statusTagConfig.theme]">
+                    {{ statusTagConfig.message }}
+                </span>
             </label>
             <div class="execute-build-version">
                 <span
@@ -19,7 +23,10 @@
                         input-type="number"
                         :name="v.id"
                         :class="{
-                            'is-diff-param': highlightChangedParam && v.isChanged
+                            'is-diff-param': highlightChangedParam && v.isChanged,
+                            'is-change-param': v.isChange,
+                            'is-new-param': v.isNew,
+                            'is-delete-param': v.isDelete
                         }"
                         :placeholder="v.placeholder"
                         v-validate.initial="'required|numeric'"
@@ -147,6 +154,9 @@
                             v-validate.initial="'required|numeric'"
                             :value="buildNo.currentBuildNo"
                             :handle-change="handleBuildNoChange"
+                            :class="{
+                                'is-diff-param': highlightChangedParam && buildNo.isChanged
+                            }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
                         <span
@@ -167,11 +177,11 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import Logo from '@/components/Logo'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
-    import Logo from '@/components/Logo'
 
     export default {
         components: {
@@ -268,6 +278,28 @@
             },
             isPreviewAndLockedNo () {
                 return (this.isLockedNo && this.isPreview) || this.disabled
+            },
+            isDelete () {
+                return this.versionParamList.every(i => i?.isDelete)
+            },
+            isNew () {
+                return this.versionParamList.every(i => i?.isNew)
+            },
+            statusTagConfig () {
+                let message, theme
+                if (this.isDelete) {
+                    message = this.$t('deleted')
+                    theme = 'danger'
+                }
+                if (this.isNew) {
+                    message = this.$t('new')
+                    theme = 'success'
+                }
+                return {
+                    message,
+                    theme,
+                    isShow: this.isDelete || this.isNew
+                }
             }
         }
     }
@@ -284,7 +316,10 @@
         align-items: center;
         font-size: 12px;
         font-weight: 700;
-
+        .deleted {
+            color: #a7a9ac !important;
+            text-decoration: line-through;
+        }
         .desc-text {
             font-weight: normal;
             color: #979ba5;
@@ -293,6 +328,23 @@
         .instance_reset {
             font-weight: normal;
             margin-left: 18px;
+        }
+        .status-tag {
+            padding: 0 8px;
+            border-radius: 2px;
+            margin-right: 40px;
+            font-size: 12px;
+            height: 16px;
+            line-height: 16px;
+            font-weight: 400;
+            &.success {
+                color: #299E56;
+                background: #DAF6E5;
+            }
+            &.danger {
+                color: #E71818;
+                background: #FFEBEB;
+            }
         }
     }
 
@@ -333,12 +385,12 @@
         margin-left: 0;
         .preview-buildno-params {
             display: flex;
-            
+
             .build {
                 display: grid;
                 grid-template-columns: auto auto;
                 column-gap: 0;
-                
+
                 .build-label,
                 .build-value {
                     font-size: 12px;
@@ -396,5 +448,24 @@
 
 .is-diff-param {
     border-color: #FF9C01 !important;
+}
+
+.is-new-param {
+    background: #EBFAF0 !important;
+}
+
+.is-change-param {
+    background: #FDF4E8 !important;
+}
+
+.is-delete-param {
+    background: #FFF0F0 !important;
+}
+.is-new-param,
+.is-delete-param,
+.is-change-param {
+    &:focus {
+        background: #FFF !important;
+    }
 }
 </style>

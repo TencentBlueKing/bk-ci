@@ -135,7 +135,7 @@
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
         emit: ['input', 'change', 'showAllVersion'],
@@ -203,11 +203,14 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
+            uniqueId () {
+                return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
             },
             // 最新的流水线版本信息
             activeDisplayName () {
@@ -233,7 +236,7 @@
                     this.activeVersion = activeVersion
                 }
             },
-            pipelineId: {
+            uniqueId: {
                 handler () {
                     this.hasNext = true
                     this.loadMore(1)
@@ -251,12 +254,13 @@
             convertTime,
             ...mapActions({
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
+                requestTemplateVersionList: 'templates/requestTemplateVersionList',
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
 
             async loadMore (page) {
                 try {
-                    const { projectId, pipelineId, pagination } = this
+                    const { projectId, pagination } = this
                     const nextPage = page ?? pagination.page + 1
                     if (nextPage > 1 && !this.hasNext) return
                     if (nextPage === 1) {
@@ -264,9 +268,12 @@
                     } else {
                         this.bottomLoadingOptions.isLoading = true
                     }
-                    const res = await this.requestPipelineVersionList({
+                    const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                    const res = await dataSource({
                         projectId,
-                        pipelineId,
+                        ...{
+                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId
+                        },
                         page: nextPage,
                         pageSize: pagination.limit,
                         versionName: this.searchKeyword,

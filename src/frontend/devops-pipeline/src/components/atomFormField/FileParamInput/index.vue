@@ -80,12 +80,14 @@
     import FileUpload from '@/components/atomFormField/FileUpload'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { randomString } from '@/utils/util'
+    import atomFieldMixin from '../atomFieldMixin'
 
     export default {
         components: {
             VuexInput,
             FileUpload
         },
+        mixins: [atomFieldMixin],
         props: {
             id: {
                 type: String,

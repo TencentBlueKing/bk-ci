@@ -27,6 +27,8 @@ function isSkip (status) {
 }
 
 export default {
+    instanceFromTemplate: state => state.pipelineInfo?.instanceFromTemplate ?? false,
+    isTemplate: state => state.pipelineInfo?.isTemplate ?? false,
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },
@@ -34,7 +36,7 @@ export default {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
     },
     getDraftBaseVersionName: (state, getters) => {
-        return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
+        return getters.hasDraftPipeline ? (state.pipelineInfo?.baseVersionName ?? '--') : '--'
     },
     pipelineHistoryViewable: state => {
         return [

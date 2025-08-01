@@ -49,9 +49,9 @@
 
 <style lang="scss" scoped>
     .store-nav {
-        height: 5.6vh;
         display: flex;
         align-items: center;
+        height: 66px;
         justify-content: space-between;
         padding: 0 .32rem;
         background-color: #fff;
@@ -65,7 +65,6 @@
             margin-right: 6px;
         }
         .right-arrow {
-            height: 5.6vh;
             &::after {
                 margin-top: -2.5px;
                 border-color: #252935;

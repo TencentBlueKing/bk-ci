@@ -1,18 +1,25 @@
 <template>
     <section>
-        <batch-add-options :submit-batch-add="handleBatchInput" />
+        <batch-add-options
+            :disabled="disabled"
+            :submit-batch-add="handleBatchInput"
+        />
         <div
             class="Key-value-nomal"
             style="margin-top: 16px;"
         >
-            <p
+            <bk-button
                 v-if="list.length"
+                :disabled="disabled"
+                text
+                size="small"
+                theme="primary"
                 class="batch-copy"
+                icon="bk-icon icon-copy"
                 @click.stop="handleCopy"
             >
-                <i class="bk-icon icon-copy"></i>
                 {{ $t('editPage.batchCopy') }}
-            </p>
+            </bk-button>
             <form-field
                 :hide-colon="true"
                 :label="$t('editPage.optionSetting')"
@@ -86,9 +93,9 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
-    import BatchAddOptions from './batch-add-options'
     import { copyToClipboard } from '@/utils/util'
     import draggable from 'vuedraggable'
+    import BatchAddOptions from './batch-add-options'
     export default {
         components: {
             VuexInput,
@@ -290,11 +297,8 @@
             position: absolute;
             top: 0;
             right: 0;
-            font-size: 12px;
-            color: #3A84FF;
-            line-height: 20px;
-            cursor: pointer;
             z-index: 9;
+            display: flex;
         }
     }
     .param-item {

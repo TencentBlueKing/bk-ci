@@ -32,23 +32,13 @@ const serviceWork = () => import(/* webpackChunkName: 'workList' */ '@/views/wor
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
-const detail = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/index.vue') // 研发商店管理页面
 const show = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/show.vue') // 研发商店管理页面
 const edit = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/edit.vue') // 研发商店管理页面
-const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/index.vue') // 研发商店管理页面
 const statisticData = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-data.vue') // 研发商店管理页面
 const statisticPipeline = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-pipeline.vue') // 研发商店管理页面
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
-const visibleSetting = () => import(/* webpackChunkName: 'visibleSetting' */ '@/views/manage/setting/visible-setting.vue') // 研发商店管理页面
-const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
-const privateSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
-const apiSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/api-setting.vue') // 研发商店管理页面
-const deptInfoSetting = () => import(/* webpackChunkName: 'deptInfoSetting' */ '@/views/manage/setting/deptInfo-setting.vue') // 研发商店管理页面
 const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
-const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
-const environment = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/environment.vue') // 研发商店管理页面
-const codeCheck = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/code-check.vue') // 研发商店管理页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -167,70 +157,29 @@ const routes = [
                 component: manage,
                 children: [
                     {
-                        path: 'detail',
-                        name: 'detail',
-                        component: detail,
-                        children: [
-                            {
-                                path: 'show',
-                                name: 'show',
-                                component: show
-                            },
-                            {
-                                path: 'edit',
-                                name: 'edit',
-                                component: edit
-                            }
-                        ]
+                        path: 'detail/show',
+                        name: 'show',
+                        component: show
+                    },
+                    {
+                        path: 'detail/edit',
+                        name: 'edit',
+                        component: edit
                     },
                     {
                         path: 'setting',
                         name: 'setting',
-                        component: setting,
-                        children: [
-                            {
-                                path: 'member',
-                                name: 'member',
-                                component: memberSetting
-                            },
-                            {
-                                path: 'private',
-                                name: 'private',
-                                component: privateSetting
-                            },
-                            {
-                                path: 'visible',
-                                name: 'visible',
-                                component: visibleSetting
-                            },
-                            {
-                                path: 'api',
-                                name: 'api',
-                                component: apiSetting
-                            },
-                            {
-                                path: 'deptInfo',
-                                name: 'deptInfo',
-                                component: deptInfoSetting
-                            }
-                        ]
+                        component: setting
                     },
                     {
-                        path: 'overview',
-                        name: 'overView',
-                        component: overView,
-                        children: [
-                            {
-                                path: 'statisticData',
-                                name: 'statisticData',
-                                component: statisticData
-                            },
-                            {
-                                path: 'statisticPipeline',
-                                name: 'statisticPipeline',
-                                component: statisticPipeline
-                            }
-                        ]
+                        path: 'overview/statisticData',
+                        name: 'statisticData',
+                        component: statisticData
+                    },
+                    {
+                        path: 'overview/statisticPipeline',
+                        name: 'statisticPipeline',
+                        component: statisticPipeline
                     },
                     {
                         path: 'approval',
@@ -240,22 +189,7 @@ const routes = [
                     {
                         path: 'releaseManage',
                         name: 'releaseManage',
-                        component: releaseManage,
-                        children: [
-                            {
-                                path: 'version',
-                                name: 'version',
-                                component: version
-                            }, {
-                                path: 'environment',
-                                name: 'environment',
-                                component: environment
-                            }, {
-                                path: 'check',
-                                name: 'check',
-                                component: codeCheck
-                            }
-                        ]
+                        component: releaseManage
                     }
                 ],
                 meta: {
@@ -288,7 +222,7 @@ const routes = [
                 }
             },
             {
-                path: 'editTemplate/:templateId',
+                path: 'editTemplate/:templateCode?',
                 name: 'editTemplate',
                 component: editTemplate,
                 meta: {
@@ -307,11 +241,11 @@ const routes = [
                     logo: 'store',
                     header: 'store',
                     to: 'atomHome',
-                    webSocket: ['^\/console\/store\/releaseProgress\/(shelf|upgrade)\/[^\/]+$']
+                    webSocket: ['^/console/store/releaseProgress/(shelf|upgrade)/[^/]+$']
                 }
             },
             {
-                path: 'upgradeTemplate/:templateId',
+                path: 'upgradeTemplate/:templateCode',
                 name: 'upgradeTemplate',
                 component: upgradeTemplate,
                 meta: {
