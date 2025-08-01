@@ -68,7 +68,8 @@ ul {
 
     .color-block {
       display: inline-block;
-      padding: 0 4px;
+      text-align: center;
+      padding: 0 6px;
       height: 16px;
       color: #FFF;
       border-radius: 11px;
