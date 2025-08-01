@@ -76,7 +76,8 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
-                operator = operator
+                operator = operator,
+                userId = userId
             )
             tGitTokenDao.saveAccessToken(
                 dslContext,
@@ -87,7 +88,9 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
         }
     }
 
-    override fun delete(userId: String, scmCode: String) {
-        tGitTokenDao.deleteToken(dslContext = dslContext, userId = userId)
+    override fun delete(userId: String, scmCode: String, username: String) {
+        tGitTokenDao.deleteToken(dslContext = dslContext, userId = username)
     }
+
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> = listOf()
 }
