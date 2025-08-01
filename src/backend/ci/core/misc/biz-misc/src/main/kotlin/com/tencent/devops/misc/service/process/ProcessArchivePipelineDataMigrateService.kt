@@ -52,7 +52,7 @@ import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
-import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
+import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
@@ -80,7 +80,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     private var archiveShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDataMigrateDao: ProcessDataMigrateDao,
-    private val processMigrationDataDeleteService: ProcessMigrationDataDeleteService,
+    private val processDataDeleteService: ProcessDataDeleteService,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val redisOperation: RedisOperation,
@@ -200,16 +200,16 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     ) {
         try {
             if (archiveDbShardingRoutingRule != null) {
-                val deleteMigrationDataParam = DeleteMigrationDataParam(
+                val deleteDataParam = DeleteDataParam(
                     dslContext = archiveShardingDslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    targetClusterName = archiveDbShardingRoutingRule.clusterName,
-                    targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
-                    migrationLock = migrationLock,
+                    clusterName = archiveDbShardingRoutingRule.clusterName,
+                    dataSourceName = archiveDbShardingRoutingRule.dataSourceName,
+                    lock = migrationLock,
                     archivePipelineFlag = true
                 )
-                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
             }
         } catch (ignored: Throwable) {
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doMigrationErrorBus fail", ignored)
@@ -280,14 +280,14 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     resourceCode = pipelineId
                 )
                 // 删除原库的数据
-                val deleteMigrationDataParam = DeleteMigrationDataParam(
+                val deleteDataParam = DeleteDataParam(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    targetClusterName = sourceClusterName,
-                    targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
+                    clusterName = sourceClusterName,
+                    dataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
-                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
                 // 添加操作日志
                 val id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("T_PIPELINE_OPERATION_LOG").data
