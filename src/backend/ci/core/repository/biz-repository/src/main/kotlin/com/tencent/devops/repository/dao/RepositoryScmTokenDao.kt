@@ -113,4 +113,21 @@ class RepositoryScmTokenDao {
                     .fetch()
         }
     }
+
+    fun getTokenByOperator(
+        dslContext: DSLContext,
+        operator: String,
+        scmCode: String,
+        appType: String
+    ): TRepositoryScmTokenRecord? {
+        with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(
+                        OPERATOR.eq(operator)
+                                .and(SCM_CODE.eq(scmCode))
+                                .and(APP_TYPE.eq(appType))
+                    )
+                    .fetchOne()
+        }
+    }
 }
