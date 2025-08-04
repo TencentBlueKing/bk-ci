@@ -28,84 +28,109 @@
 package com.tencent.devops.misc.config
 
 import com.mysql.cj.jdbc.Driver
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.web.jasypt.DefaultEncryptor
 import com.tencent.devops.misc.pojo.DataSourceConfig
 import com.tencent.devops.misc.pojo.ProcessShardingDataSourceProperties
 import com.zaxxer.hikari.HikariDataSource
+import org.jasypt.encryption.StringEncryptor
+import org.jooq.DSLContext
 import org.jooq.SQLDialect
+import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
-import org.springframework.beans.factory.BeanFactory
-import org.springframework.beans.factory.FactoryBean
-import org.springframework.beans.factory.annotation.Autowired
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.context.properties.bind.Binder
+import org.springframework.context.EnvironmentAware
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import org.springframework.core.env.Environment
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
-class ProcessShardingDataSourceConfig(
-    private val properties: ProcessShardingDataSourceProperties
-) : BeanDefinitionRegistryPostProcessor {
+@EnableConfigurationProperties(ProcessShardingDataSourceProperties::class)
+class ProcessShardingDataSourceConfig() : BeanDefinitionRegistryPostProcessor, EnvironmentAware {
+
+    private val logger = LoggerFactory.getLogger(ProcessShardingDataSourceConfig::class.java)
+
+    private lateinit var environment: Environment
 
     override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
-        properties.sharding.forEach { (shardId, config) ->
-            registerShardBeans(registry, shardId, config)
+        // 使用 Environment 绑定配置属性
+        val binder = Binder.get(environment)
+        val properties =
+            binder.bind("spring.datasource.process", ProcessShardingDataSourceProperties::class.java)
+                .orElseThrow { IllegalStateException("Missing spring.datasource.process configuration") }
+        logger.info("Sharding config properties: ${JsonUtil.toJson(properties)}")
+        val shardingMap = properties.sharding
+        // 执行Bean注册逻辑
+        val stringEncryptor = createDirectEncryptor()
+        shardingMap.forEach { (shardId, config) ->
+            registerShardBeans(
+                registry = registry,
+                shardId = shardId,
+                config = config,
+                stringEncryptor = stringEncryptor
+            )
         }
     }
 
     private fun registerShardBeans(
         registry: BeanDefinitionRegistry,
         shardId: String,
-        config: DataSourceConfig
+        config: DataSourceConfig,
+        stringEncryptor: StringEncryptor
     ) {
-        // 1. 注册DataSource（修复空URL问题）
+        // 1. 注册数据源 Bean
         val dataSourceBeanName = "${shardId}DataSource"
-        if (config.url.isBlank()) {
-            throw IllegalStateException("DataSource URL cannot be blank for shard $shardId")
-        }
         val dataSourceDefinition = BeanDefinitionBuilder
             .genericBeanDefinition(DataSource::class.java) {
-                createDataSource("DBPool-Process-$shardId", config)
+                createDataSource("DBPool-Process-$shardId", config, stringEncryptor)
             }
             .setDestroyMethodName("close")
             .beanDefinition
         registry.registerBeanDefinition(dataSourceBeanName, dataSourceDefinition)
 
-        // 2. 注册 FactoryBean（用于创建 JooqConfig）
-        val factoryBeanName = "${shardId}JooqConfigFactory"
-        registry.registerBeanDefinition(factoryBeanName,
-            BeanDefinitionBuilder.genericBeanDefinition(JooqConfigFactoryBean::class.java) {
-                JooqConfigFactoryBean(dataSourceBeanName)
-            }.beanDefinition
-        )
+        // 2. 注册 DSLContext Bean
+        val dslContextBeanName = "${shardId}DSLContext"
+        val dslContextDefinition = BeanDefinitionBuilder
+            .genericBeanDefinition(DSLContext::class.java) {
+                // 将registry转换为ConfigurableBeanFactory
+                val beanFactory = registry as ConfigurableBeanFactory
+                // 通过转换后的beanFactory获取数据源
+                val dataSource = beanFactory.getBean(dataSourceBeanName, DataSource::class.java)
 
-        // 3. 注册 JooqConfig（通过 FactoryBean 创建）
-        val jooqConfigBeanName = "${shardId}JooqConfiguration"
-        val jooqConfigDefinition = BeanDefinitionBuilder
-            .genericBeanDefinition(org.jooq.Configuration::class.java)
-            .apply {
-                setFactoryMethodOnBean("getObject", factoryBeanName)
+                DSL.using(
+                    DefaultConfiguration().apply {
+                        set(dataSource)
+                        set(SQLDialect.MYSQL)
+                    }
+                )
             }
-            .addDependsOn(dataSourceBeanName)  // 添加 DataSource 依赖
-            .addDependsOn(factoryBeanName)      // 添加 FactoryBean 依赖
             .beanDefinition
-        registry.registerBeanDefinition(jooqConfigBeanName, jooqConfigDefinition)
+        registry.registerBeanDefinition(dslContextBeanName, dslContextDefinition)
+
+        logger.info("Registered beans for shard $shardId: $dataSourceBeanName, $dslContextBeanName")
     }
 
     fun createDataSource(
         poolName: String,
-        config: DataSourceConfig
+        config: DataSourceConfig,
+        stringEncryptor: StringEncryptor
     ): HikariDataSource {
         return HikariDataSource().apply {
             this.poolName = poolName
             jdbcUrl = config.url
-            username = config.username
-            password = config.password
+            username = decryptWithJasypt(stringEncryptor, config.username)
+            password = decryptWithJasypt(stringEncryptor, config.password)
             driverClassName = Driver::class.java.name
             minimumIdle = 1
             maximumPoolSize = 5
@@ -115,23 +140,22 @@ class ProcessShardingDataSourceConfig(
         }
     }
 
-    // 定义FactoryBean实现延迟依赖解析
-    class JooqConfigFactoryBean(
-        private val dataSourceBeanName: String
-    ) : FactoryBean<org.jooq.Configuration> {
-
-        @Autowired
-        private lateinit var beanFactory: BeanFactory
-
-        override fun getObjectType() = org.jooq.Configuration::class.java
-
-        override fun getObject(): org.jooq.Configuration {
-            // 运行时动态获取DataSource（避免Bean初始化时序问题）
-            val dataSource = beanFactory.getBean(dataSourceBeanName, DataSource::class.java)
-            return DefaultConfiguration().apply {
-                set(dataSource)
-                set(SQLDialect.MYSQL)
-            }
+    private fun decryptWithJasypt(stringEncryptor: StringEncryptor, value: String): String {
+        return if (value.startsWith("ENC(")) {
+            stringEncryptor.decrypt(value.substring(4, value.length - 1))
+        } else {
+            value
         }
+    }
+
+    private fun createDirectEncryptor(): StringEncryptor {
+        val key = environment.getProperty("enc.key", "")
+        return DefaultEncryptor(key).apply {
+            logger.info("Created direct StringEncryptor with key: ${key.take(3)}***")
+        }
+    }
+
+    override fun setEnvironment(environment: Environment) {
+        this.environment = environment
     }
 }

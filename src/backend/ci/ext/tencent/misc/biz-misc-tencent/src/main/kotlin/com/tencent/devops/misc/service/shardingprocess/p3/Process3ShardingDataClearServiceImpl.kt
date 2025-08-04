@@ -30,10 +30,12 @@ package com.tencent.devops.misc.service.shardingprocess.p3
 import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 
 @Service("ds_2")
 class Process3ShardingDataClearServiceImpl @Autowired constructor(
+    @Qualifier("p3DSLContext")
     private val dslContext: DSLContext?
 ) : ProcessShardingDataClearService() {
 

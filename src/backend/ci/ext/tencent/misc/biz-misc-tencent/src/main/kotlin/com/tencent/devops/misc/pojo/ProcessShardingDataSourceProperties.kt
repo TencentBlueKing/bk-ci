@@ -28,13 +28,11 @@
 package com.tencent.devops.misc.pojo
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.stereotype.Component
 
-@ConfigurationProperties(prefix = "spring.datasource.process.sharding")
-@Component
+@ConfigurationProperties(prefix = "spring.datasource.process")
 data class ProcessShardingDataSourceProperties(
     // 使用可变Map接收动态分片配置
-    val sharding: Map<String, DataSourceConfig> = mutableMapOf()
+    val sharding: Map<String, DataSourceConfig>
 )
 
 data class DataSourceConfig(
