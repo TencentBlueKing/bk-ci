@@ -325,7 +325,13 @@
                             class="collapse-content"
                         >
                             <p class="title">{{ $t('environment.tag') }}</p>
-                            <bk-tag :theme="item.tags.isDelete ? 'danger' : ''">{{ item.tags.tagKeyName }}: {{ item.tags.tagValueName }}</bk-tag>
+                            <span
+                                v-for="(tag, idx) in item.tags"
+                                :key="idx"
+                                class="tag"
+                            >
+                                <bk-tag :theme="tag.isDelete ? 'danger' : ''">{{ tag.tagKeyName }}: {{ tag.tagValueName }}</bk-tag>
+                            </span>
                         </div>
                     </bk-collapse-item>
                 </bk-collapse>
@@ -999,6 +1005,25 @@
                 return [...results, ...Object.values(normalTagMap)]
             },
 
+            mergeByDisplayName (data) {
+                const resultMap = new Map()
+
+                for (const item of data) {
+                    const key = JSON.stringify(item.displayName)
+
+                    if (resultMap.has(key)) {
+                        resultMap.get(key).tags.push(item.tags)
+                    } else {
+                        resultMap.set(key, {
+                            displayName: item.displayName,
+                            tags: [item.tags]
+                        })
+                    }
+                }
+
+                return Array.from(resultMap.values())
+            },
+
             handleToPreview () {
                 const processPreviewData = () => {
                     const filteredResult = this.filterModifiedTags(this.tableData)
@@ -1009,7 +1034,8 @@
                         })
                         return false
                     }
-                    this.previewData = this.groupByTagValueId(filteredResult)
+                    const aggregateNodeData = this.groupByTagValueId(filteredResult)
+                    this.previewData = this.mergeByDisplayName(aggregateNodeData)
                     this.isShowPreview = true
                     return true
                 }
@@ -1325,9 +1351,13 @@
                 margin-bottom: 8px;
             }
             .bk-tag {
-                margin: 0;
+                margin-right: 0;
+                margin-left: 0;
                 height: auto;
                 word-break: break-all;
+            }
+            .tag {
+                margin-right: 8px;
             }
         }
     }
