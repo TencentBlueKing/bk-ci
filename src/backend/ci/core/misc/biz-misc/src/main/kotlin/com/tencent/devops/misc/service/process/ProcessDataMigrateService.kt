@@ -149,7 +149,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 moduleCode = SystemModuleEnum.PROCESS,
                 ruleType = ShardingRuleTypeEnum.DB
             ).data?.dataSourceName ?: return false
-        var executor: ExecutorService? = null
+        val executor: ExecutorService?
         try {
             // 执行迁移前的逻辑
             val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(
@@ -176,6 +176,10 @@ class ProcessDataMigrateService @Autowired constructor(
                 } catch (ignored: Throwable) {
                     logger.warn("migrateProjectData doMigrateProjectDataTask fail|params:[$userId|$projectId]", ignored)
                     sendMigrateProcessDataFailMsg(projectId, userId, ignored.message)
+                } finally {
+                    executor?.let {
+                        executor.shutdown() // 确保线程池关闭
+                    }
                 }
                 logger.info("migrateProjectData end,params:[$userId|$projectId]")
             }
@@ -189,12 +193,6 @@ class ProcessDataMigrateService @Autowired constructor(
             redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
             // 解锁项目,允许用户发起新构建等操作
             redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
-            executor?.let {
-                executor.shutdown() // 确保线程池关闭
-                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                    executor.shutdownNow()
-                }
-            }
         }
         return true
     }
@@ -344,9 +342,6 @@ class ProcessDataMigrateService @Autowired constructor(
             )
         } finally {
             executor?.shutdown() // 确保线程池关闭
-            if (executor?.awaitTermination(60, TimeUnit.SECONDS) == false) {
-                executor.shutdownNow()
-            }
         }
     }
 
