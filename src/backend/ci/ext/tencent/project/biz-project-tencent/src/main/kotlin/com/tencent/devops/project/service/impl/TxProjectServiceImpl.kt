@@ -50,6 +50,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -82,13 +83,13 @@ import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.support.api.service.ServiceFileResource
+import java.io.File
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Suppress("ALL", "IMPLICIT_CAST_TO_ANY")
 @Service
@@ -215,7 +216,7 @@ class TxProjectServiceImpl @Autowired constructor(
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val serviceUrl =
             "$serviceUrlPrefix/service/file/upload?userId=$userId"
-        OkhttpUtils.uploadFile(serviceUrl, logoFile).use { response ->
+        CommonServiceUtils.uploadFileToService(serviceUrl, logoFile).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${logoFile.name} fail,responseContent:$responseContent")
