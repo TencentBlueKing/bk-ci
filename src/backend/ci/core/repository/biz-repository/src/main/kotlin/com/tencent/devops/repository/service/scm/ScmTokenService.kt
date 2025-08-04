@@ -58,7 +58,7 @@ class ScmTokenService @Autowired constructor(
     private val repoAuthServiceCode: RepoAuthServiceCode,
     private val scmTokenApiService: ScmTokenApiService
 ) {
-    @Value("\${aes.github:#{null}}")
+    @Value("\${aes.git:#{null}}")
     private val aesKey = ""
 
     fun getAccessToken(
