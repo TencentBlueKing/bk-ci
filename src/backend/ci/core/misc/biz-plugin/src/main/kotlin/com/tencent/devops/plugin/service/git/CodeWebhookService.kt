@@ -60,6 +60,7 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.plugin.api.pojo.GithubCheckRun
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
@@ -634,7 +635,14 @@ class CodeWebhookService @Autowired constructor(
         val name = "$pipelineName@$webhookEventType"
 
         val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
-        val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        // 构建任务链接
+        val detailUrl = getBuildUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode,
+            variables = variables
+        )
 
         while (true) {
             val lockKey = "code_github_check_run_lock_$pipelineId"
@@ -723,5 +731,23 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
         }
+    }
+
+    private fun getBuildUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        variables: Map<String, String>
+    ) = if (channelCode == ChannelCode.CODECC) {
+        val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
+        val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
+        if (codeccTaskId != null) {
+            "$codeccPrefix/$codeccTaskId/detail"
+        } else {
+            "codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
+        }
+    } else {
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 }
