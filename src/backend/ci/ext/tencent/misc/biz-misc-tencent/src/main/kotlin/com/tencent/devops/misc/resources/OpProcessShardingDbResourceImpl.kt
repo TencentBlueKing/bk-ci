@@ -28,13 +28,15 @@
 package com.tencent.devops.misc.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.misc.api.OpProcessShardingDbResource
-import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
+import com.tencent.devops.misc.service.process.TxProcessShardingDataClearService
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpProcessShardingDbResourceImpl : OpProcessShardingDbResource {
+class OpProcessShardingDbResourceImpl @Autowired constructor(
+    private val txProcessShardingDataClearService: TxProcessShardingDataClearService
+) : OpProcessShardingDbResource {
 
     override fun clearShardingDataByProjectId(
         userId: String,
@@ -43,12 +45,8 @@ class OpProcessShardingDbResourceImpl : OpProcessShardingDbResource {
         projectId: String,
         broadcastTableDeleteFlag: Boolean
     ): Result<Boolean> {
-        val processShardingDataClearService = SpringContextUtil.getBean(
-            clazz = ProcessShardingDataClearService::class.java,
-            beanName = dataSourceName
-        )
         return Result(
-            processShardingDataClearService.clearShardingDataByProjectId(
+            txProcessShardingDataClearService.clearShardingDataByProjectId(
                 userId = userId,
                 projectId = projectId,
                 clusterName = clusterName,

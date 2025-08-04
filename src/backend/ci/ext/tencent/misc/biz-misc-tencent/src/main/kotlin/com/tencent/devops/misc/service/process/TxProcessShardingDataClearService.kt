@@ -25,42 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.shardingprocess
+package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.db.pojo.DATA_SOURCE_NAME_PREFIX
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.misc.pojo.process.DeleteDataParam
-import com.tencent.devops.misc.service.process.ProcessDataDeleteService
 import com.tencent.devops.misc.service.project.TxProjectMiscService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-abstract class ProcessShardingDataClearService {
+@Service
+class TxProcessShardingDataClearService {
 
-    private val logger = LoggerFactory.getLogger(ProcessShardingDataClearService::class.java)
-
-    @Autowired
-    lateinit var txProjectMiscService: TxProjectMiscService
+    private val logger = LoggerFactory.getLogger(TxProcessShardingDataClearService::class.java)
 
     @Autowired
-    lateinit var processDataDeleteService: ProcessDataDeleteService
+    private lateinit var txProjectMiscService: TxProjectMiscService
 
-    /**
-     * 获取DSLContext
-     * @return DSLContext
-     */
-    abstract fun getDSLContext(): DSLContext?
-
-    /**
-     * 获取执行条件
-     * @param routingRule 路由规则
-     * @return 布尔值
-     */
-    abstract fun getExecuteFlag(routingRule: String?): Boolean
+    @Autowired
+    private lateinit var processDataDeleteService: ProcessDataDeleteService
 
     /**
      * 按项目ID清理分片数据
@@ -82,7 +72,12 @@ abstract class ProcessShardingDataClearService {
             "User($userId) start clearing sharding data for project $projectId, cluster $clusterName, " +
                     "dataSource $dataSourceName, broadcastTableDeleteFlag: $broadcastTableDeleteFlag"
         )
-        val dslContext = getDSLContext() ?: return false
+        val index = dataSourceName.removePrefix(DATA_SOURCE_NAME_PREFIX).toInt() + 1
+        val beanName = "p${index}DSLContext"
+        if (!SpringContextUtil.isBeanExist(beanName)) {
+            return false
+        }
+        val dslContext = SpringContextUtil.getBean(DSLContext::class.java, beanName)
         // 查询分片路由规则记录
         val shardingRule = txProjectMiscService.getProjectShardingRoutingRule(
             clusterName = clusterName,
@@ -91,7 +86,9 @@ abstract class ProcessShardingDataClearService {
             projectId = projectId
         )
         // 检查路由规则是否允许执行删除操作
-        if (!getExecuteFlag(shardingRule?.routingRule)) {
+        val routingRule = shardingRule?.routingRule
+        val executeFlag = routingRule != dataSourceName && !routingRule.isNullOrBlank()
+        if (!executeFlag) {
             logger.warn("Unable to delete data from data source ($dataSourceName) under cluster ($clusterName)")
             return false
         }
@@ -100,31 +97,30 @@ abstract class ProcessShardingDataClearService {
             LinkedBlockingQueue(100),
             ThreadPoolExecutor.AbortPolicy()
         )
-        try {
-            val deleteDataParam = DeleteDataParam(
-                dslContext = dslContext,
-                projectId = projectId,
-                clusterName = clusterName,
-                dataSourceName = dataSourceName,
-                broadcastTableDeleteFlag = broadcastTableDeleteFlag
-            )
-            // 提交删除任务到线程池异步执行
-            executor.submit {
-                try {
-                    processDataDeleteService.deleteProcessData(deleteDataParam)
-                } catch (ignored: Throwable) {
-                    logger.error(
-                        "Failed to delete process data for project $projectId, cluster $clusterName, " +
-                                "dataSource $dataSourceName", ignored
-                    )
-                }
-            }
-        } finally {
-            executor.shutdown() // 确保线程池关闭
-            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                executor.shutdownNow()
+        val deleteDataParam = DeleteDataParam(
+            dslContext = dslContext,
+            projectId = projectId,
+            clusterName = clusterName,
+            dataSourceName = dataSourceName,
+            broadcastTableDeleteFlag = broadcastTableDeleteFlag
+        )
+        // 提交删除任务到线程池异步执行
+        executor.submit {
+            try {
+                processDataDeleteService.deleteProcessData(deleteDataParam)
+            } catch (ignored: Throwable) {
+                logger.error(
+                    "Failed to delete process data for project $projectId, cluster $clusterName, " +
+                            "dataSource $dataSourceName", ignored
+                )
+            } finally {
+                executor.shutdown() // 确保线程池关闭
             }
         }
+        logger.info(
+            "User($userId) end clearing sharding data for project $projectId, cluster $clusterName, " +
+                    "dataSource $dataSourceName, broadcastTableDeleteFlag: $broadcastTableDeleteFlag"
+        )
         return true
     }
 }
