@@ -89,6 +89,9 @@ class ProcessShardingDataSourceConfig() : BeanDefinitionRegistryPostProcessor, E
         config: DataSourceConfig,
         stringEncryptor: StringEncryptor
     ) {
+        if (config.url.isBlank()) {
+            throw IllegalStateException("DataSource URL cannot be blank for shard $shardId")
+        }
         // 1. 注册数据源 Bean
         val dataSourceBeanName = "${shardId}DataSource"
         val dataSourceDefinition = BeanDefinitionBuilder
@@ -104,7 +107,9 @@ class ProcessShardingDataSourceConfig() : BeanDefinitionRegistryPostProcessor, E
         val dslContextDefinition = BeanDefinitionBuilder
             .genericBeanDefinition(DSLContext::class.java) {
                 // 将registry转换为ConfigurableBeanFactory
-                val beanFactory = registry as ConfigurableBeanFactory
+                val beanFactory = registry as? ConfigurableBeanFactory ?: throw IllegalStateException(
+                    "Registry must be an instance of ConfigurableBeanFactory to get DataSource bean"
+                )
                 // 通过转换后的beanFactory获取数据源
                 val dataSource = beanFactory.getBean(dataSourceBeanName, DataSource::class.java)
 

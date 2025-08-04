@@ -64,7 +64,7 @@ interface OpProcessShardingDbResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "广播表删除标识", required = true)
+        @Parameter(description = "广播表删除标识")
         @QueryParam("broadcastTableDeleteFlag")
         broadcastTableDeleteFlag: Boolean = false
     ): Result<Boolean>

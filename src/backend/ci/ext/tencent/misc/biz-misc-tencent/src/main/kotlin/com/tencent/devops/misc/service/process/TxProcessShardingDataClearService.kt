@@ -100,8 +100,6 @@ class TxProcessShardingDataClearService {
         val deleteDataParam = DeleteDataParam(
             dslContext = dslContext,
             projectId = projectId,
-            clusterName = clusterName,
-            dataSourceName = dataSourceName,
             broadcastTableDeleteFlag = broadcastTableDeleteFlag
         )
         // 提交删除任务到线程池异步执行

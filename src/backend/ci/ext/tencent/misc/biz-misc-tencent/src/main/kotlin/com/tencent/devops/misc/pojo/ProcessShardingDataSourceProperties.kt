@@ -32,7 +32,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "spring.datasource.process")
 data class ProcessShardingDataSourceProperties(
     // 使用可变Map接收动态分片配置
-    val sharding: Map<String, DataSourceConfig>
+    var sharding: Map<String, DataSourceConfig> = emptyMap()
 )
 
 data class DataSourceConfig(
