@@ -38,6 +38,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.Oauth2State
+import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
@@ -62,13 +63,14 @@ class ScmTokenService @Autowired constructor(
 
     fun getAccessToken(
         userId: String,
-        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        scmCode: String,
+        appType: TokenAppTypeEnum = TokenAppTypeEnum.OAUTH2
     ): GitToken? {
         val scmTokenRecord = scmTokenDao.getToken(
             dslContext = dslContext,
             userId = userId,
-            appType = "",
-            scmCode = ""
+            appType = appType.name,
+            scmCode = scmCode
         ) ?: return null
         return GitToken(
             accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken),
@@ -78,7 +80,12 @@ class ScmTokenService @Autowired constructor(
         )
     }
 
-    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken? {
+    fun checkAndGetAccessToken(
+        projectId: String,
+        buildId: String,
+        userId: String,
+        scmCode: String
+    ): GitToken? {
         logger.info("buildId: $buildId, userId: $userId")
         val buildInfo = client.get(ServiceBuildResource::class)
                 .serviceBasic(
@@ -92,7 +99,7 @@ class ScmTokenService @Autowired constructor(
                     }
                     it
                 }
-        val accessToken = getAccessToken(userId) ?: return null
+        val accessToken = getAccessToken(userId, scmCode) ?: return null
         val operator = (accessToken.operator ?: "").ifBlank { userId }
         val buildBasicInfo = buildInfo.data ?: throw RemoteServiceException(
             "Failed to get the basic information based on the buildId: $buildId"
