@@ -28,14 +28,13 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Service
 @Primary
@@ -76,7 +75,6 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 val filePath =
                     URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
                 return client.get(ServiceArtifactoryResource::class).getFileContent(
-                    userId = BKREPO_DEFAULT_USER,
                     projectId = bkrepoStoreProjectId,
                     repoName = BkRepoEnum.PLUGIN.repoName,
                     filePath = filePath

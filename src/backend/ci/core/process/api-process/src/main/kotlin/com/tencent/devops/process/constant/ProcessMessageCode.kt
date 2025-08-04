@@ -391,6 +391,7 @@ object ProcessMessageCode {
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
 
+    const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

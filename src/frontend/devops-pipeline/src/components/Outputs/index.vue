@@ -596,6 +596,7 @@
             },
             currentTab: function () {
                 this.keyWord = ''
+                this.artifactValue = []
                 this.$nextTick(this.init)
             },
             '$route.params.buildNo' () {

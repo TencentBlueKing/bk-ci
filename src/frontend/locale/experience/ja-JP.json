@@ -200,5 +200,6 @@
         "PIPELINE": "パイプライン",
         "WEB": "手動作成"
     },
-    "save_success": "保存に成功しました"
+    "save_success": "保存に成功しました",
+    "versionCreateTime": "体験パック作成時間"
 }

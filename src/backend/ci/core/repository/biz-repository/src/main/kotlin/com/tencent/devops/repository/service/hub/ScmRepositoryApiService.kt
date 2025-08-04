@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service.hub
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.credential.AuthRepository
@@ -49,10 +50,14 @@ import com.tencent.devops.scm.api.pojo.auth.AccessTokenScmAuth
 import com.tencent.devops.scm.api.pojo.auth.IScmAuth
 import com.tencent.devops.scm.api.pojo.repository.ScmProviderRepository
 import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
+import com.tencent.devops.scm.api.pojo.repository.svn.SvnScmProviderRepository
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.P4Config
+import com.tencent.devops.scm.config.ScmConfig
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -67,12 +72,18 @@ class ScmRepositoryApiService @Autowired constructor(
     private val oauth2TokenStoreManager: Oauth2TokenStoreManager,
     private val serverRepositoryFactory: ScmServerRepositoryFactory,
     private val gitConfig: GitConfig,
-    private val repositoryOauthService: RepositoryOauthService
+    private val repositoryOauthService: RepositoryOauthService,
+    private val p4Config: P4Config,
+    private val scmConfig: ScmConfig
 ) : AbstractScmApiService(
     repositoryService = repositoryService,
     providerRepositoryFactory = providerRepositoryFactory,
     repositoryScmConfigService = repositoryScmConfigService
 ) {
+
+    @Value("\${scm.webhook.url:#{null}}")
+    private val webhookUrl: String = ""
+
     fun findRepository(
         projectId: String,
         authRepository: AuthRepository
@@ -103,7 +114,11 @@ class ScmRepositoryApiService @Autowired constructor(
             )
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
-        val opts = RepoListOptions.builder().repoName(search).page(1).pageSize(20).build()
+        val opts = RepoListOptions(
+            repoName = search,
+            page = 1,
+            pageSize = 20
+        )
         val projects = listRepository(
             scmCode = scmCode,
             auth = AccessTokenScmAuth(oauthTokenInfo.accessToken),
@@ -159,11 +174,11 @@ class ScmRepositoryApiService @Autowired constructor(
             scmApiManager.listBranches(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                opts = BranchListOptions.builder()
-                        .search(search)
-                        .page(page)
-                        .pageSize(pageSize)
-                        .build()
+                opts = BranchListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         }
     }
@@ -199,11 +214,11 @@ class ScmRepositoryApiService @Autowired constructor(
             scmApiManager.findTags(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                opts = TagListOptions.builder()
-                        .search(search)
-                        .page(page)
-                        .pageSize(pageSize)
-                        .build()
+                opts = TagListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         }
     }
@@ -215,19 +230,29 @@ class ScmRepositoryApiService @Autowired constructor(
      */
     fun createHook(
         projectId: String,
-        hookUrl: String,
         events: List<String>,
         secret: String? = null,
-        authRepository: AuthRepository
+        authRepository: AuthRepository,
+        scmType: ScmType,
+        scmCode: String
     ): List<Hook> {
+        val hookUrl = getHookUrl(scmType, scmCode)
         return invokeApi(
             projectId = projectId,
             authRepository = authRepository
         ) { providerProperties, providerRepository ->
+            // SVN 注册webhook时需要指定子路径
+            val subPath = if (providerRepository is SvnScmProviderRepository) {
+                providerRepository.url.substringAfter(
+                    providerRepository.projectIdOrPath.toString(),
+                    "/"
+                ).ifEmpty { "/" }
+            } else null
             val existsEvents = existsHookEvents(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                hookUrl = hookUrl
+                hookUrl = hookUrl,
+                subPath = subPath
             )
             logger.info("create hook|projectId:$projectId|hookUrl:$hookUrl|events:$events|existsEvents:$existsEvents")
             val hooks = mutableListOf<Hook>()
@@ -238,7 +263,8 @@ class ScmRepositoryApiService @Autowired constructor(
                     hookUrl = hookUrl,
                     event = event,
                     secret = secret,
-                    existsEvents = existsEvents
+                    existsEvents = existsEvents,
+                    subPath = subPath
                 )
                 hooks.add(hook)
             }
@@ -252,20 +278,35 @@ class ScmRepositoryApiService @Autowired constructor(
         hookUrl: String,
         event: String,
         secret: String? = null,
-        existsEvents: Map<String, Hook>
+        existsEvents: Map<String, Hook>,
+        subPath: String? = null
     ): Hook {
         return if (existsEvents.contains(event)) {
             existsEvents[event]!!
         } else {
-            val builder = HookInput.builder().url(hookUrl).secret(secret)
-            ScmEventType.fromValue(event)?.let {
-                builder.events(HookEvents(it))
-            } ?: builder.nativeEvents(listOf(event))
-
+            val hookEvents = ScmEventType.values().find { it.value == event }?.let {
+                HookEvents(it)
+            }
+            val hookInput = HookInput(
+                url = hookUrl,
+                secret = secret,
+                events = hookEvents,
+                nativeEvents = if (hookEvents == null) {
+                    listOf(event)
+                } else {
+                    listOf()
+                },
+                name = "",
+                path = if (subPath.isNullOrBlank()) {
+                    null
+                } else {
+                    subPath
+                }
+            )
             scmApiManager.createHook(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                input = builder.build()
+                input = hookInput
             )
         }
     }
@@ -274,32 +315,62 @@ class ScmRepositoryApiService @Autowired constructor(
     private fun existsHookEvents(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository,
-        hookUrl: String
+        hookUrl: String,
+        subPath: String?
     ): Map<String, Hook> {
         val existsEvents = mutableMapOf<String, Hook>()
         var page = 1
         val pageSize = PageUtil.MAX_PAGE_SIZE
         do {
-            val opts = ListOptions.builder()
-                .page(page)
-                .pageSize(PageUtil.MAX_PAGE_SIZE)
-                .build()
+            val opts = ListOptions(
+                page = page,
+                pageSize = PageUtil.MAX_PAGE_SIZE
+            )
             val hooks = scmApiManager.listHooks(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
                 opts = opts
             )
             hooks.forEach { existsHook ->
-                if (existsHook.url == hookUrl) {
-                    existsHook.events.enabledEvents.forEach { existsEvents[it] = existsHook }
+                val matchSubPath = subPath?.let { existsHook.path == it } ?: true
+                if (existsHook.url == hookUrl && matchSubPath) {
+                    existsHook.events?.getEnabledEvents()?.forEach { existsEvents[it] = existsHook }
                     if (!existsHook.nativeEvents.isNullOrEmpty()) {
-                        existsHook.nativeEvents.forEach { existsEvents[it] = existsHook }
+                        existsHook.nativeEvents?.forEach { existsEvents[it] = existsHook }
                     }
                 }
             }
             page++
         } while (hooks.size == pageSize)
         return existsEvents
+    }
+
+    private fun getHookUrl(type: ScmType, scmCode: String): String {
+        return when (type) {
+            ScmType.CODE_GIT -> {
+                gitConfig.gitHookUrl
+            }
+
+            ScmType.CODE_GITLAB -> {
+                gitConfig.gitlabHookUrl
+            }
+
+            ScmType.CODE_TGIT -> {
+                gitConfig.tGitHookUrl
+            }
+
+            ScmType.CODE_P4 -> {
+                p4Config.p4HookUrl
+            }
+
+            ScmType.SCM_GIT, ScmType.SCM_SVN -> {
+                scmConfig.outerHookUrl.replace("{scmCode}", scmCode)
+            }
+
+            else -> {
+                webhookUrl
+            }
+        }
     }
 
     companion object {

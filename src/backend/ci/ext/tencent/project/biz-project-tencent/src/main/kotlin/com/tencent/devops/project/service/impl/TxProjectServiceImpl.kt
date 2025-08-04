@@ -494,13 +494,13 @@ class TxProjectServiceImpl @Autowired constructor(
                 ProjectOperation.CREATE -> {
                     if (channelCode == ProjectChannelCode.BS) {
                         validateProductIdNotNull()
-                        validateProductExists()
+                        validateProduct()
                     }
                 }
 
                 ProjectOperation.UPDATE -> {
                     validateProductIdNotNull()
-                    validateProductExists()
+                    validateProduct()
                 }
 
                 else -> {}
@@ -544,18 +544,31 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun ProjectProductValidateDTO.validateProductExists() {
-        val products = getOperationalProducts()
-        products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
+    private fun ProjectProductValidateDTO.validateProduct() {
+        val productInfo = getProductByProductId(productId!!) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
             defaultMessage = MessageUtil.getMessageByLocale(
                 messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        if (bgId == IEG_BG_ID && (productInfo.iCosProductCode.isNullOrBlank() || productInfo.crosCheck != true)) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                ),
+                params = arrayOf(
+                    productId?.toString().orEmpty(),
+                    productInfo.productName.orEmpty()
+                )
+            )
+        }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
+        private const val IEG_BG_ID = 956L
     }
 }

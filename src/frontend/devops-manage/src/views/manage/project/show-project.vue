@@ -176,7 +176,7 @@ const fieldMap = [
     current: 'productName',
     after: 'afterProductName'
   },
-  
+
 ];
 const propertiesFieldMap = [
   {
@@ -446,6 +446,7 @@ onMounted(async () => {
         v-model:active="activeTab"
         type="card-tab"
         @change="changeTab"
+        v-if="hasPermission && projectData.projectCode"
       >
         <bk-tab-panel
           v-for="(item, index) in tabPanels"
@@ -456,7 +457,6 @@ onMounted(async () => {
           <bk-loading
             :loading="isLoading"
             class="detail-content-form"
-            v-if="hasPermission && projectData.projectCode"
           >
           <template v-if="item.name === 'projectSettings'">
             <bk-collapse
@@ -651,7 +651,20 @@ onMounted(async () => {
           </bk-loading>
         </bk-tab-panel>
       </bk-tab>
-      <div>
+
+      <bk-exception
+        v-if="showException"
+        class="exception-content mt20"
+        :type="exceptionObj.type"
+        :title="exceptionObj.title"
+        :description="exceptionObj.description"
+      >
+        <bk-button v-if="exceptionObj.showBtn" theme="primary" @click="handleNoPermission">
+          {{ t('去申请') }}
+        </bk-button>
+      </bk-exception>
+
+      <div class="btn-group">
         <!--
           approvalStatus
           0-创建成功/修改成功,最终态
@@ -663,23 +676,24 @@ onMounted(async () => {
         <Popover
           :content="statusDisabledTips[projectData.approvalStatus]"
           :disabled="![1, 4].includes(projectData.approvalStatus)"
-          v-perm="{
-            disablePermissionApi: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
-            hasPermission: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
-            permissionData: {
-              projectId: projectData.projectCode,
-              resourceType: RESOURCE_TYPE,
-              resourceCode: projectData.projectCode,
-              action: RESOURCE_ACTION.EDIT
-            }
-          }"
         >
           <span>
             <bk-button
+              v-if="hasPermission && projectData.projectCode"
               class="btn mr10"
               theme="primary"
               :disabled="[1, 4].includes(projectData.approvalStatus)"
               @click="handleEdit"
+              v-perm="{
+                disablePermissionApi: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
+                hasPermission: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
+                permissionData: {
+                  projectId: projectData.projectCode,
+                  resourceType: RESOURCE_TYPE,
+                  resourceCode: projectData.projectCode,
+                  action: RESOURCE_ACTION.EDIT
+                }
+              }"
             >
               {{ t('编辑') }}
             </bk-button>
@@ -727,19 +741,8 @@ onMounted(async () => {
           {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
         </bk-button>
       </div>
-      <bk-exception
-        v-if="showException"
-        class="exception-content mt20"
-        :type="exceptionObj.type"
-        :title="exceptionObj.title"
-        :description="exceptionObj.description"
-      >
-        <bk-button v-if="exceptionObj.showBtn" theme="primary" @click="handleNoPermission">
-          {{ t('去申请') }}
-        </bk-button>
-      </bk-exception>
     </div>
-    
+
     <bk-dialog
         :is-show="showFailedEnableDialog"
         :width="600"
@@ -823,8 +826,9 @@ onMounted(async () => {
     }
   }
   .status-tips {
-    width: 100%;
-    margin: 0 0 16px 0;
+    width: 1200px;
+    margin: auto;
+    margin-bottom: 16px;
   }
   .approval-details {
     cursor: pointer;
@@ -928,6 +932,9 @@ onMounted(async () => {
       font-size: 12px;
       color: #FF9C01;
     }
+  }
+  .btn-group {
+    margin-top: 20px;
   }
 </style>
 <style lang="postcss">
