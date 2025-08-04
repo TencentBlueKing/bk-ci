@@ -95,6 +95,7 @@
     import { bus } from '@/utils/bus'
     import { copyText } from '@/utils/util'
     import { mapState } from 'vuex'
+    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
 
     export default {
         components: {
@@ -103,6 +104,7 @@
         },
         data () {
             return {
+                ENV_ACTIVE_NODE_TYPE,
                 showContent: false,
                 editable: false,
                 basePrototypeList: [
@@ -154,7 +156,7 @@
         },
         methods: {
             toNodeList () {
-                const nodeType = localStorage.getItem('ENV_ACTIVE_NODE_TYPE')
+                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE)
                 this.$router.push({
                     name: 'nodeList',
                     params: { nodeType }

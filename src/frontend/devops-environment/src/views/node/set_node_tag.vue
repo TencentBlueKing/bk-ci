@@ -354,6 +354,7 @@
 
 <script>
     import { mapState } from 'vuex'
+    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
 
     export default {
         props: {
@@ -361,6 +362,7 @@
         },
         data () {
             return {
+                ENV_ACTIVE_NODE_TYPE,
                 showContent: false,
                 loading: {
                     isLoading: false,
@@ -572,7 +574,7 @@
             },
             
             toNodeList () {
-                const nodeType = localStorage.getItem('ENV_ACTIVE_NODE_TYPE')
+                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE)
                 this.$router.push({
                     name: 'nodeList',
                     params: { nodeType }

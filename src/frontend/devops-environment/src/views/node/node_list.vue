@@ -264,6 +264,7 @@
     import { mapActions, mapState } from 'vuex'
     import ListTable from './list_table.vue'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
+    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     export default {
         components: {
             thirdConstruct,
@@ -278,6 +279,7 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
                 curEditNodeItem: '',
                 createImageNode: '',
                 nodeIp: '',
@@ -592,7 +594,7 @@
                     })
                 } else {
                     const currentNodeType = this.$route.params.nodeType || 'allNode'
-                    localStorage.setItem('ENV_ACTIVE_NODE_TYPE', currentNodeType)
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                     this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
                     this.$router.push({
                         name: 'setNodeTag',
