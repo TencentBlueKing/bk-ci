@@ -70,27 +70,10 @@ class ProcessDataDeleteService @Autowired constructor(
         val projectId = deleteDataParam.projectId
         try {
             lock?.lock()
-            val moduleCode = SystemModuleEnum.PROCESS
-            val queryParam = ProjectDataMigrateHistoryQueryParam(
-                projectId = projectId,
-                pipelineId = deleteDataParam.pipelineId,
-                moduleCode = moduleCode,
-                targetClusterName = deleteDataParam.clusterName,
-                targetDataSourceName = deleteDataParam.dataSourceName
-            )
-            // 判断是否能删除db中数据
-            if (projectDataMigrateHistoryService.isDataCanDelete(queryParam)) {
-                deleteProcessRelData(deleteDataParam)
-            } else {
-                throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                    params = arrayOf(projectId),
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                        params = arrayOf(projectId)
-                    )
-                )
-            }
+            val targetClusterName = deleteDataParam.targetClusterName
+            val targetDataSourceName = deleteDataParam.targetDataSourceName
+            checkMigrationDataDeleteCondition(targetClusterName, targetDataSourceName, projectId)
+            deleteProcessRelData(deleteDataParam)
         } finally {
             lock?.unlock()
         }
@@ -158,8 +141,8 @@ class ProcessDataDeleteService @Autowired constructor(
         deleteProjectDirectlyRelData(
             dslContext = dslContext,
             projectId = projectId,
-            targetClusterName = deleteDataParam.clusterName,
-            targetDataSourceName = deleteDataParam.dataSourceName
+            targetClusterName = deleteDataParam.targetClusterName,
+            targetDataSourceName = deleteDataParam.targetDataSourceName
         )
     }
 
@@ -365,41 +348,55 @@ class ProcessDataDeleteService @Autowired constructor(
      * 删除项目直接相关的数据
      * @param dslContext jooq上下文
      * @param projectId 项目ID
-     * @param targetClusterName 迁移集群
-     * @param targetDataSourceName 迁移数据源名称
+     * @param targetClusterName 迁移目标集群名称
+     * @param targetDataSourceName 迁移目标数据源名称
      * @param lock 锁
      * @return 字段列表
      */
     fun deleteProjectDirectlyRelData(
         dslContext: DSLContext,
         projectId: String,
-        targetClusterName: String,
-        targetDataSourceName: String,
+        targetClusterName: String? = null,
+        targetDataSourceName: String? = null,
         lock: RedisLock? = null
     ) {
         try {
             lock?.lock()
-            val queryParam = ProjectDataMigrateHistoryQueryParam(
-                projectId = projectId,
-                moduleCode = SystemModuleEnum.PROCESS,
+            checkMigrationDataDeleteCondition(
                 targetClusterName = targetClusterName,
-                targetDataSourceName = targetDataSourceName
+                targetDataSourceName = targetDataSourceName,
+                projectId = projectId
             )
-            // 判断是否能删除db中数据
-            if (projectDataMigrateHistoryService.isDataCanDelete(queryParam)) {
-                deleteProjectRelData(dslContext, projectId)
-            } else {
-                throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                    params = arrayOf(projectId),
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                        params = arrayOf(projectId)
-                    )
-                )
-            }
+            deleteProjectRelData(dslContext, projectId)
         } finally {
             lock?.unlock()
+        }
+    }
+
+    private fun checkMigrationDataDeleteCondition(
+        targetClusterName: String?,
+        targetDataSourceName: String?,
+        projectId: String
+    ) {
+        if (targetClusterName.isNullOrEmpty() || targetDataSourceName.isNullOrEmpty()) {
+            return
+        }
+        val queryParam = ProjectDataMigrateHistoryQueryParam(
+            projectId = projectId,
+            moduleCode = SystemModuleEnum.PROCESS,
+            targetClusterName = targetClusterName,
+            targetDataSourceName = targetDataSourceName
+        )
+        // 判断是否能删除db中数据
+        if (!projectDataMigrateHistoryService.isDataCanDelete(queryParam)) {
+            throw ErrorCodeException(
+                errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                params = arrayOf(projectId),
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                    params = arrayOf(projectId)
+                )
+            )
         }
     }
 

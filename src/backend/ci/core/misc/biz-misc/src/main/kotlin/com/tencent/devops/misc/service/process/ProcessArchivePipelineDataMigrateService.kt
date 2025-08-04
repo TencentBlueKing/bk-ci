@@ -204,10 +204,10 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     dslContext = archiveShardingDslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    clusterName = archiveDbShardingRoutingRule.clusterName,
-                    dataSourceName = archiveDbShardingRoutingRule.dataSourceName,
                     lock = migrationLock,
-                    archivePipelineFlag = true
+                    archivePipelineFlag = true,
+                    targetClusterName = archiveDbShardingRoutingRule.clusterName,
+                    targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName
                 )
                 processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
             }
@@ -284,8 +284,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    clusterName = sourceClusterName,
-                    dataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
+                    targetClusterName = targetClusterName,
+                    targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
                 processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
                 // 添加操作日志
