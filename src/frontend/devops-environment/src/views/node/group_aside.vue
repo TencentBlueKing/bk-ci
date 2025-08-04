@@ -242,7 +242,8 @@
   
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
+    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
 
     export default {
         name: 'NodeGroupTree',
@@ -250,11 +251,12 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
                 expandedGroupIds: [],
                 isAdd: false,
                 isShowTagChange: false,
                 dialogTopOffset: null,
-                storedActiveNodeType: localStorage.getItem('ENV_ACTIVE_NODE_TYPE') || 'allNode',
+                storedActiveNodeType: localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || 'allNode',
                 formData: {
                     tagKeyName: '',
                     canUpdate: 'TRUE',
@@ -296,7 +298,7 @@
                 return this.isAdd ? this.$t('environment.addTag') : this.$t('environment.updateTag')
             },
             activeNodeType () {
-                const stored = localStorage.getItem('ENV_ACTIVE_NODE_TYPE') || 'allNode'
+                const stored = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || 'allNode'
 
                 if (this.$route.name === 'nodeList' && this.$route.params.nodeType) {
                     return this.$route.params.nodeType
@@ -408,7 +410,7 @@
             },
             handleNodeClick (nodeType) {
                 this.storedActiveNodeType = nodeType
-                localStorage.setItem('ENV_ACTIVE_NODE_TYPE', nodeType)
+                localStorage.setItem(ENV_ACTIVE_NODE_TYPE, nodeType)
             
                 this.$router.push({
                     name: 'nodeList',
@@ -421,7 +423,7 @@
             },
             handleSubNodeClick (child) {
                 this.storedActiveNodeType = String(child.tagValueId)
-                localStorage.setItem('ENV_ACTIVE_NODE_TYPE', this.storedActiveNodeType)
+                localStorage.setItem(ENV_ACTIVE_NODE_TYPE, this.storedActiveNodeType)
         
                 this.$router.push({
                     name: 'nodeList',
