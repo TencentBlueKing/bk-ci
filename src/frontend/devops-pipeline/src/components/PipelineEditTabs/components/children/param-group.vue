@@ -83,7 +83,7 @@
                                                 class="default-value"
                                                 v-bk-overflow-tips
                                             >
-                                                {{ param.defaultValue || '--' }}
+                                                {{ (param.isSensitive ? '******' : param.defaultValue) || '--' }}
                                             </span>
                                         </div>
                                         <div
