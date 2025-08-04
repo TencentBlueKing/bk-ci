@@ -230,9 +230,9 @@ class ProcessDataMigrateService @Autowired constructor(
         val deleteDataParam = DeleteDataParam(
             dslContext = migratingShardingDslContext,
             projectId = projectId,
-            clusterName = clusterName,
-            dataSourceName = shardingRoutingRule,
-            lock = migrationLock
+            lock = migrationLock,
+            targetClusterName = clusterName,
+            targetDataSourceName = shardingRoutingRule
         )
         processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
         // 查询项目下流水线数量
@@ -374,9 +374,9 @@ class ProcessDataMigrateService @Autowired constructor(
                 val deleteDataParam = DeleteDataParam(
                     dslContext = migratingShardingDslContext,
                     projectId = projectId,
-                    clusterName = clusterName,
-                    dataSourceName = shardingRoutingRule,
-                    lock = migrationLock
+                    lock = migrationLock,
+                    targetClusterName = clusterName,
+                    targetDataSourceName = shardingRoutingRule
                 )
                 processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
             }
@@ -527,8 +527,8 @@ class ProcessDataMigrateService @Autowired constructor(
                     val deleteDataParam = DeleteDataParam(
                         dslContext = context,
                         projectId = projectId,
-                        clusterName = clusterName,
-                        dataSourceName = shardingRoutingRule,
+                        targetClusterName = clusterName,
+                        targetDataSourceName = shardingRoutingRule,
                         broadcastTableDeleteFlag = !migrationProcessDbUnionClusterFlag
                     )
                     processDataDeleteService.deleteProcessData(deleteDataParam)

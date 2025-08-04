@@ -37,10 +37,6 @@ data class DeleteDataParam(
     val dslContext: DSLContext,
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @get:Schema(title = "集群名称", required = true)
-    val clusterName: String,
-    @get:Schema(title = "数据源名称", required = true)
-    val dataSourceName: String,
     @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String? = null,
     @get:Schema(title = "锁", required = false)
@@ -48,5 +44,9 @@ data class DeleteDataParam(
     @get:Schema(title = "广播表删除标识", required = false)
     val broadcastTableDeleteFlag: Boolean? = true,
     @get:Schema(title = "归档流水线标识", required = false)
-    val archivePipelineFlag: Boolean? = null
+    val archivePipelineFlag: Boolean? = null,
+    @get:Schema(title = "迁移目标集群名称", required = false)
+    val targetClusterName: String? = null,
+    @get:Schema(title = "迁移目标数据源名称", required = false)
+    val targetDataSourceName: String? = null
 )
