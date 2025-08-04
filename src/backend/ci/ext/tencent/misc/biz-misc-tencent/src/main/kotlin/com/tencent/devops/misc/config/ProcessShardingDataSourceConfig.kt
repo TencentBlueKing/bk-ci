@@ -57,7 +57,7 @@ import javax.sql.DataSource
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
 @EnableConfigurationProperties(ProcessShardingDataSourceProperties::class)
-class ProcessShardingDataSourceConfig() : BeanDefinitionRegistryPostProcessor, EnvironmentAware {
+class ProcessShardingDataSourceConfig : BeanDefinitionRegistryPostProcessor, EnvironmentAware {
 
     private val logger = LoggerFactory.getLogger(ProcessShardingDataSourceConfig::class.java)
 
