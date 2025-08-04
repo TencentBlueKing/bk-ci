@@ -34,5 +34,7 @@ data class ScmProviderWebhookProps(
     // 事件类型列表
     val eventTypeList: List<String>?,
     // 事件类型与操作映射关系
-    val eventTypeActionMap: Map<String, List<String>>?
+    val eventTypeActionMap: Map<String, List<String>>?,
+    // 事件过滤规则
+    val eventTypeFilterMap: Map<String, List<String>>?
 )

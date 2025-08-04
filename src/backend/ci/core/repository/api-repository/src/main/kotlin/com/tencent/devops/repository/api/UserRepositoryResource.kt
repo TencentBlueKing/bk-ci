@@ -225,7 +225,10 @@ interface UserRepositoryResource {
         aliasName: String? = null,
         @Parameter(description = "是否开启pac", required = false)
         @QueryParam("enablePac")
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        @Parameter(description = "代码库类型标识", required = false)
+        @QueryParam("scmCode")
+        scmCode: String? = null
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "删除代码库")

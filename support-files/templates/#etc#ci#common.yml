@@ -431,3 +431,11 @@ sm4:
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__
+
+scm:
+  webhook:
+    url:
+      # 外部hookUrl
+      outerUrl: /outUrl
+      # 内部hookUrl
+      innerUrl: /inUrl
