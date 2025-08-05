@@ -53,7 +53,6 @@
             }
         },
         beforeDestroy () {
-            console.log(111)
             localStorage.removeItem(ENV_ACTIVE_NODE_TYPE)
         },
         methods: {
