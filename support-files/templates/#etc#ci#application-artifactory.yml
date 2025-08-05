@@ -31,7 +31,3 @@ artifactory:
 
 bkrepo:
   dockerRegistry: __BK_REPO_DOCKER_REGISTRY__
-
-report:
-  compress:
-    enabledPipelines: ""

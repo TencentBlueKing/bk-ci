@@ -1,5 +1,8 @@
 -- 将jwtPrivateKey转换为PEM格式
 local single_line_b64_private_key = config.jwtPrivateKey
+if single_line_b64_private_key == '' or single_line_b64_private_key == nil then
+    return
+end
 -- 组装 PEM 格式的私钥
 local private_key_pem_parts = {}
 table.insert(private_key_pem_parts, "-----BEGIN RSA PRIVATE KEY-----")
