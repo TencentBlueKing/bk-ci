@@ -90,6 +90,10 @@ spec:
                   echo -e ""
               done
 
+              # 生成jwt_token
+              chmod +x ../../scripts/bk-ci-gen-jwt-token.sh
+              JWT_TOKEN=$(../../scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-bkrepo")
+
               # 打开制品库入口
               services="project"
               for service in $services
@@ -101,7 +105,7 @@ spec:
                 done
                 echo "{{ include "bkci.names.fullname" . }}-$service is available";
               done
-              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo"
+              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo" -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
       restartPolicy: Never
 {{- end -}}
 {{- end -}}

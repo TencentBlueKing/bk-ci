@@ -64,6 +64,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_USER_ENV
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WhiteListDao
 import com.tencent.devops.remotedev.dao.WindowsGpuResourceDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
@@ -80,6 +81,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
@@ -156,7 +158,8 @@ class WorkspaceService @Autowired constructor(
     private val taiService: TaiService,
     private val startCloudClient: StartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val whiteListDao: WhiteListDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -1411,12 +1414,23 @@ class WorkspaceService @Autowired constructor(
             logger.debug("projectAccessDevicePermissions ip null")
             return emptyMap()
         }
-        return apiGwService.projectAccessDevicePermissions(
+        val res = apiGwService.projectAccessDevicePermissions(
             mac = macAddress,
             userId = userId,
             projects = projects.joinToString(","),
             ip = ip
         ) ?: emptyMap()
+        res.forEach { (project, v) -> v.checkWhiteList(project, userId) }
+        return res
+    }
+
+    private fun ProjectAccessDevicePermissionsResp.checkWhiteList(projectId: String, userId: String) {
+        if (!hasIpPermissions || !hasMacPermissions) {
+            whiteListDao.get(dslContext, "$projectId::$userId", WhiteListType.PROJECT_ACCESS_DEVICE)?.run {
+                hasIpPermissions = true
+                hasMacPermissions = true
+            }
+        }
     }
 
     @Deprecated("不要新增功能，希望废弃该接口")

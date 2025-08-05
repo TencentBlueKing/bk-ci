@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -112,24 +111,24 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
-    fun updateSetting4Op(data: OPUserSetting) {
+    fun updateSetting4Op(operator: String,data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         data.userIds.forEach { userId ->
             remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
             // 根据OPUserSetting中设置是否开启客户端白名单 + START白名单，分别做处理
             data.clientWhiteList?.let { isEnabled ->
                 if (isEnabled) {
-                    whiteListService.addWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                    whiteListService.addWhiteListUser(operator = operator, whiteListUser = userId)
                 } else {
-                    whiteListService.removeWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                    whiteListService.removeWhiteListUser(operator = operator, whiteListUser = userId)
                 }
             }
 
             data.startWhiteList?.let { isEnabled ->
                 if (isEnabled) {
-                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId, override = true)
+                    whiteListService.addGPUWhiteListUser(operator = operator, whiteListUser = userId, override = true)
                 } else {
-                    whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                    whiteListService.removeGPUWhiteListUser(userId = operator, whiteListUser = userId)
                 }
             }
         }

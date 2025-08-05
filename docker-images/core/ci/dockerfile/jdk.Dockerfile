@@ -18,6 +18,7 @@ RUN dnf makecache &&\
     dnf install -y redis &&\
     dnf install -y python3 &&\
     dnf install -y pip3 &&\
+    dnf install -y openssl &&\
     pip install requests
 
 # 安装Java工具
