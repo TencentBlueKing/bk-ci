@@ -19,6 +19,10 @@ LINUX
 3. 安装成功后, 你可以在浏览器上访问 `devops.example.com` (需要修改本地hosts, 配置域名到ingress ip)
 4. 内置的elasticsearch启动如果报`max virtual memory areas vm.max_map_count [65530] is too low`错误 , 需要手动修改内核参数 , 在 /etc/sysctl.conf 里面添加`vm.max_map_count=262144`,保存后执行`sysctl -p`即可
 
+## 安全相关
+1. 如何开启 JWT? [JWT配置文档](./jwt.md)
+2. 如何独立安装 kubernetes-manager [kubernetes-manager安装文档](./kubernetes-manager.md)
+
 ## FAQ
 #### values.yaml的配置可以在哪里看到?
 [Helm Chart README](https://github.com/TencentBlueKing/bk-ci/blob/master/helm-charts/README.md)

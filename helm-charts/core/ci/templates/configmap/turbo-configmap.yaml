@@ -75,6 +75,11 @@ data:
         enabled: false
       server:
         port: 18080
+    bkci:
+      security:
+        enable: {{ .Values.config.bkCiJwtEnable }}
+        private-key: "{{ .Values.config.bkCiJwtRsaPrivateKey }}"
+        public-key: "{{ .Values.config.bkCiJwtRsaPublicKey }}"
     {{- if keys $.Values.turbo.config }}
       {{- toYaml .Values.turbo.config | lower | nindent 4 }}
     {{- end}}

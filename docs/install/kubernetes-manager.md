@@ -19,19 +19,30 @@ kubernetes-manager可以使用二进制方式启动，也可以使用容器方�
     - **如何链接不同的kubernetes集群**通过修改 values中的 useKubeConfig 参数即可开启使用指定的kubeconfig，同时修改 chart/template/kubernetes-manager-configmap.yaml 中 kubeConfig.yaml 即可。
     - **登录调试相关** 因为登录调试需要将https链接转为wss与kuberntes通信，所以需要 **指定需要登录调试集群的kubeconfig**，指定方式参考 **如何链接不同的kubernetes集群**。
     - **realResource优化** 优化使用了kubernetes-scheduler-pluign和prometheus的特性，所以需要配置 prometheus同时需要安装 [ci-dispatch-k8s-manager-plugin](https://github.com/TencentBlueKing/ci-dispatch-k8s-manager-plugin) 插件。
+### 部署方案
+#### 【构建机】和【蓝盾服务】同k8s集群同namespace部署(bk-ci默认部署方式)
+‼️禁止在生产环境采用这种部署方式
+#### 【构建机】和【蓝盾服务】同集群不同namespace部署(基本的安全隔离)
+1. 创建构建机namespace , 如: devops-build
+2. 配置bk-ci helm values
+```
+kubernetes-manager:
+    kubernetesManager:
+        builderNamespace: devops-build // 构建机的namespace
+config:
+    bkCiPrivateUrl: {{ 蓝盾可访问域名 }} // 如: devops.example.com
+```
+#### 【构建机】和【蓝盾服务】不同集群部署(最安全,网络隔离)
+1. 独立部署kubernetes-manager, 将[kubernetes-manager](https://github.com/TencentBlueKing/bk-ci/tree/master/helm-charts/core/ci/local_chart/kubernetes-management) 下载下来 , 配置values.yaml后进行helm install
+2. 配置bk-ci helm values
+```
+kubernetes-manager:
+    enabled: false // bk-ci部署的时候不带上kubernetes-manager
+config:
+    bkCiPrivateUrl: {{ 蓝盾可访问域名 }} // 如: devops.example.com
+    bkCiKubernetesHost: {{ kubernetes-manager可访问域名 }}
+```
 
-#### kubernetes-manager和bk-ci同k8s集群同namespace部署(bk-ci默认部署方式)
-配置bk-ci helm values，已默认配置
-'bkCiKubernetesHost': "http://kubernetes-manager"  // 默认kubernetes-manager的service类型为 NodePort
-'bkCiKubernetesToken': "landun" // 同kubernetesManager.apiserver.auth.apiToken.value配置
-#### kubernetes-manager和bk-ci同集群不同namespace部署
-配置bk-ci helm values
-'bkCiKubernetesHost': "http://kubernetes-manager.{{ .Release.Name }}"  // 默认kubernetes-manager的service类型为 NodePort
-'bkCiKubernetesToken': "landun" // 同kubernetesManager.apiserver.auth.apiToken.value配置
-#### kubernetes-manager和bk-ci不同集群部署
-配置bk-ci helm values
-'bkCiKubernetesHost': "http://node:port"  // // 默认kubernetes-manager的service类型为 NodePort
-'bkCiKubernetesToken': "landun" // 同kubernetesManager.apiserver.auth.apiToken.value配置
 
 ### 以二进制的方式启动
 

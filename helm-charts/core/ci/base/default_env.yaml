@@ -59,3 +59,5 @@ bkTenantEnabled: false
 bkApigwUserUrl: http://bkapi.example.com
 bkApigwCmsiUrl: http://bkapi.example.com
 bkApigwUserWebUrl: http://bkapi.example.com
+bkCiJwtEnable: false
+bkCiNotifyUserBlackListCacheSize: 50000

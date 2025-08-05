@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.0-rc.6](#v400-rc6)
+   - [Changelog since v4.0.0-rc.5](#changelog-since-v400-rc5)
+
 - [v4.0.0-rc.5](#v400-rc5)
    - [Changelog since v4.0.0-rc.4](#changelog-since-v400-rc4)
 
@@ -19,6 +22,69 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.0-rc.6
+## 2025-08-01
+### Changelog since v4.0.0-rc.5
+#### 新增
+
+##### 流水线
+- [新增] feat：支持展示制品自动化测试结果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11462)
+- [新增] feat: 调整子流水线接口参数名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11979)
+- [新增] feat:流水线公共变量管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12010)
+- [新增] feat: GIT触发区分MR合并前后的检查 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11966)
+
+##### 代码库
+- [新增] feat：平台管理-代码源管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11379)
+
+##### 研发商店
+- [新增] feat：插件申请 get_credential 接口时，自动通过 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12039)
+
+##### 环境管理
+- [新增] feat：导入第三方构建机时支持自动切换启动用户 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11945)
+
+##### 权限中心
+- [新增] feat：权限模型优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11832)
+- [新增] feat：权限系统熔断设计 数据准确性校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11964)
+
+##### 调度
+- [新增] feat：无编译构建机轮训任务逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12046)
+
+##### Agent
+- [新增] feat: 支持插件output中传流水线制品元数据 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11940)
+
+##### 未分类
+- [新增] feat: 报告支持压缩预览 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11923)
+- [新增] feat: 蓝盾国际化支持日语版 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11877)
+- [新增] feat: okhttp客户端新增dns配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12026)
+
+#### 优化
+
+##### 流水线
+- [优化] pref：优化项目创建/修改 校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12052)
+- [优化] perf：流水线分组文案优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12056)
+- [优化] perf: 优化定时任务上锁规则 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12041)
+- [优化] perf：归档流水线时记录操作日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11922)
+- [优化] perf：已归档的流水线查看页面，导出和删除操作不可用 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12006)
+
+##### 研发商店
+- [优化] perf:优化研发商店组件查询 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12027)
+
+##### 未分类
+- [优化] pref:metrics服务部分接口完善权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11620)
+- [优化] pref:metrics构建数据上报接口在构建并发量大时可能出现线程阻塞情况 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12043)
+- [优化] pref: 消息队列配置优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11878)
+- [优化] pref: 增加构建机接口便于worker判断当前的环境类型 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11636)
+
+#### 修复
+
+##### 流水线
+- [修复] 静态流水线分组在搜索流水线，添加流水线保存之后，再次操作会出现整个页面无响应的问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12035)
+- [修复] bug：拥有项目管理员权限，但是无法操作删除流水线组 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12031)
+
+##### 未分类
+- [修复] bug: 移除接口冗余的userId参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12069)
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
 # v4.0.0-rc.5
 ## 2025-07-18
 ### Changelog since v4.0.0-rc.4

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.AtomDao
@@ -126,8 +127,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         logger.info("downloadFile params:[$projectCode|$atomCode|$version|$fileName")
         val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
-                "/service/artifactories/atom/file/content?filePath=$filePath"
-        val response = OkhttpUtils.doPost(url, "")
+            "/service/artifactories/atom/file/content?filePath=$filePath"
+        val response = CommonServiceUtils.doPostFromService(url, "")
         if (response.isSuccessful) {
             OkhttpUtils.downloadFile(response, file)
         } else {
