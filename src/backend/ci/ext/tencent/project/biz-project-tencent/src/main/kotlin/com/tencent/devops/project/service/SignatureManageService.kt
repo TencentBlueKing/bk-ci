@@ -141,7 +141,11 @@ class SignatureManageService(
         )
         logger.info("fetch live signature status {}|{}|{}", projectId, platform, userId)
         // 获取用户信息并校验用户是否存在
-        val userNickName = getUserNickname(userId)
+        val userNickName = try {
+            getUserNickname(userId)
+        } catch (ex: Exception) {
+            userId
+        }
         try {
             // 构建请求
             val request = buildSignatureQueryRequest(
