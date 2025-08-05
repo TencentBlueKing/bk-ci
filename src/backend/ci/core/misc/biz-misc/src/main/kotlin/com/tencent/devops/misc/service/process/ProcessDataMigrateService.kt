@@ -234,7 +234,7 @@ class ProcessDataMigrateService @Autowired constructor(
             targetClusterName = clusterName,
             targetDataSourceName = shardingRoutingRule
         )
-        processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
+        processDataDeleteService.deleteProcessData(deleteDataParam)
         // 查询项目下流水线数量
         val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
         var executor: ExecutorService? = null
@@ -378,7 +378,7 @@ class ProcessDataMigrateService @Autowired constructor(
                     targetClusterName = clusterName,
                     targetDataSourceName = shardingRoutingRule
                 )
-                processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
+                processDataDeleteService.deleteProcessData(deleteDataParam)
             }
             // 把项目路由规则还原
             val updateShardingRoutingRule = historyShardingRoutingRule
@@ -527,9 +527,9 @@ class ProcessDataMigrateService @Autowired constructor(
                     val deleteDataParam = DeleteDataParam(
                         dslContext = context,
                         projectId = projectId,
+                        broadcastTableDeleteFlag = !migrationProcessDbUnionClusterFlag,
                         targetClusterName = clusterName,
-                        targetDataSourceName = shardingRoutingRule,
-                        broadcastTableDeleteFlag = !migrationProcessDbUnionClusterFlag
+                        targetDataSourceName = shardingRoutingRule
                     )
                     processDataDeleteService.deleteProcessData(deleteDataParam)
                 }
