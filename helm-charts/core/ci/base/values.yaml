@@ -194,7 +194,7 @@ rabbitmq:
     # management.tcp.port = 15672
     # management.tcp.ip  = ::
     # 默认账户
-    default_vhost = default-vhost
+    default_vhost = default-vhost-quorum
     default_permissions.configure = .*
     default_permissions.read = .*
     default_permissions.write = .*
