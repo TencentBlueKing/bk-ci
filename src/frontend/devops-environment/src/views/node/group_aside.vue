@@ -409,7 +409,7 @@
                 }
             },
             handleNodeClick (nodeType) {
-                this.storedActiveNodeType = nodeType
+                this.storedActiveNodeType = String(nodeType)
                 localStorage.setItem(ENV_ACTIVE_NODE_TYPE, nodeType)
             
                 this.$router.push({

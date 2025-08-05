@@ -209,7 +209,7 @@
             searchValue (val) {
                 const requestParams = {}
                 val?.forEach(i => {
-                    requestParams[i.id] = i.values[0].id
+                    if (i.values?.length) requestParams[i.id] = i.values[0].id
                 })
                 this.requestList(requestParams)
             }
