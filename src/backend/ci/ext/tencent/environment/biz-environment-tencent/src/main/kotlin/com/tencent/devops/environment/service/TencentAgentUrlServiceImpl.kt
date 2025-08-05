@@ -128,7 +128,7 @@ open class TencentAgentUrlServiceImpl constructor(
             return sc
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
-                "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+                "\"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
         var t = "?"
         if (!zoneName.isNullOrBlank()) {
             url += "${t}zoneName=$zoneName"
@@ -138,7 +138,7 @@ open class TencentAgentUrlServiceImpl constructor(
             url += "${t}reInstallId=$reInstallId"
             t = "&"
         }
-        return "$url | bash"
+        return "$url\" | bash"
     }
 
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
