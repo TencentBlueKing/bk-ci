@@ -526,18 +526,16 @@ class NodeDao {
         nodeId: Long,
         nodeName: String,
         userId: String,
-        projectId: String? = null
+        projectId: String
     ): Int {
         with(TNode.T_NODE) {
-            val dsl = dslContext.update(this)
+            return dslContext.update(this)
                 .set(DISPLAY_NAME, nodeName)
                 .set(LAST_MODIFY_USER, userId)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_ID.eq(nodeId))
-            if (!projectId.isNullOrBlank()) {
-                dsl.and(PROJECT_ID.eq(projectId))
-            }
-            return dsl.execute()
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 
