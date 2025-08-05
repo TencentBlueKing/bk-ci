@@ -382,10 +382,10 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils'
     import formTips from '@/components/common/formTips/index'
-    import status from './status'
     import { serviceStatusMap } from '@/store/constants'
+    import { debounce } from '@/utils'
+    import status from './status'
 
     export default {
         components: {
@@ -592,7 +592,7 @@
 
             goToServiceDetail (code) {
                 this.$router.push({
-                    name: 'overView',
+                    name: 'statisticData',
                     params: {
                         code,
                         type: 'service'

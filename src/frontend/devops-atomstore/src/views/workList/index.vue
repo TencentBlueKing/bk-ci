@@ -208,10 +208,7 @@
     .title-work {
         cursor: pointer;
         color: #1592ff;
-        margin-right: 16px;
-        &:last-child {
-            margin-right: 32px;
-        }
+        margin: 0 16px;
     }
     .content-header {
         display: flex;
