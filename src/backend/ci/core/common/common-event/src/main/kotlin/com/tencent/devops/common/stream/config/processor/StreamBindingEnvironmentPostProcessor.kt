@@ -154,7 +154,8 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
-        if (consumer.type == RabbitQueueType.QUORUM && !consumer.anonymous) {
+        val quorumEnabled = "\${bkci.rabbitQuorumEnable:false}".toBoolean()
+        if (quorumEnabled && consumer.type == RabbitQueueType.QUORUM && !consumer.anonymous) {
             setProperty("$rabbitPropPrefix.consumer.quorum.enabled", "true")
         }
     }
