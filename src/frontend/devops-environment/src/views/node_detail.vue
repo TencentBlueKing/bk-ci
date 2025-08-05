@@ -85,7 +85,7 @@
     import { copyText } from '@/utils/util'
     import nodeDetailTab from '@/components/devops/node-detail-tab'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
-    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         components: {
@@ -95,6 +95,7 @@
         data () {
             return {
                 ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 showContent: false,
                 editable: false,
                 basePrototypeList: [
@@ -140,7 +141,7 @@
         },
         methods: {
             toNodeList () {
-                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || 'allNode'
+                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE
                 this.$router.push({
                     name: 'nodeList',
                     params: { nodeType }

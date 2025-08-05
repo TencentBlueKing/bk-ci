@@ -22,7 +22,8 @@
 <script>
     import {
         NODE_LIST_ASIDE_WIDTH_CACHE,
-        NODE_LIST_ASIDE_PANEL_TOGGLE
+        NODE_LIST_ASIDE_PANEL_TOGGLE,
+        ENV_ACTIVE_NODE_TYPE
     } from '@/store/constants'
     import GroupAside from './group_aside.vue'
 
@@ -50,6 +51,10 @@
             if (localStorage.getItem(NODE_LIST_ASIDE_PANEL_TOGGLE) === 'true') {
                 this.$refs.resizeLayout.setCollapse(true)
             }
+        },
+        beforeDestroy () {
+            console.log(111)
+            localStorage.removeItem(ENV_ACTIVE_NODE_TYPE)
         },
         methods: {
             handleCollapseChange (val) {

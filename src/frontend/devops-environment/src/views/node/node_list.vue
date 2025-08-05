@@ -167,7 +167,7 @@
     import ListTable from './list_table.vue'
     import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
-    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
     export default {
         components: {
             ListTable,
@@ -179,6 +179,7 @@
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
                 nodeIp: '',
@@ -475,7 +476,7 @@
                         theme: 'error'
                     })
                 } else {
-                    const currentNodeType = this.$route.params.nodeType || 'allNode'
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
                     localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                     this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
                     this.$router.push({
@@ -546,7 +547,7 @@
             
                 const nodeType = this.$route.params.nodeType
                 if (['allNode', 'THIRDPARTY', 'CMDB'].includes(nodeType)) {
-                    this.currentNodeType = nodeType !== 'allNode' ? nodeType : ''
+                    this.currentNodeType = nodeType !== ALLNODE ? nodeType : ''
                     this.currentTags = []
                 } else {
                     this.currentTags = this.findTagByValueId(nodeType)
@@ -578,7 +579,7 @@
                 this.tagSearchValue = []
                 this.currentTags = []
                 if (!this.currentNodeType) {
-                    this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                    this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
                     this.requestList()
                 }
@@ -884,7 +885,7 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
             },
 
             handleToPipelineDetail (param) {

@@ -46,15 +46,11 @@
         computed: {
             activePanel () {
                 const routeMap = {
-                    envList: 'envList',
-                    nodeList: 'nodeList',
-                    createEnv: 'envList',
-                    envDetail: 'envList',
-                    nodeDetail: 'nodeList',
-                    setNodeTag: 'nodeList',
+                    nodeList: 1,
+                    nodeDetail: 1,
+                    setNodeTag: 1,
                 }
-                
-                return routeMap[this.$route.name] || 'envList'
+                return routeMap[this.$route.name] === 1 ? 'nodeList' : 'envList'
             },
             panels () {
                 return [
