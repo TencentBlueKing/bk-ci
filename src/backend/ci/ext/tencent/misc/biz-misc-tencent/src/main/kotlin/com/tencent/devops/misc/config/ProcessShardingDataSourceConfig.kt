@@ -28,7 +28,6 @@
 package com.tencent.devops.misc.config
 
 import com.mysql.cj.jdbc.Driver
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
 import com.tencent.devops.misc.pojo.DataSourceConfig
 import com.tencent.devops.misc.pojo.ProcessShardingDataSourceProperties
@@ -69,7 +68,6 @@ class ProcessShardingDataSourceConfig : BeanDefinitionRegistryPostProcessor, Env
         val properties =
             binder.bind("spring.datasource.process", ProcessShardingDataSourceProperties::class.java)
                 .orElseThrow { IllegalStateException("Missing spring.datasource.process configuration") }
-        logger.info("Sharding config properties: ${JsonUtil.toJson(properties)}")
         val shardingMap = properties.sharding
         // 执行Bean注册逻辑
         val stringEncryptor = createDirectEncryptor()
