@@ -89,17 +89,16 @@
                 }))
             },
             activePanel () {
-                const routeMap = {
-                    envList: 'envList',
-                    nodeList: 'nodeList',
-                    createEnv: 'envList',
-                    envDetail: 'envList',
-                    nodeDetail: 'nodeList',
-                    extPage: 'extPage',
-                    setNodeTag: 'nodeList',
+                if (this.$route.name === 'extPage') {
+                    return 'extPage'
+                } else {
+                    const routeMap = {
+                        nodeList: 1,
+                        nodeDetail: 1,
+                        setNodeTag: 1,
+                    }
+                    return routeMap[this.$route.name] === 1 ? 'nodeList' : 'envList'
                 }
-                
-                return routeMap[this.$route.name] || 'envList'
             },
             panels () {
                 return [

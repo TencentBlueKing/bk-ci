@@ -618,7 +618,7 @@
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
-    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         components: {
@@ -661,6 +661,7 @@
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: 'small',
@@ -897,7 +898,7 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
-                    const currentNodeType = this.$route.params.nodeType || 'allNode'
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
                     localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                     this.$router.push({
                         name: 'nodeDetail',

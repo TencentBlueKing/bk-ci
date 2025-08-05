@@ -243,7 +243,7 @@
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
-    import { ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         name: 'NodeGroupTree',
@@ -252,11 +252,12 @@
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 expandedGroupIds: [],
                 isAdd: false,
                 isShowTagChange: false,
                 dialogTopOffset: null,
-                storedActiveNodeType: localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || 'allNode',
+                storedActiveNodeType: localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE,
                 formData: {
                     tagKeyName: '',
                     canUpdate: 'TRUE',
@@ -298,7 +299,7 @@
                 return this.isAdd ? this.$t('environment.addTag') : this.$t('environment.updateTag')
             },
             activeNodeType () {
-                const stored = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || 'allNode'
+                const stored = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE
 
                 if (this.$route.name === 'nodeList' && this.$route.params.nodeType) {
                     return this.$route.params.nodeType
@@ -388,7 +389,7 @@
                 await this.requestNodeTagList(this.projectId)
                 const isValidNodeType = this.getTagValues().includes(this.$route.params.nodeType)
                 if (this.$route.name === 'nodeList' && !isValidNodeType) {
-                    this.handleNodeClick('allNode')
+                    this.handleNodeClick(ALLNODE)
                 }
             },
             isGroupExpanded (groupId) {
@@ -452,7 +453,7 @@
                             if (res) {
                                 const currentNodeType = this.$route.params.nodeType
                                 const isDeleteCurNodeType = groupItem.tagValues.map(i => String(i.tagValueId)).includes(currentNodeType)
-                                isDeleteCurNodeType && this.handleNodeClick('allNode')
+                                isDeleteCurNodeType && this.handleNodeClick(ALLNODE)
 
                                 this.getTagTypeList()
                                 this.$bkMessage({
