@@ -221,7 +221,7 @@ Rabbitmq vhost
 */}}
 {{- define "bkci.rabbitmqVhost" -}}
 {{- if eq .Values.rabbitmq.enabled true -}}
-default-vhost-quorum
+default-vhost
 {{- else -}}
 {{- .Values.externalRabbitmq.vhost -}}
 {{- end -}}
