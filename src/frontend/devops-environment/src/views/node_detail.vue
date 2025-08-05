@@ -140,7 +140,7 @@
         },
         methods: {
             toNodeList () {
-                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE)
+                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || 'allNode'
                 this.$router.push({
                     name: 'nodeList',
                     params: { nodeType }

@@ -509,16 +509,8 @@
                                 message: this.$t('environment.successfullyDeleted'),
                                 theme: 'success'
                             })
-                        } catch (e) {
-                            this.handleError(
-                                e,
-                                {
-                                    projectId: this.projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
-                                    resourceCode: row.nodeHashId,
-                                    action: NODE_RESOURCE_ACTION.DELETE
-                                }
-                            )
+                        } catch (err) {
+                            console.log(err)
                         } finally {
                             this.requestList()
                             await this.requestGetCounts(this.projectId)
