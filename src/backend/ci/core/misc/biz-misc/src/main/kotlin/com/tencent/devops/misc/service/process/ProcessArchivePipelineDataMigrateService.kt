@@ -209,7 +209,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     targetClusterName = archiveDbShardingRoutingRule.clusterName,
                     targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName
                 )
-                processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
+                processDataDeleteService.deleteProcessData(deleteDataParam)
             }
         } catch (ignored: Throwable) {
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doMigrationErrorBus fail", ignored)
@@ -287,7 +287,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     targetClusterName = targetClusterName,
                     targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
-                processDataDeleteService.deleteProcessMigrationData(deleteDataParam)
+                processDataDeleteService.deleteProcessData(deleteDataParam)
                 // 添加操作日志
                 val id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("T_PIPELINE_OPERATION_LOG").data

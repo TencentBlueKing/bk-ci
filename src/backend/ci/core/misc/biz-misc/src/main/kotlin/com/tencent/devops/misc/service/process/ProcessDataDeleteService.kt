@@ -60,10 +60,10 @@ class ProcessDataDeleteService @Autowired constructor(
     private val clearBaseBuildData: Boolean = false
 
     /**
-     * 删除process数据库迁移数据
+     * 删除process数据库数据
      * @param deleteDataParam 删除迁移数据参数
      */
-    fun deleteProcessMigrationData(
+    fun deleteProcessData(
         deleteDataParam: DeleteDataParam
     ) {
         val lock = deleteDataParam.lock
@@ -73,22 +73,6 @@ class ProcessDataDeleteService @Autowired constructor(
             val targetClusterName = deleteDataParam.targetClusterName
             val targetDataSourceName = deleteDataParam.targetDataSourceName
             checkMigrationDataDeleteCondition(targetClusterName, targetDataSourceName, projectId)
-            deleteProcessRelData(deleteDataParam)
-        } finally {
-            lock?.unlock()
-        }
-    }
-
-    /**
-     * 删除process数据库数据
-     * @param deleteDataParam 删除迁移数据参数
-     */
-    fun deleteProcessData(
-        deleteDataParam: DeleteDataParam
-    ) {
-        val lock = deleteDataParam.lock
-        try {
-            lock?.lock()
             deleteProcessRelData(deleteDataParam)
         } finally {
             lock?.unlock()
