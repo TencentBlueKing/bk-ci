@@ -134,10 +134,15 @@
     }
 
     .environment-tit {
+        display: flex;
+        align-items: center;
         position: absolute;
         left: 24px;
         img {
             vertical-align: middle;
+        }
+        span {
+            margin-left: 4px;
         }
     }
 
