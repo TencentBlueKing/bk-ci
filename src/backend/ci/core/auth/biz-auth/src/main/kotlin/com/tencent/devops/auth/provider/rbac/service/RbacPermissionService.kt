@@ -338,6 +338,7 @@ class RbacPermissionService(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -380,10 +381,10 @@ class RbacPermissionService(
                         )
 
                     resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
-                        val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
+                        val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { viewIds ->
                             client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
                                 projectId = projectCode,
-                                viewIdsEncode = authViewIds
+                                viewIdsEncode = viewIds
                             ).data
                         } ?: emptyList()
 
