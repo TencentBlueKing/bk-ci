@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,19 +33,20 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import org.jolokia.util.Base64Util
-import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.SchedulingConfigurer
-import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.net.InetAddress
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.time.Duration
 import java.time.Instant
+import java.util.Base64
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.SchedulingConfigurer
+import org.springframework.scheduling.config.ScheduledTaskRegistrar
 
 class JwtManager(
     private val privateKeyString: String?,
@@ -77,8 +78,9 @@ class JwtManager(
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
         val json = if (securityJwtInfo == null) "X-DEVOPS-JWT-TOKEN AUTH" else JsonUtil.toJson(securityJwtInfo)
-        token = Jwts.builder().setSubject(json).setExpiration(Date(expireAt))
-            .signWith(SignatureAlgorithm.RS512, privateKey).compact()
+        token = Jwts.builder()
+            .setSubject(json).setExpiration(Date(expireAt))
+            .signWith(privateKey, SignatureAlgorithm.RS512).compact()
         return token
     }
 
@@ -93,7 +95,8 @@ class JwtManager(
         val tokenExpireAt = tokenCache.getIfPresent(token)
         if (tokenExpireAt != null) {
             // 如果未超时
-            if (tokenExpireAt > Instant.now().epochSecond) {
+            if (tokenExpireAt > Instant.now().toEpochMilli()) {
+                logger.info("Verify jwt cache hit, tokenExpireAt: $tokenExpireAt")
                 return true
             }
         }
@@ -105,6 +108,7 @@ class JwtManager(
             logger.info("Verify jwt sub:${claims["sub"]}")
             val expireAt = claims.get("exp", Date::class.java)
             if (expireAt != null) {
+                logger.info("Verify jwt expireAt: $expireAt")
                 tokenCache.put(token, expireAt.time)
             }
         } catch (e: ExpiredJwtException) {
@@ -123,10 +127,10 @@ class JwtManager(
     }
 
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
-        if (isAuthEnable()) {
-            taskRegistrar?.addFixedDelayTask(
+        if (isSendEnable()) {
+            taskRegistrar.addFixedDelayTask(
                 this@JwtManager::refreshToken,
-                5 * 60 * 1000
+                Duration.ofMinutes(5L).toMillis()
             )
         }
     }
@@ -153,8 +157,9 @@ class JwtManager(
             authEnable = false
         } else {
             val keyFactory = KeyFactory.getInstance("RSA")
-            privateKey = keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64Util.decode(privateKeyString)))
-            publicKey = keyFactory.generatePublic(X509EncodedKeySpec(Base64Util.decode(publicKeyString)))
+            privateKey =
+                keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64.getMimeDecoder().decode(privateKeyString)))
+            publicKey = keyFactory.generatePublic(X509EncodedKeySpec(Base64.getMimeDecoder().decode(publicKeyString)))
             authEnable = enable
         }
         securityJwtInfo = SecurityJwtInfo(
