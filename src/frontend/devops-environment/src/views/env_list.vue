@@ -189,7 +189,21 @@
                     },
                     {
                         name: this.$t('environment.node'),
-                        id: 'nodeHashId'
+                        id: 'nodeHashId',
+                        remoteMethod:
+                            async (search) => {
+                                const nodeList = await this.$store.dispatch('environment/requestNodeList', {
+                                    projectId: this.projectId,
+                                    params: {
+                                        displayName: search
+                                    }
+                                })
+                                return nodeList.records.map(item => ({
+                                    name: item.displayName,
+                                    id: item.nodeHashId
+                                }))
+                            },
+                        inputInclude: true
                     }
                 ]
                 return data.filter(data => {
@@ -202,6 +216,7 @@
         },
         watch: {
             projectId: async function (val) {
+                this.searchValue = []
                 await this.requestList()
             },
             searchValue (val) {
