@@ -459,9 +459,9 @@
     "updateDialogContent": "インスタンスは現在更新中です。更新が完了すると、メールで更新結果が通知されます。",
     "permissionSetting": "権限設定",
     "accessDeny": {
-        "title": "パイプラインテンプレートの権限がありません",
-        "desc": "このテンプレートを表示する権限がありません。権限を申請してください",
-        "apply": "参加を申請"
+      "title": "パイプラインテンプレートの権限がありません",
+      "desc": "このテンプレートを表示する権限がありません。権限を申請してください",
+      "apply": "参加を申請"
     },
     "editStoreTemplateTips": "開発ストアのテンプレートは編集をサポートしていません",
     "lastModifiedDate": "更新時間",
@@ -1933,5 +1933,6 @@
   "noticeConf": "通知設定",
   "constraintConfTips": "この設定はテンプレートに準じます。カスタマイズする必要がある場合は、",
   "unfollow": "テンプレート追随をキャンセル",
-  "triggerStepIdNotSet": "トリガーにStep IDが不足しています。テンプレートを修正してStep IDを補完してください"
+  "triggerStepIdNotSet": "トリガーにStep IDが不足しています。テンプレートを修正してStep IDを補完してください",
+  "pacTemplaneEnableTips": "パイプラインテンプレートはPACモードが有効になっており、コードリポジトリでパイプライン設定を管理できます。"
 }

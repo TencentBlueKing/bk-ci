@@ -114,7 +114,7 @@
         />
         <constraint-wraper
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
-            classify="paramIds"
+            :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
             @toggleConstraint="handleToggleConstraint"
         >
@@ -297,6 +297,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
+    import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
@@ -376,6 +377,7 @@
         },
         data () {
             return {
+                CLASSIFY_ENUM,
                 optionList: [],
                 selectDefautVal: '',
                 remoteParamOption: {}

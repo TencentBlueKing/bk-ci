@@ -16,7 +16,7 @@
                 :error-msg="errors.first('buildNumRule')"
             >
                 <constraint-wraper
-                    classify="settingGroups"
+                    :classify="CLASSIFY_ENUM.SETTING"
                     field="buildNumRule"
                 >
                     <template v-slot:constraint-title>
@@ -55,7 +55,7 @@
                 ext-cls="variable-invalid"
             >
                 <constraint-wraper
-                    classify="settingGroups"
+                    :classify="CLASSIFY_ENUM.SETTING"
                     field="failIfVariableInvalid"
                     :label="$t('settings.whenVariableExceedsLength')"
                 >
@@ -83,7 +83,7 @@
             </bk-form-item>
             <bk-form-item>
                 <constraint-wraper
-                    classify="settingGroups"
+                    :classify="CLASSIFY_ENUM.SETTING"
                     field="parallelSetting"
                     :label="$t('template.parallelSetting')"
                 >
@@ -241,7 +241,8 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
-import ConstraintWraper from '@/components/ConstraintWraper.vue'
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
+    import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
@@ -258,6 +259,9 @@ import ConstraintWraper from '@/components/ConstraintWraper.vue'
             handleRunningLockChange: Function
         },
         computed: {
+            CLASSIFY_ENUM () {
+                return CLASSIFY_ENUM
+            },
             proxyFailIfVariableInvalid: {
                 get () {
                     return this.pipelineSetting.failIfVariableInvalid ?? false

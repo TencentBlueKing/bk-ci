@@ -52,7 +52,6 @@
                 'template-constraint-area': showConstraintAreaBg && instanceFromTemplate,
                 'is-override': isOverrideField
             }"
-            :isOverride="isOverrideField"
         >
             <slot
                 name="constraint-area"
@@ -116,6 +115,9 @@
                 if (fieldAlias.value === 'NOTICES') {
                     return t('noticeConf')
                 }
+                if (fieldAlias.value === 'BK_CI_BUILD_NO') {
+                    return t(labelMap[fieldAlias.value])
+                }
             
                 
                 return t(labelMap[classify] ?? 'unknown')
@@ -124,7 +126,7 @@
                 return isOverrideTemplate(props.classify, fieldAlias.value)
             })
             const isTriggerClassify = computed(() => {
-                return props.classify === 'triggerStepIds'
+                return props.classify === ''
             })
 
             const constraintTipsContent = computed(() => {
@@ -138,6 +140,8 @@
 
             watch(() => isOverrideField.value, (isOverride) => {
                 ctx.emit('toggleConstraint', isOverride)
+            }, {
+                immediate: true
             })
             
             return {

@@ -1,6 +1,14 @@
 // 转化为composition API 的 mixin
 
+import { allVersionKeyList } from '@/utils/pipelineConst'
 import { computed, getCurrentInstance, ref } from 'vue'
+
+
+export const CLASSIFY_ENUM = {
+    PARAM: 'paramIds',
+    SETTING: 'settingGroups',
+    TRIGGER: 'triggerStepIds'
+}
 
 export default function useTemplateConstraint () {
     const fieldMap = {
@@ -8,13 +16,15 @@ export default function useTemplateConstraint () {
         labels: 'LABEL',
         notices: 'NOTICES',
         parallelSetting: 'CONCURRENCY',
-        failIfVariableInvalid: 'FAIL_IF_VARIABLE_INVALID'
+        failIfVariableInvalid: 'FAIL_IF_VARIABLE_INVALID',
+        buildNo: 'BK_CI_BUILD_NO'
     }
     
     const labelMap = {
-        triggerStepIds: 'triggerSetting',
-        paramIds: 'paramDefaultValue',
-        settingGroups: 'template.settings',
+        [CLASSIFY_ENUM.TRIGGER]: 'triggerSetting',
+        [CLASSIFY_ENUM.PARAM]: 'paramDefaultValue',
+        [CLASSIFY_ENUM.SETTING]: 'template.settings',
+        BK_CI_BUILD_NO: 'template.versionSetting'
     }
     const vm = getCurrentInstance()
     const reverting = ref(false)
@@ -23,7 +33,9 @@ export default function useTemplateConstraint () {
     const instanceFromTemplate = computed(() => vm.proxy.$store.getters['atom/instanceFromTemplate'])
 
     function isOverrideTemplate (classify, field) {
-        return !!(instanceFromTemplate.value && overrideTemplateGroups.value?.[classify]?.includes(field))
+        if (!instanceFromTemplate.value) return true
+        
+        return overrideTemplateGroups.value[classify]?.includes(field)
     }
 
     function partialRevertPipelineSetting (setting, field) {
@@ -60,18 +72,35 @@ export default function useTemplateConstraint () {
         console.log('partialRevertPipeline', model, classify, field)
         const currentTriggerContainer = vm.proxy.$store.state.atom.pipeline.stages[0].containers[0]
         const constraintTriggerContainer = model.stages[0].containers[0]
-        if (classify === 'triggerStepIds') {
+        if (classify === CLASSIFY_ENUM.TRIGGER) {
             const currentAtom = findTrigger(currentTriggerContainer, field)
             const constraintAtom = findTrigger(constraintTriggerContainer, field)
             
             vm.proxy.$store.dispatch('atom/updateAtom', {
                 element: currentAtom,
                 newParam: {
-                    ...constraintAtom
+                    ...constraintAtom,
+                    startParams: constraintAtom.startParams ?? null
                 }
             })
-        } else if (classify === 'paramIds') {
+        } else if (classify === CLASSIFY_ENUM.PARAM) {
             const { params } = currentTriggerContainer
+            if (field === 'buildNo') {
+                const { buildNo = null, params: contraintParams } = constraintTriggerContainer
+                const otherParams = params.filter(p => !allVersionKeyList.includes(p.id))
+                const allVersionParams = contraintParams.filter(p => allVersionKeyList.includes(p.id))
+                console.log(buildNo, otherParams, allVersionParams)
+                vm.proxy.$store.dispatch('atom/updateContainer', {
+                    container: currentTriggerContainer,
+                    newParam: {
+                        buildNo,
+                        params: [
+                            ...otherParams,
+                            ...allVersionParams
+                        ]
+                    }
+                })
+            }
             const paramIndex = constraintTriggerContainer.params.findIndex(item => item.id === field)
             if (paramIndex === -1) return
             vm.proxy.$store.dispatch('atom/updateContainer', {
@@ -92,7 +121,7 @@ export default function useTemplateConstraint () {
     }
 
     function partialRevert (modelAndSetting, classify, field) {
-        if (classify === 'settingGroups') {
+        if (classify === CLASSIFY_ENUM.SETTING) {
             partialRevertPipelineSetting(modelAndSetting.setting, field)
         } else {
             partialRevertPipelineModel(modelAndSetting.model, classify, field)
@@ -102,12 +131,7 @@ export default function useTemplateConstraint () {
     async function revertTemplateConstraint (classify, field) {
         try {
             reverting.value = true
-            const { pipeline } = vm.proxy.$store.state.atom
-            const templateRes = await vm.proxy.$store.dispatch('atom/fetchTemplateByVersion', {
-                projectId: vm.proxy.$route.params.projectId,
-                templateId: pipeline.parsedTemplateId,
-                version: pipeline.parsedTemplateVersion
-            })
+            const templateRes = await vm.proxy.$store.dispatch('atom/requestTemplateConstraint', vm.proxy.$route.params)
             partialRevert({
                 model: templateRes.resource.model,
                 setting: templateRes.setting
