@@ -83,7 +83,9 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId,
                     buildId = buildId,
-                    refreshTypes = RefreshType.HISTORY.binary or RefreshType.RECORD.binary
+                    refreshTypes = RefreshType.HISTORY.binary
+                        or RefreshType.RECORD.binary
+                        or RefreshType.DETAIL.binary
                 )
             )
             return Result(buildHistory)
