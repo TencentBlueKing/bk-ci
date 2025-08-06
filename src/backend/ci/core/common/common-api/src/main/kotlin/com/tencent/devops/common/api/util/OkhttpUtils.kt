@@ -128,8 +128,11 @@ object OkhttpUtils {
     fun genOkHttpClientSupDns(host: String, ips: Set<String>) = OkHttpClient.Builder()
         .dns(object : Dns {
             override fun lookup(hostname: String): List<InetAddress> {
+                logger.info("genOkHttpClientSupDns [$host:$ips] | [$hostname]")
                 return if (hostname == host) {
-                    ips.map { InetAddress.getByName(it) }.toList()
+                    val inets = ips.map { InetAddress.getByName(it) }.toList()
+                    logger.info("genOkHttpClientSupDns [$inets]")
+                    inets
                 } else {
                     Dns.SYSTEM.lookup(hostname)
                 }
