@@ -149,8 +149,8 @@ class SignatureManageService(
         try {
             // 构建请求
             val request = buildSignatureQueryRequest(
-                userId = userId,
-                nickName = userNickName,
+                userId = userId.removeSuffix("@tai"),
+                nickName = userNickName.removeSuffix("@tai"),
                 platform = platform,
                 nonce = generateRandomString(12),
                 timestamp = System.currentTimeMillis()
