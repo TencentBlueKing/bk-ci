@@ -223,8 +223,13 @@
         border-bottom: 1px solid rgb(220, 222, 229);
     }
     .environment-tit {
+        display: flex;
+        align-items: center;
         img {
             vertical-align: middle;
+        }
+        span {
+            margin-left: 4px;
         }
     }
 

@@ -330,7 +330,10 @@
                                 :key="idx"
                                 class="tag"
                             >
-                                <bk-tag :theme="tag.isDelete ? 'danger' : ''">{{ tag.tagKeyName }}: {{ tag.tagValueName }}</bk-tag>
+                                <bk-tag
+                                    :theme="tag.isDelete ? 'danger' : ''"
+                                    :class="tag.isDelete ? 'delete-line' : ''"
+                                >{{ tag.tagKeyName }}: {{ tag.tagValueName }}</bk-tag>
                             </span>
                         </div>
                     </bk-collapse-item>
@@ -1112,6 +1115,7 @@
     max-width: 100vw;
     height: 100%;
     overflow: hidden;
+    font-family: MicrosoftYaHei;
 
     .info-header {
         height: 54px;
@@ -1145,6 +1149,7 @@
         height: calc(100% - 54px);
         overflow: hidden;
         padding: 0 20px;
+        font-size: 12px;
         .table-content {
             width: 100%;
             max-height: calc(100% - 48px);
@@ -1360,6 +1365,9 @@
             }
             .tag {
                 margin-right: 8px;
+            }
+            .delete-line {
+                text-decoration: line-through;
             }
         }
     }

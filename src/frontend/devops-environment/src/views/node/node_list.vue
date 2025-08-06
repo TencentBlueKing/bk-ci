@@ -1272,6 +1272,7 @@
         .search-part {
             display: flex;
             flex: 1;
+            justify-content: end;
 
             .bk-date-picker.long {
                 max-width: 170px;
@@ -1288,7 +1289,7 @@
             align-items: center;
         }
         .search-input {
-            flex: 1;
+            width: 50%;
             background: #fff;
             margin-right: 10px;
             ::placeholder {
