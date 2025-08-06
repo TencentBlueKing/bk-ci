@@ -96,7 +96,8 @@ class UserArtifactQualityMetadataResourceImpl(
     override fun listByPipeline(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        debug: Boolean?
     ): Result<List<MetadataLabelDetail>> {
         // 获取项目下所有已定义的元数据标签，并转换为Map以便高效查找
         val definedLabels = bkRepoClient.listArtifactQualityMetadataLabels(userId, projectId)
@@ -104,7 +105,7 @@ class UserArtifactQualityMetadataResourceImpl(
 
         // 获取流水线产物中的所有元数据Key
         val artifactPropertyKeys = client.get(ServiceBuildResource::class)
-            .getLatestBuildInfo(projectId, pipelineId, debug = false)
+            .getLatestBuildInfo(projectId, pipelineId, debug = debug ?: false)
             .data?.artifactList.orEmpty()
             .flatMap { it.properties.orEmpty() }
             .mapTo(HashSet()) { it.key } // 使用HashSet自动去重
