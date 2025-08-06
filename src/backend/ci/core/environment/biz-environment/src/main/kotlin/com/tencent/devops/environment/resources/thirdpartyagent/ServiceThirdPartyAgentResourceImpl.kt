@@ -53,6 +53,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
@@ -337,5 +338,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 data = data.envVars
             )
         )
+    }
+
+    override fun updateAgentInfo(
+        userId: String,
+        projectId: String,
+        data: UpdateAgentInfo
+    ): Result<Boolean> {
+        return Result(agentService.updateAgentInfo(userId, projectId, data))
     }
 }
