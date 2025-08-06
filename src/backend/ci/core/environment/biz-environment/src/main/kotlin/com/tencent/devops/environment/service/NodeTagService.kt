@@ -260,7 +260,9 @@ class NodeTagService @Autowired constructor(
             nodeTagDao.batchAddNodeTags(
                 dslContext = ctx,
                 projectId = projectId,
-                nodeAndValueAndKeyIds = data.associate { it.nodeId to it.tags.associate { tag -> tag.tagValueId to tag.tagKeyId } }
+                nodeAndValueAndKeyIds = data.associate {
+                    it.nodeId to it.tags.associate { tag -> tag.tagValueId to tag.tagKeyId }
+                }
             )
         }
     }
