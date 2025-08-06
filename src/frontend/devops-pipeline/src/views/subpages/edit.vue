@@ -13,12 +13,12 @@
         </empty-tips>
         <YamlPipelineEditor
             v-else-if="isCodeMode"
-            :editable="!isTemplatePipeline"
+            :editable="!instanceFromTemplate"
         />
         <template v-else>
             <show-variable
                 v-if="currentTab === 'pipeline' && pipeline"
-                :editable="!isTemplatePipeline"
+                :editable="!instanceFromTemplate"
                 :pipeline="pipeline"
             />
             <header
@@ -74,7 +74,6 @@
     import { navConfirm } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import YamlPipelineEditor from './YamlPipelineEditor'
-    import { TEMPLATE_MODE } from '@/store/modules/templates/constants'
 
     export default {
         components: {
@@ -135,7 +134,8 @@
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
-                isTemplate: 'atom/isTemplate'
+                isTemplate: 'atom/isTemplate',
+                instanceFromTemplate: 'atom/instanceFromTemplate',
             }),
             pipelineVersion () {
                 return this.pipelineInfo?.version
@@ -152,9 +152,6 @@
             curPanel () {
                 return this.panels.find((panel) => panel.name === this.currentTab)
             },
-            isTemplatePipeline () {
-                return (this.pipelineInfo?.mode === TEMPLATE_MODE.CONSTRAINT && this.isTemplate) ?? false
-            },
             panels () {
                 return [
                     {
@@ -162,7 +159,7 @@
                         label: this.$t('pipeline'),
                         component: 'PipelineEditTab',
                         bindData: {
-                            editable: !this.isTemplatePipeline,
+                            editable: !this.instanceFromTemplate,
                             pipeline: this.pipelineWithoutTrigger,
                             isLoading: !this.pipelineWithoutTrigger
                         }
@@ -172,7 +169,7 @@
                         label: this.$t('settings.trigger'),
                         component: 'TriggerTab',
                         bindData: {
-                            editable: !this.isTemplatePipeline,
+                            editable: !this.instanceFromTemplate,
                             pipeline: this.pipeline
                         }
                     },
@@ -181,6 +178,7 @@
                         label: this.$t('settings.notify'),
                         component: 'NotifyTab',
                         bindData: {
+                            editable: !this.instanceFromTemplate,
                             failSubscriptionList: this.getPipelineSubscriptions('fail'),
                             successSubscriptionList: this.getPipelineSubscriptions('success'),
                             updateSubscription: (name, value) => {
@@ -200,6 +198,7 @@
                         component: 'BaseSettingTab',
                         bindData: {
                             pipelineSetting: this.pipelineSetting,
+                            editable: !this.instanceFromTemplate,
                             updatePipelineSetting: (...args) => {
                                 this.setPipelineEditing(true)
                                 this.updatePipelineSetting(...args)

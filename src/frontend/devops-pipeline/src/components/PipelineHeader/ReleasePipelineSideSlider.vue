@@ -562,19 +562,13 @@
                             }
                             : null
                     ),
-                    ...(
-                        this.releaseParams.enabledPac
-                            ? {
-                                description: [
-                                    {
-                                        required: true,
-                                        message: this.$t('stageReview.requireRule', [this.$t('versionDesc')]),
-                                        trigger: 'blur'
-                                    }
-                                ]
-                            }
-                            : null
-                    ),
+                    description: [
+                        {
+                            required: this.releaseParams.enablePac,
+                            message: this.$t('stageReview.requireRule', [this.$t('versionDesc')]),
+                            trigger: 'blur'
+                        }
+                    ],
                     targetAction: [
                         {
                             required: true,

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@ function isSkip (status) {
 }
 
 export default {
+    instanceFromTemplate: state => state.pipelineInfo?.instanceFromTemplate ?? false,
     isTemplate: state => state.pipelineInfo?.isTemplate ?? false,
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
@@ -188,7 +189,6 @@ export default {
         try {
             let codeccCount = 0
             let manualTriggerCount = 0
-            let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
             if (pipelineSetting && !pipelineSetting.pipelineName) {
@@ -251,18 +251,15 @@ export default {
                 atomCode === 'linuxPaasCodeCCScript' && codeccCount++
                 atomCode === 'CodeccCheckAtom' && codeccCount++
                 atomCode === 'manualTrigger' && manualTriggerCount++
-                atomCode === 'timerTrigger' && timerTriggerCount++
                 atomCode === 'remoteTrigger' && remoteTriggerCount++
 
-                return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
+                return codeccCount > 1 || manualTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })
 
             if (codeccCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
-            } else if (timerTriggerCount > 1) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneRemoteTrigger'))
             } else if (elementValid) {

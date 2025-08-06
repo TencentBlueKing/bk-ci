@@ -169,7 +169,7 @@
 
                 <div
                     v-if="atom"
-                    :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }"
+                    :class="{ 'atom-form-box': true, 'readonly': !isOverride && !editable && !isRemoteAtom }"
                 >
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
                     <div
@@ -268,7 +268,7 @@
     import ReportArchive from './ReportArchive'
     import SendWechatNotify from './SendWechatNotify'
     import SubPipelineCall from './SubPipelineCall'
-    import TimerTrigger from './TimerTrigger'
+    import TimerTrigger from './TimerTrigger/'
     import Unity3dBuild from './Unity3dBuild'
 
     export default {
@@ -520,7 +520,11 @@
                     manualReviewUserTask: ManualReviewUserTask
                 }
                 return atomMap[this.atomCode] || NormalAtom
-            }
+            },
+            isOverride () {
+                console.log(this.atom, this.element)
+                return this.editable || this.element?.isOverride
+            },
         },
         watch: {
             atomCode (atomCode) {

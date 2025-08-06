@@ -1,12 +1,20 @@
 <template>
     <div>
-        <bk-button
-            v-if="editable"
-            theme="primary"
-            @click="addTrigger"
+        <span
+            v-bk-tooltips="{
+                disabled: !pipeline?.instanceFromTemplate,
+                content: $t('constraintTriggerTips')
+            }"
         >
-            {{ $t('settings.addTrigger') }}
-        </bk-button>
+
+            <bk-button
+                :disabled="!editable || pipeline?.instanceFromTemplate"
+                theme="primary"
+                @click="addTrigger"
+            >
+                {{ $t('settings.addTrigger') }}
+            </bk-button>
+        </span>
         <div class="trigger-list-wrapper">
             <bk-table :data="triggerList">
                 <bk-table-column
@@ -25,27 +33,47 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('settings.enableStatus')">
                     <template slot-scope="props">
-                        <bk-switcher
-                            :disabled="!editable"
-                            :value="getIsEnable(props.row)"
-                            theme="primary"
-                            size="small"
-                            @change="(val) => handleUpdateOptions(props.$index, 'enable', val)"
-                        ></bk-switcher>
+                        <ConstraintWraper
+                            :disabled="!pipeline?.instanceFromTemplate"
+                            classify="triggerStepIds"
+                            :field="props.row.stepId"
+                            :space-between="false"
+                            :show-constraint-area="false"
+                            @toggleConstraint="(isOverride) => setIsOverrideField(props.$index, isOverride)"
+                        >
+                            <template #constraint-title="{ props: { isOverride } }">
+                                <bk-switcher
+                                    :disabled="!(editable || isOverride)"
+                                    :value="getIsEnable(props.row)"
+                                    theme="primary"
+                                    size="small"
+                                    @change="(val) => handleUpdateOptions(props.$index, 'enable', val)"
+                                ></bk-switcher>
+                            </template>
+                        </ConstraintWraper>
                     </template>
                 </bk-table-column>
                 <bk-table-column
-                    v-if="editable"
                     :label="$t('operate')"
                     width="150"
                     class-name="handler-btn"
                 >
-                    <template slot-scope="props">
-                        <span
-                            class="link-btn"
+                    <span
+                        slot-scope="props"
+                        v-bk-tooltips="{
+                            disabled: !pipeline?.instanceFromTemplate,
+                            content: $t('constraintTriggerUnDeleteTips')
+                        }"
+                    >
+                        
+                        <bk-button
+                            text
+                            :disabled="!editable || pipeline?.instanceFromTemplate"
                             @click="deleteTriggerAtom(props.$index)"
-                        >{{ $t('delete') }}</span>
-                    </template>
+                        >
+                            {{ $t('delete') }}
+                        </bk-button>
+                    </span>
                 </bk-table-column>
             </bk-table>
         </div>
@@ -62,21 +90,24 @@
                 :stage-index="0"
                 :editable="editable"
                 :stages="pipeline.stages"
-                :is-instance-template="pipeline.instanceFromTemplate"
+                :is-instance-template="pipeline?.instanceFromTemplate"
             />
         </template>
     </div>
 </template>
 
 <script>
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import { mapActions, mapState } from 'vuex'
     import AtomPropertyPanel from '../AtomPropertyPanel'
     import AtomSelector from '../AtomSelector'
 
+
     export default {
         components: {
             AtomPropertyPanel,
-            AtomSelector
+            AtomSelector,
+            ConstraintWraper
         },
         props: {
             editable: {
@@ -138,6 +169,9 @@
                 'deleteAtom',
                 'togglePropertyPanel'
             ]),
+            setIsOverrideField (index, isOverride) {
+                this.handleAtomChange(index, 'isOverride', isOverride)
+            },
             getIsEnable (row) {
                 return row?.additionalOptions?.enable ?? true
             },
@@ -149,6 +183,7 @@
             },
             handleAtomChange (index, key, val) {
                 const element = this.triggerList[index]
+                
                 this.updateAtom({
                     element: element,
                     newParam: {

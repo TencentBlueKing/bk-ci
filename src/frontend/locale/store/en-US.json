@@ -464,7 +464,7 @@
   "下架后：": "After unpublish: ",
   "下架插件": "Unpublished plugin",
   "1、插件市场不再展示插件": "1、plugin is no longer displayed in the plugin store",
-  "2、已使用插件的流水线可以继续使用，但有插件已下架标识": "2、pipelines with this plugin integrated can continue to it, but a \"Unpublish Plugin\" logo must be displayed in the pipeline.",
+  "2、已使用模版的流水线可以继续使用，但有模版已下架标识": "2、pipelines that are currently using this template can continue to do so, but a \"unpublished template\" logo must be displayed in the pipeline.",
   "确定删除插件": "Delete plugin ({0})?",
   "2、已安装插件的项目不能再添加插件到流水线": "2、projects with this plugin installed will no longer be able to add plugin into pipeline",
   "3、已使用插件的流水线可以继续使用，但有插件已下架标识": "3、pipelines with this plugin integrated can continue to it, but a \"Unpublish Plugin\" logo must be displayed in the pipeline.",
@@ -656,5 +656,6 @@
   "onlineTips": "Confirm to release version {0}?",
   "全部可见": "All visible",
   "部分可见": "Partial visible",
-  "当前模板的版本已全部上架": "All versions of the current template have been listed"
+  "当前模板的版本已全部上架": "All versions of the current template have been listed",
+  "typeError": "Type Error"
 }

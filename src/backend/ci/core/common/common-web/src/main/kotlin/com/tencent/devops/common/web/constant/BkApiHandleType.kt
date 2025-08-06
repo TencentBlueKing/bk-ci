@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,5 +32,6 @@ enum class BkApiHandleType {
     PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
     PIPELINE_API_ACCESS_LIMIT, // 限制流水线接口访问权限
     API_NO_AUTH_CHECK, // 接口免权限校验
-    API_OPEN_TOKEN_CHECK // open接口token校验
+    API_OPEN_TOKEN_CHECK, // open接口token校验
+    PROJECT_MEMBER_CHECK // 项目成员校验
 }

@@ -32,7 +32,13 @@
         },
         setup () {
             const vm = getCurrentInstance()
-            const activePanel = computed(() => vm.proxy.$route.name)
+            const activePanel = computed(() => {
+                if (vm.proxy.$route.name === 'PipelineListAuth') {
+                    return 'PipelineManageList'
+                }
+                return vm.proxy.$route.name
+            })
+
             const panels = [
                 {
                     label: vm.proxy.$t('pipeline'),
@@ -87,5 +93,8 @@
                 overflow: hidden;
             }
         }
+    }
+    .bk-tab-header-setting {
+        border-left: none !important;
     }
 </style>

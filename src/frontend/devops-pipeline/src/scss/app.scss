@@ -1,7 +1,7 @@
 /*!
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -73,11 +73,6 @@ table tr:hover {
 
 .biz-app {
     height: 100%;
-    a:not(.bk-button) {
-    	&:hover {
-    		color: $primaryColor;
-    	}
-    }
     .bk-form {
         .bk-label {
             font-size: 12px;

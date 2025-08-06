@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -138,3 +138,4 @@ export const TOGGLE_STAGE_REVIEW_PANEL = 'TOGGLE_STAGE_REVIEW_PANEL'
 export const SELECT_PIPELINE_VERSION = 'SELECT_PIPELINE_VERSION'
 export const SWITCHING_PIPELINE_VERSION = 'SWITCHING_PIPELINE_VERSION'
 export const SET_ATOM_EDITING = 'SET_ATOM_EDITING'
+export const UPDATE_TEMPLATE_CONSTRAINT = 'UPDATE_TEMPLATE_CONSTRAINT'

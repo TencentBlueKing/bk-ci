@@ -18,7 +18,7 @@ data class ProjectConditionDTO(
     @get:Schema(title = "排除项目code")
     val excludedProjectCodes: List<String>? = null,
     @get:Schema(title = "项目ID列表")
-    val projectCodes: List<String>? = null,
+    var projectCodes: List<String>? = null,
     @get:Schema(title = "资源类型")
     val resourceType: String? = null,
     @get:Schema(title = "路由tag")
@@ -34,5 +34,7 @@ data class ProjectConditionDTO(
     @get:Schema(title = "渠道代码")
     val channelCode: String? = null,
     @get:Schema(title = "remoteDev相关")
-    val queryRemoteDevFlag: Boolean? = null
+    val queryRemoteDevFlag: Boolean? = null,
+    @get:Schema(title = "项目名称")
+    val projectName: String? = null
 )

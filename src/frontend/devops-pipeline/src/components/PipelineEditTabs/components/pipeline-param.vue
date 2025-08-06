@@ -28,6 +28,7 @@
                     </bk-button>
                 </template>
                 <bk-input
+                    class="search-input"
                     v-model="searchStr"
                     :clearable="true"
                     :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
@@ -43,12 +44,9 @@
         >
             <param-group
                 v-for="group in pipelineParamGroups"
-                :editable="editable"
+                v-bind="group"
                 :key="group.key"
-                :title="group.title"
-                :tips="group.tips"
-                :item-num="group.listNum"
-                :list-map="group.listMap"
+                :editable="editable"
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
@@ -56,7 +54,7 @@
         </div>
 
         <div
-            v-else-if="editable"
+            v-else
             class="current-edit-param-item"
         >
             <div class="edit-var-header">
@@ -74,6 +72,7 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
+                    :disabled="!editable"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -101,8 +100,11 @@
 </template>
 
 <script>
-    import { navConfirm, deepCopy } from '@/utils/util'
+    import {
+        getParamsGroupByLabel
+    } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy, navConfirm } from '@/utils/util'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
 
@@ -146,14 +148,17 @@
             },
             globalParams: {
                 get () {
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG').map(i => ({
+                        ...i,
+                        category: i.category ?? ''
+                    }))
                 },
                 set (params) {
                     this.updateContainerParams('params', [...params, ...this.versions])
                 }
             },
             renderParams () {
-                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id.includes(this.searchStr) || item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)))
+                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id?.includes(this.searchStr) || item.name?.includes(this.searchStr) || item.desc?.includes(this.searchStr)))
             },
             requiredParamList () {
                 return this.renderParams.filter(item => !item.constant && item.required)
@@ -171,19 +176,22 @@
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
                         listNum: this.requiredParamList.length,
-                        listMap: this.getParamsGroupByLabel(this.requiredParamList)
+                        listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
                         listNum: this.constantParamList.length,
-                        listMap: this.getParamsGroupByLabel(this.constantParamList)
+                        listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
                         listNum: this.otherParamList.length,
-                        listMap: this.getParamsGroupByLabel(this.otherParamList)
+                        listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
                 ]
             },
@@ -192,9 +200,9 @@
             },
             sortParamsList () {
                 return [
-                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.requiredParamList)),
-                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.constantParamList)),
-                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.otherParamList))
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.requiredParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
                 ]
             }
         },
@@ -204,23 +212,6 @@
             },
             initParamsSort () {
                 this.updateContainerParams('params', [...this.sortParamsList, ...this.versions])
-            },
-            getParamsGroupByLabel (list) {
-                const key = this.$t('notGrouped')
-                const listMap = list.reduce((acc, item) => {
-                    const categoryKey = item.category || key
-                    if (!acc[categoryKey]) {
-                        acc[categoryKey] = []
-                    }
-                    acc[categoryKey].push(item)
-                    return acc
-                }, {})
-                
-                if (!(key in listMap)) {
-                    return listMap
-                }
-                const { [key]: value, ...rest } = listMap
-                return { [key]: value, ...rest }
             },
          
             handleSort (preEleId, newEleId, isPrefix) {
@@ -252,7 +243,6 @@
                 this.paramType = type
             },
             handleEdit (paramId) {
-                if (!this.editable) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
@@ -366,7 +356,11 @@
             justify-content: space-between;
             .var-btn {
                 min-width: 88px;
+                width: -webkit-fill-available;
                 margin-right: 8px;
+            }
+            .search-input {
+                min-width: 215px;
             }
         }
         .variable-content {

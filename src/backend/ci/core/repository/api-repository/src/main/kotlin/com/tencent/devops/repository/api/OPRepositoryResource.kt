@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -120,6 +120,18 @@ interface OPRepositoryResource {
     @PUT
     @Path("updateRepoCredentialType")
     fun updateRepoCredentialType(
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "代码库ID", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "")
+    @PUT
+    @Path("updateRepoScmCode")
+    fun updateRepoScmCode(
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,

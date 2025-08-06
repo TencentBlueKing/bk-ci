@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -70,7 +70,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("custom-build-num")
     override var customBuildNum: String? = null,
     @JsonProperty("syntax-dialect")
-    override var syntaxDialect: String? = null
+    override var syntaxDialect: String? = null,
+    @JsonProperty("fail-if-variable-invalid")
+    override var failIfVariableInvalid: Boolean? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
@@ -92,7 +94,8 @@ data class PreTemplateScriptBuildYamlV3Parser(
             notices = notices,
             concurrency = concurrency,
             disablePipeline = disablePipeline,
-            syntaxDialect = syntaxDialect
+            syntaxDialect = syntaxDialect,
+            failIfVariableInvalid = failIfVariableInvalid
         )
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.event.annotation
 
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import org.springframework.context.annotation.Bean
 
 /**
@@ -41,5 +42,6 @@ import org.springframework.context.annotation.Bean
 annotation class EventConsumer(
     val anonymous: Boolean = false, // 匿名队列，每个实例均会消费
     val defaultConcurrency: Int = 5, // 并发数 ,默认为5, 可以在配置文件中使用bkScs.consumer.concurrency.$bindingName来覆盖
-    val groupName: String = "" // 默认使用${applicationName}-service
+    val groupName: String = "", // 默认使用${applicationName}-service
+    val type: RabbitQueueType = RabbitQueueType.QUORUM // 默认使用仲裁队列，如果是匿名则优先匿名
 )

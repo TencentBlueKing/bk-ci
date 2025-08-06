@@ -9,6 +9,7 @@ const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
     'zh-cn': '中文',
+    'ja-JP': '日本語',
     cn: '中文',
     'en-US': 'English',
     'en-us': 'English',
@@ -18,6 +19,8 @@ const localeLabelMap = {
 const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
+    'ja-JP': 'ja-JP',
+    ja: 'ja-JP',
     zh_CN: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
@@ -66,7 +69,18 @@ function getLsLocale () {
 }
 
 function setLsLocale (locale) {
-    const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
+    let formateLocale = 'zh-cn'
+    switch (localeAliasMap[locale]) {
+        case 'en-US':
+            formateLocale = 'en'
+            break
+        case 'ja-JP':
+            formateLocale = 'ja'
+            break
+        default:
+            formateLocale = 'zh-cn'
+            break
+    }
     if (typeof cookies.set === 'function') {
         const subDomains = getSubDoamin()
         subDomains.forEach(domain => {

@@ -42,7 +42,7 @@
             class="pipeline-history-right-aside"
         >
             <VersionDiffEntry
-                v-if="!isTemplatePipeline && !editAndExecutable"
+                v-if="!isTemplatePipeline && !editAndExecutable && !archiveFlag"
                 :text="false"
                 outline
                 :version="currentVersion"
@@ -51,7 +51,7 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
             <RollbackEntry
-                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline)"
+                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline) && !archiveFlag"
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
@@ -68,7 +68,7 @@
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
-                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion"
+                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion && !archiveFlag"
                 theme="primary"
                 outline
                 v-perm="{
@@ -102,7 +102,10 @@
             />
             <template v-else-if="!isTemplate">
                 <template v-if="editAndExecutable">
-                    <span v-bk-tooltips="tooltip">
+                    <span
+                        v-if="!archiveFlag"
+                        v-bk-tooltips="tooltip"
+                    >
                         <bk-button
                             :disabled="!executable"
                             theme="primary"
@@ -138,8 +141,8 @@
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
-    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import InstanceReleaseBtn from '@/components/Template/InstanceReleaseBtn.vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -267,6 +270,9 @@
             },
             canInstantiate () {
                 return this.releaseVersion === this.currentVersion || this.isBranchVersion
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -323,11 +329,13 @@
                 try {
                     if (this.currentVersion) {
                         this.setSwitchingPipelineVersion(true)
-                        await this.requestPipeline({
+                        const urlParams = {
                             projectId: this.projectId,
                             [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId,
-                            version: this.currentVersion
-                        })
+                            version: this.currentVersion,
+                            archiveFlag: this.archiveFlag
+                        }
+                        await this.requestPipeline(urlParams)
                     }
                 } catch (error) {
                     this.$bkMessage({

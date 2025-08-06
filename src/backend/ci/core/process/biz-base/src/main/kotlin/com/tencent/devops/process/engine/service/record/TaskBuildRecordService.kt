@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,11 +55,11 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress(
     "LongParameterList",
@@ -208,6 +208,12 @@ class TaskBuildRecordService(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, taskId = taskId, executeCount = executeCount
                 )
+                // 由于此处task启动的情况同时包含的手动重试和自动重试，并且是互补的。所以可得计算公式[总执行次数-自动重试次数=手动重试次数]
+                taskVar[Element::retryCount.name] = (recordTask.taskVar[Element::retryCount.name] as Int?)
+                    ?.plus(1) ?: 0
+                taskVar[Element::retryCountManual.name] = (taskVar[Element::retryCount.name] as Int?)
+                    ?.minus(recordTask.taskVar[Element::retryCountAuto.name] as Int? ?: 0)
+                    ?: 0
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -357,7 +363,7 @@ class TaskBuildRecordService(
         )
     }
 
-    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): Pair<List<PipelineTaskStatusInfo>, BuildRecordTask?> {
 
         val projectId = taskBuildEndParam.projectId
         val pipelineId = taskBuildEndParam.pipelineId
@@ -370,7 +376,7 @@ class TaskBuildRecordService(
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
         val executeCount = taskBuildEndParam.executeCount
-
+        var recordTaskReturn: BuildRecordTask? = null
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
@@ -392,6 +398,7 @@ class TaskBuildRecordService(
                     )
                     return@transaction
                 }
+                recordTaskReturn = recordTask
                 // 插件存在自动重试，永远更新一次当前时间为结束时间
                 recordTask.endTime = now
                 val taskVar = mutableMapOf<String, Any>()
@@ -428,6 +435,12 @@ class TaskBuildRecordService(
                 recordTask.generateTaskTimeCost()?.let {
                     taskVar[Element::timeCost.name] = it
                 }
+                // 自动重试时，retryCountAuto + 1
+                if (taskBuildEndParam.buildStatus == BuildStatus.RETRY) {
+                    taskVar[Element::retryCountAuto.name] =
+                        (recordTask.taskVar[Element::retryCountAuto.name] as Int?)?.plus(1) ?: 1
+                }
+                recordTask.taskVar.putAll(taskVar)
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -435,7 +448,7 @@ class TaskBuildRecordService(
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = executeCount,
-                    taskVar = recordTask.taskVar.plus(taskVar),
+                    taskVar = recordTask.taskVar,
                     buildStatus = buildStatus,
                     startTime = null,
                     endTime = now,
@@ -444,7 +457,7 @@ class TaskBuildRecordService(
             }
         }
 
-        return taskBuildDetailService.taskEnd(taskBuildEndParam)
+        return Pair(taskBuildDetailService.taskEnd(taskBuildEndParam), recordTaskReturn)
     }
 
     fun updateTaskRecord(

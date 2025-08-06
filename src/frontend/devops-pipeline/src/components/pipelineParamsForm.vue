@@ -10,7 +10,7 @@
         >
             <template v-if="sortCategory">
                 <renderSortCategoryParams
-                    v-for="(list, key) in renderParamList"
+                    v-for="key in sortedCategories"
                     :key="key"
                     :name="key"
                 >
@@ -222,32 +222,35 @@
                                     childrenOptions: this.getBranchOption(this.paramValues?.[param.id]?.['repo-name'])
                                 }
                                 : {}
-                        )
+                        ),
+                        // eslint-disable-next-line
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        
                     }
                 })
             },
-            renderParamList () {
-                // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
-                const key = this.$t('notGrouped')
-                const list = this.hideDeleted ? this.paramList.filter(i => !i.isDelete) : this.paramList
-                const listMap = list.reduce((acc, item) => {
-                    const categoryKey = item.category || key
-                    if (!acc[categoryKey]) {
-                        acc[categoryKey] = []
-                    }
-                    acc[categoryKey].push(item)
-                    return acc
-                }, {})
-                if (!(key in listMap)) {
-                    return listMap
-                }
-                const { [key]: value, ...rest } = listMap
-                return { [key]: value, ...rest }
+            paramsListMap () {
+                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+            },
+            sortedCategories () {
+                return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
             }
+            
         },
         methods: {
             isObject,
             getBranchOption,
+            isEqual (a, b) {
+                try {
+                    // hack: 处理 undefined 和 '' 的情况
+                    if (typeof a === 'undefined' && b === '') {
+                        return true
+                    }
+                    return String(a) === String(b)
+                } catch (error) {
+                    return false
+                }
+            },
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
                     return 'request-selector'

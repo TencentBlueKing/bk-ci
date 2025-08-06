@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineViewType
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
@@ -15,12 +16,15 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.pojo.PipelineYamlViewLock
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlViewService(
     private val dslContext: DSLContext,
     private val pipelineYamlViewDao: PipelineYamlViewDao,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineViewService: PipelineViewService,
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val redisOperation: RedisOperation
@@ -30,7 +34,7 @@ class PipelineYamlViewService(
         userId: String,
         projectId: String,
         repoHashId: String,
-        repoFullName: String,
+        aliasName: String,
         directoryList: Set<String>
     ) {
         PipelineYamlViewLock(
@@ -57,7 +61,7 @@ class PipelineYamlViewService(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = repoFullName,
+                    aliasName = aliasName,
                     directory = directory
                 )
             }
@@ -68,15 +72,14 @@ class PipelineYamlViewService(
         userId: String,
         projectId: String,
         repoHashId: String,
-        repoFullName: String,
+        aliasName: String,
         directory: String
     ) {
-        val path = repoFullName.substringAfterLast("/")
         val name = if (directory == Constansts.ciFileDirectoryName) {
-            path
+            aliasName
         } else {
-            "$path-${directory.removePrefix(".ci/")}"
-        }.coerceAtMaxLength(PipelineViewService.PIPELINE_VIEW_NAME_LENGTH_MAX)
+            "$aliasName-${directory.removePrefix(".ci/")}"
+        }.coerceAtMaxLength(PipelineViewService.YAML_PIPELINE_VIEW_NAME_LENGTH_MAX)
         val pipelineView = PipelineViewForm(
             name = name,
             projected = true,
@@ -90,20 +93,22 @@ class PipelineYamlViewService(
                 )
             )
         )
-        // 系统创建流水线组不需要校验权限
-        val viewHashId = pipelineViewGroupService.addViewGroup(
-            projectId = projectId,
-            userId = userId,
-            pipelineView = pipelineView,
-            checkPermission = false
-        )
-        pipelineYamlViewDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory = directory,
-            viewId = HashUtil.decodeIdToLong(viewHashId)
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            val viewId = pipelineViewService.addView(
+                userId = userId,
+                projectId = projectId,
+                pipelineView = pipelineView,
+                context = transactionContext
+            )
+            pipelineYamlViewDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory,
+                viewId = viewId
+            )
+        }
     }
 
     fun getPipelineYamlView(
@@ -141,5 +146,53 @@ class PipelineYamlViewService(
             repoHashId = repoHashId,
             directory = directory
         )
+    }
+
+    /**
+     * 删除空的流水线组
+     */
+    fun deleteEmptyYamlView(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        directory: String
+    ) {
+        PipelineYamlViewLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            repoHashId = repoHashId
+        ).use { lock ->
+            lock.lock()
+            val yamlPipelineCnt = pipelineYamlInfoDao.countYamlPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory
+            )
+            if (yamlPipelineCnt == 0L) {
+                logger.info("delete pipeline yaml view|$projectId|$repoHashId|$directory")
+                getPipelineYamlView(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    directory = directory
+                )?.let {
+                    pipelineViewGroupService.deleteViewGroup(
+                        projectId = projectId,
+                        userId = userId,
+                        viewIdEncode = HashUtil.encodeLongId(it.viewId),
+                        checkPac = false
+                    )
+                    deleteYamlView(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        directory = directory
+                    )
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineYamlViewService::class.java)
     }
 }

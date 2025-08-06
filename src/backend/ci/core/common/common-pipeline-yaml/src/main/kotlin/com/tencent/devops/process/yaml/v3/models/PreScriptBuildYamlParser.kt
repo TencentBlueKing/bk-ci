@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -58,6 +58,7 @@ interface PreScriptBuildYamlIParser : YamlVersionParser {
     val recommendedVersion: RecommendedVersion?
     val customBuildNum: String?
     val syntaxDialect: String?
+    val failIfVariableInvalid: Boolean?
 }
 
 /**
@@ -85,7 +86,8 @@ data class PreScriptBuildYamlParser(
     override val disablePipeline: Boolean? = null,
     override val recommendedVersion: RecommendedVersion? = null,
     override val customBuildNum: String? = null,
-    override val syntaxDialect: String?
+    override val syntaxDialect: String?,
+    override val failIfVariableInvalid: Boolean? = null
 ) : PreScriptBuildYamlIParser {
     override fun yamlVersion() = YamlVersion.V2_0
 }

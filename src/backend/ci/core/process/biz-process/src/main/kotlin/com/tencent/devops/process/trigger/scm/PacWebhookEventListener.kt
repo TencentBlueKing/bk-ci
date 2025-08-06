@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,7 +37,9 @@ import com.tencent.devops.process.yaml.PipelineYamlViewService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
+import com.tencent.devops.process.yaml.pojo.YamlFileActionType.CREATE
+import com.tencent.devops.process.yaml.pojo.YamlFileActionType.RENAME
+import com.tencent.devops.process.yaml.pojo.YamlFileActionType.UPDATE
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
@@ -138,7 +140,8 @@ class PacWebhookEventListener(
         yamlFileEvents: List<PipelineYamlFileEvent>
     ) {
         val directories = yamlFileEvents.filter {
-            it.actionType == YamlFileActionType.CREATE || it.actionType == YamlFileActionType.UPDATE
+            // 创建、更新、重命名事件
+            setOf(CREATE, UPDATE, RENAME).contains(it.actionType)
         }.map { GitActionCommon.getCiDirectory(it.filePath) }.toSet()
         if (directories.isNotEmpty()) {
             // 创建yaml流水线组
@@ -146,7 +149,7 @@ class PacWebhookEventListener(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repository.repoHashId!!,
-                repoFullName = repository.projectName,
+                aliasName = repository.aliasName,
                 directoryList = directories
             )
         }
