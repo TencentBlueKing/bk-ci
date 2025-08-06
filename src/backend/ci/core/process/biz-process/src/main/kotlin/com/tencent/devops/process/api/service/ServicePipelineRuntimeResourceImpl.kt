@@ -76,6 +76,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
                     errorCode = ERROR_NO_BUILD_EXISTS_BY_ID,
                     params = arrayOf(buildId)
                 )
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
                     source = "UpdateArtifactList",
@@ -83,6 +84,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId,
                     buildId = buildId,
+                    executeCount = buildInfo?.executeCount ?: 1,
                     refreshTypes = RefreshType.HISTORY.binary
                         or RefreshType.RECORD.binary
                         or RefreshType.DETAIL.binary
