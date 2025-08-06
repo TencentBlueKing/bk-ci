@@ -173,9 +173,10 @@ const actions = {
     /**
      * 生成构建机命令
      */
-    requestDevCommand ({ commit }, { projectId, model, zoneName }) {
-        const urls = zoneName ? `${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateLink?zoneName=${zoneName}` : `${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateLink`
-        return vue.$ajax.get(urls).then(response => {
+    requestDevCommand ({ commit }, { projectId, model, params }) {
+        const queryString = new URLSearchParams(params).toString()
+
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateBatchInstallLink?${queryString}`).then(response => {
             return response
         })
     },

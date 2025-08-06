@@ -86,11 +86,13 @@ class RepositoryCheckService @Autowired constructor(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository
     ) {
-        val opts = BranchListOptions.builder().page(1).pageSize(1).build()
         scmApiManager.listBranches(
             providerProperties = providerProperties,
             providerRepository = providerRepository,
-            opts = opts
+            opts = BranchListOptions(
+                page = 1,
+                pageSize = 1
+            )
         )
     }
 

@@ -186,7 +186,9 @@ object CommonMessageCode {
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
     const val ERROR_VARIABLE_NOT_FOUND = "2100137" // SVN Token 为空, 请检查代码库的凭证类型
+    const val CUSTOM_MESSAGE_EXCEPTION = "2100138" // 自定义错误信息异常
     const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2100139" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
+    const val ERROR_USER_NOT_EXIST_IN_PROJECT = "2100140" // 项目{0}中不存在用户{1}
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 

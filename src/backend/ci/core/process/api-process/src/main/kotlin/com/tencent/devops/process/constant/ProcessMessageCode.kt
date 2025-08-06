@@ -393,6 +393,7 @@ object ProcessMessageCode {
     // URL[{0}]中存在高危端口号
     const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101286"
 
+    const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

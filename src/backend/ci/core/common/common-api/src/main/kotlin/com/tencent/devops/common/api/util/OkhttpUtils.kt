@@ -44,6 +44,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import okhttp3.ConnectionPool
+import okhttp3.Dns
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -55,6 +56,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.util.FileCopyUtils
+import java.net.InetAddress
 import java.net.URL
 
 @SuppressWarnings("ALL")
@@ -125,6 +127,23 @@ object OkhttpUtils {
         .writeTimeout(writeTimeout, TimeUnit.SECONDS)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .followRedirects(false)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
+    fun genOkHttpClientSupDns(host: String, ips: Set<String>) = OkHttpClient.Builder()
+        .dns(object : Dns {
+            override fun lookup(hostname: String): List<InetAddress> {
+                return if (hostname == host) {
+                    ips.map { InetAddress.getByName(it) }.toList()
+                } else {
+                    Dns.SYSTEM.lookup(hostname)
+                }
+            }
+        })
+        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(readTimeout, TimeUnit.SECONDS)
+        .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
         .build()
 

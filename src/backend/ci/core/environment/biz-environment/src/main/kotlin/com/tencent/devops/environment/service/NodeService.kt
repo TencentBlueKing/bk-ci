@@ -822,7 +822,13 @@ class NodeService @Autowired constructor(
             .setInstance(displayName)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.updateDisplayName(dslContext = context, nodeId = nodeId, nodeName = displayName, userId = userId)
+            nodeDao.updateDisplayName(
+                dslContext = context,
+                nodeId = nodeId,
+                nodeName = displayName,
+                userId = userId,
+                projectId = projectId
+            )
             if (nodeInDb.displayName != displayName) {
                 environmentPermissionService.updateNode(userId, projectId, nodeId, displayName)
             }
