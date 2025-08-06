@@ -1,6 +1,6 @@
 <template>
     <constraint-wraper
-        classify="settingGroups"
+        :classify="CLASSIFY_ENUM.SETTING"
         field="notices"
         :label="$t('notifyConf')"
         :show-constraint-area-bg="false"
@@ -157,6 +157,7 @@
 <script>
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
+    import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { deepCopy } from '@/utils/util'
     import { mapActions } from 'vuex'
 
@@ -200,6 +201,7 @@
         },
         data () {
             return {
+                CLASSIFY_ENUM,
                 showSlider: false,
                 sliderEditItem: {},
                 editType: '', // 当前编辑通知类型，成功或失败

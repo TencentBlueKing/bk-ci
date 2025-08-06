@@ -48,7 +48,7 @@
             
             <bk-form-item :required="false">
                 <constraint-wraper
-                    classify="settingGroups"
+                    :classify="CLASSIFY_ENUM.SETTING"
                     field="labels"
                 >
                     <template v-slot:constraint-title>
@@ -140,6 +140,7 @@
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import Logo from '@/components/Logo'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
+    import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { mapGetters, mapState } from 'vuex'
 
@@ -163,6 +164,7 @@
         },
         data () {
             return {
+                CLASSIFY_ENUM,
                 settings: {}
             }
         },

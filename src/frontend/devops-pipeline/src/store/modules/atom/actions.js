@@ -1100,8 +1100,9 @@ export default {
     setTemplateStrategy (_, { projectId, templateId, ...strategy }) {
         return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`, strategy)
     },
-    revertPipelineConstraint (_, { projectId, pipelineId, version }) {
-        return request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version}/related/detail`)
+    async revertPipelineConstraint (_, { projectId, pipelineId, version }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version}/related/details`)
+        return res.data
     }
 
 }
