@@ -391,7 +391,7 @@ object ProcessMessageCode {
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
     // URL[{0}]中存在高危端口号
-    const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101186"
+    const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101286"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

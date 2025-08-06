@@ -123,12 +123,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
             logger.warn("$projectId|callback url Invalid")
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
-        if (blackPorts.contains(OkhttpUtils.getPort(url) ?: -1)) {
+        val port = OkhttpUtils.getPort(url) ?: -1
+        if (blackPorts.contains(port)) {
             // url 存在高危端口号
             logger.warn("url[$url] with high-risk port detected")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT,
-                params = arrayOf(url)
+                params = arrayOf(port.toString())
             )
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
