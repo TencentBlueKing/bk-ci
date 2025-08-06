@@ -123,7 +123,8 @@ class RemotedevBkRepoClient @Autowired constructor(
         try {
             return if (!config.dnsIp.isNullOrBlank()) {
                 val ips = config.dnsIp.split(";").filter { it.isNotBlank() }.map { it.trim() }.toSet()
-                val client = OkhttpUtils.genOkHttpClientSupDns(config.url, ips)
+                val client =
+                    OkhttpUtils.genOkHttpClientSupDns(config.url.removePrefix("http://").removePrefix("https://"), ips)
                 client.newCall(request).execute()
             } else {
                 OkhttpUtils.doHttp(request)
