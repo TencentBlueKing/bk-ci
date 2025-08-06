@@ -131,7 +131,7 @@ export default function useTemplateConstraint () {
     async function revertTemplateConstraint (classify, field) {
         try {
             reverting.value = true
-            const templateRes = await vm.proxy.$store.dispatch('atom/requestTemplateConstraint', vm.proxy.$route.params)
+            const templateRes = await vm.proxy.$store.dispatch('atom/revertPipelineConstraint', vm.proxy.$route.params)
             partialRevert({
                 model: templateRes.resource.model,
                 setting: templateRes.setting
