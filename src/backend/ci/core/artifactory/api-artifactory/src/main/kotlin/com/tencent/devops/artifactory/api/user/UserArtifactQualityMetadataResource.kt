@@ -18,6 +18,7 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_ARTIFACTORY_QUALITY_METADATA", description = "USER-制品质量元数据")
@@ -62,6 +63,9 @@ interface UserArtifactQualityMetadataResource {
         @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @Parameter(description = "是否获取调试数据", required = true)
+        @QueryParam("debug")
+        debug: Boolean?
     ): Result<List<MetadataLabelDetail>>
 
     @Operation(summary = "获取项目制品质量元数据标签")

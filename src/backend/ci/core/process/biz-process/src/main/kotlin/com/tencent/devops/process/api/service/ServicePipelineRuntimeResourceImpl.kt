@@ -31,22 +31,22 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILED
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineRuntimeResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val webSocketDispatcher: WebSocketDispatcher,
-    private val pipelineWebsocketService: PipelineWebsocketService,
-    private val pipelineArtifactQualityService: PipelineArtifactQualityService
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : ServicePipelineRuntimeResource {
 
     override fun updateArtifactList(
@@ -76,18 +76,18 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
                     errorCode = ERROR_NO_BUILD_EXISTS_BY_ID,
                     params = arrayOf(buildId)
                 )
-
-            webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildHistoryMessage(
-                    buildId = buildId,
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "UpdateArtifactList",
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    userId = userId
+                    userId = userId,
+                    buildId = buildId,
+                    refreshTypes = RefreshType.HISTORY.binary or RefreshType.RECORD.binary
                 )
             )
             return Result(buildHistory)
         }
-
         throw ErrorCodeException(
             errorCode = ERROR_UPDATE_FAILED,
             params = arrayOf(buildId)
