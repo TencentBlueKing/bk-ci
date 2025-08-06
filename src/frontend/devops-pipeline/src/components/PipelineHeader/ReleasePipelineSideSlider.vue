@@ -34,7 +34,6 @@
                 <template v-else>
                     {{ isInstanceCreateType ? $t('template.releasePipelineInstance') : $t('template.updatePipelineInstance') }}
                     <bk-popover
-                        v-if="!isInstanceCreateType"
                         theme="light"
                         :tippy-options="{
                             arrow: false,
@@ -109,6 +108,7 @@
                             </bk-radio-group>
                         </aside>
                     </div>
+                   
                     <bk-form
                         v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
                         label-width="auto"
@@ -119,6 +119,17 @@
                         class="release-pipeline-pac-setting"
                         error-display-type="normal"
                     >
+                        <bk-form-item
+                            v-if="isTemplate && !isTemplateInstanceMode"
+                            :label="$t('template.customVersionName')"
+                            property="customVersionName"
+                        >
+                            <bk-input
+                                v-model="releaseParams.customVersionName"
+                                :maxlength="50"
+                            >
+                            </bk-input>
+                        </bk-form-item>
                         <div v-if="releaseParams.enablePac && hasOauth">
                             <header
                                 @click="togglePacCodelibSettingForm"
@@ -488,7 +499,8 @@
                     filePath: '',
                     scmType: '',
                     description: '',
-                    repoHashId: ''
+                    repoHashId: '',
+                    customVersionName: ''
                 },
                 newReleaseVersionNameList: []
             }
@@ -613,13 +625,15 @@
                     targetBranch,
                     targetAction,
                     repoHashId,
-                    enablePac
+                    enablePac,
+                    customVersionName
                 } = this.releaseParams
                 return {
                     targetBranch,
                     targetAction,
                     repoHashId,
-                    enablePac
+                    enablePac,
+                    customVersionName
                 }
             },
             templateInstanceEnablePac () {
@@ -910,6 +924,7 @@
                             scmType,
                             filePath,
                             targetAction,
+                            customVersionName,
                             ...rest
                         } = this.releaseParams
                         const {
@@ -919,6 +934,7 @@
                             version: this.version,
                             params: {
                                 ...rest,
+                                customVersionName,
                                 ...(rest.enablePac
                                     ? {
                                         targetAction
@@ -1337,7 +1353,6 @@
         }
     }
 }
-
 .yaml-info-codelib-label {
     position: relative;
     font-size: 12px;

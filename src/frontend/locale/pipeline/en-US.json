@@ -437,8 +437,16 @@
     "previewDiff": "Arrange Preview",
     "templateInstantiation": "Instantiate Templates",
     "templateVersion": "Template Version",
-    "applyTemplateSetting": "Apply template settings simultaneously",
-    "applyTemplateSettingTips": "After application, the instance's tags, run settings, notifications and other settings will be consistent with the template.",
+    "applyTemplateSettingTips": {
+      "create": {
+        "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other setting information will be initialized using template settings",
+        "tips2": "● If not checked, the instance settings will be set to default values"
+      },
+      "update": {
+        "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other settings information will be updated using the current settings of the selected template",
+        "tips2": "● If not checked, the instance settings will remain unchanged from before the update"
+      }
+    },
     "applySettingTips": "When ticked, the template settings will be applied to instantiated pipelines",
     "newPipelineName": "Name of Instantiated Pipeline",
     "addPipelineInstance": "New Instance",
@@ -608,7 +616,13 @@
       "updated": "Update Successful",
       "failed": "Update Failed"
     },
-    "failedReason": "failure reason"
+    "failedReason": "失败原因",
+    "referenceById": "Reference through template ID",
+    "referenceByPath": "Reference through code repository ref",
+    "referenceByPathTips": "When both the template and instance have PAC mode enabled, they can be referenced through the code repository ref",
+    "branch": "Branch",
+    "commit": "Commit",
+    "Example": "Example"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

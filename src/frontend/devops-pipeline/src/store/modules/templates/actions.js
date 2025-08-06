@@ -143,6 +143,16 @@ const actions = {
     // 获取实例化发布状态（轮询）
     fetchReleaseTaskStatus ({ commit }, { projectId, baseId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/result`)
+    },
+    // 根据引用查看模版详
+    fetchTemplateByRef ({ commit }, { projectId, templateId, ref }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/ref/details?ref=${ref}`).then(res => {
+            commit(SET_TEMPLATE_DETAIL, {
+                templateDetail: res.data,
+                templateVersion: ''
+            })
+            return res.data
+        })
     }
 }
 

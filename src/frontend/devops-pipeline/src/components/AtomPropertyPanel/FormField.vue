@@ -82,11 +82,19 @@
                 type: Boolean,
                 default: false
             },
+            isFollowTemplate: {
+                type: Boolean,
+                default: false
+            },
             handleUseDefaultValue: {
                 type: Function,
                 default: () => () => {}
             },
             handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
             }
@@ -119,7 +127,8 @@
             const {
                 label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink,
                 descLink, descLinkText, type, widthStyle, bottomDivider, customDesc, showOperateBtn,
-                statusTagConfig, isDelete, isChange, isRequiredParam, $t, handleSetParmaRequired, handleUseDefaultValue
+                statusTagConfig, isDelete, isChange, isRequiredParam, isFollowTemplate, $t, handleSetParmaRequired,
+                handleUseDefaultValue, handleFollowTemplate
             } = this
             const descMap = desc.split('\n')
             return (
@@ -198,6 +207,23 @@
                             >
                                 <Logo
                                     name={isRequiredParam ? 'set-param-active' : 'set-param-default'}
+                                    size="14"
+                                />
+                            </span>
+                            <span class={['icon-item', {
+                                    active: isFollowTemplate
+                                }]}
+                                key={'follow'}
+                                v-bk-tooltips={
+                                    {
+                                        content: isFollowTemplate ? $t('template.notFollowTemplateTips') : $t('template.followTemplateTips'),
+                                        width: 320
+                                    }
+                                }
+                                onClick={handleFollowTemplate}
+                            >
+                                <Logo
+                                    name={isFollowTemplate ? 'template-mode-color' : 'template-mode'}
                                     size="14"
                                 />
                             </span>
@@ -304,7 +330,6 @@
         visibility: hidden;
         height: 32px;
         .icon-item {
-            position: relative;
             position: relative;
             display: flex;
             align-items: center;

@@ -1,8 +1,28 @@
 <template>
     <section
-        class="instance-config-wrapper"
+        :class="{
+            'instance-config-wrapper': true,
+            'has-ref-tips': !templateRefTypeById
+        }"
         v-bkloading="{ isLoading: isLoading }"
     >
+        <bk-alert
+            v-if="!templateRefTypeById"
+            closable
+            type="warning"
+        >
+            <div slot="title">
+                <p>
+                    {{ $t('template.notSpecifiedRef.tips1') }}
+                    <span class="doc-btn">
+                        {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
+                    </span>
+                </p>
+                <p>
+                    {{ $t('template.notSpecifiedRef.tips2') }}
+                </p>
+            </div>
+        </bk-alert>
         <section class="instance-config-constant">
             <header class="config-header">
                 <div class="left">
@@ -12,7 +32,7 @@
                 </div>
                 <div
                     class="right"
-                    v-if="!isInstanceCreateType && !!curTemplateVersion"
+                    v-if="!isInstanceCreateType && (!!curTemplateVersion || !!templateRef)"
                 >
                     <ul class="params-compare-content">
                         <bk-checkbox
@@ -78,6 +98,9 @@
                                     <renderSortCategoryParams
                                         :name="$t('preview.introVersion')"
                                         default-layout
+                                        show-follow-template-btn
+                                        key="introVersion"
+                                        :handle-follow-template="handleFollowTemplate"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -85,10 +108,11 @@
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
                                                 is-instance
-                                                is-init-instance
+                                                :is-reset-build-no="isResetBuildNo"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
+                                                :handle-check-change="handleCheckChange"
                                                 :version-param-list="versionParams"
                                             />
                                         </template>
@@ -191,6 +215,44 @@
                         </div>
                     </section>
                 </template>
+
+                <template>
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(4)
+                            }]"
+                            @click="toggleCollapse(4)"
+                        >
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+    
+                            {{ $t('template.triggers') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(4)"
+                            class="params-collapse-content"
+                        >
+                            <renderSortCategoryParams
+                                v-for="(trigger, index) in triggerConfigs"
+                                :key="index"
+                                :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
+                                default-layout
+                                show-follow-template-btn
+                                display-key="trigger"
+                                :handle-follow-template="handleFollowTemplate"
+                            >
+                                <template slot="content">
+                                    <render-trigger
+                                        :trigger="trigger"
+                                    />
+                                </template>
+                            </renderSortCategoryParams>
+                        </div>
+                    </section>
+                </template>
             </div>
         </section>
         <footer
@@ -211,6 +273,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
+    import RenderTrigger from '@/components/Template/RenderTrigger.vue'
     import UseInstance from '@/hook/useInstance'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
@@ -226,6 +289,7 @@
     const isLoading = ref(true)
     const paramsList = ref([])
     const paramsValues = ref({})
+    const triggerConfigs = ref([])
     const otherParams = ref([])
     const otherValues = ref({})
     const constantParams = ref([])
@@ -234,6 +298,10 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
+    const isResetBuildNo = ref(false)
+    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
+    const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
+    const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
@@ -254,11 +322,11 @@
         // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
         let instanceParams, instanceBuildNo
         if (!props.isInstanceCreateType && instance) {
-            if (instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params) {
+            if (instance?.param && (curTemplateVersion.value || templateRef.value) && curTemplateDetail.value?.params) {
                 instanceParams = compareParams(instance, curTemplateDetail.value)
             }
-            if (instance?.buildNo && curTemplateVersion.value && curTemplateDetail.value?.buildNo) {
-                instanceBuildNo = compareBuild(instance.buildNo, curTemplateDetail.value.buildNo)
+            if (instance && (curTemplateVersion.value || templateRef.value) && curTemplateDetail.value?.buildNo) {
+                instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
         }
         if (instanceParams || instanceBuildNo) {
@@ -321,7 +389,7 @@
         return buildNo.value?.required
     })
     const hasOtherParams = computed(() => {
-        if (isVisibleVersion.value) {
+        if (!isVisibleVersion.value) {
             return [...otherParams.value, ...versionParams.value].length
         }
         return otherParams.value.length
@@ -341,7 +409,7 @@
     }, {
         deep: true
     })
-    watch(() => curTemplateVersion.value, () => {
+    watch(() => [curTemplateVersion.value, templateRef.value], () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
@@ -427,7 +495,7 @@
                 ...curInstance.value,
                 param: curInstance.value?.param.map(p => ({
                     ...p,
-                    isRequiredParam: !p.isRequiredParam
+                    isRequiredParam: p.id === id ? !p.isRequiredParam : p.isRequiredParam
                 }))
             }
         })
@@ -494,6 +562,38 @@
             }
         })
     }
+    function handleCheckChange (value) {
+        isResetBuildNo.value = value
+        if (!value) return
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                buildNo: {
+                    ...curInstance.value?.buildNo,
+                    currentBuildNo: curInstance.value.buildNo?.buildNo
+                }
+            }
+        })
+    }
+    /**
+     *
+     * @param key 区分 推荐版本号/流水线参数/触发器
+     * @param id 流水线参数 - id | 触发器 - stepId
+     */
+    function handleFollowTemplate (key, id) {
+        switch (key) {
+            case 'introVersion':
+                console.log('introVersion')
+                break
+
+            case 'trigger':
+                console.log('trigger')
+                break
+            default:
+                break
+        }
+    }
     function initData () {
         const params = curInstance.value?.param
         if (!params) return
@@ -514,6 +614,15 @@
             isChanged: p.defaultValue !== p.value
         }))
         buildNo.value = curInstance.value?.buildNo || {}
+        triggerConfigs.value = curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
+            atomCode: i.atomCode,
+            stepId: i.stepId,
+            disabled: i.additionalOptions?.enable ?? true,
+            cron: i.advanceExpression,
+            variables: i.startParams,
+            name: i.name,
+            version: i.version
+        }))
         getParamsValue()
         setTimeout(() => {
             isLoading.value = false
@@ -525,6 +634,13 @@
     $header-height: 36px;
     .instance-config-wrapper {
         height: calc(100% - 148px);
+        &.has-ref-tips {
+            height: calc(100% - 188px);
+        }
+        .doc-btn {
+            color: #3a84ff;
+            cursor: pointer;
+        }
     }
     .instance-config-constant {
         height: 100%;
@@ -651,5 +767,6 @@
         padding: 0 20px;
         background: #FFFFFF;
         border: 1px solid #DCDEE5;
+        z-index: 100;
     }
 </style>

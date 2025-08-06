@@ -9,7 +9,7 @@
             v-bkloading="{ isLoading: fetchingAtmoModal }"
         >
             <form-field
-                v-if="atom && !isTriggerContainer(container)"
+                v-if="atom"
                 :desc="$t('editPage.stepIdDesc')"
                 label="Step ID"
                 :is-error="errors.has('stepId')"

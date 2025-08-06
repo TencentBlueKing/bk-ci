@@ -155,7 +155,8 @@
                             :value="buildNo.currentBuildNo"
                             :handle-change="handleBuildNoChange"
                             :class="{
-                                'is-diff-param': highlightChangedParam && buildNo.isChanged
+                                'is-diff-param': highlightChangedParam && buildNo.isChanged,
+                                'is-change-param': isResetBuildNo
                             }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
@@ -222,6 +223,7 @@
             isInitInstance: Boolean,
             resetBuildNo: Boolean,
             highlightChangedParam: Boolean,
+            isResetBuildNo: Boolean,
             versionParamList: {
                 type: Array,
                 default: () => []

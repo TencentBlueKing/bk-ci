@@ -228,7 +228,9 @@
         }
         if (!props.isInstanceCreateType) {
             fetchPipelinesDetails()
-            handleInstanceClick(instanceActiveIndex.value)
+            proxy.$nextTick(() => {
+                handleInstanceClick(instanceActiveIndex.value)
+            })
         }
     }
     function handleBatchEdit () {

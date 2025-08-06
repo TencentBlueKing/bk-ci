@@ -21,13 +21,13 @@
                     </bk-button>
                     <span
                         v-bk-tooltips="{
-                            disabled: !!templateVersion,
+                            disabled: templateRefTypeById ? !!templateVersion : !!templateRef,
                             content: $t('template.disabledReleaseTips')
                         }"
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="!templateVersion"
+                            :disabled="templateRefTypeById ? !templateVersion : !templateRef"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}
@@ -88,11 +88,13 @@
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import BatchEditConfig from './BatchEditConfig'
     import UseInstance from '@/hook/useInstance'
-    import { computed, onMounted, ref, watch } from 'vue'
+    import { computed, onMounted, ref, watch, onBeforeUnmount } from 'vue'
     import {
         SET_INSTANCE_LIST,
         SET_RELEASE_ING,
-        SET_RELEASE_BASE_ID
+        SET_RELEASE_BASE_ID,
+        UPDATE_TEMPLATE_REF,
+        UPDATE_TEMPLATE_REF_TYPE
     } from '@/store/modules/templates/constants'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
@@ -113,6 +115,10 @@
     const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
+    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
+    const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
+    const templateRefTypeById = computed(() => templateRefType.value === 'ID')
+
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type ?? 'create'
         const textMap = {
@@ -193,6 +199,8 @@
                 templateId: templateId.value,
                 version: templateVersion.value,
                 params: {
+                    templateRefType: templateRefType.value,
+                    templateRef: templateRef.value,
                     useTemplateSettings: useTemplateSettings.value,
                     instanceReleaseInfos,
                     ...value
@@ -221,6 +229,10 @@
     }
     onMounted(() => {
         requestTemplateByVersion()
+    })
+    onBeforeUnmount(() => {
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, 'ID')
     })
 </script>
 

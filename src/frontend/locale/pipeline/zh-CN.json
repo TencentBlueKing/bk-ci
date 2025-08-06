@@ -432,7 +432,16 @@
     "templateInstantiation": "模板实例化",
     "templateVersion": "模板版本",
     "applyTemplateSetting": "同时应用模板设置",
-    "applyTemplateSettingTips": "应用后，实例的标签、运行设置、通知等设置信息将和模版保持一致，",
+    "applyTemplateSettingTips": {
+      "create": {
+        "tips1": "● 勾选后，实例的标签、描述、运行设置、通知等设置信息，将使用模版设置进行初始化",
+        "tips2": "● 若不勾选，实例的设置为缺省值"
+      },
+      "update": {
+        "tips1": "● 勾选后，实例的标签、描述、运行设置、通知等设置信息，将使用所选模版的当前设置进行更新",
+        "tips2": "● 若不勾选，实例的设置维持更新前的设置不变"
+      }
+    },
     "templateVersionErrTips": "请先选择模板版本",
     "notificationSetting": "通知设置",
     "parallelSetting": "并发策略",
@@ -614,7 +623,26 @@
       "updated": "更新成功",
       "failed": "更新失败"
     },
-    "failedReason": "失败原因"
+    "failedReason": "失败原因",
+    "referenceById": "通过模板ID引用",
+    "referenceByPath": "通过代码库ref引用",
+    "referenceByPathTips": "模板和实例都开启了 PAC 模式时，可以通过代码库 ref 引用",
+    "branch": "分支",
+    "commit": "提交",
+    "Example": "如",
+    "notSpecifiedRef": {
+      "tips1": "未指定 ref 时，实例编排根据触发方式有所不同，请查看",
+      "tips2": "如下入参填写界面，拉取的是默认分支的入参；push、tag 等方式触发时，入参可能不同，请谨慎使用缺省 ref 的方式。",
+      "arrangingValueStrategy": "编排取值策略"
+    },
+    "followTemplateTips": "切换为跟随模板：<br/>升级实例时，若模版新版本修改了变量默认值，实例将自动跟随模版变更默认值，以模版为准。",
+    "notFollowTemplateTips": "取消跟随模板：<br/>升级实例时，不自动跟随模版变更默认值，按需手动修改。",
+    "customVersionName": "版本名称",
+    "triggers": "触发器",
+    "triggerEnabled": "是否启用",
+    "enable": "启用",
+    "close": "不启用",
+    "timeCron": "定时规则"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
