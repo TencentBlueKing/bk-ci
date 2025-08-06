@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
-import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -65,9 +64,6 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "zoneType", required = false)
-        @QueryParam("zoneType")
-        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据")
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -144,6 +140,7 @@ interface OpProjectWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     )
+
     @Operation(summary = "分配云桌面拥有者和共享人")
     @POST
     @Path("/assign_user")

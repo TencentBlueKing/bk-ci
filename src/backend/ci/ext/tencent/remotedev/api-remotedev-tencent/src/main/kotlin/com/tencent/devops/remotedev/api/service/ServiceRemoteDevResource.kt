@@ -186,9 +186,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
-        @Parameter(description = "zoneType", required = false)
-        @QueryParam("zoneType")
-        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
