@@ -32,6 +32,9 @@ spec:
             - "-c"
             - |
               sh -x turbo-op-ci.sh scene add cc;
+              # 生成jwt_token
+              chmod +x ../../scripts/bk-ci-gen-jwt-token.sh
+              JWT_TOKEN=$(../../scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-turbo")
               curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{    
                 "showProjectList": true,
                 "showNav": true,
@@ -41,7 +44,7 @@ spec:
                 "linkNew": "/turbo/",
                 "css_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.css",
                 "js_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.js" 
-              }' "http://{{ include "bkci.names.fullname" . }}-project/api/op/services/update/Turbo"
+              }' "http://{{ include "bkci.names.fullname" . }}-project/api/op/services/update/Turbo" -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
       restartPolicy: Never
 {{- end -}}
 {{- end -}}
