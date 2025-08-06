@@ -50,8 +50,7 @@ class ServiceSecurityAutoConfiguration {
     companion object {
         const val JWT_MANAGER_SCHEDULER = "jwtManagerScheduler"
     }
-
-
+    
     @Value("\${bkci.security.public-key:#{null}}")
     private val publicKey: String? = null
 
