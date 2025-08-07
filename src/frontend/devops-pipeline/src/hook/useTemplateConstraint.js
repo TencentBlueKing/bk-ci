@@ -33,8 +33,7 @@ export default function useTemplateConstraint () {
     const instanceFromTemplate = computed(() => vm.proxy.$store.getters['atom/instanceFromTemplate'])
 
     function isOverrideTemplate (classify, field) {
-        if (!instanceFromTemplate.value) return true
-        
+        if (!instanceFromTemplate.value) return vm.proxy.$route.meta.edit
         return vm.proxy.$route.meta.edit && overrideTemplateGroups.value[classify]?.includes(field)
     }
 
