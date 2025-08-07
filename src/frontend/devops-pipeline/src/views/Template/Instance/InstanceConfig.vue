@@ -256,7 +256,6 @@
                                 :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
                             >
                                 <template slot="content">
-                                    {{ trigger }}
                                     <render-trigger
                                         :trigger="trigger"
                                         :index="index"

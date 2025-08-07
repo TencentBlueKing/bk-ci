@@ -194,7 +194,7 @@
                                     >
                                         <Logo
                                             name="use-default"
-                                            size="20"
+                                            size="18"
                                         />
                                     </span>
                                 )
@@ -209,7 +209,7 @@
                             >
                                 <Logo
                                     name={isRequiredParam ? 'set-param-active' : 'set-param-default'}
-                                    size="14"
+                                    size="12"
                                 />
                             </span>
                             <span class={['icon-item', {
@@ -226,7 +226,7 @@
                             >
                                 <Logo
                                     name="template-mode"
-                                    size="14"
+                                    size="12"
                                 />
                             </span>
                         </span>
@@ -339,8 +339,8 @@
             display: flex;
             align-items: center;
             justify-content: space-around;
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             background: #EAEBF0;
             border-radius: 2px;
             margin-left: 6px;
