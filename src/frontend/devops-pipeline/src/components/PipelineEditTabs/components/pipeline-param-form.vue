@@ -135,6 +135,7 @@
                     <SubParameter
                         :title="$t('editPage.displayCondition')"
                         name="displayCondition"
+                        :disabled="disabled"
                         :param="displayConditionList"
                         v-bind="displayConditionSetting"
                         :handle-change="handleUpdateDisplayCondition"

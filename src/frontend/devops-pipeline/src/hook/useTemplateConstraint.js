@@ -35,7 +35,7 @@ export default function useTemplateConstraint () {
     function isOverrideTemplate (classify, field) {
         if (!instanceFromTemplate.value) return true
         
-        return overrideTemplateGroups.value[classify]?.includes(field)
+        return vm.proxy.$route.meta.edit && overrideTemplateGroups.value[classify]?.includes(field)
     }
 
     function partialRevertPipelineSetting (setting, field) {

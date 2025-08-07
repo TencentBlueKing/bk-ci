@@ -34,6 +34,7 @@
                 <pipeline-param
                     v-if="active === 'pipeline'"
                     :editable="editable"
+                    :can-edit-param="canEditParam"
                     :params="params"
                     :update-container-params="handleContainerChange"
                 />
@@ -81,6 +82,10 @@
                 required: true
             },
             editable: {
+                type: Boolean,
+                default: true
+            },
+            canEditParam: {
                 type: Boolean,
                 default: true
             },
