@@ -25,23 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.shardingprocess.p3
+package com.tencent.devops.misc.pojo
 
-import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-@Service
-class Process3ShardingDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext?
-) : ProcessShardingDataClearService() {
+@ConfigurationProperties(prefix = "spring.datasource.process")
+data class ProcessShardingDataSourceProperties(
+    // 使用可变Map接收动态分片配置
+    var sharding: Map<String, DataSourceConfig> = emptyMap()
+)
 
-    override fun getDSLContext(): DSLContext? {
-        return dslContext
-    }
-
-    override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_2" && dslContext != null
-    }
-}
+data class DataSourceConfig(
+    var url: String = "",
+    var username: String = "",
+    var password: String = "",
+    var initSql: String? = null,
+    var leakDetectionThreshold: Long = 0
+)

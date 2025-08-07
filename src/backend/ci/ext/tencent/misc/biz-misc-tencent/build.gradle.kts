@@ -32,6 +32,7 @@ dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":ext:tencent:misc:api-misc-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
 }
