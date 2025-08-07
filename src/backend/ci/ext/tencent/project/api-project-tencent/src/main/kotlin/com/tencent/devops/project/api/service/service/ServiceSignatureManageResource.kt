@@ -60,7 +60,7 @@ interface ServiceSignatureManageResource {
     ): Result<UserSignatureStatusResponse>
 
     @GET
-    @Path("/{projectId}/getSignatureStatus")
+    @Path("/{projectId}/project/getSignatureStatus")
     @Operation(summary = "获取状态")
     fun getSignatureStatus(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
