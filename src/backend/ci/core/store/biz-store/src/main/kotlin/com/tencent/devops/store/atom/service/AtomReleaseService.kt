@@ -110,4 +110,6 @@ interface AtomReleaseService {
     fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean>
 
     fun updateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String)
+
+    fun getAtomGitRecentCommitMessage(userId: String, branch: String, codeSrc: String): Result<String>
 }

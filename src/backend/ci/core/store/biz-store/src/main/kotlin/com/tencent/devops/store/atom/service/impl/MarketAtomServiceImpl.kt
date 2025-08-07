@@ -68,12 +68,9 @@ import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.atom.dao.AtomApproveRelDao
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
@@ -138,14 +135,11 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
-import com.tencent.devops.store.pojo.common.USE_REPO_COMMITS_FOR_RELEASE_NOTES
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -245,9 +239,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var redisOperation: RedisOperation
-
-    @Autowired
-    lateinit var atomReleaseService: AtomReleaseServiceImpl
 
     @Autowired
     lateinit var client: Client
@@ -845,13 +836,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     version = version,
                     atomStatus = atomStatus,
                     releaseType = releaseType?.name,
-                    versionContent = getReleaseNotes(
-                        projectCode = projectCode,
-                        atomCode = atomCode,
-                        record = record,
-                        repositoryHashId = repositoryHashId,
-                        userId = userId
-                    ) ?: record[tAtomVersionLog.CONTENT],
+                    versionContent = record[tAtomVersionLog.CONTENT],
                     language = defaultAtomEnvRecord?.language?.let { I18nUtil.getCodeLanMessage(it) },
                     codeSrc = record[tAtom.CODE_SRC],
                     publisher = record[tAtom.PUBLISHER] as String,
@@ -1639,75 +1624,5 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } catch (e: Exception) {
             logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", e)
         }
-    }
-
-    private fun getReleaseNotes(
-        projectCode: String?,
-        atomCode: String,
-        record: Record,
-        repositoryHashId: String?,
-        userId: String
-    ): String? {
-        val tAtom = TAtom.T_ATOM
-        val atomStatusValue = (record[tAtom.ATOM_STATUS] as Byte).toInt()
-        val atomStatus = AtomStatusEnum.getAtomByStatus(atomStatusValue)
-        val atomVersion = record[tAtom.VERSION] as String
-        val branch = record[tAtom.BRANCH] as String
-        val codeSrc = record[tAtom.CODE_SRC] as String
-        // 检查前置条件：项目编码不为空且状态为BUILDING
-        if (projectCode.isNullOrBlank() || atomStatus != AtomStatusEnum.BUILDING) {
-            return null
-        }
-        val taskJson = atomReleaseService.getFileStr(
-            projectCode = projectCode,
-            atomCode = atomCode,
-            atomVersion = atomVersion,
-            repositoryHashId = repositoryHashId,
-            fileName = TASK_JSON_NAME,
-            branch = branch
-        )
-        if (taskJson.isNullOrBlank()) {
-            return null
-        }
-        val taskConfigMap = parseTaskJsonToMap(taskJson)
-        // 检查是否需要使用仓库提交信息作为发布说明
-        val useRepoCommits = taskConfigMap[USE_REPO_COMMITS_FOR_RELEASE_NOTES] as? Boolean ?: false
-        if (!useRepoCommits) {
-            return null
-        }
-        return getGitRecentCommitMessage(userId, codeSrc, branch)
-    }
-
-    private fun parseTaskJsonToMap(taskJson: String): Map<String, Any> {
-        return try {
-            JsonUtil.toMap(taskJson)
-        } catch (e: Exception) {
-            // 记录日志 不抛异常 避免影响核心组件发布业务
-            logger.error(
-                "Plugin configuration file has incorrect format. " +
-                        "File name: $TASK_JSON_NAME, Error reason: ${e.message}", e
-            )
-            emptyMap()
-        }
-    }
-
-    private fun getGitRecentCommitMessage(userId: String, codeSrc: String, branch: String): String? {
-        // 获取用户Git授权Token
-        val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
-        if (accessToken.isNullOrBlank()) {
-            // 记录日志 不抛异常 避免影响核心组件发布业务
-            logger.warn("User [$userId] has not performed OAUTH authorization. Please authorize first.")
-            return null
-        }
-        // 调用Git服务获取提交信息
-        return client.get(ServiceGitResource::class)
-            .getRepoRecentCommitInfo(
-                repoName = GitUtils.getProjectName(codeSrc),
-                sha = branch,
-                token = accessToken,
-                tokenType = TokenTypeEnum.OAUTH
-            )
-            .data
-            ?.message
     }
 }

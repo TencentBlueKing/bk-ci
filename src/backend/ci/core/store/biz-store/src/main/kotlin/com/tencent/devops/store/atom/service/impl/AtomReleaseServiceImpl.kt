@@ -67,6 +67,10 @@ import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
@@ -1511,6 +1515,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 latestFlag = true
             )
         }
+    }
+
+    override fun getAtomGitRecentCommitMessage(userId: String, branch: String, codeSrc: String): Result<String> {
+        val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
+        if (accessToken.isNullOrBlank()) {
+            logger.warn("User [$userId] has not performed OAUTH authorization. Please authorize first.")
+            return Result("")
+        }
+        val commitMessage = client.get(ServiceGitResource::class)
+            .getRepoRecentCommitInfo(
+                repoName = GitUtils.getProjectName(codeSrc),
+                sha = branch,
+                token = accessToken,
+                tokenType = TokenTypeEnum.OAUTH
+            ).data?.message ?: ""
+        return Result(commitMessage)
     }
 
     private fun sendPendingReview(userId: String, atomName: String, version: String, atomId: String) {
