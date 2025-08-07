@@ -1236,7 +1236,7 @@ class WorkspaceService @Autowired constructor(
         return kotlin.runCatching {
             client.get(ServiceDEVXResource::class).getUserDEVXEnv(userId, userHas).data
         }.onFailure {
-            logger.error("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
+            logger.warn("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
         }.getOrNull() ?: kotlin.run {
             logger.error("fail to get user env|$userId|$userHas")
             emptyList()
