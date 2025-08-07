@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -319,7 +319,7 @@ class TaskBuildRecordService(
         )
     }
 
-    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): Pair<List<PipelineTaskStatusInfo>, BuildRecordTask?> {
 
         val projectId = taskBuildEndParam.projectId
         val pipelineId = taskBuildEndParam.pipelineId
@@ -337,7 +337,7 @@ class TaskBuildRecordService(
             logger.warn(
                 "ENGINE|$buildId|taskEnd| get task($taskId) record failed."
             )
-            return emptyList()
+            return Pair(emptyList(), null)
         }
         // #7983 将RETRY中间态过滤，不体现在详情页面
         val buildStatus = taskBuildEndParam.buildStatus.let {
@@ -345,6 +345,7 @@ class TaskBuildRecordService(
         }
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
+        var recordTaskReturn: BuildRecordTask? = null
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
@@ -353,6 +354,7 @@ class TaskBuildRecordService(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val now = LocalDateTime.now()
+                recordTaskReturn = recordTask
                 // 插件存在自动重试，永远更新一次当前时间为结束时间
                 recordTask.endTime = now
                 val taskVar = mutableMapOf<String, Any>()
@@ -394,6 +396,7 @@ class TaskBuildRecordService(
                     taskVar[Element::retryCountAuto.name] =
                         (recordTask.taskVar[Element::retryCountAuto.name] as Int?)?.plus(1) ?: 1
                 }
+                recordTask.taskVar.putAll(taskVar)
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -401,7 +404,7 @@ class TaskBuildRecordService(
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = executeCount,
-                    taskVar = recordTask.taskVar.plus(taskVar),
+                    taskVar = recordTask.taskVar,
                     buildStatus = buildStatus,
                     startTime = null,
                     endTime = now,
@@ -411,7 +414,7 @@ class TaskBuildRecordService(
         }
         if (buildStatus?.isCancel() != true && buildStatus?.isSkip() != true) {
             // 如果状态不是取消状态或者跳过状态，无需处理后续更新task状态的逻辑
-            return emptyList()
+            return Pair(emptyList(), recordTaskReturn)
         }
         val pipelineTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
         val buildRecordContainer = containerBuildRecordService.getRecord(
@@ -500,7 +503,7 @@ class TaskBuildRecordService(
                 )
             }
         }
-        return pipelineTaskStatusInfos
+        return Pair(pipelineTaskStatusInfos, recordTaskReturn)
     }
 
     private fun addCancelTaskStatusInfo(

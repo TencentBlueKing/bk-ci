@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,10 @@ import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_MD5
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_PIPELINE_ID
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_PROJECT_ID
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_TASK_ID
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.time.DateFormatUtils
@@ -51,6 +55,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
 import jakarta.annotation.PreDestroy
+import org.apache.commons.lang3.StringUtils
 
 /**
  * 调度服务框架
@@ -120,8 +125,13 @@ class PipelineQuartzService @Autowired constructor(
                 schedulerManager.deleteJob(comboKey)
             }
             schedulerManager.addJob(
-                comboKey, crontab,
-                jobBeanClass
+                key = comboKey,
+                cronExpression = crontab,
+                jobBeanClass = jobBeanClass,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = taskId,
+                md5 = md5
             )
         } catch (ignore: Exception) {
             logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
@@ -141,6 +151,13 @@ class PipelineQuartzService @Autowired constructor(
 }
 
 class PipelineQuartzJob : Job {
+    companion object {
+        const val JOB_DATA_MAP_KEY_PROJECT_ID = "projectId"
+        const val JOB_DATA_MAP_KEY_PIPELINE_ID = "pipelineId"
+        const val JOB_DATA_MAP_KEY_TASK_ID = "taskId"
+        const val JOB_DATA_MAP_KEY_MD5 = "md5"
+    }
+
     override fun execute(context: JobExecutionContext?) {
         SpringContextUtil.getBean(PipelineJobBean::class.java).execute(context)
     }
@@ -161,12 +178,21 @@ class PipelineJobBean(
     fun execute(context: JobExecutionContext?) {
         val jobKey = context?.jobDetail?.key ?: return
         val comboKey = jobKey.name
+        val jobDataMap = context.jobDetail.jobDataMap ?: return
+        if (jobDataMap.isEmpty()) {
+            logger.warn("PIPELINE_TIMER_INVALID_DATA|jobDataMap is empty|comboKey=$comboKey")
+            return
+        }
         // 格式：pipelineId_{md5}_{projectId}_{taskId}
-        val comboKeys = comboKey.split(Regex("_"), 4)
-        val pipelineId = comboKeys[0]
-        val crontabMd5 = comboKeys[1]
-        val projectId = comboKeys[2]
-        val taskId = comboKeys.getOrElse(3) { "" }
+        val pipelineId = jobDataMap.getString(JOB_DATA_MAP_KEY_PIPELINE_ID)
+        val crontabMd5 = jobDataMap.getString(JOB_DATA_MAP_KEY_MD5)
+        val projectId = jobDataMap.getString(JOB_DATA_MAP_KEY_PROJECT_ID)
+        val taskId = jobDataMap.getString(JOB_DATA_MAP_KEY_TASK_ID) ?: ""
+        if (StringUtils.isAnyEmpty(pipelineId, projectId, crontabMd5)) {
+            // 缺少关键字段
+            logger.warn("PIPELINE_TIMER_INVALID_DATA|miss require param|$projectId|$pipelineId|$taskId|$crontabMd5")
+            return
+        }
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
             if (redisOperation.isMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)) {
@@ -207,8 +233,7 @@ class PipelineJobBean(
             val scheduledFireTime = DateFormatUtils.format(context.scheduledFireTime, "yyyyMMddHHmmss")
             // 相同触发的要锁定，防止误差导致重复执行
             watcher.start("redisLock")
-            // 以流水线ID为key，待taskId全部补充完毕后以[pipelineId:taskId]为key，处理多个定时触发器交集触发的情况
-            val pipelineLockKey = pipelineId
+            val pipelineLockKey = "$pipelineId:$taskId"
             val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineLockKey, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {

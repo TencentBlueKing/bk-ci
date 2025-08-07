@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -302,7 +302,7 @@ class MigrateResourceService @Autowired constructor(
             )
         }
         if (migrateOtherGroup) {
-            migrateProjectOtherGroup(
+            resetOtherProjectLevelGroupPermissions(
                 projectCode = projectCode,
                 projectName = projectName,
                 registerMonitorPermission = registerMonitorPermission
@@ -310,10 +310,12 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    fun migrateProjectOtherGroup(
+    fun resetOtherProjectLevelGroupPermissions(
         projectCode: String,
         projectName: String,
-        registerMonitorPermission: Boolean
+        registerMonitorPermission: Boolean,
+        filterResourceTypes: List<String> = emptyList(),
+        filterActions: List<String> = emptyList()
     ) {
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
@@ -338,7 +340,6 @@ class MigrateResourceService @Autowired constructor(
                     groupCode = groupConfig.groupCode
                 )
             } ?: return@forEach
-
             // 项目下用户组注册监控权限资源
             permissionResourceGroupPermissionService.grantGroupPermission(
                 authorizationScopesStr = groupConfig.authorizationScopes,
@@ -349,7 +350,9 @@ class MigrateResourceService @Autowired constructor(
                 iamResourceCode = projectCode,
                 resourceName = projectName,
                 iamGroupId = resourceGroupInfo.relationId.toInt(),
-                registerMonitorPermission = registerMonitorPermission
+                registerMonitorPermission = registerMonitorPermission,
+                filterResourceTypes = filterResourceTypes,
+                filterActions = filterActions
             )
         }
     }

@@ -52,14 +52,14 @@
         computed: {
             enumList () {
                 return this.list.map((item) => {
-                    let { value, ...restProp } = item
+                    let { value } = item
                     if (value === 'true') {
                         value = true
                     } else if (value === 'false') {
                         value = false
                     }
                     return {
-                        ...restProp,
+                        ...item,
                         value
                     }
                 })

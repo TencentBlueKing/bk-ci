@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,7 @@ import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.api.builds.BuildNotifyResource
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -44,8 +45,8 @@ import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.util.MessageCheckUtil
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
+import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * @author ajackyu
@@ -61,6 +62,7 @@ class BuildNotifyResourceImpl @Autowired constructor(
     private val weworkService: WeworkService
 ) : BuildNotifyResource {
 
+    @BkCheckBlackListInterface
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
         val wechatNotifyMessage = WeworkNotifyMessageWithOperation()
@@ -70,18 +72,21 @@ class BuildNotifyResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @BkCheckBlackListInterface
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkEmailMessage(message)
         emailService.sendMqMsg(message)
         return Result(true)
     }
 
+    @BkCheckBlackListInterface
     override fun sendWechatNotify(message: WechatNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkWechatMessage(message)
         wechatService.sendMqMsg(message)
         return Result(true)
     }
 
+    @BkCheckBlackListInterface
     override fun sendSmsNotify(message: SmsNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkSmsMessage(message)
         smsService.sendMqMsg(message)

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -58,7 +58,8 @@ class RbacPermissionProjectService(
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
-    private val permissionManageFacadeService: PermissionManageFacadeService
+    private val permissionManageFacadeService: PermissionManageFacadeService,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator
 ) : PermissionProjectService {
 
     companion object {
@@ -111,7 +112,7 @@ class RbacPermissionProjectService(
                 AuthPermission.get(action), finalResourceType
             )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            return if (instanceMap.contains("*")) {
+            val result = if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")
                 authResourceService.getAllResourceCode(
                     resourceType = AuthResourceType.PROJECT.value
@@ -121,6 +122,12 @@ class RbacPermissionProjectService(
                 logger.info("get user projects:$projectList")
                 projectList
             }
+            bkInternalPermissionComparator.getUserProjectsByAction(
+                userId = userId,
+                action = useAction,
+                expectedResult = result
+            )
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects by permission"

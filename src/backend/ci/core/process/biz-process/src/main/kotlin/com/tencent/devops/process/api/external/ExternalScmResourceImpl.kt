@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,13 +30,17 @@ package com.tencent.devops.process.api.external
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
+import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -44,7 +48,8 @@ import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
-    private val streamBridge: StreamBridge
+    private val streamBridge: StreamBridge,
+    private val simpleDispatcher: SampleEventDispatcher
 ) : ExternalScmResource {
 
     @Value("\${scm.external.tGit.hookSecret:}")
@@ -121,6 +126,34 @@ class ExternalScmResourceImpl @Autowired constructor(
                 )
             )
         )
+    }
+
+    override fun webHookScmCommit(scmCode: String, request: HttpServletRequest, body: String): Result<Boolean> {
+        logger.info("scm webhook|$body")
+        simpleDispatcher.dispatch(
+            ScmWebhookRequestEvent(
+                scmCode = scmCode,
+                request = WebhookRequest(
+                    headers = scmWebhookHeader(request),
+                    queryParams = parseQueryString(request.queryString ?: ""),
+                    body = body
+                )
+            )
+        )
+        return Result(true)
+    }
+
+    private fun scmWebhookHeader(request: HttpServletRequest) = request.headerNames.toList()
+            .associateWith { request.getHeader(it) }
+
+    private fun parseQueryString(queryString: String): Map<String, String> {
+        return queryString.split("&")
+                .associate {
+                    val pair = it.split("=", limit = 2)
+                    val key = pair[0]
+                    val value = if (pair.size > 1) pair[1] else ""
+                    key to value
+                }
     }
 
     companion object {

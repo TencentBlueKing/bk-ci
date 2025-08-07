@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -52,6 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -70,6 +72,9 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -113,6 +118,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val buildDetailDao: BuildDetailDao,
     private val client: Client,
     private val pipelineInfoService: PipelineInfoService,
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
@@ -167,7 +173,7 @@ class PipelineBuildRecordService @Autowired constructor(
      * @param buildId: 构建Id
      * @param refreshStatus: 是否刷新状态
      * @param executeCount: 执行次数
-     * @param queryDslContext: 查询jooq上下文
+     * @param archiveFlag: 归档标识
      */
     fun getBuildRecord(
         projectId: String,
@@ -176,10 +182,11 @@ class PipelineBuildRecordService @Autowired constructor(
         refreshStatus: Boolean = true,
         executeCount: Int? = null,
         encryptedFlag: Boolean? = false,
-        queryDslContext: DSLContext? = null
+        archiveFlag: Boolean? = false
     ): ModelRecord? {
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val buildInfo = pipelineBuildDao.getBuildInfo(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             buildId = buildId
         ) ?: throw ErrorCodeException(
@@ -199,7 +206,7 @@ class PipelineBuildRecordService @Autowired constructor(
             executeCount = executeCount,
             refreshStatus = refreshStatus,
             encryptedFlag = encryptedFlag,
-            queryDslContext = queryDslContext
+            archiveFlag = archiveFlag
         )
     }
 
@@ -210,11 +217,12 @@ class PipelineBuildRecordService @Autowired constructor(
      * @param refreshStatus: 是否刷新状态
      */
     fun getBuildRecord(
+        userId: String? = null,
         buildInfo: BuildInfo,
         executeCount: Int?,
         refreshStatus: Boolean = true,
-        queryDslContext: DSLContext? = null,
-        encryptedFlag: Boolean? = false
+        encryptedFlag: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): ModelRecord? {
         // 直接取构建记录数据，防止接口传错
         val projectId = buildInfo.projectId
@@ -224,10 +232,11 @@ class PipelineBuildRecordService @Autowired constructor(
         val watcher = Watcher(id = "getBuildRecord#$buildId")
 
         // 如果请求的次数为空则填补为最新的次数，旧数据直接按第一次查询
-        var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
+        var fixedExecuteCount = executeCount ?: buildInfo.executeCount
         watcher.start("buildRecordModel")
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val buildRecordModel = recordModelDao.getRecord(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -235,7 +244,7 @@ class PipelineBuildRecordService @Autowired constructor(
         )
         watcher.start("genRecordModel")
         val version = buildInfo.version
-        val model = if (buildRecordModel != null && buildInfo.executeCount != null) {
+        val model = if (buildRecordModel != null) {
             val record = getRecordModel(
                 projectId = projectId, pipelineId = pipelineId,
                 version = version, buildId = buildId,
@@ -245,7 +254,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 queryDslContext = queryDslContext,
                 debug = buildInfo.debug
             )
-            if (record == null) fixedExecuteCount = buildInfo.executeCount!!
+            if (record == null) fixedExecuteCount = buildInfo.executeCount
             record
         } else {
             null
@@ -255,7 +264,7 @@ class PipelineBuildRecordService @Autowired constructor(
                     "fixedExecuteCount=$fixedExecuteCount"
             )
             watcher.start("getDetailModel")
-            val record = buildDetailDao.get(queryDslContext ?: dslContext, projectId, buildId) ?: return null
+            val record = buildDetailDao.get(queryDslContext, projectId, buildId) ?: return null
             val detail = JsonUtil.to(record.model, Model::class.java)
             fixDetailTimeCost(buildInfo, detail)
             detail
@@ -266,7 +275,7 @@ class PipelineBuildRecordService @Autowired constructor(
         ) ?: return null
 
         val buildSummaryRecord = pipelineBuildSummaryDao.get(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = buildInfo.pipelineId
         )
@@ -277,7 +286,7 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
-        if (refreshStatus && fixedExecuteCount == buildInfo.executeCount) {
+        if (refreshStatus && fixedExecuteCount == buildInfo.executeCount && archiveFlag != true) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
             // #6400 无需流水线是终态就可以进行task重试
             if (checkPassDays(buildInfo.startTime)) {
@@ -320,7 +329,7 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
         val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = pipelineInfo.pipelineId,
             buildId = buildId
@@ -431,7 +440,12 @@ class PipelineBuildRecordService @Autowired constructor(
             debug = buildInfo.debug,
             webhookInfo = buildInfo.webhookInfo,
             templateInfo = pipelineInfo.templateInfo,
-            recordList = recordList
+            recordList = recordList,
+            artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
+                userId = userId,
+                projectId = projectId,
+                artifactQualityList = buildInfo.artifactQualityList
+            )
         )
     }
 

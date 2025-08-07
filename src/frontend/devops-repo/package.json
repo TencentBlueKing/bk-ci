@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@vue/runtime-dom": "^3.2.37",
-    "axios": "^0.28.0",
+    "axios": "^0.30.0",
     "bkui-vue": "0.0.1-beta.123",
     "core-js": "^3.6.5",
     "js-cookie": "^3.0.1",
@@ -42,7 +42,7 @@
     "eslint": "^7.32.0",
     "eslint-config-tencent": "^1.0.4",
     "eslint-plugin-codecc": "^0.2.0",
-    "eslint-plugin-import": "^2.25.3",
+    
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^8.0.3",

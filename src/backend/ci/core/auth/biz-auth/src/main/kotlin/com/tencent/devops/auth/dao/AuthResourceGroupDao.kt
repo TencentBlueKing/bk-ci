@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,11 +30,11 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.common.auth.api.AuthResourceType
-import org.jooq.impl.DSL.count
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL.count
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -193,6 +193,22 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun getByGroupCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String
+    ): AuthResourceGroup? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_CODE.eq(groupCode))
+                .fetchOne()?.let { convert(it) }
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         projectCode: String,
@@ -270,16 +286,43 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun listByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .fetch()
+        }
+    }
+
     fun listIamGroupIdsByConditions(
         dslContext: DSLContext,
         projectCode: String,
+        ids: List<Long>? = null,
         iamGroupIds: List<String>? = null,
         groupName: String? = null,
-        iamTemplateIds: List<Int>? = null
+        iamTemplateIds: List<Int>? = null,
+        resourceType: String? = null,
+        resourceCode: String? = null,
+        iamResourceCode: String? = null,
+        excludeResourceType: String? = null,
+        limit: Int? = null,
+        offset: Int? = null
     ): List<Int> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.select(RELATION_ID).from(this)
                 .where(PROJECT_CODE.eq(projectCode))
+                .let {
+                    if (!ids.isNullOrEmpty())
+                        it.and(ID.`in`(ids))
+                    else it
+                }
                 .let {
                     if (!iamGroupIds.isNullOrEmpty())
                         it.and(RELATION_ID.`in`(iamGroupIds))
@@ -297,6 +340,42 @@ class AuthResourceGroupDao {
                         it.and(IAM_TEMPLATE_ID.`in`(iamTemplateIds))
                     } else
                         it
+                }
+                .let {
+                    if (resourceType != null) {
+                        it.and(RESOURCE_TYPE.eq(resourceType))
+                    } else {
+                        it
+                    }
+                }
+                .let {
+                    if (resourceCode != null) {
+                        it.and(RESOURCE_CODE.eq(resourceCode))
+                    } else {
+                        it
+                    }
+                }
+                .let {
+                    if (iamResourceCode != null) {
+                        it.and(IAM_RESOURCE_CODE.eq(iamResourceCode))
+                    } else {
+                        it
+                    }
+                }
+                .let {
+                    if (excludeResourceType != null) {
+                        it.and(RESOURCE_TYPE.ne(excludeResourceType))
+                    } else {
+                        it
+                    }
+                }
+                .orderBy(CREATE_TIME.asc())
+                .let {
+                    if (limit != null && offset != null) {
+                        it.limit(limit).offset(offset)
+                    } else {
+                        it
+                    }
                 }
                 // 同步iam时，可能会同步到极少数组ID值为null，为了防止转化报错，过滤掉该类数据。
                 .fetch().filterNot { it.value1() == NULL_PLACEHOLDER }
@@ -443,7 +522,8 @@ class AuthResourceGroupDao {
                     defaultGroup = defaultGroup,
                     relationId = relationId.toInt(),
                     createTime = createTime,
-                    updateTime = updateTime
+                    updateTime = updateTime,
+                    description = description
                 )
             } catch (ignore: Exception) {
                 logger.warn(

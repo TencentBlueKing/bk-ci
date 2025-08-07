@@ -1,9 +1,9 @@
 <template>
-    <header class="exec-detail-summary">
-        <div
-            v-if="visible"
-            class="exec-detail-summary-info"
-        >
+    <header
+        v-if="visible"
+        class="exec-detail-summary"
+    >
+        <div class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
@@ -123,30 +123,32 @@
             <div class="exec-remark-block">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("history.remark") }}
-                    <i
-                        v-if="!remarkEditable"
-                        @click="showRemarkEdit"
-                        class="devops-icon icon-edit exec-remark-edit-icon pointer"
-                    />
-                    <span
-                        v-else
-                        class="pipeline-exec-remark-actions"
-                    >
-                        <bk-button
-                            text
-                            theme="primary"
-                            @click="handleRemarkChange"
-                        >{{
-                            $t("save")
-                        }}</bk-button>
-                        <bk-button
-                            text
-                            theme="primary"
-                            @click="hideRemarkEdit"
-                        >{{
-                            $t("cancel")
-                        }}</bk-button>
-                    </span>
+                    <template v-if="!archiveFlag">
+                        <i
+                            v-if="!remarkEditable"
+                            @click="showRemarkEdit"
+                            class="devops-icon icon-edit exec-remark-edit-icon pointer"
+                        />
+                        <span
+                            v-else
+                            class="pipeline-exec-remark-actions"
+                        >
+                            <bk-button
+                                text
+                                theme="primary"
+                                @click="handleRemarkChange"
+                            >{{
+                                $t("save")
+                            }}</bk-button>
+                            <bk-button
+                                text
+                                theme="primary"
+                                @click="hideRemarkEdit"
+                            >{{
+                                $t("cancel")
+                            }}</bk-button>
+                        </span>
+                    </template>
                 </span>
                 <div class="exec-detail-summary-info-block-content">
                     <bk-input
@@ -171,6 +173,18 @@
                 </div>
             </div>
         </div>
+        <div
+            class="part-quality-block"
+            v-if="artifactQuality && Object.keys(artifactQuality).length"
+        >
+            <span class="part-quality-block-title">
+                {{ $t("artifactQuality") }}
+            </span>
+            <ArtifactQuality
+                :data="artifactQuality"
+                @goOutputs="goOutputs"
+            />
+        </div>
     </header>
 </template>
 
@@ -178,10 +192,13 @@
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
+    import ArtifactQuality from './artifactQuality'
+
     export default {
         components: {
             MaterialItem,
-            Logo
+            Logo,
+            ArtifactQuality
         },
         props: {
             visible: {
@@ -238,8 +255,13 @@
                             }
                         }
                     }]
+            },
+            artifactQuality () {
+                return this.execDetail?.artifactQuality
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
-
         },
         watch: {
             execDetail: {
@@ -264,7 +286,8 @@
                 try {
                     const result = await this.fetchVersionDetail({
                         version: this.execDetail.curVersion,
-                        ...this.$route.params
+                        ...this.$route.params,
+                        ...this.$route.query
                     })
                     this.curVersionDesc = result.data.description
                 } catch (error) {
@@ -312,6 +335,19 @@
                     this.isChangeRemark = false
                     this.hideRemarkEdit()
                 }
+            },
+            goOutputs (values) {
+                this.$router.push({
+                    name: 'pipelinesDetail',
+                    params: {
+                        ...this.routerParams,
+                        type: 'outputs'
+                    },
+                    query: {
+                        metadataKey: values[0].labelKey,
+                        metadataValues: values.map(item => item.value).join(',')
+                    }
+                })
             }
         }
     }
@@ -329,8 +365,8 @@
   .instance-template-info {
     display: inline-flex;
     margin-right: 6px;
-    line-height: 1;
-    margin-right: 6px;
+    line-height: 52px;
+    height: 100%;
   }
   .template-info-entry {
     color: #979ba5;
@@ -479,6 +515,21 @@
                 @include ellipsis();
             }
         }
+    }
+}
+.part-quality-block {
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    padding-bottom: 10px;
+    font-size: 12px;
+    
+    .part-quality-block-title {
+        color: #979ba5;
+        margin-right: 24px;
+        margin-top: 3px;
+        padding-top: 4px;
+        flex-shrink: 0;
     }
 }
 </style>

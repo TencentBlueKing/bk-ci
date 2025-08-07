@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,8 +37,11 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -446,6 +449,7 @@ class PipelineBuildQualityService(
                     stepId = task.stepId
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
+                notifyEvent(task, BuildStatus.REVIEWING)
             }
 
             task.taskParams[QUALITY_RESULT] = checkResult.success
@@ -582,6 +586,7 @@ class PipelineBuildQualityService(
                     jobId = null,
                     stepId = task.stepId
                 )
+                notifyEvent(task, BuildStatus.REVIEW_ABORT)
                 AtomResponse(
                     buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
                     errorType = ErrorType.USER,
@@ -608,6 +613,7 @@ class PipelineBuildQualityService(
                             jobId = null,
                             stepId = task.stepId
                         )
+                        notifyEvent(task, BuildStatus.REVIEW_PROCESSED)
                         AtomResponse(BuildStatus.SUCCEED)
                     }
                     ManualReviewAction.ABORT -> {
@@ -624,6 +630,7 @@ class PipelineBuildQualityService(
                             jobId = null,
                             stepId = task.stepId
                         )
+                        notifyEvent(task, BuildStatus.REVIEW_ABORT)
                         AtomResponse(
                             buildStatus = BuildStatus.REVIEW_ABORT,
                             errorType = ErrorType.USER,
@@ -635,6 +642,34 @@ class PipelineBuildQualityService(
             } else {
                 AtomResponse(BuildStatus.REVIEWING)
             }
+        }
+    }
+
+    private fun notifyEvent(task: PipelineBuildTask, status: BuildStatus) {
+        with(task) {
+            pipelineEventDispatcher.dispatch(
+                // 质量红线审核
+                PipelineBuildStatusBroadCastEvent(
+                    source = "quality reviewed with ${status.name}",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = "",
+                    buildId = buildId,
+                    actionType = ActionType.START,
+                    stageId = stageId,
+                    jobId = jobId,
+                    taskId = taskId,
+                    executeCount = executeCount,
+                    buildStatus = status.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_QUALITY,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp(),
+                        PipelineBuildStatusBroadCastEvent.Labels::stepName.name to
+                            taskName
+                    )
+                )
+            )
         }
     }
 }

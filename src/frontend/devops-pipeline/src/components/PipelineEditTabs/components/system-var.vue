@@ -1,11 +1,5 @@
 <template>
     <div class="system-var-container">
-        <bk-alert
-            v-if="editable"
-            type="info"
-            :title="$t('newui.sysVarTips')"
-            closable
-        ></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"
@@ -19,6 +13,7 @@
                 v-for="(group) in renderSysParamList"
                 :key="group.name"
                 :title="group.name"
+                :tips="group.tips"
                 :item-num="group.params.length"
                 :show-content="group.isOpen === true"
             >
@@ -28,6 +23,7 @@
                             :key="env.name"
                             :name="env.name"
                             :desc="env.desc"
+                            :remark="env.remark"
                             :editable="editable"
                         />
                     </template>
