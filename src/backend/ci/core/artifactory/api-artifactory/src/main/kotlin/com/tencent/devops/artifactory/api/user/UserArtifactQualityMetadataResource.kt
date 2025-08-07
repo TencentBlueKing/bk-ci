@@ -63,7 +63,7 @@ interface UserArtifactQualityMetadataResource {
         @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "是否获取调试数据", required = true)
+        @Parameter(description = "是否获取调试数据", required = false)
         @QueryParam("debug")
         debug: Boolean?
     ): Result<List<MetadataLabelDetail>>
