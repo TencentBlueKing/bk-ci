@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.type.BuildType
 import io.swagger.v3.oas.annotations.media.Schema
+import org.springframework.test.context.junit.jupiter.EnabledIfCondition
 
 // @JsonDeserialize(using = IVariableDeserializer::class)
 interface IVariable
@@ -78,7 +79,9 @@ data class Variable(
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
-    val props: VariableProps? = null
+    val props: VariableProps? = null,
+    @JsonProperty("if")
+    val ifCondition: Map<String, String>? = null
 ) : IVariable
 
 data class ShortVariable(val value: String) : IVariable

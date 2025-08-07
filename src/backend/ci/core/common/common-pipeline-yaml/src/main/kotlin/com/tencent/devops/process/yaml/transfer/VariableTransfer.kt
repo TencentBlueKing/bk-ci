@@ -189,7 +189,8 @@ class VariableTransfer {
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
-                props = if (props?.empty() == false) props else null
+                props = if (props?.empty() == false) props else null,
+                ifCondition = it.displayCondition
             )
         }
         return if (result.isEmpty()) {
@@ -276,7 +277,8 @@ class VariableTransfer {
                         variable.readonly ?: false
                     },
                     valueNotEmpty = variable.props?.required ?: false,
-                    payload = variable.props?.payload
+                    payload = variable.props?.payload,
+                    displayCondition = variable.ifCondition
                 )
             )
         }

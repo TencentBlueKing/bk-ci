@@ -83,7 +83,8 @@ object YamlObjects {
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
-            props = props
+            props = props,
+            ifCondition = transValue<Map<String, String>>(fromPath, "if", variable["if"])
         )
 
         // 只有列表需要判断
