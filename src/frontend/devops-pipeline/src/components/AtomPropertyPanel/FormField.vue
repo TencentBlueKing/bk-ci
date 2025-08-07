@@ -180,7 +180,9 @@
 
                     {
                         showOperateBtn && !isDelete && <span
-                            class='operate-btn'
+                            class={['operate-btn', {
+                                'show': isRequiredParam || isFollowTemplate
+                            }]}
                         >
                             {
                                 isChange && (
@@ -198,7 +200,7 @@
                                 )
                             }
                             <span class={['icon-item', {
-                                    active: isRequiredParam
+                                    'is-follow': isRequiredParam
                                 }]}
                                 v-bk-tooltips={
                                     isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
@@ -223,7 +225,7 @@
                                 onClick={handleFollowTemplate}
                             >
                                 <Logo
-                                    name={isFollowTemplate ? 'template-mode-color' : 'template-mode'}
+                                    name="template-mode"
                                     size="14"
                                 />
                             </span>
@@ -329,6 +331,9 @@
         align-items: center;
         visibility: hidden;
         height: 32px;
+        &.show {
+            visibility: visible;
+        }
         .icon-item {
             position: relative;
             display: flex;
@@ -340,6 +345,10 @@
             border-radius: 2px;
             margin-left: 6px;
             cursor: pointer;
+            &.is-follow {
+                background: #CDDFFE;
+                color: #3A84FF;
+            }
             &.active {
                 background: #CDDFFE;
             }

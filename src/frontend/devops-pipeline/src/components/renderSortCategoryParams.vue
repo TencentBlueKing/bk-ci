@@ -2,12 +2,12 @@
     <section class="render-sort-category-params">
         <details open>
             <summary class="category-collapse-trigger">
-                <div>
+                <div class="header">
                     {{ name }}
                     <span
                         v-if="showFollowTemplateBtn"
                         :class="['icon-item', {
-                            'active': isFollowTemplate,
+                            'is-follow': isFollowTemplate,
                             'disabled': checkStepId ? !stepId : false
                         }]"
                         v-bk-tooltips="{
@@ -16,9 +16,9 @@
                         }"
                         @click.stop="handleChangeFollow"
                     >
-                        <Logo
-                            :name="isFollowTemplate ? 'template-mode-color' : 'template-mode'"
-                            size="14"
+                        <logo
+                            name="template-mode"
+                            size="12"
                         />
                     </span>
                     <span
@@ -31,7 +31,7 @@
                     >
                         <Logo
                             :name="isRequiredParam ? 'set-param-active' : 'set-param-default'"
-                            size="14"
+                            size="12"
                         />
                     </span>
                     <span
@@ -174,6 +174,10 @@
         }
     }
     .category-collapse-trigger {
+        .header {
+            display: flex;
+            align-items: center;
+        }
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -208,16 +212,21 @@
         transform: rotate(-90deg);
     }
     .icon-item {
-        position: relative;
+        display: inline-flex;
         align-items: center;
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        background: #EAEBF0;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
         border-radius: 2px;
-        margin-left: 6px;
+        background: #EAEBF0;
+        color: #4D4F56;
         cursor: pointer;
+        margin-left: 10px;
         z-index: 100;
+        &.is-follow {
+            background: #CDDFFE;
+            color: #3A84FF;
+        }
         &.active {
             background: #CDDFFE;
         }
