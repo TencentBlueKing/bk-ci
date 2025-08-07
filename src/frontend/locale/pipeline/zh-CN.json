@@ -1782,6 +1782,7 @@
     "views": "点击查看",
     "dataUpdateT1": "（数据T+1更新)"
   },
+  "validVariableFormat": "请输入有效的变量格式",
   "attributeValue": "属性值",
   "attributeName": "属性名",
   "metadataAttributeName": "元数据属性名",

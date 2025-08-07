@@ -1786,6 +1786,7 @@
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"
   },
+  "validVariableFormat": "Please enter a valid variable format",
   "attributeValue": "Attribute Value",
   "attributeName": "Attribute Name",
   "metadataAttributeName": "Metadata Attribute Name",
