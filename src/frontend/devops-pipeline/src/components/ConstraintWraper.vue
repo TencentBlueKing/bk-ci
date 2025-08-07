@@ -19,12 +19,15 @@
                 </label>
             </slot>
             <bk-popover
-                v-if="instanceFromTemplate"
+                v-if="instanceFromTemplate && $route.meta.edit"
                 ref="constraintTips"
                 transfer
             >
                 <span
-                    :class="['template-constraint-mode-icon', { 'is-override': isOverrideField }]"
+                    :class="['template-constraint-mode-icon', {
+                        'is-override': isOverrideField,
+                        'constraint-togglable': !disabled || !$route.meta.edit
+                    }]"
                     @click="toggleConstraint"
                 >
                     <span
@@ -73,6 +76,10 @@
             Logo
         },
         props: {
+            disabled: {
+                type: Boolean,
+                default: false
+            },
             spaceBetween: {
                 type: Boolean,
                 default: true
@@ -146,6 +153,7 @@
             
             return {
                 toggleConstraint: (instance) => {
+                    if (props.disabled) return
                     if (isTriggerClassify.value && !fieldAlias.value) {
                         vm.proxy.$bkMessage({
                             theme: 'error',
@@ -196,7 +204,12 @@
                 border-radius: 2px;
                 background: #E1ECFF;
                 color: #3A84FF;
-                cursor: pointer;
+                cursor: not-allowed;
+                opacity: 0.8;
+                &.constraint-togglable {
+                    cursor: pointer;
+                    opacity: 1;
+                }
                 &.is-override {
                     background: #EAEBF0;
                     color: #4D4F56;

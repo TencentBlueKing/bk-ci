@@ -125,6 +125,10 @@
             editable: {
                 type: Boolean,
                 default: true
+            },
+            canEditParam: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -228,7 +232,7 @@
             },
             // toTop为true，表示移到最前, 为false为delete操作
             handleUpdate (paramId, toTop = false) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
                 const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
@@ -243,6 +247,7 @@
                 this.paramType = type
             },
             handleEdit (paramId) {
+                if (!this.canEditParam) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})

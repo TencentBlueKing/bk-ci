@@ -33,9 +33,8 @@ export default function useTemplateConstraint () {
     const instanceFromTemplate = computed(() => vm.proxy.$store.getters['atom/instanceFromTemplate'])
 
     function isOverrideTemplate (classify, field) {
-        if (!instanceFromTemplate.value) return true
-        
-        return overrideTemplateGroups.value[classify]?.includes(field)
+        if (!instanceFromTemplate.value) return vm.proxy.$route.meta.edit
+        return vm.proxy.$route.meta.edit && overrideTemplateGroups.value[classify]?.includes(field)
     }
 
     function partialRevertPipelineSetting (setting, field) {

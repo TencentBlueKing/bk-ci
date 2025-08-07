@@ -544,6 +544,7 @@
         margin-top: 8px;
         display: flex;
         justify-content: space-between;
+        grid-gap: 10px;
         & > :first-child {
             flex: 1;
         }

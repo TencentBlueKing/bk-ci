@@ -34,7 +34,6 @@
                 <bk-table-column :label="$t('settings.enableStatus')">
                     <template slot-scope="props">
                         <ConstraintWraper
-                            :disabled="!pipeline?.instanceFromTemplate"
                             classify="triggerStepIds"
                             :field="props.row.stepId"
                             :space-between="false"
