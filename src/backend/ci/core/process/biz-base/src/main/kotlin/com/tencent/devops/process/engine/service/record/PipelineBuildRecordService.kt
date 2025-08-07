@@ -84,14 +84,14 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Suppress(
     "LongParameterList",
@@ -349,7 +349,25 @@ class PipelineBuildRecordService @Autowired constructor(
         val startTime = buildRecordModel?.startTime?.timestampmilli()
         val endTime = buildRecordModel?.endTime?.timestampmilli()
         val queueTimeCost = startTime?.let { it - queueTime } ?: endTime?.let { it - queueTime }
+        val versionChange = run {
+            if (buildInfo.buildNum == 1 || buildInfo.versionChange == false || buildInfo.debug) {
+                return@run false // 返回 run 块的结果
+            }
 
+            if (buildInfo.versionChange == true) {
+                return@run true
+            }
+
+            val prevBuildInfo = pipelineBuildDao.getBuildByBuildNum(
+                dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildInfo.buildNum - 1,
+                debugVersion = null
+            )
+
+            prevBuildInfo != null && prevBuildInfo.version != buildInfo.version
+        }
         LogUtils.printCostTimeWE(watcher)
         return ModelRecord(
             id = buildInfo.buildId,
@@ -397,7 +415,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 artifactQualityList = buildInfo.artifactQualityList
-            )
+            ),
+            versionChange = versionChange
         )
     }
 

@@ -29,12 +29,16 @@ package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.yaml.PipelineYamlFileExecutor
+import com.tencent.devops.process.yaml.PipelineYamlFileScheduler
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class PipelineYamlMQConfig @Autowired constructor(
-    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener
+    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener,
+    private val pipelineYamlFileScheduler: PipelineYamlFileScheduler,
+    private val pipelineYamlFileExecutor: PipelineYamlFileExecutor
 ) {
     @EventConsumer
     fun pipelineYamlEnableConsumer() =
@@ -51,4 +55,12 @@ class PipelineYamlMQConfig @Autowired constructor(
     @EventConsumer
     fun pipelineYamlFileConsumer() =
         ScsConsumerBuilder.build<PipelineYamlFileEvent> { pipelineYamlTriggerListener.execute(it) }
+
+    @EventConsumer
+    fun pipelineYamlFileSchedulerConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlFileSchedulerEvent> { pipelineYamlFileScheduler.schedule(it) }
+
+    @EventConsumer
+    fun pipelineYamlFileExecutorConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlFileExecutorEvent> { pipelineYamlFileExecutor.execute(it) }
 }

@@ -29,6 +29,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "流水线yml版本")
 data class PipelineYamlVersion(
@@ -47,5 +48,7 @@ data class PipelineYamlVersion(
     @get:Schema(title = "流水线ID")
     val pipelineId: String,
     @get:Schema(title = "流水线版本")
-    val version: Int
+    val version: Int,
+    @get:Schema(title = "提交时间")
+    val commitTime: LocalDateTime
 )

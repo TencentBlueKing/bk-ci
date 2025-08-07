@@ -342,8 +342,12 @@ class PipelineResourceVersionDao {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
-                    STATUS.ne(VersionStatus.DELETE.name)
-                        .or(STATUS.isNull)
+                    STATUS.isNull.or(
+                        STATUS.notIn(
+                            VersionStatus.DELETE.name,
+                            VersionStatus.HIDDEN.name
+                        )
+                    )
                 )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
@@ -597,6 +601,23 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun updateVersionStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionStatus: VersionStatus
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.update(this)
+                .set(STATUS, versionStatus.name)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
@@ -670,6 +691,7 @@ class PipelineResourceVersionDao {
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
                     status = status,
+                    branchAction = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion,
                     description = record.description,

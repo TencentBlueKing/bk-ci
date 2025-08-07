@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -60,8 +61,12 @@ data class PipelineVersionSimple(
     val triggerVersion: Int? = null,
     @get:Schema(title = "配置版本号", required = false)
     val settingVersion: Int? = null,
+    @get:Schema(title = "父模板版本", required = true)
+    val srcTemplateVersion: Int? = null,
     @get:Schema(title = "草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
+    @get:Schema(title = "分支版本状态", required = false)
+    val branchAction: BranchVersionAction? = null,
     @get:Schema(title = "版本变更说明", required = false)
     val description: String? = null,
     @get:Schema(title = "调试构建ID", required = false)
@@ -71,5 +76,9 @@ data class PipelineVersionSimple(
     @get:Schema(title = "基准版本的版本名称")
     var baseVersionName: String? = null,
     @get:Schema(title = "当前最新正式版本标识", required = false)
-    var latestReleasedFlag: Boolean? = false
+    var latestReleasedFlag: Boolean? = false,
+    @get:Schema(title = "版本排序号", required = false)
+    val number: Int = -1,
+    @get:Schema(title = "是否上架研发商店", required = false)
+    val storeFlag: Boolean? = false
 )

@@ -28,20 +28,22 @@
 package com.tencent.devops.process.trigger.scm.listener
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_CLOSE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_CREATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_CREATE_SUCCESS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DELETE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DELETE_SUCCESS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DELETE_VERSION_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_SUCCESS
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailCombination
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
@@ -55,7 +57,7 @@ import org.springframework.stereotype.Service
 @Service
 class WebhookTriggerEventListener(
     private val pipelineTriggerEventService: PipelineTriggerEventService
-) : WebhookTriggerListenerSupport(), PipelineYamlChangeListener {
+) : WebhookTriggerListener, PipelineYamlChangeListener {
 
     override fun onBuildSuccess(context: WebhookTriggerContext) {
         val triggerDetail = with(context) {
@@ -222,6 +224,14 @@ class WebhookTriggerEventListener(
                 )
             }
 
+            YamlPipelineActionType.DEPENDENCY_UPGRADE -> {
+                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
+                PipelineTriggerDetailMessageCode(
+                    messageCode = BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED,
+                    listOf(linkUrl, pipelineName ?: pipelineId ?: "")
+                )
+            }
+
             YamlPipelineActionType.DELETE_VERSION -> {
                 val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
@@ -234,6 +244,13 @@ class WebhookTriggerEventListener(
                 val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_DELETE_FAILED,
+                    params = listOf(linkUrl, pipelineName ?: pipelineId ?: "")
+                )
+            }
+            YamlPipelineActionType.CLOSE -> {
+                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
+                PipelineTriggerDetailMessageCode(
+                    messageCode = BK_YAML_PIPELINE_CLOSE_FAILED,
                     params = listOf(linkUrl, pipelineName ?: pipelineId ?: "")
                 )
             }

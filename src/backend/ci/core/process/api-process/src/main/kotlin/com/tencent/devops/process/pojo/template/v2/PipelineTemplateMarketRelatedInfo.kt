@@ -1,0 +1,57 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 Tencent.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.process.pojo.template.v2
+
+import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "流水线模版研发商店相关")
+data class PipelineTemplateMarketRelatedInfo(
+    @get:Schema(title = "父模板项目ID", required = true)
+    val srcMarketProjectId: String,
+    @get:Schema(title = "父模板ID", required = true)
+    val srcMarketTemplateId: String,
+    @get:Schema(title = "父模板名称", required = true)
+    val srcMarketTemplateName: String,
+    @get:Schema(title = "父模板最新版本", required = true)
+    val srcMarketTemplateLatestVersion: Long,
+    @get:Schema(title = "父模板最新版本名称", required = true)
+    val srcMarketTemplateLatestVersionName: String,
+    @get:Schema(title = "最近安装版本", required = true)
+    val latestInstalledVersion: Long,
+    @get:Schema(title = "最近安装版本名称", required = true)
+    val latestInstalledVersionName: String,
+    @get:Schema(title = "最近安装用户", required = true)
+    val latestInstaller: String,
+    @get:Schema(title = "最新安装时间", required = true)
+    val latestInstalledTime: Long,
+    @get:Schema(title = "升级策略-用于研发商店安装的模板", required = true)
+    val upgradeStrategy: UpgradeStrategyEnum,
+    @get:Schema(title = "配置同步策略-用于研发商店安装的模板", required = true)
+    val settingSyncStrategy: UpgradeStrategyEnum
+)
