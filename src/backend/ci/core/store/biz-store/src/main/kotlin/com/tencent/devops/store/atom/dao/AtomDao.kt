@@ -1333,10 +1333,9 @@ class AtomDao : AtomBaseDao() {
 
     fun getPublishedAtomCount(dslContext: DSLContext): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount()
+            return dslContext.select(DSL.countDistinct(ATOM_CODE))
                 .from(this)
                 .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                .groupBy(ATOM_CODE)
                 .fetchOne(0, Int::class.java)!!
         }
     }
