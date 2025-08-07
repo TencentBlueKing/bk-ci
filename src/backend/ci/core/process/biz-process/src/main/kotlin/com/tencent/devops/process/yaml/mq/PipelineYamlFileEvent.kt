@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
@@ -73,24 +74,31 @@ data class PipelineYamlFileEvent(
         required = true
     )
     val authRepository: AuthRepository? = null,
-    @get:Schema(title = "文件commit信息,yaml文件有变更时必传", required = true)
+    @get:Schema(title = "文件commit信息,yaml文件有变更时必传", required = false)
     val commit: FileCommit? = null,
 
-    @get:Schema(title = "文件来源于fork仓库", required = true)
+    @get:Schema(title = "文件来源于fork仓库", required = false)
     val fork: Boolean = false,
-    @get:Schema(title = "mr是否已合并", required = true)
+    @get:Schema(title = "合并请求ID", required = false)
+    val pullRequestId: Long? = null,
+    @get:Schema(title = "合并请求连接", required = false)
+    val pullRequestUrl: String? = null,
+    @get:Schema(title = "mr是否已合并", required = false)
     val merged: Boolean = false,
-    @get:Schema(title = "源分支", required = true)
+    @get:Schema(title = "源分支", required = false)
     val sourceBranch: String? = null,
-    @get:Schema(title = "目标分支", required = true)
+    @get:Schema(title = "目标分支", required = false)
     val targetBranch: String? = null,
-    @get:Schema(title = "源仓库URL", required = true)
+    @get:Schema(title = "源仓库URL", required = false)
     val sourceUrl: String? = null,
-    @get:Schema(title = "源仓库全名", required = true)
+    @get:Schema(title = "源仓库全名", required = false)
     val sourceFullName: String? = null
 ) : IEvent() {
     @JsonIgnore
     val repoHashId = repository.repoHashId!!
+    // 是否是模版
+    @JsonIgnore
+    val isTemplate = GitActionCommon.isTemplateFile(filePath)
 }
 
 data class FileCommit(

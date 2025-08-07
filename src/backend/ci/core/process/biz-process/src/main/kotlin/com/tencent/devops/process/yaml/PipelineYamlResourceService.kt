@@ -30,43 +30,48 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
+import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.service.PipelineInfoFacadeService
-import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.util.LinkedList
 
 @Service
 class PipelineYamlResourceService @Autowired constructor(
     @Lazy private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineVersionManager: PipelineVersionManager
 ) : IPipelineYamlResourceService {
     override fun createYamlPipeline(
         userId: String,
         projectId: String,
         yaml: String,
-        yamlFileName: String,
-        branchName: String,
-        isDefaultBranch: Boolean,
-        description: String?,
-        aspects: LinkedList<IPipelineTransferAspect>?,
-        yamlInfo: PipelineYamlVo?
+        event: PipelineYamlFileEvent
     ): DeployPipelineResult {
-        return pipelineInfoFacadeService.createYamlPipeline(
-            userId = userId,
-            projectId = projectId,
-            yaml = yaml,
-            yamlFileName = yamlFileName,
-            branchName = branchName,
-            isDefaultBranch = isDefaultBranch,
-            description = description,
-            aspects = aspects,
-            yamlInfo = yamlInfo
-        )
+        with(event) {
+            val isDefaultBranch = ref == defaultBranch
+            val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
+            val yamlFileName = GitActionCommon.getCiFileName(filePath)
+            val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
+                yaml = yaml,
+                yamlFileName = yamlFileName,
+                branchName = ref,
+                isDefaultBranch = isDefaultBranch,
+                description = commit!!.commitMsg,
+                yamlFileInfo = yamlFileInfo,
+                pullRequestUrl = pullRequestUrl
+            )
+            return pipelineVersionManager.deployPipeline(
+                userId = userId,
+                projectId = projectId,
+                request = pipelineYamlWebhookReq
+            )
+        }
     }
 
     override fun updateYamlPipeline(
@@ -74,25 +79,28 @@ class PipelineYamlResourceService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
-        yamlFileName: String,
-        branchName: String,
-        isDefaultBranch: Boolean,
-        description: String?,
-        aspects: LinkedList<IPipelineTransferAspect>?,
-        yamlInfo: PipelineYamlVo?
+        event: PipelineYamlFileEvent
     ): DeployPipelineResult {
-        return pipelineInfoFacadeService.updateYamlPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            yaml = yaml,
-            yamlFileName = yamlFileName,
-            branchName = branchName,
-            isDefaultBranch = isDefaultBranch,
-            description = description,
-            aspects = aspects,
-            yamlInfo = yamlInfo
-        )
+        with(event) {
+            val isDefaultBranch = ref == defaultBranch
+            val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
+            val yamlFileName = GitActionCommon.getCiFileName(filePath)
+            val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
+                yaml = yaml,
+                yamlFileName = yamlFileName,
+                branchName = ref,
+                isDefaultBranch = isDefaultBranch,
+                description = commit!!.commitMsg,
+                yamlFileInfo = yamlFileInfo,
+                pullRequestUrl = pullRequestUrl
+            )
+            return pipelineVersionManager.deployPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                request = pipelineYamlWebhookReq
+            )
+        }
     }
 
     override fun updateBranchVersion(
@@ -101,7 +109,8 @@ class PipelineYamlResourceService @Autowired constructor(
         pipelineId: String,
         branchName: String,
         branchVersionAction: BranchVersionAction,
-        releaseBranch: Boolean?
+        releaseBranch: Boolean?,
+        pullRequestId: Long?
     ) {
         pipelineInfoFacadeService.updateBranchVersion(
             userId = userId,
@@ -113,8 +122,8 @@ class PipelineYamlResourceService @Autowired constructor(
         )
     }
 
-    override fun deletePipeline(userId: String, projectId: String, pipelineId: String): DeletePipelineResult {
-        return pipelineInfoFacadeService.deletePipeline(
+    override fun deletePipeline(userId: String, projectId: String, pipelineId: String) {
+        pipelineInfoFacadeService.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -130,6 +139,8 @@ class PipelineYamlResourceService @Autowired constructor(
     }
 
     override fun existsReleaseVersion(projectId: String, pipelineId: String): Boolean {
-        return pipelineRepositoryService.getReleaseVersionRecord(projectId = projectId, pipelineId = pipelineId) != null
+        return pipelineRepositoryService.getReleaseVersionRecord(
+            projectId = projectId, pipelineId = pipelineId
+        ) != null
     }
 }
