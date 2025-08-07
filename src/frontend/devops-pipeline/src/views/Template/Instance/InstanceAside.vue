@@ -185,9 +185,12 @@
                 }
             })
             list.forEach(item => {
+                const overrideTemplateField = res[item.pipelineId]?.overrideTemplateField ?? {}
                 item.param.forEach(p => {
                     proxy.$set(p, 'isRequiredParam', p.required)
+                    proxy.$set(p, 'isFollowTemplate', overrideTemplateField?.paramIds?.includes(p.id))
                 })
+                proxy.$set(item.buildNo, 'isRequiredParam', item.buildNo.required)
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
         } catch (e) {
@@ -202,7 +205,8 @@
             param: params.map(p => {
                 return {
                     ...p,
-                    isRequiredParam: p.required
+                    isRequiredParam: p.required,
+                    isFollowTemplate: false
                 }
             }),
             buildNo
@@ -228,7 +232,9 @@
         }
         if (!props.isInstanceCreateType) {
             fetchPipelinesDetails()
-            handleInstanceClick(instanceActiveIndex.value)
+            proxy.$nextTick(() => {
+                handleInstanceClick(instanceActiveIndex.value)
+            })
         }
     }
     function handleBatchEdit () {

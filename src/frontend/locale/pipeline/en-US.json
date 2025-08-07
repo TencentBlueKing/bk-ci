@@ -444,8 +444,16 @@
     "previewDiff": "Arrange Preview",
     "templateInstantiation": "Instantiate Templates",
     "templateVersion": "Template Version",
-    "applyTemplateSetting": "Apply template settings simultaneously",
-    "applyTemplateSettingTips": "After application, the instance's tags, run settings, notifications and other settings will be consistent with the template.",
+    "applyTemplateSettingTips": {
+      "create": {
+        "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other setting information will be initialized using template settings",
+        "tips2": "● If not checked, the instance settings will be set to default values"
+      },
+      "update": {
+        "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other settings information will be updated using the current settings of the selected template",
+        "tips2": "● If not checked, the instance settings will remain unchanged from before the update"
+      }
+    },
     "applySettingTips": "When ticked, the template settings will be applied to instantiated pipelines",
     "newPipelineName": "Name of Instantiated Pipeline",
     "addPipelineInstance": "New Instance",
@@ -615,7 +623,27 @@
       "updated": "Update Successful",
       "failed": "Update Failed"
     },
-    "failedReason": "failure reason"
+    "failedReason": "Failure Reason",
+    "referenceById": "Reference through template ID",
+    "referenceByPath": "Reference through code repository ref",
+    "referenceByPathTips": "When both the template and instance have PAC mode enabled, they can be referenced through the code repository ref",
+    "branch": "Branch",
+    "commit": "Commit",
+    "Example": "Example",
+    "notSpecifiedRef": {
+      "tips1": "When ref is not specified, instance orchestration varies depending on the trigger method. Please refer to",
+      "tips2": "the following parameter input interface, where the parameters are pulled from the default branch. For triggers like push or tag events, the parameters may differ. Exercise caution when using the default ref approach.",
+      "arrangingValueStrategy": "Orchestration Value Strategy"
+    },
+    "followTemplateTips": "Switch to follow template:<br/>During instance upgrades, if a new template version modifies default variable values, the instance will automatically update to match template defaults.",
+    "notFollowTemplateTips": "Disable template following:<br/>During instance upgrades, default values will not automatically update with template changes. Manually update as needed.",
+    "customVersionName": "Version Name",
+    "triggers": "Triggers",
+    "triggerEnabled": "Enable Trigger",
+    "enable": "Enable",
+    "close": "Disable",
+    "timeCron": "Schedule Rule",
+    "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

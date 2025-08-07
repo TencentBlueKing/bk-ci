@@ -1,13 +1,7 @@
 <template>
     <section>
         <slot name="versionParams"></slot>
-        <bk-form
-            form-type="vertical"
-            :class="{
-                'pipeline-execute-params-form': true,
-                'is-category': sortCategory
-            }"
-        >
+        <bk-form form-type="vertical">
             <template v-if="sortCategory">
                 <renderSortCategoryParams
                     v-for="key in sortedCategories"
@@ -16,7 +10,7 @@
                 >
                     <template slot="content">
                         <div
-                            v-for="param in list"
+                            v-for="param in paramsListMap[key]"
                             :key="param.id"
                         >
                             <render-param
@@ -28,6 +22,7 @@
                                 :handle-use-default-value="handleUseDefaultValue"
                                 :highlight-changed-param="highlightChangedParam"
                                 :handle-param-update="handleParamUpdate"
+                                :handle-follow-template="(id) => handleFollowTemplate(followTemplateKey, id)"
                             />
                         </div>
                     </template>
@@ -47,6 +42,7 @@
                         :handle-use-default-value="handleUseDefaultValue"
                         :highlight-changed-param="highlightChangedParam"
                         :handle-param-update="handleParamUpdate"
+                        :handle-follow-template="handleFollowTemplate"
                     />
                 </div>
             </template>
@@ -64,6 +60,7 @@
         CONTAINER_TYPE,
         ENUM,
         getBranchOption,
+        getParamsGroupByLabel,
         GIT_REF,
         isCodelibParam,
         isEnumParam,
@@ -124,6 +121,14 @@
                 default: () => () => {}
             },
             handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
+            },
+            followTemplateKey: {
+                type: String,
+                default: ''
+            },
+            handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
             }

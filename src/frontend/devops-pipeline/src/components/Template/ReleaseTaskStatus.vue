@@ -238,13 +238,13 @@
 
     async function handleModifyConfig () {
         try {
-            const res = await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
+            await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
                 projectId: projectId.value,
                 templateId: templateId.value,
                 baseId: releaseBaseId.value,
                 status: RELEASE_STATUS.FAILED
             })
-            console.log(res, 123)
+            
             proxy.$emit('cancel')
         } catch (e) {
             console.error(e)

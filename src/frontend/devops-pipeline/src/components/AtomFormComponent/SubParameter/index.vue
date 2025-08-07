@@ -1,5 +1,6 @@
 <template>
     <div class="sub-parameter">
+        {{ param }}
         <label class="bk-label">
             {{ title }}：
             <span
@@ -225,7 +226,7 @@
             },
 
             getParametersList () {
-                if (this.param.paramType === 'list' && Array.isArray(this.param.list)) {
+                if (this.param?.paramType === 'list' && Array.isArray(this.param.list)) {
                     this.subParamsKeyList = this.param.list
                     return
                 }

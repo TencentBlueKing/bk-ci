@@ -4,6 +4,42 @@
             <summary class="category-collapse-trigger">
                 <div>
                     {{ name }}
+                    <span
+                        v-if="showFollowTemplateBtn"
+                        :class="['icon-item', {
+                            'active': isFollowTemplate,
+                            'disabled': checkStepId ? !stepId : false
+                        }]"
+                        v-bk-tooltips="{
+                            content: getTooltipMessage,
+                            width: 320
+                        }"
+                        @click.stop="handleChangeFollow"
+                    >
+                        <Logo
+                            :name="isFollowTemplate ? 'template-mode-color' : 'template-mode'"
+                            size="14"
+                        />
+                    </span>
+                    <span
+                        v-if="showSetRequiredBtn"
+                        :class="['icon-item', {
+                            'active': isRequiredParam
+                        }]"
+                        v-bk-tooltips=" isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')"
+                        @click="handelChangeBuildNoRequired"
+                    >
+                        <Logo
+                            :name="isRequiredParam ? 'set-param-active' : 'set-param-default'"
+                            size="14"
+                        />
+                    </span>
+                    <span
+                        v-if="statusTagConfig.message"
+                        :class="['status-tag ml10', statusTagConfig.theme]"
+                    >
+                        {{ statusTagConfig.message }}
+                    </span>
                 </div>
                 <i class="devops-icon icon-angle-down"></i>
             </summary>
@@ -19,9 +55,17 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     export default {
         name: 'RenderSortCategoryParams',
+        components: {
+            Logo
+        },
         props: {
+            followTemplateKey: {
+                type: String,
+                default: ''
+            },
             name: {
                 type: String,
                 default: ''
@@ -29,6 +73,94 @@
             defaultLayout: {
                 type: Boolean,
                 default: false
+            },
+            isFollowTemplate: {
+                type: Boolean,
+                default: false
+            },
+            isRequiredParam: {
+                type: Boolean,
+                default: false
+            },
+            showFollowTemplateBtn: {
+                type: Boolean,
+                default: false
+            },
+            showSetRequiredBtn: {
+                type: Boolean,
+                default: false
+            },
+            handleFollowTemplate: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleSetBuildNoRequired: {
+                type: Function,
+                default: () => () => {}
+            },
+            checkStepId: {
+                type: Boolean,
+                default: false
+            },
+            stepId: {
+                type: String,
+                default: ''
+            },
+            isNew: {
+                type: Boolean,
+                default: false
+            },
+            isDelete: {
+                type: Boolean,
+                default: false
+            },
+            isChange: {
+                type: Boolean,
+                default: false
+            }
+        },
+        computed: {
+            getTooltipMessage () {
+                if (this.checkStepId) {
+                    if (this.stepId) {
+                        return this.isFollowTemplate
+                            ? this.$t('template.notFollowTemplateTips')
+                            : this.$t('template.followTemplateTips')
+                    } else {
+                        return this.$t('template.notStepIdTips', [this.name])
+                    }
+                } else {
+                    return this.isFollowTemplate
+                        ? this.$t('template.notFollowTemplateTips')
+                        : this.$t('template.followTemplateTips')
+                }
+            },
+            statusTagConfig () {
+                let message, theme
+                if (this.isDelete) {
+                    message = this.$t('deleted')
+                    theme = 'danger'
+                }
+                if (this.isNew) {
+                    message = this.$t('new')
+                    theme = 'success'
+                }
+                return {
+                    message,
+                    theme,
+                    isShow: this.isDelete || this.isNew
+                }
+            }
+        },
+        methods: {
+            handleChangeFollow (event) {
+                event.preventDefault()
+                if (this.checkStepId && !this.stepId) return
+                this.handleFollowTemplate(this.followTemplateKey)
+            },
+            handelChangeBuildNoRequired (event) {
+                event.preventDefault()
+                this.handleSetBuildNoRequired()
             }
         }
     }
@@ -37,6 +169,9 @@
 <style lang="scss" scoped>
     .render-sort-category-params {
         margin-bottom: 20px;
+        &:last-child {
+            margin-bottom: 0px !important;
+        }
     }
     .category-collapse-trigger {
         display: flex;
@@ -56,7 +191,7 @@
     }
 
     .collapse-content {
-        padding: 16px 16px 0;
+        padding: 10px 16px 0;
         display: grid;
         grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
@@ -71,5 +206,23 @@
 
     details:not([open]) .category-collapse-trigger .icon-angle-down {
         transform: rotate(-90deg);
+    }
+    .icon-item {
+        position: relative;
+        align-items: center;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background: #EAEBF0;
+        border-radius: 2px;
+        margin-left: 6px;
+        cursor: pointer;
+        z-index: 100;
+        &.active {
+            background: #CDDFFE;
+        }
+        &.disabled {
+            cursor: not-allowed;
+        }
     }
 </style>

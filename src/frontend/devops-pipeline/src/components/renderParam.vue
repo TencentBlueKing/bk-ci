@@ -8,6 +8,7 @@
             :show-operate-btn="showOperateBtn"
             :handle-use-default-value="() => handleUseDefaultValue(param.id)"
             :handle-set-parma-required="() => handleSetParmaRequired(param.id)"
+            :handle-follow-template="() => handleFollowTemplate(param.id)"
         >
             <section class="component-row">
                 <component
@@ -95,6 +96,10 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            handleFollowTemplate: {
+                type: Function,
+                default: () => () => {}
             }
         },
         methods: {
