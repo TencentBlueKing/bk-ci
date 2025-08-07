@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
@@ -76,7 +77,8 @@ class ContainerBuildRecordService(
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    pipelineModelParser: PipelineModelParser
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
@@ -87,7 +89,8 @@ class ContainerBuildRecordService(
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
     pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineElementService = pipelineElementService,
+    pipelineModelParser = pipelineModelParser
 ) {
 
     fun getRecord(

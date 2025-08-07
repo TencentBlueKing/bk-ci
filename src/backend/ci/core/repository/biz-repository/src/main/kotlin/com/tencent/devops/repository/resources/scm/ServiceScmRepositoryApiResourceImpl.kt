@@ -46,6 +46,21 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
     private val repositoryApiService: ScmRepositoryApiService
 ) : ServiceScmRepositoryApiResource {
+
+    override fun getServerRepositoryById(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String
+    ): Result<ScmServerRepository> {
+        return Result(
+            repositoryApiService.findRepository(
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName
+            )
+        )
+    }
+
     override fun getServerRepository(
         projectId: String,
         authRepository: AuthRepository

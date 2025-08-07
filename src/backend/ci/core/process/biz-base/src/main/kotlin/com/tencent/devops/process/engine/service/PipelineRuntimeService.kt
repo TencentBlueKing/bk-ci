@@ -144,15 +144,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -1137,6 +1137,7 @@ class PipelineRuntimeService @Autowired constructor(
             context.watcher.start("saveBuildRuntimeRecord")
             saveBuildRuntimeRecord(
                 transactionContext = transactionContext,
+                fullModel = fullModel,
                 context = context,
                 updateExistsStage = updateExistsStage,
                 updateExistsContainer = updateExistsContainerWithDetail,
@@ -1231,6 +1232,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     private fun saveBuildRuntimeRecord(
         transactionContext: DSLContext,
+        fullModel: Model,
         context: StartBuildContext,
         updateExistsStage: MutableList<PipelineBuildStage>,
         updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
@@ -1242,6 +1244,11 @@ class PipelineRuntimeService @Autowired constructor(
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
+        val modelVar = mutableMapOf<String, Any>()
+        if (fullModel.fromTemplate == true) {
+            modelVar[Model::parsedTemplateId.name] = fullModel.parsedTemplateId!!
+            modelVar[Model::parsedTemplateVersion.name] = fullModel.parsedTemplateVersion!!
+        }
         val modelRecord = if (context.retryOnRunningBuild) {
             null
         } else {
@@ -1250,7 +1257,7 @@ class PipelineRuntimeService @Autowired constructor(
                 startType = context.startType.name, buildNum = context.buildNum,
                 projectId = context.projectId, pipelineId = context.pipelineId,
                 buildId = context.buildId, executeCount = context.executeCount,
-                modelVar = mutableMapOf(), status = context.startBuildStatus.name,
+                modelVar = modelVar, status = context.startBuildStatus.name,
                 timestamps = mapOf(
                     BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
                         BuildRecordTimeStamp(context.now.timestampmilli(), null)

@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import java.time.LocalDateTime
@@ -86,7 +87,8 @@ class TaskBuildRecordService(
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    pipelineModelParser: PipelineModelParser
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
@@ -97,7 +99,8 @@ class TaskBuildRecordService(
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
     pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineElementService = pipelineElementService,
+    pipelineModelParser = pipelineModelParser
 ) {
 
     fun updateTaskStatus(

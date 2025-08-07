@@ -83,10 +83,6 @@ data class Variable(
     val ifCondition: Map<String, String>? = null
 ) : IVariable
 
-data class ShortVariable(val value: String) : IVariable
-
-data class TemplateVariable(private val list: List<Extends>) : List<Extends> by list, IVariable
-
 /**
  * Variable 属性变量
  * @param label 可选, 预定义下拉可选值的字段
