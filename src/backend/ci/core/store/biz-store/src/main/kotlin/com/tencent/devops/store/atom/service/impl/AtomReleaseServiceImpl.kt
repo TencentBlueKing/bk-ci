@@ -1517,7 +1517,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
 
-    override fun getAtomGitRecentCommitMessage(userId: String, branch: String, codeSrc: String): Result<String> {
+    override fun getAtomGitRecentCommitMessage(userId: String, branch: String?, codeSrc: String): Result<String> {
         val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
         if (accessToken.isNullOrBlank()) {
             logger.warn("User [$userId] has not performed OAUTH authorization. Please authorize first.")
@@ -1526,7 +1526,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val commitMessage = client.get(ServiceGitResource::class)
             .getRepoRecentCommitInfo(
                 repoName = GitUtils.getProjectName(codeSrc),
-                sha = branch,
+                sha = branch ?: MASTER,
                 token = accessToken,
                 tokenType = TokenTypeEnum.OAUTH
             ).data?.message ?: ""

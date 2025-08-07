@@ -111,5 +111,5 @@ interface AtomReleaseService {
 
     fun updateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String)
 
-    fun getAtomGitRecentCommitMessage(userId: String, branch: String, codeSrc: String): Result<String>
+    fun getAtomGitRecentCommitMessage(userId: String, branch: String?, codeSrc: String): Result<String>
 }

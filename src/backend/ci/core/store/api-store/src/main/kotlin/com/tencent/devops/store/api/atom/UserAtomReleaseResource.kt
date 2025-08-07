@@ -141,7 +141,7 @@ interface UserAtomReleaseResource {
         userId: String,
         @Parameter(description = "分支", required = true)
         @QueryParam("branch")
-        branch: String,
+        branch: String?,
         @Parameter(description = "代码库链接", required = true)
         @QueryParam("codeSrc")
         codeSrc: String,

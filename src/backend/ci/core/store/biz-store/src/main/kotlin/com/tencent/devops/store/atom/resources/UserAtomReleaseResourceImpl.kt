@@ -72,7 +72,7 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
 
     override fun getAtomGitRecentCommitMessage(
         userId: String,
-        branch: String,
+        branch: String?,
         codeSrc: String
     ): Result<String> {
         return atomReleaseService.getAtomGitRecentCommitMessage(userId, branch, codeSrc)
