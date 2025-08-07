@@ -36,9 +36,11 @@ import com.tencent.devops.store.pojo.template.InstallTemplateResp
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.MyTemplateItem
+import com.tencent.devops.store.pojo.template.MyTemplateItemResponse
 import com.tencent.devops.store.pojo.template.TemplateDetail
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 
 @Suppress("ALL")
 interface MarketTemplateService {
@@ -78,6 +80,11 @@ interface MarketTemplateService {
     ): Result<TemplateDetail?>
 
     /**
+     * 获取研发商店模板状态
+     */
+    fun getMarketTemplateStatus(templateCode: String): TemplateStatusEnum
+
+    /**
      * 根据模版ID获取模版
      */
     fun getTemplateDetailById(
@@ -97,6 +104,15 @@ interface MarketTemplateService {
      * 安装模板到项目
      */
     fun installTemplate(
+        userId: String,
+        channelCode: ChannelCode,
+        installTemplateReq: InstallTemplateReq
+    ): Result<InstallTemplateResp>
+
+    /**
+     * 安装模板到项目-v2版本
+     */
+    fun installTemplateV2(
         userId: String,
         channelCode: ChannelCode,
         installTemplateReq: InstallTemplateReq
@@ -130,6 +146,17 @@ interface MarketTemplateService {
         page: Int,
         pageSize: Int
     ): Result<Page<MyTemplateItem>?>
+
+    fun getMyTemplatesNew(
+        userId: String,
+        templateName: String?,
+        projectName: String?,
+        status: TemplateStatusEnum?,
+        modifier: String?,
+        description: String?,
+        page: Int,
+        pageSize: Int
+    ): Page<MyTemplateItemResponse>
 
     /**
      * 根据模板ID和模板代码判断模板是否存在

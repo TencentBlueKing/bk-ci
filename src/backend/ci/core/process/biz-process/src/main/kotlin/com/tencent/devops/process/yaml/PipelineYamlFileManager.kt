@@ -47,10 +47,11 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
@@ -64,7 +65,6 @@ import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.process.yaml.pojo.YamlPipelineActionType
-import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmFileApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmPullRequestApiResource
@@ -187,8 +187,8 @@ class PipelineYamlFileManager @Autowired constructor(
             checkParam()
             logger.info(
                 "[PAC_PIPELINE]|create or update yaml pipeline|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
-                        "commitId:${commit!!.commitId}|blobId:$blobId"
+                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
+                    "commitId:${commit!!.commitId}|blobId:$blobId"
             )
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
@@ -210,8 +210,8 @@ class PipelineYamlFileManager @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to create or update yaml pipeline|eventId:$eventId|" +
-                            "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
-                            "commitId:${commit.commitId}|blobId:$blobId",
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
+                        "commitId:${commit.commitId}|blobId:$blobId",
                     ignored
                 )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
@@ -235,7 +235,7 @@ class PipelineYamlFileManager @Autowired constructor(
         with(event) {
             logger.info(
                 "[PAC_PIPELINE]|delete pipeline yaml|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
+                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
             )
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
@@ -257,7 +257,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to delete pipeline yaml|eventId:$eventId|" +
-                            "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
                     ignored
                 )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
@@ -275,7 +275,7 @@ class PipelineYamlFileManager @Autowired constructor(
         with(event) {
             logger.info(
                 "[PAC_PIPELINE]|rename pipeline yaml|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
+                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
             )
             checkParam()
             if (oldFilePath.isNullOrBlank()) {
@@ -297,8 +297,8 @@ class PipelineYamlFileManager @Autowired constructor(
         with(yamlFileReleaseReq) {
             logger.info(
                 "[PAC_PIPELINE]|release pipeline yaml file|" +
-                        "userId:$userId|projectId:$projectId|pipelineId:$pipelineId|" +
-                        "repoHashId:$repoHashId|version:$version|versionName:$versionName"
+                    "userId:$userId|projectId:$projectId|pipelineId:$pipelineId|" +
+                    "repoHashId:$repoHashId|version:$version|versionName:$versionName"
             )
             val repository = client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId,
@@ -347,13 +347,12 @@ class PipelineYamlFileManager @Autowired constructor(
                 ).data!!
                 // 创建mr
                 val needCreatePullRequest = targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE ||
-                        targetAction == CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
+                    targetAction == CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                 val pullRequest = if (needCreatePullRequest) {
                     createPullRequest(
                         ref = ref,
                         targetBranch = defaultBranch,
                         commitMessage = commitMessage,
-                        pipelineName = pipelineName,
                         newFile = filePushResult.newFile,
                         authRepository = authRepository
                     )
@@ -372,7 +371,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     repoHashId = repoHashId,
                     filePath = filePath,
                     branch = ref,
-                    mrUrl = pullRequest?.link
+                    pullRequestUrl = pullRequest?.link
                 )
             } catch (ignored: RemoteServiceException) {
                 throw when (ignored.errorCode) {
@@ -381,6 +380,7 @@ class PipelineYamlFileManager @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
                         params = arrayOf(repository.projectName)
                     )
+
                     HTTP_401, HTTP_403 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
                         params = arrayOf(repository.userName, repository.projectName)
@@ -391,7 +391,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to release yaml pipeline|projectId:$projectId|pipelineId:$pipelineId|" +
-                            "repoHashId:$repoHashId|version:$version|versionName:$versionName",
+                        "repoHashId:$repoHashId|version:$version|versionName:$versionName",
                     ignored
                 )
                 throw ignored
@@ -405,24 +405,11 @@ class PipelineYamlFileManager @Autowired constructor(
         ref: String,
         targetBranch: String,
         commitMessage: String,
-        pipelineName: String,
         newFile: Boolean,
         authRepository: AuthRepository
     ): PullRequest? {
-        val dateStr = DateTimeUtil.toDateTime(LocalDateTime.now())
-        val title = if (newFile) {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
-                params = arrayOf(dateStr, pipelineName),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
-        } else {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
-                params = arrayOf(dateStr, pipelineName),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
-        }
+
+        val title = getPullRequestTitle(newFile = newFile)
         return client.get(ServiceScmPullRequestApiResource::class).createPullRequestIfAbsent(
             projectId = projectId,
             pullRequestCreateReq = ScmPullRequestCreateReq(
@@ -470,7 +457,7 @@ class PipelineYamlFileManager @Autowired constructor(
             val pipelineName = pipelineYamlResourceManager.getPipelineName(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                isTemplate = GitActionCommon.isTemplateFile(filePath)
+                isTemplate = isTemplate
             ) ?: run {
                 throw ErrorCodeException(
                     errorCode = ERROR_PIPELINE_NOT_EXISTS,
@@ -544,7 +531,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.createYamlPipeline(): DeployPipelineResult {
         val isDefaultBranch = ref == defaultBranch
         val directory = GitActionCommon.getCiDirectory(filePath)
-        val yamlInfo = PipelineYamlVo(repoHashId = repoHashId, filePath = filePath)
+        val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
         // 如果不是默认分支,需要判断默认分支是否已经删除,如果删除,不能再创建
         if (!isDefaultBranch) {
             val defaultBranchDeleted = pipelineYamlFileService.getBranchFilePath(
@@ -571,15 +558,7 @@ class PipelineYamlFileManager @Autowired constructor(
             userId = authUser,
             projectId = projectId,
             yaml = content.content,
-            yamlFileName = GitActionCommon.getCiFileName(filePath),
-            branchName = ref,
-            isDefaultBranch = isDefaultBranch,
-            description = commit.commitMsg,
-            aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
-                repository.aliasName
-            }),
-            yamlInfo = yamlInfo,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            event = this
         )
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
@@ -611,8 +590,8 @@ class PipelineYamlFileManager @Autowired constructor(
         )
         logger.info(
             "[PAC_PIPELINE]|create pipeline|eventId:$eventId|" +
-                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
-                    "pipelineId:$pipelineId|version:$version|versionName:${deployPipelineResult.versionName}"
+                "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
+                "pipelineId:$pipelineId|version:$version|versionName:${deployPipelineResult.versionName}"
         )
         return deployPipelineResult
     }
@@ -695,8 +674,8 @@ class PipelineYamlFileManager @Autowired constructor(
         return if (pipelineYamlVersion != null) {
             logger.info(
                 "[PAC_PIPELINE]|find pipeline yaml version in commit,skip update|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|commitId:$commitId|" +
-                        "version:${pipelineYamlVersion.version}"
+                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|commitId:$commitId|" +
+                    "version:${pipelineYamlVersion.version}"
             )
             true
         } else {
@@ -729,8 +708,8 @@ class PipelineYamlFileManager @Autowired constructor(
             if (it.blobId == blobId) {
                 logger.info(
                     "[PAC_PIPELINE]|find pipeline yaml version in current branch,skip update|" +
-                            "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|blobId:$blobId|" +
-                            "version:${it.version}"
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|blobId:$blobId|" +
+                        "version:${it.version}"
                 )
                 false
             } else {
@@ -772,8 +751,8 @@ class PipelineYamlFileManager @Autowired constructor(
             if (pipelineYamlVersion != null) {
                 logger.info(
                     "[PAC_PIPELINE]|find pipeline yaml version in default branch,skip update|" +
-                            "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|blobId:$blobId|" +
-                            "version:${pipelineYamlVersion.version}"
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|blobId:$blobId|" +
+                        "version:${pipelineYamlVersion.version}"
                 )
                 false
             } else {
@@ -783,10 +762,6 @@ class PipelineYamlFileManager @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.updateYamlPipeline(pipelineId: String): DeployPipelineResult {
-        val yamlInfo = PipelineYamlVo(
-            repoHashId = repoHashId,
-            filePath = filePath
-        )
         val content = pipelineYamlFileService.getFileContent(
             projectId = projectId,
             path = filePath,
@@ -798,15 +773,7 @@ class PipelineYamlFileManager @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = content.content,
-            yamlFileName = GitActionCommon.getCiFileName(filePath),
-            branchName = ref,
-            isDefaultBranch = ref == defaultBranch,
-            description = commit.commitMsg,
-            aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
-                repository.aliasName
-            }),
-            yamlInfo = yamlInfo,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            event = this
         )
         pipelineYamlService.update(
             projectId = projectId,
@@ -823,8 +790,8 @@ class PipelineYamlFileManager @Autowired constructor(
         )
         logger.info(
             "[PAC_PIPELINE]|update pipeline version|eventId:$eventId|" +
-                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
-                    "version:${deployPipelineResult.version}|versionName:${deployPipelineResult.versionName}"
+                "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
+                "version:${deployPipelineResult.version}|versionName:${deployPipelineResult.versionName}"
         )
         return deployPipelineResult
     }
@@ -832,7 +799,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.deletePipelineOrBranchVersion(context: PipelineYamlChangeContext) {
         logger.info(
             "[PAC_PIPELINE]|delete pipeline or branch version|eventId:$eventId|" +
-                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
+                "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
         )
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
@@ -849,7 +816,7 @@ class PipelineYamlFileManager @Autowired constructor(
         val pipelineName = pipelineYamlResourceManager.getPipelineName(
             projectId = projectId,
             pipelineId = pipelineId,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            isTemplate = isTemplate
         ) ?: run {
             throw ErrorCodeException(
                 errorCode = ERROR_PIPELINE_NOT_EXISTS,
@@ -871,7 +838,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } else {
                 context.actionType = YamlPipelineActionType.NO_CHANGE
                 "[PAC_PIPELINE]|branch version has deleted|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
+                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
             }
         }
         if (shouldDeletePipeline || shouldDeleteVersion) {
@@ -896,12 +863,12 @@ class PipelineYamlFileManager @Autowired constructor(
         val releaseVersionExists = pipelineYamlResourceManager.existsReleaseVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            isTemplate = isTemplate
         )
         if (releaseVersionExists) {
             logger.info(
                 "[PAC_PIPELINE]|release version exists, cannot be deleted|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
+                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
             )
             return Pair(false, true)
         }
@@ -957,8 +924,8 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.deleteBranchVersion(pipelineId: String) {
         logger.info(
             "[PAC_PIPELINE]|delete pipeline branch version|eventId:$eventId|" +
-                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|" +
-                    "ref:$ref|commitId:${commit?.commitId}|pipelineId:$pipelineId"
+                "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|" +
+                "ref:$ref|commitId:${commit?.commitId}|pipelineId:$pipelineId"
         )
         pipelineYamlService.updateBranchAction(
             projectId = projectId,
@@ -974,7 +941,8 @@ class PipelineYamlFileManager @Autowired constructor(
             branchName = ref,
             releaseBranch = true,
             branchVersionAction = BranchVersionAction.INACTIVE,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            pullRequestId = pullRequestId,
+            isTemplate = isTemplate
         )
         pipelineYamlService.refreshPipelineYamlStatus(
             projectId = projectId,
@@ -990,8 +958,8 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.deletePipeline(pipelineId: String) {
         logger.info(
             "[PAC_PIPELINE]|delete pipeline|eventId:$eventId|" +
-                    "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|" +
-                    "ref:$ref|commitId:${commit?.commitId}|pipelineId:$pipelineId"
+                "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|" +
+                "ref:$ref|commitId:${commit?.commitId}|pipelineId:$pipelineId"
         )
         pipelineYamlService.deleteYamlPipeline(
             userId = authUser,
@@ -1016,5 +984,65 @@ class PipelineYamlFileManager @Autowired constructor(
                 directory = directory
             )
         }
+    }
+
+    private fun PipelineYamlFileReleaseReq.getPullRequestTitle(
+        newFile: Boolean
+    ): String {
+        val dateStr = DateTimeUtil.toDateTime(LocalDateTime.now())
+        val title = if (newFile) {
+            when (source) {
+                PipelineYamlFileReleaseReqSource.PIPELINE -> {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_MERGE_PIPELINE_YAML_UPDATE_TITLE,
+                        params = arrayOf(dateStr, pipelineName),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+
+                PipelineYamlFileReleaseReqSource.TEMPLATE -> {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_MERGE_TEMPLATE_YAML_CREATE_TITLE,
+                        params = arrayOf(dateStr, pipelineName),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+
+                PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE -> {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE,
+                        params = arrayOf(dateStr, templateName ?: ""),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+            }
+        } else {
+            when (source) {
+                PipelineYamlFileReleaseReqSource.PIPELINE -> {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_MERGE_PIPELINE_YAML_UPDATE_TITLE,
+                        params = arrayOf(dateStr, pipelineName),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+
+                PipelineYamlFileReleaseReqSource.TEMPLATE -> {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_MERGE_TEMPLATE_YAML_UPDATE_TITLE,
+                        params = arrayOf(dateStr, pipelineName),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+
+                PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE -> {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE,
+                        params = arrayOf(dateStr, templateName ?: ""),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+            }
+        }
+        return title
     }
 }

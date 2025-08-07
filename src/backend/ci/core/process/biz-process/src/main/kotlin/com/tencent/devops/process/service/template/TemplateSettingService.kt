@@ -1,11 +1,13 @@
 package com.tencent.devops.process.service.template
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.pojo.event.PipelineTemplateMigrateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.service.PipelineAsCodeService
@@ -30,7 +32,8 @@ class TemplateSettingService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
     fun updateTemplateSetting(
         projectId: String,
@@ -40,6 +43,8 @@ class TemplateSettingService @Autowired constructor(
     ): Boolean {
         logger.info("Start to update the template setting - [$projectId|$userId|$templateId]")
         templateCommonService.checkPermission(projectId, userId)
+        setting.fixSubscriptions()
+        modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templateCommonService.checkTemplateName(
@@ -70,17 +75,15 @@ class TemplateSettingService @Autowired constructor(
         setting: PipelineSetting
     ): PipelineSetting {
         val projectId = setting.projectId
-        val pipelineId = setting.pipelineId
+        val templateId = setting.pipelineId
         // 对齐新旧通知配置，统一根据新list数据保存
-        setting.fixSubscriptions()
-        modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         val settingVersion = pipelineSettingVersionService.getSettingVersionAfterUpdate(
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = templateId,
             updateVersion = true,
             setting = setting
         )
-        logger.info("Save the template pipeline setting|$pipelineId|settingVersion=$settingVersion|setting=\n$setting")
+        logger.info("Save the template pipeline setting|$templateId|settingVersion=$settingVersion|setting=\n$setting")
         val templateName = pipelineRepositoryService.saveSetting(
             context = context,
             userId = userId,
@@ -103,6 +106,16 @@ class TemplateSettingService @Autowired constructor(
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
+        )
+        // 同步数据
+        pipelineEventDispatcher.dispatch(
+            PipelineTemplateMigrateEvent(
+                projectId = projectId,
+                source = "PIPELINE_TEMPLATE_MIGRATE",
+                pipelineId = "",
+                userId = userId,
+                templateId = templateId
+            )
         )
         return setting.copy(version = settingVersion)
     }

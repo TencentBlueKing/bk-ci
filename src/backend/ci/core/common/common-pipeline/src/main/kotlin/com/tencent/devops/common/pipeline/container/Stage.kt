@@ -27,9 +27,10 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.pipeline.IModelTemplate
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -71,10 +72,23 @@ data class Stage(
     var executeCount: Int? = null,
     @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    override var template: String? = null,
-    override var ref: String? = null,
-    override var variables: Map<String, String>? = null
-) : IModelTemplate {
+    @get:Schema(title = "来源于模版", required = false)
+    override var fromTemplate: Boolean? = null,
+    @get:Schema(title = "模板路径", required = false)
+    override var templatePath: String? = null,
+    @get:Schema(title = "模板版本引用,分支/tag/commit", required = false)
+    override var templateRef: String? = null,
+    @get:Schema(title = "模板ID", required = false)
+    override var templateId: String? = null,
+    @get:Schema(title = "模版版本名称", required = false)
+    override var templateVersionName: String? = null,
+    @get:Schema(title = "模板参数构建", required = false)
+    override var templateVariables: List<TemplateVariable>? = null,
+    @get:Schema(title = "解析后的模版ID", required = false)
+    override var parsedTemplateId: String? = null,
+    @get:Schema(title = "解析后的模版版本", required = false)
+    override var parsedTemplateVersion: Long? = null
+) : TemplateDescriptor {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
      */
