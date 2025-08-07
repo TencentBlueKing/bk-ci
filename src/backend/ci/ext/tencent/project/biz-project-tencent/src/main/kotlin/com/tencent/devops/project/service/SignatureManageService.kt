@@ -144,6 +144,7 @@ class SignatureManageService(
         val userNickName = try {
             getUserNickname(userId)
         } catch (ex: Exception) {
+            logger.warn("Failed to get user nickname, use userId instead", ex)
             userId
         }
         try {
