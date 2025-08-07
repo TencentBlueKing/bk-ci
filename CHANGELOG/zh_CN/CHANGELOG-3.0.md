@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.15](#v3015)
+   - [Changelog since v3.0.14](#changelog-since-v3014)
+
 - [v3.0.14](#v3014)
    - [Changelog since v3.0.13](#changelog-since-v3013)
 
@@ -22,6 +25,16 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.15
+## 2025-08-06
+### Changelog since v3.0.14
+#### 新增
+
+##### 未分类
+- [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [新增] feat: 升级turbo版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+
 # v3.0.14
 ## 2025-07-11
 ### Changelog since v3.0.13
