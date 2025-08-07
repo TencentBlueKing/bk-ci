@@ -40,6 +40,7 @@ import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import org.jooq.Condition
@@ -100,8 +101,8 @@ class TemplatePipelineDao {
                     userId,
                     now,
                     now,
-                    buildNo ?: "",
-                    param ?: ""
+                    buildNo,
+                    param
                 )
                 .execute()
         }
@@ -389,7 +390,9 @@ class TemplatePipelineDao {
         templateVersion: Long,
         versionName: String,
         userId: String,
-        instance: TemplateInstanceUpdate
+        instance: TemplateInstanceUpdate,
+        status: TemplatePipelineStatus? = null,
+        pullRequestUrl: String? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.update(this)
@@ -400,6 +403,8 @@ class TemplatePipelineDao {
                 .set(PARAM, instance.param?.let { self -> JsonUtil.toJson(self, formatted = false) })
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .setNull(INSTANCE_ERROR_INFO)
+                .let { if (status != null) it.set(STATUS, status.name) else it }
+                .let { if (pullRequestUrl != null) it.set(PULL_REQUEST_URL, pullRequestUrl) else it }
                 .where(PIPELINE_ID.eq(instance.pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }

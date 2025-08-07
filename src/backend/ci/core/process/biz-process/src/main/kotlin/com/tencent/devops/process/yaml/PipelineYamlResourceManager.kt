@@ -28,40 +28,28 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.util.LinkedList
 
 @Service
 class PipelineYamlResourceManager @Autowired constructor(
-    private val pipelineYamlResourceService: PipelineYamlResourceService
+    private val pipelineYamlResourceService: PipelineYamlResourceService,
+    @Lazy private val pTemplateYamlResourceService: PTemplateYamlResourceService
 ) {
     fun createYamlPipeline(
         userId: String,
         projectId: String,
         yaml: String,
-        yamlFileName: String,
-        branchName: String,
-        isDefaultBranch: Boolean,
-        description: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        isTemplate: Boolean
+        event: PipelineYamlFileEvent
     ): DeployPipelineResult {
-        return getService(isTemplate).createYamlPipeline(
+        return getService(event.isTemplate).createYamlPipeline(
             userId = userId,
             projectId = projectId,
             yaml = yaml,
-            yamlFileName = yamlFileName,
-            branchName = branchName,
-            isDefaultBranch = isDefaultBranch,
-            description = description,
-            aspects = aspects,
-            yamlInfo = yamlInfo
+            event = event
         )
     }
 
@@ -70,25 +58,14 @@ class PipelineYamlResourceManager @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
-        yamlFileName: String,
-        branchName: String,
-        isDefaultBranch: Boolean,
-        description: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null,
-        yamlInfo: PipelineYamlVo? = null,
-        isTemplate: Boolean
+        event: PipelineYamlFileEvent
     ): DeployPipelineResult {
-        return getService(isTemplate).updateYamlPipeline(
+        return getService(event.isTemplate).updateYamlPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = yaml,
-            yamlFileName = yamlFileName,
-            branchName = branchName,
-            isDefaultBranch = isDefaultBranch,
-            description = description,
-            aspects = aspects,
-            yamlInfo = yamlInfo
+            event = event
         )
     }
 
@@ -99,6 +76,7 @@ class PipelineYamlResourceManager @Autowired constructor(
         branchName: String,
         branchVersionAction: BranchVersionAction,
         releaseBranch: Boolean? = false,
+        pullRequestId: Long?,
         isTemplate: Boolean
     ) {
         return getService(isTemplate).updateBranchVersion(
@@ -107,7 +85,8 @@ class PipelineYamlResourceManager @Autowired constructor(
             pipelineId = pipelineId,
             branchName = branchName,
             releaseBranch = releaseBranch,
-            branchVersionAction = branchVersionAction
+            branchVersionAction = branchVersionAction,
+            pullRequestId = pullRequestId
         )
     }
 
@@ -116,7 +95,7 @@ class PipelineYamlResourceManager @Autowired constructor(
         projectId: String,
         pipelineId: String,
         isTemplate: Boolean
-    ): DeletePipelineResult {
+    ) {
         return getService(isTemplate).deletePipeline(
             userId = userId,
             projectId = projectId,
@@ -147,6 +126,10 @@ class PipelineYamlResourceManager @Autowired constructor(
     }
 
     fun getService(isTemplate: Boolean): IPipelineYamlResourceService {
-        return pipelineYamlResourceService
+        return if (isTemplate) {
+            pTemplateYamlResourceService
+        } else {
+            pipelineYamlResourceService
+        }
     }
 }

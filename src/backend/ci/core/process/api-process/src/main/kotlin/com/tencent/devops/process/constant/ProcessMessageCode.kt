@@ -82,7 +82,7 @@ object ProcessMessageCode {
     const val BK_PIPELINE_NAME = "bkPipelineName" // 流水线名称
     const val BK_CREATOR = "bkCreator" // 创建人
     const val BK_TCLS_ENVIRONMENT_MESSAGE = "bkTclsEnvironmentMessage" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
-    const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是否正确
+    const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是 否正确
     const val BK_CONTINUE = "bkContinue" // 继续
     const val BK_OVERRULE = "bkOverrule" // 驳回
     const val BK_TRIGGER = "bkTrigger" // 触发
@@ -335,8 +335,10 @@ object ProcessMessageCode {
     const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
     const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容为空，请检查
     const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
+
     // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
     const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
+
     // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
     const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
     const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
@@ -572,16 +574,21 @@ object ProcessMessageCode {
 
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
-    const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
-    const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
+    const val BK_MERGE_PIPELINE_YAML_CREATE_TITLE = "bkMergePipelineYamlCreateTitle" // 新增流水线发布mr标题
+    const val BK_MERGE_PIPELINE_YAML_UPDATE_TITLE = "bkMergePipelineYamlUpdateTitle" // 修改流水线发布mr标题
+    const val BK_MERGE_TEMPLATE_YAML_CREATE_TITLE = "bkMergeTemplateYamlCreateTitle" // 新增模版发布mr标题
+    const val BK_MERGE_TEMPLATE_YAML_UPDATE_TITLE = "bkMergeTemplateYamlUpdateTitle" // 修改模版发布mr标题
+    const val BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE = "bkMergeTemplateInstanceYamlTitle" // 模版实例化标题
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+
     // 没有子流水线执行权限错误标题
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
+
     // 没有子流水线执行权限错误消息
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
 
@@ -591,6 +598,7 @@ object ProcessMessageCode {
 
     // 权限代持人[xxx]已无当前流水线执行权限，可能是权限已过期或不再负责此流水线，请联系流水线拥有者处理
     const val BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION = "bkAuthorNotPipelineExecutePermission"
+
     // 子流水线循环依赖错误标题
     const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
 
@@ -623,4 +631,13 @@ object ProcessMessageCode {
     const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
+
+    // 自定义模板名称
+    const val BK_CUSTOM_PIPELINE_TEMPLATE_NAME = "bkCustomPipelineTemplateName"
+
+    // 研发商店模板名称
+    const val BK_MARKET_PIPELINE_TEMPLATE_NAME = "bkMarketPipelineTemplateName"
+
+    // 公共模板名称
+    const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
 }

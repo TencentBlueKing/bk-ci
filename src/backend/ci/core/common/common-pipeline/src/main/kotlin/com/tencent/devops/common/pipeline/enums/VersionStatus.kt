@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.enums
 
 enum class VersionStatus(val statusName: String) {
+    INIT("初始化状态"),
     RELEASED("已发布版本"),
     COMMITTING("草稿版本"),
     BRANCH("分支版本"),
@@ -48,10 +49,28 @@ enum class VersionStatus(val statusName: String) {
     fun isReleasing(): Boolean = this == RELEASED || this == BRANCH_RELEASE || this == DRAFT_RELEASE
 
     fun isNotReleased(): Boolean = this == COMMITTING || this == BRANCH
+
+    companion object {
+        fun get(name: String): VersionStatus {
+            VersionStatus.values().forEach {
+                if (name == it.name) return it
+            }
+            throw IllegalArgumentException("No enum for constant $name")
+        }
+    }
 }
 
 enum class BranchVersionAction(val statusName: String) {
     ACTIVE("活跃分支（可以被代码推送直接更新）"),
     INACTIVE("不活跃分支（已被发布或已被删除）"),
     CONFLICT("有冲突分支（落后于主干无法直接合入）");
+
+    companion object {
+        fun get(name: String): BranchVersionAction {
+            BranchVersionAction.values().forEach {
+                if (name == it.name) return it
+            }
+            throw IllegalArgumentException("No enum for constant $name")
+        }
+    }
 }

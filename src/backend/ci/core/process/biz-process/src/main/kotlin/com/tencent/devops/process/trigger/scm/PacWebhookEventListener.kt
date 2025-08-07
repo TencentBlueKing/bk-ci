@@ -40,6 +40,7 @@ import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType.CREATE
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType.RENAME
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType.UPDATE
+import com.tencent.devops.process.yaml.pojo.YamlFileActionType.TRIGGER
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
@@ -91,7 +92,10 @@ class PacWebhookEventListener(
                 repository = repository,
                 yamlFileEvents = filterYamlFileEvents
             )
-            filterYamlFileEvents.forEach {
+            filterYamlFileEvents.filterNot {
+                // 模版不需要触发
+                it.isTemplate && it.actionType == TRIGGER
+            }.forEach {
                 eventDispatcher.dispatch(it)
             }
         } catch (ignored: Exception) {

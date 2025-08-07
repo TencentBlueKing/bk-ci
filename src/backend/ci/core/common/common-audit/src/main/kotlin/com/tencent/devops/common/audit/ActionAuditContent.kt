@@ -57,6 +57,8 @@ object ActionAuditContent {
     const val PIPELINE_TEMPLATE_EDIT_SETTING_CONTENT = "update template setting $CONTENT_TEMPLATE " +
         "in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_TEMPLATE_EDIT_CONTENT = "update template $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_VIEW_CONTENT = "get template info  $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_EXPORT_CONTENT = "export template $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 证书
     const val CERT_CREATE_CONTENT = "create cert $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

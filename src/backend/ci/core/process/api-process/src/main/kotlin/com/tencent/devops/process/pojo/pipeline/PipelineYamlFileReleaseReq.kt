@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -47,8 +46,6 @@ data class PipelineYamlFileReleaseReq(
     val versionName: String?,
     @get:Schema(title = "代码库hashId", required = true)
     val repoHashId: String,
-    @get:Schema(title = "代码库类型", required = true)
-    val scmType: ScmType,
     @get:Schema(title = "文件路径", required = true)
     val filePath: String,
     @get:Schema(title = "文件内容", required = true)
@@ -58,5 +55,9 @@ data class PipelineYamlFileReleaseReq(
     @get:Schema(title = "提交类型", required = true)
     val targetAction: CodeTargetAction,
     @get:Schema(title = "目标分支", required = true)
-    val targetBranch: String? = null
+    val targetBranch: String? = null,
+    @get:Schema(title = "请求来源", required = true)
+    val source: PipelineYamlFileReleaseReqSource = PipelineYamlFileReleaseReqSource.PIPELINE,
+    @get:Schema(title = "模版名称", required = true)
+    val templateName: String? = null
 )

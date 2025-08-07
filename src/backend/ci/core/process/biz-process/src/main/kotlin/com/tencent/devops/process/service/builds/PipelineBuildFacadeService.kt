@@ -1200,7 +1200,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         reviewUsers: List<String>,
         params: MutableList<ManualReviewParam>,
-        desc: String,
+        desc: String
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
         reviewUsers.forEach { user ->

@@ -170,6 +170,8 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE` (
   `PARAM` mediumtext COMMENT '参数',
   `DELETED` bit(1) DEFAULT b'0' COMMENT '流水线已被软删除',
   `INSTANCE_ERROR_INFO` text null comment '实例化错误信息',
+  `STATUS` varchar(32) default 'UPDATED' not null comment '状态',
+  `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接',
   PRIMARY KEY (`PIPELINE_ID`),
   KEY `TEMPLATE_ID` (`TEMPLATE_ID`),
   KEY `ROOT_TEMPLATE_ID` (`ROOT_TEMPLATE_ID`),
