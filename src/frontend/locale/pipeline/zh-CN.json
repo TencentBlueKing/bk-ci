@@ -645,7 +645,8 @@
     "triggerEnabled": "是否启用",
     "enable": "启用",
     "close": "不启用",
-    "timeCron": "定时规则"
+    "timeCron": "定时规则",
+    "notStepIdTips": "触发器[{0}]缺少 Step ID ，请修改模版补全 Step ID"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

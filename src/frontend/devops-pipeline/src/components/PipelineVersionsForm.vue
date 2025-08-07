@@ -7,10 +7,6 @@
             <label class="pipeline-execute-version-label">
                 <span :class="{ 'deleted': isDelete }">{{ $t('versionNum') }}</span>
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
-
-                <span :class="['status-tag', statusTagConfig.theme]">
-                    {{ statusTagConfig.message }}
-                </span>
             </label>
             <div class="execute-build-version">
                 <span
@@ -286,22 +282,6 @@
             },
             isNew () {
                 return this.versionParamList.every(i => i?.isNew)
-            },
-            statusTagConfig () {
-                let message, theme
-                if (this.isDelete) {
-                    message = this.$t('deleted')
-                    theme = 'danger'
-                }
-                if (this.isNew) {
-                    message = this.$t('new')
-                    theme = 'success'
-                }
-                return {
-                    message,
-                    theme,
-                    isShow: this.isDelete || this.isNew
-                }
             }
         }
     }

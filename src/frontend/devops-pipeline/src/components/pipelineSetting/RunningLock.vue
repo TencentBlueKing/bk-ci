@@ -241,7 +241,7 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
-import ConstraintWraper from '@/components/ConstraintWraper.vue'
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',

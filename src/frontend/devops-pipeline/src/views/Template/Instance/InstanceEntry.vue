@@ -184,14 +184,23 @@
         }
         const fn = fnMap[proxy.$route.params?.type]
         try {
+            console.log(instanceList.value, '1')
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
                     pipelineId: item.pipelineId,
                     pipelineName: item.pipelineName,
-                    buildNo: item.buildNo,
-                    param: item.param,
+                    buildNo: {
+                        ...item.buildNo,
+                        required: item.buildNo.isRequiredParam
+                    },
+                    param: item.param.map(i => ({
+                        ...i,
+                        required: i.isRequiredParam
+                    })),
                     timerTrigger: item.timerTrigger,
-                    filePath: `.ci/${item.filePath}`
+                    filePath: item.filePath ? `.ci/${item.filePath}` : undefined,
+                    overrideTemplateField: item.overrideTemplateField,
+                    triggerConfigs: item.triggerConfigs
                 }
             })
             const res = await proxy.$store.dispatch(fn, {

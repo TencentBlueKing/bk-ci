@@ -90,6 +90,8 @@
                                 :hide-deleted="hideDeleted"
                                 :handle-use-default-value="handleUseDefaultValue"
                                 :handle-set-parma-required="handleSetParmaRequired"
+                                follow-template-key="param"
+                                :handle-follow-template="handleFollowTemplate"
                             >
                                 <template
                                     slot="versionParams"
@@ -99,8 +101,13 @@
                                         :name="$t('preview.introVersion')"
                                         default-layout
                                         show-follow-template-btn
-                                        key="introVersion"
+                                        show-set-required-btn
+                                        v-bind="versionParams"
+                                        follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
+                                        :handle-set-build-no-required="handleSetBuildNoRequired"
+                                        :is-required-param="curInstance.buildNo.isRequiredParam"
+                                        :is-follow-template="curInstance.buildNo.isFollowTemplate"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -194,6 +201,8 @@
                                     <renderSortCategoryParams
                                         :name="$t('preview.introVersion')"
                                         default-layout
+                                        key="introVersion"
+                                        v-bind="versionParams"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -241,12 +250,16 @@
                                 :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
                                 default-layout
                                 show-follow-template-btn
-                                display-key="trigger"
-                                :handle-follow-template="handleFollowTemplate"
+                                follow-template-key="trigger"
+                                check-step-id
+                                v-bind="trigger"
+                                :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
                             >
                                 <template slot="content">
                                     <render-trigger
                                         :trigger="trigger"
+                                        :index="index"
+                                        :handle-change-trigger="handleChangeTrigger"
                                     />
                                 </template>
                             </renderSortCategoryParams>
@@ -320,20 +333,34 @@
             })
         }
         // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
-        let instanceParams, instanceBuildNo
-        if (!props.isInstanceCreateType && instance) {
-            if (instance?.param && (curTemplateVersion.value || templateRef.value) && curTemplateDetail.value?.params) {
+        let instanceParams, instanceBuildNo, instanceTriggerConfigs
+        if (!props.isInstanceCreateType && instance && (curTemplateVersion.value || templateRef.value)) {
+            if (curTemplateDetail.value?.params) {
                 instanceParams = compareParams(instance, curTemplateDetail.value)
             }
-            if (instance && (curTemplateVersion.value || templateRef.value) && curTemplateDetail.value?.buildNo) {
+            if (curTemplateDetail.value?.buildNo) {
                 instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
+            if (templateTriggerConfigs.value.length) {
+                const triggerConfigs = instance.triggerElements?.map(i => ({
+                    atomCode: i.atomCode,
+                    stepId: i.stepId ?? '',
+                    disabled: i.additionalOptions?.enable ?? true,
+                    cron: i.advanceExpression,
+                    variables: i.startParams,
+                    name: i.name,
+                    version: i.version,
+                    isFollowTemplate: (instance?.overrideTemplateField?.triggerStepIds || []).includes(i.stepId)
+                }))
+                instanceTriggerConfigs = compareTriggerConfigs(triggerConfigs, templateTriggerConfigs.value)
+            }
         }
-        if (instanceParams || instanceBuildNo) {
+        if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
             return {
                 ...instance,
                 param: instanceParams ?? instance.param,
-                buildNo: instanceBuildNo ?? instance.buildNo
+                buildNo: instanceBuildNo ?? instance.buildNo,
+                triggerConfigs: instanceTriggerConfigs ?? instance.triggerConfigs
             }
         }
         return instance
@@ -344,6 +371,7 @@
             added: 0,
             deleted: 0
         }
+        // 流水线入参 新增/删除/变更统计
         curInstance?.value?.param?.forEach(item => {
             if (item.isChange) {
                 counts.changed++
@@ -355,6 +383,16 @@
                 counts.deleted++
             }
         })
+
+        // 触发器新增/删除统计
+        // curInstance?.value?.triggerConfigs?.forEach(item => {
+        //     if (item.isNew) {
+        //         counts.added++
+        //     }
+        //     if (item.isDelete) {
+        //         counts.deleted++
+        //     }
+        // })
 
         return counts
     })
@@ -400,6 +438,18 @@
         }
         return paramsList.value.length
     })
+    const templateTriggerConfigs = computed(() => {
+        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
+            atomCode: i.atomCode,
+            stepId: i.stepId ?? '',
+            disabled: i.additionalOptions?.enable ?? true,
+            cron: i.advanceExpression,
+            variables: i.startParams,
+            name: i.name,
+            version: i.version,
+            isFollowTemplate: true
+        }))
+    })
     watch(() => activeIndex.value, () => {
         isLoading.value = true
     })
@@ -432,7 +482,7 @@
 
         // 非入参的参数直接赋值模板配置的入参默认值
         if (instanceBuildNo?.required && !templateBuildNo?.required) {
-            instanceParams.forEach(i => {
+            instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
                     const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
                     i.defaultValue = newValue ?? i.defaultValue
@@ -440,7 +490,7 @@
             })
         }
 
-        instanceParams.forEach(i => {
+        instanceParams?.forEach(i => {
             // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
             if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
                 const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
@@ -476,15 +526,34 @@
         
         return instanceParams
     }
+
+    function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
+        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.stepId, item]))
+        const result = templateTriggerConfigs.map(item => {
+            if (!instanceTriggerMap.has(item.stepId)) {
+                return { ...item, isNew: true }
+            }
+            const instanceTrigger = instanceTriggerMap.get(item.stepId)
+            return { ...item, ...instanceTrigger }
+        })
+
+        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.stepId, item]))
+
+        instanceTriggerConfigs.forEach(item => {
+            if (!templateTriggerMap.has(item.stepId)) {
+                result.push({ ...item, isDelete: true })
+            }
+        })
+        return result
+    }
     function compareBuild (instanceBuildNo, templateBuildNo) {
-        // 将模板的推荐版本号配置覆盖实例推荐版本号
-        if (instanceBuildNo?.required !== templateBuildNo?.required) {
+        if (!instanceBuildNo && !!templateBuildNo) {
+            // 将模板的推荐版本号配置覆盖实例推荐版本号
             return {
                 ...instanceBuildNo,
                 ...templateBuildNo
             }
         }
-        
         return instanceBuildNo
     }
     
@@ -576,19 +645,100 @@
             }
         })
     }
+    function handleSetBuildNoRequired () {
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                buildNo: {
+                    ...curInstance.value?.buildNo,
+                    isRequiredParam: !curInstance.value.buildNo.isRequiredParam
+                }
+            }
+        })
+    }
+    function handleChangeTrigger (name, index, value) {
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                triggerConfigs: curInstance.value?.triggerConfigs.map((trigger, idx) => {
+                    if (idx === index) {
+                        return {
+                            ...trigger,
+                            [name]: value
+                        }
+                    }
+                    return trigger
+                })
+            }
+        })
+    }
     /**
      *
      * @param key 区分 推荐版本号/流水线参数/触发器
-     * @param id 流水线参数 - id | 触发器 - stepId
+     * @param id 流水线入参 id |  触发器 stepId
      */
     function handleFollowTemplate (key, id) {
+        const paramIds = [...curInstance.value.overrideTemplateField?.paramIds]
+        let target = id, index
         switch (key) {
             case 'introVersion':
-                console.log('introVersion')
+                target = 'BK_CI_BUILD_NO'
+                index = paramIds.indexOf(target)
+                index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance.value.overrideTemplateField,
+                            paramIds
+                        },
+                        buildNo: {
+                            ...curInstance.value?.buildNo,
+                            isFollowTemplate: !curInstance.value.buildNo.isFollowTemplate
+                        }
+                    }
+                })
                 break
 
             case 'trigger':
-                console.log('trigger')
+                const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
+                index = triggerStepIds.indexOf(target)
+                index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance.value.overrideTemplateField,
+                            triggerStepIds
+                        },
+                        triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => ({
+                            ...trigger,
+                            isFollowTemplate: triggerStepIds.includes(id)
+                        }))
+                    }
+                })
+                break
+            case 'param':
+                index = paramIds.indexOf(target)
+                index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance.value.overrideTemplateField,
+                            paramIds
+                        },
+                        param: curInstance.value?.param.map(p => ({
+                            ...p,
+                            isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate
+                        }))
+                    }
+                })
                 break
             default:
                 break
@@ -613,16 +763,11 @@
             ...p,
             isChanged: p.defaultValue !== p.value
         }))
-        buildNo.value = curInstance.value?.buildNo || {}
-        triggerConfigs.value = curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
-            atomCode: i.atomCode,
-            stepId: i.stepId,
-            disabled: i.additionalOptions?.enable ?? true,
-            cron: i.advanceExpression,
-            variables: i.startParams,
-            name: i.name,
-            version: i.version
-        }))
+        buildNo.value = {
+            ...curInstance.value?.buildNo,
+            isRequiredParam: curInstance.value?.buildNo?.required ?? false
+        } || {}
+        triggerConfigs.value = curInstance.value?.triggerConfigs || []
         getParamsValue()
         setTimeout(() => {
             isLoading.value = false

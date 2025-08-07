@@ -10,6 +10,7 @@
                 <section class="component-row">
                     <bk-radio-group
                         v-model="trigger.disabled"
+                        @change="(val) => handleChangeTrigger('disabled', index, val)"
                     >
                         <bk-radio
                             :value="true"
@@ -25,7 +26,7 @@
                     </bk-radio-group>
                 </section>
             </form-field>
-            <form-field
+            <!-- <form-field
                 v-if="isTimerTriggerV2"
                 :label="$t('template.timeCron')"
             >
@@ -36,33 +37,31 @@
                     </bk-input>
                 </section>
             </form-field>
-            <form-field
+            <sub-parameter
                 v-if="isTimerTriggerV2"
-                :label="$t('details.startupParams')"
-            >
-                <section class="component-row">
-                    <sub-parameter></sub-parameter>
-                </section>
-            </form-field>
+                :title="$t('details.startupParams')"
+                :value="trigger.variables"
+            /> -->
         </bk-form>
     </section>
 </template>
 
 <script setup>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import SubParameter from '@/components/AtomFormComponent/SubParameter'
-    import { defineProps, computed } from 'vue'
+    // import SubParameter from '@/components/AtomFormComponent/SubParameter'
+    import { defineProps } from 'vue'
     const props = defineProps({
-        trigger: Object
+        index: Boolean,
+        trigger: Object,
+        handleChangeTrigger: Function
     })
-    const isTimerTriggerV2 = computed(() => {
-        const { version, atomCode } = props.trigger
-        return atomCode === 'timerTrigger' && version.startsWith('2.')
-    })
+    // const isTimerTriggerV2 = computed(() => {
+    //     const { version, atomCode } = props.trigger
+    //     return atomCode === 'timerTrigger' && version.startsWith('2.')
+    // })
 
-    function handleShowTimeCronCom () {
-        console.log(123)
-    }
+    // function handleShowTimeCronCom () {
+    // }
 </script>
 
 <style lang="scss" scoped>

@@ -7,10 +7,11 @@
                     <span
                         v-if="showFollowTemplateBtn"
                         :class="['icon-item', {
-                            'active': isFollowTemplate
+                            'active': isFollowTemplate,
+                            'disabled': checkStepId ? !stepId : false
                         }]"
                         v-bk-tooltips="{
-                            content: isFollowTemplate ? $t('template.notFollowTemplateTips') : $t('template.followTemplateTips'),
+                            content: getTooltipMessage,
                             width: 320
                         }"
                         @click.stop="handleChangeFollow"
@@ -19,6 +20,25 @@
                             :name="isFollowTemplate ? 'template-mode-color' : 'template-mode'"
                             size="14"
                         />
+                    </span>
+                    <span
+                        v-if="showSetRequiredBtn"
+                        :class="['icon-item', {
+                            'active': isRequiredParam
+                        }]"
+                        v-bk-tooltips=" isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')"
+                        @click="handelChangeBuildNoRequired"
+                    >
+                        <Logo
+                            :name="isRequiredParam ? 'set-param-active' : 'set-param-default'"
+                            size="14"
+                        />
+                    </span>
+                    <span
+                        v-if="statusTagConfig.message"
+                        :class="['status-tag ml10', statusTagConfig.theme]"
+                    >
+                        {{ statusTagConfig.message }}
                     </span>
                 </div>
                 <i class="devops-icon icon-angle-down"></i>
@@ -42,7 +62,7 @@
             Logo
         },
         props: {
-            displayKey: {
+            followTemplateKey: {
                 type: String,
                 default: ''
             },
@@ -56,21 +76,91 @@
             },
             isFollowTemplate: {
                 type: Boolean,
-                default: true
+                default: false
+            },
+            isRequiredParam: {
+                type: Boolean,
+                default: false
             },
             showFollowTemplateBtn: {
+                type: Boolean,
+                default: false
+            },
+            showSetRequiredBtn: {
                 type: Boolean,
                 default: false
             },
             handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
+            },
+            handleSetBuildNoRequired: {
+                type: Function,
+                default: () => () => {}
+            },
+            checkStepId: {
+                type: Boolean,
+                default: false
+            },
+            stepId: {
+                type: String,
+                default: ''
+            },
+            isNew: {
+                type: Boolean,
+                default: false
+            },
+            isDelete: {
+                type: Boolean,
+                default: false
+            },
+            isChange: {
+                type: Boolean,
+                default: false
+            }
+        },
+        computed: {
+            getTooltipMessage () {
+                if (this.checkStepId) {
+                    if (this.stepId) {
+                        return this.isFollowTemplate
+                            ? this.$t('template.notFollowTemplateTips')
+                            : this.$t('template.followTemplateTips')
+                    } else {
+                        return this.$t('template.notStepIdTips', [this.name])
+                    }
+                } else {
+                    return this.isFollowTemplate
+                        ? this.$t('template.notFollowTemplateTips')
+                        : this.$t('template.followTemplateTips')
+                }
+            },
+            statusTagConfig () {
+                let message, theme
+                if (this.isDelete) {
+                    message = this.$t('deleted')
+                    theme = 'danger'
+                }
+                if (this.isNew) {
+                    message = this.$t('new')
+                    theme = 'success'
+                }
+                return {
+                    message,
+                    theme,
+                    isShow: this.isDelete || this.isNew
+                }
             }
         },
         methods: {
             handleChangeFollow (event) {
                 event.preventDefault()
-                this.handleFollowTemplate(this.displayKey)
+                if (this.checkStepId && !this.stepId) return
+                this.handleFollowTemplate(this.followTemplateKey)
+            },
+            handelChangeBuildNoRequired (event) {
+                event.preventDefault()
+                this.handleSetBuildNoRequired()
             }
         }
     }
@@ -130,6 +220,9 @@
         z-index: 100;
         &.active {
             background: #CDDFFE;
+        }
+        &.disabled {
+            cursor: not-allowed;
         }
     }
 </style>
