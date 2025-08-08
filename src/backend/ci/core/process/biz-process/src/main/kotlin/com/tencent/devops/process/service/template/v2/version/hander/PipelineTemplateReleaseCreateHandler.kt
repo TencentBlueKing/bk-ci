@@ -82,7 +82,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
         )
         val resourceOnlyVersion = if (templateInfo == null) {
             val resourceOnlyVersion = pipelineTemplateGenerator.getDefaultVersion(
-                versionStatus = pTemplateResourceWithoutVersion.status
+                versionStatus = pTemplateResourceWithoutVersion.status,
+                versionName = customVersionName
             )
             pipelineTemplatePersistenceService.initializeTemplate(
                 context = this,
