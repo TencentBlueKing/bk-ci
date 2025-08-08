@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import ManageHeader from '@/components/manage-header.vue';
+import ProjectForm from '@/components/project-form.vue';
+import http from '@/http/api';
+import { Message } from 'bkui-vue';
 import {
   ref,
 } from 'vue';
-import http from '@/http/api';
-import { Message, InfoBox } from 'bkui-vue';
-import ManageHeader from '@/components/manage-header.vue';
-import ProjectForm from '@/components/project-form.vue';
+import { useI18n } from 'vue-i18n';
 import {
   useRouter,
 } from 'vue-router';
@@ -35,27 +35,6 @@ const projectData = ref({
 });
 const projectForm = ref(null);
 const btnLoading = ref(false);
-const handleConfirm = () => {
-  projectForm.value?.validate().then(async () => {
-    btnLoading.value = true;
-    const result = await http.requestCreateProject({
-      projectData: projectData.value,
-    })
-      .catch(() => false)
-      .finally(() => {
-        btnLoading.value = false;
-      });
-    if (result) {
-      Message({
-        theme: 'success',
-        message: t('提交成功'),
-      });
-      router.push({
-        path: `${projectData.value.englishName}/show`,
-      });
-    }
-  })
-};
 const initProjectForm = (value) => {
   projectForm.value = value;
 };
@@ -63,6 +42,32 @@ const initProjectForm = (value) => {
 const handleCancel = () => {
   router.back();
 };
+
+
+async function handleConfirm () {
+  try {
+    await projectForm.value?.validate();
+    btnLoading.value = true;
+    const { status, projectId } = await http.requestCreateProject({
+      projectData: projectData.value,
+    })
+    if (status) {
+      Message({
+        theme: 'success',
+        message: t('提交成功'),
+      });
+      router.push({
+        path: `${projectId}/show`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    btnLoading.value = false;
+  }
+};
+
+
 </script>
 
 <template>
