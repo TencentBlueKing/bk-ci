@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.project.pojo.CreateProjectVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
@@ -146,7 +147,7 @@ class UserProjectResourceImpl @Autowired constructor(
         tenantId: String?,
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?
-    ): Result<Boolean> {
+    ): Result<CreateProjectVO> {
         // 创建项目
         projectCreateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         projectService.create(
@@ -157,7 +158,15 @@ class UserProjectResourceImpl @Autowired constructor(
             projectChannel = ProjectChannelCode.BS
         )
 
-        return Result(true)
+        return Result(
+            CreateProjectVO(
+                status = true,
+                projectId = TenantUtils.parseEnglishName(
+                    tenantId = projectCreateInfo.tenantId,
+                    tenantEnglishName = projectCreateInfo.projectName
+                )
+            )
+        )
     }
 
     @AuditEntry(actionId = PROJECT_EDIT)
