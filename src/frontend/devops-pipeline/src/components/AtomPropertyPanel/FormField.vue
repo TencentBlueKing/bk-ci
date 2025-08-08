@@ -200,7 +200,7 @@
                                 )
                             }
                             <span class={['icon-item', {
-                                    'is-follow': isRequiredParam
+                                    'active': isRequiredParam
                                 }]}
                                 v-bk-tooltips={
                                     isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
@@ -213,7 +213,7 @@
                                 />
                             </span>
                             <span class={['icon-item', {
-                                    active: isFollowTemplate
+                                    'is-follow': isFollowTemplate
                                 }]}
                                 key={'follow'}
                                 v-bk-tooltips={

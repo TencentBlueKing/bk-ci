@@ -554,6 +554,12 @@
                 ...templateBuildNo
             }
         }
+        if (instanceBuildNo && templateBuildNo) {
+            return {
+                ...instanceBuildNo,
+                required: templateBuildNo.required
+            }
+        }
         return instanceBuildNo
     }
     

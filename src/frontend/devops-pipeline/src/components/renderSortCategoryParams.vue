@@ -221,7 +221,7 @@
         background: #EAEBF0;
         color: #4D4F56;
         cursor: pointer;
-        margin-left: 10px;
+        margin-left: 8px;
         z-index: 100;
         &.is-follow {
             background: #CDDFFE;
