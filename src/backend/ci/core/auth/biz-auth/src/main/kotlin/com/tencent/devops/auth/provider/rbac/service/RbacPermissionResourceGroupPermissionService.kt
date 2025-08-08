@@ -73,6 +73,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import groovy.lang.Lazy
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -85,6 +86,7 @@ import java.util.concurrent.Executors
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
     private val v2ManagerService: V2ManagerService,
+    @Lazy
     private val rbacCommonService: RbacCommonService,
     private val monitorSpaceService: AuthMonitorSpaceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
