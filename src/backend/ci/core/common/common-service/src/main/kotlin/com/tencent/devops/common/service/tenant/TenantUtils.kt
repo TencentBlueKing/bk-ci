@@ -30,16 +30,22 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         enableMultiTenantMode = environment["bk.enableMultiTenantMode"] == "true"
         appCode = environment["bk.apigw.appCode"] ?: ""
         appSecret = environment["bk.apigw.appSecret"] ?: ""
+        disableEsb = environment["bk.apigw.disableEsb"] == "true"
     }
 
     companion object {
         private var enableMultiTenantMode: Boolean = false
         private var appCode = ""
         private var appSecret = ""
+        private var disableEsb: Boolean = false
 
         private const val DEFAULT_TENANT_ID_FOR_SINGLE = "default"
         public const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
         private val logger = LoggerFactory.getLogger(TenantUtils::class.java)
+
+        fun disableEsb(): Boolean {
+            return disableEsb || isMultiTenantMode()
+        }
 
         /**
          * 是否开启多租户模式
