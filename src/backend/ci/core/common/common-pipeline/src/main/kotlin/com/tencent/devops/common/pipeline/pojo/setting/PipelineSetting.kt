@@ -96,9 +96,9 @@ data class PipelineSetting(
     @get:Schema(title = "YAML流水线特殊配置", required = false)
     var pipelineAsCodeSettings: PipelineAsCodeSettings?,
     @get:Schema(title = "创建人", required = false)
-    val creator: String? = null,
+    var creator: String? = null,
     @get:Schema(title = "更新人", required = false)
-    val updater: String? = null,
+    var updater: String? = null,
     @get:Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
     @get:Schema(title = "更新时间", required = false)

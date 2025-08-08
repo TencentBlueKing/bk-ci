@@ -139,8 +139,13 @@ class TemplateSettingService @Autowired constructor(
         )
     }
 
-    fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {
-        return setting.copy(pipelineId = pipelineId, pipelineName = templateName)
+    fun copySetting(
+        setting: PipelineSetting,
+        pipelineId: String,
+        templateName: String,
+        creator: String? = null
+    ): PipelineSetting {
+        return setting.copy(pipelineId = pipelineId, pipelineName = templateName, creator = creator)
     }
 
     fun getTemplateSetting(projectId: String, userId: String, templateId: String): PipelineSetting {
