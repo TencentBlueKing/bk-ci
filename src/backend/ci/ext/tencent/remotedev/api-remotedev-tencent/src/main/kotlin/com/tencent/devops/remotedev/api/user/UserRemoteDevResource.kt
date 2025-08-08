@@ -257,5 +257,5 @@ interface UserRemoteDevResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
-    ): Result<UserSignatureStatusResponse?>
+    ): Result<UserSignatureStatusResponse>
 }

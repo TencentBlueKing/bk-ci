@@ -198,7 +198,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceService.updateUserLocale(userId, localeInfo.language))
     }
 
-    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse?> {
+    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
         return Result(workspaceService.getSignatureStatus(userId, projectId))
     }
 }

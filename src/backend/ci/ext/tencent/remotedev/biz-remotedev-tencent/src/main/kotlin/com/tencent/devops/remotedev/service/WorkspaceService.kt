@@ -1547,7 +1547,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun getSignatureStatus(userId: String, projectId: String): UserSignatureStatusResponse? {
+    fun getSignatureStatus(userId: String, projectId: String): UserSignatureStatusResponse {
         logger.info("getSignatureStatus|$userId|$projectId")
 
         return kotlin.runCatching {
@@ -1556,7 +1556,11 @@ class WorkspaceService @Autowired constructor(
             logger.error("error in workspaceService::getSignatureStatus|$userId", it)
         }.getOrNull() ?: kotlin.run {
             logger.error("fail to getSignatureStatus|$userId|$projectId")
-            null
+            // 获取不到的话就跳过
+            UserSignatureStatusResponse(
+                userId = userId,
+                signed = true
+            )
         }
     }
 
