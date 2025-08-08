@@ -1865,5 +1865,28 @@
   "checkTemplate": "查看模板",
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
-  "notGrouped": "未分组"
+  "notGrouped": "未分组",
+  "publicVar": {
+    "variable": "公共变量",
+    "publicVarTips": "仅为项目下变量的公共定义，不支持用于跨流水线数据传递",
+    "addParamGroup": "新增变量组",
+    "editParamGroup": "编辑变量组",
+    "importParamGroup": "导入变量组",
+    "paramGroupName": "变量组名称",
+    "paramName": "变量名称",
+    "paramType": "变量类型",
+    "paramGroupDesc": "变量组描述",
+    "paramGroupId": "变量组ID",
+    "pipelineNum": "流水线/模板数",
+    "paramNum": "变量数",
+    "lastModifiedBy": "更新人",
+    "lastModifiedDate": "更新时间",
+    "operation": "操作",
+    "importParamGroupLabel": "支持.yaml 类型文件，文件小于2 M。格式请参考 {0}",
+    "templateFile": "模板文件",
+    "release": "去发布",
+    "basicInfo": "基础信息",
+    "referenceList": "引用列表",
+    "releaseRecord": "发布记录"
+  }
 }

@@ -41,6 +41,10 @@
                 {
                     label: vm.proxy.$t('templateName'),
                     name: 'TemplateManageList'
+                },
+                {
+                    label: vm.proxy.$t('publicVar.variable'),
+                    name: 'PublicVarList'
                 }
             ]
 
@@ -49,14 +53,20 @@
                 // 跳转到对应的路由
                 vm.proxy.$router.push({
                     name,
-                    params: name === 'PipelineManageList'
-                        ? {
-                            viewId: getCacheViewId(vm.proxy.$route.params.projectId)
-                        }
-                        : {
-                            templateViewId: getTemplateCacheViewId()
-                        }
+                    params: getParamsByRouterName(name)
                 })
+            }
+            function getParamsByRouterName (name) {
+                const paramsMap = {
+                    PipelineManageList: {
+                        viewId: getCacheViewId(vm.proxy.$route.params.projectId)
+                    },
+                    TemplateManageList: {
+                        templateViewId: getTemplateCacheViewId()
+                    },
+                    PublicVarList: {}
+                }
+                return paramsMap[name]
             }
             return {
                 activePanel,
