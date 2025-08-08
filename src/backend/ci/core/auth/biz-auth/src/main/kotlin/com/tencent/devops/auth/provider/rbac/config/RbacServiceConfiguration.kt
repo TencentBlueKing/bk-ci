@@ -42,6 +42,7 @@ import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceNameConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
@@ -71,7 +72,8 @@ class RbacServiceConfiguration {
         iamV2PolicyService: PolicyService,
         iamConfiguration: IamConfiguration,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authProjectUserMetricsService: AuthProjectUserMetricsService
+        authProjectUserMetricsService: AuthProjectUserMetricsService,
+        bkInternalPermissionComparator: BkInternalPermissionComparator
     ) = RbacCommonService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
@@ -79,7 +81,8 @@ class RbacServiceConfiguration {
         policyService = iamV2PolicyService,
         iamConfiguration = iamConfiguration,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authUserDailyService = authProjectUserMetricsService
+        authUserDailyService = authProjectUserMetricsService,
+        bkInternalPermissionComparator = bkInternalPermissionComparator
     )
 
     @Bean

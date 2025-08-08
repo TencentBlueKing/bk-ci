@@ -24,6 +24,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
@@ -38,7 +39,8 @@ class RbacCommonService(
     private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authUserDailyService: AuthProjectUserMetricsService
+    private val authUserDailyService: AuthProjectUserMetricsService,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator
 ) {
 
     companion object {
@@ -211,6 +213,14 @@ class RbacCommonService(
                     operate = action
                 )
             }
+            bkInternalPermissionComparator.validateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = ResourceTypeId.PROJECT,
+                resourceCode = projectCode,
+                action = action,
+                expectedResult = result
+            )
             return result
         } finally {
             logger.info(
