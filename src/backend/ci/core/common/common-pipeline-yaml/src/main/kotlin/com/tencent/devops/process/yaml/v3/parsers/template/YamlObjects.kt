@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -70,33 +70,37 @@ object YamlObjects {
     }
 
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
+        val props = variable["props"]?.let {
+            getVarProps(fromPath, it)
+        }
+        val type = props?.type
         val va = Variable(
-            value = variable["value"]?.toString(),
+            value = if (type == VariablePropType.REPO_REF.value) {
+                variable["value"] ?: mapOf<String, String>()
+            } else {
+                variable["value"]?.toString()
+            },
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
-            props = if (variable["props"] == null) {
-                null
-            } else {
-                getVarProps(fromPath, variable["props"]!!)
-            }
+            props = props
         )
 
         // 只有列表需要判断
-        if (va.props?.type == VariablePropType.SELECTOR.value || va.props?.type == VariablePropType.CHECKBOX.value) {
+        if (type == VariablePropType.SELECTOR.value || type == VariablePropType.CHECKBOX.value) {
             // 这期暂不对拉取远程接口的参数做校验
-            if (va.props.payload != null) {
+            if (props.payload != null) {
                 return va
             }
-
-            if (!va.value.isNullOrBlank() && va.props.options.isNullOrEmpty()) {
+            val value = va.value as String?
+            if (!value.isNullOrBlank() && props.options.isNullOrEmpty()) {
                 throw YamlFormatException(
-                    "$fromPath variable $key format error: value ${va.value} not in variable options"
+                    "$fromPath variable $key format error: value $value not in variable options"
                 )
             }
             val expectValues =
-                va.value?.split(",")?.asSequence()?.filter { it.isNotBlank() }?.map { it.trim() }?.toSet()
-            val resultValues = va.props.options?.map { it.id.toString() }?.toSet() ?: emptySet()
+                value?.split(",")?.asSequence()?.filter { it.isNotBlank() }?.map { it.trim() }?.toSet()
+            val resultValues = props.options?.map { it.id.toString() }?.toSet() ?: emptySet()
             // 说明默认值没有匹配到选项值，报错
             if (expectValues?.subtract(resultValues)?.isEmpty() == false) {
                 throw YamlFormatException(
@@ -106,7 +110,7 @@ object YamlObjects {
         }
 
         // 校验bool
-        if (va.props?.type == VariablePropType.BOOLEAN.value && (va.value != "true" && va.value != "false")) {
+        if (type == VariablePropType.BOOLEAN.value && (va.value != "true" && va.value != "false")) {
             throw YamlFormatException(
                 "$fromPath variable $key format error: bool value ${va.value} not true / false"
             )
@@ -119,12 +123,15 @@ object YamlObjects {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
         val po = VariableProps(
             label = getNullValue("label", propsMap),
-            type = getNotNullValue("type", "props", propsMap),
+            type = getNullValue("type", propsMap),
             options = getVarPropOptions(fromPath, propsMap["options"]),
             description = getNullValue("description", propsMap),
-            multiple = getNullValue("multiple", propsMap)?.toBoolean(),
-            required = getNullValue("required", propsMap)?.toBoolean(),
+            group = getNullValue("group", propsMap),
+            multiple = getNullValue("multiple", propsMap)?.toBooleanStrictOrNull(),
+            required = getNullValue("required", propsMap)?.toBooleanStrictOrNull(),
             repoHashId = getNullValue("repo-id", propsMap),
+            relativePath = getNullValue("relative-path", propsMap),
+            versionControl = getNullValue("version-control", propsMap)?.toBooleanStrictOrNull(),
             scmType = getNullValue("scm-type", propsMap),
             containerType = getVarPropContainerType(fromPath, propsMap["container-type"]),
             glob = getNullValue("filter-rule", propsMap),
@@ -136,10 +143,6 @@ object YamlObjects {
             ),
             payload = propsMap["payload"]
         )
-
-        if (!po.options.isNullOrEmpty() && po.payload != null) {
-            throw YamlFormatException("$fromPath variable format error: options and payload cannot coexist")
-        }
 
         return po
     }
@@ -196,7 +199,7 @@ object YamlObjects {
             enable = getNullValue("enable", step)?.toBoolean(),
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
-            ifFiled = step["if"]?.toString(),
+            ifField = step["if"],
             ifModify = if (step["if-modify"] is List<*>) {
                 val ifModifyList = step["if-modify"] as List<*>
                 ifModifyList.map { it.toString() }.toList()
@@ -309,9 +312,13 @@ object YamlObjects {
 
     fun getStrategy(fromPath: TemplatePath, strategy: Any?): Strategy? {
         val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
-        val matrix = strategyMap["matrix"] ?: return null
+        val matrix = strategyMap["matrix"]
+        val include = strategyMap["include"]
+        val exclude = strategyMap["exclude"]
         return Strategy(
             matrix = matrix,
+            include = include,
+            exclude = exclude,
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
             maxParallel = getNullValue("max-parallel", strategyMap)?.toInt()
         )
@@ -482,10 +489,11 @@ fun <T> YamlTemplate<T>.getStage(
     deepTree: TemplateDeepTreeNode
 ): PreStage {
     return PreStage(
+        id = stage["id"]?.toString(),
         enable = YamlObjects.getNullValue("enable", stage)?.toBoolean(),
         name = stage["name"]?.toString(),
         label = stage["label"],
-        ifField = stage["if"]?.toString(),
+        ifField = stage["if"],
         ifModify = if (stage["if-modify"] is List<*>) {
             val ifModifyList = stage["if-modify"] as List<*>
             ifModifyList.map { it.toString() }.toList()
@@ -536,6 +544,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         enable = YamlObjects.getNullValue("enable", job)?.toBoolean(),
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
+        showRunsOn = YamlObjects.getNullValue("show-runs-on", job)?.toBoolean(),
         mutex = if (job["mutex"] == null) {
             null
         } else {
@@ -551,7 +560,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         } else {
             YamlObjects.getService(fromPath, job["services"]!!)
         },
-        ifField = job["if"]?.toString(),
+        ifField = job["if"],
         ifModify = if (job["if-modify"] is List<*>) {
             val ifModifyList = job["if-modify"] as List<*>
             ifModifyList.map { it.toString() }.toList()

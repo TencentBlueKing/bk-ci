@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
@@ -57,7 +58,7 @@ import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class ServicePipelineVersionResourceImpl @Autowired constructor(
@@ -85,7 +86,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        targetAction: CodeTargetAction?,
+        repoHashId: String?,
+        targetBranch: String?
     ): Result<PrefetchReleaseResult> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
@@ -110,7 +114,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                targetAction = targetAction,
+                repoHashId = repoHashId,
+                targetBranch = targetBranch
             )
         )
     }
@@ -246,7 +253,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = result.pipelineId,
-                resourceName = modelAndYaml.modelAndSetting.model.name,
+                resourceName = result.pipelineName,
                 userId = userId,
                 action = "edit",
                 actionContent = "Save Ver.${result.version}",
@@ -450,6 +457,18 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             storageType = PipelineStorageType.getActionType(storageType)
         )
     }
+
+    override fun resetBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ) = Result(
+        pipelineInfoFacadeService.resetBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    )
 
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {

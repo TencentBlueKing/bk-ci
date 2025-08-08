@@ -1,9 +1,21 @@
 <template>
     <section>
         <div class="explain">{{ $t('store.说明：') }}<span class="explain-info">{{ explainInfo }}</span></div>
-        <bk-table :data="outputData" v-bkloading="{ isLoading: isLoading }" :key="outputData">
-            <bk-table-column :label="$t('store.参数名')" prop="name" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('store.参数说明')" prop="desc" show-overflow-tooltip></bk-table-column>
+        <bk-table
+            :data="outputData"
+            v-bkloading="{ isLoading: isLoading }"
+            :key="outputData"
+        >
+            <bk-table-column
+                :label="$t('store.参数名')"
+                prop="name"
+                show-overflow-tooltip
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('store.参数说明')"
+                prop="desc"
+                show-overflow-tooltip
+            ></bk-table-column>
         </bk-table>
     </section>
 </template>

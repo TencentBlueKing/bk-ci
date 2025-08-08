@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,5 +30,14 @@ package com.tencent.devops.common.expression.expression.sdk
 interface IReadOnlyObject {
     val values: Iterable<Any?>
 
-    fun tryGetValue(key: String): Pair<Any?, Boolean>
+    /**
+     * 使用kotlin原生Map的get方法
+     * 使用时需要注意场景
+     */
+    operator fun get(key: String): Any?
+
+    /**
+     * 封装get，令返回结果更清晰
+     */
+    fun getRes(key: String): CollectionResult
 }

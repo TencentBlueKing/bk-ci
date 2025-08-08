@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -45,7 +46,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineTaskService
+import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -61,7 +62,6 @@ class QueueInterceptor @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineUrlBean: PipelineUrlBean
@@ -72,6 +72,11 @@ class QueueInterceptor @Autowired constructor(
     }
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
+        if (task.retryOnRunningBuild) {
+            // perf：流水线运行中、重试失败的步骤时提示队列满问题跟进和优化 #11807
+            // 运行中重试不进行构建流程判断
+            return Response(BuildStatus.RUNNING)
+        }
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
         val runLockType = task.runLockType
@@ -86,6 +91,7 @@ class QueueInterceptor @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
+
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
                     task = task,
@@ -94,6 +100,7 @@ class QueueInterceptor @Autowired constructor(
                     runningCount = buildSummaryRecord.runningCount,
                     queueCount = buildSummaryRecord.queueCount
                 )
+
             runLockType == PipelineRunLockType.GROUP_LOCK ->
                 checkRunLockWithGroupType(
                     task = task,
@@ -101,14 +108,19 @@ class QueueInterceptor @Autowired constructor(
                     latestStartUser = buildSummaryRecord.latestStartUser,
                     runningCount = buildSummaryRecord.runningCount
                 )
-            task.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
+
+            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
+                PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                task.maxConRunningQueueSize
+            ) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
                     message = MessageUtil.getMessageByLocale(
                         messageCode = BK_MAX_PARALLEL,
                         language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + " ${task.maxConRunningQueueSize}"
+                    ) + " ${max(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, task.maxConRunningQueueSize)}"
                 )
+
             else -> Response(data = BuildStatus.RUNNING)
         }
     }
@@ -130,6 +142,7 @@ class QueueInterceptor @Autowired constructor(
             // 设置了最大排队数量限制为0，但此时没有构建正在执行
             task.maxQueueSize == 0 && runningCount == 0 && queueCount == 0 ->
                 Response(data = BuildStatus.RUNNING)
+
             task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
@@ -138,6 +151,7 @@ class QueueInterceptor @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
+
             queueCount >= task.maxQueueSize -> {
                 if (groupName == null) {
                     outQueueCancelBySingle(
@@ -192,7 +206,8 @@ class QueueInterceptor @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = latestStartUser ?: task.pipelineInfo.creator,
                     buildId = buildInfo.buildId,
-                    status = BuildStatus.CANCELED
+                    status = BuildStatus.CANCELED,
+                    executeCount = buildInfo.executeCount
                 )
             )
         }
@@ -228,7 +243,8 @@ class QueueInterceptor @Autowired constructor(
                 buildId = buildInfo.buildId,
                 message = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY,
-                    params = arrayOf(groupName,
+                    params = arrayOf(
+                        groupName,
                         "<a target='_blank' href='$detailUrl'>${task.buildId}</a>"
                     )
                 ),
@@ -245,7 +261,8 @@ class QueueInterceptor @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = latestStartUser ?: task.pipelineInfo.creator,
                     buildId = buildInfo.buildId,
-                    status = BuildStatus.CANCELED
+                    status = BuildStatus.CANCELED,
+                    executeCount = buildInfo.executeCount
                 )
             )
         }

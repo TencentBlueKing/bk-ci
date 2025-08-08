@@ -10,10 +10,23 @@
             <header class="pipeline-base-config-panel-header">
                 {{ $t(panel.name) }}
             </header>
-            <div class="base-info-panel-content" slot="content">
-                <p v-for="row in panel.rows" :key="row.key">
-                    <ul v-if="row.key === 'parallelConfDetail'" class="parallel-conf-detail">
-                        <li class="parallel-conf-detail-row" v-for="item in prarallelSettingRows" :key="item.key">
+            <div
+                class="base-info-panel-content"
+                slot="content"
+            >
+                <p
+                    v-for="row in panel.rows"
+                    :key="row.key"
+                >
+                    <ul
+                        v-if="row.key === 'parallelConfDetail'"
+                        class="parallel-conf-detail"
+                    >
+                        <li
+                            class="parallel-conf-detail-row"
+                            v-for="item in parallelSettingRows"
+                            :key="item.key"
+                        >
                             <label>
                                 {{ $t(item.label) }}
                             </label>
@@ -23,17 +36,40 @@
                         </li>
                     </ul>
                     <template v-else>
-                        <label class="base-info-block-row-label">{{ $t(row.key) }}</label>
+                        <label
+                            v-if="row.key !== 'namingConvention'"
+                            class="base-info-block-row-label"
+                        >{{ $t(row.key) }}</label>
+                        <bk-popover
+                            v-else
+                            theme="light"
+                            :width="892"
+                            placement="top-start"
+                        >
+                            <label class="base-info-block-row-label dotted">{{ $t(row.key) }}</label>
+                            <div slot="content">
+                                <NamingConventionTip />
+                            </div>
+                        </bk-popover>
                         <span class="base-info-block-row-value">
                             <template v-if="['label', 'pipelineGroup'].includes(row.key)">
                                 <template v-if="row.value.length > 0">
-                                    <bk-tag v-for="label in row.value" :key="label" class="base-info-block-row-value-label">
-                                        {{ label }}
+                                    <bk-tag
+                                        v-for="label in row.value"
+                                        :key="label"
+                                        class="base-info-block-row-value-label"
+                                        @click="goPipelineManageList(row.key, label.id)"
+                                    >
+                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>
                                     --
                                 </template>
+                            </template>
+                            <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
+                                <span>{{ row.value || '--' }}</span>
+                                <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
                             </template>
                             <template v-else>
                                 {{ row.value || '--' }}
@@ -47,7 +83,13 @@
 </template>
 <script>
     import { convertTime } from '@/utils/util'
+    import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import { mapState, mapActions } from 'vuex'
+    
     export default {
+        components: {
+            NamingConventionTip
+        },
         props: {
             basicInfo: {
                 type: Object,
@@ -56,10 +98,18 @@
         },
         data () {
             return {
-                activeName: ['baseInfo', 'executeConfig']
+                activeName: ['baseInfo', 'executeConfig'],
+                namingStyle: {
+                    CLASSIC: this.$t('CLASSIC'),
+                    CONSTRAINED: this.$t('CONSTRAINED')
+                },
+                currentGroups: []
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'allPipelineGroup'
+            ]),
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -71,6 +121,10 @@
             },
             baseInfoRows () {
                 const { basicInfo } = this
+                const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
+                const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
+                const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
+                const viweNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
                 return [
                     {
                         key: 'pipelineName',
@@ -82,19 +136,26 @@
                     },
                     {
                         key: 'pipelineGroup',
-                        value: basicInfo?.viewNames ?? []
+                        value: viweNameList ?? []
                     },
                     {
                         key: 'desc',
                         value: basicInfo?.desc ?? '--'
                     },
                     {
-                        key: 'creator',
-                        value: basicInfo?.creator ?? '--'
+                        key: 'namingConvention',
+                        value: namingConvention ?? '--',
+                        grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
                     },
                     {
-                        key: 'createTime',
-                        value: convertTime(basicInfo?.createTime) ?? '--'
+                        key: 'modificationDetail',
+                        value: basicInfo?.versionUpdater ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                    },
+                    {
+                        key: 'creatorDetail',
+                        value: basicInfo?.creator ?? '--',
+                        grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
                     }
                 ]
             },
@@ -106,10 +167,14 @@
                         value: this.basicInfo?.buildNumRule ?? '--'
                     },
                     {
+                        key: 'settings.whenVariableExceedsLength',
+                        value: this.$t(this.basicInfo?.failIfVariableInvalid ? 'settings.errorAndHalt' : 'settings.clearTheValue')
+                    },
+                    {
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
-                    ...(runLockType === 'group_lock'
+                    ...(['group_lock', 'multiple'].includes(runLockType)
                         ? [{
                             key: 'parallelConfDetail'
                         }]
@@ -117,35 +182,77 @@
                     )
                 ]
             },
-            prarallelSettingRows () {
+            parallelSettingRows () {
+                const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
+                if (runLockType === 'group_lock') {
+                    return [
+                        {
+                            key: 'concurrencyGroup',
+                            label: 'group.groupName',
+                            value: this.basicInfo?.concurrencyGroup ?? '--'
+                        },
+                        {
+                            key: 'concurrencyCancelInProgress',
+                            label: 'settings.stopWhenNewCome',
+                            value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
+                        },
+                        ...(!this.basicInfo?.concurrencyCancelInProgress
+                            ? [
+                                {
+                                    key: 'maxQueueSize',
+                                    label: 'settings.largestNum',
+                                    value: this.basicInfo?.maxQueueSize ?? '--'
+                                },
+                                {
+                                    key: 'waitQueueTimeMinute',
+                                    label: 'settings.lagestTime',
+                                    value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
+                                }
+    
+                            ]
+                            : []
+                        )
+                    ]
+                }
+
                 return [
-                    {
-                        key: 'concurrencyGroup',
-                        label: 'group.groupName',
-                        value: this.basicInfo?.concurrencyGroup ?? '--'
-                    },
-                    {
-                        key: 'concurrencyCancelInProgress',
-                        label: 'settings.stopWhenNewCome',
-                        value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
-                    },
                     ...(!this.basicInfo?.concurrencyCancelInProgress
                         ? [
                             {
-                                key: 'maxQueueSize',
-                                label: 'settings.largestNum',
-                                value: this.basicInfo?.maxQueueSize ?? '--'
+                                key: 'maxConRunningQueueSize',
+                                label: 'settings.concurrentMaxConcurrency',
+                                value: this.basicInfo?.maxConRunningQueueSize ?? '--'
                             },
                             {
                                 key: 'waitQueueTimeMinute',
-                                label: 'settings.lagestTime',
+                                label: 'settings.concurrentTimeout',
                                 value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                             }
-
                         ]
                         : []
                     )
                 ]
+            }
+        },
+        async mounted () {
+            if (!this.allPipelineGroup.length) {
+                const res = await this.requestAllPipelineGroup({
+                    projectId: this.$route.params.projectId
+                })
+                this.currentGroups = res.data
+            }
+        },
+        methods: {
+            ...mapActions('pipelines', ['requestAllPipelineGroup']),
+            goPipelineManageList (key, viewId) {
+                if (key === 'pipelineGroup') {
+                    this.$router.push({
+                        name: 'PipelineManageList',
+                        params: {
+                            viewId
+                        }
+                    })
+                }
             }
         }
     }
@@ -177,8 +284,9 @@
         width: 600px;
         .parallel-conf-detail-row {
             line-height: 32px;
+            align-items: center;
+            grid-template-columns: 150px 1fr;
             > label {
-                line-height: 32px;
                 color: #63656e;
             }
             > span {
@@ -208,5 +316,17 @@
         }
     }
 
+    .dotted {
+        line-height: 18px;
+        color: #979BA5;
+        border-bottom: 1px dashed #979BA5;
+    }
+    .bk-tooltip {
+        text-align: right !important;
+    }
+
+}
+.base-info-block-row-value-gray {
+    color: #979BA5;
 }
 </style>

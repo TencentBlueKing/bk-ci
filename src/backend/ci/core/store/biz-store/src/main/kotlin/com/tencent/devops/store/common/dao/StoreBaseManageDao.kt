@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -62,6 +62,7 @@ class StoreBaseManageDao {
                 PUBLISHER,
                 PUB_TIME,
                 CLASSIFY_ID,
+                BUS_NUM,
                 CREATOR,
                 MODIFIER,
                 UPDATE_TIME,
@@ -81,6 +82,7 @@ class StoreBaseManageDao {
                 storeBaseDataPO.publisher,
                 storeBaseDataPO.pubTime,
                 storeBaseDataPO.classifyId,
+                storeBaseDataPO.busNum,
                 storeBaseDataPO.creator,
                 storeBaseDataPO.modifier,
                 storeBaseDataPO.updateTime,
@@ -98,8 +100,9 @@ class StoreBaseManageDao {
                 .set(PUBLISHER, storeBaseDataPO.publisher)
                 .set(PUB_TIME, storeBaseDataPO.pubTime)
                 .set(CLASSIFY_ID, storeBaseDataPO.classifyId)
+                .set(BUS_NUM, storeBaseDataPO.busNum)
                 .set(MODIFIER, storeBaseDataPO.modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(UPDATE_TIME, storeBaseDataPO.updateTime)
                 .execute()
         }
     }

@@ -1,13 +1,25 @@
 <template>
-    <div :class="['pipeline-detail-entry', {
-        'show-pipeline-var': activeChild.showVar
-    }]">
+    <div
+        :class="['pipeline-detail-entry', {
+            'show-pipeline-var': activeChild.showVar
+        }]"
+    >
         <aside class="pipeline-detail-entry-aside">
-            <ul v-for="item in asideNav" :key="item.title">
+            <ul
+                v-for="item in asideNav"
+                :key="item.title"
+            >
                 <li class="nav-item-title">
                     {{ item.title }}
-                    <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
-                        <logo :name="item.link.icon" size="16"></logo>
+                    <span
+                        class="nav-item-link"
+                        v-if="item.link"
+                        @click="item.link.handler"
+                    >
+                        <logo
+                            :name="item.link.icon"
+                            size="16"
+                        ></logo>
                         {{ item.link.title }}
                     </span>
                 </li>
@@ -27,19 +39,36 @@
                     >
                         {{ child.title }}
                     </li>
-
                 </ul>
             </ul>
-            <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
-                {{$t('switchToReleaseVersion')}}
-                <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('switch') }}</span>
+            <div
+                v-for="i in [1,2,3,4]"
+                :key="i"
+                ref="disableToolTips"
+                class="disable-nav-child-item-tooltips"
+            >
+                {{ $t('switchToReleaseVersion') }}
+                <span
+                    v-if="isReleasePipeline"
+                    @click="switchToReleaseVersion"
+                    class="text-link"
+                >{{ $t('switch') }}</span>
             </div>
         </aside>
 
         <main class="pipeline-detail-entry-main">
-            <component :is="activeChild.component" v-bind="activeChild.props" />
+            <component
+                :is="activeChild.component"
+                v-bind="activeChild.props"
+            />
         </main>
-        <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
+        <show-variable
+            v-if="activeChild.showVar && pipeline"
+            :editable="false"
+            :pipeline-model="true"
+            :pipeline="pipeline"
+            :is-direct-show-version="isDirectShowVersion"
+        />
     </div>
 </template>
 
@@ -66,6 +95,11 @@
             ShowVariable,
             DelegationPermission
         },
+        data () {
+            return {
+                shouldRetainArchiveFlag: false
+            }
+        },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
@@ -74,6 +108,9 @@
             },
             activeChild () {
                 return this.getNavComponent(this.activeMenuItem)
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             },
             asideNav () {
                 return [
@@ -102,7 +139,7 @@
                             //     title: this.$t('details.outputs'),
                             //     name: 'artifactory'
                             // }
-                        ].map((child) => ({
+                        ].filter((child) => child.name !== 'triggerEvent' || !this.archiveFlag).map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion && !this.isBranchVersion,
                             active: this.activeMenuItem === child.name
@@ -160,19 +197,28 @@
                                 },
                                 name: 'changeLog'
                             }
-                        ].map((child) => ({
+                        ].filter(child => !this.archiveFlag || child.name === 'changeLog').map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     }
                 ]
+            },
+            isDirectShowVersion () {
+                return this.$route.params.isDirectShowVersion || false
             }
         },
         beforeDestroy () {
-            this.resetHistoryFilterCondition()
+            this.resetHistoryFilterCondition({ retainArchiveFlag: this.shouldRetainArchiveFlag })
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
+        },
+        beforeRouteLeave (to, from, next) {
+            // 判断目标路由是否需要保留 archiveFlag
+            const routesToKeepArchiveFlag = ['pipelinesDetail', 'draftDebugRecord']
+            this.shouldRetainArchiveFlag = routesToKeepArchiveFlag.includes(to.name) && to.query.archiveFlag !== undefined
+            next()
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
@@ -231,7 +277,8 @@
                     params: {
                         ...this.$route.params,
                         type: child.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             switchToReleaseVersion () {
@@ -239,7 +286,8 @@
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.releaseVersion
-                    }
+                    },
+                    query: this.$route.query
                 })
             }
         }

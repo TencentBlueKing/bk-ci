@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,17 +28,19 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -53,11 +55,35 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun list(dslContext: DSLContext, buildId: String): Result<TDispatchThirdpartyAgentBuildRecord> {
+    fun getWithExecuteCount(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int?
+    ): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .fetch()
+                .and(VM_SEQ_ID.eq(vmSeqId))
+            if (executeCount != null) {
+                dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
+            }
+            return dsl.fetchAny()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        buildId: String,
+        executeCount: Int?
+    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+            if (executeCount != null) {
+                dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
+            }
+            return dsl.fetch()
         }
     }
 
@@ -248,27 +274,21 @@ class ThirdPartyAgentBuildDao {
 
     fun getRunningAndQueueBuilds(
         dslContext: DSLContext,
-        agentId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        agentId: String,
+        hasDocker: Boolean
+    ): List<Pair<String, Int>> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+            val dsl = dslContext.select(BUILD_ID, STATUS)
+                .from(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
-                .and(DOCKER_INFO.isNull)
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+            if (hasDocker) {
+                dsl.and(DOCKER_INFO.isNotNull)
+            } else {
+                dsl.and(DOCKER_INFO.isNull)
+            }
+            return dsl.and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetch()
-        }
-    }
-
-    fun getDockerRunningAndQueueBuilds(
-        dslContext: DSLContext,
-        agentId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
-                .where(AGENT_ID.eq(agentId))
-                .and(DOCKER_INFO.isNotNull)
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .fetch()
+                .map { Pair(it[BUILD_ID], it[STATUS]) }
         }
     }
 
@@ -292,6 +312,48 @@ class ThirdPartyAgentBuildDao {
                 .orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
+        }
+    }
+
+    fun listLatestBuildPipelines(
+        dslContext: DSLContext,
+        agentIds: List<String>
+    ): List<AgentBuildInfo> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val sub = dslContext.select(DSL.max(ID).`as`("max_id"))
+                .from(this).where(AGENT_ID.`in`(agentIds)).groupBy(AGENT_ID).asTable("sub")
+            return dslContext.select(
+                PROJECT_ID,
+                AGENT_ID,
+                PIPELINE_ID,
+                PIPELINE_NAME,
+                BUILD_ID,
+                BUILD_NUM,
+                VM_SEQ_ID,
+                TASK_NAME,
+                STATUS,
+                CREATED_TIME,
+                UPDATED_TIME,
+                WORKSPACE
+            ).from(this)
+                .join(sub).on(ID.eq(sub.field("max_id", Long::class.java)))
+                .orderBy(CREATED_TIME.desc())
+                .fetch().map {
+                    AgentBuildInfo(
+                        projectId = it.value1(),
+                        agentId = it.value2(),
+                        pipelineId = it.value3(),
+                        pipelineName = it.value4(),
+                        buildId = it.value5(),
+                        buildNum = it.value6(),
+                        vmSeqId = it.value7(),
+                        taskName = it.value8(),
+                        status = PipelineTaskStatus.toStatus(it.value9()).name,
+                        createdTime = it.value10().timestamp(),
+                        updatedTime = it.value11().timestamp(),
+                        workspace = it.value12() ?: ""
+                    )
+                }
         }
     }
 

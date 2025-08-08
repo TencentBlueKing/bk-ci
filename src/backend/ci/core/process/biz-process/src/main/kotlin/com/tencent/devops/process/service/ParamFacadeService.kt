@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED
@@ -86,6 +87,8 @@ class ParamFacadeService @Autowired constructor(
                 filterParams.add(addArtifactoryProperties(userId, projectId, it))
             } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
+            } else if (it.type == BuildFormPropertyType.REPO_REF) {
+                filterParams.add(addRepoRefs(projectId, it))
             } else {
                 filterParams.add(it)
             }
@@ -114,6 +117,8 @@ class ParamFacadeService @Autowired constructor(
                 addArtifactoryProperties(userId, projectId, property)
             } else if (property.type == BuildFormPropertyType.SUB_PIPELINE) {
                 addSubPipelineProperties(userId, projectId, pipelineId, property)
+            } else if (property.type == BuildFormPropertyType.REPO_REF) {
+                addRepoRefs(projectId, property)
             } else {
                 property
             }
@@ -334,7 +339,10 @@ class ParamFacadeService @Autowired constructor(
             glob = property.glob,
             properties = property.properties,
             searchUrl = searchUrl,
-            replaceKey = replaceKey
+            replaceKey = replaceKey,
+            valueNotEmpty = property.valueNotEmpty,
+            category = property.category,
+            displayCondition = property.displayCondition
         )
     }
 
@@ -404,6 +412,22 @@ class ParamFacadeService @Autowired constructor(
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher, errorThreshold = 3000)
+        }
+    }
+
+    private fun addRepoRefs(
+        projectId: String,
+        formProperty: BuildFormProperty
+    ): BuildFormProperty {
+        return copyFormProperty(
+            property = formProperty,
+            options = listOf()
+        ).let {
+            it.cascadeProps = RepoRefCascadeParam().getProps(
+                projectId = projectId,
+                prop = formProperty
+            )
+            it
         }
     }
 

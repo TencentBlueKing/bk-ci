@@ -1,9 +1,20 @@
 <template>
-    <section class="startup-parameter-box" v-bkloading="{ isLoading }">
+    <section
+        class="startup-parameter-box"
+        v-bkloading="{ isLoading }"
+    >
         <div class="startup-parameter-wrapper">
-            <div ref="parent" class="build-param-row" v-for="(param, index) in params" :key="index">
+            <div
+                ref="parent"
+                class="build-param-row"
+                v-for="(param, index) in params"
+                :key="index"
+            >
                 <span class="build-param-span">
-                    <span class="build-param-key-span" :title="param.key">
+                    <span
+                        class="build-param-key-span"
+                        :title="param.key"
+                    >
                         {{ param.key }}
                     </span>
                     <i
@@ -44,7 +55,11 @@
                 :is-show.sync="isDetailShow"
                 @hidden="hideDetail"
             >
-                <div v-if="activeParam" slot="content" class="startup-param-detail-wrapper">
+                <div
+                    v-if="activeParam"
+                    slot="content"
+                    class="startup-param-detail-wrapper"
+                >
                     <p>{{ activeParam.key }}</p>
                     <pre>{{ activeParam.value }}</pre>
                 </div>
@@ -64,6 +79,11 @@
                 activeParam: null,
                 isDetailShow: false,
                 overflowSpan: []
+            }
+        },
+        computed: {
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -87,11 +107,13 @@
                 try {
                     this.isLoading = true
                     const { projectId, pipelineId, buildNo: buildId } = this.$route.params
-                    const res = await this.requestBuildParams({
+                    const urlParams = {
                         projectId,
                         pipelineId,
-                        buildId
-                    })
+                        buildId,
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
+                    const res = await this.requestBuildParams(urlParams)
 
                     this.defaultParamMap = res.reduce((acc, item) => {
                         acc[item.key] = item.defaultValue
@@ -134,6 +156,7 @@
     width: 100%;
     height: 100%;
     padding: 24px;
+    overflow: scroll;
 }
 .startup-parameter-wrapper {
   border-radius: 2px;

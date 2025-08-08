@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.expression.context
 
+import com.tencent.devops.common.expression.ContextNotFoundException
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
 import com.tencent.devops.common.expression.expression.sdk.NamedValue
@@ -34,7 +35,12 @@ import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
 class ContextValueNode : NamedValue() {
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
-        return Pair(null, (context.state as ExecutionContext).expressionValues[name])
+        val value = (context.state as ExecutionContext).expressionValues.getRes(name)
+        if (context.options.contextNotNull() && value.noKey()) {
+            context.options.contextNotNull.trace(name)
+            throw ContextNotFoundException()
+        }
+        return Pair(null, value.value)
     }
 
     override fun createNode(): NamedValue {
@@ -43,7 +49,7 @@ class ContextValueNode : NamedValue() {
 
     override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
         val values = (context.state as ExecutionContext).expressionValues
-        return if (values[name] != null) {
+        return if (values.containsKey(name)) {
             Pair(values[name], true)
         } else {
             Pair(name, false)

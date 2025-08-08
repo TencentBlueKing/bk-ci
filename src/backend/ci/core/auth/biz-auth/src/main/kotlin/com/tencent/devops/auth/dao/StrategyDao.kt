@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.entity.StrategyInfo
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthStrategy
 import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
 import org.jooq.DSLContext
@@ -39,7 +40,8 @@ class StrategyDao {
 
     fun create(dslContext: DSLContext, userId: String, strategyInfo: StrategyInfo): Int {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 STRATEGY_NAME,
                 STRATEGY_BODY,
                 IS_DELETE,
@@ -86,7 +88,11 @@ class StrategyDao {
 
     fun list(dslContext: DSLContext): Result<TAuthStrategyRecord>? {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
-            return dslContext.selectFrom(this).where((IS_DELETE.eq(0))).orderBy(CREATE_TIME.desc()).fetch()
+            return dslContext.selectFrom(this)
+                .where((IS_DELETE.eq(0)))
+                .orderBy(CREATE_TIME.desc())
+                .skipCheck()
+                .fetch()
         }
     }
 

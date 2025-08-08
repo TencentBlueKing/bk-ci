@@ -1,9 +1,20 @@
 <template>
     <section class="atom-card">
-        <honer-img class="card-pic atom-logo" :detail="atom" />
-        <p v-bk-overflow-tips :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
+        <honer-img
+            class="card-pic atom-logo"
+            :detail="atom"
+        />
+        <p
+            v-bk-overflow-tips
+            :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']"
+        >
+            {{ atom.name }}
+        </p>
         <h5 class="card-detail">
-            <honer-tag :detail="atom" :max-num="1"></honer-tag>
+            <honer-tag
+                :detail="atom"
+                :max-num="1"
+            ></honer-tag>
             <img
                 v-for="indexInfo in atom.indexInfos"
                 v-bk-tooltips="{
@@ -21,7 +32,12 @@
                 }"
             >
         </h5>
-        <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('store.暂无描述')}}</p>
+        <p
+            v-if="hasSummary"
+            class="card-summary"
+        >
+            {{ atom.summary || $t('store.暂无描述') }}
+        </p>
         <section class="card-rate">
             <section class="rate-left">
                 <p class="score-group">
@@ -41,13 +57,24 @@
                     />
                 </p>
                 <span class="ml4">{{ atom.score }}</span>
-                <img v-if="atom.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
-                <img v-else class="hot-icon" src="../../../images/hot.png">
+                <img
+                    v-if="atom.hotFlag"
+                    class="hot-icon"
+                    src="../../../images/hot-red.png"
+                >
+                <img
+                    v-else
+                    class="hot-icon"
+                    src="../../../images/hot.png"
+                >
                 <span class="ml4">{{ getShowNum(atom.recentExecuteNum) }}</span>
             </section>
             <span class="text-overflow ml5">{{ atom.publisher }}</span>
         </section>
-        <i class="devops-icon icon-lock-shape" v-if="!atom.flag"></i>
+        <i
+            class="devops-icon icon-lock-shape"
+            v-if="!atom.flag"
+        ></i>
     </section>
 </template>
 

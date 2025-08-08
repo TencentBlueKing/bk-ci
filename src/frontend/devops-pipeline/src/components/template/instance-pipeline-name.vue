@@ -7,14 +7,18 @@
         :close-icon="instanceDialogConfig.closeIcon"
     >
         <template>
-            <section class="create-pipeline-content"
+            <section
+                class="create-pipeline-content"
                 v-bkloading="{
                     isLoading: instanceDialogConfig.loading
-                }">
+                }"
+            >
                 <div class="info-title">{{ $t('template.newPipelineName') }}</div>
                 <div class="bk-form create-form">
                     <div class="item-label">{{ $t('pipelineName') }}</div>
-                    <input type="text" class="bk-form-input pipeline-name-input"
+                    <input
+                        type="text"
+                        class="bk-form-input pipeline-name-input"
                         :placeholder="$t('pipelineNameInputTips')"
                         name="pipelineName"
                         v-model="pipelineName"
@@ -23,12 +27,18 @@
                             required: true,
                             max: 128
                         }"
-                        :class="{ 'is-danger': errors.has('pipelineName') }">
+                        :class="{ 'is-danger': errors.has('pipelineName') }"
+                    >
                     <div :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{ errors.first("pipelineName") }}</div>
                 </div>
             </section>
             <div class="form-footer">
-                <bk-button theme="primary" @click="confirm()">{{ $t('confirm') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="confirm()"
+                >
+                    {{ $t('confirm') }}
+                </bk-button>
                 <bk-button @click="cancel()">{{ $t('cancel') }}</bk-button>
             </div>
         </template>

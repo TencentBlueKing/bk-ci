@@ -9,9 +9,9 @@ rbac:
   enabled: true
   serviceAccount: bkci
   clusterRole:
-    enabled: false
+    enabled: true
   clusterRoleBinding:
-    enabled: false
+    enabled: true
 
 ## Add labels to all the deployed resources
 commonLabels: {}
@@ -82,9 +82,9 @@ init:
   defaultImage:
     enabled: true
     image:
-      registry: registry-1.docker.io/bkci
+      registry: bkci
       repository: ci
-      tag: latest
+      tag: jdk17
   plugin:
     enabled: false
     atoms:

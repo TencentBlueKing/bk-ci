@@ -1,12 +1,31 @@
 <template>
     <header class="store-nav">
         <section class="nav-main">
-            <icon class="title-icon" name="color-logo-store" size="22" />
-            <span class="back-home quick-route" @click="changePage({ name: 'atomHome', query: { pipeType: type } })"> {{ $t('store.研发商店') }} </span>
+            <icon
+                class="title-icon"
+                name="color-logo-store"
+                size="22"
+            />
+            <span
+                class="back-home quick-route"
+                @click="changePage({ name: 'atomHome', query: { pipeType: type } })"
+            > {{ $t('store.研发商店') }} </span>
             <template v-for="breadCrumb in breadCrumbs">
-                <i class="right-arrow banner-arrow" :key="breadCrumb.name"></i>
-                <span class="banner-des quick-route" :key="breadCrumb.name" v-if="breadCrumb.to" @click="changePage(breadCrumb.to)"> {{ breadCrumb.name }} </span>
-                <span class="banner-des" :key="breadCrumb.name" v-else> {{ breadCrumb.name }} </span>
+                <i
+                    class="right-arrow banner-arrow"
+                    :key="breadCrumb.name"
+                ></i>
+                <span
+                    class="banner-des quick-route"
+                    :key="breadCrumb.name"
+                    v-if="breadCrumb.to"
+                    @click="changePage(breadCrumb.to)"
+                > {{ breadCrumb.name }} </span>
+                <span
+                    class="banner-des"
+                    :key="breadCrumb.name"
+                    v-else
+                > {{ breadCrumb.name }} </span>
             </template>
         </section>
         <slot></slot>

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,8 @@ import {
     SET_TICKETS_MUTATION,
     SET_T_GIT_OAUTH_MUTATION,
     TOGGLE_CODE_LIB_DIALOG,
-    UPDATE_CODE_LIB_MUTATION
+    UPDATE_CODE_LIB_MUTATION,
+    SET_PROVIDER_CONFIG
 } from './constants'
 const mutations = {
     [SET_CODELIB_TYPES]: (state, codelibTypes) => {
@@ -75,6 +76,9 @@ const mutations = {
     },
     [SET_TEMPLATE_CODELIB] (state, codelib) {
         Vue.set(state, 'templateCodeLib', codelib)
+    },
+    [SET_PROVIDER_CONFIG] (state, value) {
+        Vue.set(state, 'providerConfig', value)
     }
 }
 

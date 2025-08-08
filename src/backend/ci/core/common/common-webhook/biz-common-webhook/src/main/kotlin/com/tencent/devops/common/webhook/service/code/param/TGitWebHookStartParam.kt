@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -64,14 +64,13 @@ class TGitWebHookStartParam @Autowired constructor(
         projectId: String,
         element: CodeTGitWebHookTriggerElement,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         with(element.data.input) {
-            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
             startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = branchName ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = excludeBranchName ?: ""
@@ -88,12 +87,15 @@ class TGitWebHookStartParam @Autowired constructor(
                 } else {
                     gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
                 }
-            startParams.putAll(
-                matcher.retrieveParams(
-                    projectId = projectId,
-                    repository = repo
+            matcher?.let {
+                startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
+                startParams.putAll(
+                    matcher.retrieveParams(
+                        projectId = projectId,
+                        repository = repo
+                    )
                 )
-            )
+            }
         }
         return startParams
     }

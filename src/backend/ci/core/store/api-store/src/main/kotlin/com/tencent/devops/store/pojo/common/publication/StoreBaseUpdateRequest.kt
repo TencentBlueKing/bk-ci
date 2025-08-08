@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "工作台-组件基础信息请求报文体")
 data class StoreBaseUpdateRequest(
@@ -55,6 +55,7 @@ data class StoreBaseUpdateRequest(
     @get:Schema(title = "描述", required = false)
     val description: String? = null,
     @get:Schema(title = "版本信息", required = true)
+    @field:Valid
     val versionInfo: VersionModel,
     @get:Schema(title = "标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,
@@ -67,5 +68,5 @@ data class StoreBaseUpdateRequest(
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,
     @get:Schema(title = "环境信息列表", required = false)
     @Valid
-    val baseEnvInfos: List<StoreBaseEnvRequest>? = null
+    val baseEnvInfos: MutableList<StoreBaseEnvRequest>? = null
 )

@@ -92,15 +92,19 @@ stages:
             timeout-minutes: 480
             continue-on-error: false
             retry-times: 0
+            env:
 
           - run: |
               echo "stage1, job_id_1"
               echo "hello world" >> test.txt
 
         timeout-minutes: 480
+        env:
 
         continue-on-error: false
         strategy:
+          matrix:
+
           fast-kill: true
           max-parallel: 10
         depend-on:
@@ -132,7 +136,7 @@ stages:
                 username: ${{ settings.CSIGHUB_USER }}
                 password: ${{ settings.CSIGHUB_PWD }}
 
-#finally:
+finally:
 #  f_job_1:
 #    name: f-job-1
 #    if: FAILURE
@@ -157,4 +161,3 @@ resources:
     - repository: epc-ieg-bk-common
       name: ieg/epc-ieg-bk-common
       ref: refs/tags/v1.0
-

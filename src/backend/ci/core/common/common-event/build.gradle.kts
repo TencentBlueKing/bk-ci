@@ -1,7 +1,9 @@
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,5 +29,14 @@
 
 dependencies {
     api(project(":core:common:common-service"))
-    compileOnly("org.springframework.boot:spring-boot-starter-amqp")
+    compileOnly("org.apache.pulsar:pulsar-client") {
+        // 暂时无需消息加解密能力，为避免版本冲突排除
+        exclude("org.bouncycastle")
+    }
+    api("org.reflections:reflections")
+    api("org.springframework.boot:spring-boot-actuator")
+    api("org.springframework.boot:spring-boot-actuator-autoconfigure")
+    api("org.springframework.cloud:spring-cloud-stream")
+    api("org.springframework.cloud:spring-cloud-starter-stream-kafka")
+    api("org.springframework.cloud:spring-cloud-starter-stream-rabbit")
 }

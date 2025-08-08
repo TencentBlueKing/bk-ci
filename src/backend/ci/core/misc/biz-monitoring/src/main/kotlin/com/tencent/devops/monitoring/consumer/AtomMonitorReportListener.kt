@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,7 @@ package com.tencent.devops.monitoring.consumer
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITORING_INSERT_DATA_FAIL
@@ -45,7 +45,7 @@ class AtomMonitorReportListener @Autowired constructor(
     private val influxdbClient: InfluxdbClient,
     private val monitorProcessors: List<AbstractMonitorProcessor>,
     private val meterRegistry: MeterRegistry
-) : Listener<AtomMonitorReportBroadCastEvent> {
+) : EventListener<AtomMonitorReportBroadCastEvent> {
 
     override fun execute(event: AtomMonitorReportBroadCastEvent) {
         try {

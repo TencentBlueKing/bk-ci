@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,17 +30,22 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.atom.AtomResponse
+import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
-import com.tencent.devops.process.engine.common.BS_TASK_HOST
+import com.tencent.devops.process.engine.common.VMUtils.getStartVmLabel
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
@@ -97,7 +102,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[PipelineBuildAtomTaskEvent]事件，开始执行/结束插件任务
      */
-    @Suppress("LongMethod", "ComplexMethod")
+    @Suppress("LongMethod", "ComplexMethod", "NestedBlockDepth")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -128,7 +133,8 @@ class TaskControl @Autowired constructor(
             val runCondition = additionalOptions?.runCondition
             val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
             if (actionType.isTerminate() ||
-                (actionType == ActionType.END && !failedEvenCancelFlag)) {
+                (actionType == ActionType.END && !failedEvenCancelFlag)
+            ) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
                 // 区分终止还是用户手动取消, fastKill的行为本质还是用户的行为导致的取消
                 val buildStatus =
@@ -176,7 +182,19 @@ class TaskControl @Autowired constructor(
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
                 // 如果是要轮循的才需要定时消息轮循
-                loopDispatch(buildTask = buildTask)
+                if (!taskId.startsWith(getStartVmLabel())) {
+                    loopDispatch(buildTask = buildTask)
+                } else {
+                    val taskParam =
+                        SpringContextUtil.getBean(IAtomTask::class.java, buildTask.taskAtom).getParamElement(buildTask)
+                    if (taskParam is VMBuildContainer &&
+                        (taskParam.dispatchType is ThirdPartyAgentEnvDispatchType ||
+                                taskParam.dispatchType is ThirdPartyAgentIDDispatchType)
+                    ) {
+                        // #11546 第三方构建机调度兜底
+                        loopDispatch(buildTask = buildTask)
+                    }
+                }
             } else {
                 pipelineBuildTaskService.finishTask(
                     buildTask = buildTask,
@@ -228,10 +246,6 @@ class TaskControl @Autowired constructor(
         taskParam.putAll(buildTask.taskParams)
         delayMills = loopDelayMills
         actionType = ActionType.REFRESH // 尝试刷新任务状态
-        // 特定消费者
-        if (buildTask.taskParams[BS_TASK_HOST] != null) {
-            routeKeySuffix = buildTask.taskParams[BS_TASK_HOST].toString()
-        }
         pipelineEventDispatcher.dispatch(this)
     }
 

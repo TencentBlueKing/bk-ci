@@ -7,24 +7,48 @@
         :has-header="instanceMessageConfig.hasHeader"
         :show-footer="instanceMessageConfig.hasFooter"
         :close-icon="instanceMessageConfig.closeIcon"
-        :mask-close="instanceMessageConfig.quickClose">
+        :mask-close="instanceMessageConfig.quickClose"
+    >
         <template>
-            <section class="create-pipeline-content"
+            <section
+                class="create-pipeline-content"
                 v-bkloading="{
                     isLoading: instanceMessageConfig.loading
-                }">
-                <i class="devops-icon icon-close" @click="cancel()"></i>
-                <div v-if="showTitle" class="message-title">{{ message }}</div>
+                }"
+            >
+                <i
+                    class="devops-icon icon-close"
+                    @click="cancel()"
+                ></i>
+                <div
+                    v-if="showTitle"
+                    class="message-title"
+                >
+                    {{ message }}
+                </div>
                 <div class="fail-pipeline-content">
                     <span>{{ $t('template.instantiationFailMsg') }}：</span>
                     <ul class="fail-list">
-                        <li class="item-row" v-for="(item) in failListInfo" :key="item.key">
+                        <li
+                            class="item-row"
+                            v-for="(item) in failListInfo"
+                            :key="item.key"
+                        >
                             <div class="pipeline-item">
-                                <div class="name" v-bk-overflow-tips>
+                                <div
+                                    class="name"
+                                    v-bk-overflow-tips
+                                >
                                     {{ item.key }} {{ item.message }}
                                 </div>
-                                <ul v-if="item.errors?.length" class="error-details">
-                                    <li v-for="err in item.errors" :key="err.errorTitle">
+                                <ul
+                                    v-if="item.errors?.length"
+                                    class="error-details"
+                                >
+                                    <li
+                                        v-for="err in item.errors"
+                                        :key="err.errorTitle"
+                                    >
                                         <span>{{ err.errorTitle }}</span>
                                         <ul
                                             class="error-details-item-list"

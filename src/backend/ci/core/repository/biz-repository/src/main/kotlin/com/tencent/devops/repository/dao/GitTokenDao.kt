@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,6 +45,7 @@ class GitTokenDao {
     }
 
     fun saveAccessToken(dslContext: DSLContext, userId: String, token: GitToken): Int {
+        val now = LocalDateTime.now()
         with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.insertInto(
                 this,
@@ -53,7 +54,9 @@ class GitTokenDao {
                 REFRESH_TOKEN,
                 TOKEN_TYPE,
                 EXPIRES_IN,
-                CREATE_TIME
+                CREATE_TIME,
+                UPDATE_TIME,
+                OPERATOR
             )
                 .values(
                     userId,
@@ -61,14 +64,23 @@ class GitTokenDao {
                     token.refreshToken,
                     token.tokenType,
                     token.expiresIn,
-                    LocalDateTime.now()
+                    now,
+                    now,
+                    token.operator ?: userId
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
                 .set(REFRESH_TOKEN, token.refreshToken)
                 .set(TOKEN_TYPE, token.tokenType)
                 .set(EXPIRES_IN, token.expiresIn)
-                .set(CREATE_TIME, LocalDateTime.now())
+                .set(UPDATE_TIME, now)
+                .let {
+                    // 避免空值覆盖操作人
+                    if (!token.operator.isNullOrBlank()) {
+                        it.set(OPERATOR, token.operator)
+                    }
+                    it
+                }
                 .execute()
         }
     }

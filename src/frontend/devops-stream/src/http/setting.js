@@ -210,8 +210,14 @@ export default {
     /**
     * 设置agent构建并发数
     */
-    saveParallelTaskCount (projectId, nodeHashId, parallelTaskCount) {
-        return api.post(`${ENVIRNMENT_PERFIX}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${parallelTaskCount}`).then(response => {
+    saveParallelTaskCount ({ projectId, nodeHashId, count }) {
+        return api.post(`${ENVIRNMENT_PERFIX}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${count }`).then(response => {
+            return response
+        })
+    },
+    
+    saveDockerParallelTaskCount ({ projectId, nodeHashId, count }) {
+        return api.post(`${ENVIRNMENT_PERFIX}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/dockerParallelTaskCount?count=${count}`).then(response => {
             return response
         })
     },

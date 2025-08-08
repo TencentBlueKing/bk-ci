@@ -3,15 +3,27 @@
         <aside>
             <slot name="tab">
                 <ul class="bkdevops-vertical-tab-list">
-                    <li v-for="(tab, index) in tabs" :class="{ 'active': tabActiveIndex === index }" :key="tab.id" @click="handleTabClick(index)" :title="tab.name">
+                    <li
+                        v-for="(tab, index) in tabs"
+                        :class="{ 'active': tabActiveIndex === index }"
+                        :key="tab.id"
+                        @click="handleTabClick(index)"
+                        :title="tab.name"
+                    >
                         {{ tab.name }}
                     </li>
                 </ul>
             </slot>
         </aside>
         <section>
-            <slot name="panel" :tabActiveIndex="tabActiveIndex">
-                <component :is="activeTab.component" v-bind="activeTab.componentProps"></component>
+            <slot
+                name="panel"
+                :tabActiveIndex="tabActiveIndex"
+            >
+                <component
+                    :is="activeTab.component"
+                    v-bind="activeTab.componentProps"
+                ></component>
             </slot>
         </section>
     </div>

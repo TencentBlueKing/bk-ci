@@ -18,7 +18,7 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.Path
+import jakarta.ws.rs.Path
 
 /**
  * 项目访问权限拦截器
@@ -83,7 +83,7 @@ class UserApiPermissionAspect constructor(
         // 参数value
         val parameterValue = jp.args
         // 参数key
-        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        val parameterNames = methodSignature.parameterNames
         var projectId: String? = null
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
@@ -113,7 +113,7 @@ class UserApiPermissionAspect constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SensitiveApiPermissionAspect::class.java)
+        private val logger = LoggerFactory.getLogger(UserApiPermissionAspect::class.java)
         private const val CACHE_MAX_SIZE = 50000L
     }
 }

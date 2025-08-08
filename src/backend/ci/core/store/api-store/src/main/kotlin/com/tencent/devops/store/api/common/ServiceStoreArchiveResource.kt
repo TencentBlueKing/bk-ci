@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
@@ -37,15 +38,16 @@ import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateReques
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_STORE_ARCHIVE", description = "研发商店-组件归档")
 @Path("/service/store/archives")
@@ -99,16 +101,33 @@ interface ServiceStoreArchiveResource {
         osArch: String? = null
     ): Result<List<StorePkgEnvInfo>>
 
+    @Operation(summary = "根据配置文件内容获取组件包环境信息")
+    @POST
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/pkg/env/info/get")
+    fun getComponentPkgEnvInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "查询参数", required = true)
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
+    ): Result<List<StorePkgEnvInfo>>
+
     @Operation(summary = "更新组件执行包相关信息")
     @PUT
-    @Path("/components/{storeId}/pkg/info/update")
+    @Path("/component/pkg/info/update")
     fun updateComponentPkgInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        storeId: String,
         @Parameter(description = "组件包相关信息修改请求报文体", required = true)
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Result<Boolean>

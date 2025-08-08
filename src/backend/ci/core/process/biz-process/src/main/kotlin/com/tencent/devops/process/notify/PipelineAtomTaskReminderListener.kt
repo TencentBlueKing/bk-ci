@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,8 +27,7 @@
 
 package com.tencent.devops.process.notify
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.process.service.ReviewReminderService
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,11 +40,10 @@ import org.springframework.stereotype.Component
  */
 @Component
 class PipelineAtomTaskReminderListener @Autowired constructor(
-    private val reminderControl: ReviewReminderService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildReviewReminderEvent>(pipelineEventDispatcher) {
+    private val reminderControl: ReviewReminderService
+) : EventListener<PipelineBuildReviewReminderEvent> {
 
-    override fun run(event: PipelineBuildReviewReminderEvent) {
+    override fun execute(event: PipelineBuildReviewReminderEvent) {
         reminderControl.handle(event)
     }
 }

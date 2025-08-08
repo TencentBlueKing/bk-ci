@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,14 +27,33 @@
 
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
 interface StoreReleaseSpecBusService {
+
+    /**
+     * 执行新增组件请求前置业务
+     * @param storeCreateRequest 新增组件请求报文
+     */
+    fun doStoreCreatePreBus(
+        storeCreateRequest: StoreCreateRequest
+    )
+
+    /**
+     * 执行更新组件请求前置业务
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreUpdatePreBus(
+        storeUpdateRequest: StoreUpdateRequest
+    )
 
     /**
      * 对更新组件请求参数进行国际化转换个性化逻辑
@@ -94,6 +113,23 @@ interface StoreReleaseSpecBusService {
     ): List<StorePkgEnvInfo>
 
     /**
+     * 获取组件包环境信息
+     * @param userId 流水线ID
+     * @param storeType 组件类型
+     * @param storeCode 组件标识
+     * @param version 组件版本
+     * @param queryComponentPkgEnvInfoParam 获取组件包环境信息查询参数
+     * @return 包环境信息列表
+     */
+    fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
+    ): List<StorePkgEnvInfo>
+
+    /**
      * 获取组件发布过程信息列表
      * @param userId 流水线ID
      * @param isNormalUpgrade 是否为普通升级
@@ -105,4 +141,29 @@ interface StoreReleaseSpecBusService {
         isNormalUpgrade: Boolean,
         status: StoreStatusEnum
     ): List<ReleaseProcessItem>
+
+    /**
+     * 执行组件环境信息业务
+     * @param userId 流水线ID
+     * @param storeType 组件类型
+     * @param storeCode 组件标识
+     * @param version 组件版本
+     * @param releaseType 发布类型
+     */
+    fun doStoreEnvBus(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        userId: String,
+        releaseType: ReleaseTypeEnum? = null
+    )
+
+    /**
+     * 执行新增组件请求后置业务
+     */
+    fun doStorePostCreateBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    )
 }

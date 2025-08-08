@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -72,6 +73,28 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
             storeType = storeType,
             storeCode = storeCode,
             unInstallReq = unInstallReq
+        )
+    }
+
+    override fun getStoreUpgradeVersionInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        projectCode: String,
+        instanceId: String?,
+        osName: String?,
+        osArch: String?
+    ): Result<VersionInfo?> {
+        return Result(
+            storeComponentQueryService.getComponentUpgradeVersionInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                projectCode = projectCode,
+                instanceId = instanceId,
+                osName = osName,
+                osArch = osArch
+            )
         )
     }
 
@@ -126,6 +149,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
         instanceId: String?,
+        queryTestFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<Page<MarketItem>> {
@@ -145,6 +169,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
                     queryProjectComponentFlag = queryProjectComponentFlag,
                     sortType = sortType,
                     instanceId = instanceId,
+                    queryTestFlag = queryTestFlag,
                     page = page,
                     pageSize = pageSize,
                     installed = installed,

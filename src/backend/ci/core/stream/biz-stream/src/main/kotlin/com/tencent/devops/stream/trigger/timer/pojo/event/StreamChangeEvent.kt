@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,14 +30,14 @@ package com.tencent.devops.stream.trigger.timer.pojo.event
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.constant.StreamMQ
 
 /**
  * 广播定时规则变化的事件
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT, MQ.QUEUE_STREAM_TIMER)
+@Event(StreamMQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT)
 data class StreamChangeEvent(
     override val source: String,
     override val projectId: String,

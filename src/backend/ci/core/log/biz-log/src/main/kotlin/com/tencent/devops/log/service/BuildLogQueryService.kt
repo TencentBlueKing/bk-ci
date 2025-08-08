@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,7 +42,7 @@ import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
 import com.tencent.devops.log.strategy.factory.UserLogPermissionCheckStrategyFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")
 @Service
@@ -66,16 +66,20 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true,
+        reverse: Boolean?
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
@@ -88,7 +92,8 @@ class BuildLogQueryService @Autowired constructor(
                 containerHashId = containerHashId,
                 executeCount = executeCount,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                reverse = reverse
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -166,16 +171,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
@@ -217,16 +225,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {

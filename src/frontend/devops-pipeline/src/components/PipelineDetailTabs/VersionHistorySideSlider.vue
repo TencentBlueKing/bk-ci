@@ -91,8 +91,10 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="280"
                         :label="$t('operate')"
+                        :width="320"
+                        prop="operate"
+                        fixed="right"
                     >
                         <div
                             slot-scope="props"
@@ -106,7 +108,7 @@
                                 {{ $t('draftExecRecords') }}
                             </bk-button>
                             <rollback-entry
-                                v-if="props.row.canRollback"
+                                v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
                                 :pipeline-id="$route.params.pipelineId"
@@ -114,13 +116,18 @@
                                 :version-name="props.row.versionName"
                                 :draft-base-version-name="draftBaseVersionName"
                                 :is-active-draft="props.row.isDraft"
+                                :is-active-branch-version="props.row.isBranchVersion"
+                                :draft-creator="props.row?.creator"
+                                :draft-create-time="props.row?.createTime"
                             />
                             <version-diff-entry
                                 v-if="props.row.version !== releaseVersion"
-                                :version="props.row.version"
-                                :latest-version="releaseVersion"
+                                :version="props.row.currentDiffVersion"
+                                :latest-version="props.row.latestDiffVersion"
+                                :archive-flag="archiveFlag"
                             />
                             <bk-button
+                                v-if="!archiveFlag"
                                 text
                                 theme="primary"
                                 :disabled="releaseVersion === props.row.version"
@@ -139,7 +146,6 @@
 <script>
     import Logo from '@/components/Logo'
     import EmptyException from '@/components/common/exception'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime, navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
@@ -184,10 +190,12 @@
             columns () {
                 return [{
                     prop: 'versionName',
+                    width: 120,
                     label: this.$t('versionNum'),
                     showOverflowTooltip: true
                 }, {
                     prop: 'description',
+                    width: 120,
                     label: this.$t('versionDesc'),
                     showOverflowTooltip: true
                 }, {
@@ -200,7 +208,7 @@
                     }
                 }, {
                     prop: 'creator',
-                    width: 90,
+                    width: 120,
                     label: this.$t('creator')
                 }, {
                     prop: 'updateTime',
@@ -212,7 +220,7 @@
                     }
                 }, {
                     prop: 'updater',
-                    width: 90,
+                    width: 120,
                     label: this.$t('audit.operator')
                 }]
             },
@@ -239,6 +247,9 @@
             },
             emptyType () {
                 return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         mounted () {
@@ -249,10 +260,12 @@
             window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
-            ...mapActions('pipelines', [
-                'requestPipelineVersionList',
-                'deletePipelineVersion'
-            ]),
+            ...mapActions({
+                requestPipelineSummary: 'atom/requestPipelineSummary',
+                requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
+                deletePipelineVersion: 'pipelines/deletePipelineVersion',
+                setHistoryPageStatus: 'pipelines/setHistoryPageStatus'
+            }),
             handleShown () {
                 this.handlePageChange(1)
             },
@@ -289,6 +302,7 @@
                     pipelineId,
                     page,
                     pageSize: this.pagination.limit,
+                    archiveFlag: this.archiveFlag,
                     ...this.filterQuery
                 })
                 Object.assign(this.pagination, {
@@ -303,7 +317,9 @@
                         isDraft,
                         canRollback: !isDraft,
                         isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName]),
+                        currentDiffVersion: !isDraft ? item.version : this.releaseVersion,
+                        latestDiffVersion: !isDraft ? this.releaseVersion : item.version
                     }
                 })
             },
@@ -329,14 +345,7 @@
                                 theme: 'success'
                             })
 
-                            if (row.isDraft) { // 删除草稿时需要更新pipelineInfo
-                                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                                    version: this.pipelineInfo?.releaseVersion,
-                                    versionName: this.pipelineInfo?.releaseVersionName,
-                                    canDebug: false,
-                                    canRelease: false
-                                })
-                            }
+                            this.requestPipelineSummary(this.$route.params)
                         } catch (err) {
                             this.$showTips({
                                 message: err.message || err,
@@ -357,7 +366,10 @@
             },
             goDebugRecords () {
                 this.$router.push({
-                    name: 'draftDebugRecord'
+                    name: 'draftDebugRecord',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 })
             }
         }

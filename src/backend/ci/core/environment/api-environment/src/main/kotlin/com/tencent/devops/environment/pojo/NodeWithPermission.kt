@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "NodeWithPermission-节点信息(权限)")
@@ -90,5 +91,13 @@ data class NodeWithPermission(
     @get:Schema(title = "job任务ID")
     val taskId: Long?,
     @get:Schema(title = "主机serverId")
-    val serverId: Long?
+    val serverId: Long?,
+    @get:Schema(title = "机型")
+    val size: String? = null,
+    @get:Schema(title = "该节点所属环境名")
+    val envNames: List<String>? = null,
+    @get:Schema(title = "最近构建信息")
+    var latestBuildDetail: AgentBuildDetail? = null,
+    @get:Schema(title = "节点标签信息")
+    val tags: List<NodeTag>? = null
 )

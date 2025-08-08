@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,7 +31,7 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
@@ -120,7 +120,66 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 branch = ref,
-                filePath = filePath
+                filePath = filePath,
+                commitId = commitId,
+                blobId = blobId,
+                commitTime = commitTime
+            )
+        }
+    }
+
+    fun save(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        directory: String,
+        defaultBranch: String?,
+        pipelineId: String,
+        status: String,
+        userId: String,
+        blobId: String,
+        commitId: String,
+        commitTime: LocalDateTime,
+        ref: String,
+        version: Int
+    ) {
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlInfoDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                directory = directory,
+                defaultBranch = defaultBranch,
+                pipelineId = pipelineId,
+                status = status,
+                userId = userId
+            )
+            pipelineYamlVersionDao.save(
+                dslContext = transactionContext,
+                id = id,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                ref = ref,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
+                pipelineId = pipelineId,
+                version = version,
+                userId = userId
+            )
+            pipelineYamlBranchFileDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = ref,
+                filePath = filePath,
+                commitId = commitId,
+                blobId = blobId,
+                commitTime = commitTime
             )
         }
     }
@@ -173,7 +232,69 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 branch = ref,
-                filePath = filePath
+                filePath = filePath,
+                commitId = commitId,
+                blobId = blobId,
+                commitTime = commitTime
+            )
+        }
+        if (!defaultBranch.isNullOrBlank()) {
+            refreshPipelineYamlStatus(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                defaultBranch = defaultBranch
+            )
+        }
+    }
+
+    fun update(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        pipelineId: String,
+        userId: String,
+        blobId: String,
+        commitId: String,
+        commitTime: LocalDateTime,
+        ref: String,
+        defaultBranch: String?,
+        version: Int
+    ) {
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlInfoDao.update(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                defaultBranch = defaultBranch,
+                userId = userId
+            )
+            pipelineYamlVersionDao.save(
+                dslContext = transactionContext,
+                id = id,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                ref = ref,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
+                pipelineId = pipelineId,
+                version = version,
+                userId = userId
+            )
+            pipelineYamlBranchFileDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = ref,
+                filePath = filePath,
+                commitId = commitId,
+                blobId = blobId,
+                commitTime = commitTime
             )
         }
         if (!defaultBranch.isNullOrBlank()) {
@@ -195,11 +316,11 @@ class PipelineYamlService(
         filePath: String,
         defaultBranch: String
     ) {
-        val branchList = pipelineYamlBranchFileDao.listBranch(
-            dslContext = dslContext,
+        val branchList = listRef(
             projectId = projectId,
             repoHashId = repoHashId,
-            filePath = filePath
+            filePath = filePath,
+            branchAction = BranchVersionAction.ACTIVE
         )
         val pipelineYamlInfo = pipelineYamlInfoDao.get(
             dslContext = dslContext,
@@ -229,21 +350,6 @@ class PipelineYamlService(
                 status = status
             )
         }
-    }
-
-    fun updatePipelineYamlStatus(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        status: String
-    ) {
-        pipelineYamlInfoDao.updateStatus(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            status = status
-        )
     }
 
     fun getPipelineYamlInfo(
@@ -299,34 +405,22 @@ class PipelineYamlService(
         }
     }
 
-    fun listEnablePacPipelineMap(
-        projectId: String,
-        pipelineIds: List<String>
-    ): List<PipelineYamlInfo> {
-        return pipelineYamlInfoDao.listByPipelineIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineIds = pipelineIds
-        )
-    }
-
-    /**
-     * 获取当前分支或blob_id对应的最新的版本
-     */
-    fun getLatestVersion(
+    fun getPipelineYamlVersion(
         projectId: String,
         repoHashId: String,
         filePath: String,
         ref: String? = null,
+        commitId: String? = null,
         blobId: String? = null,
         branchAction: String? = null
     ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.getLatestVersion(
+        return pipelineYamlVersionDao.getPipelineYamlVersion(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
             ref = ref,
+            commitId = commitId,
             blobId = blobId,
             branchAction = branchAction
         )
@@ -359,7 +453,7 @@ class PipelineYamlService(
                 logger.info("pipeline yaml not found|$projectId|$pipelineId")
                 return null
             }
-        val pipelineYamlVersion = pipelineYamlVersionDao.getLatestVersion(
+        val pipelineYamlVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -410,12 +504,14 @@ class PipelineYamlService(
 
     fun countPipelineYaml(
         projectId: String,
-        repoHashId: String
+        repoHashId: String,
+        directory: String? = null
     ): Long {
         return pipelineYamlInfoDao.countYamlPipeline(
             dslContext = dslContext,
             projectId = projectId,
-            repoHashId = repoHashId
+            repoHashId = repoHashId,
+            directory = directory
         )
     }
 
@@ -461,6 +557,23 @@ class PipelineYamlService(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId
+        )
+    }
+
+    fun listRef(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        branchAction: BranchVersionAction = BranchVersionAction.ACTIVE,
+        excludeRef: String? = null
+    ): List<String> {
+        return pipelineYamlVersionDao.listRef(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            branchAction = branchAction.name,
+            excludeRef = excludeRef
         )
     }
 
@@ -512,21 +625,6 @@ class PipelineYamlService(
             projectId = projectId,
             repoHashId = repoHashId,
             branch = branch
-        )
-    }
-
-    fun getBranchFilePath(
-        projectId: String,
-        repoHashId: String,
-        branch: String,
-        filePath: String
-    ): TPipelineYamlBranchFileRecord? {
-        return pipelineYamlBranchFileDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            branch = branch,
-            filePath = filePath
         )
     }
 }

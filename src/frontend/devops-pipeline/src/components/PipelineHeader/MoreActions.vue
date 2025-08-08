@@ -1,8 +1,18 @@
 <template>
     <div class="flex-container">
-        <bk-dropdown-menu trigger="click" align="bottom">
-            <div slot="dropdown-trigger" class="more-operation-entry">
-                <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
+        <bk-dropdown-menu
+            trigger="click"
+            align="bottom"
+        >
+            <div
+                slot="dropdown-trigger"
+                class="more-operation-entry"
+            >
+                <i
+                    class="entry-circle"
+                    v-for="i in [1, 2, 3]"
+                    :key="i"
+                />
             </div>
             <div
                 v-if="curPipelineId"
@@ -10,7 +20,10 @@
                 class="more-operation-dropmenu"
                 slot="dropdown-content"
             >
-                <ul v-for="(parent, index) in actionConfMenus" :key="index">
+                <ul
+                    v-for="(parent, index) in actionConfMenus"
+                    :key="index"
+                >
                     <template v-for="(action, aIndex) in parent">
                         <li
                             v-if="!action.hidden"
@@ -59,6 +72,12 @@
             @close="closeDisablePipeline"
             @done="afterDisablePipeline"
         />
+        <delete-archived-dialog
+            :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="afterRemovePipeline"
+            @cancel="closeDeleteArchiveDialog"
+        />
     </div>
 </template>
 
@@ -75,6 +94,7 @@
     import { RESOURCE_ACTION, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     export default {
         components: {
             ImportPipelinePopup,
@@ -82,6 +102,7 @@
             CopyPipelineDialog,
             SaveAsTemplateDialog,
             RemoveConfirmDialog,
+            DeleteArchivedDialog,
             DisableDialog
         },
         mixins: [pipelineActionMixin],
@@ -97,6 +118,9 @@
             ...mapState('atom', ['pipelineInfo']),
             ...mapState('pipelines', ['pipelineActionState']),
             ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
+            ...mapState('common', [
+                'hasProjectPermission'
+            ]),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
@@ -106,6 +130,9 @@
             curPipelineId () {
                 return this.pipelineInfo?.pipelineId
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             actionConfMenus () {
                 const { projectId } = this.$route.params
                 const pipeline = {
@@ -113,7 +140,7 @@
                     projectId,
                     pac: this.pacEnabled
                 }
-                return [
+                const menuItems = [
                     [
                         {
                             label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
@@ -136,7 +163,9 @@
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canEdit,
+                                hasPermission: this.archiveFlag
+                                    ? this.hasProjectPermission
+                                    : pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
@@ -229,9 +258,17 @@
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(pipeline),
+                            handler: () => {
+                                if (this.archiveFlag) {
+                                    this.openDeleteArchivedDialog(pipeline)
+                                } else {
+                                    this.deleteHandler(pipeline)
+                                }
+                            },
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canDelete,
+                                hasPermission: this.archiveFlag
+                                    ? this.hasProjectPermission
+                                    : pipeline.permissions?.canDelete,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
@@ -243,6 +280,18 @@
                         }
                     ]
                 ]
+
+                if (this.archiveFlag) {
+                    // 归档时只保留导出和删除
+                    return menuItems.map(subMenu =>
+                        subMenu.filter(item =>
+                            item.label === 'newlist.exportPipelineJson'
+                            || item.label === 'delete'
+                        )
+                    ).filter(subMenu => subMenu.length > 0)
+                }
+
+                return menuItems
             }
         },
         methods: {
@@ -344,7 +393,6 @@
   }
 }
 .more-operation-dropmenu {
-  width: 120px;
   > ul {
     &:first-child {
       border-bottom: 1px solid #dcdee5;

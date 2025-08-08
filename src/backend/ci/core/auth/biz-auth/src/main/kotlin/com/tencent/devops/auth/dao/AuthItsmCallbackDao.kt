@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.vo.AuthItsmCallbackInfo
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthItsmCallback
 import com.tencent.devops.model.auth.tables.records.TAuthItsmCallbackRecord
 import org.jooq.DSLContext
@@ -95,6 +96,7 @@ class AuthItsmCallbackDao {
             return dslContext.selectFrom(this)
                 .where(ENGLISH_NAME.eq(projectCode))
                 .orderBy(CREATE_TIME.desc())
+                .skipCheck()
                 .fetchAny()
         }
     }

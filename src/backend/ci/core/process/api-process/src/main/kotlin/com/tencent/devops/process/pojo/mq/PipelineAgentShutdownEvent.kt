@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,11 +28,12 @@
 package com.tencent.devops.process.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, MQ.ROUTE_AGENT_SHUTDOWN)
+@Event(StreamBinding.PIPELINE_AGENT_SHUTDOWN)
 data class PipelineAgentShutdownEvent(
     override val source: String,
     override val projectId: String,
@@ -43,7 +44,18 @@ data class PipelineAgentShutdownEvent(
     val buildResult: Boolean,
     val executeCount: Int?,
     val dockerRoutingType: String? = "VM",
+    val dispatchType: DispatchType,
+    val jobId: String? = null,
+    val containerHashId: String? = null,
+    override var routeKeySuffix: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0
+) : IPipelineEvent(
+    actionType = actionType,
+    source = source,
+    projectId = projectId,
+    pipelineId = pipelineId,
+    userId = userId,
+    delayMills = delayMills,
+    routeKeySuffix = routeKeySuffix
+)

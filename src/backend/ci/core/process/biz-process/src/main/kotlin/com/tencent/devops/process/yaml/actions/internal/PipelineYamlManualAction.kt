@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -105,7 +105,7 @@ class PipelineYamlManualAction : BaseAction {
         val event = event()
         return when (event.scmType) {
             ScmType.CODE_GIT, ScmType.CODE_TGIT -> TGitCred(
-                userId = event().userId,
+                userId = event().authUserId,
                 accessToken = personToken,
                 useAccessToken = personToken == null
             )
@@ -151,7 +151,8 @@ class PipelineYamlManualAction : BaseAction {
         return api.checkPushPermission(
             userId = event().userId,
             cred = this.getGitCred(),
-            gitProjectId = getGitProjectIdOrName()
+            gitProjectId = getGitProjectIdOrName(),
+            authUserId = event().authUserId
         )
     }
 
@@ -162,10 +163,11 @@ class PipelineYamlManualAction : BaseAction {
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction,
-        versionName: String?
+        versionName: String?,
+        targetBranch: String?
     ): PacGitPushResult {
         return api.pushYamlFile(
-            userId = event().userId,
+            userId = event().authUserId,
             cred = this.getGitCred(),
             gitProjectId = getGitProjectIdOrName(),
             defaultBranch = data.eventCommon.branch,
@@ -175,7 +177,8 @@ class PipelineYamlManualAction : BaseAction {
             targetAction = targetAction,
             pipelineId = pipelineId,
             pipelineName = pipelineName,
-            versionName = versionName
+            versionName = versionName,
+            targetBranch = targetBranch
         )
     }
 }

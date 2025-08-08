@@ -76,37 +76,6 @@ object ActionAuditContent {
     const val CREDENTIAL_LIST_CONTENT = "list credential $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CREDENTIAL_USE_CONTENT = "use credential $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
-    // 云桌面
-    const val CGS_CREATE_CONTENT = "create workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_LIST_CONTENT = "list workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_VIEW_CONTENT = "get workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_STOP_CONTENT = "stop workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_START_CONTENT = "start workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_RESTART_CONTENT = "restart workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_ASSIGN_USER_CONTENT = "assign workspace $CONTENT_TEMPLATE " +
-        "to [{{$ASSIGNS_TEMPLATE}}] from $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_ASSIGN_PROJECT_CONTENT = "assign workspace $CONTENT_TEMPLATE to project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_EDIT_TYPE_CONTENT = "modify workspace type $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_REBUILD_SYSTEM_DISK_CONTENT = "rebuild workspace system disk $CONTENT_TEMPLATE " +
-        "in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_MAKE_IMAGE_CONTENT = "make workspace image  $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_EXPAND_DISK_CONTENT = "expand workspace disk $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_TOKEN_GENERATE_CONTENT = "generate workspace 1password $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-
-    // 云桌面镜像
-    const val IMAGE_LIST_CONTENT = "list workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val IMAGE_DELETE_CONTENT = "delete workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val IMAGE_EDIT_CONTENT = "modify workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-
-    // 代理仓库
-    const val TGIT_LINK_CREATE_CONTENT = "create tgit link $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val TGIT_LINK_CALLBACK_CREATE_CONTENT = "create tgit link callback $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val TGIT_LINK_DELETE_CONTENT = "delete tgit link $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val TGIT_LINK_CREATE_PROJECT_CONTENT = "create tgit project $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-
     // 环境
     const val ENVIRONMENT_CREATE_CONTENT = "create environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_EDIT_CONTENT = "modify environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -127,6 +96,12 @@ object ActionAuditContent {
     const val ENV_NODE_DELETE_CONTENT = "delete environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_LIST_CONTENT = "list environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_USE_CONTENT = "use environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 环境节点标签
+    const val ENV_NODE_TAG_CREATE_CONTENT = "create environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_EDIT_CONTENT = "edit environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_DELETE_CONTENT = "delete environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_UPDATE_CONTENT = "update environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 质量红线
     const val RULE_CREATE_CONTENT = "create rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

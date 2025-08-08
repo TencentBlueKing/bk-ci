@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,9 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.message
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "CodeCC上报消息")
+@Event(StreamBinding.METRICS_STATISTIC_CODE_CHECK_DAILY, binder = StreamBinder.EXTEND_RABBIT)
 data class CodeCheckReportEvent(
     @get:Schema(title = "统计日期")
     val statisticsTime: String,
@@ -39,4 +44,4 @@ data class CodeCheckReportEvent(
     val repoCodeccAvgScore: Double,
     @get:Schema(title = "已解决缺陷数量")
     val resolvedDefectNum: Int
-)
+) : IEvent()

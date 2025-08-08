@@ -1,7 +1,5 @@
 /// <reference path='./typings/index.d.ts' />
 
-import Vue from 'vue'
-
 import AsideNav from '@/components/AsideNav/index.vue'
 import ContentHeader from '@/components/ContentHeader/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
@@ -15,6 +13,7 @@ import store from '@/store'
 import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
+import Vue from 'vue'
 import createDocs from '../../common-lib/docs'
 
 import createLocale from '../../locale'
@@ -25,6 +24,7 @@ import bsWebSocket from '@/utils/bsWebSocket.js'
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
+import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import './assets/scss/icon/iconcool'
@@ -36,7 +36,8 @@ import validDictionary from './utils/validDictionary'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+// @ts-ignore
+import('bk-magic-vue/dist/bk-magic-vue.min.css')
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -70,6 +71,7 @@ Vue.use(VeeValidate, {
     i18n,
     fieldsBagName: 'veeFields',
     dictionary: {
+        'ja-JP': validationJAMessages,
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }

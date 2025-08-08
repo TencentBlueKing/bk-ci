@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,23 +33,25 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPENAPI_PROJECT_V4", description = "OPENAPI-项目资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/project")
@@ -137,7 +139,22 @@ interface ApigwProjectResourceV4 {
         userId: String,
         @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        accessToken: String?,
+        @Parameter(description = "产品Id,多个Id之间以,分隔", required = true)
+        @QueryParam("productIds")
+        productIds: String? = null,
+        @Parameter(description = "渠道号,多个Id之间以,分隔", required = true)
+        @QueryParam("channelCodes")
+        channelCodes: String? = null,
+        @Parameter(description = "排序字段(支持PROJECT_NAME、ENGLISH_NAME)", required = true)
+        @QueryParam("sort")
+        sort: ProjectSortType? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页条数(默认10)", required = false, example = "10")
+        @QueryParam("pageSize")
+        pageSize: Int? = 10
     ): Result<List<ProjectVO>>
 
     @GET
@@ -231,4 +248,27 @@ interface ApigwProjectResourceV4 {
         @QueryParam("productId")
         productId: Int
     ): Result<List<ProjectBaseInfo>>
+
+    @PUT
+    @Path("/{projectId}/update_plugin_details_display")
+    @Operation(
+        summary = "更新插件展示顺序",
+        tags = ["v4_app_update_plugin_details_display"]
+    )
+    fun updatePluginDetailsDisplay(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "插件展示顺序", required = true)
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Result<Boolean>
 }

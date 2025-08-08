@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -109,6 +109,9 @@ object ModelUtils {
     }
 
     fun refreshCanRetry(model: Model) {
+        // #11143 如果最后一个stage是finally stage，则在finally stage运行时不显示前序的重试/跳过按钮
+        val lastStage = model.stages.last()
+        if (lastStage.finally && BuildStatus.parse(lastStage.status).isRunning()) return
         model.stages.forEach { s ->
             val stageStatus = BuildStatus.parse(s.status)
             s.canRetry = stageStatus.isFailure() || stageStatus.isCancel()

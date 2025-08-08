@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.websocket.dispatch.push
 
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.NotifyPost
@@ -39,7 +40,7 @@ abstract class WebsocketPush(
     open val redisOperation: RedisOperation,
     open var page: String?,
     open var notifyPost: NotifyPost
-) {
+) : IEvent() {
     open fun findSession(page: String): Set<String>? {
         return WsRedisUtils.getSessionListFormPageSessionByPage(redisOperation, page)
     }

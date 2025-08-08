@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,6 +54,19 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun syncYamlFile(
+        userId: String,
+        projectId: String,
+        yamlFileSyncReq: PipelineYamlFileSyncReq
+    ): Result<Boolean> {
+        pipelineYamlFacadeService.syncYamlFile(
+            userId = userId,
+            projectId = projectId,
+            yamlFileSyncReq = yamlFileSyncReq
+        )
+        return Result(true)
+    }
+
     override fun disable(
         userId: String,
         projectId: String,
@@ -66,5 +80,14 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
             scmType = scmType
         )
         return Result(true)
+    }
+
+    override fun yamlExistInDefaultBranch(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        return Result(
+            pipelineYamlFacadeService.yamlExistInDefaultBranch(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        )
     }
 }

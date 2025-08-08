@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -39,5 +40,7 @@ data class StorePkgInfoUpdateRequest(
     @get:Schema(title = "组件版本号", required = true)
     val version: String,
     @get:Schema(title = "组件包环境信息", required = true)
-    val storePkgEnvInfos: List<StorePkgEnvInfo>
+    val storePkgEnvInfos: List<StorePkgEnvInfo>,
+    @get:Schema(title = "发布类型", required = false)
+    val releaseType: ReleaseTypeEnum? = null
 )

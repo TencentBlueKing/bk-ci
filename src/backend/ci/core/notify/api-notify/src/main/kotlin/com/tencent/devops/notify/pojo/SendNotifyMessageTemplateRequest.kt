@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.notify.api.annotation.BkNotifyReceivers
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "使用模板发送消息通知请求报文体")
@@ -33,6 +34,7 @@ data class SendNotifyMessageTemplateRequest(
     @get:Schema(title = "通知模板代码", required = true)
     val templateCode: String,
     @get:Schema(title = "通知接收者", required = true)
+    @BkNotifyReceivers
     val receivers: MutableSet<String> = mutableSetOf(),
     @get:Schema(title = "指定消息类型", required = false)
     val notifyType: MutableSet<String>? = null, // 枚举保护：使用NotifyType.name传值
@@ -46,6 +48,8 @@ data class SendNotifyMessageTemplateRequest(
     val bcc: MutableSet<String>? = null,
     @get:Schema(title = "是否以markdown格式发送通知内容, 目前仅企业微信群支持markdown", required = false)
     val markdownContent: Boolean? = false,
+    @get:Schema(title = "是否@receivers, 仅企业微信群支持, 当然如果markdownContent=true时无法支持", required = false)
+    val mentionReceivers: Boolean? = false,
     @get:Schema(title = "回调内容", required = false)
     val callbackData: Map<String, String>? = null
 )

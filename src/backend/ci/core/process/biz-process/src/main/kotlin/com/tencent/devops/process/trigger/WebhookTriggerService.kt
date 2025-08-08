@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -76,8 +76,9 @@ class WebhookTriggerService(
         val yamlPipelineIds = getYamlPipelineIds(matcher, scmType)
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
-            repositoryType = scmType.name,
-            yamlPipelineIds = yamlPipelineIds
+            repositoryType = scmType,
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         pipelineBuildWebhookService.dispatchTriggerPipelines(
             matcher = matcher,
@@ -86,7 +87,7 @@ class WebhookTriggerService(
         )
     }
 
-    private fun getYamlPipelineIds(
+    fun getYamlPipelineIds(
         matcher: ScmWebhookMatcher,
         scmType: ScmType
     ): List<String> {

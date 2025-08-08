@@ -19,15 +19,25 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
         >
-            <bk-table-column :label="$t('codelib.事件')" prop="eventType">
+            <bk-table-column
+                :label="$t('codelib.事件')"
+                prop="eventType"
+            >
                 <template slot-scope="{ row }">
                     <div class="event-name">
-                        <img class="logo" :src="row.atomLogo" alt="">
+                        <img
+                            class="logo"
+                            :src="row.atomLogo"
+                        >
                         {{ row.eventTypeDesc }}
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('codelib.触发条件')" prop="eventType" show-overflow-tooltip>
+            <bk-table-column
+                :label="$t('codelib.触发条件')"
+                prop="eventType"
+                show-overflow-tooltip
+            >
                 <template slot-scope="{ row }">
                     <div
                         v-if="Object.keys(row.triggerCondition).length"
@@ -37,7 +47,9 @@
                         }"
                     >
                         <div
-                            v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item"
+                            v-for="(item, key, index) in row.triggerCondition"
+                            :key="index"
+                            class="condition-item"
                             v-show="(index <= 2 && !row.isExpand) || row.isExpand"
                         >
                             <bk-popover
@@ -66,8 +78,18 @@
                                     </div>
                                 </template>
                                 <span v-else>{{ key }}</span>
-                                <div class="trigger-expand-btn" v-if="!row.isExpand && Object.keys(row.triggerCondition).length > 3 && index === 2" text @click="row.isExpand = true">{{ $t('codelib.展开') }}</div>
-                                <div slot="content" style="white-space: normal;">
+                                <div
+                                    class="trigger-expand-btn"
+                                    v-if="!row.isExpand && Object.keys(row.triggerCondition).length > 3 && index === 2"
+                                    text
+                                    @click="row.isExpand = true"
+                                >
+                                    {{ $t('codelib.展开') }}
+                                </div>
+                                <div
+                                    slot="content"
+                                    style="white-space: normal;"
+                                >
                                     <span>- {{ key }}:</span>
                                     <div
                                         v-for="i in item"
@@ -78,19 +100,36 @@
                                     </div>
                                 </div>
                             </bk-popover>
-
                         </div>
-                        <div class="trigger-expand-btn" v-if="row.isExpand && Object.keys(row.triggerCondition).length > 3 " text @click="row.isExpand = false">{{ $t('codelib.收起') }}</div>
+                        <div
+                            class="trigger-expand-btn"
+                            v-if="row.isExpand && Object.keys(row.triggerCondition).length > 3 "
+                            text
+                            @click="row.isExpand = false"
+                        >
+                            {{ $t('codelib.收起') }}
+                        </div>
                     </div>
                     <div v-else>--</div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('codelib.流水线数量')" prop="pipelineCount">
+            <bk-table-column
+                :label="$t('codelib.流水线数量')"
+                prop="pipelineCount"
+            >
                 <template slot-scope="{ row }">
-                    <bk-button text @click="handleShowPipelineList(row)">{{ row.pipelineRefCount }}</bk-button>
+                    <bk-button
+                        text
+                        @click="handleShowPipelineList(row)"
+                    >
+                        {{ row.pipelineRefCount }}
+                    </bk-button>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('codelib.操作')" width="150">
+            <bk-table-column
+                :label="$t('codelib.操作')"
+                width="150"
+            >
                 <template slot-scope="{ row }">
                     <bk-button
                         class="mr10"
@@ -111,7 +150,8 @@
         </bk-table>
         <atom-detail
             ref="atomDetailRef"
-            :atom="curAtom">
+            :atom="curAtom"
+        >
         </atom-detail>
 
         <bk-sideslider
@@ -125,8 +165,12 @@
                 <bk-table
                     :data="pipelineList"
                     :pagination="pipelineListPagination"
-                    @page-change="handlePipelinePageChange">
-                    <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
+                    @page-change="handlePipelinePageChange"
+                >
+                    <bk-table-column
+                        :label="$t('codelib.流水线名称')"
+                        prop="pipelineName"
+                    >
                         <template slot-scope="{ row }">
                             <a @click="handleToPipeline(row)">{{ row.pipelineName }}</a>
                         </template>

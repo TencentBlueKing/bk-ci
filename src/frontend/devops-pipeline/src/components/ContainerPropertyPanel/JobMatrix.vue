@@ -1,12 +1,38 @@
 <template>
-    <accordion show-checkbox :show-content="enableMatrix" key="otherChoice" is-version="true">
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        :show-content="enableMatrix"
+        key="otherChoice"
+        is-version="true"
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.enableMatrix') }}</span>
-            <input class="accordion-checkbox" :disabled="disabled" :checked="enableMatrix" type="checkbox" @click.stop @change="toggleMatrix" />
+            <input
+                class="accordion-checkbox"
+                :disabled="disabled"
+                :checked="enableMatrix"
+                type="checkbox"
+                @click.stop
+                @change="toggleMatrix"
+            />
         </header>
-        <div slot="content" class="bk-form bk-form-vertical" v-if="enableMatrix">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical"
+            v-if="enableMatrix"
+        >
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <form-field
+                    :key="key"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
                     <component
                         :is="obj.component"
                         :name="key"

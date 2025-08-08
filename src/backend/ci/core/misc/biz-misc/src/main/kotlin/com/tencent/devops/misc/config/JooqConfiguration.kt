@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -59,7 +59,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
-    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment|gpt)"
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
@@ -129,6 +129,15 @@ class JooqConfiguration {
 
     @Bean
     fun pluginJooqConfiguration(
+        @Qualifier("pluginDataSource")
+        pluginDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(pluginDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun gptJooqConfiguration(
         @Qualifier("pluginDataSource")
         pluginDataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>

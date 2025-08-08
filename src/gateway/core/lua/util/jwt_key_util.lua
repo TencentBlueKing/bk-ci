@@ -10,7 +10,7 @@ table.insert(private_key_pem_parts, "-----BEGIN RSA PRIVATE KEY-----")
 local len = #single_line_b64_private_key
 local chunk_size = 64
 for i = 1, len, chunk_size do
-    table.insert(private_key_pem_parts, string.sub(single_line_b64_private_key, i, i + chunk_size - 1))
+table.insert(private_key_pem_parts, string.sub(single_line_b64_private_key, i, i + chunk_size - 1))
 end
 table.insert(private_key_pem_parts, "-----END RSA PRIVATE KEY-----")
 config.jwtPrivateKey = table.concat(private_key_pem_parts, "\n")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,12 @@ interface StoreBaseDeleteService {
      * @param handlerRequest 删除组件请求报文体
      */
     fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest)
+
+    /**
+     * 删除组件代码库
+     * @param handlerRequest 删除组件请求报文体
+     */
+    fun deleteComponentCodeRepository(handlerRequest: StoreDeleteRequest)
 
     /**
      * 持久化删除组件数据

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,14 +39,12 @@ import com.tencent.devops.common.web.task.AccessLogCleanupTask
 import io.micrometer.core.instrument.binder.jersey.server.JerseyTagsProvider
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.jersey.JerseyAutoConfiguration
-import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory
@@ -58,7 +56,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
-import org.springframework.core.env.Environment
 
 /**
  *
@@ -103,9 +100,6 @@ class WebAutoConfiguration {
     fun versionInfoResource() = VersionInfoResource()
 
     @Bean
-    fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
-
-    @Bean
     fun bkWriterInterceptor(commonConfig: CommonConfig, client: Client) = BkWriterInterceptor(
         commonConfig = commonConfig,
         client = client
@@ -115,8 +109,7 @@ class WebAutoConfiguration {
     fun bkServiceInstanceApplicationRunner(
         compositeDiscoveryClient: CompositeDiscoveryClient,
         bkTag: BkTag,
-        redisOperation: RedisOperation,
-        rabbitAdmin: RabbitAdmin
+        redisOperation: RedisOperation
     ) = BkServiceInstanceApplicationRunner(
         compositeDiscoveryClient = compositeDiscoveryClient,
         bkTag = bkTag,

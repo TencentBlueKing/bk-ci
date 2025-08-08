@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,13 +30,15 @@ package job
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -460,17 +462,38 @@ func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logTy
 	}
 }
 
+const (
+	targetJreDir  = "/usr/local/jre"
+	targetJre8Dir = "/usr/local/jre8"
+)
+
 // parseContainerMounts 解析生成容器挂载内容
 func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, error) {
 	var mounts []mount.Mount
 
-	// 默认绑定本机的java用来执行worker
-	mounts = append(mounts, mount.Mount{
-		Type:     mount.TypeBind,
-		Source:   config.GAgentConfig.JdkDirPath,
-		Target:   "/usr/local/jre",
-		ReadOnly: true,
-	})
+	// 默认绑定本机的java用来执行worker，如果有jdk17优先用jdk17，否则用jdk8
+	if third_components.Jdk.Jdk17.GetJavaOrNull() != "" {
+		mounts = append(mounts, mount.Mount{
+			Type:     mount.TypeBind,
+			Source:   config.GAgentConfig.Jdk17DirPath,
+			Target:   targetJreDir,
+			ReadOnly: true,
+		})
+		// 用jdk17的同时保存jdk8
+		mounts = append(mounts, mount.Mount{
+			Type:     mount.TypeBind,
+			Source:   config.GAgentConfig.JdkDirPath,
+			Target:   targetJre8Dir,
+			ReadOnly: true,
+		})
+	} else {
+		mounts = append(mounts, mount.Mount{
+			Type:     mount.TypeBind,
+			Source:   config.GAgentConfig.JdkDirPath,
+			Target:   targetJreDir,
+			ReadOnly: true,
+		})
+	}
 
 	// 默认绑定本机的 worker 用来执行
 	mounts = append(mounts, mount.Mount{
@@ -534,6 +557,17 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	envs = append(envs, "devops_gateway="+config.GetGateWay())
 	// 通过环境变量区分agent docker
 	envs = append(envs, "agent_build_env=DOCKER")
+	// JDK版本，只有jdk17的过渡期需要这个
+	if third_components.Jdk.Jdk17.GetJavaOrNull() != "" {
+		envs = append(envs, "DEVOPS_AGENT_JDK_8_PATH="+(targetJre8Dir+"/bin/java"))
+		envs = append(envs, "DEVOPS_AGENT_JDK_17_PATH="+(targetJreDir+"/bin/java"))
+	}
+
+	// 用户指定的节点环境变量
+	userEnvs := config.GApiEnvVars.GetAll()
+	for k, v := range userEnvs {
+		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
+	}
 
 	return envs
 }

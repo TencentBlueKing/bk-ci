@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -57,6 +56,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -95,10 +95,12 @@ class PipelineWebhookService @Autowired constructor(
             logger.info("$pipelineId|$version|model is null")
             return
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }.toMutableMap()
+        val triggerContainer = model.getTriggerContainer()
+        val variables = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        )
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
         val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->
@@ -154,7 +156,7 @@ class PipelineWebhookService @Autowired constructor(
             repoHashId = repositoryConfig.repositoryHashId,
             repoName = repositoryConfig.repositoryName,
             taskId = element.id,
-            projectName = getProjectName(repository.projectName),
+            projectName = getExternalName(scmType = scmType, repository.projectName),
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
             externalId = repository.getExternalId(),
@@ -231,6 +233,14 @@ class PipelineWebhookService @Autowired constructor(
                         )
                     }
 
+                ScmType.SCM_GIT, ScmType.SCM_SVN -> {
+                    scmProxyService.addScmWebhook(
+                        projectId = projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType
+                    )
+                }
+
                 else -> {
                     null
                 }
@@ -300,15 +310,46 @@ class PipelineWebhookService @Autowired constructor(
 
     fun getTriggerPipelines(
         name: String,
-        repositoryType: String,
-        yamlPipelineIds: List<String>?
+        repositoryType: ScmType,
+        yamlPipelineIds: List<String>?,
+        compatibilityRepoNames: Set<String>
     ): List<WebhookTriggerPipeline> {
-        return pipelineWebhookDao.getByProjectNameAndType(
+        val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
+        // 需要精确匹配的代码库类型
+        val needExactMatch = repositoryType in setOf(
+            ScmType.CODE_GIT,
+            ScmType.CODE_TGIT,
+            ScmType.CODE_GITLAB,
+            ScmType.GITHUB
+        ) && name != getProjectName(name)
+        // 精准匹配结果
+        val exactResults = if (needExactMatch) {
+            pipelineWebhookDao.getByProjectNamesAndType(
+                dslContext = dslContext,
+                projectNames = setOf(name),
+                repositoryType = repositoryType.name,
+                yamlPipelineIds = yamlPipelineIds
+            )?.toSet() ?: setOf()
+        } else {
+            setOf()
+        }
+        // 模糊匹配和兼容仓库名一起查
+        val repoNames = compatibilityRepoNames.map { getProjectName(it) }.toMutableSet()
+        repoNames.add(getProjectName(name))
+        // 模糊匹配结果
+        val fuzzyResults = pipelineWebhookDao.getByProjectNamesAndType(
             dslContext = dslContext,
-            projectName = getProjectName(name),
-            repositoryType = repositoryType,
+            projectNames = repoNames,
+            repositoryType = repositoryType.name,
             yamlPipelineIds = yamlPipelineIds
-        ) ?: emptyList()
+        )?.toSet() ?: setOf()
+        // projectName字段补充完毕后，模糊匹配结果应为空
+        if (needExactMatch && fuzzyResults.isNotEmpty()) {
+            logger.info("$repositoryType|$name|projectName contains dirty data|${fuzzyResults.size}")
+        }
+        pipelineSet.addAll(exactResults)
+        pipelineSet.addAll(fuzzyResults)
+        return pipelineSet.toList()
     }
 
     fun listTriggerPipeline(

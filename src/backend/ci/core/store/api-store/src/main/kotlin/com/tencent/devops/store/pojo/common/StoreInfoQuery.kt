@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -67,6 +67,8 @@ data class StoreInfoQuery(
     val sortType: StoreSortTypeEnum? = null,
     @get:Schema(title = "实例ID", required = false)
     val instanceId: String? = null,
+    @get:Schema(title = "是否查测试中版本 true：是，false：否", required = false)
+    val queryTestFlag: Boolean? = null,
     @get:Schema(title = "页码", required = true)
     val page: Int,
     @get:Schema(title = "每页数量", required = true)
@@ -74,9 +76,12 @@ data class StoreInfoQuery(
 ) {
     fun validate() {
         // 检查 projectCode 是否为空
-        val paramCheck = (queryProjectComponentFlag || installed != null || updateFlag != null)
-        if (paramCheck && projectCode.isNullOrEmpty()) {
+        if (getSpecQueryFlag() && projectCode.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_QUERY_PARAM_CHECK_FAIL)
         }
+    }
+
+    fun getSpecQueryFlag(): Boolean {
+        return queryProjectComponentFlag || installed != null || updateFlag != null || queryTestFlag != null
     }
 }

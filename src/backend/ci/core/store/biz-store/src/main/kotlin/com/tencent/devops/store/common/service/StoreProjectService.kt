@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,8 @@ import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.test.StoreTestItem
+import com.tencent.devops.store.pojo.common.test.StoreTestRequest
 
 /**
  * store项目通用业务逻辑类
@@ -90,7 +92,8 @@ interface StoreProjectService {
     fun isInstalledByProject(
         projectCode: String,
         storeCode: String,
-        storeType: Byte
+        storeType: Byte,
+        instanceId: String? = null
     ): Boolean
 
     /**
@@ -108,4 +111,23 @@ interface StoreProjectService {
      * 更新组件初始化项目信息
      */
     fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean
+
+    /**
+     * 保存组件测试信息
+     */
+    fun saveStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeTestRequest: StoreTestRequest
+    ): Boolean
+
+    /**
+     * 获取组件测试信息
+     */
+    fun getStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Set<StoreTestItem>
 }

@@ -9,7 +9,8 @@
         :disabled="disabled"
         :create-tag-validator="checkVariable"
         :paste-fn="paste"
-        :list="list">
+        :list="list"
+    >
     </bk-tag-input>
 </template>
 

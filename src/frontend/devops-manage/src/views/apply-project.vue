@@ -28,6 +28,10 @@ const projectData = ref({
   subjectScopes: [],
   secrecy: false,
   authSecrecy: 0,
+  properties: {
+    pipelineDialect: 'CLASSIC',
+    loggingLineLimit: null
+  }
 });
 const projectForm = ref(null);
 const btnLoading = ref(false);
@@ -75,25 +79,25 @@ const handleCancel = () => {
           :data="projectData"
           @initProjectForm="initProjectForm"
         >
-          <bk-form-item>
-            <bk-button
-              class="btn mr10"
-              theme="primary"
-              :loading="btnLoading"
-              @click="handleConfirm"
-            >
-              {{ t('提交') }}
-            </bk-button>
-            <bk-button
-              class="btn"
-              theme="default"
-              :loading="btnLoading"
-              @click="handleCancel"
-            >
-              {{ t('取消') }}
-            </bk-button>
-          </bk-form-item>
-        </project-form>
+      </project-form>
+      <div class="btn-group">
+        <bk-button
+          class="btn mr10"
+          theme="primary"
+          :loading="btnLoading"
+          @click="handleConfirm"
+        >
+          {{ t('提交') }}
+        </bk-button>
+        <bk-button
+          class="btn"
+          theme="default"
+          :loading="btnLoading"
+          @click="handleCancel"
+        >
+          {{ t('取消') }}
+        </bk-button>
+      </div>
       </section>
     </article>
   </section>
@@ -109,10 +113,8 @@ const handleCancel = () => {
     height: 100%;
   }
   .apply-project-content {
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    height: 100%;
+    padding: 24px 24px 16px;
+    height: calc(100% - 108px);
     overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -126,12 +128,20 @@ const handleCancel = () => {
       height: 8px !important;
     }
     .create-project-form {
-      width: 1000px;
+      width: 1200px;
       flex: 1;
       margin: 0 auto;
-      background-color: #fff;
-      padding: 32px 120px 32px 80px;
-      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
+    }
+    .btn-group {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      padding-left: 24px;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      background: #FAFBFD;
+      box-shadow: 0 -1px 0 0 #DCDEE5;
     }
     .mr10 {
       margin-right: 10px;

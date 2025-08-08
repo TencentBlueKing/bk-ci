@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -46,7 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.apache.lucene.util.RamUsageEstimator
 import org.jooq.DSLContext
@@ -54,7 +54,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Optional
 import java.util.concurrent.TimeUnit
+import kotlin.jvm.optionals.getOrNull
 
 @Suppress("ALL", "UNUSED")
 @Service
@@ -62,22 +64,30 @@ class MeasureServiceImpl : MeasureService {
 
     @Autowired
     lateinit var projectCacheService: ProjectCacheService
+
     @Autowired
     lateinit var pipelineTaskService: PipelineTaskService
+
     @Autowired
     lateinit var buildVariableService: BuildVariableService
+
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var templateService: TemplateService
+
     @Autowired
     lateinit var pipelineInfoService: PipelineInfoService
+
     @Autowired
     lateinit var redisOperation: RedisOperation
+
     @Autowired
     lateinit var pipelineEventDispatcher: PipelineEventDispatcher
+
     @Autowired
-    lateinit var measureEventDispatcher: MeasureEventDispatcher
+    lateinit var sampleEventDispatcher: SampleEventDispatcher
 
     @Value("\${build.atomMonitorData.report.switch:false}")
     private val atomMonitorSwitch: String = "false"
@@ -193,7 +203,7 @@ class MeasureServiceImpl : MeasureService {
                 ),
                 extData = extData
             )
-            measureEventDispatcher.dispatch(
+            sampleEventDispatcher.dispatch(
                 AtomMonitorReportBroadCastEvent(
                     pipelineId = pipelineId,
                     projectId = projectId,
@@ -207,14 +217,14 @@ class MeasureServiceImpl : MeasureService {
     }
 
     private fun getSpecReportAtoms(): List<String> = try {
-        cache.get("specReportAtoms")?.split(",") ?: emptyList()
+        cache.get("specReportAtoms").getOrNull()?.split(",") ?: emptyList()
     } catch (ignored: Exception) {
         emptyList()
     }
 
     private fun checkAtomMonitorSwitch(): Boolean {
         return try {
-            cache.get("atomMonitorSwitch")?.toBoolean() ?: true
+            cache.get("atomMonitorSwitch").getOrNull()?.toBoolean() ?: true
         } catch (ignored: Exception) {
             atomMonitorSwitch.toBoolean()
         }
@@ -222,8 +232,8 @@ class MeasureServiceImpl : MeasureService {
 
     private val cache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE)
         .expireAfterWrite(CACHE_TIME, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, String>() {
-            override fun load(key: String) = redisOperation.get(key)
+        .build(object : CacheLoader<String, Optional<String>>() {
+            override fun load(key: String) = Optional.ofNullable(redisOperation.get(key))
         })
 
     companion object {

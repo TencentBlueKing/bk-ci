@@ -1,35 +1,107 @@
 <template>
-    <li :class="[{ 'active': currentItem === card.code, 'disable': !card.availableFlag }, 'select-card']" @click="clickItem" ref="card" v-bk-tooltips="toolTip">
+    <li
+        :class="[{ 'active': currentItem === card.code, 'disable': !card.availableFlag }, 'select-card']"
+        @click="clickItem"
+        ref="card"
+        v-bk-tooltips="toolTip"
+    >
         <section class="card-info">
-            <img :src="card.logoUrl" class="info-pic">
+            <img
+                :src="card.logoUrl"
+                class="info-pic"
+            >
             <p class="info-main">
                 <span class="main-name">
-                    <span :class="{ 'not-recommend': card.recommendFlag === false }" :title="card.recommendFlag === false ? $t('editPage.notRecomendImage') : ''">{{card.name}}</span>
-                    <span :title="$t('editPage.officialCertification')" class="icon-title">
-                        <logo class="devops-icon" name="LDImage" size="13" v-if="card.certificationFlag" />
+                    <span
+                        :class="{ 'not-recommend': card.recommendFlag === false }"
+                        :title="card.recommendFlag === false ? $t('editPage.notRecomendImage') : ''"
+                    >{{ card.name }}</span>
+                    <span
+                        :title="$t('editPage.officialCertification')"
+                        class="icon-title"
+                    >
+                        <logo
+                            class="devops-icon"
+                            name="LDImage"
+                            size="13"
+                            v-if="card.certificationFlag"
+                        />
                     </span>
                 </span>
-                <span class="main-summary" :title="card.summary">{{card.summary}}</span>
-                <span class="main-repo" :title="`${card.imageRepoUrl}${card.imageRepoUrl ? '/' : ''}${card.imageRepoName}:${card.imageTag}`">
-                    <logo class="devops-icon" name="imagedocker" size="10" />
-                    {{card.imageRepoUrl}}{{card.imageRepoUrl ? '/' : ''}}{{card.imageRepoName}}:{{card.imageTag}}
+                <span
+                    class="main-summary"
+                    :title="card.summary"
+                >{{ card.summary }}</span>
+                <span
+                    class="main-repo"
+                    :title="`${card.imageRepoUrl}${card.imageRepoUrl ? '/' : ''}${card.imageRepoName}:${card.imageTag}`"
+                >
+                    <logo
+                        class="devops-icon"
+                        name="imagedocker"
+                        size="10"
+                    />
+                    {{ card.imageRepoUrl }}{{ card.imageRepoUrl ? '/' : '' }}{{ card.imageRepoName }}:{{ card.imageTag }}
                 </span>
-                <ul class="main-label" v-if="card.labelNames">
-                    <li v-for="label in card.labelNames.split(',')" :key="label">{{ label }}</li>
+                <ul
+                    class="main-label"
+                    v-if="card.labelNames"
+                >
+                    <li
+                        v-for="label in card.labelNames.split(',')"
+                        :key="label"
+                    >
+                        {{ label }}
+                    </li>
                 </ul>
             </p>
             <template v-if="card.availableFlag">
                 <template v-if="type === 'store'">
-                    <bk-button size="small" class="info-button" @click="choose" :disabled="code === card.code" v-if="card.installedFlag">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
-                    <bk-button size="small" class="info-button" @click="installImage" v-else-if="card.flag" :loading="isInstalling">{{ $t('editPage.install') }}</bk-button>
-                    <bk-button size="small" class="info-button" v-else :disabled="true" :title="$t('editPage.noInstallRight')">{{ $t('editPage.install') }}</bk-button>
+                    <bk-button
+                        size="small"
+                        class="info-button"
+                        @click="choose"
+                        :disabled="code === card.code"
+                        v-if="card.installedFlag"
+                    >
+                        {{ code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select') }}
+                    </bk-button>
+                    <bk-button
+                        size="small"
+                        class="info-button"
+                        @click="installImage"
+                        v-else-if="card.flag"
+                        :loading="isInstalling"
+                    >
+                        {{ $t('editPage.install') }}
+                    </bk-button>
+                    <bk-button
+                        size="small"
+                        class="info-button"
+                        v-else
+                        :disabled="true"
+                        :title="$t('editPage.noInstallRight')"
+                    >
+                        {{ $t('editPage.install') }}
+                    </bk-button>
                 </template>
-                <bk-button size="small" class="info-button" :disabled="code === card.code" @click="choose" v-else>{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
+                <bk-button
+                    size="small"
+                    class="info-button"
+                    :disabled="code === card.code"
+                    @click="choose"
+                    v-else
+                >
+                    {{ code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select') }}
+                </bk-button>
             </template>
         </section>
         <p class="card-link">
-            <span class="link-pub">{{ $t('editPage.provideInfo', [card.publisher, card.modifier, convertTime(card.updateTime)])}}</span>
-            <a class="link-more" @click="goToStore">{{ $t('editPage.knowMore') }}</a>
+            <span class="link-pub">{{ $t('editPage.provideInfo', [card.publisher, card.modifier, convertTime(card.updateTime)]) }}</span>
+            <a
+                class="link-more"
+                @click="goToStore"
+            >{{ $t('editPage.knowMore') }}</a>
         </p>
     </li>
 </template>

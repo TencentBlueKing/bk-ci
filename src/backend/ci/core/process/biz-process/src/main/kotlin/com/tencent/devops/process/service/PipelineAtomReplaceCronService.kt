@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -73,8 +74,6 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_NAMESPACE
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -82,6 +81,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -899,31 +900,18 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         element: Element,
         dataMap: MutableMap<String, Any>
     ): MarketBuildLessAtomElement {
-        val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-            name = element.name,
-            id = element.id,
-            status = element.status,
-            atomCode = toAtomInfo.atomCode,
-            version = toAtomVersion,
+        return (element as? MarketBuildLessAtomElement)?.apply {
+            // 如果是市场插件之间的替换，则只需把被替换插件的关键几个参数值替换成目标插件的值
+            atomCode = toAtomInfo.atomCode
+            version = toAtomVersion
             data = dataMap
-        )
-        setElementBaseInfo(marketBuildLessAtomElement, element)
-        return marketBuildLessAtomElement
-    }
-
-    private fun setElementBaseInfo(
-        element: Element,
-        dataElement: Element
-    ) {
-        element.executeCount = dataElement.executeCount
-        element.canRetry = dataElement.canRetry
-        element.elapsed = dataElement.elapsed
-        element.startEpoch = dataElement.startEpoch
-        element.templateModify = dataElement.templateModify
-        element.additionalOptions = dataElement.additionalOptions
-        element.errorType = dataElement.errorType
-        element.errorCode = dataElement.errorCode
-        element.errorMsg = dataElement.errorMsg
+        } ?: MarketBuildLessAtomElement(name = element.name).apply {
+            // 如果是内置插件替换成市场插件，则需先定义市场插件模型再把被替换插件的属性值赋值过来
+            ReflectUtil.copyMatchingProperties(element, this)
+            atomCode = toAtomInfo.atomCode
+            version = toAtomVersion
+            data = dataMap
+        }
     }
 
     private fun generateMarketBuildAtomElement(
@@ -932,15 +920,17 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         element: Element,
         dataMap: MutableMap<String, Any>
     ): MarketBuildAtomElement {
-        val marketBuildAtomElement = MarketBuildAtomElement(
-            name = element.name,
-            id = element.id,
-            status = element.status,
-            atomCode = toAtomInfo.atomCode,
-            version = toAtomVersion,
+        return (element as? MarketBuildAtomElement)?.apply {
+            // 如果是市场插件之间的替换，则只需把被替换插件的关键几个参数值替换成目标插件的值
+            atomCode = toAtomInfo.atomCode
+            version = toAtomVersion
             data = dataMap
-        )
-        setElementBaseInfo(marketBuildAtomElement, element)
-        return marketBuildAtomElement
+        } ?: MarketBuildAtomElement(name = element.name).apply {
+            // 如果是内置插件替换成市场插件，则需先定义市场插件模型再把被替换插件的属性值赋值过来
+            ReflectUtil.copyMatchingProperties(element, this)
+            atomCode = toAtomInfo.atomCode
+            version = toAtomVersion
+            data = dataMap
+        }
     }
 }

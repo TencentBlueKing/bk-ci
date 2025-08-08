@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,16 +31,18 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_ARCH
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_OS_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_FILE_NAME
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 /**
  * 验证组件是否有调用敏感接口的权限,在store中实现
@@ -54,7 +56,8 @@ interface ServiceSensitiveApiPermissionResource {
     /**
      * 验证组件是否有该api接口的权限
      *
-     * @param installedPkgShaContent 已安装组件包sha1摘要值
+     * @param signFileName 签名文件名称
+     * @param fileShaContent 文件sha1摘要值
      * @param osName 操作系统名称
      * @param osArch 操作系统CPU架构
      * @param storeCode 组件标识
@@ -66,9 +69,12 @@ interface ServiceSensitiveApiPermissionResource {
     @GET
     @Suppress("LongParameterList")
     fun verifyApi(
-        @Parameter(description = "已安装组件包sha1摘要值", required = false)
+        @Parameter(description = "签名文件名称", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_FILE_NAME)
+        signFileName: String? = null,
+        @Parameter(description = "文件sha1摘要值", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SHA_CONTENT)
-        installedPkgShaContent: String? = null,
+        fileShaContent: String? = null,
         @Parameter(description = "操作系统名称", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_OS_NAME)
         osName: String? = null,
@@ -83,6 +89,7 @@ interface ServiceSensitiveApiPermissionResource {
         apiName: String,
         @QueryParam("storeType")
         @Parameter(description = "组件类型", required = true)
+        @DefaultValue("ATOM")
         storeType: String = "ATOM",
         @QueryParam("version")
         @Parameter(description = "组件版本", required = false)

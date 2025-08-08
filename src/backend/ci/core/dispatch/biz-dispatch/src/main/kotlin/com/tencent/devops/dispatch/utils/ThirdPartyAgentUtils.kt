@@ -17,7 +17,7 @@ object ThirdPartyAgentUtils {
         val tickets = try {
             DispatchCommonUtils.getCredential(
                 client = client,
-                projectId = projectId,
+                projectId = credInfo.credentialProjectId ?: projectId,
                 credentialId = credInfo.credentialId!!,
                 type = CredentialType.USERNAME_PASSWORD
             )

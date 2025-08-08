@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,11 +35,10 @@ import com.tencent.devops.common.expression.expression.ITraceWriter
 class EvaluationContext(
     val trace: ITraceWriter?,
     val state: Any?,
-    ops: EvaluationOptions?,
+    val options: EvaluationOptions,
     val node: ExpressionNode?,
     val expressionOutput: ExpressionOutput?
 ) {
-    val options: EvaluationOptions = EvaluationOptions(ops)
     val memory: EvaluationMemory
     private val mTraceResults = mutableMapOf<ExpressionNode, String>()
     private val mTraceMemory: MemoryCounter

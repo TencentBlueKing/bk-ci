@@ -1,5 +1,6 @@
 <template>
-    <selector :popover-min-width="popoverMinWidth"
+    <selector
+        :popover-min-width="popoverMinWidth"
         :tools="tools"
         :name="name"
         :edit="edit"
@@ -18,7 +19,10 @@
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
-                <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
+                <a
+                    :href="urlParse(webUrl + itemTargetUrl, { projectId })"
+                    target="_blank"
+                >
                     <i class="devops-icon icon-plus-circle" />
                     {{ itemText }}
                 </a>

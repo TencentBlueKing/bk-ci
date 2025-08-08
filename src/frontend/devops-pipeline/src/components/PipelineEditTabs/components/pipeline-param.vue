@@ -1,37 +1,70 @@
 <template>
     <div class="variable-container">
-        <bk-alert v-if="editable" type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
-        <div class="operate-row">
-            <template v-if="editable">
-                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>
-                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd('constant')">{{$t('newui.pipelineParam.addConst')}}</bk-button>
-            </template>
-            <bk-input
-                v-model="searchStr"
-                :clearable="true"
-                :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
-                :right-icon="'bk-icon icon-search'"
-            />
+        <div
+            class="container-top"
+        >
+            <bk-alert
+                v-if="editable"
+                type="info"
+                :title="$t('newui.pipelineParam.useTips')"
+                closable
+                @close="alertClose"
+            ></bk-alert>
+            <div class="operate-row">
+                <template v-if="editable">
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleAdd"
+                    >
+                        {{ $t('newui.pipelineParam.addVar') }}
+                    </bk-button>
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleAdd('constant')"
+                    >
+                        {{ $t('newui.pipelineParam.addConst') }}
+                    </bk-button>
+                </template>
+                <bk-input
+                    class="search-input"
+                    v-model="searchStr"
+                    :clearable="true"
+                    :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
+                    :right-icon="'bk-icon icon-search'"
+                />
+            </div>
         </div>
-        <template v-if="!showSlider">
+
+        <div
+            class="container-bottom"
+            :style="{ marginTop: `${offsetData}px` }"
+            v-if="!showSlider"
+        >
             <param-group
                 v-for="group in pipelineParamGroups"
-                :editable="editable"
+                v-bind="group"
                 :key="group.key"
-                :title="group.title"
-                :tips="group.tips"
-                :item-num="group.list.length"
-                :list="group.list"
+                :editable="editable"
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
             />
-        </template>
+        </div>
 
-        <div v-else-if="editable" class="current-edit-param-item">
+        <div
+            v-else-if="editable"
+            class="current-edit-param-item"
+        >
             <div class="edit-var-header">
-                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="hideSlider" />
-                {{sliderTitle}}
+                <bk-icon
+                    style="font-size: 28px;"
+                    type="arrows-left"
+                    class="back-icon"
+                    @click="hideSlider"
+                />
+                {{ sliderTitle }}
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
@@ -41,13 +74,23 @@
                     :edit-index="editIndex"
                     :param-type="paramType"
                     :update-param="updateEditItem"
-                    :reset-edit-item="resetEditItem" />
+                    :reset-edit-item="resetEditItem"
+                />
             </div>
-            <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" @click="handleSaveVar">
+            <div
+                class="edit-var-footer"
+                slot="footer"
+            >
+                <bk-button
+                    theme="primary"
+                    @click="handleSaveVar"
+                >
                     {{ editIndex === -1 ? $t('editPage.append') : $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" @click="hideSlider">
+                <bk-button
+                    style="margin-left: 8px;"
+                    @click="hideSlider"
+                >
                     {{ $t('cancel') }}
                 </bk-button>
             </div>
@@ -60,6 +103,9 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
+    import {
+        getParamsGroupByLabel
+    } from '@/store/modules/atom/paramsConfig'
 
     export default {
         components: {
@@ -88,23 +134,39 @@
                 sliderEditItem: {},
                 searchStr: '',
                 confirmMsg: this.$t('editPage.closeConfirmMsg'),
-                cancelText: this.$t('cancel')
+                cancelText: this.$t('cancel'),
+                isAlertTips: true
             }
         },
         computed: {
+            offsetData () {
+                return this.editable && this.isAlertTips ? 98 : 63
+            },
             versions () {
                 return this.params.filter(p => allVersionKeyList.includes(p.id))
             },
             globalParams: {
                 get () {
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG').map(i => ({
+                        ...i,
+                        category: i.category ?? ''
+                    }))
                 },
                 set (params) {
                     this.updateContainerParams('params', [...params, ...this.versions])
                 }
             },
             renderParams () {
-                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id.includes(this.searchStr) || item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)))
+                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id?.includes(this.searchStr) || item.name?.includes(this.searchStr) || item.desc?.includes(this.searchStr)))
+            },
+            requiredParamList () {
+                return this.renderParams.filter(item => !item.constant && item.required)
+            },
+            constantParamList () {
+                return this.renderParams.filter(item => item.constant === true)
+            },
+            otherParamList () {
+                return this.renderParams.filter(item => !item.constant && !item.required)
             },
             pipelineParamGroups () {
                 return [
@@ -112,34 +174,55 @@
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
-                        list: this.renderParams.filter(item => !item.constant && item.required)
+                        listNum: this.requiredParamList.length,
+                        listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
-                        list: this.renderParams.filter(item => item.constant === true)
+                        listNum: this.constantParamList.length,
+                        listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
-                        list: this.renderParams.filter(item => !item.constant && !item.required)
+                        listNum: this.otherParamList.length,
+                        listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
                 ]
             },
             sliderTitle () {
                 return `${this.editIndex === -1 ? this.$t('editPage.append') : this.$t('edit')}${this.paramType === 'constant' ? this.$t('newui.pipelineParam.constTitle') : this.$t('newui.pipelineParam.varTitle')}`
+            },
+            sortParamsList () {
+                return [
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.requiredParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
+                ]
             }
         },
         methods: {
-            handleSort (preEleId, newEleId) {
+            flattenMultipleObjects (objects) {
+                return Object.values(objects).flat()
+            },
+            initParamsSort () {
+                this.updateContainerParams('params', [...this.sortParamsList, ...this.versions])
+            },
+         
+            handleSort (preEleId, newEleId, isPrefix) {
                 // 从原列表找出被拖拽的element
                 const newEle = this.globalParams.find(item => item.id === newEleId)
                 // 从原列表中删除该element
                 const oldIndex = this.globalParams.findIndex(item => item.id === newEleId)
                 this.globalParams.splice(oldIndex, 1)
-                // 把拖拽的element插入到preEleId对应的element后面
+                // 把拖拽的element插入到preEleId对应的element前面或后面
                 const preEleIndex = this.globalParams.findIndex(item => item.id === preEleId)
-                this.globalParams.splice(preEleIndex + 1, 0, newEle)
+                this.globalParams.splice((isPrefix ? preEleIndex : preEleIndex + 1), 0, newEle)
+                this.initParamsSort()
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             // toTop为true，表示移到最前, 为false为delete操作
@@ -147,8 +230,9 @@
                 if (!this.editable) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
+                const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
                 this.globalParams.splice(index, 1)
-                toTop && this.globalParams.unshift(item)
+                toTop && this.globalParams.splice(preEleIndex, 0, item)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             handleAdd (type = 'var') {
@@ -218,6 +302,9 @@
                 } else {
                     close()
                 }
+            },
+            alertClose () {
+                this.isAlertTips = false
             }
         }
     }
@@ -226,6 +313,37 @@
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
     .variable-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+
+        .container-top {
+            position: absolute;
+            width: 100%;
+        }
+
+        .container-bottom {
+            width: 100%;
+            position: absolute;
+            height: calc(100% - 89px);
+            overflow-y: auto;
+        }
+        
+        .current-edit-param-item {
+            position: fixed;
+            top: 48px;
+
+            .edit-var-content {
+                height: calc(100% - 138px);
+            }
+
+            .edit-var-footer {
+                bottom: 48px;
+                background-color: #fff;
+            }
+        }
+
         .circle {
             width: 10px;
             height: 10px;
@@ -238,7 +356,11 @@
             justify-content: space-between;
             .var-btn {
                 min-width: 88px;
+                width: -webkit-fill-available;
                 margin-right: 8px;
+            }
+            .search-input {
+                min-width: 215px;
             }
         }
         .variable-content {

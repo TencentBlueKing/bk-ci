@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,12 +30,12 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind")
     api("com.fasterxml.jackson.core:jackson-core")
     api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
+    api("com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-json-provider")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
+    api("com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api("org.apache.commons:commons-collections4")
-    api("org.apache.httpcomponents:httpclient")
+    api("org.apache.httpcomponents.client5:httpclient5")
 //    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
     api("com.tencent.bk.sdk:iam-java-sdk")
 }

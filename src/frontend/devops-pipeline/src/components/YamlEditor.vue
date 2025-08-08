@@ -1,7 +1,7 @@
 /*
 * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
 *
-* Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+* Copyright (C) 2019 Tencent. All rights reserved.
 *
 * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
 *
@@ -24,13 +24,28 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 <template>
-    <section v-bkloading="{ isLoading }" :style="style">
-        <i :class="['yaml-full-screen-switcher', 'devops-icon', fullScreen ? 'icon-un-full-screen' : 'icon-full-screen']"
-            :title="$t('editPage.isFullScreen')" @click="toggleFullScreen" />
-        <div ref="box" :style="style">
+    <section
+        v-bkloading="{ isLoading }"
+        :style="style"
+    >
+        <i
+            :class="['yaml-full-screen-switcher', 'devops-icon', fullScreen ? 'icon-un-full-screen' : 'icon-full-screen']"
+            :title="$t('editPage.isFullScreen')"
+            @click="toggleFullScreen"
+        />
+        <div
+            ref="box"
+            :style="style"
+        >
         </div>
-        <ul v-if="!readOnly" class="yaml-error-summary">
-            <li v-for="(item, index) in errorList" :key="index">
+        <ul
+            v-if="!readOnly"
+            class="yaml-error-summary"
+        >
+            <li
+                v-for="(item, index) in errorList"
+                :key="index"
+            >
                 <i class="devops-icon icon-close-circle-fill"></i>
                 <p>
                     <span>

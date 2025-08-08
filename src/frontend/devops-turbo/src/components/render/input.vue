@@ -1,5 +1,10 @@
 <template>
-    <bk-input :value="paramValue[paramKey]" @change="changeParamValue" v-bind="$props" class="g-turbo-single-width"></bk-input>
+    <bk-input
+        :value="paramValue[paramKey]"
+        @change="changeParamValue"
+        v-bind="$props"
+        class="g-turbo-single-width"
+    ></bk-input>
 </template>
 
 <script>

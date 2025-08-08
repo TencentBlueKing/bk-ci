@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -199,7 +199,6 @@ class StreamUserMessageService @Autowired constructor(
         id: Int,
         projectCode: String?
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectCode)
         return streamUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
@@ -207,7 +206,6 @@ class StreamUserMessageService @Autowired constructor(
         projectCode: String?,
         userId: String
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectCode)
         return if (projectCode != null) {
             streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,

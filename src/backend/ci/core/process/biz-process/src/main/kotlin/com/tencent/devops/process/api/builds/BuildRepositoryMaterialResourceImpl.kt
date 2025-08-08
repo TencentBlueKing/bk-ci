@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,13 +44,15 @@ class BuildRepositoryMaterialResourceImpl @Autowired constructor(
         buildId: String,
         projectId: String,
         pipelineId: String,
-        pipelineBuildMaterials: List<PipelineBuildMaterial>
+        pipelineBuildMaterials: List<PipelineBuildMaterial>,
+        taskId: String?
     ): Result<Int> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         return Result(pipelineBuildMaterialService.saveBuildMaterial(
             buildId = buildId,
             projectId = projectId,
-            pipelineBuildMaterials = pipelineBuildMaterials
+            pipelineBuildMaterials = pipelineBuildMaterials,
+            taskId = taskId
         ))
     }
 

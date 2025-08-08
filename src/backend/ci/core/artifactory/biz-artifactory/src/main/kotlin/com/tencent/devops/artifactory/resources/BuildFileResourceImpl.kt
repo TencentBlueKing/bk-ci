@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,20 +32,28 @@ import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.util.PathUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 @RestResource@Suppress("ALL")
 class BuildFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService,
     private val client: Client
 ) : BuildFileResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildFileResourceImpl::class.java)
+    }
 
     override fun downloadFile(
         projectCode: String,
@@ -54,7 +62,7 @@ class BuildFileResourceImpl @Autowired constructor(
         response: HttpServletResponse
     ) {
         val userId = getLastModifyUser(projectCode, pipelineId)
-        archiveFileService.downloadFile(userId, filePath, response)
+        archiveFileService.downloadFile(userId, PathUtil.getNormalizedPath(filePath), response)
     }
 
     override fun archiveFile(
@@ -96,7 +104,7 @@ class BuildFileResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             fileType = fileType,
-            customFilePath = customFilePath,
+            customFilePath = PathUtil.getNormalizedPath(customFilePath),
             response = response
         )
     }
@@ -122,7 +130,17 @@ class BuildFileResourceImpl @Autowired constructor(
     }
 
     private fun getLastModifyUser(projectId: String, pipelineId: String): String {
-        return client.get(ServicePipelineResource::class)
+        // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+        return try {
+            client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId
+            ).data
+        } catch (ignored: Exception) {
+            logger.info("get pipeline oauth user fail", ignored)
+            null
+        }?.handoverFrom ?: client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 }

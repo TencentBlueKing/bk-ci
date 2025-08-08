@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,14 +28,15 @@
 package com.tencent.devops.stream.trigger.mq.streamTrigger
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.constant.StreamMQ
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 import org.slf4j.MDC
 
-@Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
+@Event(StreamMQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
     val traceId: String? = MDC.get(TraceTag.BIZID),
     val eventStr: String,
@@ -43,4 +44,4 @@ data class StreamTriggerEvent(
     val actionContext: StreamTriggerContext,
     val actionSetting: StreamTriggerSetting,
     val trigger: String?
-)
+) : IEvent()

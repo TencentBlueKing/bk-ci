@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -50,6 +50,9 @@ export default {
     },
     onlyBranchPipeline: state => {
         return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
+    },
+    isCommittingPipeline: state => {
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
     },
     isReleaseVersion: state => {
         return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
@@ -184,7 +187,6 @@ export default {
         try {
             let codeccCount = 0
             let manualTriggerCount = 0
-            let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
             if (pipelineSetting && !pipelineSetting.pipelineName) {
@@ -247,18 +249,15 @@ export default {
                 atomCode === 'linuxPaasCodeCCScript' && codeccCount++
                 atomCode === 'CodeccCheckAtom' && codeccCount++
                 atomCode === 'manualTrigger' && manualTriggerCount++
-                atomCode === 'timerTrigger' && timerTriggerCount++
                 atomCode === 'remoteTrigger' && remoteTriggerCount++
 
-                return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
+                return codeccCount > 1 || manualTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })
 
             if (codeccCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
-            } else if (timerTriggerCount > 1) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneRemoteTrigger'))
             } else if (elementValid) {
@@ -363,15 +362,16 @@ export default {
         return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
     },
     isThirdDockerContainer: state => container => {
-        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo
+        return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo && Object.keys(container?.dispatchType?.dockerInfo).length
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
         const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
-        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum
+
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)

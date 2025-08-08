@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,9 +28,10 @@
 package com.tencent.devops.common.pipeline.pojo
 
 data class BuildNo(
-    var buildNo: Int,
+    var buildNo: Int, // 用于保存编排中定义的构建号初始值
     val buildNoType: BuildNoType,
-    var required: Boolean? = false
+    var required: Boolean? = false,
+    var currentBuildNo: Int? = null // 用于替换当前的最新值，如果是创建流水线则不传值
 )
 
 enum class BuildNoType {

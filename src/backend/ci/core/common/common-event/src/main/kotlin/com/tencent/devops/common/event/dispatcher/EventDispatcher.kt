@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,14 @@
 
 package com.tencent.devops.common.event.dispatcher
 
+import com.tencent.devops.common.event.pojo.IEvent
+
 /**
  * 事件下发接口
  *
  * @version 1.0
  */
-interface EventDispatcher<T> {
+interface EventDispatcher<T : IEvent> {
 
     fun dispatch(vararg events: T)
 }

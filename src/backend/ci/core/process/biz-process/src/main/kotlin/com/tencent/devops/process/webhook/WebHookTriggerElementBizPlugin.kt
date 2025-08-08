@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,10 +28,8 @@
 package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -70,17 +68,7 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         }
     }
 
-    override fun check(
-        projectId: String?,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        element: T,
-        contextMap: Map<String, String>,
-        appearedCnt: Int,
-        isTemplate: Boolean,
-        oauthUser: String?
-    ) = ElementCheckResult(true)
+    override fun check(element: T, appearedCnt: Int) = Unit
 }
 
 @ElementBiz

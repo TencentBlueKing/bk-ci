@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -79,7 +80,8 @@ class PipelineTriggerEventDao {
                 EVENT_DESC,
                 REPLAY_REQUEST_ID,
                 REQUEST_PARAMS,
-                CREATE_TIME
+                CREATE_TIME,
+                EVENT_BODY
             ).values(
                 triggerEvent.requestId,
                 triggerEvent.projectId,
@@ -90,9 +92,23 @@ class PipelineTriggerEventDao {
                 triggerEvent.triggerUser,
                 JsonUtil.toJson(triggerEvent.eventDesc),
                 triggerEvent.replayRequestId,
-                triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
-                triggerEvent.createTime
+                triggerEvent.requestParams?.let { JsonUtil.toJson(it, false) },
+                triggerEvent.createTime,
+                triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
             ).onDuplicateKeyIgnore().execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        triggerEvent: PipelineTriggerEvent
+    ) {
+        with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.update(this)
+                .set(EVENT_BODY, triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) })
+                .where(PROJECT_ID.eq(triggerEvent.projectId))
+                .and(EVENT_ID.eq(triggerEvent.eventId))
+                .execute()
         }
     }
 
@@ -124,7 +140,7 @@ class PipelineTriggerEventDao {
                 triggerDetail.buildId,
                 triggerDetail.buildNum,
                 triggerDetail.reason,
-                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, true) },
+                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, false) },
                 LocalDateTime.now()
             ).onDuplicateKeyIgnore().execute()
         }
@@ -461,7 +477,7 @@ class PipelineTriggerEventDao {
             dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
                 .and(PROJECT_ID.eq(projectId))
-                .fetchOne()
+                .fetchAny()
         }
         return record?.let { convertEvent(it) }
     }
@@ -625,7 +641,10 @@ class PipelineTriggerEventDao {
                         it,
                         object : TypeReference<Map<String, String>>() {})
                 },
-                createTime = createTime
+                createTime = createTime,
+                eventBody = eventBody?.let {
+                    JsonUtil.to(it, Webhook::class.java)
+                }
             )
         }
     }

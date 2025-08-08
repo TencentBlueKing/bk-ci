@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,19 +28,20 @@
 package com.tencent.devops.environment.api.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.JDKInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Suppress("TooManyFunctions")
 @Tag(name = "OP_ENVIRONMENT_UPGRADE_THIRD_PARTY_AGENT", description = "第三方构建机升级设置")
@@ -174,6 +175,8 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/set_priority_upgrade_projects")
     fun setPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -182,6 +185,8 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unset_priority_upgrade_projects")
     fun unsetPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -189,17 +194,25 @@ interface OpThirdPartyAgentUpgradeResource {
     @Operation(summary = "获取优先升级项目列表(所有）")
     @GET
     @Path("/agents/get_all_priority_upgrade_projects")
-    fun getAllPriorityUpgradeAgentProjects(): Result<Set<String>>
+    fun getAllPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Set<String>>
 
     @Operation(summary = "取消优先升级项目（所有）")
     @DELETE
     @Path("/agents/clean_all_priority_upgrade_projects")
-    fun cleanAllPriorityUpgradeAgentProjects(): Result<Boolean>
+    fun cleanAllPriorityUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Boolean>
 
     @Operation(summary = "设置禁止升级项目（指定项目）")
     @PUT
     @Path("/agents/set_deny_upgrade_projects")
     fun setDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -208,6 +221,8 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unset_deny_upgrade_projects")
     fun unsetDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?,
         @Parameter(description = "agentIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
@@ -215,10 +230,16 @@ interface OpThirdPartyAgentUpgradeResource {
     @Operation(summary = "获取禁止升级项目列表(所有）")
     @GET
     @Path("/agents/get_all_deny_upgrade_projects")
-    fun getAllDenyUpgradeAgentProjects(): Result<Set<String>>
+    fun getAllDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Set<String>>
 
     @Operation(summary = "移除禁止升级项目（所有）")
     @DELETE
     @Path("/agents/clean_all_deny_upgrade_projects")
-    fun cleanAllDenyUpgradeAgentProjects(): Result<Boolean>
+    fun cleanAllDenyUpgradeAgentProjects(
+        @QueryParam("type")
+        type: AgentUpgradeType?
+    ): Result<Boolean>
 }

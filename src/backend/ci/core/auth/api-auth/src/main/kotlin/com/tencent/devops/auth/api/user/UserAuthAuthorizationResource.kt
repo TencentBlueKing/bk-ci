@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,7 +28,10 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.model.SQLPage
@@ -42,15 +45,15 @@ import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_RESOURCE_AUTHORIZATION", description = "用户-权限-授权管理")
 @Path("/user/auth/authorization/")
@@ -68,6 +71,9 @@ interface UserAuthAuthorizationResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "操作渠道", required = true)
+        @QueryParam("operateChannel")
+        operateChannel: OperateChannel?,
         @Parameter(description = "查询条件", required = true)
         condition: ResourceAuthorizationConditionRequest
     ): Result<SQLPage<ResourceAuthorizationResponse>>
@@ -138,4 +144,13 @@ interface UserAuthAuthorizationResource {
         @Parameter(description = "资源授权交接条件实体", required = true)
         condition: ResetAllResourceAuthorizationReq
     ): Result<List<ResourceTypeInfoVo>>
+
+    @GET
+    @Path("/listUserProjectsWithAuthorization")
+    @Operation(summary = "获取用户授权相关的项目")
+    fun listUserProjectsWithAuthorization(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "用户ID", required = true)
+        userId: String
+    ): Result<List<AuthProjectVO>>
 }

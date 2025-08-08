@@ -1,5 +1,5 @@
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
--- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- Copyright (C) 2019 Tencent.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
 -- A copy of the MIT License is included in this file.
 -- Terms of the MIT License:
@@ -20,6 +20,7 @@ _M = {}
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     local gateway_project = ngx.var.project
+    local devops_project_id = ngx.var.project_id
 
     -- 不走容器化的服务
     local no_container = false
@@ -42,9 +43,13 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain
         else
-            kubernetes_domain = config.kubernetes.domain
-        end
+            if ngx.var.devops_region == 'DEVNET' then
+                kubernetes_domain = config.kubernetes.devnetDomain
+            else
+                kubernetes_domain = config.kubernetes.domain
+            end
 
+        end
         -- 特殊处理的域名,优先级最高
         local special_key = gateway_project .. ":" .. devops_tag
         if config.kubernetes.special_domain[special_key] ~= nil then

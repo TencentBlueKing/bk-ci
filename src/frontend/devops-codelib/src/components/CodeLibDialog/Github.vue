@@ -22,7 +22,10 @@
                 </bk-radio>
             </bk-radio-group>
 
-            <div class="codelib-oauth" v-if="!hasPower">
+            <div
+                class="codelib-oauth"
+                v-if="!oAuth.hasPower"
+            >
                 <bk-button
                     theme="primary"
                     @click="openValidate"
@@ -38,7 +41,7 @@
                 </div>
             </div>
         </bk-form-item>
-        <template v-if="hasPower">
+        <template v-if="oAuth.hasPower">
             <bk-form-item
                 :label="$t('codelib.address')"
                 :required="true"

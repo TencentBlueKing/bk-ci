@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,10 +34,10 @@ import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.plugin.svn.service.TriggerSvnService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.SchedulingConfigurer
@@ -58,7 +58,7 @@ class PollSvnConfig : SchedulingConfigurer {
         pipelineWebhookDao: PipelineWebhookDao,
         dslContext: DSLContext,
         redisOperation: RedisOperation,
-        rabbitTemplate: RabbitTemplate
+        streamBridge: StreamBridge
     ): TriggerSvnService {
         return TriggerSvnService(
             client = client,
@@ -66,7 +66,7 @@ class PollSvnConfig : SchedulingConfigurer {
             pipelineWebhookDao = pipelineWebhookDao,
             dslContext = dslContext,
             redisOperation = redisOperation,
-            rabbitTemplate = rabbitTemplate
+            streamBridge = streamBridge
         )
     }
 
@@ -103,7 +103,7 @@ class PollSvnConfig : SchedulingConfigurer {
                     // 如果间隔时间设为负数, 关闭轮询, 就每5分钟检查是不是打开了
                     nextExecutionTime.add(Calendar.MINUTE, INTERVAL_MINUTE_5)
                 }
-                nextExecutionTime.time
+                nextExecutionTime.time.toInstant()
             }
         )
     }

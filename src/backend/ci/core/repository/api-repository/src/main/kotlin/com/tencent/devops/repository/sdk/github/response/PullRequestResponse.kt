@@ -11,7 +11,7 @@ import com.tencent.devops.repository.sdk.github.pojo.PullRequestLabel
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PullRequestResponse(
     val url: String,
-    val id: Int,
+    val id: Long,
     @JsonProperty("node_id")
     val nodeId: String,
     @JsonProperty("html_url")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,13 +32,14 @@ import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.service.impl.AbsProjectExtServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SimpleProjectExtService @Autowired constructor(
     private val client: Client
-) : ProjectExtService {
+) : AbsProjectExtServiceImpl() {
     override fun createExtProjectInfo(
         userId: String,
         authProjectId: String,

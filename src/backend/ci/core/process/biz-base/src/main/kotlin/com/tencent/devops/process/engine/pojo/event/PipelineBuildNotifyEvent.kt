@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,17 +27,17 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 
 /**
  * 流水线构建通知
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_NOTIFY)
+@Event(StreamBinding.PIPELINE_BUILD_NOTIFY)
 data class PipelineBuildNotifyEvent(
     override val source: String,
     override val projectId: String,
@@ -52,9 +52,11 @@ data class PipelineBuildNotifyEvent(
     val callbackData: Map<String, String>? = null,
     val notifyCompleteCheck: Boolean = false,
     val markdownContent: Boolean? = false, // 是否以markdown格式发送通知内容，为true时，会指向md格式的模板
+    val mentionReceivers: Boolean? = false,
     val position: String?,
     val stageId: String?,
+    val stageSeq: Int? = null,
+    val taskId: String? = null,
     override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

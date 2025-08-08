@@ -1,25 +1,46 @@
 <template>
     <div class="container-app-selector">
-        <bk-select searchable
+        <bk-select
+            searchable
             :clearable="false"
             :disabled="disabled"
             @selected="handleAppSelector"
             :loading="isLoading"
             :value="app"
         >
-            <bk-option v-for="item in appList" :key="item.id" :id="item.id" :name="item.name" :disabled="item.disalbed">
+            <bk-option
+                v-for="item in appList"
+                :key="item.id"
+                :id="item.id"
+                :name="item.name"
+                :disabled="item.disalbed"
+            >
             </bk-option>
         </bk-select>
-        <bk-select searchable
+        <bk-select
+            searchable
             :disabled="disabled"
             :value="version"
             @selected="handleVersionSelector"
         >
-            <bk-option v-for="item in versionList" :key="item.id" :id="item.id" :name="item.name">
+            <bk-option
+                v-for="item in versionList"
+                :key="item.id"
+                :id="item.id"
+                :name="item.name"
+            >
             </bk-option>
         </bk-select>
-        <i v-if="addContainerApp && !disabled" @click="addContainerApp" class="devops-icon icon-plus"></i>
-        <i v-if="removeContainerApp && !disabled" @click="removeContainerApp(app)" class="devops-icon icon-minus"></i>
+        <i
+            v-if="addContainerApp && !disabled"
+            @click="addContainerApp"
+            class="devops-icon icon-plus"
+        ></i>
+        <i
+            v-if="removeContainerApp && !disabled"
+            @click="removeContainerApp(app)"
+            class="devops-icon icon-minus"
+        ></i>
     </div>
 </template>
 

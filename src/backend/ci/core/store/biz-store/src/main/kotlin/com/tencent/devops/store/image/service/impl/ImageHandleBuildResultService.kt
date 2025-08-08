@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,11 +30,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
 import com.tencent.devops.store.image.dao.ImageDao
+import com.tencent.devops.store.image.service.MarketImageService
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
-import com.tencent.devops.store.image.service.MarketImageService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,7 +73,7 @@ class ImageHandleBuildResultService @Autowired constructor(
         }
         marketImageService.setImageBuildStatusByImageId(
             imageId = imageId,
-            userId = storeBuildResultRequest.userId,
+            userId = imageRecord.modifier,
             imageStatus = imageStatus,
             msg = null
         )

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,9 +32,12 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
 import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
@@ -55,9 +58,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -65,6 +66,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -75,7 +77,7 @@ class PipelineGroupService @Autowired constructor(
     private val pipelineFavorDao: PipelineFavorDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val client: Client,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: SampleEventDispatcher
 ) {
 
     fun getGroups(userId: String, projectId: String): List<PipelineGroup> {
@@ -124,8 +126,17 @@ class PipelineGroupService @Autowired constructor(
         }.sortedBy { it.createTime }
     }
 
-    fun getGroups(userId: String, projectId: String, pipelineId: String): List<PipelineGroupWithLabels> {
-        val labelRecords = pipelineLabelPipelineDao.listLabels(dslContext, projectId, pipelineId)
+    fun getGroups(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean? = false
+    ): List<PipelineGroupWithLabels> {
+        val labelRecords = pipelineLabelPipelineDao.listLabels(
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         val labelIds = labelRecords.map { it.labelId }.toSet()
         val groups = getLabelsGroupByGroup(projectId, labelIds)
         return groups.map {

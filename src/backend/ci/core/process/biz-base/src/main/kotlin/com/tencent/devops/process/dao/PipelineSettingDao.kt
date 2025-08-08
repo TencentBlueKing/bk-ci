@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
@@ -92,7 +93,9 @@ class PipelineSettingDao {
                 CLEAN_VARIABLES_WHEN_RETRY,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
-                VERSION
+                VERSION,
+                PIPELINE_AS_CODE_SETTINGS,
+                FAIL_IF_VARIABLE_INVALID
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -126,7 +129,9 @@ class PipelineSettingDao {
                 setting.cleanVariablesWhenRetry,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
-                setting.version
+                setting.version,
+                setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
+                setting.failIfVariableInvalid
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -158,13 +163,11 @@ class PipelineSettingDao {
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(VERSION, setting.version)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
             // pipelineAsCodeSettings 默认传空不更新
             setting.pipelineAsCodeSettings?.let { self ->
                 insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
-            }
-            // maxConRunningQueueSize 默认传空不更新
-            if (setting.maxConRunningQueueSize != null) {
-                insert.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
             }
             return insert.execute()
         }
@@ -350,6 +353,27 @@ class PipelineSettingDao {
         }
     }
 
+    /**
+     * 获取非继承项目的流水线列表
+     */
+    fun getNonInheritedPipelineIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            var conditionsAnd = PIPELINE_AS_CODE_SETTINGS.isNotNull
+            val inheritedDialectField =
+                JooqUtils.jsonExtractAny<Boolean?>(PIPELINE_AS_CODE_SETTINGS, "$.inheritedDialect")
+            // 不是继承项目的流水线列表
+            conditionsAnd = conditionsAnd.and(inheritedDialectField.isNotNull).and(inheritedDialectField.isFalse)
+
+            return dslContext.select(PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(conditionsAnd)
+                .fetch(0, String::class.java)
+        }
+    }
+
     class PipelineSettingJooqMapper : RecordMapper<TPipelineSettingRecord, PipelineSetting> {
         override fun map(record: TPipelineSettingRecord?): PipelineSetting? {
             return record?.let { t ->
@@ -414,6 +438,7 @@ class PipelineSettingDao {
                     maxQueueSize = t.maxQueueSize,
                     maxPipelineResNum = t.maxPipelineResNum,
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
+                    failIfVariableInvalid = t.failIfVariableInvalid,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
                     concurrencyGroup = t.concurrencyGroup,

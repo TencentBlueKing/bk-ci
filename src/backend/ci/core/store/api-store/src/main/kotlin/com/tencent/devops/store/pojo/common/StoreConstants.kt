@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,6 +36,7 @@ const val TASK_JSON_NAME = "task.json"
 const val QUALITY_JSON_NAME = "quality.json"
 const val ERROR_JSON_NAME = "errorCodes.json"
 const val EXTENSION_JSON_NAME = "extension.json"
+const val CONFIG_YML_NAME = "bk-config.yml"
 const val README = "README.md"
 const val STORE_ATOM_STATUS = "STORE_ATOM_STATUS" // 插件状态
 const val STORE_IMAGE_STATUS = "STORE_IMAGE_STATUS" // 镜像状态
@@ -57,6 +58,8 @@ const val CLOSE = "close" // 开关关闭
 const val ATOM_POST = "post" // 插件post
 const val ATOM_POST_FLAG = "postFlag" // 插件post标识
 const val ATOM_POST_ENTRY_PARAM = "postEntryParam" // 插件post操作入口参数
+const val ATOM_POST_PARENT_TASK_ID = "parentTaskId" // 插件后置动作父任务id
+const val ATOM_POST_PARENT_ELEMENT_ID = "parentElementId"
 const val ATOM_POST_CONDITION = "postCondition" // 插件post操作执行条件
 const val ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX = "ATOM_POST_NORMAL_PROJECT_FLAG" // 插件对应普通项目的post标识Key前缀
 const val ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX = "ATOM_POST_VERSION_TEST_FLAG" // 插件大版本内是否有测试版本Key前缀
@@ -114,6 +117,8 @@ const val KEY_TARGET = "target"
 const val KEY_LANGUAGE = "language"
 const val KEY_MINIMUM_VERSION = "minimumVersion"
 const val KEY_DEMANDS = "demands"
+const val KEY_TYPE = "type"
+const val IS_EXPANDED = "isExpanded" // 是否默认展开分组
 const val KEY_PACKAGE_PATH = "packagePath"
 const val KEY_DEFAULT = "default"
 const val KEY_ATOM_CODE = "atomCode"
@@ -143,6 +148,9 @@ const val KEY_RELEASE_INFO = "releaseInfo"
 const val KEY_VERSION_INFO = "versionInfo"
 const val KEY_RELEASE_TYPE = "releaseType"
 const val KEY_YAML_FLAG = "yamlFlag"
+const val KEY_REPOSITORY_AUTHORIZER = "repositoryAuthorizer"
+const val KEY_URL_SCHEME = "urlScheme"
+const val KEY_STORE_PACKAGE_FILE = "storePackageFile"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"
@@ -173,6 +181,12 @@ const val BK_ATOM_SLA = "bkAtomSla" // 插件SLA
 const val BK_NO_FAIL_DATA = "bkNoFailData" // 近一月无执行失败数据
 const val BK_COMPLIANCE_RATE = "bkComplianceRate" // 错误码合规率
 const val BK_CODE_QUALITY = "bkCodeQuality" // codecc代码质量
-const val BK_TRUSTWORTHY = "bkTrustworthy" // 可信插件
 const val BK_TRIGGER = "bkTrigger" // 触发器
 const val BK_NORMAL = "bkNormal" // 无编译环境
+const val STORE_BUS_NUM_LEN = 10 // 业务序号长度
+const val BK_STORE_DIR_PATH = "store.dir.path"
+const val BK_STORE_FIRST_PUBLISHER_FLAG = "firstPublisherFlag"
+const val BK_ATOM_SLA_INDEX = "atomSlaIndex" // 插件SLA指标
+const val BK_ATOM_QUALITY_INDEX = "atomQualityIndex" // 插件质量指标
+const val BK_STORE_TRUSTWORTHY_INDEX = "storeTrustworthyIndex" // 可信组件指标
+const val BK_STORE_TRUSTWORTHY_TIPS = "storeTrustworthyTips" // 可信组件，已纳入工具保障组治理范围

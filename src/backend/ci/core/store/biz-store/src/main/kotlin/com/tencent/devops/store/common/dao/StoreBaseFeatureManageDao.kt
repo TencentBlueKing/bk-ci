@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,6 +45,7 @@ class StoreBaseFeatureManageDao {
             val publicFlag = storeBaseFeatureDataPO.publicFlag
             val recommendFlag = storeBaseFeatureDataPO.recommendFlag
             val certificationFlag = storeBaseFeatureDataPO.certificationFlag
+            val showFlag = storeBaseFeatureDataPO.showFlag
             val type = storeBaseFeatureDataPO.type
             val rdType = storeBaseFeatureDataPO.rdType
             val weight = storeBaseFeatureDataPO.weight
@@ -56,6 +57,7 @@ class StoreBaseFeatureManageDao {
                 PUBLIC_FLAG,
                 RECOMMEND_FLAG,
                 CERTIFICATION_FLAG,
+                SHOW_FLAG,
                 TYPE,
                 RD_TYPE,
                 WEIGHT,
@@ -70,6 +72,7 @@ class StoreBaseFeatureManageDao {
                 publicFlag ?: false,
                 recommendFlag ?: true,
                 certificationFlag ?: false,
+                showFlag ?: true,
                 type,
                 rdType,
                 weight,
@@ -89,6 +92,7 @@ class StoreBaseFeatureManageDao {
                     DSL.`when`(DSL.condition(certificationFlag != null), certificationFlag)
                         .otherwise(CERTIFICATION_FLAG)
                 )
+                .set(SHOW_FLAG, DSL.`when`(DSL.condition(showFlag != null), showFlag).otherwise(SHOW_FLAG))
                 .set(TYPE, DSL.`when`(DSL.condition(type != null), type).otherwise(TYPE))
                 .set(RD_TYPE, DSL.`when`(DSL.condition(rdType != null), rdType).otherwise(RD_TYPE))
                 .set(WEIGHT, DSL.`when`(DSL.condition(weight != null), weight).otherwise(WEIGHT))

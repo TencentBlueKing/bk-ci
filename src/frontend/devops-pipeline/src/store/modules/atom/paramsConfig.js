@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -22,6 +22,7 @@ export const TEXTAREA = 'TEXTAREA'
 export const BOOLEAN = 'BOOLEAN'
 export const ENUM = 'ENUM'
 export const MULTIPLE = 'MULTIPLE'
+export const CHECKBOX = 'CHECKBOX'
 export const SVN_TAG = 'SVN_TAG'
 export const GIT_REF = 'GIT_REF'
 export const CODE_LIB = 'CODE_LIB'
@@ -29,6 +30,7 @@ export const CONTAINER_TYPE = 'CONTAINER_TYPE'
 export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
 export const CUSTOM_FILE = 'CUSTOM_FILE'
+export const REPO_REF = 'REPO_REF'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -45,7 +47,9 @@ export const DEFAULT_PARAM = {
         type: STRING,
         typeDesc: 'string',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [TEXTAREA]: {
         id: 'textarea',
@@ -55,7 +59,9 @@ export const DEFAULT_PARAM = {
         type: TEXTAREA,
         typeDesc: 'textarea',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [BOOLEAN]: {
         id: 'bool',
@@ -67,7 +73,9 @@ export const DEFAULT_PARAM = {
         type: BOOLEAN,
         typeDesc: 'bool',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [ENUM]: {
         id: 'select',
@@ -80,7 +88,9 @@ export const DEFAULT_PARAM = {
         typeDesc: 'enum',
         options: [],
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [MULTIPLE]: {
         id: 'multiple',
@@ -93,7 +103,22 @@ export const DEFAULT_PARAM = {
         type: MULTIPLE,
         typeDesc: 'multiple',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
+    },
+    [CHECKBOX]: {
+        id: 'checkbox',
+        name: 'checkbox',
+        defaultValue: false,
+        defalutValueLabel: 'defaultValue',
+        desc: '',
+        type: CHECKBOX,
+        typeDesc: 'checkbox',
+        required: true,
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [SVN_TAG]: {
         id: 'svntag',
@@ -108,7 +133,9 @@ export const DEFAULT_PARAM = {
         type: SVN_TAG,
         typeDesc: 'svntag',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [GIT_REF]: {
         id: 'gitref',
@@ -122,7 +149,25 @@ export const DEFAULT_PARAM = {
         type: GIT_REF,
         typeDesc: 'gitref',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
+    },
+    [REPO_REF]: {
+        id: 'reporef',
+        name: 'reporef',
+        defaultValue: {
+            'repo-name': '',
+            branch: ''
+        },
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        type: REPO_REF,
+        typeDesc: 'reporef',
+        required: true,
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [CODE_LIB]: {
         id: 'codelib',
@@ -136,24 +181,9 @@ export const DEFAULT_PARAM = {
         type: CODE_LIB,
         typeDesc: 'codelib',
         required: true,
-        readOnly: false
-    },
-    [CONTAINER_TYPE]: {
-        id: 'buildResource',
-        name: 'buildResource',
-        defaultValue: '',
-        defalutValueLabel: 'defaultValue',
-        defaultValueLabelTips: 'defaultValueDesc',
-        containerType: {
-            os: 'LINUX',
-            buildType: 'DOCKER'
-        },
-        desc: '',
-        options: [],
-        type: CONTAINER_TYPE,
-        typeDesc: 'buildResource',
-        required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
@@ -166,7 +196,9 @@ export const DEFAULT_PARAM = {
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     },
     [CUSTOM_FILE]: {
         id: 'file',
@@ -174,11 +206,14 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',
+        enableVersionControl: false,
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: '',
+        displayCondition: {}
     }
 }
 
@@ -219,6 +254,13 @@ export const CHECK_DEFAULT_PARAM = {
         options: [],
         valueType: MULTIPLE,
         required: true
+    },
+    [CHECKBOX]: {
+        key: 'checkbox',
+        value: false,
+        desc: '',
+        valueType: CHECKBOX,
+        required: true
     }
 }
 export const CHECK_PARAM_LIST = Object.keys(CHECK_DEFAULT_PARAM).map(key => ({
@@ -254,7 +296,8 @@ export const ParamComponentMap = {
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
-    [CUSTOM_FILE]: 'FileParamInput'
+    [CUSTOM_FILE]: 'FileParamInput',
+    [REPO_REF]: 'CascadeRequestSelector'
 }
 
 export const BOOLEAN_LIST = [
@@ -268,13 +311,25 @@ export const BOOLEAN_LIST = [
     }
 ]
 
-export function getRepoOption (type = 'CODE_SVN') {
+export function getRepoOption (type = 'CODE_SVN', paramId = 'repositoryHashId') {
     return {
         url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`,
-        paramId: 'repositoryHashId',
+        paramId,
         paramName: 'aliasName',
         searchable: true,
         hasAddItem: true
+    }
+}
+
+export function getBranchOption (name) {
+    if (!name) return {}
+    return {
+        url: `/process/api/user/buildParam/{projectId}/repository/refs?repositoryType=NAME&repositoryId=${name}`,
+        paramId: 'key',
+        paramName: 'value',
+        searchable: true,
+        settingKey: 'key',
+        displayKey: 'value'
     }
 }
 
@@ -316,10 +371,44 @@ export const isTextareaParam = paramType(TEXTAREA)
 export const isBooleanParam = paramType(BOOLEAN)
 export const isEnumParam = paramType(ENUM)
 export const isMultipleParam = paramType(MULTIPLE)
+export const isCheakboxParam = paramType(CHECKBOX)
 export const isSvnParam = paramType(SVN_TAG)
 export const isGitParam = paramType(GIT_REF)
+export const isRepoParam = paramType(REPO_REF)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
 export const isFileParam = paramType(CUSTOM_FILE)
+
+export const getParamsGroupByLabel = (list) => {
+    // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
+    const notGroupedKey = (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('notGrouped')) || '未分组'
+    const listMap = list.reduce((acc, item) => {
+        const categoryKey = item.category || notGroupedKey
+        if (!acc[categoryKey]) {
+            acc[categoryKey] = []
+        }
+        acc[categoryKey].push(item)
+        return acc
+    }, {})
+    
+    const sortedCategories = Object.keys(listMap).sort((a, b) => {
+        if (a === notGroupedKey) return -1
+        if (b === notGroupedKey) return 1
+        const isEnglishA = /^[a-z]/i.test(a)
+        const isEnglishB = /^[a-z]/i.test(b)
+
+        if (isEnglishA && !isEnglishB) return -1
+        if (!isEnglishA && isEnglishB) return 1
+        return a.localeCompare(b, 'zh-CN', {
+            sensitivity: 'case',
+            numeric: true
+        })
+    })
+    
+    return {
+        listMap,
+        sortedCategories
+    }
+}

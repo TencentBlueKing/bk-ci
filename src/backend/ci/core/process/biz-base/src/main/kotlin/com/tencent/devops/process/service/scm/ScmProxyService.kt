@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,6 +48,7 @@ import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -58,8 +59,13 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
+import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.api.enums.ScmEventType
+import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -73,7 +79,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -222,6 +228,22 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     }
                 }
             }
+            is ScmGitRepository, is ScmSvnRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).getBranch(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    branch = branchName ?: ""
+                ).data?.let {
+                    Result(
+                        RevisionInfo(
+                            revision = it.sha,
+                            updatedMessage = "",
+                            branchName = it.name,
+                            authorName = ""
+                        )
+                    )
+                } ?: Result(status = -2, message = "can not find branch $branchName")
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
@@ -251,7 +273,23 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 ).data?.defaultBranch
             }
 
+            is ScmGitRepository -> {
+                val gitScmServerRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo)
+                ).data as? GitScmServerRepository
+                gitScmServerRepository?.defaultBranch
+            }
+
+            // SVN 仓库直接取关联仓库时的路径，部分用户可能没有根路径的访问权限
+            // eg: http://svn.template.com/svn_group/svn_repo/trank/xxx 有权限
+            //     http://svn.template.com/svn_group/svn_repo 无权限
+            is CodeSvnRepository, is ScmSvnRepository -> {
+                "/"
+            }
+
             else -> {
+                logger.warn("not support get default branch for ${repo.scmCode} repo[${repo.repoHashId}]|$projectId")
                 null
             }
         }
@@ -374,6 +412,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 }
             }
+            is ScmGitRepository, is ScmSvnRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).findBranches(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    search = search,
+                    page = 1,
+                    pageSize = 100
+                ).let {
+                    Result(it.data?.map { ref -> ref.name } ?: listOf())
+                }
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
@@ -388,7 +437,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
-            is CodeSvnRepository -> {
+            is CodeSvnRepository, is ScmSvnRepository -> {
                 return Result(emptyList())
             }
             is CodeGitRepository -> {
@@ -461,6 +510,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         userName = credInfo.username,
                         search = search
                     )
+                }
+            }
+            is ScmGitRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).findTags(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    search = search,
+                    page = 1,
+                    pageSize = 100
+                ).let {
+                    Result(it.data?.map { ref -> ref.name } ?: listOf())
                 }
             }
             else -> {
@@ -619,6 +679,27 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 event = convertEvent(codeEventType)
             )
         }
+        return repo
+    }
+
+    fun addScmWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): Repository {
+        checkRepoID(repositoryConfig)
+        val repository = getRepo(projectId, repositoryConfig)
+        val repo = repository as? ScmGitRepository
+            ?: (repository as? ScmSvnRepository)
+            ?: throw ErrorCodeException(
+                defaultMessage = "ScmRepo",
+                errorCode = ProcessMessageCode.SCM_REPO_INVALID
+            )
+        client.get(ServiceScmRepositoryApiResource::class).registerWebhook(
+            projectId = projectId,
+            eventType = (codeEventType?.convertScmEventType() ?: ScmEventType.PUSH).value,
+            repository = repo
+        )
         return repo
     }
 
@@ -884,4 +965,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun tryGetSession(repository: Repository, credentialType: CredentialType) =
         (repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeSvnRepository) &&
                 (credentialType == CredentialType.USERNAME_PASSWORD)
+
+    private fun CodeEventType.convertScmEventType() = when (this) {
+        CodeEventType.PUSH -> ScmEventType.PUSH
+        CodeEventType.PULL_REQUEST, CodeEventType.MERGE_REQUEST -> ScmEventType.PULL_REQUEST
+        CodeEventType.TAG_PUSH -> ScmEventType.TAG
+        CodeEventType.ISSUES -> ScmEventType.ISSUE
+        CodeEventType.POST_COMMIT -> ScmEventType.POST_COMMIT
+        else -> throw IllegalArgumentException("unknown code event type: $this")
+    }
 }

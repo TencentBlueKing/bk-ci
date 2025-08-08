@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserReportStorageResource
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.archive.util.PathUtil
 import org.springframework.beans.factory.annotation.Autowired
 
 class UserReportStorageResourceImpl @Autowired constructor(
@@ -42,6 +43,13 @@ class UserReportStorageResourceImpl @Autowired constructor(
         elementId: String,
         path: String
     ) {
-        return archiveFileService.downloadReport(userId, projectId, pipelineId, buildId, elementId, path)
+        return archiveFileService.downloadReport(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            path = PathUtil.getNormalizedPath(path)
+        )
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,5 +43,7 @@ data class BuildParameters(
     @get:Schema(title = "描述", required = false)
     var desc: String? = null,
     @get:Schema(title = "默认值", required = false)
-    var defaultValue: Any? = null
+    var defaultValue: Any? = null,
+    @get:Schema(title = "目录随机字符串（仅供CUSTOM_FILE类型）", required = false)
+    var latestRandomStringInPath: String? = null
 )

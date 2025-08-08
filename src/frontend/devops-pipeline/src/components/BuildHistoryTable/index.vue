@@ -22,47 +22,49 @@
                             {{ $t(row) }}
                         </p>
                     </div>
-                    <bk-button
-                        v-if="!isReleasePipeline && !isDebug"
-                        @click="goEdit"
-                        theme="primary"
-                        size="large"
-                        v-perm="{
-                            hasPermission: canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipelineId,
-                                action: RESOURCE_ACTION.EDIT
-                            }
-                        }"
-                    >
-                        {{ $t('goEdit') }}
-                    </bk-button>
-                    <span
-                        v-else
-                        v-bk-tooltips="tooltip"
-                    >
+                    <template v-if="!archiveFlag">
                         <bk-button
-                            :disabled="!executable"
-                            @click="buildNow"
+                            v-if="!isReleasePipeline && !isDebug"
+                            @click="goEdit"
                             theme="primary"
                             size="large"
                             v-perm="{
-                                hasPermission: canExecute,
+                                hasPermission: canEdit,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
                                     resourceType: 'pipeline',
                                     resourceCode: pipelineId,
-                                    action: RESOURCE_ACTION.EXECUTE
+                                    action: RESOURCE_ACTION.EDIT
                                 }
                             }"
                         >
-                            {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                            {{ $t('goEdit') }}
                         </bk-button>
-                    </span>
+                        <span
+                            v-else
+                            v-bk-tooltips="tooltip"
+                        >
+                            <bk-button
+                                :disabled="!executable"
+                                @click="buildNow"
+                                theme="primary"
+                                size="large"
+                                v-perm="{
+                                    hasPermission: canExecute,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: pipelineId,
+                                        action: RESOURCE_ACTION.EXECUTE
+                                    }
+                                }"
+                            >
+                                {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                            </bk-button>
+                        </span>
+                    </template>
                 </div>
             </div>
         </bk-exception>
@@ -85,6 +87,19 @@
                 @page-change="handlePageChange"
                 @page-limit-change="handleLimitChange"
             >
+                <bk-table-column
+                    :width="32"
+                    :resizable="false"
+                >
+                    <template v-slot="{ row }">
+                        <div
+                            v-if="row.artifactQuality && Object.keys(row.artifactQuality).length >= 3"
+                            @click.stop="toggleRowShowAll(row)"
+                        >
+                            <i :class="['devops-icon', 'shape-icon', row.showAll ? 'icon-down-shape' : 'icon-right-shape']" />
+                        </div>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     v-for="col in tableColumnFields"
                     v-bind="col"
@@ -244,6 +259,30 @@
                         <span v-else>--</span>
                     </template>
                     <template
+                        v-else-if="col.id === 'artifactQuality'"
+                        v-slot="{ row }"
+                    >
+                        <div
+                            v-if="row.artifactQuality && Object.keys(row.artifactQuality).length"
+                            class="artifact-quality"
+                        >
+                            <ArtifactQuality
+                                :data="row.showAll ? row.artifactQuality : getSlicedData(row)"
+                            />
+                            <div
+                                v-if="Object.keys(row.artifactQuality).length >= 3"
+                                class="more-btn"
+                                @click.stop="toggleRowShowAll(row)"
+                            >
+                                <span>
+                                    {{ row.showAll ? $t('settings.fold') : $t('totalArtifactCount', [Object.keys(row.artifactQuality).length]) }}
+                                    <i :class="['devops-icon', 'angle-icon', row.showAll ? 'icon-angle-up' : 'icon-angle-down']" />
+                                </span>
+                            </div>
+                        </div>
+                        <span v-else>--</span>
+                    </template>
+                    <template
                         v-else-if="col.id === 'startType'"
                         v-slot="props"
                     >
@@ -312,6 +351,7 @@
                                     {{ props.row.remark || "--" }}
                                 </span>
                                 <i
+                                    v-if="!archiveFlag"
                                     class="devops-icon icon-edit-line remark-entry"
                                     @click.stop="activeRemarkInput(props.row)"
                                 />
@@ -361,36 +401,38 @@
                         <span v-else>--</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column
-                    v-if="!isDebug"
-                    :label="$t('operate')"
-                    fixed="right"
-                    width="80"
-                >
-                    <template v-slot="props">
-                        <bk-button
-                            v-if="retryable(props.row)"
-                            text
-                            theme="primary"
-                            size="small"
-                            @click.stop="retry(props.row.id)"
-                        >
-                            {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
-                        </bk-button>
-                    </template>
-                </bk-table-column>
-                <bk-table-column
-                    type="setting"
-                    :tippy-options="{ zIndex: 3000 }"
-                >
-                    <TableColumnSetting
-                        ref="tableSetting"
-                        :selected-column-keys="tableColumnKeys"
-                        :all-table-column-map="allTableColumnMap"
-                        @change="handleColumnChange"
-                        @reset="handleColumnReset"
-                    />
-                </bk-table-column>
+                <template v-if="!archiveFlag">
+                    <bk-table-column
+                        v-if="!isDebug"
+                        :label="$t('operate')"
+                        fixed="right"
+                        width="80"
+                    >
+                        <template v-slot="props">
+                            <bk-button
+                                v-if="retryable(props.row)"
+                                text
+                                theme="primary"
+                                size="small"
+                                @click.stop="retry(props.row.id)"
+                            >
+                                {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
+                            </bk-button>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        type="setting"
+                        :tippy-options="{ zIndex: 3000 }"
+                    >
+                        <TableColumnSetting
+                            ref="tableSetting"
+                            :selected-column-keys="tableColumnKeys"
+                            :all-table-column-map="allTableColumnMap"
+                            @change="handleColumnChange"
+                            @reset="handleColumnReset"
+                        />
+                    </bk-table-column>
+                </template>
                 <empty-exception
                     slot="empty"
                     type="search-empty"
@@ -402,30 +444,56 @@
         <bk-dialog
             v-model="isShowMoreArtifactories"
             render-directive="if"
-            :width="640"
+            :width="900"
+            ext-cls="history-dialog"
             header-position="left"
             :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.artifactList')}`"
             @cancel="hideArtifactoriesPopup"
+            :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
-            <p class="artifactory-popup-header">
-                <bk-button
-                    text
-                    theme="primary"
-
-                    @click.stop="gotoArtifactoryList"
-                >
-                    <span class="go-outputs-btn">
-                        <logo
-                            name="tiaozhuan"
-                            size="18"
-                        />
-                        {{ $t("goOutputs") }}
-                    </span>
-                </bk-button>
-            </p>
+            <template slot="header">
+                <div class="artifactory-popup-header">
+                    <span class="header-title">{{ $t('history.artifactList') }}</span>
+                    <span
+                        class="pipeline-name"
+                        v-bk-tooltips="{ content: pipelineName }"
+                    >{{ $t('pipeline') }}: {{ pipelineName }}</span>
+                    <span class="build-num">{{ $t('buildNum') }}: {{ `#${activeBuild && activeBuild.buildNum}` }}</span>
+                    <bk-button
+                        text
+                        theme="primary"
+                        class="outputs-btn"
+                        @click.stop="gotoArtifactoryList"
+                    >
+                        <span class="go-outputs-btn">
+                            <logo
+                                name="tiaozhuan"
+                                size="14"
+                            />
+                            {{ $t("goOutputs") }}
+                        </span>
+                    </bk-button>
+                </div>
+            </template>
+            <!-- <p class="artifactory-popup-header">
+                    <bk-button
+                        text
+                        theme="primary"
+                        @click.stop="gotoArtifactoryList"
+                    >
+                        <span class="go-outputs-btn">
+                            <logo
+                                name="tiaozhuan"
+                                size="18"
+                            />
+                            {{ $t("goOutputs") }}
+                        </span>
+                    </bk-button>
+                </p> -->
             <ul
                 class="build-artifact-list-ul"
                 v-if="visibleIndex !== -1"
+                :style="{ 'max-height': `${ulMaxHeight}px` }"
             >
                 <li
                     v-for="artifactory in actifactories"
@@ -540,6 +608,7 @@
     import StageSteps from '@/components/StageSteps'
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
+    import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
@@ -563,6 +632,7 @@
             MaterialItem,
             FilterBar,
             TableColumnSetting,
+            ArtifactQuality,
             EmptyException
         },
         props: {
@@ -589,7 +659,8 @@
                 stoping: {},
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
-                tableHeight: null
+                tableHeight: null,
+                dialogTopOffset: null
             }
         },
         computed: {
@@ -628,6 +699,9 @@
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
+            },
+            pipelineName () {
+                return this.pipelineInfo?.pipelineName
             },
             executable () {
                 return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
@@ -733,6 +807,7 @@
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories,
                         stageStatus,
+                        showAll: false,
                         errorInfoList:
                             (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
                                 ? item.errorInfoList.slice(0, 1)
@@ -766,6 +841,15 @@
                     page,
                     pageSize
                 }
+            },
+            ulMaxHeight () {
+                return window.innerHeight * 0.8 - 167
+            },
+            dialogWidth () {
+                return window.innerWidth * 0.8
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -807,8 +891,20 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+
+            getSlicedData (row) {
+                const keys = Object.keys(row.artifactQuality)
+                const slicedKeys = keys.slice(0, 2)
+                return slicedKeys.reduce((obj, key) => {
+                    obj[key] = row.artifactQuality[key]
+                    return obj
+                }, {})
+            },
+            toggleRowShowAll (row) {
+                row.showAll = !row.showAll
+            },
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
             handleColumnChange (columns) {
                 this.tableColumnKeys = columns
@@ -833,7 +929,8 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        isDebug: this.isDebug
+                        isDebug: this.isDebug,
+                        archiveFlag: this.archiveFlag
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -984,7 +1081,10 @@
                         buildNo,
                         ...(type ? { type } : {})
                     },
-                    hash: codelib ? `#${codelib}` : ''
+                    hash: codelib ? `#${codelib}` : '',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 }
             },
 
@@ -1008,6 +1108,13 @@
             },
             showArtifactoriesPopup (e, index = -1) {
                 this.visibleIndex = index
+
+                const ITEM_HEIGHT = 46
+                const DIALOG_EXTRA_HEIGHT = 167
+                const totalListHeight = this.actifactories.length * ITEM_HEIGHT
+                const listHeight = Math.min(totalListHeight, this.ulMaxHeight)
+                this.dialogTopOffset = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
+
                 this.isShowMoreArtifactories = true
             },
             hideErrorInfoPopup () {
@@ -1137,7 +1244,7 @@
                 })
             },
             clearFilter () {
-                this.resetHistoryFilterCondition()
+                this.resetHistoryFilterCondition({ retainArchiveFlag: true })
                 this.$nextTick(() => {
                     this.requestHistory()
                 })
@@ -1289,6 +1396,28 @@
             }
         }
       }
+      .shape-icon {
+        color: #C4C6CC;
+      }
+      .angle-icon {
+        margin-left: 4px;
+        font-size: 10px;
+      }
+      .more-btn {
+        min-width: 80px;
+        max-width: 90px;
+        margin-top: 3px;
+        background: #FAFBFD;
+        text-align: center;
+        border: 1px solid #DCDEE5;
+        border-radius: 2px;
+        padding: 2px;
+        font-size: 12px;
+        color: #3A84FF;
+      }
+      .artifact-quality {
+        padding: 10px 0;
+      }
       .trigger-cell {
         display: flex;
         align-items: center;
@@ -1399,32 +1528,61 @@
     grid-gap: 8px;
 }
 .artifactory-popup-header {
-    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    >span {
+        display: inline-block;
+        font-size: 14px;
+        color: #979BA5;
+    }
+    .header-title {
+        font-size: 20px;
+        color: #313238;
+        line-height: 28px;
+    }
+    .pipeline-name {
+        max-width: 300px;
+        padding-left: 9px;
+        margin-left: 9px;
+        border-left: 1px solid #979BA5;
+        @include ellipsis();
+    }
+    .build-num {
+        padding: 0 26px;
+    }
     .go-outputs-btn {
+        svg {
+            vertical-align: middle;
+        }
         display: grid;
         align-items: center;
         grid-gap: 6px;
         grid-auto-flow: column;
+        font-size: 14px;
+        color: #3A84FF;
     }
 }
 .build-artifact-list-ul {
     border-top: 1px solid #EAEBF0;
-    max-height: 100vh / 3;
+    max-height: calc(100vh / 3);
     overflow: auto;
     > li {
-        height: 38px;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         border-bottom: 1px solid #EAEBF0;
         font-size: 12px;
+        padding: 8px 10px;
+        line-height: 20px;
         .build-artifact-name {
             display: grid;
             grid-gap: 6px;
             grid-auto-flow: column;
             align-items: center;
             .artifact-name-span {
-                @include ellipsis();
+                @include multiline-ellipsis();
             }
 
         }
@@ -1432,10 +1590,14 @@
             color: #C4C6CC;
         }
         .build-artifactory-operation {
+            max-width: 160px;
             display: grid;
-            grid-gap: 10px;
             grid-auto-flow: column;
             flex-shrink: 0;
+
+            .bk-button-text.bk-button-small {
+                padding: 0 10px !important;
+            }
         }
     }
 }
@@ -1460,6 +1622,13 @@
             -webkit-line-clamp: 3;
             overflow: hidden;
         }
+    }
+}
+
+.history-dialog{
+    .bk-dialog {
+        top: 50% !important;
+        transform: var(--dialog-top-translateY) !important;
     }
 }
 </style>

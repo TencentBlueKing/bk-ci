@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -46,4 +46,17 @@ interface PipelineUrlBean {
      * 生成手机侧的构建详情访问链接
      */
     fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+
+    /**
+     * 生成构建stage审核/人工审核快捷访问链接
+     */
+    @Suppress("LongParameterList")
+    fun genBuildReviewUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        stageSeq: Int?,
+        taskId: String?,
+        needShortUrl: Boolean = true
+    ): String
 }

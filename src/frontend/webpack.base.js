@@ -1,6 +1,5 @@
 const path = require('path')
 // const fs = require('fs')
-const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -37,7 +36,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib'), path.resolve(__dirname, './locale')],
                     use: [
                         { loader: 'babel-loader' }
                     ]
@@ -47,10 +46,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     use: [{
                         loader: MiniCssExtractPlugin.loader,
                         options: {
-                            publicPath: (resourcePath, context) => {
-                                console.log(resourcePath, 111)
-                                return ''
-                            }
+                            publicPath: (resourcePath, context) => ''
                         }
                     }, 'css-loader']
                 },
@@ -69,7 +65,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
-                    include: [path.resolve('src'), path.resolve(__dirname, './common-lib')],
+                    include: [path.resolve('src'), path.resolve(__dirname, './common-lib'), path.resolve(__dirname, './locale')],
                     exclude: /node_modules/,
                     options: {
                         fix: true,
@@ -98,12 +94,11 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
-            new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({
                 dist: envDist,
                 isDev,
-                bundleName: 'assets_bundle'
+                entryFolderName: "entry's"
             }),
             new MiniCssExtractPlugin({
                 filename: '[name].[contenthash].css',
@@ -127,10 +122,13 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             minimize: !isDev,
             splitChunks: {
                 cacheGroups: {
-                    vendor: {
-                        test: /[\\/]node_modules[\\/](bk-magic-vue)[\\/]/, // 指定要单独打包的依赖
-                        name: 'vendors', // chunk 的名字
-                        chunks: 'all' // 可能的值 'async', 'initial', 'all'
+                    bkMagicVue: {
+                        test: module => {
+                            return /bk-magic-vue/.test(module.context)
+                        },
+                        name: 'bk-magic-vue-chunk', // chunk 的名字
+                        chunks: 'all', // 可能的值 'async', 'initial', 'all',
+                        reuseExistingChunk: true
                     },
                     default: {
                         minChunks: 2,

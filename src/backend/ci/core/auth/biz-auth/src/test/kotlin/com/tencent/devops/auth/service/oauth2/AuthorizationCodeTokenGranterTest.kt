@@ -21,16 +21,14 @@ import java.time.LocalDateTime
 class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
 
     private val codeService = mockk<Oauth2CodeService>()
-
     private val accessTokenService = mockk<Oauth2AccessTokenService>()
-
     private val refreshTokenService = mockk<Oauth2RefreshTokenService>()
 
     private val self: AuthorizationCodeTokenGranter = spyk(
         AuthorizationCodeTokenGranter(
             codeService = codeService,
-            accessTokenService = accessTokenService,
-            refreshTokenService = refreshTokenService
+            refreshTokenService = refreshTokenService,
+            accessTokenService = accessTokenService
         ),
         recordPrivateCalls = true
     )
@@ -52,6 +50,7 @@ class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
         accessTokenInfo.accessToken = "testAccessToken"
         accessTokenInfo.clientId = "testClientId"
         accessTokenInfo.userName = "testUserName"
+        accessTokenInfo.passWord = "testPassword"
         accessTokenInfo.grantType = "testGrantType"
         accessTokenInfo.expiredTime = System.currentTimeMillis() / 1000 + 1000
         accessTokenInfo.refreshToken = "testRefreshToken"
@@ -74,6 +73,7 @@ class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
         expiredAccessTokenInfo.accessToken = "testAccessToken"
         expiredAccessTokenInfo.clientId = "testClientId"
         expiredAccessTokenInfo.userName = "testUserName"
+        expiredAccessTokenInfo.passWord = "testPassword"
         expiredAccessTokenInfo.grantType = "testGrantType"
         expiredAccessTokenInfo.expiredTime = System.currentTimeMillis() / 1000 - 1000
         expiredAccessTokenInfo.refreshToken = "testRefreshToken"

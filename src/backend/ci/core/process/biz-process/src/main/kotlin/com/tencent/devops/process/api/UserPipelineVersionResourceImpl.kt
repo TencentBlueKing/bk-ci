@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,7 +36,9 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.web.RestResource
@@ -55,8 +57,10 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -72,12 +76,20 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun getPipelineVersionDetail(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean?
     ): Result<PipelineDetail> {
         checkParam(userId, projectId)
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        if (archiveFlag != true) {
+            pipelineRecentUseService.record(userId, projectId, pipelineId)
+        }
         return Result(
-            pipelineVersionFacadeService.getPipelineDetailIncludeDraft(userId, projectId, pipelineId)
+            pipelineVersionFacadeService.getPipelineDetailIncludeDraft(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            )
         )
     }
 
@@ -85,7 +97,10 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        targetAction: CodeTargetAction?,
+        repoHashId: String?,
+        targetBranch: String?
     ): Result<PrefetchReleaseResult> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
@@ -110,7 +125,10 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                targetAction = targetAction,
+                repoHashId = repoHashId,
+                targetBranch = targetBranch
             )
         )
     }
@@ -174,31 +192,24 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean?
     ): Result<PipelineVersionWithModel> {
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
+            permission = AuthPermission.VIEW
         )
         return Result(
             pipelineVersionFacadeService.getVersion(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -246,7 +257,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceId = result.pipelineId,
-                resourceName = modelAndYaml.modelAndSetting.model.name,
+                resourceName = result.pipelineName,
                 userId = userId,
                 action = "edit",
                 actionContent = "Save Ver.${result.version}",
@@ -299,26 +310,19 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         includeDraft: Boolean?,
         creator: String?,
         description: String?,
+        buildOnly: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        archiveFlag: Boolean?
     ): Result<Page<PipelineVersionSimple>> {
         checkParam(userId, projectId)
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
+            permission = AuthPermission.VIEW
         )
         return Result(
             pipelineVersionFacadeService.listPipelineVersion(
@@ -330,7 +334,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
                 page = page ?: 1,
-                pageSize = pageSize ?: 5
+                pageSize = pageSize ?: 5,
+                buildOnly = buildOnly,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -339,31 +345,24 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean?
     ): Result<PipelineVersionSimple> {
         checkParam(userId, projectId)
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
+            permission = AuthPermission.VIEW
         )
         return Result(
             pipelineVersionFacadeService.getPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -374,25 +373,17 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         creator: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        archiveFlag: Boolean?
     ): Result<Page<PipelineOperationDetail>> {
         checkParam(userId, projectId)
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
+            permission = AuthPermission.VIEW
         )
         return Result(
             pipelineOperationLogService.getOperationLogsInPage(
@@ -401,7 +392,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 creator = creator,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -484,6 +476,21 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             version = version,
             storageType = PipelineStorageType.getActionType(storageType)
         )
+    }
+
+    override fun updateBuildNo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildNo: BuildNoUpdateReq
+    ): Result<Boolean> {
+        pipelineInfoFacadeService.updateBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            targetBuildNo = buildNo.currentBuildNo
+        )
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
@@ -44,17 +46,17 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.validation.Valid
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 @Tag(name = "USER_PIPELINE_VERSION", description = "用户-流水线版本管理")
 @Path("/user/version")
@@ -75,10 +77,13 @@ interface UserPipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineDetail>
 
-    @Operation(summary = "将当前草稿发布为正式版本")
+    @Operation(summary = "草稿发布为正式版本的信息预览")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/releaseVersion/{version}/prefetch")
     fun preFetchDraftVersion(
@@ -93,7 +98,16 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "提交动作", required = false)
+        @QueryParam("targetAction")
+        targetAction: CodeTargetAction? = null,
+        @Parameter(description = "代码库hashId", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String? = null,
+        @Parameter(description = "指定提交的分支", required = false)
+        @QueryParam("targetBranch")
+        targetBranch: String? = null
     ): Result<PrefetchReleaseResult>
 
     @Operation(summary = "将当前草稿发布为正式版本")
@@ -145,7 +159,10 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")
@@ -230,12 +247,18 @@ interface UserPipelineVersionResource {
         @Parameter(description = "搜索字段：变更说明", required = false)
         @QueryParam("description")
         description: String? = null,
+        @Parameter(description = "仅查询可执行构建的版本: 最新正式版本或者分支版本", required = false)
+        @QueryParam("buildOnly")
+        buildOnly: Boolean? = false,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "5")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Page<PipelineVersionSimple>>
 
     @Operation(summary = "获取指定版本号的流水线编排版本信息")
@@ -253,7 +276,10 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "跳转定位的版本号", required = false)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineVersionSimple>
 
     @Operation(summary = "获取流水线操作日志列表（分页）")
@@ -277,7 +303,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Page<PipelineOperationDetail>>
 
     @Operation(summary = "获取流水线操作人列表（分页）")
@@ -334,4 +363,21 @@ interface UserPipelineVersionResource {
         @QueryParam("storageType")
         storageType: String?
     ): Response
+
+    @Operation(summary = "重置流水线推荐版本号")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/updateBuildNo")
+    fun updateBuildNo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线构建推荐版本号更新", required = true)
+        buildNo: BuildNoUpdateReq
+    ): Result<Boolean>
 }

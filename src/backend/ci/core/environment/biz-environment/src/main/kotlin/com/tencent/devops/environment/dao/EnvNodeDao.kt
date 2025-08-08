@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,15 @@ class EnvNodeDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.`in`(envIds))
                 .orderBy(NODE_ID.desc())
+                .fetch()
+        }
+    }
+
+    fun listNodeIds(dslContext: DSLContext, projectId: String, nodeIds: List<Long>): List<TEnvNodeRecord> {
+        with(TEnvNode.T_ENV_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
                 .fetch()
         }
     }

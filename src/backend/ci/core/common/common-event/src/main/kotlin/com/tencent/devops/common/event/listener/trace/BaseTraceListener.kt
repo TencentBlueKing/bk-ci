@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,14 +28,14 @@
 package com.tencent.devops.common.event.listener.trace
 
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 abstract class BaseTraceListener<in T : ITraceEvent>(val traceEventDispatcher: TraceEventDispatcher) :
-    Listener<T> {
+    EventListener<T> {
 
     companion object {
         private const val TryTime = 3

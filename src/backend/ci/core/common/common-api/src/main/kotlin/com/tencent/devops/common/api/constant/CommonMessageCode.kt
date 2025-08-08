@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -180,11 +180,15 @@ object CommonMessageCode {
     const val DISPATCH_NOT_SUPPORT_TRANSFER = "2100129" // 如下构建环境在 Code 方式下不支持转换，请修改后再切换: \n[{0}]
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
-    const val GIT_INVALID_PRIVATE_KEY_OR_PASSWORD = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
+    const val THIRD_PARTY_SERVICE_OPERATION_FAILED = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
     const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
+    const val ERROR_VARIABLE_NOT_FOUND = "2100137" // SVN Token 为空, 请检查代码库的凭证类型
+    const val CUSTOM_MESSAGE_EXCEPTION = "2100138" // 自定义错误信息异常
+    const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2100139" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
+    const val ERROR_USER_NOT_EXIST_IN_PROJECT = "2100140" // 项目{0}中不存在用户{1}
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
@@ -233,6 +237,7 @@ object CommonMessageCode {
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
     const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
     const val GET_SESSION_INFO = "bkGetSessionInfo" // 获取会话详情
+    const val GET_TAG_INFO = "bkGetSessionInfo" // 获取Tag详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签
@@ -260,7 +265,18 @@ object CommonMessageCode {
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
 
+    // 插件{0}输出变量命名空间功能已不推荐使用，请去掉命名空间，通过jobs上下文访问插件输出
+    const val BK_ELEMENT_NAMESPACE_NOT_SUPPORT = "bkElementNamespaceNotSupport"
+
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
     const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
+    const val TRANSFER_ERROR_CHECK_AGENT_ID_FAILED = "transferErrorCheckAgentIdFailed" // 当前私有构建机数据有误或不存在
+    const val TRANSFER_ERROR_CHECK_ENV_ID_FAILED = "transferErrorCheckEnvIdFailed" // 当前私有构建机集群数据有误或不存在
+
+    const val ERROR_LOGO_FORMAT_UNSUPPORTED = "logoFormatUnsupported" // logo不支持{0}类型，可以上传{1}类型
+    const val ERROR_LOGO_DIMENSION_REQUIREMENT = "logoDimensionRequirement" // logo的尺寸应为大于{0}x{1}的正方形
+    const val ERROR_LOGO_FILE_SIZE_EXCEEDED = "logoFileSizeExceeded" // 上传的logo文件不能超过{0}
+    const val ERROR_USER_NO_PLATFORM_ADMIN_PERMISSION =
+        "userNoPlatformAdminPermission" // 当前用户没有平台管理权限，请联系管理员添加操作权限
 }

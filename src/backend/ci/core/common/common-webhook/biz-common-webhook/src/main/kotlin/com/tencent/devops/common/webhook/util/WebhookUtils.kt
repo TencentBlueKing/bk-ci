@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.util
 import com.google.common.base.Splitter
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
@@ -91,8 +92,8 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
 object WebhookUtils {
 
@@ -102,6 +103,8 @@ object WebhookUtils {
     const val CUSTOM_P4_TRIGGER_VERSION = 2
     // GitAction触发器插件版本号
     const val ACTION_GIT_TRIGGER_VERSION = 2
+    // MR描述信息最大长度
+    const val MR_DESC_MAX_LENGTH = 2000
 
     private val logger = LoggerFactory.getLogger(WebhookUtils::class.java)
 
@@ -220,7 +223,14 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
         startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
+        val mrDesc = (mrInfo?.description ?: "").let {
+            if (it.length > MR_DESC_MAX_LENGTH) {
+                it.substring(0, MR_DESC_MAX_LENGTH)
+            } else {
+                it
+            }
+        }
+        startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrDesc
         startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
@@ -244,10 +254,10 @@ object WebhookUtils {
         startParams[PIPELINE_GIT_MR_ID] = mrInfo?.mrId ?: ""
         startParams[PIPELINE_GIT_MR_IID] = mrInfo?.mrNumber ?: ""
         startParams[PIPELINE_GIT_MR_TITLE] = mrInfo?.title ?: ""
-        startParams[PIPELINE_GIT_MR_DESC] = mrInfo?.description ?: ""
+        startParams[PIPELINE_GIT_MR_DESC] = mrDesc
         startParams[PIPELINE_GIT_MR_PROPOSER] = mrInfo?.author?.username ?: ""
-        if (!homepage.isNullOrBlank()) {
-            startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${mrInfo?.mrNumber}"
+        if (!homepage.isNullOrBlank() && mrInfo?.mrNumber != null) {
+            startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${mrInfo.mrNumber}"
         }
         return startParams
     }
@@ -364,4 +374,34 @@ object WebhookUtils {
             list.joinToString(",")
         }
     }
+
+    fun getSvnIncludePaths(webHookParams: WebHookParams, projectRelativePath: String) =
+        with(webHookParams) {
+            // 如果没有配置包含路径，则需要跟代码库url做对比
+            if (relativePath.isNullOrBlank()) {
+                // 模糊匹配需要包含整个路径
+                if (pathFilterType == PathFilterType.NamePrefixFilter) {
+                    listOf(
+                        WebhookUtils.getFullPath(
+                            projectRelativePath = projectRelativePath,
+                            relativeSubPath = ""
+                        )
+                    )
+                } else {
+                    listOf(
+                        WebhookUtils.getFullPath(
+                            projectRelativePath = projectRelativePath,
+                            relativeSubPath = "**"
+                        )
+                    )
+                }
+            } else {
+                WebhookUtils.convert(relativePath).map { path ->
+                    WebhookUtils.getFullPath(
+                        projectRelativePath = projectRelativePath,
+                        relativeSubPath = path
+                    )
+                }
+            }
+        }
 }

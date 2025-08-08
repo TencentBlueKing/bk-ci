@@ -7,9 +7,18 @@
             scroll-box-class-name="pipeline-card-view-box"
             v-slot="slotProps"
         >
-            <PipelineListEmpty class="pipeline-card-list-empty-tips" v-if="slotProps.list.length === 0"></PipelineListEmpty>
-            <ul v-else class="pipelines-card-view-list">
-                <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
+            <PipelineListEmpty
+                class="pipeline-card-list-empty-tips"
+                v-if="slotProps.list.length === 0"
+            ></PipelineListEmpty>
+            <ul
+                v-else
+                class="pipelines-card-view-list"
+            >
+                <li
+                    v-for="pipeline of slotProps.list"
+                    :key="pipeline.pipelineId"
+                >
                     <pipeline-card
                         :pipeline="pipeline"
                         :remove-handler="removeHandler"
@@ -19,7 +28,6 @@
                     </pipeline-card>
                 </li>
             </ul>
-
         </infinite-scroll>
     </main>
 </template>

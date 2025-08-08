@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,18 +30,25 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreResource
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.common.service.StorePackageDeployService
+import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
+import com.tencent.devops.store.common.service.StoreReleaseService
+import com.tencent.devops.store.common.service.UserSensitiveConfService
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
-import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
+import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService
+    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService,
+    private val storePackageDeployService: StorePackageDeployService,
+    private val storeReleaseService: StoreReleaseService
 ) : BuildStoreResource {
 
     override fun getSensitiveConf(
@@ -62,6 +69,7 @@ class BuildStoreResourceImpl @Autowired constructor(
     }
 
     override fun getStorePkgRunEnvInfo(
+        devopsEnv: String?,
         storeType: StoreTypeEnum,
         language: String,
         runtimeVersion: String,
@@ -70,6 +78,7 @@ class BuildStoreResourceImpl @Autowired constructor(
     ): Result<StorePkgRunEnvInfo?> {
         return Result(
             storePkgRunEnvInfoService.getStorePkgRunEnvInfo(
+                devopsEnv = devopsEnv,
                 userId = "",
                 storeType = storeType,
                 language = language,
@@ -78,5 +87,27 @@ class BuildStoreResourceImpl @Autowired constructor(
                 runtimeVersion = runtimeVersion
             )
         )
+    }
+
+    override fun oneClickDeployComponent(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        return Result(
+            storePackageDeployService.oneClickDeployComponent(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType,
+                inputStream = inputStream,
+                disposition = disposition,
+            )
+        )
+    }
+
+    override fun getProcessInfo(userId: String, storeId: String): Result<StoreProcessInfo> {
+        return Result(storeReleaseService.getProcessInfo(userId, storeId))
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,5 +47,7 @@ data class RepositoryInfo(
     @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
     @get:Schema(title = "创建人", required = false)
-    val createUser: String? = null
+    val createUser: String? = null,
+    @get:Schema(title = "远程仓库ID", required = false)
+    val remoteRepoId: Long? = null
 )

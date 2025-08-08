@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -52,8 +52,8 @@ import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 import kotlin.math.ceil
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "ReturnCount")
@@ -139,7 +139,8 @@ class LogServiceLuceneImpl constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs {
         return doQueryInitLogs(
             buildId = buildId,
@@ -150,7 +151,8 @@ class LogServiceLuceneImpl constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            reverse = reverse
         )
     }
 
@@ -534,7 +536,8 @@ class LogServiceLuceneImpl constructor(
         containerHashId: String? = null,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        reverse: Boolean?
     ): QueryLogs {
         val startTime = System.currentTimeMillis()
         val (queryLogs, index) = getQueryLogs(
@@ -569,7 +572,8 @@ class LogServiceLuceneImpl constructor(
                 containerHashId = containerHashId,
                 executeCount = executeCount,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                reverse = reverse
             )
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)

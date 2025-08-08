@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.service.oauth2.grant
 
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.Oauth2AuthorizationCodeRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
 import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
@@ -15,16 +15,15 @@ import com.tencent.devops.model.auth.tables.records.TAuthOauth2CodeRecord
 import org.springframework.stereotype.Service
 
 @Service
-class AuthorizationCodeTokenGranter constructor(
+class AuthorizationCodeTokenGranter(
     private val codeService: Oauth2CodeService,
-    private val accessTokenService: Oauth2AccessTokenService,
-    private val refreshTokenService: Oauth2RefreshTokenService
-) : AbstractTokenGranter(
-    grantType = Oauth2GrantType.AUTHORIZATION_CODE.grantType,
+    private val refreshTokenService: Oauth2RefreshTokenService,
+    accessTokenService: Oauth2AccessTokenService
+) : AbstractTokenGranter<Oauth2AuthorizationCodeRequest>(
     accessTokenService = accessTokenService
 ) {
     override fun getAccessToken(
-        accessTokenRequest: Oauth2AccessTokenRequest,
+        accessTokenRequest: Oauth2AuthorizationCodeRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
         val clientId = clientDetails.clientId
@@ -92,4 +91,6 @@ class AuthorizationCodeTokenGranter constructor(
             newRefreshToken
         }
     }
+
+    override fun type(): Oauth2GrantType = Oauth2GrantType.AUTHORIZATION_CODE
 }

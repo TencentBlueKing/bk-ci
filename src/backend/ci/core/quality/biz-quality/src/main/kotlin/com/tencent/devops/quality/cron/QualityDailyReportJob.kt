@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,11 +27,11 @@
 
 package com.tencent.devops.quality.cron
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -45,7 +45,7 @@ import java.time.format.DateTimeFormatter
 @Component
 class QualityDailyReportJob @Autowired constructor(
     private val historyDao: HistoryDao,
-    private val qualityDailyDispatch: QualityDailyDispatch,
+    private val qualityDailyDispatch: SampleEventDispatcher,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
 ) {

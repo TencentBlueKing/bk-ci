@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -64,6 +64,10 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
+        return streamPermissionService.isProjectMember(projectCode, userId).first
+    }
+
+    override fun isProjectMember(userId: String, projectCode: String): Boolean {
         return streamPermissionService.isProjectMember(projectCode, userId).first
     }
 

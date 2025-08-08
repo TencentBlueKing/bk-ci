@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,6 +45,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.version.VersionModel
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,14 +88,6 @@ class StoreArchiveServiceImpl @Autowired constructor(
             storeType = storeType
         )
         var storeName = storeRecord?.name
-        // 判断是否有资格上传包
-        if (storeRecord != null && storeRecord.status !in listOf(
-                StoreStatusEnum.INIT.name,
-                StoreStatusEnum.GROUNDING_SUSPENSION.name
-            )
-        ) {
-            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
-        }
         if (storeName == null) {
             val storeNewestRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)
                 ?: throw ErrorCodeException(
@@ -115,14 +108,39 @@ class StoreArchiveServiceImpl @Autowired constructor(
                 name = storeName ?: ""
             )
         }
+        // 判断是否有资格上传包
+        if (storeRecord != null && storeRecord.status !in listOf(
+                StoreStatusEnum.INIT.name,
+                StoreStatusEnum.GROUNDING_SUSPENSION.name
+            )
+        ) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+        }
         return true
     }
 
     override fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Boolean {
+        val storeCode = storePkgInfoUpdateRequest.storeCode
+        val version = storePkgInfoUpdateRequest.version
+        val storeType = storePkgInfoUpdateRequest.storeType
+        val storeId = with(storeBaseQueryDao) {
+            when (storePkgInfoUpdateRequest.releaseType) {
+                ReleaseTypeEnum.NEW -> getFirstComponent(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType
+                )?.id
+                else -> getComponentId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = version,
+                    storeType = storeType
+                )
+            }
+        } ?: DigestUtils.md5Hex("$storeType-$storeCode-$version")
         val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvInfos
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
         var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
@@ -158,8 +176,8 @@ class StoreArchiveServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             storeBaseEnvManageDao.deleteStoreEnvInfo(context, storeId)
             storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs)
+            storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
             if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
-                storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
                 storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs!!)
             }
         }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -154,20 +154,21 @@ class PipelineWebhookDao {
                 repoName = repoName,
                 id = id,
                 projectName = projectName,
-                taskId = taskId
+                taskId = taskId,
+                repositoryHashId = repositoryHashId
             )
         }
     }
 
-    fun getByProjectNameAndType(
+    fun getByProjectNamesAndType(
         dslContext: DSLContext,
-        projectName: String,
+        projectNames: Set<String>,
         repositoryType: String,
         yamlPipelineIds: List<String>?
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .where(PROJECT_NAME.eq(projectName))
+                .where(PROJECT_NAME.`in`(projectNames))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
                 .let {
@@ -270,16 +271,26 @@ class PipelineWebhookDao {
 
     fun listWebhook(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
+        projectId: String?,
+        pipelineId: String?,
+        ignoredRepoTypes: Set<String>? = null,
         offset: Int,
         limit: Int
     ): List<PipelineWebhook>? {
         return with(T_PIPELINE_WEBHOOK) {
+            val conditions = mutableListOf(DELETE.eq(false))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!ignoredRepoTypes.isNullOrEmpty()) {
+                conditions.add(REPOSITORY_TYPE.notIn(ignoredRepoTypes))
+            }
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(DELETE.eq(false))
-                .and(PROJECT_ID.eq(projectId))
+                .where(conditions)
+                .orderBy(PIPELINE_ID.desc())
                 .limit(offset, limit)
                 .fetch()
         }?.map { convert(it) }
@@ -332,6 +343,23 @@ class PipelineWebhookDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(TASK_ID.eq(taskId))
                 .execute()
+        }
+    }
+
+    fun updateProjectName(
+        dslContext: DSLContext,
+        projectName: String,
+        pipelineId: String,
+        projectId: String,
+        taskId: String
+    ): Int {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.update(this)
+                    .set(PROJECT_NAME, projectName)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(TASK_ID.eq(taskId))
+                    .execute()
         }
     }
 

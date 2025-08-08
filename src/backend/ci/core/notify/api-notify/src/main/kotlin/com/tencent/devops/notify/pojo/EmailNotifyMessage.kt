@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -26,14 +26,21 @@
  */
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.notify.api.annotation.BkNotifyReceivers
+import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_EMAIL
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "email电子邮件消息类型")
-open class EmailNotifyMessage : BaseMessage() {
+@Event(destination = NOTIFY_EMAIL)
+open class EmailNotifyMessage(
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : BaseMessage(delayMills, retryTime) {
 
     @get:Schema(title = "邮件格式", allowableValues = ["0", "1"], type = "int")
     var format: EnumEmailFormat = EnumEmailFormat.PLAIN_TEXT
@@ -42,6 +49,7 @@ open class EmailNotifyMessage : BaseMessage() {
     var type: EnumEmailType = EnumEmailType.OUTER_MAIL
 
     @get:Schema(title = "通知接收者")
+    @BkNotifyReceivers
     private val receivers: LinkedHashSet<String> = LinkedHashSet()
 
     @get:Schema(title = "邮件抄送接收者")

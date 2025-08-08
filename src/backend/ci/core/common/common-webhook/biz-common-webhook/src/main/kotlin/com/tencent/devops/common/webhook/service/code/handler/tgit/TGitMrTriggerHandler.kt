@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
@@ -76,8 +77,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -314,9 +315,10 @@ class TGitMrTriggerHandler(
                 changeFiles = changeFiles.toSet(),
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
-                thirdSecretToken = thirdSecretToken,
-                gitScmService = gitScmService,
-                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+                secretToken = lazy { gitScmService.getCredential(projectId, thirdSecretToken) }.value,
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
+                eventType = getEventType().name
             )
             return listOf(
                 wipFilter, userFilter, targetBranchFilter,
@@ -343,6 +345,7 @@ class TGitMrTriggerHandler(
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = lastCommit.message
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE] = event.object_attributes.mergeType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] = event.object_attributes.mergeCommitSha ?: ""
 
@@ -390,7 +393,6 @@ class TGitMrTriggerHandler(
             startParams.putIfEmpty(PIPELINE_GIT_MR_DESC, event.object_attributes.description!!)
         }
         startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
-
         return startParams
     }
 

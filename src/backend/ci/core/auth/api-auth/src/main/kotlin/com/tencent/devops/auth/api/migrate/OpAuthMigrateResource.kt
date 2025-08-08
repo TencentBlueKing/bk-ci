@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,12 +35,13 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_MIGRATE", description = "权限-迁移")
 @Path("/op/auth/migrate")
@@ -86,17 +87,9 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/migrateSpecificResource")
-    @Operation(summary = "迁移特定资源类型资源")
-    fun migrateSpecificResource(
-        @Parameter(description = "迁移资源实体类", required = true)
-        migrateResourceDTO: MigrateResourceDTO
-    ): Result<Boolean>
-
-    @POST
-    @Path("/migrateSpecificResourceOfAllProject")
-    @Operation(summary = "迁移所有项目的特定资源类型资源")
-    fun migrateSpecificResourceOfAllProject(
+    @Path("/resetProjectPermissions")
+    @Operation(summary = "重置项目权限")
+    fun resetProjectPermissions(
         @Parameter(description = "迁移资源实体类", required = true)
         migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
@@ -137,6 +130,9 @@ interface OpAuthMigrateResource {
     @Path("/autoRenewal")
     @Operation(summary = "自动续期")
     fun autoRenewal(
+        @Parameter(description = "小于该值才会被续期,若传空,则默认用户在用户组中的过期时间小于180天会被自动续期", required = true)
+        @QueryParam("validExpiredDay")
+        validExpiredDay: Int?,
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
@@ -159,6 +155,14 @@ interface OpAuthMigrateResource {
     @Operation(summary = "修复资源组")
     fun fixResourceGroups(
         @Parameter(description = "迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/enablePipelineListPermissionControl")
+    @Operation(summary = "开启流水线列表权限控制")
+    fun enablePipelineListPermissionControl(
+        @Parameter(description = "项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 }

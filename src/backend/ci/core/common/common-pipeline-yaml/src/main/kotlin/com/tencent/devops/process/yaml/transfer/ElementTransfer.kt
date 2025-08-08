@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
@@ -47,6 +48,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
@@ -63,6 +66,8 @@ import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.models.IfField
+import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -102,6 +107,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                 TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
                 TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
                 TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
+                TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
+                TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
             }
             yamlInput.aspectWrapper.setModelElement4Model(
                 elements.last(),
@@ -179,7 +186,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                         repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
-                        enable = element.elementEnabled().nullIfDefault(true)
+                        enable = element.elementEnabled().nullIfDefault(true),
+                        startParams = element.convertStartParams()
                     )
                 )
                 return@forEach
@@ -296,6 +304,34 @@ class ElementTransfer @Autowired(required = false) constructor(
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
+
+        val scmGitElement = fix[CodeScmGitWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            WebHookTriggerElementChanger(it as CodeScmGitWebHookTriggerElement)
+        }
+        if (!scmGitElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = scmGitElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "ScmGit"
+            )
+            res.putAll(gitTrigger.groupBy { ScmType.SCM_GIT })
+        }
+
+        val scmSvnElement = fix[CodeScmSvnWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            WebHookTriggerElementChanger(it as CodeScmSvnWebHookTriggerElement)
+        }
+        if (!scmSvnElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = scmSvnElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "SVN"
+            )
+            res.putAll(gitTrigger.groupBy { ScmType.SCM_SVN })
+        }
         return res
     }
 
@@ -332,19 +368,22 @@ class ElementTransfer @Autowired(required = false) constructor(
         jobRunsOnType: JobRunsOnType? = null
     ): Element {
         val runCondition = when {
-            step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-            IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
+            step.ifField == null -> RunCondition.PRE_TASK_SUCCESS
+            IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifField.expression) ->
                 RunCondition.PRE_TASK_FAILED_BUT_CANCEL
 
-            IfType.ALWAYS.name == (step.ifFiled) ->
+            IfType.ALWAYS.name == (step.ifField.expression) ->
                 RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
 
-            IfType.FAILURE.name == (step.ifFiled) ->
+            IfType.FAILURE.name == (step.ifField.expression) ->
                 RunCondition.PRE_TASK_FAILED_ONLY
 
-            else -> {
-                RunCondition.CUSTOM_CONDITION_MATCH
-            }
+            !step.ifField.expression.isNullOrBlank() -> RunCondition.CUSTOM_CONDITION_MATCH
+
+            step.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> RunCondition.CUSTOM_VARIABLE_MATCH
+            step.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH -> RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+
+            else -> RunCondition.PRE_TASK_SUCCESS
         }
         val continueOnError = Step.ContinueOnErrorType.parse(step.continueOnError)
         val additionalOptions = ElementAdditionalOptions(
@@ -356,7 +395,18 @@ class ElementTransfer @Autowired(required = false) constructor(
             retryWhenFailed = step.retryTimes != null && step.retryTimes > 0,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             runCondition = runCondition,
-            customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,
+            customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                step.ifField?.expression
+            } else {
+                null
+            },
+            customVariables = if (runCondition == RunCondition.CUSTOM_VARIABLE_MATCH ||
+                runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+            ) {
+                step.ifField?.params?.map { NameAndValue(it.key, it.value) }
+            } else {
+                null
+            },
             manualRetry = step.manualRetry ?: false,
             subscriptionPauseUser = userId
         )
@@ -528,8 +578,6 @@ class ElementTransfer @Autowired(required = false) constructor(
                 PreStep(
                     name = element.name,
                     id = element.stepId,
-                    // 插件上的
-                    ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
                     with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).apply {
                         this.remove(CheckoutAtomParam::repositoryType.name)
@@ -546,8 +594,6 @@ class ElementTransfer @Autowired(required = false) constructor(
                 PreStep(
                     name = element.name,
                     id = element.stepId,
-                    // 插件上的
-                    ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
                     with = TransferUtil.simplifyParams(
                         transferCache.getAtomDefaultValue(uses),
@@ -562,6 +608,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
             else -> element.transferYaml(transferCache.getAtomDefaultValue(uses))
         }?.apply {
+            this.ifField = parseStepIfFiled(element)
             this.enable = element.elementEnabled().nullIfDefault(true)
             this.timeoutMinutes =
                 (element.additionalOptions?.timeoutVar ?: element.additionalOptions?.timeout?.toString()).nullIfDefault(
@@ -580,6 +627,34 @@ class ElementTransfer @Autowired(required = false) constructor(
             this.env = element.customEnv?.associateBy({ it.key ?: "" }) {
                 it.value
             }?.ifEmpty { null }
+        }
+    }
+
+    private fun parseStepIfFiled(
+        step: Element
+    ): Any? {
+        return when (step.additionalOptions?.runCondition) {
+            RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+            RunCondition.CUSTOM_VARIABLE_MATCH -> IfField(
+                mode = IfField.Mode.RUN_WHEN_ALL_PARAMS_MATCH,
+                params = step.additionalOptions?.customVariables?.associateBy({ it.key ?: "" }, { it.value ?: "" })
+            )
+
+            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> IfField(
+                mode = IfField.Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH,
+                params = step.additionalOptions?.customVariables?.associateBy({ it.key ?: "" }, { it.value ?: "" })
+            )
+
+            RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                IfType.ALWAYS_UNLESS_CANCELLED.name
+
+            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                IfType.ALWAYS.name
+
+            RunCondition.PRE_TASK_FAILED_ONLY ->
+                IfType.FAILURE.name
+
+            else -> null
         }
     }
 

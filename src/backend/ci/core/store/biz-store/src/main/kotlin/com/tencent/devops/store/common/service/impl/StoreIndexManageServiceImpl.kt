@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,6 +51,16 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreIndexPipelineService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.pojo.common.BK_ATOM_QUALITY_INDEX
+import com.tencent.devops.store.pojo.common.BK_ATOM_SLA
+import com.tencent.devops.store.pojo.common.BK_ATOM_SLA_INDEX
+import com.tencent.devops.store.pojo.common.BK_CODE_QUALITY
+import com.tencent.devops.store.pojo.common.BK_COMPLIANCE_RATE
+import com.tencent.devops.store.pojo.common.BK_NOT_UP_TO_PAR
+import com.tencent.devops.store.pojo.common.BK_NO_FAIL_DATA
+import com.tencent.devops.store.pojo.common.BK_STORE_TRUSTWORTHY_INDEX
+import com.tencent.devops.store.pojo.common.BK_STORE_TRUSTWORTHY_TIPS
+import com.tencent.devops.store.pojo.common.BK_UP_TO_PAR
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
@@ -116,7 +126,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         storeIndexManageInfoDao.batchCreateStoreIndexLevelInfo(dslContext, indexLevelInfoRecords)
         // 如果运算类型为插件则需要初始化流水线
         if (storeIndexCreateRequest.operationType == IndexOperationTypeEnum.ATOM &&
-            !storeIndexCreateRequest.atomCode.isNullOrBlank()) {
+            !storeIndexCreateRequest.atomCode.isNullOrBlank()
+        ) {
             tStoreIndexBaseInfoRecord.atomCode = storeIndexCreateRequest.atomCode
             storeIndexManageInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
             storeIndexPipelineService.initStoreIndexPipeline(
@@ -160,7 +171,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                 ).data?.get(storePipelineRelRecord.pipelineId)
                 pipelineBuildInfo?.let {
                     if (it.status == BuildStatus.PREPARE_ENV.name ||
-                        it.status == BuildStatus.RUNNING.name) {
+                        it.status == BuildStatus.RUNNING.name
+                    ) {
                         client.get(ServiceBuildResource::class).manualShutdown(
                             userId = userId,
                             projectId = initProjectCode,
@@ -236,14 +248,92 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(iconUrl) as? String
                     } ?: "",
                     description = it[tStoreIndexBaseInfo.DESCRIPTION],
-                    indexLevelName = it[tStoreIndexLevelInfo.LEVEL_NAME],
-                    hover = it[tStoreIndexResult.ICON_TIPS]
+                    indexLevelName = I18nUtil.getCodeLanMessage(
+                        messageCode = it[tStoreIndexLevelInfo.LEVEL_NAME],
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        defaultMessage = it[tStoreIndexLevelInfo.LEVEL_NAME]
+                    ),
+                    hover = handleHover(
+                        storeCode = storeCode,
+                        indexCode = it[tStoreIndexResult.INDEX_CODE],
+                        storeType = storeType
+                    )
                 )
             )
             storeIndexInfosMap[storeCode] = storeIndexInfos
         }
 
         return storeIndexInfosMap
+    }
+
+    fun handleHover(storeCode: String, indexCode: String, storeType: StoreTypeEnum): String {
+        val elementDeilResult = storeIndexManageInfoDao.getElementDeilByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            indexCode = indexCode,
+            storeType = storeType
+        )
+        if (elementDeilResult.isEmpty()) return ""
+        return when (indexCode) {
+            BK_ATOM_QUALITY_INDEX -> buildQualityIndexHover(elementDeilResult)
+            BK_ATOM_SLA_INDEX -> buildSlaIndexHover(elementDeilResult)
+            BK_STORE_TRUSTWORTHY_INDEX -> {
+                buildTrustworthyIndexHover(elementDeilResult)
+            }
+
+            else -> ""
+        }
+    }
+
+    private fun buildQualityIndexHover(elementDeilResult: List<TStoreIndexElementDetailRecord>): String {
+        val complianceRateValue =
+            elementDeilResult.find { it.elementCode == BK_COMPLIANCE_RATE }?.elementValue?.toDoubleOrNull()
+        val codeQualityValue =
+            elementDeilResult.find { it.elementCode == BK_CODE_QUALITY }?.elementValue?.toDoubleOrNull() ?: 0.0
+
+        val complianceRateTips = complianceRateValue?.let {
+            val resultCode = if (it >= 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+            "$it%(${I18nUtil.getCodeLanMessage(resultCode)})"
+        } ?: I18nUtil.getCodeLanMessage(BK_NO_FAIL_DATA)
+
+        val qualityIndexResult = I18nUtil.getCodeLanMessage(
+            if (codeQualityValue >= 100) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+        )
+
+        return """
+        <span style="line-height: 18px">
+            <span>${I18nUtil.getCodeLanMessage(BK_COMPLIANCE_RATE)}：$complianceRateTips</span>
+            <br>
+            <span>${I18nUtil.getCodeLanMessage(BK_CODE_QUALITY)}：$codeQualityValue（$qualityIndexResult）</span>
+        </span>
+    """.trimIndent()
+    }
+
+    private fun buildSlaIndexHover(elementDeilResult: List<TStoreIndexElementDetailRecord>): String {
+        val slaValue = elementDeilResult.find { it.elementCode == BK_ATOM_SLA_INDEX }?.elementValue?.toDoubleOrNull()
+
+        val slaTips = slaValue?.let {
+            val resultCode = if (it >= 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+            "$it%(${I18nUtil.getCodeLanMessage(resultCode)})"
+        }
+
+        return """
+        <span style="line-height: 18px">
+            <span>${I18nUtil.getCodeLanMessage(BK_ATOM_SLA)}：$slaTips</span>
+        </span>
+    """.trimIndent()
+    }
+
+    private fun buildTrustworthyIndexHover(elementDeilResult: List<TStoreIndexElementDetailRecord>): String {
+        val trustworthyValue = elementDeilResult.find { it.elementCode == BK_STORE_TRUSTWORTHY_INDEX }?.elementValue
+        trustworthyValue?.let {
+            return """
+        <span style="line-height: 18px">
+            <span>${I18nUtil.getCodeLanMessage(BK_STORE_TRUSTWORTHY_TIPS)}</span>
+        </span>
+        """.trimIndent()
+        }
+        return ""
     }
 
     override fun getStoreIndexInfosByStoreCode(
@@ -270,34 +360,36 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             indexId,
             createIndexComputeDetailRequest.levelName
         )?.id
-        val tStoreIndexResultRecord = TStoreIndexResultRecord()
-        tStoreIndexResultRecord.id = UUIDUtil.generate()
-        tStoreIndexResultRecord.indexId = indexId
-        tStoreIndexResultRecord.indexCode = createIndexComputeDetailRequest.indexCode
-        tStoreIndexResultRecord.storeCode = createIndexComputeDetailRequest.storeCode
-        tStoreIndexResultRecord.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
-        tStoreIndexResultRecord.iconTips = createIndexComputeDetailRequest.iconTips
-        tStoreIndexResultRecord.levelId = levelId
-        tStoreIndexResultRecord.creator = userId
-        tStoreIndexResultRecord.modifier = userId
-        tStoreIndexResultRecord.updateTime = LocalDateTime.now()
-        tStoreIndexResultRecord.createTime = LocalDateTime.now()
+        val tStoreIndexResultRecord = TStoreIndexResultRecord().apply {
+            this.id = UUIDUtil.generate()
+            this.indexId = indexId
+            this.indexCode = createIndexComputeDetailRequest.indexCode
+            this.storeCode = createIndexComputeDetailRequest.storeCode
+            this.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
+            this.iconTips = createIndexComputeDetailRequest.iconTips
+            this.levelId = levelId
+            this.creator = userId
+            this.modifier = userId
+            this.updateTime = LocalDateTime.now()
+            this.createTime = LocalDateTime.now()
+        }
         storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, listOf(tStoreIndexResultRecord))
         val tStoreIndexElementDetailRecords = createIndexComputeDetailRequest.elementInfos.map {
-            val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
-            tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
-            tStoreIndexElementDetailRecord.storeCode = createIndexComputeDetailRequest.storeCode
-            tStoreIndexElementDetailRecord.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
-            tStoreIndexElementDetailRecord.indexId = indexId
-            tStoreIndexElementDetailRecord.indexCode = createIndexComputeDetailRequest.indexCode
-            tStoreIndexElementDetailRecord.elementName = it.elementName
-            tStoreIndexElementDetailRecord.elementValue = it.elementValue
-            tStoreIndexElementDetailRecord.remark = it.remark
-            tStoreIndexElementDetailRecord.creator = userId
-            tStoreIndexElementDetailRecord.modifier = userId
-            tStoreIndexElementDetailRecord.updateTime = LocalDateTime.now()
-            tStoreIndexElementDetailRecord.createTime = LocalDateTime.now()
-            tStoreIndexElementDetailRecord
+            TStoreIndexElementDetailRecord().apply {
+                this.id = UUIDUtil.generate()
+                this.storeCode = createIndexComputeDetailRequest.storeCode
+                this.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
+                this.indexId = indexId
+                this.indexCode = createIndexComputeDetailRequest.indexCode
+                this.elementCode = it.elementCode
+                this.elementName = it.elementName
+                this.elementValue = it.elementValue
+                this.remark = it.remark
+                this.creator = userId
+                this.modifier = userId
+                this.updateTime = LocalDateTime.now()
+                this.createTime = LocalDateTime.now()
+            }
         }
         storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)
         return Result(true)
@@ -362,41 +454,43 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             params = arrayOf("indexCode: $TRUSTWORTHY_INDEX_CODE")
         )
         val levelId = storeIndexManageInfoDao.getStoreIndexLevelInfo(
-            dslContext,
-            indexId,
-            TRUSTWORTHY_INDEX_LEVEL_NAME
+            dslContext = dslContext,
+            indexId = indexId,
+            levelName = TRUSTWORTHY_INDEX_LEVEL_NAME
         )?.id
         val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
         val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
-            newStoreCodes.forEach {
-
-                val tStoreIndexResultRecord = TStoreIndexResultRecord()
-                tStoreIndexResultRecord.id = UUIDUtil.generate()
-                tStoreIndexResultRecord.indexId = indexId
-                tStoreIndexResultRecord.indexCode = TRUSTWORTHY_INDEX_CODE
-                tStoreIndexResultRecord.storeCode = it
-                tStoreIndexResultRecord.storeType = storeType.type.toByte()
-                tStoreIndexResultRecord.iconTips = I18nUtil.getCodeLanMessage(TRUSTWORTHY_INDEX_LEVEL_NAME)
-                tStoreIndexResultRecord.levelId = levelId
-                tStoreIndexResultRecord.creator = userId
-                tStoreIndexResultRecord.modifier = userId
-                tStoreIndexResultRecord.updateTime = LocalDateTime.now()
-                tStoreIndexResultRecord.createTime = LocalDateTime.now()
-                tStoreIndexResultRecords.add(tStoreIndexResultRecord)
-                val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
-                tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
-                tStoreIndexElementDetailRecord.storeCode = it
-                tStoreIndexElementDetailRecord.storeType = storeType.type.toByte()
-                tStoreIndexElementDetailRecord.indexId = indexId
-                tStoreIndexElementDetailRecord.indexCode = TRUSTWORTHY_INDEX_CODE
-                tStoreIndexElementDetailRecord.elementName = deptCode
-                tStoreIndexElementDetailRecord.elementValue = "Certified"
-                tStoreIndexElementDetailRecord.remark = null
-                tStoreIndexElementDetailRecord.creator = userId
-                tStoreIndexElementDetailRecord.modifier = userId
-                tStoreIndexElementDetailRecord.updateTime = LocalDateTime.now()
-                tStoreIndexElementDetailRecord.createTime = LocalDateTime.now()
-                tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
+        newStoreCodes.forEach {
+            val tStoreIndexResultRecord = TStoreIndexResultRecord().apply {
+                this.id = UUIDUtil.generate()
+                this.indexId = indexId
+                this.indexCode = TRUSTWORTHY_INDEX_CODE
+                this.storeCode = it
+                this.storeType = storeType.type.toByte()
+                this.iconTips = I18nUtil.getCodeLanMessage(TRUSTWORTHY_INDEX_LEVEL_NAME)
+                this.levelId = levelId
+                this.creator = userId
+                this.modifier = userId
+                this.updateTime = LocalDateTime.now()
+                this.createTime = LocalDateTime.now()
+            }
+            tStoreIndexResultRecords.add(tStoreIndexResultRecord)
+            val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord().apply {
+                this.id = UUIDUtil.generate()
+                this.storeCode = it
+                this.storeType = storeType.type.toByte()
+                this.indexId = indexId
+                this.indexCode = TRUSTWORTHY_INDEX_CODE
+                this.elementCode = TRUSTWORTHY_INDEX_CODE
+                this.elementName = TRUSTWORTHY_INDEX_CODE
+                this.elementValue = "Certified"
+                this.remark = null
+                this.creator = userId
+                this.modifier = userId
+                this.updateTime = LocalDateTime.now()
+                this.createTime = LocalDateTime.now()
+            }
+            tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
         }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)

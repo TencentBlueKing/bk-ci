@@ -2,15 +2,28 @@
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
             <template v-if="obj.type === 'group'">
-                <form-field-group v-if="rely(obj, element)" :name="key" :value="element[key]" :key="key" v-bind="obj">
+                <form-field-group
+                    v-if="rely(obj, element)"
+                    :name="key"
+                    :value="element[key]"
+                    :key="key"
+                    v-bind="obj"
+                >
                     <template v-for="(i) in obj.children">
-                        <form-field :key="i.key" v-if="rely(i, element)" v-bind="i" :is-error="errors.has(i.key)" :error-msg="errors.first(i.key)">
+                        <form-field
+                            :key="i.key"
+                            v-if="rely(i, element)"
+                            v-bind="i"
+                            :is-error="errors.has(i.key)"
+                            :error-msg="errors.first(i.key)"
+                        >
                             <component
                                 :is="i.component"
                                 :name="i.key"
                                 disabled
                                 :value="element[i.key]"
-                                v-bind="i">
+                                v-bind="i"
+                            >
                             </component>
                         </form-field>
                     </template>
@@ -24,7 +37,8 @@
                     :desc-link="obj.descLink"
                     :desc-link-text="obj.descLinkText"
                     :required="obj.required"
-                    :label="obj.label">
+                    :label="obj.label"
+                >
                     <component
                         :disabled="true"
                         :is="obj.component"

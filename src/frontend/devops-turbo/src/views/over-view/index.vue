@@ -2,11 +2,22 @@
     <article class="overview-home">
         <template v-if="hasPermission">
             <ul class="overview-cards">
-                <li class="card g-turbo-box" v-for="card in taskCards" :key="card.label">
-                    <logo :name="card.icon" size="42" class="card-logo"></logo>
+                <li
+                    class="card g-turbo-box"
+                    v-for="card in taskCards"
+                    :key="card.label"
+                >
+                    <logo
+                        :name="card.icon"
+                        size="42"
+                        class="card-logo"
+                    ></logo>
                     <h5>
                         <p class="g-turbo-black-font">
-                            <bk-animate-number :value="card.num" :digits="card.digit"></bk-animate-number>
+                            <bk-animate-number
+                                :value="card.num"
+                                :digits="card.digit"
+                            ></bk-animate-number>
                         </p>
                         <span class="g-turbo-gray-font">{{ card.label }}</span>
                     </h5>
@@ -16,8 +27,15 @@
             <section class="g-turbo-chart-box chart">
                 <header class="chart-head">
                     <span class="g-turbo-black-font"> {{ $t('turbo.耗时分布') }} </span>
-                    <bk-tab :active.sync="takeTimeDateType" type="unborder-card">
-                        <bk-tab-panel v-for="(panel, index) in timeGap" v-bind="panel" :key="index"></bk-tab-panel>
+                    <bk-tab
+                        :active.sync="takeTimeDateType"
+                        type="unborder-card"
+                    >
+                        <bk-tab-panel
+                            v-for="(panel, index) in timeGap"
+                            v-bind="panel"
+                            :key="index"
+                        ></bk-tab-panel>
                     </bk-tab>
                 </header>
                 <div class="canvas-wrapper">
@@ -28,8 +46,15 @@
             <section class="g-turbo-chart-box chart">
                 <header class="chart-head build-trend">
                     <span class="g-turbo-black-font"> {{ $t('turbo.编译次数趋势') }} </span>
-                    <bk-tab :active.sync="buildNumDateType" type="unborder-card">
-                        <bk-tab-panel v-for="(panel, index) in timeGap" v-bind="panel" :key="index"></bk-tab-panel>
+                    <bk-tab
+                        :active.sync="buildNumDateType"
+                        type="unborder-card"
+                    >
+                        <bk-tab-panel
+                            v-for="(panel, index) in timeGap"
+                            v-bind="panel"
+                            :key="index"
+                        ></bk-tab-panel>
                     </bk-tab>
                 </header>
                 <div class="canvas-wrapper">
@@ -37,7 +62,10 @@
                 </div>
             </section>
         </template>
-        <permission-exception v-else :message="errMessage" />
+        <permission-exception
+            v-else
+            :message="errMessage"
+        />
     </article>
 </template>
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,22 +37,36 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.service.AtomNotifyService
+import com.tencent.devops.store.atom.service.AtomQualityService
+import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.atom.service.OpAtomService
 import com.tencent.devops.store.common.dao.LabelDao
+import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.common.service.StoreFileService
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreLogoService
+import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -65,33 +79,21 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
-import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomNotifyService
-import com.tencent.devops.store.atom.service.AtomQualityService
-import com.tencent.devops.store.atom.service.AtomReleaseService
-import com.tencent.devops.store.atom.service.OpAtomService
-import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.StoreFileService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.service.StoreLogoService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.service.StoreWebsocketService
-import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
-import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.ThreadPoolUtil
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
-import java.nio.file.Files
+import java.nio.file.FileSystems
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -99,7 +101,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
-import java.util.concurrent.ThreadPoolExecutor
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
@@ -119,11 +120,17 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeI18nMessageService: StoreI18nMessageService,
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val marketAtomService: MarketAtomService
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
-    private val fileSeparator: String = System.getProperty("file.separator")
+    private val fileSeparator: String = FileSystems.getDefault().separator
+    private val executorService by lazy {
+        Executors.newFixedThreadPool(1).apply {
+            Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+        }
+    }
 
     /**
      * op系统获取插件信息
@@ -327,6 +334,16 @@ class OpAtomServiceImpl @Autowired constructor(
         } else {
             approveReq.result == PASS
         }
+        // 入库信息，并设置当前版本的LATEST_FLAG
+        marketAtomDao.approveAtomFromOp(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomStatus = atomStatus,
+            approveReq = approveReq,
+            latestFlag = latestFlag,
+            pubTime = LocalDateTime.now()
+        )
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,
@@ -338,7 +355,8 @@ class OpAtomServiceImpl @Autowired constructor(
                     atomStatus = atomStatus,
                     releaseType = releaseType,
                     repositoryHashId = atom.repositoryHashId,
-                    branch = atom.branch
+                    branch = atom.branch,
+                    publisher = atom.modifier
                 )
             )
         } else {
@@ -347,16 +365,6 @@ class OpAtomServiceImpl @Autowired constructor(
             // 发送通知消息
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_REJECT)
         }
-        // 入库信息，并设置当前版本的LATEST_FLAG
-        marketAtomDao.approveAtomFromOp(
-            dslContext = dslContext,
-            userId = userId,
-            atomId = atomId,
-            atomStatus = atomStatus,
-            approveReq = approveReq,
-            latestFlag = latestFlag,
-            pubTime = LocalDateTime.now()
-        )
         // 更新默认插件缓存
         if (approveReq.defaultFlag) {
             redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
@@ -378,23 +386,16 @@ class OpAtomServiceImpl @Autowired constructor(
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): Result<Boolean> {
-        // 解压插件包到临时目录
-        val fileName = disposition.fileName
-        val index = fileName.lastIndexOf(".")
-        val fileType = fileName.substring(index + 1)
-        val uuid = UUIDUtil.generate()
-        val file = Files.createTempFile(uuid, ".$fileType").toFile()
-        file.outputStream().use {
-            inputStream.copyTo(it)
-        }
-        val atomPath = TextReferenceFileAnalysisUtil.buildStoreArchivePath(atomCode) + "$fileSeparator$uuid"
-        if (!File(atomPath).exists()) {
-            ZipUtil.unZipFile(file, atomPath, false)
-        }
+        val (atomPath, file) = StoreFileAnalysisUtil.extractStorePackage(
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM,
+            inputStream = inputStream,
+            disposition = disposition
+        )
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                messageCode = StoreMessageCode.STORE_PACKAGE_FILE_NOT_FOUND,
                 params = arrayOf(TASK_JSON_NAME),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -452,7 +453,7 @@ class OpAtomServiceImpl @Autowired constructor(
         // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
             // 解析logoUrl
-            val logoUrlAnalysisResult = TextReferenceFileAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
+            val logoUrlAnalysisResult = StoreFileAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
             if (logoUrlAnalysisResult.isNotOk()) {
                 return Result(
                     data = false,
@@ -505,16 +506,16 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = TextReferenceFileAnalysisUtil.serviceArchiveAtomFile(
+                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     client = client,
                     file = file,
                     archiveAtomRequest = ArchiveAtomRequest(
-                        projectCode = releaseInfo.projectId,
                         atomCode = atomCode,
+                        projectCode = releaseInfo.projectId,
                         version = versionInfo.version,
                         releaseType = versionInfo.releaseType,
-                        os = JsonUtil.toJson(releaseInfo.os)
+                        os = JsonUtil.toJson(releaseInfo.os),
                     )
                 )
                 if (archiveAtomResult.isNotOk()) {
@@ -594,8 +595,7 @@ class OpAtomServiceImpl @Autowired constructor(
             action = {
                 updateAtomRepoFlagAction(
                     userId = userId,
-                    atomCode = atomCode,
-                    threadPoolExecutor = it
+                    atomCode = atomCode
                 )
             },
             actionTitle = "updateAtomRepoFlag"
@@ -605,8 +605,7 @@ class OpAtomServiceImpl @Autowired constructor(
 
     private fun updateAtomRepoFlagAction(
         userId: String,
-        atomCode: String?,
-        threadPoolExecutor: ThreadPoolExecutor
+        atomCode: String?
     ) {
         val limit = 100
         var offset = 0
@@ -632,8 +631,62 @@ class OpAtomServiceImpl @Autowired constructor(
             } while (recordSize == limit)
         } catch (ignored: Exception) {
             logger.warn("updateAtomRepoFlag failed", ignored)
-        } finally {
-            threadPoolExecutor.shutdown()
         }
+    }
+
+    override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
+        executorService.submit {
+            logger.info("begin updateAtomSensitiveCacheConfig!!")
+            val statusList = listOf(
+                AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.AUDITING.status.toByte(),
+                AtomStatusEnum.RELEASED.status.toByte()
+            )
+            try {
+                if (atomCode.isNullOrBlank()) {
+                    batchUpdateAtomSensitiveCacheConfig(null, statusList)
+                } else {
+                    batchUpdateAtomSensitiveCacheConfig(atomCode, statusList)
+                }
+            } catch (ignored: Exception) {
+                logger.warn("updateAtomSensitiveCacheConfig failed", ignored)
+            }
+            logger.info("end updateAtomSensitiveCacheConfig!!")
+        }
+        return Result(true)
+    }
+
+    private fun batchUpdateAtomSensitiveCacheConfig(
+        atomCode: String? = null,
+        statusList: List<Byte>
+    ) {
+        val limit = 100
+        var offset = 0
+        do {
+            val result = atomDao.queryAtomByStatus(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                statusList = statusList,
+                offset = offset,
+                limit = limit
+            )
+            val tAtom = TAtom.T_ATOM
+            result.forEach {
+                val latestFlag = it[tAtom.LATEST_FLAG]
+                marketAtomService.updateAtomSensitiveCacheConfig(
+                    atomCode = it[tAtom.ATOM_CODE],
+                    atomVersion = it[tAtom.VERSION],
+                    props = it[tAtom.PROPS]
+                )
+                if (latestFlag == true) {
+                    marketAtomService.updateAtomSensitiveCacheConfig(
+                        atomCode = it[tAtom.ATOM_CODE],
+                        atomVersion = VersionUtils.convertLatestVersion(it[tAtom.VERSION]),
+                        props = it[tAtom.PROPS]
+                    )
+                }
+            }
+            offset += limit
+        } while (result.size == limit)
     }
 }

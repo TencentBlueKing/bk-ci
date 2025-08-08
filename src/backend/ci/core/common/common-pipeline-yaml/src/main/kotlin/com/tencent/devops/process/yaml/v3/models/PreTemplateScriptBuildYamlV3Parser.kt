@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -68,7 +68,11 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("recommended-version")
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
-    override var customBuildNum: String? = null
+    override var customBuildNum: String? = null,
+    @JsonProperty("syntax-dialect")
+    override var syntaxDialect: String? = null,
+    @JsonProperty("fail-if-variable-invalid")
+    override var failIfVariableInvalid: Boolean? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
@@ -89,12 +93,17 @@ data class PreTemplateScriptBuildYamlV3Parser(
             resources = resources,
             notices = notices,
             concurrency = concurrency,
-            disablePipeline = disablePipeline
+            disablePipeline = disablePipeline,
+            syntaxDialect = syntaxDialect,
+            failIfVariableInvalid = failIfVariableInvalid
         )
     }
 
     @JsonIgnore
     lateinit var preYaml: PreScriptBuildYamlV3Parser
+
+    private val formatStages = lazy { ScriptYmlUtils.formatStage(preYaml, transferData) }
+    private val formatFinallyStage = lazy { ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData) }
 
     @JsonIgnore
     val transferData: YamlTransferData = YamlTransferData()
@@ -137,12 +146,12 @@ data class PreTemplateScriptBuildYamlV3Parser(
 
     override fun formatStages(): List<Stage> {
         checkInitialized()
-        return ScriptYmlUtils.formatStage(preYaml, transferData)
+        return formatStages.value
     }
 
     override fun formatFinallyStage(): List<Job> {
         checkInitialized()
-        return ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData)
+        return formatFinallyStage.value
     }
 
     override fun formatResources(): Resources? {

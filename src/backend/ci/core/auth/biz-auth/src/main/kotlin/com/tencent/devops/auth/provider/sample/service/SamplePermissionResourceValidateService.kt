@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 
 class SamplePermissionResourceValidateService : PermissionResourceValidateService {
@@ -46,4 +47,13 @@ class SamplePermissionResourceValidateService : PermissionResourceValidateServic
         resourceType: String,
         resourceCode: String
     ): Boolean = true
+
+    override fun validateUserProjectPermissionByChannel(
+        userId: String,
+        projectCode: String,
+        operateChannel: OperateChannel,
+        targetMemberId: String
+    ) {
+        return
+    }
 }

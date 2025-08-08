@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -53,13 +53,11 @@ interface StoreArchiveService {
     /**
      * 更新组件包信息
      * @param userId 流水线ID
-     * @param storeId 组件ID
      * @param storePkgInfoUpdateRequest 组件包更新信息请求
      * @return 布尔值
      */
     fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Boolean
 }

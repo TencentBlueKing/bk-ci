@@ -1,8 +1,14 @@
 <template>
     <section class="pipeline-table-column-setting">
         <h2>{{ $t('tableColSettings') }}</h2>
-        <draggable class="pipeline-table-column-ul" v-model="allTableColumns">
-            <li v-for="col in allTableColumns" :key="col.id">
+        <draggable
+            class="pipeline-table-column-ul"
+            v-model="allTableColumns"
+        >
+            <li
+                v-for="col in allTableColumns"
+                :key="col.id"
+            >
                 <bk-checkbox
                     class="pipeline-table-column-column-checkbox"
                     :checked="col.checked"
@@ -15,8 +21,13 @@
             </li>
         </draggable>
         <footer>
-            <bk-button theme="primary" @click="handleConfirm">{{$t('confirm')}}</bk-button>
-            <bk-button @click="handleReset">{{$t('history.reset')}}</bk-button>
+            <bk-button
+                theme="primary"
+                @click="handleConfirm"
+            >
+                {{ $t('confirm') }}
+            </bk-button>
+            <bk-button @click="handleReset">{{ $t('history.reset') }}</bk-button>
         </footer>
     </section>
 </template>

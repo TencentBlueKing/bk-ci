@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,13 +29,11 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.ExceptionMapper
 
 @BkExceptionMapper
 class IamExceptionMapper : ExceptionMapper<IamException> {
@@ -46,12 +44,7 @@ class IamExceptionMapper : ExceptionMapper<IamException> {
     override fun toResponse(exception: IamException): Response {
         logger.warn("Failed with iam request exception", exception)
         val status = Response.Status.BAD_REQUEST
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "Failed with iam request exception"
-        }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result(status = status.statusCode, message = message, data = exception.errorMsg)).build()
+            .entity(Result(status = status.statusCode, message = exception.errorMsg, data = exception.errorMsg)).build()
     }
 }

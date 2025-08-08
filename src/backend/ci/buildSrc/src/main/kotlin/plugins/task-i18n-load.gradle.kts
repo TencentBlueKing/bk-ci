@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -24,10 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import utils.ModuleUtil
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.nio.charset.StandardCharsets
 import java.util.Properties
+import utils.ModuleUtil
 
 val i18nPath = joinPath(
     rootDir.absolutePath.replace("${File.separator}src${File.separator}backend${File.separator}ci", ""),
@@ -68,14 +71,27 @@ if (File(i18nPath).isDirectory) {
                     val targetProperties = Properties()
                     if (commonPropertyFile.exists()) {
                         logger.debug("copy commonPropertyFile: ${commonPropertyFile.absolutePath} now...")
-                        targetProperties.load(FileInputStream(commonPropertyFile))
+                        targetProperties.load(
+                            InputStreamReader(
+                                FileInputStream(commonPropertyFile),
+                                StandardCharsets.UTF_8
+                            )
+                        )
                     }
                     // append second input to output file if it exists
                     if (propertyFile.exists()) {
                         logger.debug("copy modulePropertyFile: ${propertyFile.absolutePath} now...")
-                        targetProperties.load(FileInputStream(propertyFile))
+                        targetProperties.load(
+                            InputStreamReader(
+                                FileInputStream(propertyFile),
+                                StandardCharsets.UTF_8
+                            )
+                        )
                     }
-                    targetProperties.store(FileOutputStream(propertyFile), "i18n")
+                    targetProperties.store(
+                        OutputStreamWriter(FileOutputStream(propertyFile), StandardCharsets.UTF_8),
+                        "i18n"
+                    )
                 }
             }
         }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,12 +38,12 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
@@ -84,10 +84,10 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -217,6 +217,8 @@ class BuildEndControl @Autowired constructor(
                     lockValue = buildId,
                     expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
                 ).unlock()
+                // 解锁的同时兜底删除 linkTip
+                redisOperation.delete(AgentReuseMutex.genAgentReuseMutexLinkTipKey(buildId))
                 val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, agentId)
                 redisOperation.hdelete(queueKey, buildId)
             }
@@ -257,7 +259,28 @@ class BuildEndControl @Autowired constructor(
                 buildId = buildId,
                 actionType = ActionType.END,
                 buildStatus = buildStatus.name,
-                executeCount = buildInfo.executeCount
+                executeCount = buildInfo.executeCount,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_END,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                        buildInfo.startTime,
+                    PipelineBuildStatusBroadCastEvent.Labels::duration.name to
+                        timeCost?.totalCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::executeDuration.name to
+                        timeCost?.executeCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::systemDuration.name to
+                        timeCost?.systemCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name to
+                        timeCost?.queueCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name to
+                        timeCost?.waitCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::trigger.name to
+                        buildInfo.trigger,
+                    PipelineBuildStatusBroadCastEvent.Labels::triggerUser.name to
+                        buildInfo.triggerUser,
+                    PipelineBuildStatusBroadCastEvent.Labels::pipelineName.name to
+                        model.name
+                )
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",
@@ -278,7 +301,7 @@ class BuildEndControl @Autowired constructor(
 
     private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val buildNoObj = triggerContainer.buildNo ?: return
 
         if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
@@ -423,7 +446,7 @@ class BuildEndControl @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     params = arrayOf(nextBuild.buildId)
                 )
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val triggerContainer = model.getTriggerContainer()
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStartEvent(
                     source = "build_finish_$buildId",

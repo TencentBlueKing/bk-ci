@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -109,6 +109,7 @@ import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
@@ -138,16 +139,16 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.Calendar
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -318,7 +319,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
-            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
+            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
+                storeType = storeType,
+                storeCodes = atomCodeList,
+                userId = userId
+            )
             val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
@@ -365,6 +370,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             name = it[tAtom.NAME] as String,
                             code = atomCode,
                             version = it[tAtom.VERSION] as String,
+                            status = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
                             type = it[tAtom.JOB_TYPE] as String,
                             rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                             classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
@@ -653,7 +659,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    @Suppress("UNCHECKED_CAST")
     override fun getAtomById(atomId: String, userId: String): Result<AtomVersion?> {
         return getAtomVersion(atomId, userId)
     }
@@ -682,7 +687,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             null
         }
-        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(
+            storeType = StoreTypeEnum.ATOM,
+            cancelFlag = cancelFlag,
+            releaseType = showReleaseType,
+            version = showVersion
+        )
         return Result(showVersionInfo)
     }
 
@@ -1211,11 +1221,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
             val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
             if (null != props["input"]) {
-                val input = props["input"] as Map<String, Any>
-                input.forEach { inputIt ->
+                val input = props["input"] as? Map<String, Any>
+                input?.forEach { inputIt ->
                     val paramKey = inputIt.key
-                    val paramValueMap = inputIt.value as Map<String, Any>
-                    val rely = paramValueMap["rely"]
+                    val paramValueMap = inputIt.value as? Map<String, Any>
+                    val rely = paramValueMap?.get("rely")
                     if (rely != null) {
                         itemMap[paramKey] = rely
                     }
@@ -1583,6 +1593,36 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             builder.removeSuffix("|")
         } catch (ignored: Throwable) {
             logger.warn("load atom input[list] with error", ignored)
+        }
+    }
+
+    override fun updateAtomSensitiveCacheConfig(
+        atomCode: String,
+        atomVersion: String,
+        props: String?
+    ) {
+        try {
+            val propsJsonStr = if (props.isNullOrBlank()) {
+                atomDao.getAtomProps(dslContext, atomCode, atomVersion)
+            } else {
+                props
+            }
+            if (propsJsonStr.isNullOrBlank()) return
+            val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
+            // 去缓存中获取插件运行时信息
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
+            if (!atomRunInfoJson.isNullOrEmpty() && !params.isNullOrEmpty()) {
+                val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                atomRunInfo.sensitiveParams = params.joinToString(",")
+                redisOperation.hset(
+                    key = atomRunInfoKey,
+                    hashKey = atomVersion,
+                    values = JsonUtil.toJson(atomRunInfo)
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", e)
         }
     }
 }

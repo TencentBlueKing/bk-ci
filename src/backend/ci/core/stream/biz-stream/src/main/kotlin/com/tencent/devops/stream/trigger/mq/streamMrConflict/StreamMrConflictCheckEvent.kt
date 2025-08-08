@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,13 +28,14 @@
 package com.tencent.devops.stream.trigger.mq.streamMrConflict
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.stream.constant.StreamMQ
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 
-@Event(MQ.EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT, MQ.ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT)
+@Event(StreamMQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT)
 data class StreamMrConflictCheckEvent(
     val eventStr: String,
     val actionCommonData: EventCommonData,
@@ -42,8 +43,8 @@ data class StreamMrConflictCheckEvent(
     val actionSetting: StreamTriggerSetting,
     val path2PipelineExists: Map<String, StreamTriggerPipeline>,
     // 单位为ms，冲突检查超时时间120s
-    var retryTime: Int = 24,
-    val delayMills: Int = 5 * 1000,
+    override var retryTime: Int = 24,
+    override var delayMills: Int = 5 * 1000,
     // 当前not build库中的ID，方便修改状态
     val notBuildRecordId: Long
-)
+) : IEvent()

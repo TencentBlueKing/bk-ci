@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -157,7 +157,7 @@ class MetricsHeartBeatService @Autowired constructor(
          */
         private fun invalidUpdateCheck() {
             val updateKeys = redisOperation.hkeys(updateKey)?.ifEmpty { null } ?: return
-            val limit = LocalDateTime.now().plusHours(-1)
+            val limit = LocalDateTime.now().plusMinutes(-10)
             val needDelete = mutableListOf<String>()
             updateKeys.chunked(CHUNKED).forEach { keys ->
                 val updateValues = redisOperation.hmGet(updateKey, keys)

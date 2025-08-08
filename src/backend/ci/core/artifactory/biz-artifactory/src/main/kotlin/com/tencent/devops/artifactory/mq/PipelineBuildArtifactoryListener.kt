@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,8 +32,6 @@ import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
@@ -47,16 +45,15 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ALL")
 class PipelineBuildArtifactoryListener @Autowired constructor(
-    pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineBuildArtifactoryService: PipelineBuildArtifactoryService,
     private val client: Client
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildArtifactoryListener::class.java)!!
     }
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
         logger.info("PipelineBuildArtifactoryListener.run, event: $event")
         val userId = event.userId
         val projectId = event.projectId

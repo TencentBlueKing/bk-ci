@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,14 +28,12 @@
 package com.tencent.devops.environment.utils
 
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 @Component
 class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
@@ -88,32 +86,7 @@ class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
         return "environment.thirdparty.new.agent.heartbeat_${projectId}_$agentId"
     }
 
-    // tip: 此个需要删除，目前还有旧的Agent心跳逻辑，需要兼容此Key
-    fun heartbeat(projectId: String, agentId: String) {
-        redisOperation.set(
-            key = getHeartbeatKey(projectId = projectId, agentId = agentId),
-            value = System.currentTimeMillis().toString(),
-            expired = true,
-            expiredInSecond = expiredInSecond
-        )
-    }
-
-    // tip: 此个需要删除，目前还有旧的Agent心跳逻辑，需要兼容此Key
-    private fun getHeartbeat(projectId: String, agentId: String): Long? {
-        return redisOperation.get(getHeartbeatKey(projectId, agentId))?.toLong()
-    }
-
-    // tip: 此个需要删除，目前还有旧的Agent心跳逻辑，需要兼容此Key
-    private fun getHeartbeatKey(projectId: String, agentId: String) = "third-party-agent-heartbeat-$projectId-$agentId"
-
     fun getHeartbeatTime(id: Long, projectId: String): Long? {
-        val agentId = HashUtil.encodeLongId(id)
-
-        val oldHeartbeatTime = getHeartbeat(projectId, agentId)
-        if (oldHeartbeatTime == null) {
-            heartbeat(projectId, agentId)
-        }
-
         val newHeartbeat = getNewHeartbeat(projectId, id)
         val newHeartbeatTime = if (newHeartbeat != null) {
             newHeartbeat.heartbeatTime
@@ -122,10 +95,6 @@ class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
             null
         }
 
-        return if (oldHeartbeatTime != null && newHeartbeatTime != null) {
-            max(oldHeartbeatTime, newHeartbeatTime)
-        } else {
-            newHeartbeatTime ?: oldHeartbeatTime
-        }
+        return newHeartbeatTime
     }
 }

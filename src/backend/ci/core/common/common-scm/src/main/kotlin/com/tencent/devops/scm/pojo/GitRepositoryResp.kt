@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "创建git仓库响应体")
 class GitRepositoryResp(
+    @get:Schema(title = "仓库ID", required = true)
+    val id: Long,
     @get:Schema(title = "仓库名称", required = true)
     val name: String,
     @get:Schema(title = "仓库地址", required = true)

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,7 +33,10 @@ enum class ScmType(val alis: String) {
     CODE_GITLAB("gitlab"),
     GITHUB("github"),
     CODE_TGIT("tgit"),
-    CODE_P4("p4")
+    CODE_P4("p4"),
+    SCM_GIT("scm_git"),
+    SCM_SVN("scm_svn"),
+    SCM_P4("scm_p4")
     ;
 
     companion object {
@@ -45,6 +48,9 @@ enum class ScmType(val alis: String) {
                 GITHUB -> 4.toShort()
                 CODE_TGIT -> 5.toShort()
                 CODE_P4 -> 6.toShort()
+                SCM_GIT -> 7.toShort()
+                SCM_SVN -> 8.toShort()
+                SCM_P4 -> 9.toShort()
             }
         }
 

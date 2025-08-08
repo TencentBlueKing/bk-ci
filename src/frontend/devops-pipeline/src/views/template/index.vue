@@ -1,10 +1,14 @@
 <template>
-    <div class="biz-container pipeline-subpages" v-bkloading="{ isLoading }">
+    <div
+        class="biz-container pipeline-subpages"
+        v-bkloading="{ isLoading }"
+    >
         <div class="biz-side-bar">
             <side-bar
                 :nav="nav"
                 :side-menu-list="sideMenuList"
-                :sub-system-name="'pipelines'">
+                :sub-system-name="'pipelines'"
+            >
             </side-bar>
         </div>
         <template v-if="!isLoading">

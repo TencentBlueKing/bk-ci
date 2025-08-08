@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -194,3 +194,15 @@ export const isTGit = judgementCodelibType('codeTGit')
  * @param {string} typeName
  */
 export const isP4 = judgementCodelibType('codeP4')
+
+export const isScmGit = judgementCodelibType('scmGit')
+export const isScmSvn = judgementCodelibType('scmSvn')
+
+/**
+ * 根据传入的代码库scmType，转为驼峰格式
+ * @param {string} type
+ * @returns
+ */
+export function convertToCamelCase (type) {
+    return type.toLowerCase().replace(/_(.)/g, (_, group1) => group1.toUpperCase())
+}

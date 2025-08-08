@@ -30,11 +30,26 @@
                 @page-limit-change="handlePageLimitChange"
                 @selection-change="handleSelectChange"
             >
-                <bk-table-column type="selection" width="60"></bk-table-column>
-                <bk-table-column :label="$t('environment.project')" prop="name"></bk-table-column>
-                <bk-table-column :label="$t('environment.projectId')" prop="projectId"></bk-table-column>
-                <bk-table-column :label="$t('environment.envInfo.creator')" prop="creator"></bk-table-column>
-                <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="formatTime"></bk-table-column>
+                <bk-table-column
+                    type="selection"
+                    width="60"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('environment.project')"
+                    prop="name"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('environment.projectId')"
+                    prop="projectId"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('environment.envInfo.creator')"
+                    prop="creator"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('environment.envInfo.creationTime')"
+                    prop="formatTime"
+                ></bk-table-column>
             </bk-table>
         </div>
     </bk-dialog>

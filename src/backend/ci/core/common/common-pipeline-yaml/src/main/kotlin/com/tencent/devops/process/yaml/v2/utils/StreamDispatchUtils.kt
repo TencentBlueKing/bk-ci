@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,7 +48,7 @@ import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
@@ -129,10 +129,12 @@ object StreamDispatchUtils {
                     password = info.password,
                     credentialId = info.credId,
                     acrossTemplateId = info.acrossTemplateId,
-                    jobId = job.id
+                    jobId = job.id,
+                    credentialProjectId = null
                 ),
                 options = info.options,
-                imagePullPolicy = info.imagePullPolicy
+                imagePullPolicy = info.imagePullPolicy,
+                storeImage = null
             )
 
             return ThirdPartyAgentEnvDispatchType(

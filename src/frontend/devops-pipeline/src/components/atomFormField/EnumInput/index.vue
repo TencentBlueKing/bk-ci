@@ -1,6 +1,10 @@
 <template>
     <form class="enum-input-main">
-        <bk-radio-group @change="handleSelect" :value="value" :name="name">
+        <bk-radio-group
+            @change="handleSelect"
+            :value="value"
+            :name="name"
+        >
             <template v-for="item in list">
                 <bk-popover
                     v-if="!item.hidden"
@@ -15,10 +19,13 @@
                         :value="item.value"
                         :disabled="disabled || item.disabled || readOnly"
                     >
-                        <span :class="{
-                            'overflow': true,
-                            'tip-style': item.tips
-                        }" v-bk-overflow-tips>
+                        <span
+                            :class="{
+                                'overflow': true,
+                                'tip-style': item.tips
+                            }"
+                            v-bk-overflow-tips
+                        >
                             {{ item.label }}
                         </span>
                     </bk-radio>
@@ -47,14 +54,14 @@
         computed: {
             enumList () {
                 return this.list.map((item) => {
-                    let { value, ...restProp } = item
+                    let { value } = item
                     if (value === 'true') {
                         value = true
                     } else if (value === 'false') {
                         value = false
                     }
                     return {
-                        ...restProp,
+                        ...item,
                         value
                     }
                 })
@@ -84,7 +91,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    width: 100%;
+    max-width: 540px;
     display: inline-block;
   }
   .tip-style {

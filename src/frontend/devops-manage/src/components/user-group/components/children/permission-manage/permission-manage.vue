@@ -79,10 +79,10 @@ export default {
         this.isAllMember = true;
       }
     },
-    handleCreateGroup() {
+    handleCreateGroup(roleId) {
       this.activeIndex = '';
       this.isAllMember = false;
-      this.path = 'create-user-group';
+      this.path = `create-user-group?role_id=${roleId}`;
     },
     handleCloseManage() {
       this.$emit('close-manage');

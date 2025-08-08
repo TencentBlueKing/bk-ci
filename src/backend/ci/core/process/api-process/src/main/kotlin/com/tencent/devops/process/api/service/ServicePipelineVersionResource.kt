@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -45,17 +46,17 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.validation.Valid
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 @Tag(name = "SERVICE_PIPELINE_VERSION", description = "服务-流水线版本管理")
 @Path("/service/version")
@@ -94,7 +95,16 @@ interface ServicePipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "提交动作", required = false)
+        @QueryParam("targetAction")
+        targetAction: CodeTargetAction? = null,
+        @Parameter(description = "代码库hashId", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String? = null,
+        @Parameter(description = "指定提交的分支", required = false)
+        @QueryParam("targetBranch")
+        targetBranch: String? = null
     ): Result<PrefetchReleaseResult>
 
     @Operation(summary = "将当前模板发布为正式版本")
@@ -314,4 +324,19 @@ interface ServicePipelineVersionResource {
         @QueryParam("storageType")
         storageType: String?
     ): Response
+
+    @Operation(summary = "重置流水线推荐版本号")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/resetBuildNo")
+    fun resetBuildNo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,15 +28,15 @@
 package com.tencent.devops.websocket.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.push.TransferPush
 
-@Event(exchange = MQ.EXCHANGE_WEBSOCKET_SESSION_CLEAR_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_SESSION_CLEAR_EVENT)
+@Event(destination = StreamBinding.WEBSOCKET_SESSION_CLEAR)
 class ClearSessionEvent(
     val sessionId: String,
     override val eventName: String? = "clearSession",
     override val userId: String,
     override var page: String?,
-    override var delayMills: Int? = 0,
+    override var delayMills: Int = 0,
     override val transferData: Map<String, Any>
 ) : TransferPush(eventName, userId, page, delayMills, transferData)

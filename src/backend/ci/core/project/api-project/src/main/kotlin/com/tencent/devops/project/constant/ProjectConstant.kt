@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,4 +31,6 @@ object ProjectConstant {
     const val PROJECT_NAME_MAX_LENGTH = 64
     const val PROJECT_ID_MAX_LENGTH = 32
     const val NAME_MIN_LENGTH = 2
+    // 流水线命名规范
+    const val PIPELINE_NAME_FORMAT_MAX_LENGTH = 200
 }

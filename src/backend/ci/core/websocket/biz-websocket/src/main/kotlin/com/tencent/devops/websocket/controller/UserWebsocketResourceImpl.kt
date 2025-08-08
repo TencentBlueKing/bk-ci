@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,17 +28,16 @@
 package com.tencent.devops.websocket.controller
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.websocket.api.UserWebsocketResource
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserWebsocketResourceImpl @Autowired constructor(
-    val websocketService: WebsocketService
-
-) : UserWebsocketResource {
+class UserWebsocketResourceImpl @Autowired constructor() : UserWebsocketResource {
     override fun clearSession(userId: String, sessionId: String): Result<Boolean> {
-        return websocketService.clearAllBySession(userId, sessionId)
+        return SpringContextUtil.getBean(WebsocketService::class.java)
+            .clearAllBySession(userId, sessionId)
     }
 }

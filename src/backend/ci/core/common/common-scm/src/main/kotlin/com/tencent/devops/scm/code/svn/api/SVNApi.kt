@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -110,6 +110,7 @@ open class SVNApi {
     private fun getBody(request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
+                logger.warn("fail to get response|url=${request.url}|code=${response.code}|body=${response.body}")
                 when {
                     response.code == 401 -> throw ScmException(
                         I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_UNAUTHORIZED),

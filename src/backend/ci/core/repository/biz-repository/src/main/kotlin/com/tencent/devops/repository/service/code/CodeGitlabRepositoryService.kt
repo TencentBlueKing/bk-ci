@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,7 +42,7 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -59,7 +59,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
     private val repositoryCodeGitLabDao: RepositoryCodeGitLabDao,
     private val dslContext: DSLContext,
     private val scmService: IScmService,
-    private val credentialService: CredentialService
+    private val credentialService: RepoCredentialService
 ) : CodeRepositoryService<CodeGitlabRepository> {
     override fun repositoryType(): String {
         return CodeGitlabRepository::class.java.name
@@ -77,7 +77,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GITLAB,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.CODE_GITLAB.name
             )
             // Git项目ID
             val gitProjectId: Long = getGitProjectId(
@@ -128,7 +129,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         var gitProjectId: Long? = null
         // 需要更新gitProjectId
-        if (record.url != repository.url) {
+        if (record.url != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[${record.url}] " +
                     "targetUrl=[${repository.url}]"
@@ -178,7 +179,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 RepoAuthType.valueOf(record.authType)
             },
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_GITLAB.name
         )
     }
 

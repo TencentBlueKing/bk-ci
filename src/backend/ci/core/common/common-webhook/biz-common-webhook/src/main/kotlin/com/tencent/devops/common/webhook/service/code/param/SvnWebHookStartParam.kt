@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,7 +51,7 @@ class SvnWebHookStartParam : ScmWebhookStartParams<CodeSVNWebHookTriggerElement>
         projectId: String,
         element: CodeSVNWebHookTriggerElement,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult
@@ -62,7 +62,9 @@ class SvnWebHookStartParam : ScmWebhookStartParams<CodeSVNWebHookTriggerElement>
         startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = element.includeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
-        startParams.putAll(matcher.retrieveParams())
+        matcher?.let {
+            startParams.putAll(matcher.retrieveParams())
+        }
         return startParams
     }
 }

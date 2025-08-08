@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,12 +43,13 @@ import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ComplexMethod")
 class WebhookEventListener constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val webhookRequestService: WebhookRequestService
 ) {
 
@@ -78,7 +79,8 @@ class WebhookEventListener constructor(
                 CommitEventType.GIT -> {
                     val request = WebhookRequest(
                         headers = mapOf(
-                            "X-Event" to event.event!!
+                            "X-Event" to event.event!!,
+                            "X-TRACE-ID" to traceId
                         ),
                         body = event.requestContent
                     )
@@ -99,7 +101,8 @@ class WebhookEventListener constructor(
                 CommitEventType.TGIT -> {
                     val request = WebhookRequest(
                         headers = mapOf(
-                            "X-Event" to event.event!!
+                            "X-Event" to event.event!!,
+                            "X-TRACE-ID" to traceId
                         ),
                         body = event.requestContent
                     )
@@ -134,7 +137,7 @@ class WebhookEventListener constructor(
             logger.warn("Retry to handle the event [${event.retryTime}]")
             with(event) {
                 CodeWebhookEventDispatcher.dispatchEvent(
-                    rabbitTemplate,
+                    streamBridge,
                     when (event.commitEventType) {
                         CommitEventType.SVN -> SvnWebhookEvent(
                             requestContent = requestContent,
@@ -148,7 +151,8 @@ class WebhookEventListener constructor(
                                 retryTime = retryTime - 1,
                                 delayMills = DELAY_MILLS,
                                 event = event.event,
-                                secret = event.secret
+                                secret = event.secret,
+                                traceId = event.traceId
                             )
                         }
                         CommitEventType.GITLAB -> GitlabWebhookEvent(
@@ -216,7 +220,7 @@ class WebhookEventListener constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to handle the Github event [${event.retryTime}]")
                 CodeWebhookEventDispatcher.dispatchGithubEvent(
-                    rabbitTemplate,
+                    streamBridge,
                     GithubWebhookEvent(
                         thisGithubWebhook,
                         retryTime = event.retryTime - 1,
@@ -249,8 +253,8 @@ class WebhookEventListener constructor(
                 logger.warn("Retry to handle the Github event [${replayEvent.retryTime}]")
                 with(replayEvent) {
                     CodeWebhookEventDispatcher.dispatchReplayEvent(
-                        rabbitTemplate = rabbitTemplate,
-                        event = ReplayWebhookEvent(
+                        streamBridge,
+                        ReplayWebhookEvent(
                             userId = userId,
                             projectId = projectId,
                             eventId = eventId,

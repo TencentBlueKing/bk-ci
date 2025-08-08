@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -77,6 +77,7 @@ class StageControl @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(StageControl::class.java)
         private const val CACHE_SIZE = 500L
+        private const val DEFAULT_DELAY = 1000
     }
 
     private val commandCache: LoadingCache<Class<out StageCmd>, StageCmd> = CacheBuilder.newBuilder()
@@ -95,7 +96,11 @@ class StageControl @Autowired constructor(
             val stageIdLock = StageIdLock(redisOperation, buildId, stageId)
             try {
                 watcher.start("lock")
-                stageIdLock.lock()
+                if (!stageIdLock.tryLock()) {
+                    LOG.info("ENGINE|$buildId|$pipelineId|$stageId|$source|StageIdLock try lock fail")
+                    retry()
+                    return
+                }
                 watcher.start("execute")
                 execute(watcher = watcher)
                 watcher.start("finish")
@@ -105,6 +110,12 @@ class StageControl @Autowired constructor(
                 LogUtils.printCostTimeWE(watcher)
             }
         }
+    }
+
+    private fun PipelineBuildStageEvent.retry() {
+        LOG.info("ENGINE|$buildId|$source|$pipelineId|RETRY_TO_STAGE_LOCK")
+        this.delayMills = DEFAULT_DELAY
+        pipelineEventDispatcher.dispatch(this)
     }
 
     private fun PipelineBuildStageEvent.execute(watcher: Watcher) {
@@ -140,7 +151,7 @@ class StageControl @Autowired constructor(
             containsMatrix = false
         )
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
-        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId, buildId, buildInfo)
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
         // #10082 过滤Agent复用互斥的endJob信息
         val mutexJobs = containers.filter {
             it.controlOption.agentReuseMutex?.endJob == true &&

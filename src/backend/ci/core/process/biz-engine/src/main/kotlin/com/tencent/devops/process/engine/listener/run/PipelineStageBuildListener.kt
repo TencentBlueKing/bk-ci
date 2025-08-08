@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.StageControl
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class PipelineStageBuildListener @Autowired constructor(
     private val stageControl: StageControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildStageEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildStageEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildStageEvent) {
         stageControl.handle(event)

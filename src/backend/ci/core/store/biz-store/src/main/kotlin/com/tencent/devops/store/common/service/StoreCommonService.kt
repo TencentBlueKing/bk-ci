@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,12 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 
@@ -46,6 +46,14 @@ interface StoreCommonService {
      * 根据ID获取组件名称
      */
     fun getStoreNameById(
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): String
+
+    /**
+     * 根据ID获取组件名称
+     */
+    fun getStoreCodeById(
         storeId: String,
         storeType: StoreTypeEnum
     ): String
@@ -119,7 +127,7 @@ interface StoreCommonService {
      * 获取组件可见范围
      */
     fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>?
 
@@ -127,6 +135,7 @@ interface StoreCommonService {
      * 获取回显版本信息
      */
     fun getStoreShowVersionInfo(
+        storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
         version: String?

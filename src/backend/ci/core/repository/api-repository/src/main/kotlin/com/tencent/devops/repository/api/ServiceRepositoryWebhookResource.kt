@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,22 +29,35 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.repository.pojo.webhook.WebhookData
+import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_REPOSITORY_WEBHOOK", description = "服务-代码库webhook")
 @Path("/service/repository/webhook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRepositoryWebhookResource {
+
+    @Operation(summary = "解析webhook数据")
+    @POST
+    @Path("/{scmCode}/parse")
+    fun webhookParse(
+        @PathParam("scmCode")
+        @Parameter(description = "代码库编码", required = true)
+        scmCode: String,
+        @Parameter(description = "代码库触发请求", required = true)
+        request: WebhookParseRequest
+    ): Result<WebhookData>
 
     @Operation(summary = "保存代码库触发事件")
     @POST

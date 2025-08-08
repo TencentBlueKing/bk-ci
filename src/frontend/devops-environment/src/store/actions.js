@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -82,8 +82,51 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}`).then(response => {
+    requestNodeList ({ commit }, { projectId, params, tags }) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, { tags }).then(response => {
+            return response
+        })
+    },
+    /**
+     * 节点标签列表
+     */
+    async requestNodeTagList ({ commit }, projectId) {
+        try {
+            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`)
+            commit('setNodeTagList', res || [])
+            return res
+        } catch (err) {
+            console.error(err)
+            return []
+        }
+    },
+    async requestGetCounts ({ commit }, projectId) {
+        try {
+            const res = await vue.$ajax.get(`${prefix}/user/envnode/${projectId}/nodesCount`)
+            commit('setNodeCount', res || {})
+            return res
+        } catch (err) {
+            console.error(err)
+        }
+    },
+    createdNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/create?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    deleteNodeTag ({ commit }, { projectId, tagKeyId }) {
+        return vue.$ajax.delete(`${prefix}/user/nodetag/deleteTag?projectId=${projectId}&tagKeyId=${tagKeyId}`).then(response => {
+            return response
+        })
+    },
+    editNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.put(`${prefix}/user/nodetag/updateTag?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    setNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/editTag?projectId=${projectId}`, params).then(response => {
             return response
         })
     },
@@ -130,9 +173,10 @@ const actions = {
     /**
      * 生成构建机命令
      */
-    requestDevCommand ({ commit }, { projectId, model, zoneName }) {
-        const urls = zoneName ? `${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateLink?zoneName=${zoneName}` : `${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateLink`
-        return vue.$ajax.get(urls).then(response => {
+    requestDevCommand ({ commit }, { projectId, model, params }) {
+        const queryString = new URLSearchParams(params).toString()
+
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateBatchInstallLink?${queryString}`).then(response => {
             return response
         })
     },
@@ -225,8 +269,8 @@ const actions = {
     /**
     * 设置agent构建并发数
     */
-    saveParallelTaskCount ({ commit }, { projectId, nodeHashId, parallelTaskCount }) {
-        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${parallelTaskCount}`).then(response => {
+    saveParallelTaskCount ({ commit }, { projectId, nodeHashId, count }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/parallelTaskCount?parallelTaskCount=${count}`).then(response => {
             return response
         })
     },
@@ -286,6 +330,29 @@ const actions = {
     },
     enableNode (_, { projectId, envHashId, nodeHashId, enableNode }) {
         return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`)
+    },
+    /**
+    * 设置docker构建并发数
+    */
+    saveDockerParallelTaskCount ({ commit }, { projectId, nodeHashId, count }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/dockerParallelTaskCount?count=${count}`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 获取构建机最近执行记录
+     */
+    getLatestBuildPipelineList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/listLatestBuildPipelines`)
+    },
+
+    exportNodeListCSV ({ commit }, { projectId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/listNew_export?${queryString}`, {}, {
+            originalResponse: true
+        }).then(response => {
+            return response
+        })
     }
 }
 

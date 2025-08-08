@@ -1,5 +1,8 @@
 <template>
-    <section :class="[{ 'max-height': limitHeight }, 'store-code']" v-bkloading="{ isLoading }"></section>
+    <section
+        :class="[{ 'max-height': limitHeight }, 'store-code']"
+        v-bkloading="{ isLoading }"
+    ></section>
 </template>
 
 <script>

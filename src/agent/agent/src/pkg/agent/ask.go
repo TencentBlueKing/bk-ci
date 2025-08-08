@@ -3,11 +3,13 @@ package agent
 import (
 	"runtime"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -27,13 +29,13 @@ func genHeartInfoAndUpgrade(
 		})
 	}
 
-	if err := upgrade.SyncJdkVersion(); err != nil {
+	if err := third_components.Jdk.Jdk17.SyncJdkVersion(); err != nil {
 		logs.Error("ask sync jdkVersion error", err)
 	}
 	if err := upgrade.SyncDockerInitFileMd5(); err != nil {
 		logs.Error("ask sync docker file md5 error", err)
 	}
-	jdkVersion := upgrade.JdkVersion.GetVersion()
+	jdkVersion := third_components.Jdk.Jdk17.GetVersion()
 	dockerInitFile := api.DockerInitFileInfo{
 		FileMd5:     upgrade.DockerFileMd5.Md5,
 		NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
@@ -42,7 +44,7 @@ func genHeartInfoAndUpgrade(
 	var upg *api.UpgradeInfo = nil
 	if upgradeEnable {
 		upg = &api.UpgradeInfo{
-			WorkerVersion:      config.GAgentEnv.SlaveVersion,
+			WorkerVersion:      third_components.Worker.GetVersion(),
 			GoAgentVersion:     config.AgentVersion,
 			JdkVersion:         jdkVersion,
 			DockerInitFileInfo: dockerInitFile,
@@ -51,7 +53,7 @@ func genHeartInfoAndUpgrade(
 
 	return api.AgentHeartbeatInfo{
 		MasterVersion:     config.AgentVersion,
-		SlaveVersion:      config.GAgentEnv.SlaveVersion,
+		SlaveVersion:      third_components.Worker.GetVersion(),
 		HostName:          config.GAgentEnv.HostName,
 		AgentIp:           config.GAgentEnv.GetAgentIp(),
 		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
@@ -62,6 +64,7 @@ func genHeartInfoAndUpgrade(
 			Arch:              runtime.GOARCH,
 			JdkVersion:        jdkVersion,
 			DockerInitFileMd5: dockerInitFile,
+			OsVersion:         config.GAgentEnv.OsVersion,
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          job.GBuildDockerManager.GetInstances(),

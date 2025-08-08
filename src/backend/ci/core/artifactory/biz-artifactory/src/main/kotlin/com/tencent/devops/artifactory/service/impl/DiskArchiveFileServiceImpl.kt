@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -60,8 +60,8 @@ import java.io.OutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -307,14 +307,14 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
-        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        val file = File("${getBasePath()}$fileSeparator$filePath")
         response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         logger.info("downloadFileToLocal, filePath: $filePath")
-        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        val file = File("${getBasePath()}$fileSeparator$filePath")
         // 如果文件不存在，提示404
         if (!file.exists()) {
             logger.info("file($filePath) not found")
@@ -678,7 +678,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -693,7 +692,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String

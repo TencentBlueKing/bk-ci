@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -41,6 +41,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageRecord
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
@@ -74,7 +75,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.common.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -280,6 +280,29 @@ class ImageDao {
                 .limit(1)
                 .fetchOne()
         }
+    }
+
+    fun countImageRelease(
+        dslContext: DSLContext,
+        imageCode: String,
+        version: String,
+        imageStatus: ImageStatusEnum
+    ): Long {
+        val tImage = TImage.T_IMAGE
+        val conditions = mutableSetOf<Condition>()
+        if (VersionUtils.isLatestVersion(version)) {
+            conditions.add(tImage.VERSION.like(VersionUtils.generateQueryVersion(version)))
+        } else {
+            conditions.add(tImage.VERSION.eq(version))
+        }
+        conditions.add(tImage.IMAGE_CODE.eq(imageCode))
+        conditions.add(tImage.IMAGE_STATUS.eq(imageStatus.status.toByte()))
+        return dslContext.selectCount()
+            .from(tImage)
+            .where(
+                conditions
+            )
+            .fetchOne(0, Long::class.java)!!
     }
 
     fun getJobImageCount(
@@ -863,9 +886,12 @@ class ImageDao {
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val templateStatusList =
             listOf(ImageStatusEnum.UNDERCARRIAGING.status.toByte(), ImageStatusEnum.UNDERCARRIAGED.status.toByte())
-        return dslContext.selectCount().from(tImage).join(tStoreProjectRel)
+        return dslContext.select(DSL.countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tImage).join(tStoreProjectRel)
             .on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
-            .where(tImage.IMAGE_STATUS.`in`(templateStatusList).and(tImage.CLASSIFY_ID.eq(classifyId)))
+            .where(
+                tImage.IMAGE_STATUS.`in`(templateStatusList).and(tImage.CLASSIFY_ID.eq(classifyId))
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            )
             .fetchOne(0, Int::class.java)!!
     }
 

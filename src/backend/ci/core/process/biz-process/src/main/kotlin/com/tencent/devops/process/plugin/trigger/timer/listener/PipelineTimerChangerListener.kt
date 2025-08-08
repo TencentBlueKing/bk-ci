@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,9 +29,9 @@ package com.tencent.devops.process.plugin.trigger.timer.listener
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component
 class PipelineTimerChangerListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val schedulerManager: SchedulerManager
-) : BaseListener<PipelineTimerChangeEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTimerChangeEvent>(pipelineEventDispatcher) {
 
     private val jobBeanClass = PipelineQuartzJob::class.java
 
@@ -64,12 +64,27 @@ class PipelineTimerChangerListener @Autowired constructor(
         try {
             crontabExpressions.forEach { crontab ->
                 val md5 = DigestUtils.md5Hex(crontab)
+                // 旧的定时任务Key,功能发布后残留的job
                 val comboKey = "${pipelineId}_${md5}_${event.projectId}"
                 if (schedulerManager.checkExists(comboKey)) {
+                    logger.info("clear residual scheduled tasks|jobKey=[$comboKey]")
                     schedulerManager.deleteJob(comboKey)
                 }
+                // 新的定时任务Key
+                val taskComboKey = "${pipelineId}_${md5}_${event.projectId}_${event.taskId}"
+                if (schedulerManager.checkExists(taskComboKey)) {
+                    schedulerManager.deleteJob(taskComboKey)
+                }
                 if (ActionType.REFRESH == (event.actionType)) {
-                    val success = schedulerManager.addJob(comboKey, crontab, jobBeanClass)
+                    val success = schedulerManager.addJob(
+                        key = taskComboKey,
+                        cronExpression = crontab,
+                        jobBeanClass = jobBeanClass,
+                        projectId = event.projectId,
+                        pipelineId = pipelineId,
+                        taskId = event.taskId ?: "",
+                        md5 = md5
+                    )
                     logger.info("[$pipelineId]|TimerChange|crontab=$crontab|success=$success")
                 }
             }

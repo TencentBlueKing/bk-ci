@@ -1,7 +1,10 @@
 <template>
     <main class="pipeline-list-main">
-        <div class="recycle-bin-header" v-if="isDeleteView">
-            <h5>{{$t('restore.recycleBin')}}</h5>
+        <div
+            class="recycle-bin-header"
+            v-if="isDeleteView"
+        >
+            <h5>{{ $t('restore.recycleBin') }}</h5>
             <bk-input
                 clearable
                 :placeholder="$t('restore.restoreSearchTips')"
@@ -14,12 +17,22 @@
         </div>
         <template v-else>
             <h5 class="current-pipeline-group-name">
-                <bk-tag v-bk-tooltips="pipelineGroupType.tips" v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType.label }}</bk-tag>
-                <span>{{currentViewName}}</span>
+                <bk-tag
+                    v-bk-tooltips="pipelineGroupType.tips"
+                    v-if="pipelineGroupType"
+                    type="stroke"
+                >
+                    {{ pipelineGroupType.label }}
+                </bk-tag>
+                <ArchiveViewName v-if="isArchiveView" />
+                <span v-else>{{ currentViewName }}</span>
             </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
-                    <bk-dropdown-menu trigger="click">
+                    <bk-dropdown-menu
+                        v-if="!isArchiveView"
+                        trigger="click"
+                    >
                         <bk-button
                             v-perm="{
                                 hasPermission: hasCreatePermission,
@@ -35,15 +48,27 @@
                             icon="plus"
                             slot="dropdown-trigger"
                         >
-                            {{$t('newlist.addPipeline')}}
+                            {{ $t('newlist.addPipeline') }}
                         </bk-button>
-                        <ul class="bk-dropdown-list" slot="dropdown-content">
-                            <li v-for="(item, index) of newPipelineDropdown" :key="index">
-                                <a href="javascript:;" @click="item.action">{{ item.text }}</a>
+                        <ul
+                            class="bk-dropdown-list"
+                            slot="dropdown-content"
+                        >
+                            <li
+                                v-for="(item, index) of newPipelineDropdown"
+                                :key="index"
+                            >
+                                <a
+                                    href="javascript:;"
+                                    @click="item.action"
+                                >{{ item.text }}</a>
                             </li>
                         </ul>
                     </bk-dropdown-menu>
-                    <span v-bk-tooltips="noManagePermissionTips">
+                    <span
+                        v-if="!isArchiveView"
+                        v-bk-tooltips="noManagePermissionTips"
+                    >
                         <bk-button
                             v-perm="{
                                 hasPermission: !canNotMangeProjectedGroup,
@@ -59,60 +84,89 @@
                             :disabled="isPacGroup"
                             @click="handleAddToGroup"
                         >
-                            {{$t('pipelineCountEdit')}}
+                            {{ $t('pipelineCountEdit') }}
                         </bk-button>
                     </span>
-                    <bk-button @click="goPatchManage">{{$t('patchManage')}}</bk-button>
+                    <bk-button @click="goPatchManage">{{ $t('patchManage') }}</bk-button>
                 </div>
                 <div class="pipeline-list-main-header-right-area">
                     <pipeline-searcher
                         v-if="allPipelineGroup.length"
                         v-model="filters"
+                        :is-archive-view="isArchiveView"
                     />
-                    <bk-dropdown-menu trigger="click" class="pipeline-sort-dropdown-menu" align="right">
-                        <template slot="dropdown-trigger">
-                            <bk-button class="icon-button">
-                                <logo :name="currentSortIconName" size="12" />
-                            </bk-button>
-                        </template>
-                        <ul class="bk-dropdown-list" slot="dropdown-content">
-                            <li
-                                v-for="item in sortList"
-                                :key="item.id"
-                                :active="item.active"
-                                @click="changeSortType(item.id)"
+                    <template v-if="!isArchiveView">
+                        <bk-dropdown-menu
+                            trigger="click"
+                            class="pipeline-sort-dropdown-menu"
+                            align="right"
+                        >
+                            <template slot="dropdown-trigger">
+                                <bk-button class="icon-button">
+                                    <logo
+                                        :name="currentSortIconName"
+                                        size="12"
+                                    />
+                                </bk-button>
+                            </template>
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
                             >
-                                <a class="pipeline-sort-item" href="javascript:;">
-                                    {{ item.name }}
-                                    <logo class="pipeline-sort-item-icon" :name="item.sortIcon" size="12" />
-                                </a>
-                            </li>
-                        </ul>
-                    </bk-dropdown-menu>
-                    <div class="bk-button-group">
-                        <bk-button
-                            :class="{
-                                'icon-button': true,
-                                'is-selected': isTableLayout
-                            }"
-                            @click="switchLayout('table')"
-                        >
-                            <logo name="list" size="14" />
-                        </bk-button>
-                        <bk-button
-                            :class="{
-                                'icon-button': true,
-                                'is-selected': isCardLayout
-                            }"
-                            @click="switchLayout('card')"
-                        >
-                            <logo name="card" size="14" />
-                        </bk-button>
-                    </div>
+                                <li
+                                    v-for="item in sortList"
+                                    :key="item.id"
+                                    :active="item.active"
+                                    @click="changeSortType(item.id)"
+                                >
+                                    <a
+                                        class="pipeline-sort-item"
+                                        href="javascript:;"
+                                    >
+                                        {{ item.name }}
+                                        <logo
+                                            class="pipeline-sort-item-icon"
+                                            :name="item.sortIcon"
+                                            size="12"
+                                        />
+                                    </a>
+                                </li>
+                            </ul>
+                        </bk-dropdown-menu>
+                        <div class="bk-button-group">
+                            <bk-button
+                                :class="{
+                                    'icon-button': true,
+                                    'is-selected': isTableLayout
+                                }"
+                                @click="switchLayout('table')"
+                            >
+                                <logo
+                                    name="list"
+                                    size="14"
+                                />
+                            </bk-button>
+                            <bk-button
+                                :class="{
+                                    'icon-button': true,
+                                    'is-selected': isCardLayout
+                                }"
+                                @click="switchLayout('card')"
+                            >
+                                <logo
+                                    name="card"
+                                    size="14"
+                                />
+                            </bk-button>
+                        </div>
+                    </template>
                 </div>
             </header>
         </template>
-        <div class="pipeline-list-box" ref="tableBox">
+        <div
+            class="pipeline-list-box"
+            ref="tableBox"
+        >
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
@@ -124,7 +178,6 @@
                 :filter-params="filters"
                 ref="pipelineBox"
             />
-
         </div>
         <add-to-group-dialog
             :add-to-dialog-show="pipelineActionState.addToDialogShow"
@@ -169,6 +222,18 @@
             :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
             @done="refresh"
         />
+        <archive-dialog
+            :is-archive-dialog-show="pipelineActionState.isArchiveDialogShow"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="refresh"
+            @cancel="closeArchiveDialog"
+        />
+        <delete-archived-dialog
+            :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="refresh"
+            @cancel="closeDeleteArchiveDialog"
+        />
     </main>
 </template>
 <script>
@@ -184,11 +249,15 @@
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapState } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
+    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
     import { ADD_TO_PIPELINE_GROUP, bus } from '@/utils/bus'
@@ -213,6 +282,9 @@
             PipelineSearcher,
             ImportPipelinePopup,
             PipelineGroupEditDialog,
+            ArchiveViewName,
+            ArchiveDialog,
+            DeleteArchivedDialog,
             DisableDialog
         },
         mixins: [piplineActionMixin],
@@ -254,6 +326,9 @@
             },
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
+            },
+            isArchiveView () {
+                return this.$route.params.viewId === ARCHIVE_VIEW_ID
             },
             isTableLayout () {
                 return this.isDeleteView || this.layout === TABLE_LAYOUT
@@ -474,11 +549,6 @@
         align-items: center;
         > h5 {
             color: #313238;
-        }
-    }
-    .pipeline-list-main-header {
-        .bk-dropdown-menu {
-            top: -1px;
         }
     }
     .pipeline-sort-dropdown-menu {

@@ -1,5 +1,8 @@
 <template>
-    <section class="bk-form bk-form-vertical" v-if="isCorrectFormat">
+    <section
+        class="bk-form bk-form-vertical"
+        v-if="isCorrectFormat"
+    >
         <template v-if="!paramsGroupSort.length">
             <template v-for="(group, groupKey) in paramsGroupMap">
                 <template v-if="groupKey === 'rootProps'">
@@ -28,14 +31,23 @@
                             />
                             <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                         </form-field>
-
                     </template>
-
                 </template>
-                <accordion v-else show-checkbox :show-content="group.isExpanded" :key="groupKey">
-                    <header class="var-header" slot="header">
+                <accordion
+                    v-else
+                    show-checkbox
+                    :show-content="group.isExpanded"
+                    :key="groupKey"
+                >
+                    <header
+                        class="var-header"
+                        slot="header"
+                    >
                         <span>{{ group.label }}</span>
-                        <i class="devops-icon icon-angle-down" style="display: block"></i>
+                        <i
+                            class="devops-icon icon-angle-down"
+                            style="display: block"
+                        ></i>
                     </header>
                     <div slot="content">
                         <template v-for="(obj, key) in group.props">
@@ -70,10 +82,21 @@
         </template>
         <template v-else>
             <template v-for="(group, groupKey) in paramsGroupMap">
-                <accordion v-if="group.isInputGroup && rely(group, atomValue)" show-checkbox :show-content="group.isExpanded" :key="groupKey">
-                    <header class="var-header" slot="header">
+                <accordion
+                    v-if="group.isInputGroup && rely(group, atomValue)"
+                    show-checkbox
+                    :show-content="group.isExpanded"
+                    :key="groupKey"
+                >
+                    <header
+                        class="var-header"
+                        slot="header"
+                    >
                         <span>{{ group.label }}</span>
-                        <i class="devops-icon icon-angle-down" style="display: block"></i>
+                        <i
+                            class="devops-icon icon-angle-down"
+                            style="display: block"
+                        ></i>
                     </header>
                     <div slot="content">
                         <template v-for="(obj, key) in group.props">
@@ -124,14 +147,18 @@
                             v-validate.initial="Object.assign({}, group.rule, { required: !!group.required })"
                             :handle-change="handleUpdatePreviewInput"
                             :value="atomValue[groupKey]"
-                            v-bind="group" :placeholder="getPlaceholder(group, atomValue)"
+                            v-bind="group"
+                            :placeholder="getPlaceholder(group, atomValue)"
                         />
                         <route-tips v-bind="getComponentTips(group, atomValue)"></route-tips>
                     </form-field>
                 </template>
             </template>
         </template>
-        <atom-output :element="{}" :atom-props-model="atomPropsModel" />
+        <atom-output
+            :element="{}"
+            :atom-props-model="atomPropsModel"
+        />
     </section>
     <section v-else>
         <div class="empty-tips">{{ emptyTips }}</div>

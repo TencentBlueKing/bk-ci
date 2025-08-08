@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.webhook.pojo.event.commit
 
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 import org.slf4j.MDC
@@ -34,10 +35,10 @@ import org.slf4j.MDC
 @SuppressWarnings("LongParameterList")
 open class ICodeWebhookEvent(
     open val requestContent: String,
-    open val retryTime: Int,
-    open val delayMills: Int,
+    override var retryTime: Int,
+    override var delayMills: Int,
     open val commitEventType: CommitEventType,
     open var traceId: String? = MDC.get(TraceTag.BIZID),
     open val event: String? = null,
     open val secret: String? = null
-)
+) : IEvent()

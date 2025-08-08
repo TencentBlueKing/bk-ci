@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -54,6 +54,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
@@ -67,7 +68,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -89,7 +90,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
             val repo = getRepo(projectId, repositoryConfig)
             val (isOauth, token, type) = when (repo) {
                 is CodeGitRepository -> {
-                    val isOauth = repo.credentialId.isEmpty()
+                    val isOauth = repo.authType == RepoAuthType.OAUTH
                     val token = if (isOauth) {
                         getAccessToken(repo.userName).first
                     } else {
@@ -98,7 +99,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     Triple(isOauth, token, ScmType.CODE_GIT)
                 }
                 is CodeTGitRepository -> {
-                    val isOauth = repo.credentialId.isEmpty()
+                    val isOauth = repo.authType == RepoAuthType.OAUTH
                     val token = if (isOauth) {
                         getTGitAccessToken(repo.userName).first
                     } else {

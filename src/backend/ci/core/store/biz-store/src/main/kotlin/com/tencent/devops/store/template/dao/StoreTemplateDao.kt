@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -232,12 +232,13 @@ class StoreTemplateDao {
         val tTemplate = TTemplate.T_TEMPLATE
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val templateStatusList = listOf(TemplateStatusEnum.UNDERCARRIAGED.status.toByte())
-        return dslContext.selectCount().from(tTemplate).join(tStoreProjectRel)
+        return dslContext.select(DSL.countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tTemplate)
+            .join(tStoreProjectRel)
             .on(tTemplate.TEMPLATE_CODE.eq(tStoreProjectRel.STORE_CODE))
             .where(
                 tTemplate.TEMPLATE_STATUS.`in`(templateStatusList)
                     .and(tTemplate.CLASSIFY_ID.eq(classifyId))
-            )
-            .fetchOne(0, Int::class.java)!!
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
+            ).fetchOne(0, Int::class.java)!!
     }
 }

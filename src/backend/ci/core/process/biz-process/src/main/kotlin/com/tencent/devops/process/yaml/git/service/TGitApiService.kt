@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service
 class TGitApiService @Autowired constructor(
@@ -287,15 +287,24 @@ class TGitApiService @Autowired constructor(
         }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
     }
 
-    override fun checkPushPermission(userId: String, cred: PacGitCred, gitProjectId: String): Boolean {
+    override fun checkPushPermission(
+        userId: String,
+        cred: PacGitCred,
+        gitProjectId: String,
+        authUserId: String
+    ): Boolean {
         return try {
-            val member = client.get(ServiceGitResource::class).getProjectMembersAll(
+            val members = client.get(ServiceGitResource::class).getProjectMembersAll(
                 gitProjectId = gitProjectId,
-                search = userId,
+                search = null,
                 tokenType = TokenTypeEnum.OAUTH,
-                token = cred.toToken()
-            ).data?.find { it.username == userId }
-            member?.let { it.accessLevel >= GitAccessLevelEnum.DEVELOPER.level } ?: false
+                token = cred.toToken(),
+                pageSize = 1000
+            ).data?.filter {
+                it.username == userId || it.username == authUserId
+            }
+            // 操作人和代码库授权人都必须有dev及以上权限
+            members?.all { it.accessLevel >= GitAccessLevelEnum.DEVELOPER.level } ?: false
         } catch (ignored: Throwable) {
             logger.warn("Failed to check push permission|$userId|$gitProjectId")
             false
@@ -314,13 +323,14 @@ class TGitApiService @Autowired constructor(
         targetAction: CodeTargetAction,
         pipelineId: String,
         pipelineName: String,
-        versionName: String?
+        versionName: String?,
+        targetBranch: String?
     ): PacGitPushResult {
         val token = cred.toToken()
-        val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
-            defaultBranch
-        } else {
-            versionName!!
+        val branchName = when {
+            targetAction == CodeTargetAction.COMMIT_TO_MASTER -> defaultBranch
+            targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> defaultBranch
+            else -> versionName!!
         }
         createBranch(
             userId = userId,
@@ -342,8 +352,9 @@ class TGitApiService @Autowired constructor(
             content = content,
             commitMessage = commitMessage
         )
-        val mrUrl = if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
-            targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
+        val mrUrl = if (
+            targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE ||
+            targetAction == CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
         ) {
             createYamlMergeRequest(
                 userId = userId,

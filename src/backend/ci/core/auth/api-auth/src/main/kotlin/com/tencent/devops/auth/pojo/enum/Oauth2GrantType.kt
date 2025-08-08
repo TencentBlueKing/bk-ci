@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,9 @@ enum class Oauth2GrantType(val grantType: String) {
 
     // 客户端模式
     CLIENT_CREDENTIALS("client_credentials"),
+
+    // 密码模式
+    PASS_WORD("pass_word"),
 
     // 刷新token模式
     REFRESH_TOKEN("refresh_token");

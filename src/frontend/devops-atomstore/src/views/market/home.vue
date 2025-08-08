@@ -1,13 +1,36 @@
 <template>
-    <article class="market-home" v-bkloading="{ isLoading }">
-        <swiper class="home-swiper" :pics="pics" v-if="!isLoading"></swiper>
-        <section class="home-main" v-if="!isLoading">
-            <hgroup v-for="cardGroup in cardGroups" :key="cardGroup.key" class="main-group">
+    <article
+        class="market-home"
+        v-bkloading="{ isLoading }"
+    >
+        <swiper
+            class="home-swiper"
+            :pics="pics"
+            v-if="!isLoading"
+        ></swiper>
+        <section
+            class="home-main"
+            v-if="!isLoading"
+        >
+            <hgroup
+                v-for="cardGroup in cardGroups"
+                :key="cardGroup.key"
+                class="main-group"
+            >
                 <h3 class="main-title">
-                    <span>{{cardGroup.label}}</span>
-                    <span v-if="cardGroup.records.length >= 8" class="title-route" @click="showMore(cardGroup.key)"> {{ $t('store.显示全部') }} </span>
+                    <span>{{ cardGroup.label }}</span>
+                    <span
+                        v-if="cardGroup.records.length >= 8"
+                        class="title-route"
+                        @click="showMore(cardGroup.key)"
+                    > {{ $t('store.显示全部') }} </span>
                 </h3>
-                <card v-for="(card, index) in cardGroup.records" :key="index" :atom="card" class="main-card"></card>
+                <card
+                    v-for="(card, index) in cardGroup.records"
+                    :key="index"
+                    :atom="card"
+                    class="main-card"
+                ></card>
                 <empty v-if="cardGroup.records <= 0"></empty>
             </hgroup>
         </section>

@@ -1,30 +1,62 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
-        <h3 class="list-type" v-bk-clickoutside="closeOrderList">
-            <span class="list-count"> {{ $t('store.总数 :') }} <strong>{{count}}</strong></span>
+        <h3
+            class="list-type"
+            v-bk-clickoutside="closeOrderList"
+        >
+            <span class="list-count"> {{ $t('store.总数 :') }} <strong>{{ count }}</strong></span>
             <span class="list-sort"> {{ $t('store.排序：') }} </span>
-            <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
-            <ul class="list-menu" v-show="showOrderList">
-                <li v-for="(order, index) in orderList" :key="index" @click.stop="chooseOrderType(order)">{{ order.name }}</li>
+            <span
+                :class="[{ 'show-type': showOrderList }, 'list-order']"
+                @click.stop="showOrderList = !showOrderList"
+            >{{ orderType.name }}</span>
+            <ul
+                class="list-menu"
+                v-show="showOrderList"
+            >
+                <li
+                    v-for="(order, index) in orderList"
+                    :key="index"
+                    @click.stop="chooseOrderType(order)"
+                >
+                    {{ order.name }}
+                </li>
             </ul>
         </h3>
 
-        <hgroup class="list-cards" v-if="!isLoading">
-            <card v-for="card in cards" :key="card.atomCode" :atom="card" :has-summary="true" class="list-card"></card>
+        <hgroup
+            class="list-cards"
+            v-if="!isLoading"
+        >
+            <card
+                v-for="card in cards"
+                :key="card.atomCode"
+                :atom="card"
+                :has-summary="true"
+                class="list-card"
+            ></card>
         </hgroup>
-        <div class="g-empty list-empty" v-if="cards.length <= 0">
+        <div
+            class="g-empty list-empty"
+            v-if="cards.length <= 0"
+        >
             <p style="margin-top: 50px;"> {{ $t('store.没找到相关结果') }} </p>
             <div class="empty-tips">
                 {{ $t('store.可以尝试 调整关键词 或') }}
-                <button class="bk-text-button" @click="handleClear">{{$t('store.清空筛选条件')}}</button>
+                <button
+                    class="bk-text-button"
+                    @click="handleClear"
+                >
+                    {{ $t('store.清空筛选条件') }}
+                </button>
             </div>
         </div>
     </article>
 </template>
 
 <script>
-    import eventBus from '@/utils/eventBus.js'
     import card from '@/components/common/card'
+    import eventBus from '@/utils/eventBus.js'
 
     export default {
         components: {
@@ -109,15 +141,16 @@
             },
 
             getListData (isReset = false) {
-                this.isLoadingMore = true
                 const { searchStr, classifyKey, classifyValue, score, features, pipeType } = this.$route.query || {}
 
-                const featureObj = {}
+                let featureObj = {}
                 if (features) {
                     const featuresArray = features.split(';')
                     featuresArray.forEach((feature) => {
                         feature = feature.split('-')
-                        featureObj[feature[0]] = feature[1]
+                        featureObj = {
+                            [feature[0]]: feature[1]
+                        }
                     })
                 }
 
@@ -127,16 +160,20 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     keyword: searchStr,
-                    ...featureObj
+                    ...featureObj,
+                    ...(classifyValue !== 'all' ? { [classifyKey]: classifyValue } : {})
                 }
-                if (classifyValue !== 'all') postData[classifyKey] = classifyValue
 
                 const apiFun = {
                     atom: () => this.$store.dispatch('store/requestMarketAtom', postData),
                     template: () => this.$store.dispatch('store/requestMarketTemplate', postData),
                     image: () => this.$store.dispatch('store/requestMarketImage', postData)
                 }
-
+                if (Object.hasOwnProperty.call(apiFun, pipeType) === false) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+                this.isLoadingMore = true
                 apiFun[pipeType]().then((res) => {
                     this.cards = isReset ? res.records : this.cards.concat(res.records || [])
                     this.count = res.count || 0

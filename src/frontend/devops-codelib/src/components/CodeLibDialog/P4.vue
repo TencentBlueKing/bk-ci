@@ -3,7 +3,8 @@
         ref="form"
         :label-width="120"
         :model="codelib"
-        :rules="formRules">
+        :rules="formRules"
+    >
         <bk-form-item
             label="p4 port"
             :required="true"
@@ -15,7 +16,10 @@
                 v-model.trim="codelib.url"
             >
             </bk-input>
-            <span class="error-tips" v-if="urlErrMsg">
+            <span
+                class="error-tips"
+                v-if="urlErrMsg"
+            >
                 {{ urlErrMsg }}
             </span>
         </bk-form-item>
@@ -52,9 +56,13 @@
                     v-for="(option, index) in credentialList"
                     :key="option.credentialId"
                     :id="option.credentialId"
-                    :name="option.credentialId">
-                    <span class="name" :title="option.credentialId">
-                        {{option.credentialId}}
+                    :name="option.credentialId"
+                >
+                    <span
+                        class="name"
+                        :title="option.credentialId"
+                    >
+                        {{ option.credentialId }}
                     </span>
                     <i
                         class="devops-icon icon-edit2 cre-icon"
@@ -63,7 +71,10 @@
                     </i>
                 </bk-option>
             </bk-select>
-            <span class="add-cred-btn" @click="addCredential">{{ $t('codelib.new') }}</span>
+            <span
+                class="add-cred-btn"
+                @click="addCredential"
+            >{{ $t('codelib.new') }}</span>
         </bk-form-item>
     </bk-form>
 </template>

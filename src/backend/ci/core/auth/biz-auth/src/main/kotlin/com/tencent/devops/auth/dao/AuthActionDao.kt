@@ -48,15 +48,14 @@ class AuthActionDao {
         dslContext: DSLContext,
         authActionI18nMap: Map<String, String>
     ) {
-        dslContext.batch(
-            authActionI18nMap.map {
-                with(TAuthAction.T_AUTH_ACTION) {
-                    dslContext.update(this)
-                        .set(ACTION_NAME, it.value)
-                        .set(UPDATE_TIME, LocalDateTime.now())
-                        .where(ACTION.eq(it.key))
-                }
+        authActionI18nMap.forEach {
+            with(TAuthAction.T_AUTH_ACTION) {
+                dslContext.update(this)
+                    .set(ACTION_NAME, it.value)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ACTION.eq(it.key))
+                    .execute()
             }
-        ).execute()
+        }
     }
 }

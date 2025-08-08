@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -56,10 +56,10 @@ class MigrateV0PolicyServiceTest : AbMigratePolicyServiceTest() {
             migrateIamApiService = migrateIamApiService,
             authResourceCodeConverter = authResourceCodeConverter,
             permissionService = permissionService,
-            rbacCacheService = rbacCacheService,
+            rbacCommonService = rbacCommonService,
             authMigrationDao = authMigrationDao,
             deptService = deptService,
-            permissionGroupPoliciesService = permissionGroupPoliciesService,
+            permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
             permissionResourceMemberService = permissionResourceMemberService
         ),
         recordPrivateCalls = true

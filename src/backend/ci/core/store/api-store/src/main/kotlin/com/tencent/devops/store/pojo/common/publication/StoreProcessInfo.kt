@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.common.publication
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "插件发布进度信息")
+@Schema(title = "组件发布进度信息")
 data class StoreProcessInfo(
     @get:Schema(title = "发布进度流程操作权限", required = false)
     var opPermission: Boolean? = null,

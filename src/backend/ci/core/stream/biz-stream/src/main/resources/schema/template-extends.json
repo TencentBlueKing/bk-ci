@@ -482,6 +482,10 @@
                             "type" : "string"
                           }
                         }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
                       }
                     }
                   },
@@ -637,6 +641,12 @@
             },
             "description" : {
               "type" : "string"
+            },
+            "chat-id" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
             }
           }
         },
@@ -767,6 +777,10 @@
                             "type" : "string"
                           }
                         }
+                      },
+                      "image-pull-policy" : {
+                        "type" : "string",
+                        "pattern" : "(\\balways\\b|\\bif-not-present\\b)"
                       }
                     }
                   },
@@ -841,37 +855,35 @@
                       }, {
                         "type" : "string"
                       } ]
-                    },
-                    "properties" : {
-                      "include" : {
-                        "oneOf" : [ {
-                          "type" : "array",
-                          "items" : {
-                            "type" : "object",
-                            "additionalProperties" : {
-                              "anyOf" : [ {
-                                "type" : "string"
-                              }, {
-                                "type" : "number"
-                              }, {
-                                "type" : "boolean"
-                              } ]
-                            }
-                          }
-                        }, {
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "include" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object",
+                      "additionalProperties" : {
+                        "anyOf" : [ {
                           "type" : "string"
-                        } ]
-                      },
-                      "exclude" : {
-                        "oneOf" : [ {
-                          "type" : "array",
-                          "items" : {
-                            "type" : "object"
-                          }
                         }, {
-                          "type" : "string"
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
                         } ]
                       }
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "exclude" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object"
                     }
                   }, {
                     "type" : "string"
@@ -1051,10 +1063,7 @@
         }, {
           "type" : "boolean"
         }, {
-          "type" : "array",
-          "items" : {
-            "type" : "string"
-          }
+          "type" : "array"
         } ]
       }
     },

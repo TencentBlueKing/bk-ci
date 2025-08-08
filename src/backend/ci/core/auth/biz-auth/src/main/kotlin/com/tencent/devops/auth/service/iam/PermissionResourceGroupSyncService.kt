@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,6 +40,11 @@ interface PermissionResourceGroupSyncService {
     fun syncByCondition(projectConditionDTO: ProjectConditionDTO)
 
     /**
+     * 通过条件搜素项目，同步用户组过期时间
+     */
+    fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO)
+
+    /**
      * 批量同步项目下组和成员
      */
     fun batchSyncGroupAndMember(projectCodes: List<String>)
@@ -48,6 +53,11 @@ interface PermissionResourceGroupSyncService {
      * 同步项目下组和成员
      */
     fun syncGroupAndMember(projectCode: String)
+
+    /**
+     * 同步项目下组
+     */
+    fun syncProjectGroup(projectCode: String)
 
     /**
      * 获取项目的同步状态

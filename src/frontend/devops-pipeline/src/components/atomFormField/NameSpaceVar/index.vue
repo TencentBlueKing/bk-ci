@@ -2,20 +2,59 @@
     <div class="namespace-vars">
         <ul>
             <template v-if="paramList.length">
-                <li class="param-item" key="th">
+                <li
+                    class="param-item"
+                    key="th"
+                >
                     <span>{{ $t('editPage.atomForm.namespaceName') }}</span>
                     <span>{{ $t('editPage.atomForm.paramKey') }}</span>
                     <span>{{ $t('editPage.atomForm.paramValue') }}</span>
-                    <i style="visibility:hidden" class="devops-icon icon-minus" />
+                    <i
+                        style="visibility:hidden"
+                        class="devops-icon icon-minus"
+                    />
                 </li>
-                <li class="param-item" v-for="(param, index) in paramList" :key="index">
-                    <div><vuex-input name="namespace" :value="param.namespace" :handle-change="(name, value) => handleParamChange(name, value, index)" :data-vv-scope="`param-${index}`" v-validate.initial="`required`" /></div>
-                    <div><vuex-input name="varKey" :value="param.varKey" :handle-change="(name, value) => handleParamChange(name, value, index)" :data-vv-scope="`param-${index}`" v-validate.initial="`required`" /></div>
-                    <div><vuex-input name="varValue" :value="param.varValue" :handle-change="(name, value) => handleParamChange(name, value, index)" /></div>
-                    <i @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus hover-click" />
+                <li
+                    class="param-item"
+                    v-for="(param, index) in paramList"
+                    :key="index"
+                >
+                    <div>
+                        <vuex-input
+                            name="namespace"
+                            :value="param.namespace"
+                            :handle-change="(name, value) => handleParamChange(name, value, index)"
+                            :data-vv-scope="`param-${index}`"
+                            v-validate.initial="`required`"
+                        />
+                    </div>
+                    <div>
+                        <vuex-input
+                            name="varKey"
+                            :value="param.varKey"
+                            :handle-change="(name, value) => handleParamChange(name, value, index)"
+                            :data-vv-scope="`param-${index}`"
+                            v-validate.initial="`required`"
+                        />
+                    </div>
+                    <div>
+                        <vuex-input
+                            name="varValue"
+                            :value="param.varValue"
+                            :handle-change="(name, value) => handleParamChange(name, value, index)"
+                        />
+                    </div>
+                    <i
+                        @click.stop.prevent="editParam(index, false)"
+                        class="devops-icon icon-minus hover-click"
+                    />
                 </li>
             </template>
-            <a class="text-link hover-click" v-if="!disabled" @click.stop.prevent="editParam(paramList.length, true)">
+            <a
+                class="text-link hover-click"
+                v-if="!disabled"
+                @click.stop.prevent="editParam(paramList.length, true)"
+            >
                 <i class="devops-icon icon-plus-circle" />
                 <span>{{ $t('editPage.addParams') }}</span>
             </a>

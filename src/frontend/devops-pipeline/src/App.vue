@@ -28,7 +28,6 @@
         },
         watch: {
             '$route.fullPath' (val) { // 同步地址到蓝盾
-                console.log(val, 'fullPath')
                 this.$syncUrl(val.replace(/^\/pipeline\//, '/'))
             },
             fetchError (error) {
@@ -44,6 +43,7 @@
             }
         },
         created () {
+            console.log('debug')
             window.globalVue.$on('change::$currentProjectId', data => { // 蓝盾选择项目时切换
                 if (this.$route.params.projectId !== data.currentProjectId) {
                     if (this.stayCurrentPage.find(item => item === this.$route.name)) {
@@ -54,9 +54,6 @@
                 }
             })
 
-            // window.globalVue.$on('change::$userInfo', data => { // 获取人员信息
-            //     console.log('syncUserInfo', data)
-            // })
             window.globalVue.$on('order::backHome', data => { // 蓝盾选择项目时切换
                 this.goHome()
             })

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -41,10 +41,12 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.RepoCondition
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
@@ -65,7 +67,7 @@ class CodeTGitRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: IScmService,
     private val tGitOAuthService: TGitOAuthService,
-    private val credentialService: CredentialService,
+    private val credentialService: RepoCredentialService,
     private val scmOauthService: IScmOauthService
 ) : CodeRepositoryService<CodeTGitRepository> {
     override fun repositoryType(): String {
@@ -84,7 +86,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_TGIT,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.CODE_TGIT.name
             )
             // Git项目ID
             val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token)
@@ -95,7 +98,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                credentialType = credentialInfo.credentialType
             )
         }
         return repositoryId
@@ -127,7 +131,7 @@ class CodeTGitRepositoryService @Autowired constructor(
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         var gitProjectId: Long? = null
         // 需要更新gitProjectId
-        if (record.url != repository.url) {
+        if (record.url != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[${record.url}] " +
                     "targetUrl=[${repository.url}]"
@@ -154,7 +158,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                credentialType = credentialInfo.credentialType
             )
         }
     }
@@ -172,7 +177,9 @@ class CodeTGitRepositoryService @Autowired constructor(
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_TGIT.name,
+            credentialType = record.credentialType
         )
     }
 
@@ -326,6 +333,19 @@ class CodeTGitRepositoryService @Autowired constructor(
     ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+
+    override fun listByCondition(
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<Repository>? {
+        return repositoryCodeGitDao.listByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition,
+            limit = limit,
+            offset = offset
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeTGitRepositoryService::class.java)

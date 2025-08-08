@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -53,6 +53,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UP
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
@@ -79,7 +80,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -406,7 +407,9 @@ class GithubService @Autowired constructor(
         userId: String,
         projectId: String,
         refreshToken: Boolean?,
-        resetType: String?
+        resetType: String?,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
         val accessToken = if (refreshToken == true) {
@@ -420,7 +423,9 @@ class GithubService @Autowired constructor(
                 userId = userId,
                 repoHashId = null,
                 popupTag = "",
-                resetType = resetType
+                resetType = resetType,
+                specRedirectUrl = redirectUrl,
+                redirectUrlTypeEnum = redirectUrlType
             ).redirectUrl
         )
         // 校验token是否有效
@@ -434,7 +439,9 @@ class GithubService @Autowired constructor(
                     userId = userId,
                     repoHashId = null,
                     popupTag = "",
-                    resetType = resetType
+                    resetType = resetType,
+                    specRedirectUrl = redirectUrl,
+                    redirectUrlTypeEnum = redirectUrlType
                 ).redirectUrl
             )
         }

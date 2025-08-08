@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
@@ -44,15 +45,19 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.sdk.github.request.GetCommitRequest
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
@@ -515,5 +520,128 @@ class GitScmService @Autowired constructor(
                 url = url
             )
         ).data
+    }
+
+    /**
+     * 获取github commit 详情
+     */
+    fun getGithubCommitInfo(
+        githubRepoName: String,
+        commitId: String,
+        repo: Repository
+    ): CommitResponse? {
+        return try {
+            logger.info("get github commit info|repoName[$githubRepoName]|commit[$commitId]")
+            val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
+                userId = repo.userName
+            ).data?.accessToken ?: ""
+            val commitInfo = client.get(ServiceGithubCommitsResource::class).getCommit(
+                request = GetCommitRequest(
+                    repoName = githubRepoName,
+                    ref = commitId
+                ),
+                token = accessToken
+            ).data
+            commitInfo
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github commit request", ignored)
+            null
+        }
+    }
+
+    fun getCredential(projectId: String, credentialId: String?): Pair<Boolean, String>? {
+        if (credentialId.isNullOrBlank()) {
+            return false to ""
+        }
+        return try {
+            true to getCredential(
+                projectId = projectId,
+                credentialId = credentialId
+            )
+        } catch (ignored: Exception) {
+            logger.warn("Fail to get credential: $credentialId", ignored)
+            null
+        }
+    }
+
+    fun getTag(
+        projectId: String,
+        repo: Repository,
+        tagName: String
+    ): GitTagInfo? {
+        val type = getType(repo) ?: return null
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTagInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    tagName = tagName
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTagInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    tagName = tagName
+                ).data
+            }
+        } catch (e: Exception) {
+            logger.warn("fail to get tag info", e)
+            null
+        }
+    }
+
+    fun getTapdItem(
+        repo: Repository,
+        projectId: String,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        val type = getType(repo) ?: return listOf()
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } ?: listOf()
+        } catch (e: Exception) {
+            logger.warn("fail to get tapd item", e)
+            listOf()
+        }
     }
 }

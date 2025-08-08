@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.pojo.DependOnConfig
 import com.tencent.devops.process.constant.ProcessMessageCode
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 object DependOnUtils {

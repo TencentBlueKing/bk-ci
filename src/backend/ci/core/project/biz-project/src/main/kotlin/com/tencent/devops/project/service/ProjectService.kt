@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -47,8 +48,8 @@ import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -175,7 +176,14 @@ interface ProjectService {
         pageSize: Int
     ): Pagination<ProjectByConditionDTO>
 
-    fun list(userId: String): List<ProjectVO>
+    fun list(
+        userId: String,
+        productIds: String? = null,
+        channelCodes: String? = null,
+        sort: ProjectSortType? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): List<ProjectVO>
 
     fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
 
@@ -284,4 +292,11 @@ interface ProjectService {
         userId: String,
         englishName: String
     ): Boolean
+
+    fun updatePluginDetailsDisplay(
+        englishName: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Boolean
+
+    fun getPipelineDialect(projectId: String): String
 }

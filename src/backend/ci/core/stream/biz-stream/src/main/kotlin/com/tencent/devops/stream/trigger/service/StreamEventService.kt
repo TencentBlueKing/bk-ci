@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,7 +38,6 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamGitProjectInfoCache
-import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
@@ -60,7 +59,6 @@ class StreamEventService @Autowired constructor(
     private val gitCheckService: GitCheckService,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val userMessageConsumer: UserMessageConsumer
@@ -176,19 +174,13 @@ class StreamEventService @Autowired constructor(
             branch = branch
         )
 
-        if (saveUserMessage(
-                userId = userId,
-                projectCode = projectCode,
-                event = event,
-                gitProjectId = gitProjectId,
-                messageType = UserMessageType.REQUEST
-            )
-        ) {
-            websocketService.pushNotifyWebsocket(
-                userId,
-                GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
-            )
-        }
+        saveUserMessage(
+            userId = userId,
+            projectCode = projectCode,
+            event = event,
+            gitProjectId = gitProjectId,
+            messageType = UserMessageType.REQUEST
+        )
         return messageId
     }
 

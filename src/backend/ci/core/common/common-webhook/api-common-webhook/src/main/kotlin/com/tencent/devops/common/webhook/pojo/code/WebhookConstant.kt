@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -195,3 +195,6 @@ const val BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID = "BK_CI_REPO_GIT_WEBHOOK_NOTE_AUTH
 const val BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT = "BK_CI_REPO_GIT_WEBHOOK_NOTE_CREATED_AT"
 const val BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT = "BK_CI_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT"
 const val BK_REPO_GIT_WEBHOOK_NOTE_URL = "BK_CI_REPO_GIT_WEBHOOK_NOTE_URL"
+
+const val BK_REPO_SOURCE_WEBHOOK = "BK_CI_REPO_SOURCE_WEBHOOK"
+const val BK_REPO_GIT_WEBHOOK_TIMESTAMP_SUFFIX = "TIMESTAMP"

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -56,7 +56,7 @@ import java.time.LocalDateTime
  */
 @Suppress("ALL")
 @Service("ATOM_CLASSIFY_SERVICE")
-class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassifyService, AbstractClassifyService() {
+class MarketAtomClassifyServiceImpl : MarketAtomClassifyService, AbstractClassifyService() {
 
     private val logger = LoggerFactory.getLogger(MarketAtomClassifyServiceImpl::class.java)
 
@@ -121,7 +121,7 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
         }
     }
 
-    override fun getDeleteClassifyFlag(classifyId: String): Boolean {
+    override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
         // 允许删除分类是条件：1、该分类下的原子插件都不处于上架状态 2、该分类下的原子插件如果处于下架中或者已下架状态但已经没人在用
         var flag = false
         val releaseAtomNum = atomDao.countReleaseAtomNumByClassifyId(dslContext, classifyId)

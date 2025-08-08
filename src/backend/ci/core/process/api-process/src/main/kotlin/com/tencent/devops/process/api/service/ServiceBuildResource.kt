@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,15 +34,18 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -60,17 +63,17 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_BUILD", description = "服务-构建资源")
 @Path("/service/builds")
@@ -89,6 +92,18 @@ interface ServiceBuildResource {
         @QueryParam("buildId")
         buildId: String
     ): Result<String>
+
+    @Operation(summary = "通过buildId获取流水线版本")
+    @GET
+    @Path("/{projectId}/get_pipeline_version_from_build_id")
+    fun getPipelineVersionFromBuildId(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<Int>
 
     @Operation(summary = "通过buildNumber 和 pipelineId 获取流水线buildId")
     @GET
@@ -631,6 +646,7 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchStatus")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    @Deprecated("use batchGetBuildStatus instead")
     fun getBatchBuildStatus(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
@@ -644,6 +660,31 @@ interface ServiceBuildResource {
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
         endBeginTime: String? = null
+    ): Result<List<BuildHistory>>
+
+    @Operation(summary = "批量获取构建详情")
+    @POST
+    @Path("/{projectId}/batchGetBuildStatus")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun batchGetBuildStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS,
+        @QueryParam("startBeginTime")
+        startBeginTime: String? = null,
+        @QueryParam("endBeginTime")
+        endBeginTime: String? = null,
+        @Parameter(description = "构建ID列表,最大不能超过100个", required = true)
+        buildIdSet: Set<String>
     ): Result<List<BuildHistory>>
 
     @Operation(summary = "获取流水线构建历史, 返回buildid")
@@ -911,4 +952,49 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>
+
+    @Operation(summary = "添加构建的容器耗时")
+    @POST
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateContainerTimeout")
+    fun updateContainerTimeout(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "containerId/vmSeqId")
+        @QueryParam("containerId")
+        containerId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        @BkField(required = true)
+        executeCount: Int,
+        @Parameter(description = "要写入的耗时", required = true)
+        @BkField(required = true)
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+    )
+
+    @Operation(summary = "获取最新构建")
+    @GET
+    @Path("projects/{projectId}/pipelines/{pipelineId}/Latest/build")
+    fun getLatestBuildInfo(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @QueryParam("debug")
+        @BkField(required = false)
+        debug: Boolean?
+    ): Result<BuildInfo?>
 }

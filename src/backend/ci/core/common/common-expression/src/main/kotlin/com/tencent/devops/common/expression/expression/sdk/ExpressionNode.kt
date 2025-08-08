@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -69,10 +69,14 @@ abstract class ExpressionNode : IExpressionNode {
 
     protected abstract val traceFullyRealized: Boolean
 
+    // 用来展示打印这个节点
+    protected open val formatValue: String? = null
+    open fun format() = formatValue ?: name
+
     override fun evaluate(
         trace: ITraceWriter?,
         state: Any?,
-        options: EvaluationOptions?,
+        options: EvaluationOptions,
         expressionOutput: ExpressionOutput?
     ): EvaluationResult {
         if (container != null) {
@@ -140,7 +144,7 @@ abstract class ExpressionNode : IExpressionNode {
     override fun subNameValueEvaluate(
         trace: ITraceWriter?,
         state: Any?,
-        options: EvaluationOptions?,
+        options: EvaluationOptions,
         subInfo: SubNameValueEvaluateInfo,
         expressionOutput: ExpressionOutput?
     ): SubNameValueEvaluateResult {

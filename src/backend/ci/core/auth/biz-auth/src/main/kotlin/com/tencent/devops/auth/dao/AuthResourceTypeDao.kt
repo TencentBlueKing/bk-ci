@@ -40,6 +40,14 @@ class AuthResourceTypeDao {
         if (authActionResourceTypes.isEmpty()) {
             return
         }
-        dslContext.batchUpdate(authActionResourceTypes).execute()
+        with(TAuthResourceType.T_AUTH_RESOURCE_TYPE) {
+            authActionResourceTypes.forEach {
+                dslContext.update(this)
+                    .set(NAME, it.name)
+                    .set(DESC, it.desc)
+                    .where(ID.eq(it.id))
+                    .execute()
+            }
+        }
     }
 }

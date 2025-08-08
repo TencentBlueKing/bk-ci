@@ -8,12 +8,25 @@
             :popover-width="222"
             @change="doSelectPipeline"
         >
-            <span class="pipeline-name-crumb-select-trigger" slot="trigger">
+            <span
+                class="pipeline-name-crumb-select-trigger"
+                slot="trigger"
+            >
                 <span @click="goHistory">{{ pipelineName }}</span>
-                <div class="pipeline-pac-indicator" @click.stop.prevent="">
-                    <pac-tag v-if="showPacTag && pacEnabled" :info="yamlInfo" />
+                <div
+                    class="pipeline-pac-indicator"
+                    @click.stop.prevent=""
+                >
+                    <pac-tag
+                        v-if="showPacTag && pacEnabled"
+                        :info="yamlInfo"
+                    />
                 </div>
-                <i @click.prevent v-bk-tooltips="$t('subpage.switchPipelineTooltips')" class="devops-icon icon-shift"></i>
+                <i
+                    @click.prevent
+                    v-bk-tooltips="$t('subpage.switchPipelineTooltips')"
+                    class="devops-icon icon-shift"
+                ></i>
             </span>
             <bk-option
                 v-for="pipeline in pipelineList"
@@ -60,6 +73,9 @@
             }),
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         created () {
@@ -79,6 +95,9 @@
                             ...this.$route.params,
                             type: 'history',
                             version: this.pipelineInfo?.releaseVersion
+                        },
+                        query: {
+                            ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                         }
                     })
                 }
@@ -107,7 +126,8 @@
                         params: {
                             projectId: $route.params.projectId,
                             pipelineId
-                        }
+                        },
+                        query: $route.query
                     })
                     // 清空搜索
                     const list = await this.search()
@@ -127,7 +147,8 @@
             search (searchName = '') {
                 return this.searchPipelineList({
                     projectId: this.$route.params.projectId,
-                    searchName
+                    searchName,
+                    archiveFlag: this.$route.query.archiveFlag
                 })
             },
             generatePipelineList (list, curPipeline) {

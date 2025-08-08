@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,20 +38,20 @@ import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PIPELINE_VIEW", description = "服务-流水线视图")
 @Path("/service/pipelineView/{projectId}")
@@ -198,4 +198,24 @@ interface ServicePipelineViewResource {
         isProject: Boolean?,
         pipelineView: PipelineViewForm
     ): Result<Boolean>
+
+    @Operation(summary = "根据流水线ID获取视图ID(流水线组ID)")
+    @GET
+    @Path("/pipelines/{pipelineId}/listViewIds")
+    fun listViewIdsByPipelineId(
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Set<Long>>
+
+    @Operation(summary = "根据视图ID获取流水线ID列表")
+    @POST
+    @Path("/pipelines/listPipelineIdByViewIds")
+    fun listPipelineIdByViewIds(
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "按视图过滤", required = false)
+        viewIdsEncode: List<String>
+    ): Result<List<String>>
 }

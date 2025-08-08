@@ -1,12 +1,19 @@
 <template>
-    <detail-container @close="$emit('close')"
+    <detail-container
+        @close="$emit('close')"
         :title="stage.name"
         :status="stage.status"
         :current-tab="currentTab"
     >
-        <span class="head-tab" slot="tab">
+        <span
+            class="head-tab"
+            slot="tab"
+        >
             <!-- <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span> -->
-            <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
+            <span
+                @click="currentTab = 'setting'"
+                :class="{ active: currentTab === 'setting' }"
+            >{{ $t('execDetail.setting') }}</span>
         </span>
         <template v-slot:content>
             <stage-log

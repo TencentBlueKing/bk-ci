@@ -1,8 +1,8 @@
 package com.tencent.devops.notify.tencentcloud.config
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.notify.dao.EmailNotifyDao
 import com.tencent.devops.notify.tencentcloud.service.inner.TencentCloudEmailServiceImpl
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -29,7 +29,7 @@ class TencentCloudEmailConfiguration {
     @Bean
     fun emailService(
         @Autowired emailNotifyDao: EmailNotifyDao,
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired eventDispatcher: SampleEventDispatcher,
         @Autowired configuration: TencentCloudConfiguration
-    ) = TencentCloudEmailServiceImpl(emailNotifyDao, rabbitTemplate, configuration)
+    ) = TencentCloudEmailServiceImpl(emailNotifyDao, eventDispatcher, configuration)
 }

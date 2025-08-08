@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -426,13 +426,8 @@ class RbacPermissionResourceService(
             return true
         }
         permissionSubsetManagerService.deleteSubsetManagerDefaultGroup(
-            subsetManagerId = resourceInfo.relationId.toInt(),
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        authResourceService.disable(
             userId = userId,
+            subsetManagerId = resourceInfo.relationId.toInt(),
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode

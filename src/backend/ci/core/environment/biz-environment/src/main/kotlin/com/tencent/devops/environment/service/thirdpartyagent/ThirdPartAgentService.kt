@@ -3,12 +3,19 @@ package com.tencent.devops.environment.service.thirdpartyagent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartAgentUpdateType
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.utils.ThirdAgentActionAddLock
 import com.tencent.devops.environment.utils.ThirdAgentUpdateEnvLock
 import org.jooq.DSLContext
@@ -25,7 +32,9 @@ class ThirdPartAgentService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val agentActionDao: ThirdPartyAgentActionDao,
-    private val agentDao: ThirdPartyAgentDao
+    private val agentDao: ThirdPartyAgentDao,
+    private val nodeDao: NodeDao,
+    private val environmentPermissionService: EnvironmentPermissionService
 ) {
     fun addAgentAction(
         projectId: String,
@@ -109,6 +118,18 @@ class ThirdPartAgentService @Autowired constructor(
             )
         }.ifEmpty { return false }
 
+        val nodeIds = agents.map { it.nodeId }.toSet()
+        val permissionNodeIds =
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.EDIT)
+        if (nodeIds.subtract(permissionNodeIds).isNotEmpty()) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+
         when (type ?: ThirdPartAgentUpdateType.UPDATE) {
             ThirdPartAgentUpdateType.ADD, ThirdPartAgentUpdateType.REMOVE -> {
                 agents.forEach { agent ->
@@ -133,10 +154,9 @@ class ThirdPartAgentService @Autowired constructor(
                         }
                         agentDao.saveAgentEnvs(
                             dslContext = dslContext,
-                            agentIds = agents.map { it.id }.toSet(),
+                            agentIds = setOf(agentId),
                             envStr = objectMapper.writeValueAsString(envs)
                         )
-                        return true
                     } finally {
                         lock.unlock()
                     }
@@ -154,6 +174,63 @@ class ThirdPartAgentService @Autowired constructor(
 
             else -> return false
         }
+        return true
+    }
+
+    fun updateAgentInfo(
+        userId: String,
+        projectId: String,
+        data: UpdateAgentInfo
+    ): Boolean {
+        if (data.nodeHashId.isNullOrBlank() && data.agentHashId.isNullOrBlank()) {
+            return false
+        }
+
+        val nodeId = if (data.nodeHashId.isNullOrBlank()) {
+            agentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(data.agentHashId!!), projectId)?.nodeId
+                ?: return false
+        } else {
+            HashUtil.decodeIdToLong(data.nodeHashId!!)
+        }
+
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+
+        dslContext.transaction { config ->
+            if (!data.displayName.isNullOrBlank()) {
+                nodeDao.updateDisplayName(
+                    dslContext = dslContext,
+                    nodeId = nodeId,
+                    nodeName = data.displayName!!,
+                    userId = userId,
+                    projectId = projectId
+                )
+            }
+            agentDao.updateAgentInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = if (data.agentHashId.isNullOrBlank()) {
+                    null
+                } else {
+                    HashUtil.decodeIdToLong(data.agentHashId!!)
+                },
+                nodeId = if (data.nodeHashId.isNullOrBlank()) {
+                    null
+                } else {
+                    HashUtil.decodeIdToLong(data.nodeHashId!!)
+                },
+                parallelTaskCount = data.parallelTaskCount,
+                dockerParallelTaskCount = data.dockerParallelTaskCount,
+                envs = data.envs
+            )
+        }
+
         return true
     }
 }

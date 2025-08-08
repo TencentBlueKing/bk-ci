@@ -1,14 +1,49 @@
 <template>
-    <accordion show-checkbox :show-content="enableMutual" key="otherChoice" is-version="true">
-        <header class="var-header" slot="header">
+    <accordion
+        show-checkbox
+        :show-content="enableMutual"
+        key="otherChoice"
+        is-version="true"
+    >
+        <header
+            class="var-header"
+            slot="header"
+        >
             <span>{{ $t('editPage.mutexGroup') }}</span>
             <!--<i class="devops-icon icon-angle-down" style="display:block"></i>-->
-            <input class="accordion-checkbox" :disabled="disabled" :checked="enableMutual" type="checkbox" @click.stop @change="toggleMutual" />
+            <input
+                class="accordion-checkbox"
+                :disabled="disabled"
+                :checked="enableMutual"
+                type="checkbox"
+                @click.stop
+                @change="toggleMutual"
+            />
         </header>
-        <div slot="content" class="bk-form bk-form-vertical" v-if="enableMutual">
+        <div
+            slot="content"
+            class="bk-form bk-form-vertical"
+            v-if="enableMutual"
+        >
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" v-if="!isHidden(obj, mutexGroup) && key !== 'enable' && enableMutual" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                    <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobMutual" :value="mutexGroup[key]" :disabled="disabled" v-bind="obj"></component>
+                <form-field
+                    :key="key"
+                    v-if="!isHidden(obj, mutexGroup) && key !== 'enable' && enableMutual"
+                    :desc="obj.desc"
+                    :required="obj.required"
+                    :label="obj.label"
+                    :is-error="errors.has(key)"
+                    :error-msg="errors.first(key)"
+                >
+                    <component
+                        :is="obj.component"
+                        :name="key"
+                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        :handle-change="handleUpdateJobMutual"
+                        :value="mutexGroup[key]"
+                        :disabled="disabled"
+                        v-bind="obj"
+                    ></component>
                 </form-field>
             </template>
         </div>

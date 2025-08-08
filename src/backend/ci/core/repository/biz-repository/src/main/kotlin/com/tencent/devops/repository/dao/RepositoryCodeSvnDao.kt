@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,15 +27,21 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeSvnRecord
+import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
+import org.jooq.Condition
 
 @Repository
 @Suppress("ALL")
@@ -46,8 +52,9 @@ class RepositoryCodeSvnDao {
         region: CodeSvnRegion?,
         projectName: String,
         userName: String,
-        privateToken: String,
-        svnType: String?
+        credentialId: String,
+        svnType: String?,
+        credentialType: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
@@ -60,17 +67,19 @@ class RepositoryCodeSvnDao {
                 CREDENTIAL_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
-                SVN_TYPE
+                SVN_TYPE,
+                CREDENTIAL_TYPE
             )
                 .values(
                     repositoryId,
                     region?.name ?: "",
                     projectName,
                     userName,
-                    privateToken,
+                    credentialId,
                     now,
                     now,
-                    svnType ?: ""
+                    svnType ?: "",
+                    credentialType
                 ).execute()
         }
     }
@@ -94,7 +103,8 @@ class RepositoryCodeSvnDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        svnType: String?
+        svnType: String?,
+        credentialType: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
@@ -105,6 +115,7 @@ class RepositoryCodeSvnDao {
                 .set(UPDATED_TIME, now)
                 .set(CREDENTIAL_ID, credentialId)
                 .set(SVN_TYPE, svnType ?: "")
+                .set(CREDENTIAL_TYPE, credentialType)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -144,5 +155,109 @@ class RepositoryCodeSvnDao {
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
+    }
+
+    fun updateCredentialType(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        credentialType: String
+    ): Int {
+        with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
+            return dslContext.update(this)
+                .set(CREDENTIAL_TYPE, credentialType)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun listByCondition(
+        dslContext: DSLContext,
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<CodeSvnRepository> {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN
+        val condition = buildCondition(t1, t2, repoCondition)
+
+        return dslContext.select(
+            t1.ALIAS_NAME,
+            t1.URL,
+            t2.CREDENTIAL_ID,
+            t2.PROJECT_NAME,
+            t2.USER_NAME,
+            t2.SVN_TYPE,
+            t1.PROJECT_ID,
+            t1.REPOSITORY_ID,
+            t1.ENABLE_PAC,
+            t1.YAML_SYNC_STATUS,
+            t1.SCM_CODE,
+            t2.CREDENTIAL_TYPE
+        ).from(t1)
+                .leftJoin(t2)
+                .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+                .where(condition)
+                .limit(limit)
+                .offset(offset)
+                .map {
+                    CodeSvnRepository(
+                        aliasName = it.value1(),
+                        url = it.value2(),
+                        credentialId = it.value3(),
+                        projectName = it.value4(),
+                        userName = it.value5(),
+                        svnType = it.value6(),
+                        projectId = it.value7(),
+                        repoHashId = HashUtil.encodeOtherLongId(it.value8()),
+                        enablePac = it.value9(),
+                        yamlSyncStatus = it.value10(),
+                        scmCode = it.value11() ?: ScmType.SCM_SVN.name,
+                        credentialType = it.value12()
+                    )
+                }
+    }
+
+    fun countByCondition(
+        dslContext: DSLContext,
+        repoCondition: RepoCondition
+    ): Long {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN
+        val condition = buildCondition(t1, t2, repoCondition)
+        return dslContext.selectCount()
+                .from(t1)
+                .leftJoin(t2)
+                .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+                .where(condition)
+                .fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    private fun buildCondition(
+        t1: TRepository,
+        t2: TRepositoryCodeSvn,
+        repoCondition: RepoCondition
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.IS_DELETED.eq(false))
+        with(repoCondition) {
+            if (!projectId.isNullOrEmpty()) {
+                conditions.add(t1.PROJECT_ID.eq(projectId))
+            }
+            if (!repoIds.isNullOrEmpty()) {
+                conditions.add(t1.REPOSITORY_ID.`in`(repoIds))
+            }
+            type?.let { conditions.add(t1.TYPE.eq(it.name)) }
+            if (!projectName.isNullOrEmpty()) {
+                conditions.add(t2.PROJECT_NAME.eq(projectName))
+            }
+            if (!oauthUserId.isNullOrEmpty()) {
+                conditions.add(t2.USER_NAME.eq(oauthUserId))
+            }
+            svnType?.let { t2.SVN_TYPE.eq(it) }
+            if (!scmCode.isNullOrEmpty()) {
+                conditions.add(t1.SCM_CODE.eq(scmCode))
+            }
+        }
+        return conditions
     }
 }

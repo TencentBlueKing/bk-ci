@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,18 +36,20 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_SCM_CODE_OAUTH", description = "Service Code Svn resource")
 @Path("/service/scm/oauth")
@@ -335,4 +337,49 @@ interface ServiceScmOauthResource {
         @QueryParam("crId")
         crId: Long
     ): Result<GitCommitReviewInfo?>
+
+    @Operation(summary = "获取指定 TAG")
+    @GET
+    @Path("getTagInfo")
+    fun getTagInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "tagName", required = true)
+        @QueryParam("tagName")
+        tagName: String
+    ): Result<GitTagInfo?>
+
+    @Operation(summary = "获取mr关联的tapd单")
+    @GET
+    @Path("getTapdWorkItems")
+    fun getTapdWorkItems(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "类型,可选mr,cr,issue")
+        @QueryParam("refType")
+        refType: String,
+        @Parameter(description = "iid,类型对应的iid")
+        @QueryParam("iid")
+        iid: Long
+    ): Result<List<TapdWorkItem>>
 }

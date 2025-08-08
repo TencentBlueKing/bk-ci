@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -54,7 +54,7 @@ class DispatchQueueControl @Autowired constructor(
 
     internal fun flushDispatchQueue(buildId: String, stageId: String) {
         // 构建启动和结束时，分别清空一次队列
-        LOG.info("ENGINE|$buildId|FLUSH_CONTAINER_QUEUE")
+        LOG.info("ENGINE|$buildId|s($stageId)|FLUSH_CONTAINER_QUEUE")
         redisOperation.delete(getDispatchQueueKey(buildId, stageId))
     }
 

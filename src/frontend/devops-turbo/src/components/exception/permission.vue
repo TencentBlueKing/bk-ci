@@ -1,5 +1,8 @@
 <template>
-    <bk-exception class="exception-wrap-item" type="403">
+    <bk-exception
+        class="exception-wrap-item"
+        type="403"
+    >
         <span>{{ message }}</span>
     </bk-exception>
 </template>

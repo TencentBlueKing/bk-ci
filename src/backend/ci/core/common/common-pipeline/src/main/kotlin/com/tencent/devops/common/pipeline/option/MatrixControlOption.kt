@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,8 +36,8 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import io.swagger.v3.oas.annotations.media.Schema
-import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
 
 /**
  *  构建矩阵配置项
@@ -72,7 +72,7 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置
      */
-    fun convertMatrixConfig(buildContext: Map<String, String>, asCodeEnabled: Boolean? = false): MatrixConfig {
+    fun convertMatrixConfig(buildContext: Map<String, String>): MatrixConfig {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
             convertStrategyYaml(buildContext)
@@ -85,8 +85,7 @@ data class MatrixControlOption(
         return matrixConfig
     }
 
-    fun convertMatrixToYamlConfig(): Any? {
-        val result = mutableMapOf<String, Any>()
+    fun convertMatrixToYamlStrategy(): Any? {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
             convertStrategyYaml(emptyMap())
@@ -94,30 +93,25 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             return strategyStr
         }
-        result.putAll(matrixConfig.strategy ?: emptyMap())
-        with(matrixConfig.include ?: mutableListOf()) {
-            try {
-                this.addAll(convertCase(includeCaseStr))
-                if (this.size > 0) {
-                    result["include"] = this
-                }
-            } catch (e: Exception) {
-                logger.warn("this because of formJSON:${e.message}")
-                result["include"] = includeCaseStr ?: return@with
-            }
+        return matrixConfig.strategy
+    }
+
+    fun convertMatrixToYamlInclude(): Any? {
+        return try {
+            convertCase(includeCaseStr)
+        } catch (e: Exception) {
+            logger.warn("this because of formJSON:${e.message}")
+            includeCaseStr
         }
-        with(matrixConfig.exclude ?: mutableListOf()) {
-            try {
-                this.addAll(convertCase(excludeCaseStr))
-                if (this.size > 0) {
-                    result["exclude"] = this
-                }
-            } catch (e: Exception) {
-                logger.warn("this because of formJSON:${e.message}")
-                result["exclude"] = excludeCaseStr ?: return@with
-            }
+    }
+
+    fun convertMatrixToYamlExclude(): Any? {
+        return try {
+            convertCase(excludeCaseStr)
+        } catch (e: Exception) {
+            logger.warn("this because of formJSON:${e.message}")
+            excludeCaseStr
         }
-        return result
     }
 
     /**
@@ -199,6 +193,7 @@ data class MatrixControlOption(
                                 buildContext = buildContext
                             )
                         )
+
                         is List<*> -> it.value as List<String>
                         else -> throw Exception("strategyStr must be fromJSON String or List")
                     }

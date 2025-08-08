@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组件指标要素信息")
 data class StoreIndexElementInfo(
+    @get:Schema(title = "指标要素标识", required = true)
+    val elementCode: String,
     @get:Schema(title = "指标要素名称", required = true)
     val elementName: String,
     @get:Schema(title = "指标要素值", required = true)

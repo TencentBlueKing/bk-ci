@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,8 +39,8 @@ data class VersionModel(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     var publisher: String = "",
     @get:Schema(title = "发布类型", required = true)
-    var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.NEW,
-    @get:Schema(title = "插件版本", required = true)
+    var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX,
+    @get:Schema(title = "版本号", required = true)
     var version: String = "",
     @get:Schema(title = "版本日志内容", required = true)
     @field:BkField(maxLength = 65535)

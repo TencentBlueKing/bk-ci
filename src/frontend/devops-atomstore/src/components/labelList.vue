@@ -1,7 +1,18 @@
 <template>
     <ul class="label-content">
-        <li v-for="(label, index) in labelList" :key="index" class="label-item">{{ label }}</li>
-        <li class="empty-item" v-if="labelList.length <= 0">--</li>
+        <li
+            v-for="(label, index) in labelList"
+            :key="index"
+            class="label-item"
+        >
+            {{ label }}
+        </li>
+        <li
+            class="empty-item"
+            v-if="labelList.length <= 0"
+        >
+            --
+        </li>
     </ul>
 </template>
 

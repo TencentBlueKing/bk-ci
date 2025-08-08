@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,14 +28,14 @@
 package com.tencent.devops.metrics.config
 
 import io.micrometer.core.instrument.Clock
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.exporter.common.TextFormat
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.prometheus.metrics.expositionformats.PrometheusTextFormatWriter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint
-import org.springframework.boot.actuate.metrics.export.prometheus.TextOutputFormat
+import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusOutputFormat
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -45,9 +45,12 @@ import org.springframework.context.annotation.Configuration
 class MetricsUserConfig {
 
     companion object {
+        const val gaugeBuildQueueKey = "pipeline_queue_time_seconds"
         const val gaugeBuildKey = "pipeline_running_time_seconds"
         const val gaugeBuildStatusKey = "pipeline_status_info"
+        const val gaugeBuildJobQueueKey = "pipeline_job_queue_time_seconds"
         const val gaugeBuildJobKey = "pipeline_job_running_time_seconds"
+        const val gaugeBuildAgentKey = "pipeline_agent_running_time_seconds"
         const val gaugeBuildStepKey = "pipeline_step_running_time_seconds"
         const val gaugeBuildStepStatusKey = "pipeline_step_status_info"
     }
@@ -58,14 +61,26 @@ class MetricsUserConfig {
     @Value("\${metrics.user.enable:false}")
     val metricsUserEnabled: Boolean = false
 
+    @Value("\${metrics.event.url:}")
+    val eventUrl: String = ""
+
+    @Value("\${metrics.event.dataid:}")
+    val eventDataId: Long = 0L
+
+    @Value("\${metrics.event.token:}")
+    val eventToken: String = ""
+
+    @Value("\${metrics.event.consumerCount:1}")
+    val eventConsumerCount: Int = 1
+
     /*注册默认的 prometheusMeterRegistry*/
     @Bean
     fun prometheusMeterRegistry(
         prometheusConfig: PrometheusConfig,
-        collectorRegistry: CollectorRegistry,
+        prometheusRegistry: PrometheusRegistry,
         clock: Clock
     ): PrometheusMeterRegistry {
-        return PrometheusMeterRegistry(prometheusConfig, collectorRegistry, clock)
+        return PrometheusMeterRegistry(prometheusConfig, prometheusRegistry, clock)
     }
 
     @Bean
@@ -81,13 +96,16 @@ class MetricsUserConfig {
     @WebEndpoint(id = "userPrometheus")
     class UserPrometheusEndpoint(private val meterRegistry: PrometheusMeterRegistry) {
 
-        @ReadOperation(producesFrom = TextOutputFormat::class)
+        @ReadOperation(producesFrom = PrometheusOutputFormat::class)
         fun scrape(): String {
             return meterRegistry.scrape(
-                TextFormat.CONTENT_TYPE_004, setOf(
+                PrometheusTextFormatWriter.CONTENT_TYPE, setOf(
+                    gaugeBuildQueueKey,
                     gaugeBuildKey,
                     gaugeBuildStatusKey,
+                    gaugeBuildJobQueueKey,
                     gaugeBuildJobKey,
+                    gaugeBuildAgentKey,
                     gaugeBuildStepKey,
                     gaugeBuildStepStatusKey
                 )

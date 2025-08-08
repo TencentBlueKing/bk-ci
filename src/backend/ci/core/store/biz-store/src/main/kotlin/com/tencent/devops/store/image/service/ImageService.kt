@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -100,9 +100,9 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
@@ -115,9 +115,6 @@ import com.tencent.devops.store.pojo.image.response.MarketImageItem
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
-import java.time.LocalDateTime
-import java.util.Date
-import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -126,6 +123,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
+import java.time.LocalDateTime
+import java.util.Date
+import kotlin.math.ceil
 
 @Suppress("ALL")
 @RefreshScope
@@ -193,21 +193,23 @@ abstract class ImageService @Autowired constructor() {
         imageCode: String,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        validationFlag: Boolean = true
     ): Result<Page<ImageDetail>> {
         logger.info("$interfaceName:getImageVersionListByCode:Input:($userId,$imageCode,$page,$pageSize)")
-        // 判断当前用户是否是该镜像的成员
-        if (!storeMemberDao.isStoreMember(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = imageCode,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = GET_INFO_NO_PERMISSION,
-                params = arrayOf(imageCode)
-            )
+        if (validationFlag) {
+            if (!storeMemberDao.isStoreMember(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = imageCode,
+                    storeType = StoreTypeEnum.IMAGE.type.toByte()
+                )
+            ) {
+                throw ErrorCodeException(
+                    errorCode = GET_INFO_NO_PERMISSION,
+                    params = arrayOf(imageCode)
+                )
+            }
         }
         // 参数校验
         val validPage = PageUtil.getValidPage(page)
@@ -245,7 +247,8 @@ abstract class ImageService @Autowired constructor() {
         labelCode: String?,
         score: Int?,
         imageSourceType: ImageType?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        recommendFlag: Boolean? = null
     ): Int {
         // 获取镜像
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -257,7 +260,8 @@ abstract class ImageService @Autowired constructor() {
             rdType = rdType,
             labelCodeList = labelCodeList,
             score = score,
-            imageSourceType = imageSourceType
+            imageSourceType = imageSourceType,
+            recommendFlag = recommendFlag
         )
     }
 
@@ -276,7 +280,8 @@ abstract class ImageService @Autowired constructor() {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        recommendFlag: Boolean? = null
     ): List<MarketImageItem> {
         val results = mutableListOf<MarketImageItem>()
 
@@ -294,7 +299,8 @@ abstract class ImageService @Autowired constructor() {
             sortType = sortType,
             desc = desc,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            recommendFlag = recommendFlag
         )
             ?: return emptyList()
 
@@ -357,6 +363,7 @@ abstract class ImageService @Autowired constructor() {
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
                     },
                     version = it[KEY_IMAGE_VERSION] as String,
+                    status = ImageStatusEnum.getImageStatus((it.get(KEY_IMAGE_STATUS) as Byte).toInt()),
                     summary = it[KEY_IMAGE_SUMMARY] as? String,
                     score = statistic?.score ?: 0.toDouble(),
                     downloads = statistic?.downloads ?: 0,
@@ -405,6 +412,7 @@ abstract class ImageService @Autowired constructor() {
         labelCode: String?,
         score: Int?,
         sortType: MarketImageSortTypeEnum?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
@@ -421,7 +429,8 @@ abstract class ImageService @Autowired constructor() {
                 rdType = rdType,
                 labelCode = labelCode,
                 score = score,
-                imageSourceType = imageSourceType
+                imageSourceType = imageSourceType,
+                recommendFlag = recommendFlag
             ),
             page = page,
             pageSize = pageSize,
@@ -439,7 +448,8 @@ abstract class ImageService @Autowired constructor() {
                 desc = getDefaultDescTypeBySortType(sortType),
                 page = page,
                 pageSize = pageSize,
-                interfaceName = interfaceName
+                interfaceName = interfaceName,
+                recommendFlag = recommendFlag
             ).map {
                 val categories = imageCategoryRelDao.getCategorysByImageId(dslContext, it.id)?.map { categoryRecord ->
                     categoryRecord.get(KEY_CATEGORY_CODE) as String
@@ -450,6 +460,7 @@ abstract class ImageService @Autowired constructor() {
                     name = it.name,
                     code = it.code,
                     version = it.version,
+                    status = it.status,
                     // 仅用于插件区分Agent/AgentLess
                     type = "",
                     rdType = it.rdType,
@@ -1243,5 +1254,9 @@ abstract class ImageService @Autowired constructor() {
             }
         }
         return Result(true)
+    }
+
+    fun isReleasedStatus(imageCode: String, imageVersion: String, imageStatus: ImageStatusEnum): Boolean {
+        return imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus) > 0
     }
 }

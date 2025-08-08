@@ -1,9 +1,27 @@
 <template>
-    <article class="add-comment" @click.self="cancle">
-        <section class="add-main" v-bkloading="{ isLoading }">
-            <h3 class="add-title">为{{name}} {{ $t('store.评分') }} </h3>
-            <comment-rate class="add-rate" :edit="true" :rate="rate" :height="24" :width="23" @chooseRate="chooseRate"></comment-rate>
-            <textarea class="add-content g-input-border" v-model="comment" :placeholder="$t('store.请输入你的评论内容（字数上限为500字）')" ref="commentText"></textarea>
+    <article
+        class="add-comment"
+        @click.self="cancle"
+    >
+        <section
+            class="add-main"
+            v-bkloading="{ isLoading }"
+        >
+            <h3 class="add-title">为{{ name }} {{ $t('store.评分') }} </h3>
+            <comment-rate
+                class="add-rate"
+                :edit="true"
+                :rate="rate"
+                :height="24"
+                :width="23"
+                @chooseRate="chooseRate"
+            ></comment-rate>
+            <textarea
+                class="add-content g-input-border"
+                v-model="comment"
+                :placeholder="$t('store.请输入你的评论内容（字数上限为500字）')"
+                ref="commentText"
+            ></textarea>
             <h3 class="g-confirm-buttom">
                 <button @click="cancle"> {{ $t('store.取消') }} </button><button @click="confirm"> {{ $t('store.确定') }} </button>
             </h3>
@@ -75,6 +93,10 @@
 
             getComment () {
                 if (this.commentId) {
+                    if (Object.hasOwnProperty.call(this.getCommentGenerator, this.type) === false) {
+                        this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                        return Promise.reject(new Error(this.$t('store.typeError')))
+                    }
                     this.isLoading = true
                     const method = this.getCommentGenerator[this.type]
                     method().then((res) => {
@@ -131,6 +153,9 @@
                         score: this.rate
                     }
                 }
+                if (Object.hasOwnProperty.call(this.modifyCommentGenerator, this.type) === false) {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 return this.modifyCommentGenerator[this.type](data).then(() => ({
                     commentId: this.commentId,
                     commentContent: this.comment,
@@ -147,6 +172,9 @@
                         commentContent: this.comment,
                         score: this.rate
                     }
+                }
+                if (Object.hasOwnProperty.call(this.addCommentGenerator, this.type) === false) {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.addCommentGenerator[this.type](data)
             }

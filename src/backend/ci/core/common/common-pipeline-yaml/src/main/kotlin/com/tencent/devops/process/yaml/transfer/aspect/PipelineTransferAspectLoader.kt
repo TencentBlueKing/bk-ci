@@ -1,7 +1,15 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ELEMENT_NAMESPACE_NOT_SUPPORT
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
+import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import java.util.LinkedList
@@ -26,9 +34,85 @@ object PipelineTransferAspectLoader {
         return instance
     }
 
+    /*
+    * feat：第三方构建机 Job 间复用构建环境支持 Code 配置 #10254
+    * 支持检查值的有效性
+    * */
+    fun checkLockResourceJob(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        val jobsCheck = mutableListOf<String/*job_id*/>()
+        val jobsNotCheck = mutableMapOf<String/*job_id*/, String/*child_Job_id*/>()
+        aspects.add(
+            object : IPipelineTransferAspectJob {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    val job = jp.modelJob()
+                    if (job != null && job is VMBuildContainer && job.dispatchType is ThirdPartyAgentDispatch) {
+                        when ((job.dispatchType as ThirdPartyAgentDispatch).agentType) {
+                            AgentType.REUSE_JOB_ID -> {
+                                jobsNotCheck[job.jobId!!] = (job.dispatchType as ThirdPartyAgentDispatch).value
+                            }
+
+                            else -> jobsCheck.add(job.jobId!!)
+                        }
+                    }
+                }
+            })
+        aspects.add(
+            object : IPipelineTransferAspectStage {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    // 回环检测
+                    if (jobsNotCheck.isNotEmpty()) {
+                        hasCycle(jobsNotCheck, jobsCheck)
+                    }
+                }
+
+                private fun hasCycle(map: Map<String, String>, checked: List<String>): Boolean {
+                    val visited = mutableSetOf<String>()
+                    val stack = mutableSetOf<String>()
+
+                    fun dfs(jobId: String): Boolean {
+                        if (stack.contains(jobId)) {
+                            return true
+                        }
+                        if (visited.contains(jobId)) {
+                            return false
+                        }
+
+                        visited.add(jobId)
+                        stack.add(jobId)
+
+                        val childJobId = map[jobId]
+                        if (childJobId != null && dfs(childJobId)) {
+                            return true
+                        }
+                        if (childJobId == null && jobId !in checked) {
+                            return true
+                        }
+
+                        stack.remove(jobId)
+                        return false
+                    }
+
+                    map.forEach { (k, v) ->
+                        if (!visited.contains(k) && dfs(k)) {
+                            throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE,
+                                params = arrayOf(k, v)
+                            )
+                        }
+                    }
+                    jobsCheck.addAll(map.keys)
+                    jobsNotCheck.clear()
+                    return false
+                }
+            }
+        )
+    }
+
     fun sharedEnvTransfer(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
-    ): LinkedList<IPipelineTransferAspect> {
+    ) {
         val pools = mutableListOf<ResourcesPools>()
         aspects.add(
             object : IPipelineTransferAspectJob {
@@ -78,7 +162,6 @@ object PipelineTransferAspectLoader {
                 }
             }
         )
-        return aspects
     }
 
     fun initByDefaultTriggerOn(
@@ -128,6 +211,7 @@ object PipelineTransferAspectLoader {
 
     fun checkInvalidElement(
         invalidElement: MutableList<String>,
+        invalidNameSpaceElement: MutableList<String>,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
         aspects.add(
@@ -136,6 +220,29 @@ object PipelineTransferAspectLoader {
                     if (jp.yamlPreStep() == null) {
                         invalidElement.add("${jp.modelElement()?.getClassType()}(${jp.modelElement()?.name})")
                     }
+                }
+            }
+        )
+
+        // feat: PAC Code 检测流水线是否使用了命名空间 #11879
+        aspects.add(
+            object : IPipelineTransferAspectElement {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.modelElement() != null &&
+                        jp.modelElement() is MarketBuildAtomElement
+                    ) {
+                        val element = jp.modelElement() as MarketBuildAtomElement
+                        val namespace = element.data["namespace"] as String? ?: return null
+                        if (namespace.isNotBlank()) {
+                            invalidNameSpaceElement.add(
+                                I18nUtil.getCodeLanMessage(
+                                    BK_ELEMENT_NAMESPACE_NOT_SUPPORT,
+                                    params = arrayOf("${element.name}[${element.stepId}]")
+                                )
+                            )
+                        }
+                    }
+                    return null
                 }
             }
         )

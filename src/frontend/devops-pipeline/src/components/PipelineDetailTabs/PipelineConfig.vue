@@ -1,22 +1,42 @@
 <template>
-    <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
+    <div
+        class="pipeline-config-wrapper"
+        v-bkloading="{ isLoading }"
+    >
         <bk-alert
             v-if="isActiveDraftVersion"
             :title="
                 $t('draftInfoTips', [draftCreator, draftLastUpdateTime])
             "
         />
-        <p v-show="isBranchVersion" id="branch-version-guide-tooltips">
-            <span v-for="i in [1,2,3]" :key="i" v-html="$t(`branchVersionTips${i}`)" />
+        <p
+            v-show="isBranchVersion"
+            id="branch-version-guide-tooltips"
+        >
+            <span
+                v-for="i in [1,2,3]"
+                :key="i"
+                v-html="$t(`branchVersionTips${i}`)"
+            />
         </p>
         <bk-alert v-if="isBranchVersion">
             <i class="bk-icon icon-info-circle" />
-            <i18n path="branchVersionNotMergeYet" tag="p" slot="title">
-                <span class="branch-version-operate-btn text-link" v-bk-tooltips="MRGuideTooltips">
+            <i18n
+                path="branchVersionNotMergeYet"
+                tag="p"
+                slot="title"
+            >
+                <span
+                    class="branch-version-operate-btn text-link"
+                    v-bk-tooltips="MRGuideTooltips"
+                >
                     <i class="devops-icon icon-helper" />
                     {{ $t('helpGuide') }}
                 </span>
-                <span class="branch-version-operate-btn text-link" @click="commitMR">
+                <span
+                    class="branch-version-operate-btn text-link"
+                    @click="commitMR"
+                >
                     <i class="devops-icon icon-jump-link" />
                     {{ $t('goTgitCommitMR') }}
                 </span>
@@ -27,8 +47,15 @@
             v-if="hasUnResolveEvent"
         >
             <i class="bk-icon icon-info-circle" />
-            <i18n :path="unResolveEventTooltips" tag="p" slot="title">
-                <span class="text-link" @click="showVersionSideSlider">{{ $t('goVersionSideslider') }}</span>
+            <i18n
+                :path="unResolveEventTooltips"
+                tag="p"
+                slot="title"
+            >
+                <span
+                    class="text-link"
+                    @click="showVersionSideSlider"
+                >{{ $t('goVersionSideslider') }}</span>
             </i18n>
         </bk-alert>
 

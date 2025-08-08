@@ -4,11 +4,13 @@
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
             <slot name="btns">
-                <button class="bk-button"
+                <button
+                    class="bk-button"
                     v-for="(btn, index) of btns"
                     :key="index"
                     :class="[`bk-${btn.type}`, `bk-button-${btn.size}`]"
-                    @click="btn.handler">
+                    @click="btn.handler"
+                >
                     {{ btn.text }}
                 </button>
             </slot>

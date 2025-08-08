@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -80,6 +80,7 @@ jooq {
                         database.apply {
                             name = "org.jooq.meta.mysql.MySQLDatabase"
                             inputSchema = databaseName
+                            isUnsignedTypes = false
                             withIncludeRoutines(false) // 兼容"denied to user for table 'proc'"错误
                         }
 
@@ -103,7 +104,7 @@ jooq {
     }
 }
 
-tasks.getByName<AbstractCompile>("compileKotlin") {
+tasks.getByName("compileKotlin") {
     tasks.matching { it is JooqGenerate }.forEach {
         dependsOn(it.name)
     }

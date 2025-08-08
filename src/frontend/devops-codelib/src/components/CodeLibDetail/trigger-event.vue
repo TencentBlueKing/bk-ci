@@ -26,7 +26,10 @@
                 :placeholder="filterTips"
             >
             </search-select>
-            <span class="refresh-icon" @click="handleRefresh">
+            <span
+                class="refresh-icon"
+                @click="handleRefresh"
+            >
                 <bk-icon type="refresh" />
             </span>
         </header>
@@ -37,8 +40,10 @@
             v-bkloading="{ isLoading: pageLoading }"
         >
             <ul class="trigger-timeline">
-                <li class="timeline-dot"
-                    v-for="(data, key, index) in timelineMap" :key="index"
+                <li
+                    class="timeline-dot"
+                    v-for="(data, key, index) in timelineMap"
+                    :key="index"
                 >
                     <div class="timeline-section">
                         <TimelineCollapse
@@ -51,9 +56,19 @@
                     </div>
                 </li>
             </ul>
-            <div class="timeline-footer" v-if="!showEnd" v-bkloading="{ isLoading: isLoadingMore }">
-                <a v-if="!hasLoadEnd" @click="getListData">{{ $t('codelib.加载更多') }}</a>
-                <span v-else class="load-end">{{ $t('codelib.到底啦') }}</span>
+            <div
+                class="timeline-footer"
+                v-if="!showEnd"
+                v-bkloading="{ isLoading: isLoadingMore }"
+            >
+                <a
+                    v-if="!hasLoadEnd"
+                    @click="getListData"
+                >{{ $t('codelib.加载更多') }}</a>
+                <span
+                    v-else
+                    class="load-end"
+                >{{ $t('codelib.到底啦') }}</span>
             </div>
         </section>
         <EmptyTableStatus

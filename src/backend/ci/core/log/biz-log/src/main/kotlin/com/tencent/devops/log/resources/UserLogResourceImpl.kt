@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,7 +39,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  *
@@ -85,7 +85,8 @@ class UserLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             jobId = null,
             stepId = null,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            reverse = false
         )
         recordListLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs

@@ -40,6 +40,33 @@
                 </div>
             </div>
             <div class="item-content">
+                <div class="item-label">{{ $t('setting.nodeInfo.dockerMaxConcurrency') }}</div>
+                <div class="item-value">
+                    <div class="display-item" v-if="isEditDockerCount">
+                        <input type="number" class="bk-form-input parallelTaskCount-input"
+                            ref="dockerParallelTaskCount"
+                            name="dockerParallelTaskCount"
+                            :placeholder="$t('setting.nodeInfo.parallelTaskCountTips')"
+                            v-validate.initial="`required|between:0,100|decimal:0`"
+                            v-model="dockerParallelTaskCount"
+                            :class="{ 'is-danger': errors.has('dockerParallelTaskCount') }">
+                    </div>
+                    <div class="editing-item" v-else>{{ nodeDetails.dockerParallelTaskCount || '--' }}</div>
+                </div>
+                <div class="handle-btn">
+                    <div v-if="isEditDockerCount">
+                        <span @click="saveHandle('dockerParallelTaskCount')">{{ $t('setting.save') }}</span>
+                        <span @click="editHandle('dockerParallelTaskCount', false)">{{ $t('setting.cancel') }}</span>
+                    </div>
+                    <div
+                        v-else
+                        :class="{ 'is-disabled': !nodeDetails.canEdit }"
+                    >
+                        <span @click="editHandle('dockerParallelTaskCount', true)">{{ $t('setting.edit') }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="item-content">
                 <div class="item-label">{{ $t('status') }}</div>
                 <div class="item-value" :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'">
                     {{ nodeDetails.status === 'NORMAL' ? $t('setting.nodeInfo.normal') : $t('setting.nodeInfo.abnormal') }}
@@ -79,7 +106,9 @@
             return {
                 nodeDetails: {},
                 isEditCount: false,
-                parallelTaskCount: 0
+                parallelTaskCount: 0,
+                isEditDockerCount: false,
+                dockerParallelTaskCount: 0
             }
         },
         computed: {
@@ -110,20 +139,46 @@
                             })
                         }
                         break
+                    case 'dockerParallelTaskCount':
+                        this.isEditDockerCount = isOpen
+                        if (isOpen) {
+                            this.dockerParallelTaskCount = this.nodeDetails.dockerParallelTaskCount
+                            this.$nextTick(() => {
+                                this.$refs.dockerParallelTaskCount.focus()
+                            })
+                        }
+                        break
                     default:
                         break
                 }
             },
-            async saveHandle () {
+            async saveHandle (type) {
                 const valid = await this.$validator.validate()
-                if (valid) {
-                    this.saveParallelTaskCount(this.parallelTaskCount)
+                if (!valid) return
+                switch (type) {
+                    case 'parallelTaskCount':
+                        this.saveParallelTaskCount(this.parallelTaskCount, 'parallelTaskCount')
+                        break
+                    case 'dockerParallelTaskCount':
+                        this.saveParallelTaskCount(this.dockerParallelTaskCount, 'dockerParallelTaskCount')
+                        break
+                    default:
+                        break
                 }
+               
             },
-            async saveParallelTaskCount (parallelTaskCount) {
+            async saveParallelTaskCount (count, type) {
                 let message, theme
+                const fn = type === 'dockerParallelTaskCount'
+                    ? setting.saveDockerParallelTaskCount
+                    : setting.saveParallelTaskCount
+                const params = {
+                    projectId: this.projectId,
+                    nodeHashId: this.nodeHashId,
+                    count: count
+                }
                 try {
-                    await setting.saveParallelTaskCount(this.projectId, this.nodeHashId, parallelTaskCount)
+                    await fn(params)
                     message = this.$t('setting.successfullySaved')
                     theme = 'success'
                     this.requestNodeDetail()
@@ -131,6 +186,8 @@
                     message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
+                    this.isEditCount = false
+                    this.isEditDockerCount = false
                     this.$bkMessage({
                         message,
                         theme
@@ -140,7 +197,6 @@
             async requestNodeDetail () {
                 try {
                     this.nodeDetails = await setting.requestNodeDetail(this.projectId, this.nodeHashId)
-                    this.isEditCount = false
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -179,7 +235,7 @@
             align-items: center;
             border-bottom: 1px solid #DDE4EB;
             .item-label {
-                width: 180px;
+                width: 188px;
                 padding: 12px 20px;
                 border-right: 1px solid #DDE4EB;
             }

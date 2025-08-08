@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.project.pojo.TableShardingConfig
 import org.jooq.DSLContext
 
@@ -44,12 +45,14 @@ interface TableShardingConfigService {
     fun getTableShardingConfigByName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
-        tableName: String
+        tableName: String,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): TableShardingConfig?
 
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
-        moduleCode: SystemModuleEnum
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): List<TableShardingConfig>?
 }

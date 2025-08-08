@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,9 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
+import com.tencent.devops.common.api.constant.MESSAGE
+import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -51,9 +53,11 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.handler.StoreDeleteCheckHandler
+import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
+import com.tencent.devops.store.common.lock.StoreCodeLock
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
@@ -62,13 +66,16 @@ import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
+import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
+import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -105,6 +112,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var storeDeleteRepoFileHandler: StoreDeleteRepoFileHandler
+
+    @Autowired
+    lateinit var storeDeleteCodeRepositoryHandler: StoreDeleteCodeRepositoryHandler
 
     @Autowired
     lateinit var storeDeleteDataPersistHandler: StoreDeleteDataPersistHandler
@@ -358,12 +368,23 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val handlerList = mutableListOf(
             storeDeleteCheckHandler,
             storeDeleteRepoFileHandler,
+            storeDeleteCodeRepositoryHandler,
             storeDeleteDataPersistHandler
         )
         val bkStoreContext = handlerRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
-        StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
-        return Result(true)
+        StoreCodeLock(redisOperation, handlerRequest.storeType, handlerRequest.storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
+            }
+        }
+        return Result(
+            status = bkStoreContext[STATUS]?.toString()?.toInt() ?: 0,
+            data = true,
+            message = bkStoreContext[MESSAGE]?.toString()
+        )
     }
 
     override fun validateComponentDownloadPermission(
@@ -371,8 +392,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeType: StoreTypeEnum,
         version: String,
         projectCode: String,
-        userId: String
-    ): Result<Boolean> {
+        userId: String,
+        instanceId: String?
+    ): Result<StoreBaseInfo?> {
         // 检查组件的状态是否符合下载条件
         val baseRecord = storeBaseQueryDao.getComponent(
             dslContext = dslContext,
@@ -394,37 +416,47 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         if (baseRecord.status in inValidStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
         }
-        if (projectCode.isNotBlank()) {
-            val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-            if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
-                // 如果从缓存中查出该组件是公共组件则无需权限校验
-                return Result(true)
-            }
-            val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
-            val checkFlag = publicFlag == true ||
-                storeProjectService.isInstalledByProject(
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
-            if (!checkFlag) {
+        val storeBaseInfo = StoreBaseInfo(
+            storeId = baseRecord.id,
+            storeCode = baseRecord.storeCode,
+            storeName = baseRecord.name,
+            storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt()),
+            version = baseRecord.version,
+            status = baseRecord.status,
+            logoUrl = baseRecord.logoUrl,
+            publisher = baseRecord.publisher,
+            classifyId = baseRecord.classifyId
+        )
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+            // 如果从缓存中查出该组件是公共组件则无需权限校验
+            storeBaseInfo.publicFlag = true
+            return Result(storeBaseInfo)
+        }
+        val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
+        val checkFlag = publicFlag == true || (storeMemberDao.isStoreMember(
+            dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
+        ) || storeProjectService.isInstalledByProject(
+            projectCode = projectCode,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            instanceId = instanceId
+        ))
+        if (!checkFlag) {
+            if (projectCode.isNotBlank()) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
                     params = arrayOf(projectCode, storeCode)
                 )
-            }
-        } else {
-            val checkFlag = storeMemberDao.isStoreMember(
-                dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
-            )
-            if (!checkFlag) {
+            } else {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
                     params = arrayOf(storeCode)
                 )
             }
         }
-        return Result(true)
+        storeBaseInfo.publicFlag = publicFlag ?: false
+        return Result(storeBaseInfo)
     }
 
     override fun updateComponentInstalledPkgShaContent(
@@ -432,7 +464,7 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean> {
         val storeId = storeBaseQueryDao.getComponentId(
             dslContext = dslContext,
@@ -443,19 +475,56 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
             dslContext = dslContext,
             storeId = storeId,
-            osName = installedPkgShaContentRequest.osName,
-            osArch = installedPkgShaContentRequest.osArch
+            osName = installedPkgFileShaContentRequest.osName,
+            osArch = installedPkgFileShaContentRequest.osArch
         )?.get(0) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         val storeBaseEnvExtDataPO = StoreBaseEnvExtDataPO(
             id = UUIDUtil.generate(),
             envId = baseEnvRecord.id,
             storeId = storeId,
-            fieldName = KEY_INSTALLED_PKG_SHA_CONTENT,
-            fieldValue = installedPkgShaContentRequest.installedPkgShaContent,
+            fieldName = "${KEY_FILE_SHA_CONTENT}_${installedPkgFileShaContentRequest.signFileName}",
+            fieldValue = installedPkgFileShaContentRequest.fileShaContent,
             creator = userId,
             modifier = userId
         )
         storeBaseEnvExtManageDao.batchSave(dslContext, listOf(storeBaseEnvExtDataPO))
+        return Result(true)
+    }
+
+    override fun updateStoreRepositoryAuthorizer(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<Boolean> {
+        // 判断用户是否是管理员，只有管理员才能重置授权
+        if (!storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(userId)
+            )
+        }
+        val baseFeatureRecord =
+            storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
+        val storeBaseFeatureExtDataPO = StoreBaseFeatureExtDataPO(
+            id = UUIDUtil.generate(),
+            featureId = baseFeatureRecord.id,
+            storeCode = storeCode,
+            storeType = storeType,
+            fieldName = KEY_REPOSITORY_AUTHORIZER,
+            fieldValue = userId,
+            creator = userId,
+            modifier = userId
+        )
+        storeBaseFeatureExtManageDao.batchSave(dslContext, listOf(storeBaseFeatureExtDataPO))
         return Result(true)
     }
 

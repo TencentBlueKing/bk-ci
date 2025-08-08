@@ -4,7 +4,8 @@
         v-bind="config"
         :value="date"
         :disabled="disabled"
-        @change="handleDateChange">
+        @change="handleDateChange"
+    >
     </bk-date-picker>
 </template>
 

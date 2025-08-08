@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -71,7 +71,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
-        taskCommonSettingConfig = taskCommonSettingConfig
+        taskCommonSettingConfig = taskCommonSettingConfig,
+        elementBizPluginServices = listOf()
     )
     private val serviceMarketAtomResource: ServiceMarketAtomResource = mockk()
     private val serviceAtomResource: ServiceAtomResource = mockk()
@@ -199,7 +200,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     fun checkTriggerContainer() {
         // trigger
         val triggerStage = genStages(1, 1, 1)
-        checkPlugin.checkTriggerContainer(triggerStage[0])
+        checkPlugin.checkTriggerContainer(triggerStage[0], false)
     }
 
     @Test

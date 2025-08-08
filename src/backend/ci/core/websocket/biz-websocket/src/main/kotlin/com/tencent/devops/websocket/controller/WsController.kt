@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,11 +47,20 @@ class WsController @Autowired constructor(
 
     @MessageMapping("/loginOut")
     fun loginOut(loginOutDTO: LoginOutDTO) {
-        websocketService.loginOut(loginOutDTO.userId, loginOutDTO.sessionId, loginOutDTO.page, loginOutDTO.transferData)
+        websocketService.loginOut(
+            userId = loginOutDTO.userId,
+            sessionId = loginOutDTO.sessionId,
+            oldPage = loginOutDTO.page,
+            transferData = loginOutDTO.transferData
+        )
     }
 
     @MessageMapping("/clearUserSession")
     fun clearUserSession(clearUserDTO: ClearUserDTO) {
-        websocketService.clearUserSession(clearUserDTO.userId, clearUserDTO.sessionId, clearUserDTO.transferData)
+        websocketService.clearUserSession(
+            userId = clearUserDTO.userId,
+            sessionId = clearUserDTO.sessionId,
+            transferData = clearUserDTO.transferData
+        )
     }
 }

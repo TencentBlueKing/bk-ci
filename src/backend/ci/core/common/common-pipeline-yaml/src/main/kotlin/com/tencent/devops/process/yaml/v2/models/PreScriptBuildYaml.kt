@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.v2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
@@ -66,7 +65,6 @@ data class PreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
-    @JsonProperty("on")
     override var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,

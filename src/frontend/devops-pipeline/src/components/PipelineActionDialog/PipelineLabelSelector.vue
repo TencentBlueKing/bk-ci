@@ -1,11 +1,15 @@
 <template>
-    <ul class="pipeline-label-selector" ref="labelSelectorParent" v-bkloading="{ isLoading }">
+    <ul
+        class="pipeline-label-selector"
+        ref="labelSelectorParent"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="tagSelectModelList.length > 0">
             <li
                 v-for="item in tagSelectModelList"
                 :key="item.id"
             >
-                <label class="pipeline-selector-label"> {{item.name}} </label>
+                <label class="pipeline-selector-label"> {{ item.name }} </label>
                 <bk-select
                     :disabled="!editable"
                     class="sub-label-select"
@@ -26,8 +30,11 @@
                 </bk-select>
             </li>
         </template>
-        <span class="no-label-placeholder" v-else>
-            {{$t('noLabels')}}
+        <span
+            class="no-label-placeholder"
+            v-else
+        >
+            {{ $t('noLabels') }}
         </span>
     </ul>
 </template>

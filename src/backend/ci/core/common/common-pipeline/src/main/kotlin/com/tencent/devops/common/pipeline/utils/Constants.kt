@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,7 +40,7 @@ const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX = 200
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
-const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 1
+const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 10
 
 /**
  * 流水线设置-CONCURRENCY GROUP 并发组-默认值

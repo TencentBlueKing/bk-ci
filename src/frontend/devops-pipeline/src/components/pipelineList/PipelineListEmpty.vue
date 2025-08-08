@@ -1,9 +1,14 @@
 <template>
-
     <section class="bk-pipeline-list-empty-tips">
-        <Logo name="empty" size="188"></Logo>
+        <Logo
+            name="empty"
+            size="188"
+        ></Logo>
         <p class="bk-pipeline-list-empty-tips-desc">{{ emptyTipsConfig.desc }}</p>
-        <p class="bk-pipeline-list-empty-tips-btns" v-if="emptyTipsConfig.btns.length">
+        <p
+            class="bk-pipeline-list-empty-tips-btns"
+            v-if="emptyTipsConfig.btns.length"
+        >
             <bk-button
                 v-for="(btn, index) of emptyTipsConfig.btns"
                 v-bind="btn.btnProps"
@@ -49,8 +54,9 @@
                     theme: 'primary',
                     size: 'normal'
                 }
+                const isArchive = this.$route.params.viewId === 'archiveLibrary'
 
-                const isInGroup = !(this.fixedGroupIdSet.has(this.$route.params.viewId) || this.isPatch)
+                const isInGroup = !(this.fixedGroupIdSet.has(this.$route.params.viewId) || this.isPatch || isArchive)
                 return this.hasFilter
                     ? {
                         desc: this.$t('newlist.knowMore'),
@@ -64,7 +70,7 @@
                         ]
                     }
                     : {
-                        desc: this.$t(isInGroup ? 'newlist.otherEmptyDesc' : 'empty'),
+                        desc: this.$t(isInGroup ? 'newlist.otherEmptyDesc' : isArchive ? 'noArchivedPipelines' : 'empty'),
                         imgType: '',
                         btns: isInGroup
                             ? [

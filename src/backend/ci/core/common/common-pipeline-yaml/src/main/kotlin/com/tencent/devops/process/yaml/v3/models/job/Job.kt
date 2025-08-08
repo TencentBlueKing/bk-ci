@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -47,11 +48,13 @@ data class Job(
     @JsonProperty("runs-on")
     @get:Schema(title = "runs-on")
     val runsOn: RunsOn = RunsOn(),
+    @JsonProperty("show-runs-on")
+    val showRunsOn: Boolean? = null,
     // val container: Container?,
     val services: List<Service>? = null,
     @get:Schema(title = "if")
     @JsonProperty("if")
-    val ifField: String? = null,
+    val ifField: IfField? = null,
     val steps: List<Step>? = null,
     @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
@@ -140,7 +143,10 @@ data class ServiceWith(
 )
 
 data class Strategy(
-    val matrix: Any,
+    val matrix: Any? = null,
+    val include: Any? = null,
+    val exclude: Any? = null,
+
     @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = null,
@@ -161,6 +167,12 @@ data class RunsOn(
     var hwSpec: String? = null,
     @JsonProperty("node-name")
     var nodeName: String? = null,
+    @JsonProperty("lock-resource-with")
+    val lockResourceWith: String? = null,
+    @JsonProperty("concurrency-limit-per-node")
+    var singleNodeConcurrency: Int? = null,
+    @JsonProperty("concurrency-limit-total")
+    var allNodeConcurrency: Int? = null,
     @JsonIgnore
     val poolType: String? = null,
     val container: Any? = null,
@@ -178,7 +190,7 @@ data class RunsOn(
     var envProjectId: String? = null
 ) {
     fun checkLinux() = poolName == "docker" || (
-        poolName == null && nodeName == null
+        poolName == null && nodeName == null && lockResourceWith == null
         )
 }
 
@@ -204,7 +216,8 @@ enum class JobRunsOnPoolType {
     ENV_NAME,
     ENV_ID,
     AGENT_ID,
-    AGENT_NAME
+    AGENT_NAME,
+    AGENT_REUSE_JOB // 构建资源锁定
 }
 
 data class Mutex(

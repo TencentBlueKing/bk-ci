@@ -1,6 +1,12 @@
 <template>
-    <div v-if="pipelineName" class="pipeline-preview-header">
-        <pipeline-bread-crumb :is-loading="!pipelineName" :pipeline-name="pipelineName">
+    <div
+        v-if="pipelineName"
+        class="pipeline-preview-header"
+    >
+        <pipeline-bread-crumb
+            :is-loading="!pipelineName"
+            :pipeline-name="pipelineName"
+        >
             <span class="build-num-switcher-wrapper">
                 {{ title }}
             </span>
@@ -28,16 +34,6 @@
 
             <bk-button
                 :disabled="executeStatus"
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
                 @click="goBack"
             >
                 {{ $t("cancel") }}
@@ -65,7 +61,11 @@
             </span>
         </aside>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    />
 </template>
 
 <script>
@@ -73,7 +73,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
@@ -89,6 +89,8 @@
             ...mapState('pipelines', ['executeStatus']),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
+                isBranchVersion: 'atom/isBranchVersion',
+                isReleaseVersion: 'atom/isReleaseVersion',
                 canManualStartup: 'pipelines/canManualStartup'
             }),
             ...mapState('atom', [
@@ -117,8 +119,7 @@
             },
             versionNotMatch () {
                 try {
-                    // eslint-disable-next-line eqeqeq
-                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version != this.pipelineInfo?.releaseVersion)
+                    return !this.isDebugPipeline && !this.isBranchVersion && !this.isReleaseVersion
                 } catch (error) {
                     return false
                 }
@@ -147,8 +148,10 @@
         },
         beforeDestroy () {
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+            this.selectPipelineVersion(null)
         },
         methods: {
+            ...mapActions('atom', ['selectPipelineVersion']),
             updatePipelineName (name) {
                 this.pipelineName = name
             },

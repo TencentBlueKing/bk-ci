@@ -1,5 +1,6 @@
 <template>
-    <bk-select v-bind="dropdownConf"
+    <bk-select
+        v-bind="dropdownConf"
         :name="name"
         :loading="isLoading"
         :value="value"
@@ -19,8 +20,14 @@
         >
         </bk-option>
         <template v-if="mergedOptionsConf.hasAddItem">
-            <div slot="extension" class="bk-selector-create-item">
-                <a :href="addItemUrl" target="_blank">
+            <div
+                slot="extension"
+                class="bk-selector-create-item"
+            >
+                <a
+                    :href="addItemUrl"
+                    target="_blank"
+                >
                     <i class="devops-icon icon-plus-circle" />
                     {{ mergedOptionsConf.itemText }}
                 </a>

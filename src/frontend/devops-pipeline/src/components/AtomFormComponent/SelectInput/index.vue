@@ -1,16 +1,48 @@
 <template>
-    <div class="select-input" v-bk-clickoutside="handleBlur">
-        <input class="bk-form-input" v-bind="restProps" v-model="displayName" :disabled="disabled || loading" ref="inputArea" :title="value" autocomplete="off" @input="handleInput" @focus="handleFocus" @keypress.enter.prevent="handleEnterOption" @keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur" />
-        <i v-if="loading" class="devops-icon icon-circle-2-1 option-fetching-icon spin-icon" />
-        <i v-else-if="!disabled && value" class="devops-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
-        <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
+    <div
+        class="select-input"
+        v-bk-clickoutside="handleBlur"
+    >
+        <input
+            class="bk-form-input"
+            v-bind="restProps"
+            v-model="displayName"
+            :disabled="disabled || loading"
+            ref="inputArea"
+            :title="value"
+            :placeholder="placeholder"
+            autocomplete="off"
+            @input="handleInput"
+            @focus="handleFocus"
+            @keypress.enter.prevent="handleEnterOption"
+            @keydown.up.prevent="handleKeyup"
+            @keydown.down.prevent="handleKeydown"
+            @keydown.tab.prevent="handleBlur"
+        />
+        <i
+            v-if="loading"
+            class="devops-icon icon-circle-2-1 option-fetching-icon spin-icon"
+        />
+        <i
+            v-else-if="!disabled && value"
+            class="devops-icon icon-close-circle-shape option-fetching-icon"
+            @click.stop="clearValue"
+        />
+        <div
+            class="dropbox-container"
+            v-show="hasOption && optionListVisible && !loading"
+            ref="dropMenu"
+        >
             <ul>
                 <template v-if="hasGroup">
-                    <li v-for="(item, index) in filteredList"
+                    <li
+                        v-for="(item, index) in filteredList"
                         :key="item.id + index"
-                        :disabled="item.disabled">
+                        :disabled="item.disabled"
+                    >
                         <div class="option-group-name">{{ item.name }}</div>
-                        <div class="option-group-item"
+                        <div
+                            class="option-group-item"
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
                             :class="{ active: child.id === value, selected: selectedPointer === childIndex && selectedGroupPointer === index }"
@@ -18,7 +50,9 @@
                             @click.stop="selectOption(child)"
                             @mouseover="setSelectGroupPointer(index, childIndex)"
                             :title="item.name"
-                        >{{ child.name }}</div>
+                        >
+                            {{ child.name }}
+                        </div>
                     </li>
                 </template>
                 <template v-else>
@@ -37,7 +71,10 @@
                 </template>
                 <template v-if="mergedOptionsConf.hasAddItem">
                     <div class="bk-select-extension">
-                        <a :href="addItemUrl" target="_blank">
+                        <a
+                            :href="addItemUrl"
+                            target="_blank"
+                        >
                             <i class="bk-icon icon-plus-circle" />
                             {{ mergedOptionsConf.itemText }}
                         </a>
@@ -59,6 +96,7 @@
         mixins: [mixins, scrollMixins, selectorMixins],
         props: {
             isLoading: Boolean,
+            placeholder: String,
             preFilter: {
                 type: Object,
                 default: () => ({})
@@ -72,7 +110,8 @@
                 loading: this.isLoading,
                 selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: ''
+                displayName: '',
+                timerId: null
             }
         },
         computed: {
@@ -162,6 +201,12 @@
                 this.displayName = this.value
             }
         },
+        beforeDestroy () {
+            if (this.timerId) {
+                clearTimeout(this.timerId)
+                this.timerId = null
+            }
+        },
         methods: {
             handleInput (e) {
                 const { name, value } = e.target
@@ -197,8 +242,10 @@
             handleFocus (e) {
                 this.isFocused = true
                 if (!this.optionListVisible) {
-                    this.optionListVisible = true
-                    this.$emit('focus', e)
+                    this.timerId = setTimeout(() => {
+                        this.optionListVisible = true
+                        this.$emit('focus', e)
+                    }, 300)
                 }
             },
 

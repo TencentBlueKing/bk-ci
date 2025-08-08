@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,9 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
-import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -43,8 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
-    val permissionExtService: PermissionExtService,
-    val permissionGrantService: PermissionGrantService
+    val permissionExtService: PermissionExtService
 ) : ServicePermissionAuthResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
@@ -290,21 +287,6 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun grantInstancePermission(
-        userId: String,
-        token: String,
-        projectCode: String,
-        grantInstance: GrantInstanceDTO
-    ): Result<Boolean> {
-        return Result(
-            permissionGrantService.grantInstancePermission(
-                projectId = projectCode,
-                grantInfo = grantInstance
             )
         )
     }

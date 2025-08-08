@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.store.template.service.impl
 
 import com.tencent.devops.store.template.dao.StoreTemplateDao
 import com.tencent.devops.store.common.service.AbstractClassifyService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.template.service.MarketTemplateClassifyService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -46,7 +47,7 @@ class MarketTemplateClassifyServiceImpl : MarketTemplateClassifyService, Abstrac
     @Autowired
     lateinit var templateDao: StoreTemplateDao
 
-    override fun getDeleteClassifyFlag(classifyId: String): Boolean {
+    override fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean {
         // 允许删除分类是条件：1、该分类下的模板都不处于上架状态 2、该分类下的模板如果处于已下架状态但已经没人在用
         var flag = false
         val releaseTemplateNum = templateDao.countReleaseTemplateNumByClassifyId(dslContext, classifyId)

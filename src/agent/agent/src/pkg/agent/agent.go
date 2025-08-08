@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,13 +30,16 @@ package agent
 import (
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
@@ -47,6 +50,10 @@ import (
 
 func Run(isDebug bool) {
 	config.Init(isDebug)
+	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
+		systemutil.ExitProcess(1)
+	}
 
 	// 初始化国际化
 	i18n.InitAgentI18n()
@@ -77,6 +84,8 @@ func Run(isDebug bool) {
 
 	for {
 		doAsk()
+		// 请求完更新下IP
+		config.LoadAgentIp()
 		time.Sleep(5 * time.Second)
 	}
 }

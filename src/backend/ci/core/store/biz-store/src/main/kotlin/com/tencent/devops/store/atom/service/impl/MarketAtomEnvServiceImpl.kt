@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -46,6 +46,7 @@ import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
@@ -63,8 +64,8 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -88,7 +89,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
     private val storeI18nMessageService: StoreI18nMessageService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -135,6 +137,14 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 params = params
             )
         }
+        return Result(queryAtomRunInfos(projectCode, atomCodeList, filterAtomVersions))
+    }
+
+    private fun queryAtomRunInfos(
+        projectCode: String,
+        atomCodeList: List<String>,
+        atomVersions: Set<StoreVersion>
+    ): Map<String, AtomRunInfo> {
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
         val testAtomCodes = storeProjectRelDao.getTestStoreCodes(
@@ -144,7 +154,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             storeCodeList = atomCodeList
         )?.map { it.value1() }
         val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
-        filterAtomVersions.forEach { atomVersion ->
+        atomVersions.forEach { atomVersion ->
             val atomCode = atomVersion.storeCode
             val atomName = atomVersion.storeName
             val version = atomVersion.version
@@ -184,7 +194,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 }
             }
         }
-        return Result(atomRunInfoMap)
+        return atomRunInfoMap
     }
 
     private fun handleAtomVersions(
@@ -227,6 +237,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
             params = arrayOf(projectCode, atomName)
         )
+        val props = atomEnv.props
+        val sensitiveParams = props?.let {
+            marketAtomCommonService.getAtomSensitiveParams(props)
+        }
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
@@ -234,7 +248,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
-            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props)
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
+            sensitiveParams = sensitiveParams?.joinToString(",")
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存
@@ -263,12 +278,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
+        val buildingFlag =
+            projectCode == storeInnerPipelineConfig.innerPipelineProject && atomStatus == AtomStatusEnum.BUILDING.status.toByte()
         val atomStatusList = getAtomStatusList(
             atomStatus = atomStatus,
             version = version,
             normalStatusList = normalStatusList,
             atomCode = atomCode,
-            projectCode = projectCode
+            projectCode = projectCode,
+            queryTestFlag = buildingFlag
         )
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
@@ -277,7 +295,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             version = version,
             atomDefaultFlag = atomDefaultFlag,
-            atomStatusList = atomStatusList
+            atomStatusList = atomStatusList,
+            queryProjectFlag = !buildingFlag
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("[project($projectCode)-plugin($atomCode)]")
@@ -414,34 +433,38 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         normalStatusList: List<Byte>,
         atomCode: String,
-        projectCode: String
-    ): List<Byte>? {
-        var atomStatusList: List<Byte>? = null
-        if (atomStatus != null) {
+        projectCode: String,
+        queryTestFlag: Boolean
+    ): List<Byte> {
+        return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
-            if (VersionUtils.isLatestVersion(version)) {
-                atomStatusList = normalStatusList.toMutableList()
-                val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
-                if (releaseCount > 0) {
-                    // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
-                    atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
+            normalStatusList.toMutableList().apply {
+                if (VersionUtils.isLatestVersion(version)) {
+                    val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
+                    if (releaseCount > 0) {
+                        // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
+                        this.clear()
+                        this.add(AtomStatusEnum.RELEASED.status.toByte())
+                    }
                 }
-                val flag =
-                    storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
-                logger.info("isInitTestProjectCode flag is :$flag")
+                val flag = queryTestFlag ||
+                        storeProjectRelDao.isTestProjectCode(
+                            dslContext = dslContext,
+                            storeCode = atomCode,
+                            storeType = StoreTypeEnum.ATOM,
+                            projectCode = projectCode
+                        )
                 if (flag) {
-                    // 原生项目或者调试项目有权查处于测试中、审核中的插件
-                    atomStatusList.addAll(
+                    // 初始化项目或者调试项目有权查处于测试中、审核中的插件
+                    this.addAll(
                         listOf(
-                            AtomStatusEnum.TESTING.status.toByte(),
-                            AtomStatusEnum.AUDITING.status.toByte()
+                            AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte()
                         )
                     )
                 }
             }
         }
-        return atomStatusList
     }
 
     /**
@@ -501,5 +524,23 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
+    }
+
+    override fun batchGetAtomSensitiveParamInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Map<String, String> {
+        val atomRunInfos = queryAtomRunInfos(
+            projectCode = projectCode,
+            atomCodeList = atomVersions.map { it.storeCode },
+            atomVersions = atomVersions
+        )
+        val atomSensitiveParamInfos = mutableMapOf<String, String>()
+        atomRunInfos.forEach { key, atomRunInfo ->
+            if (!atomRunInfo.sensitiveParams.isNullOrBlank()) {
+                atomSensitiveParamInfos[key] = atomRunInfo.sensitiveParams!!
+            }
+        }
+        return atomSensitiveParamInfos
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,7 +40,9 @@ import io.swagger.v3.oas.annotations.media.Schema
     JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
     JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
     JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
-    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
+    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType),
+    JsonSubTypes.Type(value = ScmGitRepository::class, name = ScmGitRepository.classType),
+    JsonSubTypes.Type(value = ScmSvnRepository::class, name = ScmSvnRepository.classType)
 )
 interface Repository {
     val aliasName: String
@@ -52,6 +54,7 @@ interface Repository {
     val repoHashId: String?
     val enablePac: Boolean?
     val yamlSyncStatus: String?
+    val scmCode: String
 
     fun isLegal() = url.startsWith(getStartPrefix())
 

@@ -30,12 +30,12 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import jakarta.servlet.http.HttpServletResponse
 import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
 import java.net.HttpURLConnection
-import java.net.InetAddress
 import java.net.URLEncoder
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -43,7 +43,6 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import javax.servlet.http.HttpServletResponse
 import okhttp3.ConnectionPool
 import okhttp3.Dns
 import okhttp3.Headers.Companion.toHeaders
@@ -57,6 +56,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.util.FileCopyUtils
+import java.net.InetAddress
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
@@ -362,16 +362,16 @@ object OkhttpUtils {
         FileCopyUtils.copy(httpResponse.body!!.byteStream(), response.outputStream)
     }
 
-    fun downloadFile(url: String): javax.ws.rs.core.Response {
+    fun downloadFile(url: String): jakarta.ws.rs.core.Response {
         val httpResponse = getFileHttpResponse(url)
         val fileName: String?
         try {
             fileName = URLEncoder.encode(File(url).name, "UTF-8")
         } catch (e: UnsupportedEncodingException) {
-            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
+            return jakarta.ws.rs.core.Response.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
         }
-        return javax.ws.rs.core.Response
-            .ok(httpResponse.body!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
+        return jakarta.ws.rs.core.Response
+            .ok(httpResponse.body!!.byteStream(), jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("Content-disposition", "attachment;filename=" + fileName!!)
             .header("Cache-Control", "no-cache").build()
     }

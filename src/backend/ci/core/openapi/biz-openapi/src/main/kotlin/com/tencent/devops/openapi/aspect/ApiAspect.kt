@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,7 +45,7 @@ import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.swagger.v3.oas.annotations.Operation
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import kotlin.reflect.jvm.kotlinFunction
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.ProceedingJoinPoint

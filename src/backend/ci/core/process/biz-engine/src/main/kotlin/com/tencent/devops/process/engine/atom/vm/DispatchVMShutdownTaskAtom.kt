@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -54,8 +54,8 @@ import java.time.LocalDateTime
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchVMShutdownTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val dispatchTypeBuilder: DispatchTypeBuilder
 ) : IAtomTask<VMBuildContainer> {
@@ -87,8 +87,11 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 buildResult = true,
+                dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                 routeKeySuffix = dispatchTypeBuilder.getDispatchType(task, param).routeKeySuffix?.routeKeySuffix,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                jobId = task.jobId,
+                containerHashId = task.containerHashId
             )
         )
         containerBuildRecordService.updateContainerRecord(
@@ -139,10 +142,13 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,
-                        executeCount = task.executeCount
+                        executeCount = task.executeCount,
+                        jobId = task.jobId,
+                        containerHashId = task.containerHashId
                     )
                 )
                 defaultFailAtomResponse

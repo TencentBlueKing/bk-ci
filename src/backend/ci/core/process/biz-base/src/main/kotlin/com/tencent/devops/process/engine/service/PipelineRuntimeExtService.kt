@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -126,19 +126,19 @@ class PipelineRuntimeExtService @Autowired constructor(
         return null
     }
 
-    fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
-        val redisLock = PipelineNextQueueLock(redisOperation, pipelineId, buildId)
-        try {
-            redisLock.lock()
-            return pipelineBuildDao.updateStatus(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                oldBuildStatus = buildStatus,
-                newBuildStatus = BuildStatus.UNEXEC
-            )
-        } finally {
-            redisLock.unlock()
-        }
+    fun changeBuildStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        oldBuildStatus: BuildStatus,
+        newBuildStatus: BuildStatus
+    ): Boolean {
+        return pipelineBuildDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            oldBuildStatus = oldBuildStatus,
+            newBuildStatus = newBuildStatus
+        )
     }
 }

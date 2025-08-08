@@ -1,7 +1,11 @@
 <template>
     <article class="release-version">
-        <main v-bkloading="{ isLoading }" class="version-main">
-            <component :is="`${$route.params.type}Version`"
+        <main
+            v-bkloading="{ isLoading }"
+            class="version-main"
+        >
+            <component
+                :is="`${$route.params.type}Version`"
                 v-if="!isLoading"
                 class="release-show"
                 :detail="detail"
@@ -15,9 +19,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomVersion from '@/components/manage/release-manage/version/atom.vue'
     import imageVersion from '@/components/manage/release-manage/version/image.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -67,6 +71,10 @@
                     image: this.getImageVersion
                 }
                 const type = this.$route.params.type
+                if (!Object.hasOwnProperty.call(methodMap, type)) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 const currentMethod = methodMap[type]
                 this.isLoading = true
                 currentMethod().catch((err) => {

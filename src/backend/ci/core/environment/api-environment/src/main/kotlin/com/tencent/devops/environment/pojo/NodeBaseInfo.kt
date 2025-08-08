@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -62,5 +62,9 @@ data class NodeBaseInfo(
     @get:Schema(title = "当前环境是否启用这个 node")
     val envEnableNode: Boolean?,
     @get:Schema(title = "最后更新时间")
-    val lastModifyTime: Long? = null
+    val lastModifyTime: Long? = null,
+    @get:Schema(title = "主机名")
+    val nodeName: String? = null,
+    @get:Schema(title = "机型")
+    val size: String? = null
 )

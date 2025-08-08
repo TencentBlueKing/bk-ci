@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -63,6 +63,8 @@ interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
     var disablePipeline: Boolean?
     var recommendedVersion: RecommendedVersion?
     var customBuildNum: String?
+    var syntaxDialect: String?
+    var failIfVariableInvalid: Boolean?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser)
 
@@ -132,7 +134,11 @@ data class PreTemplateScriptBuildYamlParser(
     @JsonProperty("recommended-version")
     override var recommendedVersion: RecommendedVersion? = null,
     @JsonProperty("custom-build-num")
-    override var customBuildNum: String? = null
+    override var customBuildNum: String? = null,
+    @JsonProperty("syntax-dialect")
+    override var syntaxDialect: String? = null,
+    @JsonProperty("fail-if-variable-invalid")
+    override var failIfVariableInvalid: Boolean? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {
@@ -149,7 +155,9 @@ data class PreTemplateScriptBuildYamlParser(
             triggerOn = triggerOn,
             resources = resources,
             notices = notices,
-            concurrency = concurrency
+            concurrency = concurrency,
+            syntaxDialect = syntaxDialect,
+            failIfVariableInvalid = failIfVariableInvalid
         )
     }
 

@@ -1,5 +1,10 @@
 <template>
-    <pipeline class="edit-bk-pipeline" v-if="!isLoading" :pipeline="pipeline" :show-header="false"></pipeline>
+    <pipeline
+        class="edit-bk-pipeline"
+        v-if="!isLoading"
+        :pipeline="pipeline"
+        :show-header="false"
+    ></pipeline>
 </template>
 
 <script>

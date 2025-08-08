@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -205,7 +205,7 @@ object ProcessMessageCode {
 
     const val ERROR_PAUSE_PIPELINE_IS_RUNNING = "2101107" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101109" // {0} element大小越界
-    const val ERROR_JOB_RUNNING = "2101110" // job非完成态，不能进行重试
+    const val ERROR_RETRY_TASK_IN_CONTAINER_NOT_FINISHED = "2101110" // job非完成态，不能进行重试
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101111" // 排队超时，取消运行! [{0}]
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101112" // 质量红线(准出)检测失败
     const val ERROR_TIMEOUT_IN_RUNNING = "2101113" // {0}运行达到({1})分钟，超时结束运行!
@@ -361,7 +361,37 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
+    const val ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH = "2101256" // 流水线启动参数{0}超出4000长度限制
 
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点前后顺序不明，使用变量需明确前后顺序
+    const val ERROR_AGENT_REUSE_MUTEX_VAR_ERROR = "2101257"
+    const val ERROR_PIPELINE_RETRY_TIME_INVALID = "2101258" // 构建数据已过期，重试时间不能晚于构建开始时间{0}天以上
+    const val ERROR_COMMIT_BRANCH_IS_NOT_EMPTY = "2101259" // 指定分支不能为空
+    const val ERROR_NON_LATEST_RELEASE_VERSION = "2101266" // 当前构建版本已不是最新版本，请重新选择版本
+    const val ERROR_REPO_HASH_ID_IS_NOT_EMPTY = "2101267" // 代码库信息不能为空
+
+    const val ERROR_TRIGGER_EVENT_BODY_NOT_FOUND = "2101268" // 触发事件体不存在
+    const val ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED = "2101269" // 默认分支yaml文件已删除
+    const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2101270" // 仅支持git类型代码库开启PAC
+    const val ERROR_NOT_REPOSITORY_PUSH_PERMISSION = "2101271" // 用户 [{0}] 没有仓库 [{1}] PUSH权限
+    // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
+    const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
+    const val ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
+    const val ERROR_FAIL_IF_VARIABLE_INVALID = "2101274" // 参数[{0}]值超过系统限制(4K)，启动失败
+    const val ERROR_OP_PIPELINE_NUM_INVALID = "2101275" // 处理的流水线数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
+    const val ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID = "2101276" // 流水线[{0}]正在运行中，无法归档
+    const val ERROR_RETRY_TASK_NOT_FAILED = "2101277" // 重试的插件不是失败状态，不能进行插件级重试
+    const val ERROR_USER_NO_PUSH_PERMISSION = "2101280" // 用户[{0}]没有仓库[{1}]的推送权限, 请联系仓库管理员添加权限
+    const val ERROR_BUILD_REMARK_MAX_LENGTH = "2101281" // 构建备注最多只能输入{0}个字符
+    const val ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = "2101282" // 批量获取构建状态buildId数量不能超过{0}
+
+    const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
+    // 流水线[<a href="{0}" target="_blank">{1}</a>]分支版本[{2}]不存在
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101278"
+    // 分支版本不存在异常标题
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
+
+    const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
@@ -520,6 +550,7 @@ object ProcessMessageCode {
     const val BK_PREVIOUS_STAGE_SUCCESS = "bkPreviousStageSuccess" // [上游 Stage 成功时](Previous Stage Success):
     const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
+    const val BK_STAGE_REVIEW_EMPTY_REVIEWER = "bkStageReviewEmptyViewer" // 由于无审核人，被系统自动驳回
 
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
@@ -546,6 +577,7 @@ object ProcessMessageCode {
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
+    const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
     // 没有子流水线执行权限错误标题
@@ -556,4 +588,39 @@ object ProcessMessageCode {
     // 用户[xxx] 没有如下子流水线的执行权限，重置授权失败
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE =
         "bkNotSubPipelineExecutePermissionResetErrorTitle"
+
+    // 权限代持人[xxx]已无当前流水线执行权限，可能是权限已过期或不再负责此流水线，请联系流水线拥有者处理
+    const val BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION = "bkAuthorNotPipelineExecutePermission"
+    // 子流水线循环依赖错误标题
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
+
+    // 当前流水线存在循环依赖
+    const val BK_CURRENT_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkCurrentSubPipelineCircularDependencyErrorMessage"
+
+    // 子流水线[xxx]调用了当前流水线，形成循环依赖
+    const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkSubPipelineCircularDependencyErrorMessage"
+
+    // [xxx]流水线循环调用[xxx]流水线，形成循环依赖
+    const val BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
+        "bkOtherSubPipelineCircularDependencyErrorMessage"
+
+    // [<a href={0}>{1}</a>]创建成功,版本:{2}
+    const val BK_YAML_PIPELINE_CREATE_SUCCESS = "bkYamlPipelineCreateSuccess"
+    // [<a href={0}>{1}</a>]更新成功,版本:{2}
+    const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
+    // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
+    const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
+    // [{0}]删除成功,流水线ID:{1}
+    const val BK_YAML_PIPELINE_DELETE_SUCCESS = "bkYamlPipelineDeleteSuccess"
+
+    // 创建流水线失败
+    const val BK_YAML_PIPELINE_CREATE_FAILED = "bkYamlPipelineCreateFailed"
+    // [<a href={0}>{1}</a>]更新失败
+    const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+    // [<a href={0}>{1}</a>]删除版本失败,版本:{2}
+    const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
+    // [<a href={0}>{1}</a>]删除失败
+    const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
 }

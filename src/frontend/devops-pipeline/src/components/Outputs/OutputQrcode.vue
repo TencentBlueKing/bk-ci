@@ -1,5 +1,8 @@
 <template>
-    <div class="output-qrcode-box" @click.stop="">
+    <div
+        class="output-qrcode-box"
+        @click.stop=""
+    >
         <bk-popover
             theme="light"
             placement="bottom-end"
@@ -7,8 +10,15 @@
             :on-show="getArtifactQrcodeUrl"
         >
             <i class="devops-icon icon-qrcode"></i>
-            <div slot="content" class="output-qrcode-popup" v-bkloading="{ isLoading: gettingQrcode }">
-                <qrcode :text="qrcodeUrl" :size="100" />
+            <div
+                slot="content"
+                class="output-qrcode-popup"
+                v-bkloading="{ isLoading: gettingQrcode }"
+            >
+                <qrcode
+                    :text="qrcodeUrl"
+                    :size="100"
+                />
             </div>
         </bk-popover>
     </div>

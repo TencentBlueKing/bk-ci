@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -297,17 +297,17 @@ class P4Api(
     ): P4ChangeList {
         return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
-            p4Server.getServer().getChangelist(change).run {
-                P4ChangeList(
-                    description = this.description,
-                    fileList = this.getFiles(true).map { iFileSpec ->
-                        P4FileSpec(
-                            opStatus = iFileSpec.opStatus.name,
-                            depotPathString = iFileSpec.depotPathString
-                        )
-                    }
+            val description = p4Server.getServer().getChangelist(change).description
+            val fileList = p4Server.getChangelistFiles(change).map { iFileSpec ->
+                P4FileSpec(
+                    opStatus = iFileSpec.opStatus.name,
+                    depotPathString = iFileSpec.depotPathString
                 )
             }
+            P4ChangeList(
+                description = description,
+                fileList = fileList
+            )
         }
     }
 
@@ -317,17 +317,16 @@ class P4Api(
         return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
             val description = p4Server.getServer().getChangelist(change).description
-            p4Server.getServer().getShelvedFiles(change).run {
-                P4ChangeList(
-                    description = description,
-                    fileList = this.map { iFileSpec ->
-                        P4FileSpec(
-                            opStatus = iFileSpec.opStatus.name,
-                            depotPathString = iFileSpec.depotPathString
-                        )
-                    }
+            val fileList = p4Server.getShelvedFiles(change).map { iFileSpec ->
+                P4FileSpec(
+                    opStatus = iFileSpec.opStatus.name,
+                    depotPathString = iFileSpec.depotPathString
                 )
             }
+            P4ChangeList(
+                description = description,
+                fileList = fileList
+            )
         }
     }
 }

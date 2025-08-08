@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -22,7 +22,9 @@ import {
     isTGit,
     isSvn,
     isGitLab,
-    isGithub
+    isGithub,
+    isScmGit,
+    isScmSvn
 } from '../config'
 
 export function parsePathAlias (type, path, authType, svnType) {
@@ -58,6 +60,25 @@ export function parsePathAlias (type, path, authType, svnType) {
             reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitHttpRule}`
             aliasIndex = 2
+            break
+        case isScmSvn(type) && svnType === 'SSH':
+            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 3
+            break
+        case isScmSvn(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+            reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 4
+            break
+        case isScmGit(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+            reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
+            msg = `${codelibLocaleObj.httpOrHttpsRule}`
+            aliasIndex = 3
+            break
+        case isScmGit(type) && svnType === 'SSH':
+            reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
+            msg = `${codelibLocaleObj.gitlabSshRule}`
             break
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,7 +43,9 @@ enum class OperationLogType(val description: String) {
     ADD_PIPELINE_TO_GROUP("将流水线添加到流水线组时：「添加到流水线组 a」"),
     MOVE_PIPELINE_OUT_OF_GROUP("将流水线移出流水线组时：「从流水线组 a 中移出」"),
     UPDATE_PIPELINE_SETTING("修改流水线设置：「修改配置新增版本 P2.T1.2」"),
-    NORMAL_SAVE_OPERATION("普通保存操作");
+    RESET_RECOMMENDED_VERSION_BUILD_NO("重置流水线推荐版本号：「重置流水线推荐版本号为 xxx」"),
+    NORMAL_SAVE_OPERATION("普通保存操作"),
+    PIPELINE_ARCHIVE("流水线归档操作");
 
     fun getI18n(language: String): String {
         return MessageUtil.getMessageByLocale(

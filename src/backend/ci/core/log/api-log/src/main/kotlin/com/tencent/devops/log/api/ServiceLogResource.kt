@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,18 +34,19 @@ import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 /**
  *
@@ -100,7 +101,14 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true,
+        @Parameter(description = "查询结果是否倒序，默认false", required = false)
+        @QueryParam("reverse")
+        reverse: Boolean? = false
     ): Result<QueryLogs>
 
     @Operation(summary = "获取更多日志")
@@ -154,7 +162,11 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "获取某行前的日志")
@@ -199,7 +211,11 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs>
 
     @Operation(summary = "下载日志接口")

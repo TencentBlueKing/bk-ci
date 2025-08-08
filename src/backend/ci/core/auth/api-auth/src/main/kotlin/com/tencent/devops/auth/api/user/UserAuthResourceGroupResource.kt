@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
@@ -39,16 +40,16 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_RESOURCE_GROUP", description = "用户态-iam用户组")
 @Path("/user/auth/resource/group/{projectId}/{resourceType}")
@@ -92,6 +93,30 @@ interface UserAuthResourceGroupResource {
         @QueryParam("memberId")
         @Parameter(description = "组织ID/成员ID")
         memberId: String,
+        @QueryParam("groupName")
+        @Parameter(description = "用户组名称")
+        groupName: String?,
+        @QueryParam("minExpiredAt")
+        @Parameter(description = "最小过期时间")
+        minExpiredAt: Long?,
+        @QueryParam("maxExpiredAt")
+        @Parameter(description = "最大过期时间")
+        maxExpiredAt: Long?,
+        @QueryParam("relatedResourceType")
+        @Parameter(description = "资源类型")
+        relatedResourceType: String?,
+        @QueryParam("relatedResourceCode")
+        @Parameter(description = "资源ID")
+        relatedResourceCode: String?,
+        @QueryParam("action")
+        @Parameter(description = "操作")
+        action: String?,
+        @QueryParam("operateChannel")
+        @Parameter(description = "操作渠道")
+        operateChannel: OperateChannel?,
+        @QueryParam("uniqueManagerGroupsQueryFlag")
+        @Parameter(description = "唯一管理员组查询标识")
+        uniqueManagerGroupsQueryFlag: Boolean?,
         @Parameter(description = "起始位置,从0开始")
         @QueryParam("start")
         start: Int,
@@ -99,6 +124,27 @@ interface UserAuthResourceGroupResource {
         @QueryParam("limit")
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>>
+
+    @GET
+    @Path("{groupId}/getMemberGroupDetails/")
+    @Operation(summary = "获取用户加入单个组的详情")
+    fun getMemberGroupDetails(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "用户组Id")
+        @PathParam("groupId")
+        groupId: Int,
+        @QueryParam("memberId")
+        @Parameter(description = "组织ID/成员ID")
+        memberId: String
+    ): Result<GroupDetailsInfoVo>
 
     @PUT
     @Path("{groupId}/member/renewal")

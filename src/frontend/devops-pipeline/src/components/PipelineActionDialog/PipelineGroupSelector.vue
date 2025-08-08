@@ -1,16 +1,32 @@
 <template>
     <bk-form form-type="vertical">
         <bk-form-item>
-            <label v-if="dynamicGroupEditable" class="label-selector-label">
+            <label
+                v-if="dynamicGroupEditable"
+                class="label-selector-label"
+            >
                 <span>{{ $t('label') }}</span>
                 <span class="pipeline-label-action-span">
-                    <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
-                        <logo name="plus" size="20" />
-                        {{$t('addLabel')}}
+                    <router-link
+                        target="_blank"
+                        :to="addLabelRoute"
+                        class="pipeline-label-action-span-btn"
+                    >
+                        <logo
+                            name="plus"
+                            size="20"
+                        />
+                        {{ $t('addLabel') }}
                     </router-link>
-                    <span @click="refreshLabel" class="pipeline-label-action-span-btn">
-                        <logo name="refresh" size="16" />
-                        {{$t('editPage.atomForm.reflash')}}
+                    <span
+                        @click="refreshLabel"
+                        class="pipeline-label-action-span-btn"
+                    >
+                        <logo
+                            name="refresh"
+                            size="16"
+                        />
+                        {{ $t('editPage.atomForm.reflash') }}
                     </span>
                 </span>
             </label>
@@ -22,14 +38,16 @@
             />
         </bk-form-item>
 
-        <bk-form-item label-width="auto" :label="$t('dynamicPipelineGroup')">
+        <bk-form-item
+            label-width="auto"
+            :label="$t('dynamicPipelineGroup')"
+        >
             <bk-select
                 disabled
                 multiple
                 :value="dynamicGroup"
                 :loading="isMatching"
                 :placeholder="$t('pipelineDynamicMatchPlaceholder')"
-
             >
                 <bk-option
                     v-for="group in dynamicPipelineGroups"
@@ -40,7 +58,10 @@
                 </bk-option>
             </bk-select>
         </bk-form-item>
-        <bk-form-item label-width="auto" :label="$t('staticPipelineGroup')">
+        <bk-form-item
+            label-width="auto"
+            :label="$t('staticPipelineGroup')"
+        >
             <bk-select
                 multiple
                 :disabled="!staticGroupEditable"
@@ -53,11 +74,14 @@
                 <bk-option-group
                     v-for="(group, index) in visibleStaticGroups"
                     :name="group.name"
-                    :key="index">
-                    <bk-option v-for="option in group.children"
+                    :key="index"
+                >
+                    <bk-option
+                        v-for="option in group.children"
                         :key="option.id"
                         :id="option.id"
-                        :name="option.name">
+                        :name="option.name"
+                    >
                     </bk-option>
                 </bk-option-group>
             </bk-select>

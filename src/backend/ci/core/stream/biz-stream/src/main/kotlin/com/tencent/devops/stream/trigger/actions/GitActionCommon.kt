@@ -13,11 +13,11 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfoType
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
-import org.joda.time.DateTime
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
+import org.joda.time.DateTime
+import org.slf4j.LoggerFactory
 
 object GitActionCommon {
 
@@ -27,33 +27,20 @@ object GitActionCommon {
         action: BaseAction,
         triggerOn: TriggerOn?
     ): Map<String, String> {
-        return matchAndStartParams(
-            action = action,
-            triggerOn = triggerOn,
-            needMatch = false
-        ).second
-    }
-
-    fun matchAndStartParams(
-        action: BaseAction,
-        triggerOn: TriggerOn?,
-        needMatch: Boolean = true,
-        onlyMatch: Boolean = false
-    ): Pair<Boolean, Map<String, String>> {
-        logger.info("TGitActionCommon|matchAndStartParams|match and start params|triggerOn|$triggerOn")
+        logger.info("TGitActionCommon|getStartParams|match and start params|triggerOn|$triggerOn")
 
         val gitEvent = action.data.event
 
         val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
             gitEvent = gitEvent,
             triggerOn = triggerOn
-        ) ?: return Pair(false, emptyMap())
+        ) ?: TriggerBuilder.buildCodeGitWebHookTriggerElementDefault(gitEvent) ?: return mapOf()
         val webHookParams = WebhookElementParamsRegistrar.getService(element = element).getWebhookElementParams(
             element = element,
             variables = mapOf()
         )!!
         logger.info(
-            "TGitActionCommon|matchAndStartParams" +
+            "TGitActionCommon|getStartParams" +
                 "|match and start params|element|$element|webHookParams|$webHookParams"
         )
 
@@ -76,33 +63,72 @@ object GitActionCommon {
                 repo = repository,
                 eventCache = eventRepoCache
             )
-            val isMatch = if (needMatch) {
-                matcher.isMatch(
-                    projectId = action.data.setting.projectCode ?: "",
-                    // 如果是新的流水线,pipelineId还是为空,使用displayName
-                    pipelineId = action.data.context.pipeline!!.pipelineId.ifEmpty {
-                        action.data.context.pipeline!!.displayName
-                    },
-                    repository = repository,
-                    webHookParams = webHookParams
-                ).isMatch
-            } else {
-                true
+            return WebhookStartParamsRegistrar.getService(element = element).getStartParams(
+                projectId = action.data.eventCommon.gitProjectId,
+                element = element,
+                repo = repository,
+                matcher = matcher,
+                variables = mapOf(),
+                params = webHookParams,
+                matchResult = WebhookMatchResult(isMatch = true)
+            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+        } finally {
+            if (logger.isDebugEnabled) {
+                logger.debug("git action event cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}")
             }
-            val startParam = if (isMatch && !onlyMatch) {
-                WebhookStartParamsRegistrar.getService(element = element).getStartParams(
-                    projectId = action.data.eventCommon.gitProjectId,
-                    element = element,
-                    repo = repository,
-                    matcher = matcher,
-                    variables = mapOf(),
-                    params = webHookParams,
-                    matchResult = WebhookMatchResult(isMatch = isMatch)
-                ).map { entry -> entry.key to entry.value.toString() }.toMap()
-            } else {
-                emptyMap()
+            EventCacheUtil.remove()
+        }
+    }
+
+    fun isMatch(
+        action: BaseAction,
+        triggerOn: TriggerOn?
+    ): Boolean {
+        logger.info("TGitActionCommon|isMatch|match and start params|triggerOn|$triggerOn")
+
+        val gitEvent = action.data.event
+
+        val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
+            gitEvent = gitEvent,
+            triggerOn = triggerOn
+        ) ?: return false
+        val webHookParams = WebhookElementParamsRegistrar.getService(element = element).getWebhookElementParams(
+            element = element,
+            variables = mapOf()
+        )!!
+        logger.info(
+            "TGitActionCommon|isMatch" +
+                "|match and start params|element|$element|webHookParams|$webHookParams"
+        )
+
+        val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
+        val repository = if (action.checkRepoHookTrigger()) {
+            TriggerBuilder.buildCodeGitForRepoRepository(action)
+        } else TriggerBuilder.buildCodeGitRepository(action.data.setting)
+        try {
+            EventCacheUtil.initEventCache()
+            val eventRepoCache = with(action.data.context) {
+                EventRepositoryCache(
+                    gitMrReviewInfo = gitMrReviewInfo,
+                    gitMrInfo = gitMrInfo,
+                    gitMrChangeFiles = changeSet,
+                    gitDefaultBranchLatestCommitInfo = gitDefaultBranchLatestCommitInfo
+                )
             }
-            return Pair(isMatch, startParam)
+            EventCacheUtil.putIfAbsentEventCache(
+                projectId = action.data.setting.projectCode ?: "",
+                repo = repository,
+                eventCache = eventRepoCache
+            )
+            return matcher.isMatch(
+                projectId = action.data.setting.projectCode ?: "",
+                // 如果是新的流水线,pipelineId还是为空,使用displayName
+                pipelineId = action.data.context.pipeline!!.pipelineId.ifEmpty {
+                    action.data.context.pipeline!!.displayName
+                },
+                repository = repository,
+                webHookParams = webHookParams
+            ).isMatch
         } finally {
             if (logger.isDebugEnabled) {
                 logger.debug("git action event cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}")

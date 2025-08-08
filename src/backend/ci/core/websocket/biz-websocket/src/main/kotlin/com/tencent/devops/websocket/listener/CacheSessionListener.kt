@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,6 @@
 
 package com.tencent.devops.websocket.listener
 
-import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
@@ -37,8 +36,9 @@ import org.springframework.stereotype.Component
 @Component
 class CacheSessionListener @Autowired constructor(
     private val websocketService: WebsocketService
-) : Listener<ClearSessionEvent> {
-    override fun execute(event: ClearSessionEvent) {
+) {
+
+    fun handleClearSessionEvent(event: ClearSessionEvent) {
         if (websocketService.isCacheSession(event.sessionId)) {
             logger.info("clear cache session by mq fanout, userId[${event.userId}] sessionId[${event.sessionId}]")
             websocketService.removeCacheSession(event.sessionId)

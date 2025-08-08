@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -74,7 +74,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
         val realTaskId = if (stepId != null) {
             client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
-                projectId, buildId, taskId, stepId
+                projectId, buildId, taskId, stepId, null
             ).data?.taskId
         } else taskId
         if (realTaskId == null) {
@@ -102,7 +102,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|clear file task|$projectId|$pipelineId|$buildId|$taskId")
         val realTaskId = if (stepId != null) {
             client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
-                projectId, buildId, taskId, stepId
+                projectId, buildId, taskId, stepId, null
             ).data?.taskId
         } else taskId
         if (realTaskId == null) {

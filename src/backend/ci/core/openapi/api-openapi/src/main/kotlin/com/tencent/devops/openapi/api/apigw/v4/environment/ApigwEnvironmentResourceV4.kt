@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,19 +39,19 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPEN_API_V4_ENVIRONMENT", description = "OPENAPI-环境管理")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/environment/projects/{projectId}")
@@ -60,10 +60,13 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwEnvironmentResourceV4 {
 
-    @Operation(summary = "获取用户有权限使用的服务器列表", tags = ["v4_user_env_list_usable_nodes", "v4_app_env_list_usable_nodes"])
+    @Operation(
+        summary = "获取用户有权限使用的CMDB服务器列表",
+        tags = ["v4_user_env_list_usable_nodes", "v4_app_env_list_usable_nodes"]
+    )
     @GET
     @Path("/usable_server_nodes")
-    fun listUsableServerNodes(
+    fun listUsableServerCMDBNodes(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -185,7 +188,10 @@ interface ApigwEnvironmentResourceV4 {
         nodeHashIds: List<String>
     ): Result<Boolean>
 
-    @Operation(summary = "获取用户有权限使用的环境列表", tags = ["v4_app_env_list_usable_envs", "v4_user_env_list_usable_envs"])
+    @Operation(
+        summary = "获取用户有权限使用的CMDB环境列表",
+        tags = ["v4_app_env_list_usable_envs", "v4_user_env_list_usable_envs"]
+    )
     @GET
     @Path("/usable_server_envs")
     fun listUsableServerEnvs(
@@ -204,7 +210,7 @@ interface ApigwEnvironmentResourceV4 {
     ): Result<List<EnvWithPermission>>
 
     @Operation(
-        summary = "根据环境名称获取环境信息(不校验权限)",
+        summary = "根据环境名称获取环境CMDB信息(不校验权限)",
         tags = ["v4_user_env_list_env_by_env_names", "v4_app_env_list_env_by_env_names"]
     )
     @POST
@@ -227,7 +233,7 @@ interface ApigwEnvironmentResourceV4 {
     ): Result<List<EnvWithPermission>>
 
     @Operation(
-        summary = "根据hashId(多个)获取环境信息(不校验权限)",
+        summary = "根据hashId(多个)获取CMDB环境信息(不校验权限)",
         tags = ["v4_app_env_list_by_env_hashIds", "v4_user_env_list_by_env_hashIds"]
     )
     @POST
@@ -250,7 +256,7 @@ interface ApigwEnvironmentResourceV4 {
     ): Result<List<EnvWithPermission>>
 
     @Operation(
-        summary = "根据hashId获取项目节点列表(不校验权限)",
+        summary = "根据hashId获取项目CMDB节点列表(不校验权限)",
         tags = ["v4_user_env_node_list_byNodeHashIds", "v4_app_env_node_list_byNodeHashIds"]
     )
     @POST
@@ -273,7 +279,7 @@ interface ApigwEnvironmentResourceV4 {
     ): Result<List<NodeBaseInfo>>
 
     @Operation(
-        summary = "根据环境的hashId获取指定项目指定环境下节点列表(不校验权限)",
+        summary = "根据环境的hashId获取指定项目指定CMDB环境下节点列表(不校验权限)",
         tags = ["v4_user_env_node_list_byEnvHashIds", "v4_app_env_node_list_byEnvHashIds"]
     )
     @POST
@@ -295,7 +301,10 @@ interface ApigwEnvironmentResourceV4 {
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>>
 
-    @Operation(summary = "获取构建节点信息（扩展接口）", tags = ["v4_user_env_node_list_ext", "v4_app_env_node_list_ext"])
+    @Operation(
+        summary = "获取第三方构建节点信息（扩展接口）",
+        tags = ["v4_user_env_node_list_ext", "v4_app_env_node_list_ext"]
+    )
     @GET
     @Path("/ext_nodes")
     fun extListNodes(
@@ -314,7 +323,7 @@ interface ApigwEnvironmentResourceV4 {
     ): Result<List<NodeWithPermission>>
 
     @Operation(
-        summary = "获取构建节点信息（扩展接口）",
+        summary = "获取第三方构建节点被流水线引用数据",
         tags = ["v4_user_env_node_list_pipeline_ref", "v4_app_env_node_list_pipeline_ref"]
     )
     @GET
@@ -360,7 +369,10 @@ interface ApigwEnvironmentResourceV4 {
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean>
 
-    @Operation(summary = "指定构建环境获取所有节点信息", tags = ["v4_user_third_party_env2nodes", "v4_app_third_party_env2nodes"])
+    @Operation(
+        summary = "指定第三方构建环境获取所有第三方构建机节点信息",
+        tags = ["v4_user_third_party_env2nodes", "v4_app_third_party_env2nodes"]
+    )
     @GET
     @Path("/third_party_env2nodes")
     fun thirdPartyEnv2Nodes(

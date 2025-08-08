@@ -9,7 +9,7 @@ import java.util.TreeMap
  */
 class DictionaryContextDataWithVal(
     private val oriValue: String
-) : AbsDictionaryContextData() {
+) : DictionaryContextData() {
     override var mIndexLookup: TreeMap<String, Int>? = null
     override var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
@@ -26,6 +26,9 @@ class DictionaryContextDataWithVal(
         return result
     }
 
+    /**
+     * 兼容用户数据，输出的fetchValue
+     */
     override fun fetchValue(): Any {
         return try {
             ExpressionJsonUtil.getObjectMapper().readTree(oriValue)
@@ -33,4 +36,9 @@ class DictionaryContextDataWithVal(
             return oriValue
         }
     }
+
+    /**
+     * 引擎中计算使用的fetchValue
+     */
+    fun fetchValueNative() = super.fetchValue()
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -68,18 +68,18 @@ import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_SCM_GIT", description = "Service Code GIT resource")
 @Path("/service/git/")
@@ -411,6 +411,9 @@ interface ServiceGitResource {
         @Parameter(description = "将项目名作为目录打包进去 (默认：false)", required = false)
         @QueryParam("isProjectPathWrapped")
         isProjectPathWrapped: Boolean?,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @Context
         response: HttpServletResponse
     )
@@ -650,7 +653,7 @@ interface ServiceGitResource {
         @Parameter(description = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20,
-        @Parameter(description = "搜索用户关键字", required = true)
+        @Parameter(description = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?,
         @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)

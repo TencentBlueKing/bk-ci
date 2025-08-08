@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,24 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.notify
-
-const val EXCHANGE_EVENT = "exchange_event"
-
-const val QUEUE_NOTIFY_RTX = "queue_notify_rtx"
-const val QUEUE_NOTIFY_WECHAT = "queue_notify_wechat"
-const val QUEUE_NOTIFY_EMAIL = "queue_notify_email"
-const val QUEUE_NOTIFY_SMS = "queue_notify_sms"
-const val QUEUE_NOTIFY_WEWORK = "queue_notify_wework"
-const val QUEUE_NOTIFY_PUSH = "queue_notify_push"
-const val QUEUE_NOTIFY_VOICE = "queue_notify_voice"
-const val EXCHANGE_NOTIFY = "exchange_notify"
-const val ROUTE_RTX = "rtx"
-const val ROUTE_WECHAT = "wechat"
-const val ROUTE_EMAIL = "email"
-const val ROUTE_SMS = "sms"
-const val ROUTE_WEWORK = "wework"
-const val ROUTE_PUSH = "push"
-const val ROUTE_VOICE = "voice"
 
 const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE = "QUALITY_AUDIT_NOTIFY_TEMPLATE"
 const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE = "QUALITY_END_NOTIFY_TEMPLATE"

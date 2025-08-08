@@ -10,18 +10,19 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.IgnoreUserApiPermission
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_AUTH_APPLY", description = "用户权限申请")
 @Path("/user/auth/apply")
@@ -54,6 +55,7 @@ interface UserAuthApplyResource {
 
     @POST
     @Path("{projectId}/listGroups/")
+    @IgnoreUserApiPermission
     @Operation(summary = "展示用户组列表")
     fun listGroups(
         @Parameter(description = "用户名", required = true)
@@ -92,6 +94,7 @@ interface UserAuthApplyResource {
 
     @GET
     @Path("getRedirectInformation")
+    @IgnoreUserApiPermission
     @Operation(summary = "获取权限申请重定向信息")
     fun getRedirectInformation(
         @Parameter(description = "用户名", required = true)

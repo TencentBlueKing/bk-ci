@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境信息-Node数量")
 data class EnvWithNodeCount(
+    @get:Schema(title = "环境所属项目Id", required = true)
+    val projectId: String,
     @get:Schema(title = "环境 HashId", required = true)
     val envHashId: String,
     @get:Schema(title = "环境名称", required = true)
@@ -42,6 +44,7 @@ data class EnvWithNodeCount(
     @get:Schema(title = "源项目", required = false)
     val sharedProjectId: String?,
     @get:Schema(title = "分享人", required = false)
-    val sharedUserId: String?
-
+    val sharedUserId: String?,
+    @get:Schema(title = "节点hash id", required = false)
+    val nodeHashIds: List<String>? = null
 )

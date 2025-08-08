@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -169,5 +169,20 @@ class ServiceCallBackResourceImpl @Autowired constructor(
             callbackInfo = callbackInfo
         )
         return Result(true)
+    }
+
+    override fun getPipelineCallBack(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        event: CallBackEvent?
+    ): Result<List<ProjectPipelineCallBack>> {
+        return Result(
+            projectPipelineCallBackService.getPipelineCallback(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event?.name
+            )
+        )
     }
 }

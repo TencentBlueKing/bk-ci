@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -73,4 +73,5 @@ object StoreConstants {
     const val BK_DEFAULT_FAIL_POLICY = "defaultFailPolicy"
     const val BK_DEFAULT_RETRY_POLICY = "defaultRetryPolicy"
     const val BK_RETRY_TIMES = "retryTimes"
+    const val KEY_FRAMEWORK_CODE = "frameworkCode"
 }

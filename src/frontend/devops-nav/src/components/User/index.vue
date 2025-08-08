@@ -6,7 +6,8 @@
         :arrow="false"
         ref="popoverRef"
         :on-hide="handleHide"
-        :on-show="handleShow">
+        :on-show="handleShow"
+    >
         <div
             class="user-entry"
         >
@@ -23,14 +24,14 @@
                     v-if="item.to"
                     class="user-menu-item"
                     :to="item.to"
-                    @click.native="hideUserInfo"
+                    @click="hideUserInfo"
                 >
                     {{ item.label }}
                 </router-link>
                 <span
                     v-else-if="item.cb"
                     class="user-menu-item"
-                    @click.stop="item.cb"
+                    @click.stop="item.cb(item.name)"
                 >{{ item.label }}</span>
             </li>
         </template>
@@ -64,10 +65,7 @@
         @Action togglePopupShow
 
         hideUserInfo (item): void {
-            if (item) {
-                if (item.to === this.$route.fullPath) return
-                this.$router.push(item.to)
-            }
+            this.$refs.popoverRef.hideHandler()
         }
 
         handleShow () {
@@ -78,6 +76,10 @@
             this.togglePopupShow(false)
         }
 
+        updatePage (name) {
+            window.open(`${window.location.origin}/console/${name}`, '_self')
+        }
+
         get menu (): object[] {
             try {
                 return [
@@ -86,8 +88,14 @@
                         label: this.$t('projectManage')
                     },
                     {
-                        to: '/console/permission',
-                        label: this.$t('accessCenter')
+                        cb: this.updatePage,
+                        label: this.$t('accessCenter'),
+                        name: 'permission'
+                    },
+                    {
+                        cb: this.updatePage,
+                        label: this.$t('oauthManage'),
+                        name: 'permission/auth/oauth'
                     },
                     {
                         cb: this.logout,

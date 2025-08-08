@@ -10,7 +10,10 @@
         @after-resize="afterResize"
     >
         <pipeline-group-aside slot="aside" />
-        <Component :is="ListRightComponent" slot="main" />
+        <Component
+            :is="ListRightComponent"
+            slot="main"
+        />
     </bk-resize-layout>
 </template>
 
@@ -61,6 +64,7 @@
         flex: 1;
         display: flex;
         overflow: hidden;
+        border: 0;
 
         .flex-row {
             display: flex;
@@ -84,14 +88,16 @@
                 font-size: 14px;
                 line-height: 26px;
                 margin: 0 0 16px 0;
-                color: #313238;
-                font-weight: normal;
                 > :first-child {
                     margin: 0 8px 0 0;
                 }
                 > span {
                     font-weight: bold;
-
+                    color: #313238;
+                }
+                h5 {
+                    color: #313238;
+                    font-weight: normal;
                 }
             }
             .pipeline-list-main-header {
@@ -118,7 +124,7 @@
             .hidden {
                 visibility: hidden;
             }
-            
+
             .pipeline-cell-link {
                 color: $primaryColor;
                 cursor: pointer;

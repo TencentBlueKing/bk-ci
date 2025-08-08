@@ -1,15 +1,50 @@
 <template>
     <section>
-        <bk-form form-type="vertical" class="new-ui-form" :key="param">
-            <form-field :hide-colon="true" :required="true" :label="idLabel" :is-error="errors.has(`pipelineParam.id`)" :error-msg="errors.first(`pipelineParam.id`)">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="idValidRule" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+        <bk-form
+            form-type="vertical"
+            class="new-ui-form"
+            :key="param"
+        >
+            <form-field
+                :hide-colon="true"
+                :required="true"
+                :label="idLabel"
+                :is-error="errors.has(`pipelineParam.id`)"
+                :error-msg="errors.first(`pipelineParam.id`)"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :data-vv-scope="'pipelineParam'"
+                    v-validate="idValidRule"
+                    name="id"
+                    :placeholder="$t('nameInputTips')"
+                    :value="param.id"
+                />
             </form-field>
 
-            <form-field :hide-colon="true" :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="`notInList:${getUniqueArgs('name')}`" name="name" :placeholder="$t('newui.pipelineParam.nameInputTips')" :value="param.name" />
+            <form-field
+                :hide-colon="true"
+                :label="nameLabel"
+                :is-error="errors.has('pipelineParam.name')"
+                :error-msg="errors.first('pipelineParam.name')"
+            >
+                <vuex-input
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :data-vv-scope="'pipelineParam'"
+                    v-validate="`notInList:${getUniqueArgs('name')}`"
+                    name="name"
+                    :placeholder="$t('newui.pipelineParam.nameInputTips')"
+                    :value="param.name"
+                />
             </form-field>
 
-            <form-field :hide-colon="true" :required="true" :label="typeLabel">
+            <form-field
+                :hide-colon="true"
+                :required="true"
+                :label="typeLabel"
+            >
                 <selector
                     :popover-min-width="246"
                     :disabled="disabled"
@@ -29,8 +64,32 @@
             >
             </param-value-option>
 
-            <form-field :hide-colon="true" :label="$t('desc')">
-                <vuex-textarea :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
+            <form-field
+                :hide-colon="true"
+                :label="$t('desc')"
+            >
+                <vuex-textarea
+                    :disabled="disabled"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    name="desc"
+                    :placeholder="$t('editPage.descTips')"
+                    :value="param.desc"
+                />
+            </form-field>
+
+            <form-field
+                :hide-colon="true"
+                :label="$t('groupLabel')"
+                :desc="$t('groupLabelTips')"
+            >
+                <select-input
+                    :value="param.category"
+                    name="category"
+                    :disabled="disabled"
+                    type="text"
+                    :options="groupLabelList"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                />
             </form-field>
 
             <template v-if="paramType !== 'constant'">
@@ -41,7 +100,8 @@
                         :desc="$t('newui.pipelineParam.buildParamTips')"
                         :disabled="disabled"
                         :value="param.required"
-                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                     <atom-checkbox
                         name="valueNotEmpty"
                         class="neccessary-checkbox"
@@ -49,7 +109,8 @@
                         :disabled="disabled"
                         :text="$t('editPage.required')"
                         :value="param.valueNotEmpty"
-                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                 </div>
                 <div class="param-checkbox-row">
                     <atom-checkbox
@@ -58,27 +119,48 @@
                         :text="$t('editPage.readOnlyOnRun')"
                         :desc="$t('newui.pipelineParam.readOnlyTips')"
                         :value="param.readOnly"
-                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                 </div>
             </template>
+            <Accordion
+                show-content
+                show-checkbox
+            >
+                <header slot="header">
+                    {{ $t('editPage.controlOption') }}
+                </header>
+                <article slot="content">
+                    <SubParameter
+                        :title="$t('editPage.displayCondition')"
+                        name="displayCondition"
+                        :param="displayConditionList"
+                        v-bind="displayConditionSetting"
+                        :handle-change="handleUpdateDisplayCondition"
+                    />
+                </article>
+            </Accordion>
         </bk-form>
     </section>
 </template>
 
 <script>
-    import { deepCopy } from '@/utils/util'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput/'
+    import SubParameter from '@/components/AtomFormComponent/SubParameter'
+    import Accordion from '@/components/atomFormField/Accordion'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import Selector from '@/components/atomFormField/Selector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
+    import { deepCopy } from '@/utils/util'
     import ParamValueOption from './children/param-value-option'
 
     import {
+        CONST_TYPE_LIST,
         DEFAULT_PARAM,
         PARAM_LIST,
-        CONST_TYPE_LIST,
         STRING
     } from '@/store/modules/atom/paramsConfig'
 
@@ -89,7 +171,10 @@
             VuexInput,
             AtomCheckbox,
             Selector,
-            VuexTextarea
+            VuexTextarea,
+            SelectInput,
+            Accordion,
+            SubParameter
         },
         mixins: [validMixins],
         props: {
@@ -151,7 +236,44 @@
                         name: this.$t(`storeMap.${item.name}`)
                     }
                 })
-                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : list
+                const variableList = list.filter(item => item.id !== 'CHECKBOX')
+                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : variableList
+            },
+            groupLabelList () {
+                if (!Array.isArray(this.globalParams)) {
+                    return []
+                }
+                const ids = new Set()
+                return this.globalParams.reduce((uniqueItems, item) => {
+                    if (!ids.has(item.category) && item.category) {
+                        ids.add(item.category)
+                        uniqueItems.push({
+                            id: item.category,
+                            name: item.category
+                        })
+                    }
+                    return uniqueItems
+                }, [])
+            },
+            displayConditionList () {
+                return {
+                    paramType: 'list',
+                    list: this.globalParams.filter(item => item.id !== this.param.id).map(item => ({
+                        ...item,
+                        key: item.id
+                    }))
+                    
+                }
+            },
+            displayConditionSetting () {
+                return {
+                    atomValue: {
+                        displayCondition: Object.keys(this.param.displayCondition ?? {}).map(key => ({
+                            key,
+                            value: this.param.displayCondition[key]
+                        }))
+                    }
+                }
             }
         },
         created () {
@@ -186,6 +308,13 @@
             },
             isParamChanged () {
                 return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)
+            },
+            handleUpdateDisplayCondition (key, value) {
+                const displayCondition = JSON.parse(value).reduce((acc, cur) => {
+                    acc[cur.key] = cur.value
+                    return acc
+                }, {})
+                this.handleUpdateParam(key, displayCondition)
             }
         }
     }

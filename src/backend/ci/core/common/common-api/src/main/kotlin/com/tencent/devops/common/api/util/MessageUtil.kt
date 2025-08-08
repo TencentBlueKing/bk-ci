@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -71,7 +71,7 @@ object MessageUtil {
             // 根据locale和baseName生成resourceBundle对象
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
             // 通过resourceBundle获取对应语言的描述信息
-            message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+            message = resourceBundle.getString(messageCode)
             if (null != params) {
                 val mf = MessageFormat(message)
                 // 根据参数动态替换状态码描述里的占位符

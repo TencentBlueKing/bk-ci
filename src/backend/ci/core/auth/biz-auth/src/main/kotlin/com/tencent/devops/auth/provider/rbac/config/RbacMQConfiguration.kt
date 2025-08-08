@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,30 +30,28 @@ package com.tencent.devops.auth.provider.rbac.config
 
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
+import com.tencent.devops.auth.provider.rbac.listener.AuthProjectLevelPermissionsSyncListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
 import com.tencent.devops.auth.provider.rbac.listener.SyncGroupAndMemberListener
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthItsmCallbackEvent
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionMigrateService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import org.jooq.DSLContext
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -63,75 +61,24 @@ import org.springframework.context.annotation.Configuration
 class RbacMQConfiguration {
 
     @Bean
-    fun traceEventDispatcher(rabbitTemplate: RabbitTemplate) = TraceEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun projectEnableExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_ENABLE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun syncWhenEnabledProjectQueue(): Queue {
-        return Queue(MQ.QUEUE_PROJECT_ENABLED_SYNC_GROUP_AND_MEMBER, true)
-    }
-
-    @Bean
-    fun syncWhenEnabledProjectBind(
-        @Autowired syncWhenEnabledProjectQueue: Queue,
-        @Autowired projectEnableExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(syncWhenEnabledProjectQueue).to(projectEnableExchange)
-    }
+    fun traceEventDispatcher(streamBridge: StreamBridge) = TraceEventDispatcher(streamBridge)
 
     @Bean
     fun syncGroupAndMemberListener(
-        permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+        resourceGroupSyncService: PermissionResourceGroupSyncService,
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        permissionMigrateService: PermissionMigrateService
     ) = SyncGroupAndMemberListener(
-        permissionResourceGroupSyncService = permissionResourceGroupSyncService
+        resourceGroupSyncService = resourceGroupSyncService,
+        resourceGroupPermissionService = resourceGroupPermissionService,
+        permissionMigrateService = permissionMigrateService
     )
 
-    @Bean
-    fun syncEventListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired syncWhenEnabledProjectQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(syncGroupAndMemberListener, syncGroupAndMemberListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = syncWhenEnabledProjectQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
-
-    @Bean
-    fun authRbacExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun itsmCallbackQueue(): Queue {
-        return Queue(MQ.QUEUE_AUTH_ITSM_CALLBACK, true)
-    }
-
-    @Bean
-    fun itsmCallbackBind(
-        @Autowired itsmCallbackQueue: Queue,
-        @Autowired authRbacExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(itsmCallbackQueue).to(authRbacExchange).with(MQ.ROUTE_AUTH_ITSM_CALLBACK)
+    @EventConsumer
+    fun syncGroupAndMemberConsumer(
+        @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener
+    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> {
+        syncGroupAndMemberListener.execute(it)
     }
 
     @Bean
@@ -149,43 +96,10 @@ class RbacMQConfiguration {
         traceEventDispatcher = traceEventDispatcher
     )
 
-    @Bean
-    fun itsmCallbackEventListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired itsmCallbackQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired itsmCallbackListener: AuthItsmCallbackListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(itsmCallbackListener, itsmCallbackListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = itsmCallbackQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
-
-    @Bean
-    fun authResourceGroupCreateQueue(): Queue {
-        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP_CREATE, true)
-    }
-
-    @Bean
-    fun authResourceGroupCreateBind(
-        @Autowired authResourceGroupCreateQueue: Queue,
-        @Autowired authRbacExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder
-            .bind(authResourceGroupCreateQueue)
-            .to(authRbacExchange)
-            .with(MQ.ROUTE_AUTH_RESOURCE_GROUP_CREATE)
-    }
+    @EventConsumer
+    fun authItsmCallbackConsumer(
+        @Autowired authItsmCallbackListener: AuthItsmCallbackListener
+    ) = ScsConsumerBuilder.build<AuthItsmCallbackEvent> { authItsmCallbackListener.execute(it) }
 
     @Bean
     fun authResourceGroupCreateListener(
@@ -199,44 +113,24 @@ class RbacMQConfiguration {
     )
 
     @Bean
-    fun authResourceGroupCreateEventListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired authResourceGroupCreateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired authResourceGroupCreateListener: AuthResourceGroupCreateListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(
-            authResourceGroupCreateListener,
-            authResourceGroupCreateListener::execute.name
-        )
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = authResourceGroupCreateQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
+    fun authProjectLevelPermissionsSyncListener(
+        permissionService: PermissionResourceGroupPermissionService,
+        traceEventDispatcher: TraceEventDispatcher
+    ) = AuthProjectLevelPermissionsSyncListener(
+        permissionService = permissionService,
+        traceEventDispatcher = traceEventDispatcher
+    )
 
-    @Bean
-    fun authResourceGroupModifyQueue(): Queue {
-        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP_MODIFY, true)
-    }
+    @EventConsumer
+    fun authResourceGroupCreateConsumer(
+        @Autowired authResourceGroupCreateListener: AuthResourceGroupCreateListener
+    ) = ScsConsumerBuilder.build<AuthResourceGroupCreateEvent> { authResourceGroupCreateListener.execute(it) }
 
-    @Bean
-    fun authResourceGroupModifyBind(
-        @Autowired authResourceGroupModifyQueue: Queue,
-        @Autowired authRbacExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder
-            .bind(authResourceGroupModifyQueue)
-            .to(authRbacExchange)
-            .with(MQ.ROUTE_AUTH_RESOURCE_GROUP_MODIFY)
+    @EventConsumer
+    fun authProjectLevelPermissionsSyncConsumer(
+        @Autowired authProjectLevelPermissionsSyncListener: AuthProjectLevelPermissionsSyncListener
+    ) = ScsConsumerBuilder.build<AuthProjectLevelPermissionsSyncEvent> {
+        authProjectLevelPermissionsSyncListener.execute(it)
     }
 
     @Bean
@@ -250,28 +144,8 @@ class RbacMQConfiguration {
         traceEventDispatcher = traceEventDispatcher
     )
 
-    @Bean
-    fun authResourceGroupModifyEventListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired authResourceGroupModifyQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired authResourceGroupModifyListener: AuthResourceGroupModifyListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(
-            authResourceGroupModifyListener,
-            authResourceGroupModifyListener::execute.name
-        )
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = authResourceGroupModifyQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
+    @EventConsumer
+    fun authResourceGroupModifyConsumer(
+        @Autowired authResourceGroupModifyListener: AuthResourceGroupModifyListener
+    ) = ScsConsumerBuilder.build<AuthResourceGroupModifyEvent> { authResourceGroupModifyListener.execute(it) }
 }

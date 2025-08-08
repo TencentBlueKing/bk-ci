@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import {
-  ref,
+  RESOURCE_ACTION,
+  handleProjectManageNoPermission,
+} from '@/utils/permission.js';
+import { InfoBox, Message } from 'bkui-vue';
+import {
   onMounted,
+  ref,
 } from 'vue';
 import {
   useRoute,
@@ -9,13 +14,8 @@ import {
 } from 'vue-router';
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { InfoBox, Message, Popover } from 'bkui-vue';
 import ProjectForm from '@/components/project-form.vue';
-import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
+
 
 const { t } = useI18n();
 const router = useRouter();
@@ -28,19 +28,27 @@ const isLoading = ref(false);
 const isChange = ref(false);
 const btnLoading = ref(false);
 const hasPermission = ref(true)
-const statusDisabledTips = {
-  1: t('新建项目申请审批中，暂不可修改'),
-  4: t('更新项目信息审批中，暂不可修改'),
-};
 
+const currentDialect = ref();
+const isDialectDialog = ref(false);
+let initdata;
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http.requestProjectData({
     englishName: projectCode,
   }).then((res) => {
-    projectData.value = res;
+    projectData.value = {
+      ...res,
+      properties: {
+        pipelineDialect: 'CLASSIC',
+        loggingLineLimit: null,
+        ...res.properties,
+      },
+    };
+    currentDialect.value = res.properties?.pipelineDialect || 'CLASSIC';
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
+    initdata = JSON.stringify(projectData.value)
   }).catch((err) => {
     if (err.code === 403) {
       hasPermission.value = false
@@ -54,15 +62,19 @@ const fetchProjectData = async () => {
   isLoading.value = false;
 };
 
+const goShow = () => {
+  router.push({
+    path: 'show',
+  });
+}
+
 /**
  * 取消编辑项目
  */
 const handleCancel = () => {
   const onConfirm = () => {
     isChange.value = false;
-    router.push({
-      path: 'show',
-    });
+    goShow()
   };
   if (isChange.value) {
     InfoBox({
@@ -119,9 +131,7 @@ const updateProject = async () => {
       theme: 'success',
       message: t('保存成功'),
     });
-    router.push({
-      path: 'show',
-    });
+    goShow()
   }
   return Promise.resolve(false)
 };
@@ -141,17 +151,61 @@ const showNeedApprovedTips = () => {
   });
 };
 
+const undateMetadata = async (params) => {
+  try {
+    btnLoading.value = true;
+    const res = await http.batchUpdateMetadata(projectData.value.englishName, params)
+    if (res) {
+      Message({
+        theme: 'success',
+        message: t('保存成功'),
+      });
+      goShow()
+    }
+  } catch (err) {
+    console.log(err);
+  } finally {
+    btnLoading.value = false;
+  }
+}
+
 /**
  * 更新项目
  */
-const handleUpdate = async () => {
+const handleUpdate = (panel, params) => {
+  if (panel) {
+    undateMetadata(params)
+  } else {
+    if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
+      isDialectDialog.value = true;
+      return
+    }
+    updateConfirm()
+  }
+};
+
+const updateConfirm = async () => {
   projectForm.value?.validate().then(async () => {
     await updateProject();
   })
-};
+}
+
+const handleConfirm = () => {
+  isDialectDialog.value = false;
+  updateConfirm()
+}
+
+const handleClosed = () => {
+  isDialectDialog.value = false;
+  projectData.value.properties.pipelineDialect = 'CLASSIC'
+}
 
 const initProjectForm = (value) => {
   projectForm.value = value;
+};
+
+const initProjectData = (value) => {
+  Object.assign(projectData.value, value);
 };
 
 const handleNoPermission = () => {
@@ -176,44 +230,13 @@ onMounted(() => {
         type="edit"
         :is-change="isChange"
         :data="projectData"
+        :btnLoading="btnLoading"
         @change="handleFormChange"
         @initProjectForm="initProjectForm"
-        @approvedChange="handleApprovedChange">
-        <bk-form-item>
-          <Popover
-            :content="statusDisabledTips[projectData.approvalStatus]"
-            :disabled="![1, 4].includes(projectData.approvalStatus)"
-            v-perm="{
-              disablePermissionApi: [1, 3, 4].includes(projectData.approvalStatus),
-              hasPermission: [1, 3, 4].includes(projectData.approvalStatus),
-              permissionData: {
-                projectId: projectCode,
-                resourceType: RESOURCE_TYPE,
-                resourceCode: projectCode,
-                action: RESOURCE_ACTION.EDIT
-              }
-            }"
-          >
-            <span>
-              <bk-button
-                class="btn mr10"
-                :disabled="[1, 4].includes(projectData.approvalStatus)"
-                theme="primary"
-                :loading="btnLoading"
-                @click="handleUpdate"
-              >
-                {{ t('提交更新') }}
-              </bk-button>
-            </span>
-          </Popover>
-          <bk-button
-            class="btn"
-            :loading="btnLoading"
-            @click="handleCancel"
-          >
-            {{ t('取消') }}
-          </bk-button>
-        </bk-form-item>
+        @handleCancel="handleCancel"
+        @handleUpdate="handleUpdate"
+        @initProjectData="initProjectData"
+      >
       </project-form>
     </section>
     <bk-exception
@@ -228,17 +251,42 @@ onMounted(() => {
       </bk-button>
     </bk-exception>
   </bk-loading>
+  <bk-dialog
+    :width="480"
+    header-align="center"
+    footer-align="center"
+    :is-show="isDialectDialog"
+    @confirm="handleConfirm"
+    @closed="handleClosed"
+  >
+    <template #header>
+      <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
+      <h2 class="dialog-header"> {{ t('确定升级变量语法风格为制约风格？')}}</h2>
+    </template>
+    <template #default>
+      <div class="project">
+        {{ t('项目：') }} <span class="project-name">{{ projectData.projectName }}</span>
+      </div>
+      <div class="description">
+        {{ t('升级后，该项目下的流水线引用变量时仅支持X模式。') }}
+        <i18n-t keypath="升级有可能导致存量流水线X，请谨慎操作。" tag="div">
+          <span class="warn-tip">{{ t('运行失败') }}</span>
+        </i18n-t>
+      </div>
+    </template>
+  </bk-dialog>
 </template>
 
 <style lang="postcss" scoped>
   .edit-project-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    position: relative;
+    height: calc(100% - 108px);
+    padding: 16px 24px 16px;
     overflow: auto;
-    margin: 16px 24px 24px;
-    background-color: #fff;
-    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
+    box-sizing: border-box;
+   
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;
@@ -251,10 +299,11 @@ onMounted(() => {
       height: 8px !important;
     }
     .edit-project-form {
-      width: 100%;
+      width: 1200px;
+      height: 100%;
+      background-color: #FFF;
       flex: 1;
       margin: 0 auto;
-      padding: 32px 48px;
       :deep(.bk-form-label) {
         font-size: 12px;
       }
@@ -267,6 +316,39 @@ onMounted(() => {
     }
     .btn {
       width: 88px;
+    }
+  }
+  .manage-icon-tips {
+    width: 42px;
+    height: 42px;
+  }
+  .dialog-header {
+    font-family: MicrosoftYaHei;
+    font-size: 20px;
+    color: #313238;
+    letter-spacing: 0;
+  }
+  .progect {
+    font-size: 14px;
+    color: #63656E;
+    .project-name {
+      color: #313238;
+      font-weight: bold;
+    }
+  }
+  .description {
+    width: 416px;
+    height: 58x;
+    padding: 6px 16px;
+    margin: 16px 0;
+    background: #F5F6FA;
+    border-radius: 2px;
+    font-size: 14px;
+    color: #63656E;
+
+    .warn-tip {
+      font-weight: 700;
+      color: red;
     }
   }
 </style>

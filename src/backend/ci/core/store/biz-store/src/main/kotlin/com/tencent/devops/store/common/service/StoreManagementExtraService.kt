@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,8 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreManagementExtraService {
@@ -41,6 +43,37 @@ interface StoreManagementExtraService {
      * 删除组件仓库文件
      */
     fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 删除组件代码库
+     */
+    fun deleteComponentCodeRepository(
+        userId: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 添加组件代码库成员
+     */
+    fun addComponentRepositoryUser(
+        memberType: StoreMemberTypeEnum,
+        members: List<String>,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 删除组件代码库成员
+     */
+    fun deleteComponentRepositoryUser(
+        member: String,
+        repositoryId: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 
     /**
      * 检查卸载组件请求合法性

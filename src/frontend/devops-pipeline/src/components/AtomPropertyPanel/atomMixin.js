@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -57,6 +57,7 @@ import EnumButton from '@/components/atomFormField/EnumButton'
 import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import Tips from '@/components/AtomFormComponent/Tips'
 import SubParameter from '@/components/AtomFormComponent/SubParameter'
+import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 
 const atomMixin = {
     props: {
@@ -109,7 +110,8 @@ const atomMixin = {
         EnumButton,
         TipsSimple,
         Tips,
-        SubParameter
+        SubParameter,
+        MetadataNormal
     },
     computed: {
         ...mapGetters('atom', [
@@ -239,9 +241,11 @@ const atomMixin = {
          * 获取每种类型最大长度限制
          */
         getMaxLengthByType (type) {
-            const defaultLength = 1024
-            const componentItem = this.atomInputLimit.find(item => item.componentType === type) || {}
-            return componentItem.maxSize || defaultLength
+            const componentItem = this.atomInputLimit.find(item => item.componentType === type)
+                || this.atomInputLimit.find(item => item.componentType === 'default')
+                || { maxSize: 16384 }
+
+            return componentItem.maxSize
         }
     }
 }

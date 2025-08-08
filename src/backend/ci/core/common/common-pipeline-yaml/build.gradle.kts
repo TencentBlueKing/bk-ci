@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,7 +39,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.github.java-diff-utils/java-diff-utils
     implementation("io.github.java-diff-utils:java-diff-utils:4.12")
     // https://mvnrepository.com/artifact/org.json/json
-    implementation("org.json:json:20230618")
+    implementation("org.json:json")
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
 //    implementation("org.yaml:snakeyaml:2.1")
     testImplementation(project(":core:common:common-test"))

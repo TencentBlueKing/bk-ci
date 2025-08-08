@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,8 +31,8 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -44,5 +44,5 @@ class EnvironmentConfig {
     fun agentUrlService(commonConfig: CommonConfig) = BluekingAgentUrlServiceImpl(commonConfig)
 
     @Bean
-    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
+    fun webSocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -63,6 +63,8 @@ export default {
         getResponseData (response, dataPath = 'data.records', defaultVal = []) {
             try {
                 switch (true) {
+                    case Array.isArray(response):
+                        return response
                     case Array.isArray(response.data):
                         return response.data
                     case response.data && response.data.record && Array.isArray(response.data.record):

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,17 +28,18 @@
 package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_METRICS_DATAS", description = "METRICS-数据上报")
 @Path("/service/metrics/datas")
@@ -68,5 +69,13 @@ interface ServiceMetricsDataReportResource {
     fun metricsTurboDataReport(
         @Parameter(description = "编译加速数据上报传输对象", required = true)
         turboDataReportDTO: TurboDataReportDTO
+    ): Result<Boolean>
+
+    @Operation(summary = "Job并发数据上报")
+    @Path("/jobdispatch/data/report")
+    @POST
+    fun metricsJobDispatchDataReport(
+        @Parameter(description = "Job并发数据上报传输对象", required = true)
+        dispatchJobMetricsData: DispatchJobMetricsData
     ): Result<Boolean>
 }

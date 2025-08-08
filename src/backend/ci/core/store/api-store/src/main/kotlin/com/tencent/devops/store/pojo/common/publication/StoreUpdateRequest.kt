@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common.publication
 
 import com.tencent.devops.store.pojo.common.handler.HandlerRequest
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "工作台-更新组件请求报文体")
 data class StoreUpdateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
+    @get:Schema(title = "项目代码", required = false)
+    val projectCode: String? = null,
     @get:Schema(title = "基础信息", required = true)
     @field:Valid
     val baseInfo: StoreBaseUpdateRequest

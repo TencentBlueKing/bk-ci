@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,16 +33,17 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -136,7 +137,7 @@ class PipelineWebhookUpgradeService(
             val (elements, params) = if (model == null) {
                 Pair(emptyList(), emptyMap())
             } else {
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val triggerContainer = model.getTriggerContainer()
                 val params = triggerContainer.params.associate { param ->
                     param.id to param.defaultValue.toString()
                 }
@@ -300,6 +301,69 @@ class PipelineWebhookUpgradeService(
         }
     }
 
+    fun updateWebhookProjectName(projectId: String?, pipelineId: String?) {
+        ThreadPoolUtil.submitAction(
+            actionTitle = "updateWebhookProjectName",
+            action = {
+                updateProjectName(projectId, pipelineId)
+            }
+        )
+    }
+
+    private fun updateProjectName(projectId: String?, pipelineId: String?) {
+        logger.info("start update webhook project name|projectId:$projectId")
+        var offset = 0
+        val limit = 100
+        var webhookList = listOf<PipelineWebhook>()
+        val repoCache = mutableMapOf<String, Repository?>()
+        do {
+            webhookList = pipelineWebhookDao.listWebhook(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                ignoredRepoTypes = setOf(ScmType.CODE_SVN.name, ScmType.CODE_P4.name),
+                limit = limit,
+                offset = offset
+            ) ?: mutableListOf()
+            // 仅查没缓存的仓库
+            val repoIds = webhookList.mapNotNull { it.repositoryHashId }.filter { !repoCache.containsKey(it) }.toSet()
+            val repositoryList = try {
+                client.get(ServiceRepositoryResource::class).listRepoByIds(
+                    repositoryIds = repoIds
+                ).data
+            } catch (ignored: Exception) {
+                logger.warn("failed to get repository list", ignored)
+                null
+            } ?: listOf()
+            // 仓库信息
+            repositoryList.filter { !it.repoHashId.isNullOrBlank() }.forEach {
+                repoCache[it.repoHashId!!] = it
+            }
+            webhookList.filter { !it.repositoryHashId.isNullOrBlank() }.forEach { webhook ->
+                val repository = repoCache[webhook.repositoryHashId]
+                if (repository == null) {
+                    logger.info("${webhook.projectId}|repoCache[${webhook.repositoryHashId}] is null")
+                    return@forEach
+                }
+                if (webhook.projectName != repository.projectName) {
+                    val count = pipelineWebhookDao.updateProjectName(
+                        dslContext = dslContext,
+                        projectId = webhook.projectId,
+                        pipelineId = webhook.pipelineId,
+                        taskId = webhook.taskId!!,
+                        projectName = repository.projectName
+                    )
+                    logger.info(
+                        "${webhook.projectId}|${webhook.pipelineId}|${webhook.taskId}|update webhook projectName|" +
+                                "[${webhook.projectName}]==>[${repository.projectName}]|changeCount[$count]"
+                    )
+                }
+            }
+            offset += limit
+        } while (webhookList.size == 100)
+        logger.info("final update webhook project name|projectId:$projectId")
+    }
+
     private fun updateWebhookEventInfoTask(projectId: String?) {
         var offset = 0
         val limit = 1000
@@ -336,10 +400,12 @@ class PipelineWebhookUpgradeService(
             logger.info("$projectId|$pipelineId|model is null")
             return
         }
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val params = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }
+        val triggerContainer = model.getTriggerContainer()
+        val params = PipelineVarUtil.fillVariableMap(
+            triggerContainer.params.associate { param ->
+                param.id to param.defaultValue.toString()
+            }
+        )
         val elementMap =
             triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
         val pipelineWebhooks = pipelineWebhookDao.listWebhook(

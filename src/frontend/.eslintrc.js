@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,13 +36,11 @@ module.exports = {
         browser: true
     },
     extends: [
-        'plugin:vue/recommended',
-        'standard'
+        'plugin:vue/recommended'
     ],
     // required to lint *.vue files
     plugins: [
         'vue',
-        'import'
     ],
     settings: {
         'import/resolver': 'node'
@@ -122,7 +120,7 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-closing-bracket-newline.md
         // 单行写法不需要换行，多行需要，不限制
-        'vue/html-closing-bracket-newline': 'off',
+        'vue/html-closing-bracket-newline': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-closing-bracket-spacing.md
         'vue/html-closing-bracket-spacing': ['error', {
@@ -168,15 +166,22 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/max-attributes-per-line.md
         // 每行属性的最大个数，不限制
-        'vue/max-attributes-per-line': 'off',
+        'vue/max-attributes-per-line': ['error', {
+            singleline: {
+                max: 1
+            },
+            multiline: {
+                max: 1
+            }
+        }],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/multiline-html-element-content-newline.md
         // 在多行元素的内容前后需要换行符，不限制
-        'vue/multiline-html-element-content-newline': 'off',
+        'vue/multiline-html-element-content-newline': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/mustache-interpolation-spacing.md
         // template 中 {{var}}，不限制
-        'vue/mustache-interpolation-spacing': 'off',
+        'vue/mustache-interpolation-spacing': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/name-property-casing.md
         'vue/name-property-casing': 'off',
@@ -232,7 +237,7 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/no-template-key.md
         // 禁止在 <template> 中使用 key 属性，不限制
-        'vue/no-template-key': 'off',
+        'vue/no-template-key': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/no-template-shadow.md
         'vue/no-template-shadow': 'error',

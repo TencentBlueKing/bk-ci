@@ -1,6 +1,7 @@
 <template>
     <p class="rate-stars">
-        <svg v-for="(item, index) in maxStars"
+        <svg
+            v-for="(item, index) in maxStars"
             :key="index"
             :class="[{ yellow: index < Math.floor(rate) }, { isEdit: edit }, 'rate-star']"
             :style="{ width: width + 'px', height: height + 'px', 'min-width': width + 'px' }"
@@ -13,7 +14,10 @@
                 <g transform="translate(83.000000, 114.000000)">
                     <g transform="translate(15.000000, 384.000000)">
                         <g transform="translate(29.000000, 137.000000)">
-                            <polygon class="st1" points="48,53 28.2,63.9 32,40.8 16,24.4 38.1,21 48,-0.1 57.8,21 79.9,24.4 63.9,40.8 67.7,63.9" />
+                            <polygon
+                                class="st1"
+                                points="48,53 28.2,63.9 32,40.8 16,24.4 38.1,21 48,-0.1 57.8,21 79.9,24.4 63.9,40.8 67.7,63.9"
+                            />
                         </g>
                     </g>
                 </g>

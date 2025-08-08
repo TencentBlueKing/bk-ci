@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,27 +27,29 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
 import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
+import com.tencent.devops.turbo.vo.ResourceCostSummary
 import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.validation.Valid
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPENAPI_TURBO_V4", description = "编译加速open api接口")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/turbo")
@@ -153,4 +155,40 @@ interface ApigwTurboResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Response<Page<ProjectResourceUsageVO>>
+
+    @GET
+    @Operation(summary = "触发项目资源统计上报任务", tags = ["v4_app_server_resources_upload_auto"])
+    @Path("/triggerAutoUpload/{month}")
+    fun triggerAutoUpload(
+        @Parameter(description = "用户信息")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "所属周期月份")
+        @PathParam("month")
+        month: String,
+        @Parameter(description = "起始统计日期")
+        @QueryParam(value = "startDate")
+        startDate: String?,
+        @Parameter(description = "截止统计日期")
+        @QueryParam("endDate")
+        endDate: String?
+    ): Response<Boolean>
+
+    @POST
+    @Operation(summary = "手动上报项目资源统计数据", tags = ["v4_app_server_resources_upload_manual"])
+    @Path("/manualUpload")
+    fun triggerManualUpload(
+        @Parameter(description = "用户信息")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目id")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "待上报的数据")
+        @Valid
+        summary: ResourceCostSummary
+    ): Response<Boolean>
 }

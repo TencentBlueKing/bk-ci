@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -46,26 +46,27 @@ class LogStatusDao {
         subTags: String?,
         containerHashId: String?,
         executeCount: Int,
-        logStorageMode: LogStorageMode,
+        logStorageMode: LogStorageMode?,
         finish: Boolean,
         jobId: String?,
         stepId: String?
     ) {
         with(TLogStatus.T_LOG_STATUS) {
-            dslContext.insertInto(this)
+            val update = dslContext.insertInto(this)
                 .set(BUILD_ID, buildId)
                 .set(TAG, tag)
                 .set(SUB_TAG, subTags)
                 .set(EXECUTE_COUNT, executeCount)
                 .set(JOB_ID, containerHashId)
                 .set(FINISHED, finish)
-                .set(MODE, logStorageMode.name)
+
                 .set(USER_JOB_ID, jobId)
                 .set(STEP_ID, stepId)
-                .onDuplicateKeyUpdate()
+            logStorageMode?.let { update.set(MODE, it.name) }
+            update.onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
-                .set(MODE, logStorageMode.name)
-                .execute()
+            logStorageMode?.let { update.set(MODE, it.name) }
+            update.execute()
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,10 +34,10 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
-import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
 import com.tencent.devops.store.common.service.StoreBuildService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,15 +60,23 @@ class StoreBuildServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
-        val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-            ?: return I18nUtil.generateResponseDataObject(
+        val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
+        logger.info("handleStoreBuildResult pipelineId:${storeBuildInfoRecord?.pipelineId}")
+        if (storeBuildInfoRecord == null) {
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(pipelineId),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
-        val storeType = storePipelineRelRecord.storeType
+        }
+        val storeType = storeBuildInfoRecord.pipelineId?.let {
+            storePipelineRelDao.getStoreTypeByLatestPipelineId(
+                dslContext = dslContext,
+                pipelineId = it
+            )
+        }
         val storeHandleBuildResultService =
-            getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
+            getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType!!.toInt()))
         val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
         logger.info("handleStoreBuildResult result is:$result")
         if (result.isNotOk() || result.data != true) {

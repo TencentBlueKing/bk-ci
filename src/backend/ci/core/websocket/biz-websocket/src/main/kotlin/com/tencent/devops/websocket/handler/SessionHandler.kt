@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.websocket.handler
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.servcie.WebsocketService
 import com.tencent.devops.websocket.utils.HostUtils
@@ -41,7 +42,6 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator
 
 class SessionHandler @Autowired constructor(
     delegate: WebSocketHandler,
-    private val websocketService: WebsocketService,
     private val redisOperation: RedisOperation
 ) : WebSocketHandlerDecorator(delegate) {
 
@@ -63,7 +63,8 @@ class SessionHandler @Autowired constructor(
             super.afterConnectionClosed(session, closeStatus)
         } else {
             logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
-            websocketService.clearAllBySession(userId, sessionId)
+            SpringContextUtil.getBean(WebsocketService::class.java)
+                .removeCacheSession(sessionId)
         }
 
         super.afterConnectionClosed(session, closeStatus)
@@ -75,7 +76,8 @@ class SessionHandler @Autowired constructor(
         val sessionId = uri?.query?.split("&")
             ?.firstOrNull { it.contains("sessionId") }?.substringAfter("sessionId=")
         val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
-        websocketService.addCacheSession(sessionId!!)
+        SpringContextUtil.getBean(WebsocketService::class.java)
+            .addCacheSession(sessionId!!)
         logger.info("connection success: |$sessionId| $uri | $remoteId | $webUser ")
         super.afterConnectionEstablished(session)
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,9 +28,12 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.BkManagerCheck
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -41,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProjectAuthResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
+    val permissionAuthorizationService: PermissionAuthorizationService
 ) : ServiceProjectAuthResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectUsers(
@@ -106,6 +110,18 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun isProjectMember(
+        userId: String,
+        projectCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionProjectService.isProjectMember(
+                userId = userId,
+                projectCode = projectCode
+            )
+        )
+    }
+
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkUserInProjectLevelGroup(
         token: String,
@@ -138,6 +154,19 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
             permissionProjectService.checkProjectManager(
                 userId = userId,
                 projectCode = projectCode
+            )
+        )
+    }
+
+    @BkManagerCheck
+    override fun checkProjectManagerAndMessage(
+        userId: String,
+        projectId: String,
+    ): Result<Boolean> {
+        return Result(
+            permissionProjectService.checkProjectManager(
+                userId = userId,
+                projectCode = projectId
             )
         )
     }
@@ -198,6 +227,14 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getProjectPermissionInfo(
                 projectCode = projectCode
+            )
+        )
+    }
+
+    override fun listUserProjectsWithAuthorization(userId: String): Result<List<AuthProjectVO>> {
+        return Result(
+            permissionAuthorizationService.listUserProjectsWithAuthorization(
+                userId = userId
             )
         )
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 class ProjectCacheService @Autowired constructor(private val client: Client) {
@@ -68,6 +68,14 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
         }
     }
 
+    fun getProjectDialect(projectId: String): String? {
+        return getProject(projectId = projectId)?.properties?.pipelineDialect
+    }
+
+    fun getLoggingLineLimit(projectId: String): Int? {
+        return getProject(projectId = projectId)?.properties?.loggingLineLimit
+    }
+
     private fun getProjectInner(projectId: String): ProjectVO {
         return client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw NotFoundException("Fail to find the project info of project($projectId)")
@@ -76,6 +84,6 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectCacheService::class.java)
         private const val cacheSize: Long = 5000
-        private const val cacheTimeMinute: Long = 10
+        private const val cacheTimeMinute: Long = 5
     }
 }

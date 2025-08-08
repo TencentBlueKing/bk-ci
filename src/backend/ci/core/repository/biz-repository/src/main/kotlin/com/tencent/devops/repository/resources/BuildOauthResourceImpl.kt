@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,11 +28,14 @@
 package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.repository.api.BuildOauthResource
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService,
-    private val githubTokenService: GithubTokenService
+    private val githubTokenService: GithubTokenService,
+    private val githubOAuthService: GithubOAuthService
 ) : BuildOauthResource {
 
     @SensitiveApiPermission("get_oauth_token")
@@ -51,4 +55,38 @@ class BuildOauthResourceImpl @Autowired constructor(
     override fun githubGet(projectId: String, buildId: String, userId: String): Result<GithubToken?> {
         return Result(githubTokenService.checkAndGetAccessToken(projectId, buildId, userId))
     }
+
+    override fun gitOauthUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String
+    ): Result<String> {
+        return Result(
+            gitOauthService.getOauthUrl(
+                userId = userId,
+                redirectUrl = getBuildUrl(projectId, pipelineId, buildId)
+            )
+        )
+    }
+
+    override fun githubOauthUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String
+    ): Result<String> {
+        return Result(
+            githubOAuthService.getGithubOauth(
+                userId = userId,
+                projectId = projectId,
+                redirectUrlTypeEnum = RedirectUrlTypeEnum.SPEC,
+                specRedirectUrl = getBuildUrl(projectId, pipelineId, buildId),
+                repoHashId = null
+            ).redirectUrl
+        )
+    }
+
+    private fun getBuildUrl(projectId: String, pipelineId: String, buildId: String) =
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
 }

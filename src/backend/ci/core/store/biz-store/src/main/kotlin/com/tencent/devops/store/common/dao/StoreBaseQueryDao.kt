@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,10 +27,8 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -65,32 +63,18 @@ class StoreBaseQueryDao {
     fun getMaxVersionComponentByCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        statusList: List<String>? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_TYPE.eq(storeType.type.toByte()))
+                add(STORE_CODE.eq(storeCode))
+                statusList?.takeIf { it.isNotEmpty() }?.let { add(STATUS.`in`(it)) }
+            }
             dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
-                .orderBy(
-                    JooqUtils.subStr(
-                        str = VERSION,
-                        delim = ".",
-                        count = 1
-                    ).plus(0).desc(),
-                    JooqUtils.subStr(
-                        str = JooqUtils.subStr(
-                            str = VERSION,
-                            delim = ".",
-                            count = -2
-                        ),
-                        delim = ".",
-                        count = 1
-                    ).plus(0).desc(),
-                    JooqUtils.subStr(
-                        str = VERSION,
-                        delim = ".",
-                        count = -1
-                    ).plus(0).desc()
-                )
+                .where(conditions)
+                .orderBy(BUS_NUM.desc())
                 .limit(1)
                 .fetchOne()
         }
@@ -139,12 +123,9 @@ class StoreBaseQueryDao {
         return with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf(STORE_CODE.`in`(storeCodes))
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            val testStatusEnumList = listOf(
-                StoreStatusEnum.TESTING,
-                StoreStatusEnum.AUDITING
-            )
+            val testStatusList = StoreStatusEnum.getTestStatusList()
             if (testComponentFlag) {
-                conditions.add(STATUS.`in`(testStatusEnumList))
+                conditions.add(STATUS.`in`(testStatusList))
                 val subQuery = dslContext.select(
                     STORE_CODE,
                     STORE_TYPE,
@@ -160,10 +141,11 @@ class StoreBaseQueryDao {
                             .and(CREATE_TIME.eq(subQuery.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
                     )
                     .where(conditions)
+                    .skipCheck()
                     .fetch()
             } else {
                 conditions.add(LATEST_FLAG.eq(true))
-                conditions.add(STATUS.notIn(testStatusEnumList))
+                conditions.add(STATUS.notIn(testStatusList))
                 dslContext.selectFrom(this)
                     .where(conditions)
                     .fetch()
@@ -241,12 +223,54 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getFirstComponent(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseRecord? {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .orderBy(CREATE_TIME.asc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getMaxBusNumByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String? = null
+    ): Long? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf(
+                STORE_TYPE.eq(storeType.type.toByte()),
+                STORE_CODE.eq(storeCode)
+            ).apply {
+                version?.takeIf(String::isNotBlank)?.let { v ->
+                    add(
+                        when {
+                            VersionUtils.isLatestVersion(v) -> VERSION.like(VersionUtils.generateQueryVersion(v))
+                            else -> VERSION.eq(v)
+                        }
+                    )
+                }
+            }
+            dslContext.select(DSL.max(BUS_NUM)).from(this)
+                .where(conditions)
+                .fetchOne()?.get(0, Long::class.java)
+        }
+    }
+
     fun countByCondition(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         name: String? = null,
         storeCode: String? = null,
-        status: StoreStatusEnum? = null
+        version: String? = null,
+        status: StoreStatusEnum? = null,
+        classifyId: String? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -257,8 +281,14 @@ class StoreBaseQueryDao {
             if (!storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
             }
-            if (status != null) {
+            if (!version.isNullOrBlank()) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
+            status?.let {
                 conditions.add(STATUS.eq(status.name))
+            }
+            classifyId?.let {
+                conditions.add(CLASSIFY_ID.eq(it))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -276,9 +306,9 @@ class StoreBaseQueryDao {
     fun countComponents(
         dslContext: DSLContext,
         queryComponentsParam: QueryComponentsParam,
-        classifyId: String?,
-        categoryIds: List<String>?,
-        labelIds: List<String>?
+        classifyId: String? = null,
+        categoryIds: List<String>? = null,
+        labelIds: List<String>? = null
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val baseStep = dslContext.selectCount().from(tStoreBase)
@@ -464,16 +494,10 @@ class StoreBaseQueryDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        val statusList = StoreStatusEnum.values().map { it.name }.toMutableList()
-        statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
-        statusList.add(StoreStatusEnum.INIT.name)
-        conditions.add(
-            tStoreBase.STATUS.`in`(statusList)
-                .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION)))
-        )
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         conditions.add(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
         conditions.add(tStoreMember.USERNAME.eq(userId))
         return conditions

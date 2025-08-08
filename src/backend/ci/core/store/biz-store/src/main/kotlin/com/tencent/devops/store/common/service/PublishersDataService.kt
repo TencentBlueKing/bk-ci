@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,10 +28,10 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.publication.PublisherInfo
 import com.tencent.devops.store.pojo.common.publication.PublishersRequest
-import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface PublishersDataService {
 

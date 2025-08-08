@@ -8,7 +8,11 @@
         @confirm="handleSubmit"
         @cancel="handleClose"
     >
-        <main v-if="addToDialogShow" class="add-group-main" v-bkloadin="{ isLoading }">
+        <main
+            v-if="addToDialogShow"
+            class="add-group-main"
+            v-bkloadin="{ isLoading }"
+        >
             <aside class="add-group-left">
                 <header>
                     {{ title }}
@@ -28,7 +32,11 @@
                     default-expand-all
                     class="add-to-pipeline-group-list"
                 >
-                    <div @click.stop class="add-to-pipeline-group-tree-node" slot-scope="{ node, data }">
+                    <div
+                        @click.stop
+                        class="add-to-pipeline-group-tree-node"
+                        slot-scope="{ node, data }"
+                    >
                         <bk-checkbox
                             :ext-cls="`add-to-pipeline-checkbox ${data.hasChild ? '' : 'child-checkbox'}`"
                             :disabled="data.disabled"
@@ -36,15 +44,18 @@
                             :indeterminate="isIndeterminate(data)"
                             @change="(checked) => handleChecked(checked, data)"
                         >
-                            {{data.name}}
+                            {{ data.name }}
                         </bk-checkbox>
                         <span v-if="data.hasChild">({{ data.children.length }})</span>
-                        <span class="added-pipeline-group-desc" v-bk-tooltips="data.tooltips" v-if="data.desc">
-                            {{data.desc}}
+                        <span
+                            class="added-pipeline-group-desc"
+                            v-bk-tooltips="data.tooltips"
+                            v-if="data.desc"
+                        >
+                            {{ data.desc }}
                         </span>
                     </div>
                 </bk-big-tree>
-
             </aside>
             <aside class="add-group-right">
                 <header>
@@ -52,16 +63,29 @@
                 </header>
                 <p>
                     <span>
-                        {{$t('selectedGroup')}}
-                        <i class="add-group-count">{{selectedGroups.length}}</i>
-                        {{$t('selectedGroupSuffix')}}
+                        {{ $t('selectedGroup') }}
+                        <i class="add-group-count">{{ selectedGroups.length }}</i>
+                        {{ $t('selectedGroupSuffix') }}
                     </span>
-                    <bk-button size="small" v-if="selectedGroups.length > 0" text @click="emptySelectedGroups">{{$t('newlist.reset')}}</bk-button>
+                    <bk-button
+                        size="small"
+                        v-if="selectedGroups.length > 0"
+                        text
+                        @click="emptySelectedGroups"
+                    >
+                        {{ $t('newlist.reset') }}
+                    </bk-button>
                 </p>
                 <ul class="add-group-result-preview-list">
-                    <li v-for="(group, index) in selectedGroups" :key="group.id">
+                    <li
+                        v-for="(group, index) in selectedGroups"
+                        :key="group.id"
+                    >
                         <span class="add-selected-group-name">{{ group.name }}</span>
-                        <span @click="remove(index)" class="bk-icon icon-close">
+                        <span
+                            @click="remove(index)"
+                            class="bk-icon icon-close"
+                        >
                         </span>
                     </li>
                 </ul>

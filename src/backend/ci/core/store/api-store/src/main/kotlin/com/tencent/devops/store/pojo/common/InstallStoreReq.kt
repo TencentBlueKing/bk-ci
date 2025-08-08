@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "安装组件到项目请求报文")
 data class InstallStoreReq(
     @get:Schema(title = "项目标识", required = true)
-    val projectCodes: ArrayList<String>,
+    val projectCodes: ArrayList<String> = arrayListOf(),
     @get:Schema(title = "组件标识", required = true)
     val storeCode: String,
     @get:Schema(title = "组件类型", required = true)

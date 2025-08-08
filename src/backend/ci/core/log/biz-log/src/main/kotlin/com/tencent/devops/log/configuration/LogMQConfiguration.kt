@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,9 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -41,46 +43,32 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import org.springframework.messaging.Message
-import java.util.function.Consumer
 
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogMQConfiguration @Autowired constructor() {
+class LogMQConfiguration {
 
     @Bean
     fun buildLogPrintService(
-        streamBridge: StreamBridge,
-        logPrintBean: LogPrintBean,
-        storageProperties: StorageProperties,
-        logServiceConfig: LogServiceConfig
+        @Autowired streamBridge: StreamBridge,
+        @Autowired logPrintBean: LogPrintBean,
+        @Autowired storageProperties: StorageProperties,
+        @Autowired logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
-    @Bean(StreamBinding.BINDING_LOG_ORIGIN_EVENT_IN)
-    fun logOriginEventIn(
-        listenerService: BuildLogListenerService
-    ): Consumer<Message<LogOriginEvent>> {
-        return Consumer { event: Message<LogOriginEvent> ->
-            listenerService.handleEvent(event.payload)
-        }
-    }
+    @EventConsumer(defaultConcurrency = 10, type = RabbitQueueType.CLASSIC)
+    fun logOriginEventConsumer(
+        @Autowired listenerService: BuildLogListenerService
+    ) = ScsConsumerBuilder.build<LogOriginEvent> { listenerService.handleEvent(it) }
 
-    @Bean(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
-    fun logStorageEventIn(
-        listenerService: BuildLogListenerService
-    ): Consumer<Message<LogStorageEvent>> {
-        return Consumer { event: Message<LogStorageEvent> ->
-            listenerService.handleEvent(event.payload)
-        }
-    }
+    @EventConsumer(defaultConcurrency = 10, type = RabbitQueueType.CLASSIC)
+    fun logStorageEventConsumer(
+        @Autowired listenerService: BuildLogListenerService
+    ) = ScsConsumerBuilder.build<LogStorageEvent> { listenerService.handleEvent(it) }
 
-    @Bean(StreamBinding.BINDING_LOG_STATUS_EVENT_IN)
-    fun logStatusEventIn(
-        listenerService: BuildLogListenerService
-    ): Consumer<Message<LogStatusEvent>> {
-        return Consumer { event: Message<LogStatusEvent> ->
-            listenerService.handleEvent(event.payload)
-        }
-    }
+    @EventConsumer(defaultConcurrency = 10)
+    fun logStatusEventConsumer(
+        @Autowired listenerService: BuildLogListenerService
+    ) = ScsConsumerBuilder.build<LogStatusEvent> { listenerService.handleEvent(it) }
 }

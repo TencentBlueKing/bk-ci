@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,15 +29,53 @@ package com.tencent.devops.common.api.enums
 
 enum class PlatformEnum(
     val id: Int,
-    val mean: String
+    val mean: String,
+    val tails: List<String>
 ) {
-    ANDROID(1, "安卓"),
+    UNKNOWN(-1, "未知", emptyList()),
 
-    IOS(2, "IOS"),
+    ANDROID(1, "安卓", listOf(".apk")),
+
+    IOS(2, "IOS", listOf(".ipa")),
+
+    HAP(3, "鸿蒙", listOf(".hap"))
 
     ;
 
     companion object {
+        /**
+         * 根据尾巴获取平台
+         */
+        fun ofTail(path: String): PlatformEnum {
+            for (platformEnum in values()) {
+                for (tail in platformEnum.tails) {
+                    if (path.endsWith(tail, true)) {
+                        return platformEnum
+                    }
+                }
+            }
+            return UNKNOWN
+        }
+
+        /**
+         * 根据名字获取平台
+         */
+        fun ofName(name: String): PlatformEnum {
+            for (platformEnum in values()) {
+                if (platformEnum.mean.equals(name, true)) {
+                    return platformEnum
+                }
+            }
+            return UNKNOWN
+        }
+
+        /**
+         * 是否为安装包
+         */
+        fun isPackage(path: String): Boolean {
+            return ofTail(path) != UNKNOWN
+        }
+
         fun of(id: Int?): PlatformEnum? {
             if (null == id) {
                 return null

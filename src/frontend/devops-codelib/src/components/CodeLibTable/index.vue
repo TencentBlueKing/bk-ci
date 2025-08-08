@@ -1,7 +1,14 @@
 <template>
     <div>
-        <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
-            <bk-icon type="angle-double-right" class="angle-double-right-icon" />
+        <div
+            class="expand-btn"
+            v-if="isListFlod"
+            @click="handleExpandList"
+        >
+            <bk-icon
+                type="angle-double-right"
+                class="angle-double-right-icon"
+            />
             {{ $t('codelib.expandList') }}
         </div>
         <bk-table
@@ -12,7 +19,7 @@
                 'devops-codelib-table': true,
                 'flod-table': isListFlod
             }"
-            :data="records"
+            :data="tableData"
             :size="tableSize"
             :height="tableHeight"
             :outer-border="false"
@@ -48,11 +55,19 @@
                             }
                         }"
                     >
-                        <div v-if="isListFlod" class="mask"></div>
-                        <Icon
+                        <div
+                            v-if="isListFlod"
+                            class="mask"
+                        ></div>
+                        <!-- <Icon
+                            v-if="codelibIconMap[props.row.type]"
                             class="codelib-logo"
                             :name="codelibIconMap[props.row.type]"
                             size="16"
+                        /> -->
+                        <img
+                            class="codelib-logo"
+                            :src="props.row.logoUrl"
                         />
                         <div
                             :class="{
@@ -69,7 +84,11 @@
                             v-if="props.row.enablePac"
                             class="pac-icon"
                         >
-                            <Icon name="PACcode" size="22" class="pac-code-icon" />
+                            <Icon
+                                name="PACcode"
+                                size="22"
+                                class="pac-code-icon"
+                            />
                             PAC
                         </span>
                     </div>
@@ -143,7 +162,7 @@
             >
                 <template slot-scope="props">
                     <bk-button
-                        v-if="props.row.type === 'CODE_GIT' && !props.row.enablePac"
+                        v-if="props.row.showEnablePac && !props.row.enablePac"
                         theme="primary"
                         text
                         class="mr10"
@@ -161,10 +180,12 @@
                     >
                         {{ $t('codelib.去开启PAC') }}
                     </bk-button>
-                    <span v-bk-tooltips="{
-                        content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
-                        disabled: !props.row.enablePac
-                    }">
+                    <span
+                        v-bk-tooltips="{
+                            content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
+                            disabled: !props.row.enablePac
+                        }"
+                    >
                         <bk-button
                             theme="primary"
                             text
@@ -194,10 +215,14 @@
                     :fields="tableColumn"
                     :selected="selectedTableColumn"
                     :size="tableSize"
-                    @setting-change="handleSettingChange" />
+                    @setting-change="handleSettingChange"
+                />
             </bk-table-column>
             <template #empty>
-                <EmptyTableStatus :type="aliasName ? 'search-empty' : 'empty'" @clear="resetFilter" />
+                <EmptyTableStatus
+                    :type="aliasName ? 'search-empty' : 'empty'"
+                    @clear="resetFilter"
+                />
             </template>
         </bk-table>
         <UsingPipelinesDialog
@@ -323,10 +348,19 @@
         },
 
         computed: {
-            ...mapState('codelib', ['gitOAuth']),
+            ...mapState('codelib', ['gitOAuth', 'codelibTypes']),
 
             projectId () {
                 return this.$route.params.projectId
+            },
+            
+            tableData () {
+                return this.records.map(codelib => {
+                    return {
+                        ...codelib,
+                        showEnablePac: this.codelibTypes.find(i => i.scmCode === codelib.scmCode)?.pacEnabled || false
+                    }
+                })
             },
 
             /**
@@ -403,7 +437,7 @@
                 authType: 200,
                 updatedUser: 200,
                 updatedTime: 200,
-                operation: 80
+                operation: 150
             }
         },
 
@@ -721,6 +755,8 @@
             right: 0;
         }
         .codelib-logo {
+            width: 16px;
+            height: 16px;
             flex-shrink: 0;
         }
         .codelib-name {

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserArchiveComponentPkgResourceImpl @Autowired constructor(
@@ -59,7 +59,6 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
                 inputStream = inputStream,
                 disposition = disposition,
                 archiveStorePkgRequest = ArchiveStorePkgRequest(
-                    storeId = storeId,
                     storeCode = storeCode,
                     storeType = storeType,
                     version = version,
@@ -71,18 +70,21 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
 
     override fun getComponentPkgDownloadUrl(
         userId: String,
+        projectId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
+        instanceId: String?,
         osName: String?,
         osArch: String?
     ): Result<String> {
         return Result(
             archiveStorePkgService.getComponentPkgDownloadUrl(
                 userId = userId,
-                projectId = "",
+                projectId = projectId,
                 storeType = storeType,
                 storeCode = storeCode,
+                instanceId = instanceId,
                 version = version,
                 osName = osName,
                 osArch = osArch

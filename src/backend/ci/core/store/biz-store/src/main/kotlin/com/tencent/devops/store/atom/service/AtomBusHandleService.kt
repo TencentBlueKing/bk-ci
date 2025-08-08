@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,4 +48,9 @@ interface AtomBusHandleService {
      * 处理系统预置指令及用户（task.json.target）设置指令逻辑
      */
     fun handleTarget(reqTarget: String?, target: String): String
+
+    /**
+     * 获取插件默认运行环境版本
+     */
+    fun getDefaultRuntimeVersion(): String?
 }

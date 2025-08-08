@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,5 +34,7 @@ data class ProjectBuildId(
     @get:Schema(title = "构建ID", required = true)
     val id: String,
     @get:Schema(title = "项目ID", required = true)
-    val projectId: String
+    val projectId: String,
+    @get:Schema(title = "构建序号", required = false)
+    val buildNum: Int? = null
 )

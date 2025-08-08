@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -21,6 +21,7 @@ import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
 import { v4 as uuidv4 } from 'uuid'
+import { isFileParam } from '@/store/modules/atom/paramsConfig'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -633,7 +634,14 @@ export function getQueryParamString (query) {
 export function getParamsValuesMap (params = [], valueKey = 'defaultValue', initValues = {}) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
-        if (param.id) {
+        if (!param.id) return values
+
+        if (isFileParam(param.type) && param.enableVersionControl) {
+            values[param.id] = {
+                directory: initValues[param.id] ?? param[valueKey],
+                latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
+            }
+        } else {
             values[param.id] = initValues[param.id] ?? param[valueKey]
         }
         return values
@@ -699,6 +707,10 @@ export class HttpError extends Error {
 
 export function bkVarWrapper (name) {
     return '${{' + name + '}}'
+}
+
+export function bkVarRepoRefWrapper (name) {
+    return '${{variables.' + name + '.repo-name}}@${{variables.' + name + '.branch}}'
 }
 
 export const toolbars = {

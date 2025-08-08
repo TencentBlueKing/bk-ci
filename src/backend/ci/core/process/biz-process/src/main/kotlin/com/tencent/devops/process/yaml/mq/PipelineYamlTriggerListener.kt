@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,30 +28,35 @@
 
 package com.tencent.devops.process.yaml.mq
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.EventListener
+import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
+import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
+import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.PipelineYamlBuildService
+import com.tencent.devops.process.yaml.PipelineYamlFileManager
 import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.pojo.CheckType
+import com.tencent.devops.process.yaml.pojo.YamlFileActionType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlTriggerListener @Autowired constructor(
-    pipelineEventDispatcher: PipelineEventDispatcher,
     private val actionFactory: EventActionFactory,
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlBuildService: PipelineYamlBuildService,
-    private val exceptionHandler: YamlTriggerExceptionHandler
-) : BaseListener<BasePipelineYamlEvent>(
-    pipelineEventDispatcher = pipelineEventDispatcher
-) {
-    override fun run(event: BasePipelineYamlEvent) {
+    private val exceptionHandler: YamlTriggerExceptionHandler,
+    private val webhookTriggerBuildService: WebhookTriggerBuildService,
+    private val webhookTriggerManager: WebhookTriggerManager,
+    private val pipelineYamlFileManager: PipelineYamlFileManager
+) : EventListener<BasePipelineYamlEvent> {
+    override fun execute(event: BasePipelineYamlEvent) {
         when (event) {
             is PipelineYamlEnableEvent -> {
                 enablePac(projectId = event.projectId, event = event)
@@ -147,5 +152,81 @@ class PipelineYamlTriggerListener @Autowired constructor(
                 else -> Unit
             }
         }
+    }
+
+    fun execute(event: PipelineYamlFileEvent) {
+        with(event) {
+            val context = WebhookTriggerContext(
+                projectId = projectId,
+                pipelineId = filePath,
+                eventId = eventId
+            )
+            try {
+                logger.info(
+                    "[PAC_PIPELINE]|Start to handle yaml file event|eventId:$eventId|" +
+                            "projectId:$projectId|repoHashId:${repository.repoHashId}|" +
+                            "filePath:$filePath|ref:$ref|commitId:${commit?.commitId}|blobId:$blobId|" +
+                            "actionType:$actionType"
+                )
+                handle()
+            } catch (ignored: Exception) {
+                logger.error(
+                    "[PAC_PIPELINE]|Failed to handle yaml file event|eventId:$eventId|" +
+                            "projectId:$projectId|repoHashId:${repository.repoHashId}|" +
+                            "filePath:$filePath|ref:$ref|commitId:${commit?.commitId}|blobId:$blobId|" +
+                            "actionType:$actionType",
+                    ignored
+                )
+                webhookTriggerManager.fireError(context = context, exception = ignored)
+            }
+        }
+    }
+
+    private fun PipelineYamlFileEvent.handle() {
+        when (actionType) {
+            YamlFileActionType.SYNC -> {
+                try {
+                    pipelineYamlFileManager.createOrUpdateYamlFile(this)
+                    pipelineYamlSyncService.syncSuccess(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        filePath = filePath
+                    )
+                } catch (ignored: Exception) {
+                    val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
+                    pipelineYamlSyncService.syncFailed(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        filePath = filePath,
+                        reason = reason,
+                        reasonDetail = reasonDetail
+                    )
+                }
+            }
+
+            YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
+                pipelineYamlFileManager.createOrUpdateYamlFile(this)
+                webhookTriggerBuildService.yamlTrigger(this)
+            }
+
+            YamlFileActionType.DELETE -> {
+                pipelineYamlFileManager.deleteYamlFile(event = this)
+            }
+
+            YamlFileActionType.RENAME -> {
+                pipelineYamlFileManager.renameYamlFile(event = this)
+                webhookTriggerBuildService.yamlTrigger(this)
+            }
+
+            YamlFileActionType.TRIGGER -> {
+                webhookTriggerBuildService.yamlTrigger(this)
+            }
+
+            else -> Unit
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineYamlTriggerListener::class.java)
     }
 }

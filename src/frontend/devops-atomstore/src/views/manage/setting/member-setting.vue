@@ -1,40 +1,98 @@
 <template>
     <article class="member-setting">
         <h5 class="member-header">
-            <bk-button theme="primary" @click="openAddMember" :disabled="!userInfo.isProjectAdmin">{{ $t('store.新增成员') }}</bk-button>
+            <bk-button
+                theme="primary"
+                @click="openAddMember"
+                :disabled="!userInfo.isProjectAdmin"
+            >
+                {{ $t('store.新增成员') }}
+            </bk-button>
             <span>{{ $t('store.目前有') }} <span>{{ memberCount }}</span> {{ $t('store.名成员') }}</span>
         </h5>
 
-        <section v-bkloading="{ isLoading }" class="g-scroll-table">
-            <bk-table :data="memberList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
-                <bk-table-column :label="$t('store.成员')" prop="userName" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.调试项目')" show-overflow-tooltip>
+        <section
+            v-bkloading="{ isLoading }"
+            class="g-scroll-table"
+        >
+            <bk-table
+                :data="memberList"
+                :outer-border="false"
+                :header-border="false"
+                :header-cell-style="{ background: '#fff' }"
+                v-if="!isLoading"
+            >
+                <bk-table-column
+                    :label="$t('store.成员')"
+                    prop="userName"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.调试项目')"
+                    show-overflow-tooltip
+                >
                     <template slot-scope="props">
                         <section class="member-project">
                             <template v-if="props.row.editing">
-                                <bk-select :disabled="false" v-model="props.row.projectCode" :loading="isLoadingProject" searchable style="width: 250px">
-                                    <bk-option v-for="option in projectList"
+                                <bk-select
+                                    :disabled="false"
+                                    v-model="props.row.projectCode"
+                                    :loading="isLoadingProject"
+                                    searchable
+                                    style="width: 250px"
+                                >
+                                    <bk-option
+                                        v-for="option in projectList"
                                         :key="option.projectCode"
                                         :id="option.projectCode"
                                         :name="option.projectName"
-                                        :disabled="!option.enabled">
+                                        :disabled="!option.enabled"
+                                    >
                                     </bk-option>
                                 </bk-select>
-                                <i class="bk-icon icon-check-1" @click="saveChangeProject(props.row)"></i>
-                                <i class="bk-icon icon-close" @click="props.row.editing = false"></i>
+                                <i
+                                    class="bk-icon icon-check-1"
+                                    @click="saveChangeProject(props.row)"
+                                ></i>
+                                <i
+                                    class="bk-icon icon-close"
+                                    @click="props.row.editing = false"
+                                ></i>
                             </template>
                             <template v-else>
                                 <span>{{ props.row.projectName }}</span>
-                                <i class="bk-icon icon-edit2" @click="startEditProject(props.row)" v-if="userInfo.isProjectAdmin || userInfo.userName === props.row.userName"></i>
+                                <i
+                                    class="bk-icon icon-edit2"
+                                    @click="startEditProject(props.row)"
+                                    v-if="userInfo.isProjectAdmin || userInfo.userName === props.row.userName"
+                                ></i>
                             </template>
                         </section>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.角色')" width="160" prop="type" :formatter="typeFormatter" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.描述')" prop="type" :formatter="desFormatter" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
+                <bk-table-column
+                    :label="$t('store.角色')"
+                    width="160"
+                    prop="type"
+                    :formatter="typeFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.描述')"
+                    prop="type"
+                    :formatter="desFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="120"
+                    class-name="handler-btn"
+                >
                     <template slot-scope="props">
-                        <span :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']" @click="handleDelete(props.row)"> {{ $t('store.删除') }} </span>
+                        <span
+                            :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']"
+                            @click="handleDelete(props.row)"
+                        > {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -44,34 +102,76 @@
                 :quick-close="true"
                 :title="$t('store.新增成员')"
                 :width="640"
-                :before-close="closeAddMember">
-                <bk-form :label-width="100" :model="addMemberObj.form" slot="content" class="add-member" ref="addForm">
-                    <bk-form-item :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="memberName" error-display-type="normal">
-                        <bk-input v-model="addMemberObj.form.memberName" @change="handleChangeForm"></bk-input>
+                :before-close="closeAddMember"
+            >
+                <bk-form
+                    :label-width="100"
+                    :model="addMemberObj.form"
+                    slot="content"
+                    class="add-member"
+                    ref="addForm"
+                >
+                    <bk-form-item
+                        :label="$t('store.成员名称')"
+                        :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')"
+                        :required="true"
+                        :rules="[requireRule($t('store.成员名称'))]"
+                        property="memberName"
+                        error-display-type="normal"
+                    >
+                        <bk-input
+                            v-model="addMemberObj.form.memberName"
+                            @change="handleChangeForm"
+                        ></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('store.角色')" property="type">
-                        <bk-radio-group v-model="addMemberObj.form.type" @change="handleChangeForm" class="radio-group">
-                            <bk-radio :value="key" v-for="(entry, key) in memberType" :key="key">{{entry}}</bk-radio>
+                    <bk-form-item
+                        :label="$t('store.角色')"
+                        property="type"
+                    >
+                        <bk-radio-group
+                            v-model="addMemberObj.form.type"
+                            @change="handleChangeForm"
+                            class="radio-group"
+                        >
+                            <bk-radio
+                                :value="key"
+                                v-for="(entry, key) in memberType"
+                                :key="key"
+                            >
+                                {{ entry }}
+                            </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.权限列表')">
                         <labelList :label-list="getPermissionList(addMemberObj.form.type)"></labelList>
                     </bk-form-item>
                     <bk-form-item>
-                        <bk-button theme="primary" @click="saveMember" :loading="isSaving">{{ $t('store.保存') }}</bk-button>
-                        <bk-button @click="closeAddMember" :disabled="isSaving">{{ $t('store.取消') }}</bk-button>
+                        <bk-button
+                            theme="primary"
+                            @click="saveMember"
+                            :loading="isSaving"
+                        >
+                            {{ $t('store.保存') }}
+                        </bk-button>
+                        <bk-button
+                            @click="closeAddMember"
+                            :disabled="isSaving"
+                        >
+                            {{ $t('store.取消') }}
+                        </bk-button>
                     </bk-form-item>
                 </bk-form>
             </bk-sideslider>
         </section>
 
-        <bk-dialog v-model="deleteObj.show"
+        <bk-dialog
+            v-model="deleteObj.show"
             :loading="deleteObj.loading"
             @confirm="requestDeleteMember"
             @cancel="deleteObj.show = false"
             :title="$t('store.删除')"
         >
-            {{`${$t('store.确定删除成员')}(${deleteObj.user})？`}}
+            {{ `${$t('store.确定删除成员')}(${deleteObj.user})？` }}
         </bk-dialog>
     </article>
 </template>

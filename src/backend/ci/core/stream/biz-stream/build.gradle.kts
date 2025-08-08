@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C)) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -54,11 +54,11 @@ dependencies {
     api("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("com.github.ben-manes.caffeine:caffeine")
-    api(group = "javax.websocket", name = "javax.websocket-api")
+    api("jakarta.websocket:jakarta.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("org.json:json")
-    api(group = "org.apache.ant", name = "ant")
+    api("org.apache.ant:ant")
 
     // jsonschema
     api("com.networknt:json-schema-validator")

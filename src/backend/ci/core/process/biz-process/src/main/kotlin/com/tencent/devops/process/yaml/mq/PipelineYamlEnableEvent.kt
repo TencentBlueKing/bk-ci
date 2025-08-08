@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,13 +29,13 @@
 package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@Event(MQ.EXCHANGE_PIPELINE_YAML_LISTENER, MQ.ROUTE_PIPELINE_YAML_ENABLE_EVENT)
+@Event(StreamBinding.PIPELINE_YAML_LISTENER_ENABLE)
 data class PipelineYamlEnableEvent(
     override val source: String = "PacYamlEnable",
     override val projectId: String,

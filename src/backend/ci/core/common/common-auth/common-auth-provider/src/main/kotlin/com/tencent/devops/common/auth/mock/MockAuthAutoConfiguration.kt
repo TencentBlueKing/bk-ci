@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,10 +28,12 @@
 package com.tencent.devops.common.auth.mock
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.mock.api.MockAuthPermissionApi
+import com.tencent.devops.common.auth.mock.api.MockAuthPlatformApi
 import com.tencent.devops.common.auth.mock.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
@@ -67,4 +69,9 @@ class MockAuthAutoConfiguration {
 //    @Primary
     @ConditionalOnMissingBean(AuthProjectApi::class)
     fun authProjectApi(bkAuthPermissionApi: MockAuthPermissionApi) = MockAuthProjectApi(bkAuthPermissionApi)
+
+    @Bean
+//    @Primary
+    @ConditionalOnMissingBean(AuthPlatformApi::class)
+    fun authPlatformApi() = MockAuthPlatformApi()
 }

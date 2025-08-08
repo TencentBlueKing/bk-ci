@@ -13,12 +13,17 @@
                     <div class="title">
                         {{ $t('template.diff') }}
                     </div>
-                    <i class="devops-icon icon-close" @click="cancelHandler()"></i>
+                    <i
+                        class="devops-icon icon-close"
+                        @click="cancelHandler()"
+                    ></i>
                 </div>
-                <div class="compared-content"
+                <div
+                    class="compared-content"
                     v-bkloading="{
                         isLoading: loading
-                    }">
+                    }"
+                >
                     <div class="update-version-compared">
                         <div class="update-before">
                             {{ $t('template.beforeUpdate') }}
@@ -27,16 +32,19 @@
                         <div class="update-after version-selector">
                             <div class="label">
                                 {{ $t('template.afterUpdate') }}
-                                <i class="devops-icon icon-minus"></i></div>
+                                <i class="devops-icon icon-minus"></i>
+                            </div>
                             <bk-select
                                 v-model="instanceVersion"
                                 @selected="selectedVersion"
                                 style="width: 300px"
                             >
-                                <bk-option v-for="(option, index) in versionList"
+                                <bk-option
+                                    v-for="(option, index) in versionList"
                                     :key="index"
                                     :id="option.version"
-                                    :name="option.versionName">
+                                    :name="option.versionName"
+                                >
                                 </bk-option>
                             </bk-select>
                         </div>
@@ -47,14 +55,32 @@
                         </div>
                         <div class="update-version-compared compared-params">
                             <div class="update-before params-list">
-                                <key-value-normal :value="curParamsList" :disabled="true"></key-value-normal>
-                                <div class="cut-line" v-if="curTplParamsList.length"></div>
-                                <key-value-normal :value="curTplParamsList" :disabled="true"></key-value-normal>
+                                <key-value-normal
+                                    :value="curParamsList"
+                                    :disabled="true"
+                                ></key-value-normal>
+                                <div
+                                    class="cut-line"
+                                    v-if="curTplParamsList.length"
+                                ></div>
+                                <key-value-normal
+                                    :value="curTplParamsList"
+                                    :disabled="true"
+                                ></key-value-normal>
                             </div>
                             <div class="update-after params-list">
-                                <key-value-normal :value="targetParamsList" :disabled="true"></key-value-normal>
-                                <div class="cut-line" v-if="targetTplParamsList.length"></div>
-                                <key-value-normal :value="targetTplParamsList" :disabled="true"></key-value-normal>
+                                <key-value-normal
+                                    :value="targetParamsList"
+                                    :disabled="true"
+                                ></key-value-normal>
+                                <div
+                                    class="cut-line"
+                                    v-if="targetTplParamsList.length"
+                                ></div>
+                                <key-value-normal
+                                    :value="targetTplParamsList"
+                                    :disabled="true"
+                                ></key-value-normal>
                             </div>
                         </div>
                     </section>
@@ -64,12 +90,20 @@
                     <div class="update-version-compared compared-pipeline-preview">
                         <div class="update-before previre-pipeline">
                             <div class="prevent-content">
-                                <bk-pipeline :pipeline="{ stages: curStages }" :editable="false" v-if="curStages"></bk-pipeline>
+                                <bk-pipeline
+                                    :pipeline="{ stages: curStages }"
+                                    :editable="false"
+                                    v-if="curStages"
+                                ></bk-pipeline>
                             </div>
                         </div>
                         <div class="update-after previre-pipeline">
                             <div class="prevent-content">
-                                <bk-pipeline :pipeline="{ stages: targetStages }" :editable="false" v-if="targetStages">
+                                <bk-pipeline
+                                    :pipeline="{ stages: targetStages }"
+                                    :editable="false"
+                                    v-if="targetStages"
+                                >
                                 </bk-pipeline>
                             </div>
                         </div>

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,8 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.github.IGithubService
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,7 +43,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService,
-    private val tGitOAuthService: TGitOAuthService
+    private val tGitOAuthService: TGitOAuthService,
+    private val githubService: IGithubService,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) : ServiceOauthResource {
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitOauthService.getAccessToken(userId))
@@ -88,6 +92,27 @@ class ServiceOauthResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 refreshToken = refreshToken
             )
+        )
+    }
+
+    override fun githubOAuth(
+        userId: String
+    ): Result<AuthorizeResult> {
+        return Result(
+            githubService.isOAuth(
+                userId = userId,
+                redirectUrl = "",
+                redirectUrlType = null,
+                projectId = "",
+                resetType = "",
+                refreshToken = false
+            )
+        )
+    }
+
+    override fun isScmOauth(userId: String, scmCode: String): Result<Boolean> {
+        return Result(
+            oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) != null
         )
     }
 }

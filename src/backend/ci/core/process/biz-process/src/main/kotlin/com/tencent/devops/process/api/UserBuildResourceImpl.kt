@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -58,7 +58,7 @@ import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeServ
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -276,6 +276,7 @@ class UserBuildResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildDetail(
         userId: String,
         projectId: String,
@@ -297,6 +298,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(buildDetail)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
@@ -322,6 +324,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordInfo(
         userId: String,
         projectId: String,
@@ -343,6 +346,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildDetailByBuildNo(
         userId: String,
         projectId: String,
@@ -366,12 +370,14 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordByBuildNum(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debugVersion: Int?
+        debugVersion: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildNum <= 0) {
@@ -384,11 +390,13 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildNum = buildNum,
                 channelCode = ChannelCode.BS,
-                debugVersion = debugVersion
+                debugVersion = debugVersion,
+                archiveFlag = archiveFlag
             )
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun goToLatestFinishedBuild(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
         return pipelineBuildFacadeService.goToLatestFinishedBuild(
@@ -400,6 +408,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getHistoryBuild(
         userId: String,
         projectId: String,
@@ -425,6 +434,7 @@ class UserBuildResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getHistoryBuildNew(
         userId: String,
         projectId: String,
@@ -631,6 +641,24 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId
+            )
+        )
+    }
+
+    override fun replayByBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        forceTrigger: Boolean?
+    ): Result<BuildId> {
+        return Result(
+            pipelineBuildFacadeService.replayBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId,
+                forceTrigger = forceTrigger ?: false
             )
         )
     }

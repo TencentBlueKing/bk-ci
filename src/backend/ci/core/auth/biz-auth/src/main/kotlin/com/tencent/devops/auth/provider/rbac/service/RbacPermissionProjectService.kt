@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -53,10 +54,12 @@ class RbacPermissionProjectService(
     private val authResourceService: AuthResourceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
-    private val resourceMemberService: PermissionResourceMemberService
+    private val resourceMemberService: PermissionResourceMemberService,
+    private val permissionManageFacadeService: PermissionManageFacadeService,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator
 ) : PermissionProjectService {
 
     companion object {
@@ -109,7 +112,7 @@ class RbacPermissionProjectService(
                 AuthPermission.get(action), finalResourceType
             )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            return if (instanceMap.contains("*")) {
+            val result = if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")
                 authResourceService.getAllResourceCode(
                     resourceType = AuthResourceType.PROJECT.value
@@ -119,6 +122,12 @@ class RbacPermissionProjectService(
                 logger.info("get user projects:$projectList")
                 projectList
             }
+            bkInternalPermissionComparator.getUserProjectsByAction(
+                userId = userId,
+                action = useAction,
+                expectedResult = result
+            )
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects by permission"
@@ -137,7 +146,7 @@ class RbacPermissionProjectService(
                 return managerPermission
             }
 
-            return rbacCacheService.validateUserProjectPermission(
+            return rbacCommonService.validateUserProjectPermission(
                 userId = userId,
                 projectCode = projectCode,
                 permission = AuthPermission.VISIT
@@ -149,17 +158,32 @@ class RbacPermissionProjectService(
         }
     }
 
-    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
-        return resourceGroupMemberService.getResourceGroupMembers(
+    override fun isProjectMember(
+        userId: String,
+        projectCode: String
+    ): Boolean {
+        return permissionManageFacadeService.isProjectMember(
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            group = null
-        ).contains(userId)
+            userId = userId
+        )
+    }
+
+    override fun checkUserInProjectLevelGroup(userId: String, projectCode: String): Boolean {
+        // todo 下个迭代改回
+//        return resourceGroupMemberService.getResourceGroupMembers(
+//            projectCode = projectCode,
+//            resourceType = AuthResourceType.PROJECT.value,
+//            resourceCode = projectCode,
+//            group = null
+//        ).contains(userId)
+        return permissionManageFacadeService.isProjectMember(
+            projectCode = projectCode,
+            userId = userId
+        )
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        return rbacCacheService.checkProjectManager(userId, projectCode)
+        return rbacCommonService.checkProjectManager(userId, projectCode)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
@@ -176,7 +200,9 @@ class RbacPermissionProjectService(
         // 根据roleCode获取到对应的iam组ID
         val iamGroupId = resourceGroupMemberService.roleCodeToIamGroupId(
             projectCode = projectCode,
-            roleCode = roleCode
+            roleCode = roleCode,
+            resourceCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value
         )
         logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
@@ -211,7 +237,7 @@ class RbacPermissionProjectService(
             groupCode = BkAuthGroup.MANAGER.value
         )!!.relationId.toInt()
 
-        val remotedevManager = projectInfo.properties?.remotedevManager?.split(",")
+        val remotedevManager = projectInfo.properties?.remotedevManager?.split(";")
         val members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
 
         val owners = projectGroupAndUserList

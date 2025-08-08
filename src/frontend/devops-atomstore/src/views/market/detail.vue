@@ -1,14 +1,45 @@
 <template>
-    <article class="detail-home" v-bkloading="{ isLoading }">
-        <bread-crumbs :bread-crumbs="navList" :type="type">
-            <router-link :to="{ name: 'atomWork' }" class="g-title-work"> {{ $t('store.工作台') }} </router-link>
+    <article
+        class="detail-home"
+        v-bkloading="{ isLoading }"
+    >
+        <bread-crumbs
+            :bread-crumbs="navList"
+            :type="type"
+        >
+            <router-link
+                :to="{ name: 'atomWork' }"
+                class="g-title-work"
+            >
+                {{ $t('store.工作台') }}
+            </router-link>
         </bread-crumbs>
 
-        <main class="store-main" v-if="!isLoading">
-            <component :is="`${type}Info`" :detail="detail" class="detail-info" :current-tab.sync="currentTab"></component>
-            <bk-tab type="unborder-card" :active.sync="currentTab" class="detail-tabs">
-                <bk-tab-panel :name="tab.name" :label="tab.label" v-for="(tab, index) in tabList[type].filter(x => !x.hidden)" :key="index">
-                    <component :is="tab.componentName" v-bind="tab.bindData"></component>
+        <main
+            class="store-main"
+            v-if="!isLoading"
+        >
+            <component
+                :is="`${type}Info`"
+                :detail="detail"
+                class="detail-info"
+                :current-tab.sync="currentTab"
+            ></component>
+            <bk-tab
+                type="unborder-card"
+                :active.sync="currentTab"
+                class="detail-tabs"
+            >
+                <bk-tab-panel
+                    :name="tab.name"
+                    :label="tab.label"
+                    v-for="(tab, index) in tabList[type].filter(x => !x.hidden)"
+                    :key="index"
+                >
+                    <component
+                        :is="tab.componentName"
+                        v-bind="tab.bindData"
+                    ></component>
                 </bk-tab-panel>
             </bk-tab>
         </main>
@@ -17,16 +48,16 @@
 
 <script>
     import api from '@/api'
-    import { mapActions, mapGetters } from 'vuex'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions, mapGetters } from 'vuex'
     import atomInfo from '../../components/common/detail-info/atom'
-    import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
-    import detailScore from '../../components/common/detailTab/detailScore'
+    import templateInfo from '../../components/common/detail-info/template'
     import codeSection from '../../components/common/detailTab/codeSection'
-    import yamlDetail from '../../components/common/detailTab/yamlDetail'
+    import detailScore from '../../components/common/detailTab/detailScore'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
+    import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
         components: {
@@ -126,8 +157,12 @@
                     template: () => this.getTemplateDetail(),
                     image: () => this.getImageDetail()
                 }
+                if (!Object.hasOwnProperty.call(funObj, type)) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 const getDetailMethod = funObj[type]
-
+                
                 getDetailMethod().catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoading = false))

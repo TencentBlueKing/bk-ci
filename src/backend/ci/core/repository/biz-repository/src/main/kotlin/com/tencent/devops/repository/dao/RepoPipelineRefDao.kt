@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -278,6 +278,22 @@ class RepoPipelineRefDao {
                     }
                 }
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun countPipelineRefs(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryIds: List<Long>
+    ): Map<Long, Int> {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.select(PROJECT_ID, REPOSITORY_ID, DSL.count())
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.`in`(repositoryIds))
+                .and(ATOM_CATEGORY.eq(RepoAtomCategoryEnum.TRIGGER.name))
+                .groupBy(PROJECT_ID, REPOSITORY_ID)
+                .fetch().map { it.value2() to it.value3() }.toMap()
         }
     }
 

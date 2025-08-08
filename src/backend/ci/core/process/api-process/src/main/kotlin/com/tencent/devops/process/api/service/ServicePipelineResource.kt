@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,19 +55,19 @@ import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.DefaultValue
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.validation.Valid
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PIPELINE", description = "服务-流水线资源")
 @Path("/service/pipelines")
@@ -197,7 +197,18 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "版本", required = false)
+        @QueryParam("version")
+        version: Int? = null,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("false")
+        checkPermission: Boolean = false,
+        @Parameter(description = "是否查询草稿", required = false)
+        @QueryParam("includeDraft")
+        @DefaultValue("false")
+        includeDraft: Boolean = false
     ): Result<Model>
 
     @Operation(summary = "获取流水线编排(带权限校验)")
@@ -297,7 +308,10 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "渠道号，不指定则为空", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineInfo?>
 
     @Operation(summary = "删除流水线编排")

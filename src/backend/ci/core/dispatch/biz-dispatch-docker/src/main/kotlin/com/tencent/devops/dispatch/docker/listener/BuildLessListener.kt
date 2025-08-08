@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,8 +44,8 @@ import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -59,7 +59,7 @@ class BuildLessListener @Autowired constructor(
     private val buildLessEndPrepareHandler: BuildLessEndPrepareHandler
 ) {
 
-    fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
+    fun listenAgentStartUpEvent(event: PipelineBuildLessStartupEvent) {
         try {
             logger.info("start build less($event)")
 
@@ -125,7 +125,7 @@ class BuildLessListener @Autowired constructor(
         }
     }
 
-    fun listenAgentShutdownEvent(event: PipelineBuildLessShutdownDispatchEvent) {
+    fun listenAgentShutdownEvent(event: PipelineBuildLessShutdownEvent) {
         try {
             buildLessEndPrepareHandler.handlerRequest(BuildLessEndHandlerContext(event = event))
         } catch (ignored: Throwable) {
@@ -142,7 +142,7 @@ class BuildLessListener @Autowired constructor(
         }
     }
 
-    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
+    private fun checkPipelineRunning(event: PipelineBuildLessStartupEvent) {
         // 判断流水线当前container是否在运行中
         val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
             projectId = event.projectId,

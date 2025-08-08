@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,7 +36,7 @@ object MimeUtil {
     const val STREAM_MIME_TYPE = "application/octet-stream"
     private const val HTML_MIME_TYPE = "text/html"
 
-    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
+    private val mimeMappings = MimeMappings.lazyCopy(MimeMappings.DEFAULT).apply {
         add("yaml", YAML_MIME_TYPE)
         add("tgz", TGZ_MIME_TYPE)
         add("ico", ICO_MIME_TYPE)

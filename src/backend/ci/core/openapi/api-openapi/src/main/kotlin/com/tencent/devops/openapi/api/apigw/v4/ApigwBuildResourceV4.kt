@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -52,15 +52,15 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPENAPI_BUILD_V4", description = "OPENAPI-构建资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}")
@@ -202,6 +202,36 @@ interface ApigwBuildResourceV4 {
         @QueryParam("buildId")
         buildId: String
     ): Result<BuildHistoryWithVars>
+
+    @Operation(
+        summary = "批量获取构建详情",
+        tags = ["v4_app_batch_get_build_status", "v4_user_batch_get_build_status"]
+    )
+    @POST
+    @Path("/batch_get_build_status")
+    fun batchGetBuildStatus(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("构建开始时间")
+        startBeginTime: String? = null,
+        @QueryParam("构建结束时间")
+        endBeginTime: String? = null,
+        @Parameter(description = "构建ID列表,最大不能超过100个", required = true)
+        buildIdSet: Set<String>,
+    ): Result<List<BuildHistory>>
 
     @Operation(summary = "获取流水线构建历史", tags = ["v4_user_build_list", "v4_app_build_list"])
     @GET

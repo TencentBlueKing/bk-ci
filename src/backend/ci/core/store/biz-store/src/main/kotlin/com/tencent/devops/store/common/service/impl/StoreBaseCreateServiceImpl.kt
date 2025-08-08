@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,9 +30,9 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
 import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
@@ -44,14 +44,19 @@ import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreBaseCreateService
+import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
+import com.tencent.devops.store.pojo.common.STORE_BUS_NUM_LEN
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,10 +81,16 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
     override fun checkStoreCreateParam(storeCreateRequest: StoreCreateRequest) {
         val storeBaseCreateRequest = storeCreateRequest.baseInfo
         val storeType = storeBaseCreateRequest.storeType
+        val version = storeBaseCreateRequest.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val storeCode = storeBaseCreateRequest.storeCode
         // 判断组件标识是否存在
-        val codeCount =
-            storeBaseQueryDao.countByCondition(dslContext = dslContext, storeType = storeType, storeCode = storeCode)
+        val codeCount = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode
+        )
         if (codeCount > 0) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
@@ -97,11 +108,18 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         }
     }
 
+    override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeType = storeBaseCreateRequest.storeType
+        getStoreSpecBusService(storeType).doStoreCreatePreBus(storeCreateRequest)
+    }
+
     override fun doStoreCreateDataPersistent(storeCreateRequest: StoreCreateRequest) {
-        val storeId = UUIDUtil.generate()
         val storeBaseCreateRequest = storeCreateRequest.baseInfo
         val storeType = storeBaseCreateRequest.storeType
         val storeCode = storeBaseCreateRequest.storeCode
+        val version = storeBaseCreateRequest.version
+        val storeId = DigestUtils.md5Hex("$storeType-$storeCode-$version")
         val name = storeBaseCreateRequest.name
         val bkStoreContext = storeCreateRequest.bkStoreContext
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -111,11 +129,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType,
             name = name,
-            version = INIT_VERSION,
+            version = version,
             status = StoreStatusEnum.INIT,
             creator = userId,
             modifier = userId,
-            latestFlag = true
+            latestFlag = true,
+            busNum = CommonUtils.generateNumber(VersionUtils.getMajorVersion(version, storeType), 1, STORE_BUS_NUM_LEN)
         )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,
@@ -157,6 +176,26 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         }
     }
 
+    override fun handlePostCreateBus(storeCreateRequest: StoreCreateRequest) {
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeType = storeBaseCreateRequest.storeType
+        val bkStoreContext = storeCreateRequest.bkStoreContext
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        val storeCode = storeBaseCreateRequest.storeCode
+        getStoreSpecBusService(storeType).doStorePostCreateBus(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+    }
+
+    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
+        return SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+        )
+    }
+
     private fun initStoreData(
         context: DSLContext,
         storeCode: String,
@@ -179,22 +218,24 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             type = StoreMemberTypeEnum.ADMIN.type.toByte(),
             storeType = storeType.type.toByte()
         )
-        // 添加组件与项目关联关系，type为0代表新增组件时关联的初始化项目
-        storeProjectRelDao.addStoreProjectRel(
-            dslContext = context,
-            userId = userId,
-            storeCode = storeCode,
-            projectCode = storeCreateRequest.projectCode,
-            type = StoreProjectTypeEnum.INIT.type.toByte(),
-            storeType = storeType.type.toByte()
-        )
-        storeProjectRelDao.addStoreProjectRel(
-            dslContext = context,
-            userId = userId,
-            storeCode = storeCode,
-            projectCode = storeCreateRequest.projectCode,
-            type = StoreProjectTypeEnum.TEST.type.toByte(),
-            storeType = storeType.type.toByte()
-        )
+        storeCreateRequest.projectCode?.let {
+            // 添加组件与项目关联关系，type为0代表新增组件时关联的初始化项目
+            storeProjectRelDao.addStoreProjectRel(
+                dslContext = context,
+                userId = userId,
+                storeCode = storeCode,
+                projectCode = it,
+                type = StoreProjectTypeEnum.INIT.type.toByte(),
+                storeType = storeType.type.toByte()
+            )
+            storeProjectRelDao.addStoreProjectRel(
+                dslContext = context,
+                userId = userId,
+                storeCode = storeCode,
+                projectCode = it,
+                type = StoreProjectTypeEnum.TEST.type.toByte(),
+                storeType = storeType.type.toByte()
+            )
+        }
     }
 }

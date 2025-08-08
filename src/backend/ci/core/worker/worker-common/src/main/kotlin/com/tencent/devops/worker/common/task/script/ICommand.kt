@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,8 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
@@ -58,8 +60,7 @@ interface ICommand {
         jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null,
-        taskId: String? = null,
-        asCodeEnabled: Boolean? = null
+        taskId: String? = null
     )
 
     fun parseTemplate(
@@ -67,8 +68,7 @@ interface ICommand {
         command: String,
         variables: Map<String, String>,
         dir: File,
-        taskId: String?,
-        asCodeEnabled: Boolean?
+        taskId: String?
     ): String {
         // 解析跨项目模板信息
         val acrossTargetProjectId by lazy {
@@ -83,11 +83,12 @@ interface ICommand {
         ).toMutableMap()
         // 增加上下文的替换
         PipelineVarUtil.fillContextVarMap(contextMap)
-        return if (asCodeEnabled == true) {
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
+        return if (dialect.supportUseExpression()) {
             EnvReplacementParser.parse(
                 value = command,
                 contextMap = contextMap,
-                onlyExpression = true,
+                dialect = dialect,
                 contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = contextMap,
                     extendNamedValueMap = listOf(

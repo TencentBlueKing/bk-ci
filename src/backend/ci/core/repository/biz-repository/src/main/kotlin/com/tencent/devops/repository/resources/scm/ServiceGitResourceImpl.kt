@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -70,7 +70,7 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -279,10 +279,11 @@ class ServiceGitResourceImpl @Autowired constructor(
         filePath: String?,
         format: String?,
         isProjectPathWrapped: Boolean?,
+        projectId: String?,
         response: HttpServletResponse
     ) {
         val repo = repositoryService.serviceGet(
-                "",
+            projectId ?: "",
             RepositoryConfigUtils.buildConfig(repoId, repositoryType)
         )
         repoFileService.downloadTGitRepoFile(

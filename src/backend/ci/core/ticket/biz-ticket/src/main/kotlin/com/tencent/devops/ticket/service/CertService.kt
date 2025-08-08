@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,16 +31,16 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.ticket.pojo.Cert
-import com.tencent.devops.ticket.pojo.CertAndroidInfo
-import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
-import com.tencent.devops.ticket.pojo.CertIOSInfo
-import com.tencent.devops.ticket.pojo.CertTlsInfo
-import com.tencent.devops.ticket.pojo.CertIOS
-import com.tencent.devops.ticket.pojo.CertWithPermission
-import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertAndroid
+import com.tencent.devops.ticket.pojo.CertAndroidInfo
 import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
+import com.tencent.devops.ticket.pojo.CertEnterprise
+import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
+import com.tencent.devops.ticket.pojo.CertIOS
+import com.tencent.devops.ticket.pojo.CertIOSInfo
 import com.tencent.devops.ticket.pojo.CertTls
+import com.tencent.devops.ticket.pojo.CertTlsInfo
+import com.tencent.devops.ticket.pojo.CertWithPermission
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream

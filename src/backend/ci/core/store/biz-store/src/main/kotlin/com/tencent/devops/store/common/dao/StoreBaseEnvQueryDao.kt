@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -54,6 +54,22 @@ class StoreBaseEnvQueryDao {
                 conditions.add(OS_ARCH.eq(osArch))
             }
             dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    fun getDefaultBaseEnvInfo(
+        dslContext: DSLContext,
+        storeId: String,
+        osName: String? = null
+    ): TStoreBaseEnvRecord? {
+        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_ID.eq(storeId))
+            conditions.add(DEFAULT_FLAG.eq(true))
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
+            dslContext.selectFrom(this).where(conditions).limit(1).fetchOne()
         }
     }
 

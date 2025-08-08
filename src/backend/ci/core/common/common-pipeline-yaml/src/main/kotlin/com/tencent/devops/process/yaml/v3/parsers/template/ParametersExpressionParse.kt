@@ -15,6 +15,7 @@ import com.tencent.devops.common.expression.context.ExpressionContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
@@ -399,7 +400,7 @@ object ParametersExpressionParse {
         val (value, isComplete, type) = try {
             ExpressionParser.createSubNameValueEvaluateTree(
                 expression, null, nameValues, functionList, subInfo
-            )?.subNameValueEvaluate(null, context, null, subInfo, null)
+            )?.subNameValueEvaluate(null, context, EvaluationOptions(false), subInfo, null)
                 ?: throw YamlTemplateException("create evaluate tree is null")
         } catch (e: Throwable) {
             throw error(Constants.EXPRESSION_EVALUATE_ERROR.format(path, expression, e.message))

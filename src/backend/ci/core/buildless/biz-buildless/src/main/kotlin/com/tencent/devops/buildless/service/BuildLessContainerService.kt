@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,7 +35,7 @@ import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.buildless.config.BuildLessConfig
@@ -92,10 +92,7 @@ class BuildLessContainerService(
         .readTimeout(120000)
         .build()
 
-    val httpDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(httpClient)
-        .build()
+    val httpDockerCli: DockerClient = DockerClientImpl.getInstance(config, httpClient)
 
     fun createContainer() {
         val volumeApps = Volume(buildLessConfig.volumeApps)
@@ -237,7 +234,8 @@ class BuildLessContainerService(
             // 是否已运行超过12小时
             val buildLessPoolInfo = redisUtils.getBuildLessPoolContainer(container.id)
             if (checkStartTime(startTime) &&
-                (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)) {
+                (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)
+            ) {
                 timeoutContainerList.add(container.id)
             }
         }
@@ -245,21 +243,41 @@ class BuildLessContainerService(
         return timeoutContainerList
     }
 
+    fun checkContainerRunning(containerId: String): Boolean {
+        try {
+            val containerInfo = httpDockerCli
+                .listContainersCmd()
+                .withStatusFilter(setOf("running"))
+                .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
+                .exec()
+
+            return containerInfo.any {
+                val shortId = if (it.id.length > 12) it.id.substring(0, 12) else it.id
+                shortId == containerId
+            }
+        } catch (e: Exception) {
+            logger.error("===> check container running failed, containerId: $containerId, error msg: $e")
+            return false
+        }
+    }
+
     private fun generateEnv(containerName: String, linkPath: String): List<String> {
         val envList = mutableListOf<String>()
-        envList.addAll(listOf(
-            "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
-            "TERM=xterm-256color",
-            "$ENV_KEY_BK_TAG=${bkTag.getFinalTag()}",
-            "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-            "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
-            "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
-            "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-            "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
-            "$ENV_CONTAINER_NAME=$containerName",
-            "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
-            "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
-        ))
+        envList.addAll(
+            listOf(
+                "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
+                "TERM=xterm-256color",
+                "$ENV_KEY_BK_TAG=${bkTag.getFinalTag()}",
+                "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+                "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
+                "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
+                "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+                "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
+                "$ENV_CONTAINER_NAME=$containerName",
+                "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
+                "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
+            )
+        )
 
         buildLessConfig.idcGateway?.let {
             envList.add("$ENV_DEVOPS_GATEWAY=$it")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -75,7 +75,11 @@ data class OptionalTemplate(
 data class CloneTemplateSettingExist(
     val notifySettingExist: Boolean,
     val concurrencySettingExist: Boolean,
-    val labelSettingExist: Boolean
+    val labelSettingExist: Boolean,
+    @get:Schema(title = "是否继承项目流水线语言风格", required = false)
+    var inheritedDialect: Boolean? = true,
+    @get:Schema(title = "流水线语言风格", required = false)
+    var pipelineDialect: String? = null
 ) {
     companion object {
         fun fromSetting(setting: PipelineSetting?, pipelinesWithLabels: Set<String>?): CloneTemplateSettingExist {
@@ -85,7 +89,9 @@ data class CloneTemplateSettingExist(
             return CloneTemplateSettingExist(
                 notifySettingExist = !setting.notifySettingIsNull(),
                 concurrencySettingExist = !setting.concurrencySettingIsNull(),
-                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false
+                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false,
+                inheritedDialect = setting.pipelineAsCodeSettings?.inheritedDialect ?: true,
+                pipelineDialect = setting.pipelineAsCodeSettings?.pipelineDialect
             )
         }
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,10 +28,10 @@
 package com.tencent.devops.process.webhook.pojo.event.commit
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 
-@Event(MQ.EXCHANGE_TGIT_BUILD_REQUEST_EVENT, MQ.ROUTE_TGIT_BUILD_REQUEST_EVENT)
+@Event(StreamBinding.TGIT_BUILD_REQUEST_EVENT)
 data class TGitWebhookEvent(
     override val requestContent: String,
     override var retryTime: Int = 3,

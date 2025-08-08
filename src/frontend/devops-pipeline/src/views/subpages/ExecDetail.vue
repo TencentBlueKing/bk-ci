@@ -22,12 +22,19 @@
                     }"
                 ></span>
                 <aside class="exec-detail-summary-header-title">
-                    <bk-tag class="exec-status-tag" type="stroke" :theme="statusTagTheme">
+                    <bk-tag
+                        class="exec-status-tag"
+                        type="stroke"
+                        :theme="statusTagTheme"
+                    >
                         <span class="exec-status-label">
-                            <i v-if="isRunning" :class="['devops-icon', {
-                                'icon-hourglass hourglass-queue': execDetail.status === 'QUEUE',
-                                'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
-                            }]" />
+                            <i
+                                v-if="isRunning"
+                                :class="['devops-icon', {
+                                    'icon-hourglass hourglass-queue': execDetail.status === 'QUEUE',
+                                    'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
+                                }]"
+                            />
                             {{ statusLabel }}
                             <span
                                 v-if="execDetail.status === 'CANCELED'"
@@ -37,17 +44,27 @@
                             </span>
                         </span>
                     </bk-tag>
-                    <span v-bk-overflow-tips class="exec-detail-summary-header-build-msg">
+                    <span
+                        v-bk-overflow-tips
+                        class="exec-detail-summary-header-build-msg"
+                    >
                         {{ execDetail.buildMsg }}
                     </span>
                 </aside>
                 <aside class="exec-detail-summary-header-trigger">
-                    <img v-if="execDetail.triggerUserProfile" class="exec-trigger-profile" />
-                    <logo class="exec-trigger-profile" name="default-user" size="24" />
-                    <span v-if="execDetail.triggerUser">
+                    <img
+                        v-if="execDetail.triggerUserProfile"
+                        class="exec-trigger-profile"
+                    />
+                    <logo
+                        class="exec-trigger-profile"
+                        name="default-user"
+                        size="24"
+                    />
+                    <span v-if="startUser">
                         {{
                             $t("details.executorInfo", [
-                                execDetail.triggerUser,
+                                startUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])
@@ -55,7 +72,10 @@
                     </span>
                 </aside>
             </div>
-            <p class="summary-header-shadow" v-show="show"></p>
+            <p
+                class="summary-header-shadow"
+                v-show="show"
+            ></p>
             <Summary
                 ref="detailSummary"
                 :visible="summaryVisible"
@@ -84,9 +104,11 @@
                     {{ panel.label }}
                 </span>
             </header>
-            <div :class="['exec-detail-main', {
-                'is-outputs-panel': curItemTab === 'outputs'
-            }]">
+            <div
+                :class="['exec-detail-main', {
+                    'is-outputs-panel': curItemTab === 'outputs'
+                }]"
+            >
                 <component
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
@@ -110,6 +132,7 @@
                 <plugin
                     :exec-detail="execDetail"
                     :editing-element-pos="editingElementPos"
+                    :properties="curProject.properties?.pluginDetailsDisplayOrder"
                     @close="hideSidePanel"
                 />
             </template>
@@ -233,6 +256,9 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             panels () {
                 return [
                     {
@@ -242,7 +268,7 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
-                            isLatestBuild: this.isLatestBuild,
+                            isLatestBuild: this.archiveFlag ? !this.archiveFlag : this.isLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
                         }
@@ -352,7 +378,10 @@
                     }
             },
             routerParams () {
-                return this.$route.params
+                return {
+                    ...this.$route.params,
+                    ...this.$route.query
+                }
             },
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
@@ -371,6 +400,21 @@
             },
             pipelineModel () {
                 return this.execDetail?.model || {}
+            },
+            executeCount () {
+                return this.execDetail?.executeCount ?? 1
+            },
+            recordList () {
+                const list = [...this.execDetail?.recordList]
+                return (
+                    list.reverse().map((record, index) => ({
+                        id: index + 1,
+                        user: record.startUser
+                    })) ?? []
+                )
+            },
+            startUser () {
+                return this.recordList.find(i => i.id === this.executeCount)?.user || ''
             }
         },
 
@@ -394,6 +438,17 @@
                 if (error.code === 403) {
                     this.hasNoPermission = true
                 }
+            },
+            '$route.params.type': {
+                handler (newVal) {
+                    if (newVal !== 'outputs') {
+                        const query = { ...this.$route.query }
+                        delete query.metadataKey
+                        delete query.metadataValues
+                        this.$router.replace({ query })
+                    }
+                },
+                immediate: true
             }
         },
         beforeRouteEnter (to, from, next) {
@@ -403,7 +458,8 @@
                     params: {
                         ...to.params,
                         type: 'executeDetail'
-                    }
+                    },
+                    query: to.query
                 })
             } else {
                 next()
@@ -511,7 +567,8 @@
                     params: {
                         ...this.routerParams,
                         type: panel.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             collapseSummary () {
@@ -701,6 +758,7 @@
     margin: 0 24px;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
+    height: calc(100% - 205px);
     &.is-outputs-panel {
         overflow: hidden;
     }

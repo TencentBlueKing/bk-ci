@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,7 @@ import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
@@ -65,11 +66,10 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
 
     override fun updateComponentPkgInfo(
         userId: String,
-        storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Result<Boolean> {
         return Result(
-            storeArchiveService.updateComponentPkgInfo(userId, storeId, storePkgInfoUpdateRequest)
+            storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
         )
     }
 
@@ -90,7 +90,31 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
-                version = version
+                version = version,
+                osName = osName,
+                osArch = osArch
+            )
+        )
+    }
+
+    override fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        queryComponentPkgEnvInfoParam: QueryComponentPkgEnvInfoParam
+    ): Result<List<StorePkgEnvInfo>> {
+        val storeReleaseSpecBusService = SpringContextUtil.getBean(
+            StoreReleaseSpecBusService::class.java,
+            StoreUtils.getReleaseSpecBusServiceBeanName(storeType)
+        )
+        return Result(
+            storeReleaseSpecBusService.getComponentPkgEnvInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                queryComponentPkgEnvInfoParam = queryComponentPkgEnvInfoParam
             )
         )
     }

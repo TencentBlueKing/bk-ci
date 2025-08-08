@@ -1,5 +1,10 @@
 <template>
-    <bk-date-picker :value="paramValue[paramKey]" @change="changeParamValue" v-bind="$props" class="g-turbo-single-width"></bk-date-picker>
+    <bk-date-picker
+        :value="paramValue[paramKey]"
+        @change="changeParamValue"
+        v-bind="$props"
+        class="g-turbo-single-width"
+    ></bk-date-picker>
 </template>
 
 <script>

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.common
 
-const val BS_TASK_HOST = "_bsTaskHost_"
 const val BS_ATOM_STATUS_REFRESH_DELAY_MILLS = "_bsDelayMills_"
 const val BS_ATOM_START_TIME_MILLS = "_bsAtomStartTimeMills_"
 const val BS_ATOM_LOOP_TIMES = "_bsAtomLoopTimes_"

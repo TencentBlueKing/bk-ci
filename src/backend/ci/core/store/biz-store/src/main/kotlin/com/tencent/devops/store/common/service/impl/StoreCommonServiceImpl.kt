@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,10 +30,10 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.constant.appendIfNotEmpty
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.store.common.configuration.StoreDetailUrlConfig
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
@@ -211,6 +211,24 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }
 
+    data class VersionParts(
+        val major: Int,
+        val minor: Int,
+        val patch: Int,
+        val suffix: String? = null
+    )
+
+    private fun parseVersion(version: String): VersionParts {
+        val parts = version.split(".")
+        val (major, minor, patch) = parts.take(3).map { it.toInt() }
+        return VersionParts(
+            major = major,
+            minor = minor,
+            patch = patch,
+            suffix = parts.drop(3).takeIf { it.isNotEmpty() }?.joinToString(".")
+        )
+    }
+
     /**
      * 获取正确的升级版本号
      */
@@ -219,42 +237,36 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         releaseType: ReleaseTypeEnum,
         reqVersion: String?
     ): List<String> {
-        var requireVersionList = listOf(INIT_VERSION)
         if (dbVersion.isBlank()) {
-            return requireVersionList
+            return listOf(INIT_VERSION)
         }
-        val dbVersionParts = dbVersion.split(".")
-        val firstVersionPart = dbVersionParts[0]
-        val secondVersionPart = dbVersionParts[1]
-        val thirdVersionPart = dbVersionParts[2]
-        when (releaseType) {
-            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
-                requireVersionList = listOf("${firstVersionPart.toInt() + 1}.0.0")
-            }
-            ReleaseTypeEnum.COMPATIBILITY_UPGRADE -> {
-                requireVersionList = listOf("$firstVersionPart.${secondVersionPart.toInt() + 1}.0")
-            }
-            ReleaseTypeEnum.COMPATIBILITY_FIX -> {
-                requireVersionList = listOf("$firstVersionPart.$secondVersionPart.${thirdVersionPart.toInt() + 1}")
-            }
-            ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
-                requireVersionList = listOf(dbVersion)
-            }
+        val dbVersionParts = parseVersion(dbVersion)
+        val major = dbVersionParts.major
+        val minor = dbVersionParts.minor
+        val patch = dbVersionParts.patch
+        val suffix = dbVersionParts.suffix
+        return when (releaseType) {
+            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> listOf("${major + 1}.0.0".appendIfNotEmpty(suffix))
+            ReleaseTypeEnum.COMPATIBILITY_UPGRADE -> listOf("$major.${minor + 1}.0".appendIfNotEmpty(suffix))
+            ReleaseTypeEnum.COMPATIBILITY_FIX -> listOf("$major.$minor.${patch + 1}".appendIfNotEmpty(suffix))
+            ReleaseTypeEnum.CANCEL_RE_RELEASE -> listOf(dbVersion)
             ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {
-                if (!reqVersion.isNullOrBlank()) {
-                    val reqVersionParts = reqVersion.split(".")
-                    requireVersionList = listOf(
-                        "${reqVersionParts[0]}.${reqVersionParts[1]}.${reqVersionParts[2].toInt() + 1}",
-                        "${reqVersionParts[0]}.${reqVersionParts[1].toInt() + 1}.0"
-                    )
-                } else {
+                if (reqVersion.isNullOrBlank()) {
                     throw ErrorCodeException(errorCode = StoreMessageCode.USER_HIS_VERSION_UPGRADE_INVALID)
                 }
+                val reqVersionParts = parseVersion(reqVersion)
+                val reqMajor = reqVersionParts.major
+                val reqMinor = reqVersionParts.minor
+                val reqPatch = reqVersionParts.patch
+                val reqSuffix = reqVersionParts.suffix
+                listOf(
+                    "$reqMajor.$reqMinor.${reqPatch + 1}".appendIfNotEmpty(reqSuffix),
+                    "$reqMajor.${reqMinor + 1}.0".appendIfNotEmpty(reqSuffix)
+                )
             }
-            else -> {
-            }
+
+            else -> listOf(INIT_VERSION) // 默认返回初始版本号
         }
-        return requireVersionList
     }
 
     /**
@@ -301,9 +313,10 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {
             val pipelineId = storeBuildInfoRecord.pipelineId
-            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByStoreCode(
                 dslContext = dslContext,
-                pipelineId = pipelineId
+                storeType = storeType,
+                storeCode = storeCode
             )
             var projectCode = storePipelineRelRecord?.projectCode
             if (projectCode.isNullOrBlank()) {
@@ -386,47 +399,64 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
     ): Boolean
 
     abstract override fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>?
 
     override fun getStoreShowVersionInfo(
+        storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): StoreShowVersionInfo {
+        // 确定默认显示的发布类型
         val defaultShowReleaseType = when {
-            cancelFlag -> {
-                ReleaseTypeEnum.CANCEL_RE_RELEASE
-            }
-            releaseType?.isDefaultShow() == true -> {
-                releaseType
-            }
-            releaseType == null -> {
-                ReleaseTypeEnum.NEW
-            }
-            else -> {
-                ReleaseTypeEnum.COMPATIBILITY_FIX
-            }
+            // 如果是取消重新发布操作，使用取消类型
+            cancelFlag -> ReleaseTypeEnum.CANCEL_RE_RELEASE
+            // 如果传入的发布类型是默认显示类型，直接使用
+            releaseType?.isDefaultShow() == true -> releaseType
+            // 未指定发布类型时使用新建类型
+            releaseType == null -> ReleaseTypeEnum.NEW
+            // 其他情况使用兼容修复类型
+            else -> ReleaseTypeEnum.COMPATIBILITY_FIX
         }
+
         val dbVersion = version ?: ""
-        val defaultShowVersion = getRequireVersion(dbVersion, defaultShowReleaseType)[0]
-        val showVersionList = mutableListOf<StoreShowVersionItem>()
-        showVersionList.add(StoreShowVersionItem(defaultShowVersion, defaultShowReleaseType.name, true))
-        if (dbVersion.isBlank()) {
-            return StoreShowVersionInfo(showVersionList)
-        }
-        val tmpReleaseTypeList = listOf(
-            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE,
-            ReleaseTypeEnum.COMPATIBILITY_UPGRADE,
-            ReleaseTypeEnum.COMPATIBILITY_FIX
-        )
-        tmpReleaseTypeList.forEach { tmpReleaseType ->
-            if (tmpReleaseType != defaultShowReleaseType) {
-                val showVersion = getRequireVersion(dbVersion, tmpReleaseType)[0]
-                showVersionList.add(StoreShowVersionItem(showVersion, tmpReleaseType.name))
+        // 获取默认显示版本号（DEVX类型组件不回显版本号）
+        val defaultShowVersion = if (storeType == StoreTypeEnum.DEVX) "" else getRequireVersion(
+            dbVersion = dbVersion,
+            releaseType = defaultShowReleaseType
+        ).firstOrNull().orEmpty()
+
+        // 构建版本展示列表
+        val showVersionList = mutableListOf<StoreShowVersionItem>().apply {
+            // 添加默认版本项
+            add(
+                StoreShowVersionItem(
+                    version = defaultShowVersion,
+                    lastVersion = dbVersion,
+                    releaseType = defaultShowReleaseType.name,
+                    defaultFlag = true
+                )
+            )
+
+            // 空版本或默认版本为空时直接返回空列表
+            if (dbVersion.isBlank() || defaultShowVersion.isBlank()) return StoreShowVersionInfo(this)
+
+            // 遍历其他可能的发布类型（排除已使用的默认类型）
+            listOf(
+                ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE,
+                ReleaseTypeEnum.COMPATIBILITY_UPGRADE,
+                ReleaseTypeEnum.COMPATIBILITY_FIX
+            ).filter { it != defaultShowReleaseType }.forEach { releaseType ->
+                // 获取对应发布类型的推荐版本并添加到列表
+                getRequireVersion(dbVersion, releaseType).firstOrNull()?.let { showVersion ->
+                    add(StoreShowVersionItem(showVersion, dbVersion, releaseType.name))
+                }
             }
         }
+
+        // 返回最终构建的版本信息对象
         return StoreShowVersionInfo(showVersionList)
     }
 
@@ -437,67 +467,125 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         name: String
     ) {
         val releaseType = versionInfo.releaseType
-        val opBaseRecord = generateOpBaseRecord(storeCode, storeType, releaseType)
+        val opBaseRecord =
+            storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
         val version = versionInfo.version
         val dbVersion = opBaseRecord.version
         val dbStatus = opBaseRecord.status
         // 判断首个版本对应的请求是否合法
-        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            dbStatus !in listOf(StoreStatusEnum.INIT.name, StoreStatusEnum.GROUNDING_SUSPENSION.name)
-        ) {
+        val validStatusList = listOf(
+            StoreStatusEnum.INIT.name,
+            StoreStatusEnum.COMMITTING.name,
+            StoreStatusEnum.GROUNDING_SUSPENSION.name
+        )
+        if (releaseType == ReleaseTypeEnum.NEW && dbStatus !in validStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
-        }
-        // 最近的版本处于上架中止状态，重新升级版本号不变
-        val cancelFlag = dbStatus == StoreStatusEnum.GROUNDING_SUSPENSION.name
-        val requireVersionList =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                listOf(dbVersion)
-            } else {
-                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
-                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
-                    storeBaseQueryDao.getComponent(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        version = VersionUtils.convertLatestVersion(version),
-                        storeType = storeType
-                    )?.version
-                } else {
-                    null
-                }
-                getRequireVersion(
-                    reqVersion = reqVersion,
-                    dbVersion = dbVersion,
-                    releaseType = releaseType
-                )
-            }
-        if (!requireVersionList.contains(version)) {
-            logger.warn("$storeType[$storeCode]| invalid version: $version|requireVersionList:$requireVersionList")
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID,
-                params = arrayOf(version, requireVersionList.toString())
-            )
         }
         // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
         checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
+        // 版本存在性校验
+        when {
+            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
+                if (version != dbVersion) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
+                    )
+                }
+            }
+            releaseType != ReleaseTypeEnum.NEW -> {
+                val versionExists = storeBaseQueryDao.getComponentId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = version,
+                    storeType = storeType
+                ) != null
+                if (versionExists) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(version)
+                    )
+                }
+            }
+        }
+        // 如果是DEVX类型组件，跳过后续校验
+        if (storeType == StoreTypeEnum.DEVX) return
+
+        val dbVersionParts = parseVersion(dbVersion)
+        val reqVersionParts = parseVersion(version)
+
+        val checkFlag = when (releaseType) {
+            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
+                reqVersionParts.major > dbVersionParts.major
+            }
+
+            ReleaseTypeEnum.COMPATIBILITY_UPGRADE -> {
+                reqVersionParts.major == dbVersionParts.major &&
+                        reqVersionParts.minor > dbVersionParts.minor
+            }
+
+            ReleaseTypeEnum.COMPATIBILITY_FIX -> {
+                reqVersionParts.major == dbVersionParts.major &&
+                        reqVersionParts.minor == dbVersionParts.minor &&
+                        validatePatchVersion(
+                            reqVersionParts = reqVersionParts,
+                            compareVersionParts = dbVersionParts,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            version = version
+                        )
+            }
+
+            ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {
+                val historyVersion = storeBaseQueryDao.getComponent(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = VersionUtils.convertLatestVersion(version),
+                    storeType = storeType
+                )?.version ?: throw ErrorCodeException(errorCode = StoreMessageCode.USER_HIS_VERSION_UPGRADE_INVALID)
+                val hisVersionParts = parseVersion(historyVersion)
+                reqVersionParts.major == hisVersionParts.major &&
+                        reqVersionParts.minor >= hisVersionParts.minor &&
+                        validatePatchVersion(
+                            reqVersionParts = reqVersionParts,
+                            compareVersionParts = hisVersionParts,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            version = version
+                        )
+            }
+
+            else -> true
+        }
+        if (!checkFlag) {
+            logger.warn("$storeType[$storeCode]| invalid version: $version")
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
+            )
+        }
     }
 
-    private fun generateOpBaseRecord(
+    private fun validatePatchVersion(
+        reqVersionParts: VersionParts,
+        compareVersionParts: VersionParts,
         storeCode: String,
         storeType: StoreTypeEnum,
-        releaseType: ReleaseTypeEnum
-    ): TStoreBaseRecord {
-        val maxVersionBaseRecord = storeBaseQueryDao.getMaxVersionComponentByCode(dslContext, storeCode, storeType)
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(storeCode)
-            )
-        val newestBaseRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)!!
-        val opBaseRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-            newestBaseRecord
-        } else {
-            maxVersionBaseRecord
+        version: String
+    ): Boolean {
+        if (reqVersionParts.major != compareVersionParts.major || reqVersionParts.minor != compareVersionParts.minor) {
+            return false
         }
-        return opBaseRecord
+        return if (reqVersionParts.suffix == null) {
+            // 如果版本号为三部分，则要求修正号要递增
+            reqVersionParts.patch > compareVersionParts.patch
+        } else {
+            // 如果版本号超过三部分且补丁版本号一样，则要求请求版本号在数据库中不存在
+            (reqVersionParts.patch > compareVersionParts.patch) || storeBaseQueryDao.countByCondition(
+                dslContext = dslContext, storeCode = storeCode, storeType = storeType, version = version
+            ) < 1
+        }
     }
 
     private fun checkAddVersionCondition(
@@ -507,12 +595,7 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         name: String
     ) {
         if (dbVersion.isNotBlank() && releaseType != ReleaseTypeEnum.NEW) {
-            val storeFinalStatusList = mutableListOf(
-                StoreStatusEnum.AUDIT_REJECT.name,
-                StoreStatusEnum.RELEASED.name,
-                StoreStatusEnum.GROUNDING_SUSPENSION.name,
-                StoreStatusEnum.UNDERCARRIAGED.name
-            )
+            val storeFinalStatusList = StoreStatusEnum.getStoreFinalStatusList()
             if (!storeFinalStatusList.contains(dbStatus)) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
@@ -531,5 +614,17 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         )
         val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
         return releaseTotalNum > currentNum
+    }
+
+    override fun getStoreCodeById(
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): String {
+        var code = storeBaseQueryDao.getComponentById(dslContext, storeId)?.storeCode
+        if (code == null) {
+            val storeCommonDao = getStoreCommonDao(storeType.name)
+            code = storeCommonDao.getStoreCodeById(dslContext, storeId)
+        }
+        return code ?: ""
     }
 }

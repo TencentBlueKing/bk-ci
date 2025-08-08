@@ -1,49 +1,113 @@
 <template>
     <section>
-        <section class="select-logo" ref="selectLogo" :style="`top: ${top}px; right: ${right}px`">
-            <section v-if="form.logoUrl || form.iconData" @click="uploadLogo" class="has-upload">
-                <img :src="form.logoUrl || form.iconData" :title="$t('store.选择logo')">
+        <section
+            class="select-logo"
+            ref="selectLogo"
+            :style="`top: ${top}px; right: ${right}px`"
+        >
+            <section
+                v-if="form.logoUrl || form.iconData"
+                @click="uploadLogo"
+                class="has-upload"
+            >
+                <img
+                    :src="form.logoUrl || form.iconData"
+                    :title="$t('store.选择logo')"
+                >
                 <span>{{ $t('store.editLogo') }}</span>
             </section>
-            <section v-else @click="uploadLogo" :class="[{ 'logo-error': isErr }, 'un-upload']">
+            <section
+                v-else
+                @click="uploadLogo"
+                :class="[{ 'logo-error': isErr }, 'un-upload']"
+            >
                 <i class="devops-icon icon-plus"></i>
                 <p> {{ $t('store.上传LOGO') }} </p>
             </section>
-            <p v-if="isErr" class="is-err"> {{ $t('store.Logo必填') }} </p>
+            <p
+                v-if="isErr"
+                class="is-err"
+            >
+                {{ $t('store.Logo必填') }}
+            </p>
         </section>
-        <bk-dialog v-model="showDialog"
+        <bk-dialog
+            v-model="showDialog"
             header-position="left"
-            width="615" :title="$t('store.修改Logo')"
+            width="615"
+            :title="$t('store.修改Logo')"
             class="logo-dialog"
             @cancel="toCloseDialog"
         >
-            <main class="logo-main" v-bkloading="{ isLoading: loading }">
+            <main
+                class="logo-main"
+                v-bkloading="{ isLoading: loading }"
+            >
                 <figure class="logo-pic">
-                    <img class="pic-img" :src="selectedUrl" v-if="selectedUrl">
-                    <icon class="pic-img" v-else name="placeholder" size="88" style="fill:#dcdee5" />
+                    <img
+                        class="pic-img"
+                        :src="selectedUrl"
+                        v-if="selectedUrl"
+                    >
+                    <icon
+                        class="pic-img"
+                        v-else
+                        name="placeholder"
+                        size="88"
+                        style="fill:#dcdee5"
+                    />
                 </figure>
 
                 <section class="logo-choose">
                     <h3 class="choose-upload">
-                        <input type="file" name="file" class="input-file" id="inputfile" accept="image/png, image/jpeg" @change="fileChange">
+                        <input
+                            type="file"
+                            name="file"
+                            class="input-file"
+                            id="inputfile"
+                            accept="image/png, image/jpeg"
+                            @change="fileChange"
+                        >
                         <bk-button theme="primary"> {{ $t('store.自定义') }} </bk-button>
-                        <p class="upload-info" v-bk-tooltips="$t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M')">
+                        <p
+                            class="upload-info"
+                            v-bk-tooltips="$t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M')"
+                        >
                             {{ $t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M') }}
                         </p>
                     </h3>
                     <h3 class="sys-title"> {{ $t('store.系统自带') }} </h3>
                     <hgroup class="choose-sys">
-                        <h3 v-for="img in imgs" :key="img.id" @click="chooseSysImg(img.logoUrl)" :class="[{ 'select-icon': selectedUrl === img.logoUrl }, 'sys-icon']">
-                            <img :src="img.logoUrl" class="icon">
+                        <h3
+                            v-for="img in imgs"
+                            :key="img.id"
+                            @click="chooseSysImg(img.logoUrl)"
+                            :class="[{ 'select-icon': selectedUrl === img.logoUrl }, 'sys-icon']"
+                        >
+                            <img
+                                :src="img.logoUrl"
+                                class="icon"
+                            >
                         </h3>
                     </hgroup>
                 </section>
             </main>
             <template slot="footer">
                 <div class="bk-dialog-outer">
-                    <bk-button theme="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
-                        @click="toConfirmLogo"> {{ $t('store.确定') }} </bk-button>
-                    <bk-button type="button" class="bk-dialog-btn bk-dialog-btn-cancel" @click="toCloseDialog"> {{ $t('store.取消') }} </bk-button>
+                    <bk-button
+                        theme="primary"
+                        class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
+                        @click="toConfirmLogo"
+                    >
+                        {{ $t('store.确定') }}
+                    </bk-button>
+                    <bk-button
+                        type="button"
+                        class="bk-dialog-btn bk-dialog-btn-cancel"
+                        @click="toCloseDialog"
+                    >
+                        {{ $t('store.取消') }}
+                    </bk-button>
                 </div>
             </template>
         </bk-dialog>

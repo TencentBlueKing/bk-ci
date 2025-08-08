@@ -12,8 +12,14 @@ data class ResourceAuthorizationHandoverConditionRequest(
     override val resourceType: String,
     @get:Schema(title = "资源名称")
     override val resourceName: String? = null,
+    @get:Schema(title = "过滤资源ID列表")
+    override var filterResourceCodes: List<String>? = null,
+    @get:Schema(title = "排除资源ID列表")
+    override var excludeResourceCodes: List<String>? = null,
     @get:Schema(title = "授予人")
     override val handoverFrom: String? = null,
+    @get:Schema(title = "授予人列表")
+    override val handoverFroms: List<String>? = null,
     @get:Schema(title = "greaterThanHandoverTime")
     override val greaterThanHandoverTime: Long? = null,
     @get:Schema(title = "lessThanHandoverTime")
@@ -38,7 +44,10 @@ data class ResourceAuthorizationHandoverConditionRequest(
     projectCode = projectCode,
     resourceType = resourceType,
     resourceName = resourceName,
+    filterResourceCodes = filterResourceCodes,
+    excludeResourceCodes = excludeResourceCodes,
     handoverFrom = handoverFrom,
+    handoverFroms = handoverFroms,
     greaterThanHandoverTime = greaterThanHandoverTime,
     lessThanHandoverTime = lessThanHandoverTime,
     page = page,

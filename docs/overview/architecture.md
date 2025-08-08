@@ -35,4 +35,4 @@
     - **Agent：** 由Golang编写实现，分DevopsDaemon和DevopsAgent两个进程 ：
       - **DevopsDaemon：** 负责守护和启动DevopsAgent。
       - **DevopsAgent：** 负责与**Dispatch**和**Environment**微服务通信，负责整个**Agent**的升级和**Worker**(任务执行器) 进程的启动和销毁工作。
-    - **Worker：** 由Kotlin编写实现，是一个命名为agent.jar的文件，，任务真正的执行者。被**DevopsAgent**通过jre来拉起运行，之后会负责与**Process微服务模块**通信，领取插件任务并执行和上报结果(**Log&Process**)。
+    - **Worker：** 由Kotlin编写实现，是一个命名为agent.jar的文件，任务真正的执行者。被**DevopsAgent**通过jre来拉起运行，之后会负责与**Process微服务模块**通信，领取插件任务并执行和上报结果(**Log&Process**)。

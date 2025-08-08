@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.pojo.trigger
 
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -54,5 +55,7 @@ data class PipelineTriggerEvent(
     @get:Schema(title = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
     @get:Schema(title = "触发时间")
-    val createTime: LocalDateTime
+    val createTime: LocalDateTime,
+    @get:Schema(title = "事件体")
+    val eventBody: Webhook? = null
 )

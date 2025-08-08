@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,23 +29,61 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.atom.service.AtomPropService
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomClassifyService
+import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.atom.service.AtomPropService
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomClassifyService
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService,
+    private val marketAtomService: MarketAtomService,
     private val atomPropService: AtomPropService,
     private val atomClassifyService: MarketAtomClassifyService
 ) : ServiceAtomResource {
+
+    override fun list(
+        userId: String,
+        keyword: String?,
+        classifyCode: String?,
+        labelCode: String?,
+        score: Int?,
+        rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
+        sortType: MarketAtomSortTypeEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<MarketAtomResp> {
+        return Result(
+            marketAtomService.list(
+                userId = userId.trim(),
+                keyword = keyword?.trim(),
+                classifyCode = classifyCode?.trim(),
+                labelCode = labelCode?.trim(),
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag,
+                sortType = sortType,
+                page = page,
+                pageSize = pageSize,
+                urlProtocolTrim = true
+            )
+        )
+    }
 
     override fun getInstalledAtoms(
         projectCode: String

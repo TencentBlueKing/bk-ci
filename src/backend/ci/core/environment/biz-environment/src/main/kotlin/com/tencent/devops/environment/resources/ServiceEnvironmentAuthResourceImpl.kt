@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -50,10 +50,12 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authEnvService.getEnv(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return authEnvService.getEnvInfo(ids, token)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authEnvService.searchEnv(
                     projectId = projectId,
@@ -63,6 +65,8 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
+            else -> {}
         }
         return null
     }
@@ -75,10 +79,12 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
             CallbackMethodEnum.LIST_INSTANCE -> {
                 authNodeService.getNode(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 authNodeService.getNodeInfo(ids, token)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 authNodeService.searchNode(
                     projectId = projectId,

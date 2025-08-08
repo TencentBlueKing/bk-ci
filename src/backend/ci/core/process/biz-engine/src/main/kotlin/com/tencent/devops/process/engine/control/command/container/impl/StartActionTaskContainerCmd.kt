@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,8 +28,10 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -62,6 +64,7 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -135,7 +138,12 @@ class StartActionTaskContainerCmd(
                     jobId = jobId,
                     stepId = null,
                     executeCount = executeCount,
-                    buildStatus = commandContext.buildStatus.name
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_START,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp()
+                    )
                 )
             )
         }
@@ -387,6 +395,11 @@ class StartActionTaskContainerCmd(
                     BuildStatus.UNEXEC
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                taskBuildRecordService.updateTaskStatus(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stageId, containerId = containerId, taskId = taskId,
+                    executeCount = executeCount ?: 1, buildStatus = taskStatus, operation = "taskNeedTerminate"
+                )
                 // 打印构建日志
                 message.append(
                     I18nUtil.getCodeLanMessage(
@@ -415,7 +428,7 @@ class StartActionTaskContainerCmd(
                     executeCount = executeCount ?: 1,
                     buildStatus = taskStatus
                 )
-                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
+                val (updateTaskStatusInfos, _) = taskBuildRecordService.taskEnd(endParam)
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }

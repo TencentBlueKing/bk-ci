@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -46,7 +47,6 @@ import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
 @Repository
@@ -65,7 +65,8 @@ class PipelineInfoDao {
         canElementSkip: Boolean,
         taskCount: Int,
         id: Long? = null,
-        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED
+        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
+        pipelineDisable: Boolean? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -84,7 +85,8 @@ class PipelineInfoDao {
                 ELEMENT_SKIP,
                 TASK_COUNT,
                 ID,
-                LATEST_VERSION_STATUS
+                LATEST_VERSION_STATUS,
+                LOCKED
             )
                 .values(
                     pipelineId,
@@ -99,7 +101,8 @@ class PipelineInfoDao {
                     if (canElementSkip) 1 else 0,
                     taskCount,
                     id,
-                    latestVersionStatus?.name
+                    latestVersionStatus?.name,
+                    pipelineDisable ?: false
                 )
                 .execute()
         }
@@ -194,7 +197,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .and(CHANNEL.eq(channelCode.name))
                 .and(DELETE.eq(false))
-                .fetchOne(0, Int::class.java)!!
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 
@@ -649,12 +652,14 @@ class PipelineInfoDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        pipelineName: String,
         userId: String,
         channelCode: ChannelCode
     ) {
         return with(T_PIPELINE_INFO) {
             dslContext.update(this).set(DELETE, false)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(PIPELINE_NAME, pipelineName)
                 .set(LAST_MODIFY_USER, userId)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -729,7 +734,8 @@ class PipelineInfoDao {
         projectId: String,
         excludePipelineIds: List<String>,
         channelCode: ChannelCode? = null,
-        includeDelete: Boolean = false
+        includeDelete: Boolean = false,
+        filterPipelineIds: List<String>? = null
     ): Int {
         with(T_PIPELINE_INFO) {
             return dslContext.selectCount()
@@ -738,6 +744,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.notIn(excludePipelineIds))
                 .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
                 .let { if (includeDelete) it else it.and(DELETE.eq(false)) }
+                .let { if (filterPipelineIds != null) it.and(PIPELINE_ID.`in`(filterPipelineIds)) else it }
                 .fetchOne()?.value1() ?: 0
         }
     }
@@ -785,6 +792,44 @@ class PipelineInfoDao {
                 .orderBy(CREATE_TIME, PIPELINE_ID)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(String::class.java)
+        }
+    }
+
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        excludePipelineIds: List<String>,
+        channelCode: ChannelCode? = null,
+        limit: Int,
+        offset: Int
+    ): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.notIn(excludePipelineIds))
+                .and(DELETE.eq(false))
+                .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
+                .orderBy(CREATE_TIME.desc(), PIPELINE_ID)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
+
+    /**
+     * 根据项目ID获取已禁用的流水线ID列表
+     */
+    fun listDisabledPipelineIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LOCKED.eq(true))
+                .and(DELETE.eq(false))
+                .fetch(PIPELINE_ID, String::class.java)
         }
     }
 

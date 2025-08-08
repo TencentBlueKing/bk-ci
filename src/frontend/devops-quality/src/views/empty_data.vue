@@ -1,7 +1,7 @@
 <template>
     <div class="empty-data-wrapper">
-        <p class="title">{{emptyInfo.title}}</p>
-        <p class="intro-prompt">{{emptyInfo.desc}}</p>
+        <p class="title">{{ emptyInfo.title }}</p>
+        <p class="intro-prompt">{{ emptyInfo.desc }}</p>
         <div class="create-node-row">
             <bk-button
                 v-perm="{

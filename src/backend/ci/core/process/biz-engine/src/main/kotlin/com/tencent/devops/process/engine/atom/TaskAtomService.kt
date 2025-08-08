@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,17 +32,21 @@ import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -61,6 +65,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -87,7 +92,15 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
-            dispatchBroadCastEvent(task, ActionType.START)
+            dispatchBroadCastEvent(
+                task = task,
+                actionType = ActionType.START,
+                status = BuildStatus.RUNNING,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to LocalDateTime.now().timestamp(),
+                    PipelineBuildStatusBroadCastEvent.Labels::specialStep.name to VMUtils.getVmLabel(task.taskId)
+                )
+            )
             // 更新状态
             pipelineTaskService.updateTaskStatus(
                 task = task,
@@ -144,9 +157,14 @@ class TaskAtomService @Autowired(required = false) constructor(
         return atomResponse
     }
 
-    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
+    private fun dispatchBroadCastEvent(
+        task: PipelineBuildTask,
+        actionType: ActionType,
+        status: BuildStatus,
+        labels: Map<String, Any?>
+    ) {
         pipelineEventDispatcher.dispatch(
-            // 内置task启动/结束，包含 startVM、stopVM
+            // 内置task启动/结束，包含 startVM、stopVM、bash、batch
             PipelineBuildStatusBroadCastEvent(
                 source = "task-${task.taskId}",
                 projectId = task.projectId,
@@ -160,7 +178,13 @@ class TaskAtomService @Autowired(required = false) constructor(
                 stepId = task.stepId,
                 atomCode = task.atomCode,
                 executeCount = task.executeCount,
-                buildStatus = task.status.name
+                buildStatus = status.name,
+                type = when (actionType) {
+                    ActionType.START -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
+                    ActionType.END -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    else -> null
+                },
+                labels = labels
             )
         )
     }
@@ -191,6 +215,7 @@ class TaskAtomService @Autowired(required = false) constructor(
      * 插件任务[task]结束时做的业务处理，启动时间[startTime]毫秒，
      */
     fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
+        val labels = mutableMapOf<String, Any?>()
         try {
             // 更新状态
             pipelineTaskService.updateTaskStatus(
@@ -233,7 +258,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                     errorMsg = atomResponse.errorMsg,
                     atomVersion = atomVersion
                 )
-                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
+                val (updateTaskStatusInfos, recordTask) = taskBuildRecordService.taskEnd(endParam)
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
                         task = task,
@@ -257,6 +282,18 @@ class TaskAtomService @Autowired(required = false) constructor(
                         )
                     }
                 }
+                val timeCost = recordTask?.taskVar?.get(Element::timeCost.name) as BuildRecordTimeCost?
+                labels[PipelineBuildStatusBroadCastEvent.Labels::duration.name] = timeCost?.totalCost
+                labels[PipelineBuildStatusBroadCastEvent.Labels::executeDuration.name] = timeCost?.executeCost
+                labels[PipelineBuildStatusBroadCastEvent.Labels::systemDuration.name] = timeCost?.systemCost
+                labels[PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name] = timeCost?.queueCost
+                labels[PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name] = timeCost?.waitCost
+                labels[PipelineBuildStatusBroadCastEvent.Labels::startTime.name] = recordTask?.startTime?.timestamp()
+                if (atomResponse.buildStatus.isFailure()) {
+                    labels[PipelineBuildStatusBroadCastEvent.Labels::errorCode.name] = atomResponse.errorCode
+                    labels[PipelineBuildStatusBroadCastEvent.Labels::errorType.name] = atomResponse.errorType
+                    labels[PipelineBuildStatusBroadCastEvent.Labels::errorMessage.name] = atomResponse.errorMsg
+                }
                 measureService?.postTaskData(
                     task = task,
                     startTime = task.startTime?.timestampmilli() ?: startTime,
@@ -274,7 +311,12 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
 
-        dispatchBroadCastEvent(task, ActionType.END)
+        dispatchBroadCastEvent(
+            task = task,
+            actionType = ActionType.END,
+            status = atomResponse.buildStatus,
+            labels = labels
+        )
 
         buildLogPrinter.stopLog(
             buildId = task.buildId,
@@ -338,15 +380,27 @@ class TaskAtomService @Autowired(required = false) constructor(
 
     private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, stopFlag: Boolean) {
         if (atomResponse.buildStatus.isFinish()) {
-            buildLogPrinter.addLine(
-                buildId = task.buildId,
-                message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
-                tag = task.taskId,
-                containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
-                jobId = null,
-                stepId = task.stepId
-            )
+            if (atomResponse.errorCode != null) {
+                buildLogPrinter.addErrorLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus} (${atomResponse.errorMsg})!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            } else {
+                buildLogPrinter.addLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            }
         } else {
             if (stopFlag) {
                 buildLogPrinter.addLine(

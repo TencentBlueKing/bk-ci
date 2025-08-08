@@ -2,8 +2,12 @@
     <div class="environment-list-wrapper">
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.environment') }}</div>
-            <div slot="right" v-if="showContent && envList.length">
+            <div
+                slot="right"
+                v-if="showContent && envList.length"
+            >
                 <bk-button
+                    :key="projectId"
                     v-perm="{
                         permissionData: {
                             projectId: projectId,
@@ -12,39 +16,62 @@
                             action: ENV_RESOURCE_ACTION.CREATE
                         }
                     }"
-                    theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
+                    theme="primary"
+                    @click="toCreateEnv"
+                >
+                    {{ $t('environment.new') }}
+                </bk-button>
             </div>
         </content-header>
 
-        <section class="sub-view-port"
+        <section
+            class="sub-view-port"
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
-            <bk-table v-if="showContent && envList.length"
+            }"
+        >
+            <bk-table
+                v-if="showContent && envList.length"
                 size="small"
                 :data="envList"
                 row-class-name="env-item-row"
-                @row-click="toEnvDetail">
-                <bk-table-column :label="$t('environment.envInfo.name')" prop="name"></bk-table-column>
-                <bk-table-column :label="$t('environment.envInfo.type')" prop="envType">
+                @row-click="toEnvDetail"
+            >
+                <bk-table-column
+                    :label="$t('environment.envInfo.name')"
+                    prop="name"
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('environment.envInfo.type')"
+                    prop="envType"
+                >
                     <template slot-scope="props">
                         <span v-if="props.row.envType === 'DEV'">{{ $t('environment.envInfo.devEnvType') }}</span>
                         <span v-if="props.row.envType === 'PROD'">{{ $t('environment.envInfo.testEnvType') }}</span>
                         <span v-if="props.row.envType === 'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.envInfo.nodeCount')" prop="nodeCount">
+                <bk-table-column
+                    :label="$t('environment.envInfo.nodeCount')"
+                    prop="nodeCount"
+                >
                     <template slot-scope="props">
                         {{ props.row.nodeCount }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime">
+                <bk-table-column
+                    :label="$t('environment.envInfo.creationTime')"
+                    prop="createdTime"
+                >
                     <template slot-scope="props">
                         {{ localConvertTime(props.row.createdTime) }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.operation')" width="160">
+                <bk-table-column
+                    :label="$t('environment.operation')"
+                    width="160"
+                >
                     <template slot-scope="props">
                         <template v-if="props.row.canUse">
                             <span
@@ -77,10 +104,12 @@
                 </bk-table-column>
             </bk-table>
 
-            <empty-node v-if="showContent && !envList.length"
+            <empty-node
+                v-if="showContent && !envList.length"
                 :is-env="true"
                 :to-create-node="toCreateEnv"
-                :empty-info="emptyInfo"></empty-node>
+                :empty-info="emptyInfo"
+            ></empty-node>
         </section>
     </div>
 </template>
@@ -248,17 +277,23 @@
     @import './../scss/conf';
 
     .environment-list-wrapper {
-        height: 100%;
-        overflow: hidden;
+        width: 100%;
+        height: calc(100vh - 98px);
+        padding: 20px;
+        overflow-y: auto;
+        .sub-view-port {
+            height: calc(100% - 70px);
+            overflow: auto
+        }
         .env-header {
             display: flex;
             justify-content: space-between;
             padding: 18px 20px;
+            margin-bottom: 10px;
             width: 100%;
             height: 60px;
-            border-bottom: 1px solid $borderWeightColor;
             background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
+            border: none;
         }
         .env-item-row {
             cursor: pointer;

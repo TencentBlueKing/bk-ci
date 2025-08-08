@@ -9,16 +9,12 @@ import com.tencent.devops.auth.service.oauth2.Oauth2ScopeService
 import org.springframework.stereotype.Service
 
 @Service
-class ClientCredentialsTokenGranter constructor(
-    private val accessTokenService: Oauth2AccessTokenService,
-    private val oauth2ScopeService: Oauth2ScopeService
-) : AbstractTokenGranter(
-    grantType = GRANT_TYPE,
+class ClientCredentialsTokenGranter(
+    private val oauth2ScopeService: Oauth2ScopeService,
+    accessTokenService: Oauth2AccessTokenService
+) : AbstractTokenGranter<Oauth2AccessTokenRequest>(
     accessTokenService = accessTokenService
 ) {
-    companion object {
-        private val GRANT_TYPE = Oauth2GrantType.CLIENT_CREDENTIALS.grantType
-    }
 
     override fun getAccessToken(
         accessTokenRequest: Oauth2AccessTokenRequest,
@@ -26,7 +22,7 @@ class ClientCredentialsTokenGranter constructor(
     ): Oauth2AccessTokenDTO {
         val accessTokenInfo = accessTokenService.get(
             clientId = clientDetails.clientId,
-            grantType = GRANT_TYPE
+            grantType = type().grantType
         )
         val scopeId = oauth2ScopeService.create(
             scope = clientDetails.scope
@@ -38,4 +34,6 @@ class ClientCredentialsTokenGranter constructor(
             scopeId = scopeId
         )
     }
+
+    override fun type(): Oauth2GrantType = Oauth2GrantType.CLIENT_CREDENTIALS
 }

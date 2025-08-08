@@ -1,8 +1,14 @@
 <template>
-    <div class="biz-container bkdevops-history-subpage pipeline-subpages" v-bkloading="{ isLoading }">
+    <div
+        class="biz-container bkdevops-history-subpage pipeline-subpages"
+        v-bkloading="{ isLoading }"
+    >
         <template v-if="isInfoReady">
             <div class="pipeline-subpages-header">
-                <router-view name="header" :is-switch-pipeline="isLoading"></router-view>
+                <router-view
+                    name="header"
+                    :is-switch-pipeline="isLoading"
+                ></router-view>
             </div>
             <router-view class="biz-content"></router-view>
         </template>
@@ -12,8 +18,9 @@
 
 <script>
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import { RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_ACTION, PROJECT_RESOURCE_ACTION } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
+    import { SET_PROJECT_PERM } from '@/store/modules/common/constants'
 
     export default {
         data () {
@@ -35,10 +42,21 @@
                 immediate: true
             }
         },
-        created () {
+        async created () {
             this.$store.dispatch('requestProjectDetail', {
                 projectId: this.$route.params.projectId
             })
+            try {
+                const { data } = await this.$store.dispatch('common/validatePermission', {
+                    projectId: this.$route.params.projectId,
+                    resourceType: 'project',
+                    resourceCode: this.$route.params.pipelineId,
+                    actionList: [PROJECT_RESOURCE_ACTION.ARCHIVED]
+                })
+                this.$store.commit(`common/${SET_PROJECT_PERM}`, data[PROJECT_RESOURCE_ACTION.ARCHIVED])
+            } catch (error) {
+                console.log(error)
+            }
         },
         beforeDestroy () {
             this.setPipeline(null)
@@ -60,7 +78,11 @@
             async fetchPipelineInfo () {
                 try {
                     this.isLoading = true
-                    await this.requestPipelineSummary(this.$route.params)
+                    const params = {
+                        ...this.$route.params,
+                        ...this.$route.query
+                    }
+                    await this.requestPipelineSummary(params)
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.$route.params.projectId,

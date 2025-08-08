@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,7 +33,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
@@ -55,7 +55,7 @@ import java.util.concurrent.Executors
 @Suppress("ALL")
 class MigrateResultService constructor(
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authVerifyRecordService: AuthVerifyRecordService,
     private val migrateResourceService: MigrateResourceService,
@@ -79,7 +79,7 @@ class MigrateResultService constructor(
         logger.info("start to compare policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
-            val resourceTypes = rbacCacheService.listResourceTypes()
+            val resourceTypes = rbacCommonService.listResourceTypes()
                 .map { it.resourceType }
             val traceId = MDC.get(TraceTag.BIZID)
             val compareFuture = resourceTypes.map { resourceType ->
@@ -215,7 +215,7 @@ class MigrateResultService constructor(
         )
 
         // 校验用户是否离职
-        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        val userExists = deptService.getUserInfo(userId) != null
         if (!userExists) {
             logger.info(
                 "user does not exist or has left the company, skip comparison|$projectCode|$resourceCode|$userId"

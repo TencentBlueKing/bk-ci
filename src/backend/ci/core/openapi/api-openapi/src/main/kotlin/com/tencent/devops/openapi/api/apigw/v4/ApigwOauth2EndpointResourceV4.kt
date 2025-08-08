@@ -1,6 +1,7 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
@@ -9,13 +10,13 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPENAPI_OAUTH2_V4", description = "OPENAPI-OAUTH2相关")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/auth/oauth2/endpoint/")
@@ -43,5 +44,5 @@ interface ApigwOauth2EndpointResourceV4 {
         clientSecret: String,
         @Parameter(description = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Any?>
+    ): Result<Oauth2AccessTokenVo>
 }

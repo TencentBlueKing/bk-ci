@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,8 @@
 
 package com.tencent.devops.dispatch.configuration
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterface
 import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterfaceImpl
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -49,10 +45,4 @@ class DispatchBeanConfiguration {
     @Bean
     @ConditionalOnMissingBean(JobQuotaInterface::class)
     fun jobQuotaInterface() = JobQuotaInterfaceImpl()
-
-    @Bean
-    fun measureEventDispatcher(
-        @Qualifier(EXTEND_RABBIT_TEMPLATE_NAME) extendRabbitTemplate: RabbitTemplate
-    ): MeasureEventDispatcher =
-        MeasureEventDispatcher(extendRabbitTemplate)
 }

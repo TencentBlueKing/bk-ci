@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,7 +51,7 @@ class ElementTest {
     @Test
     fun testElementJsonOrder() {
         val jsonFile = ElementTest::class.java.classLoader.getResource("windowsElement.json")
-        val expected = jsonFile!!.readText().trim('\n')
+        val expected = jsonFile!!.readText().trim()
         val wel = WindowsScriptElement(
             id = "e-326ce1c320204980a3d2a0f241bccd63",
             name = "batch script",

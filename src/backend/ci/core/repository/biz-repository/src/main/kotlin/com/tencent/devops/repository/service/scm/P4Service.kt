@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.code.p4.api.P4Api
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
@@ -46,7 +46,7 @@ import java.net.URLDecoder
 @Service
 class P4Service(
     private val repositoryService: RepositoryService,
-    private val credentialService: CredentialService
+    private val credentialService: RepoCredentialService
 ) : Ip4Service {
 
     override fun getChangelistFiles(

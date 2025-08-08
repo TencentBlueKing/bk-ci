@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,8 +37,8 @@ import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import java.lang.reflect.Modifier
-import javax.ws.rs.ApplicationPath
-import javax.ws.rs.Path
+import jakarta.ws.rs.ApplicationPath
+import jakarta.ws.rs.Path
 
 @ApplicationPath("/api")
 open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {

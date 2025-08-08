@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -147,6 +147,15 @@ object WebhookI18nConstants {
     // WIP阶段不触发
     const val MR_SKIP_WIP = "bkRepoTriggerSkipWipNotMatch"
 
+    // 自定义触发控制不匹配
+    const val THIRD_FILTER_NOT_MATCH = "bkRepoTriggerThirdFilterNotMatch"
+
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"
+
+    // 触发条件不匹配默认文案
+    const val TRIGGER_CONDITION_NOT_MATCH = "bkTriggerConditionNotMatch"
+
+    // 代码库开启PAC事件描述
+    const val ENABLE_PAC_EVENT_DESC = "bkRepoEnablePacEventDesc"
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -38,11 +39,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
-import com.tencent.devops.store.common.dao.StorePipelineRelDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
@@ -50,12 +49,15 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
+import com.tencent.devops.store.pojo.common.test.StoreTestItem
+import com.tencent.devops.store.pojo.common.test.StoreTestRequest
 import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -77,9 +79,8 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val storeUserService: StoreUserService,
     private val redisOperation: RedisOperation,
-    private val storePipelineRelDao: StorePipelineRelDao,
-    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeCommonService: StoreCommonService
+    private val storeCommonService: StoreCommonService,
+    private val storeMemberDao: StoreMemberDao
 ) : StoreProjectService {
 
     /**
@@ -134,20 +135,19 @@ class StoreProjectServiceImpl @Autowired constructor(
         val storeCode = installStoreReq.storeCode
         val storeType = installStoreReq.storeType
         val version = installStoreReq.version
-        val projectCodeList = installStoreReq.projectCodes
-        val testProjectCodeList = storeProjectRelDao.getTestProjectCodesByStoreCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType
-        )?.map { it.value1() }
-        if (!testProjectCodeList.isNullOrEmpty()) {
-            if (version == null) {
-                // 如果版本号为空则剔除无需安装的调试项目
-                projectCodeList.removeAll(testProjectCodeList)
+        var projectCodeList = installStoreReq.projectCodes
+        if (projectCodeList.isNotEmpty()) {
+            val testProjectCodeList = storeProjectRelDao.getTestProjectCodesByStoreCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType
+            )?.map { it.value1() }
+            if (!testProjectCodeList.isNullOrEmpty()) {
+                if (version == null) {
+                    // 如果版本号为空则剔除无需安装的调试项目
+                    projectCodeList.removeAll(testProjectCodeList)
+                }
             }
-        }
-        if (projectCodeList.isEmpty()) {
-            return Result(true)
         }
         val validateInstallResult = validateInstallPermission(
             publicFlag = publicFlag,
@@ -162,11 +162,14 @@ class StoreProjectServiceImpl @Autowired constructor(
         }
         val instanceId = installStoreReq.instanceId
         var increment = 0
+        if (projectCodeList.isEmpty()) {
+            projectCodeList = arrayListOf("")
+        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
                 // 判断是否已安装
-                val installStoreLockKey = "store:$projectCode:$storeType:$storeCode:install"
+                val installStoreLockKey = "store:$projectCode:$storeType:$storeCode:$instanceId:install"
                 val installStoreLock = RedisLock(redisOperation, installStoreLockKey, 10)
                 try {
                     installStoreLock.lock()
@@ -298,7 +301,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        if (ChannelCode.isNeedAuth(channelCode)) {
+        if (ChannelCode.isNeedAuth(channelCode) && projectCodeList.isNotEmpty()) {
             // 获取用户有权限的项目列表
             val projectList = client.get(ServiceProjectResource::class).list(userId).data
             // 判断用户是否有权限安装到对应的项目
@@ -344,13 +347,15 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun isInstalledByProject(
         projectCode: String,
         storeCode: String,
-        storeType: Byte
+        storeType: Byte,
+        instanceId: String?
     ): Boolean {
         return storeProjectRelDao.isInstalledByProject(
             dslContext = dslContext,
             projectCode = projectCode,
             storeCode = storeCode,
-            storeType = storeType
+            storeType = storeType,
+            instanceId = instanceId
         )
     }
 
@@ -372,43 +377,30 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun updateStoreInitProject(userId: String, storeProjectInfo: StoreProjectInfo): Boolean {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            // 获取组件当前初始化项目
-            val initProjectInfo = storeProjectRelDao.getInitProjectInfoByStoreCode(
-                dslContext = context,
-                storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType.type.toByte()
-            )!!
             // 更新组件关联初始化项目
             storeProjectRelDao.updateStoreInitProject(context, userId, storeProjectInfo)
-            storeProjectRelDao.deleteUserStoreTestProject(
+            val testProjectInfo = storeProjectRelDao.getUserTestProjectRelByStoreCode(
                 dslContext = context,
-                userId = initProjectInfo.creator,
-                storeType = storeProjectInfo.storeType,
                 storeCode = storeProjectInfo.storeCode,
-                storeProjectType = StoreProjectTypeEnum.TEST
-            )
-            storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
                 storeType = storeProjectInfo.storeType.type.toByte(),
-                storeCode = storeProjectInfo.storeCode,
                 projectCode = storeProjectInfo.projectId,
-                type = StoreProjectTypeEnum.TEST.type.toByte()
+                userId = storeProjectInfo.userId
             )
-            val storePipelineRel = storePipelineRelDao.getStorePipelineRel(
-                dslContext = context,
-                storeCode = storeProjectInfo.storeCode,
-                storeType = storeProjectInfo.storeType
-            )
-            storePipelineRel?.let {
-                storePipelineRelDao.deleteStorePipelineRelById(context, storePipelineRel.id)
-                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(context, storePipelineRel.pipelineId)
-                client.get(ServicePipelineResource::class).delete(
-                    userId = userId,
-                    pipelineId = it.pipelineId,
-                    channelCode = ChannelCode.AM,
-                    projectId = initProjectInfo.projectCode,
-                    checkFlag = false
+            if (testProjectInfo == null) {
+                storeProjectRelDao.deleteStoreProject(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType,
+                    storeCode = storeProjectInfo.storeCode,
+                    storeProjectType = StoreProjectTypeEnum.TEST
+                )
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = storeProjectInfo.userId,
+                    storeType = storeProjectInfo.storeType.type.toByte(),
+                    storeCode = storeProjectInfo.storeCode,
+                    projectCode = storeProjectInfo.projectId,
+                    type = StoreProjectTypeEnum.TEST.type.toByte()
                 )
             }
             val storeRepoHashId =
@@ -422,5 +414,75 @@ class StoreProjectServiceImpl @Autowired constructor(
             }
         }
         return true
+    }
+
+    override fun saveStoreTestInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeTestRequest: StoreTestRequest
+    ): Boolean {
+        val memberFlag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!memberFlag) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            storeProjectRelDao.deleteStoreProject(
+                dslContext = context,
+                storeType = storeType,
+                storeCode = storeCode,
+                storeProjectType = StoreProjectTypeEnum.TEST
+            )
+            storeTestRequest.testItems.forEach { testItem ->
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = storeCode,
+                    projectCode = testItem.projectCode,
+                    type = StoreProjectTypeEnum.TEST.type.toByte(),
+                    storeType = storeType.type.toByte(),
+                    instanceId = testItem.instanceId,
+                    instanceName = testItem.instanceName
+                )
+            }
+        }
+        return true
+    }
+
+    override fun getStoreTestInfo(userId: String, storeType: StoreTypeEnum, storeCode: String): Set<StoreTestItem> {
+        val memberFlag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!memberFlag) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
+        val testProjectInfos = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.TEST
+        )
+        val storeTestItems = mutableSetOf<StoreTestItem>()
+        testProjectInfos?.forEach { testProjectInfo ->
+            storeTestItems.add(
+                StoreTestItem(testProjectInfo.projectCode, testProjectInfo.instanceId, testProjectInfo.instanceName)
+            )
+        }
+        return storeTestItems
     }
 }

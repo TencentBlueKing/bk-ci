@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,7 +43,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
 object PipelineUtils {
@@ -51,6 +51,8 @@ object PipelineUtils {
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
+
+    private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
 
     fun checkPipelineName(name: String, maxPipelineNameSize: Int) {
         if (name.toCharArray().size > maxPipelineNameSize) {
@@ -68,7 +70,8 @@ object PipelineUtils {
                 logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
                     message = I18nUtil.getCodeLanMessage(
-                        ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR
+                        ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR,
+                        params = arrayOf(param.id)
                     )
                 )
             }
@@ -162,7 +165,7 @@ object PipelineUtils {
      * 将流水线常量转换成模板常量
      */
     fun fixedTemplateParam(model: Model): Model {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val params = mutableListOf<BuildFormProperty>()
         val templateParams = mutableListOf<BuildFormProperty>()
         triggerContainer.params.forEach {
@@ -204,7 +207,7 @@ object PipelineUtils {
         labels: List<String>? = null,
         defaultStageTagId: String?
     ): Model {
-        val templateTrigger = templateModel.stages[0].containers[0] as TriggerContainer
+        val templateTrigger = templateModel.getTriggerContainer()
         val instanceParam = if (templateTrigger.templateParams == null) {
             BuildPropertyCompatibilityTools.mergeProperties(templateTrigger.params, param ?: emptyList())
         } else {
@@ -259,5 +262,9 @@ object PipelineUtils {
             }
         }
         return filterParams
+    }
+
+    fun isPipelineId(pipelineId: String): Boolean {
+        return PIPELINE_ID_PATTERN.matcher(pipelineId).matches()
     }
 }

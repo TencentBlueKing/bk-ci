@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.quality.tables.TQualityMetadata
 import com.tencent.devops.model.quality.tables.records.TQualityMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
@@ -65,6 +66,7 @@ class QualityMetadataDao {
         return with(TQualityMetadata.T_QUALITY_METADATA) {
             dslContext.selectFrom(this)
                 .where(ELEMENT_TYPE.eq(elementType))
+                .skipCheck()
                 .fetch()
         }
     }

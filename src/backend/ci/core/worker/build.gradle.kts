@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,6 @@ subprojects {
 
     configurations.forEach {
         it.exclude(group = "com.perforce", module = "*")
-        it.exclude(group = "com.google.guava", module = "*")
         it.exclude(group = "com.googlecode.javaewah", module = "*")
         it.exclude(group = "com.vdurmont", module = "*")
         it.exclude(group = "com.github.ulisesbocchio", module = "*")
@@ -37,17 +36,11 @@ subprojects {
         it.exclude(group = "joda-time", module = "*")
         it.exclude(group = "org.jolokia", module = "*")
         it.exclude(group = "com.github.taptap", module = "*")
-        it.exclude(group = "jakarta.xml.bind", module = "*")
         it.exclude(group = "org.jboss.spec.javax.websocket", module = "*")
-        it.exclude(group = "org.jboss.spec.javax.servlet", module = "*")
-        it.exclude(group = "org.jboss.spec.javax.annotation", module = "*")
+        it.exclude(group = "org.jboss.spec.jakarta.servlet", module = "*")
+        it.exclude(group = "org.jboss.spec.jakarta.annotation", module = "*")
         it.exclude(group = "net.sf.jopt-simple", module = "*")
         it.exclude(group = "com.ctc.wstx", module = "*")
-        it.exclude(group = "jakarta.ws.rs", module = "*")
-        it.exclude(group = "jakarta.activation", module = "*")
-        it.exclude(group = "jakarta.annotation", module = "*")
-        it.exclude(group = "jakarta.servlet", module = "*")
-        it.exclude(group = "jakarta.validation", module = "*")
         it.exclude(group = "org.apache.lucene", module = "*")
         it.exclude(group = "org.hashids", module = "*")
         it.exclude(group = "org.glassfish", module = "*")
@@ -56,8 +49,6 @@ subprojects {
         it.exclude(group = "org.glassfish.jersey.core", module = "*")
         it.exclude(group = "org.glassfish.hk2", module = "*")
         it.exclude(group = "org.glassfish.hk2.external", module = "*")
-        it.exclude(group = "jakarta.annotation", module = "*")
-        it.exclude(group = "javax.servlet", module = "*")
         it.exclude(group = "javax.validation", module = "*")
         it.exclude(group = "javax.mail", module = "*")
         it.exclude(group = "io.swagger", module = "*")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,15 +32,17 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 
 data class ThirdPartyAgentIDDispatchType(
-    @JsonProperty("value") var displayName: String,
-    var workspace: String?,
+    @JsonProperty("value")
+    var displayName: String,
+    override var workspace: String?,
     override val agentType: AgentType = AgentType.NAME,
-    // 第三方构建机用docker作为构建机
-    val dockerInfo: ThirdPartyAgentDockerInfo?,
+    override val dockerInfo: ThirdPartyAgentDockerInfo?,
     override var reusedInfo: ReusedInfo?
 ) : ThirdPartyAgentDispatch(
     value = displayName,
     agentType = agentType,
+    workspace = workspace,
+    dockerInfo = dockerInfo,
     reusedInfo = reusedInfo
 ) {
     override fun cleanDataBeforeSave() {

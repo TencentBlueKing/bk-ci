@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,7 +36,7 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  *
@@ -64,7 +64,9 @@ class ServiceLogResourceImpl @Autowired constructor(
         subTag: String?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean,
+        reverse: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
             userId = userId,
@@ -79,7 +81,9 @@ class ServiceLogResourceImpl @Autowired constructor(
             subTag = subTag,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            reverse = reverse ?: false,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 
@@ -99,7 +103,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
             userId = userId,
@@ -117,7 +122,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 
@@ -134,7 +140,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
     ): Result<QueryLogs> {
         return buildLogQueryService.getAfterLogs(
             userId = userId,
@@ -149,7 +156,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 

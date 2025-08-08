@@ -3,13 +3,17 @@
         <section
             v-if="curRepo && !errorCode"
             class="content-wrapper"
-            v-bkloading="{ isLoading }">
+            v-bkloading="{ isLoading }"
+        >
             <div class="detail-header">
                 <div
                     v-if="!isEditing"
                     class="codelib-name"
                 >
-                    <span v-bk-overflow-tips class="name mr5">{{ repoInfo.aliasName }}</span>
+                    <span
+                        v-bk-overflow-tips
+                        class="name mr5"
+                    >{{ repoInfo.aliasName }}</span>
                     <span
                         v-perm="{
                             hasPermission: curRepo.canEdit,
@@ -90,19 +94,10 @@
                     </bk-button>
                 </div>
                 <div class="address-content">
-                    <Icon
+                    <img
                         class="codelib-type-icon"
-                        :name="codelibIconMap[curRepo.type]"
-                        size="16"
+                        :src="curRepo.logoUrl"
                     />
-                    <!-- <a
-                        v-if="repoInfo.url && repoInfo.url.startsWith('http')"
-                        class="codelib-address"
-                        v-bk-overflow-tips
-                        @click="handleToRepo(repoInfo.url)"
-                    >
-                        {{ repoInfo.url }}
-                    </a> -->
                     <p
                         class="codelib-address"
                         v-bk-overflow-tips
@@ -118,11 +113,16 @@
                     </span>
                 </div>
             </div>
-            <bk-tab ext-cls="detail-tab" :active.sync="active" type="unborder-card">
+            <bk-tab
+                ext-cls="detail-tab"
+                :active.sync="active"
+                type="unborder-card"
+            >
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
                     v-bind="panel"
-                    :key="index">
+                    :key="index"
+                >
                     <component
                         ref="tabCom"
                         v-if="panel.name === active"
@@ -665,6 +665,10 @@
                 .copy-icon {
                     opacity: 1;
                 }
+            }
+            .codelib-type-icon {
+                width: 16px;
+                height: 16px;
             }
         }
         .codelib-address {

@@ -1,5 +1,5 @@
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
--- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- Copyright (C) 2019 Tencent.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
 -- A copy of the MIT License is included in this file.
 -- Terms of the MIT License:
@@ -91,11 +91,8 @@ config = {
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "kubernetes.demo.com",
-        switchAll = false,
+        devnetDomain = "devnet.kubernetes.demo.com",
         codecc = { domain = "kubernetes.demo.com" },
-        useForceHeader = false,
-        tags = {},
-        codeccTags = {},
         api = {
             url = "https://127.0.0.1/api/v1/nodes",
             token = ""

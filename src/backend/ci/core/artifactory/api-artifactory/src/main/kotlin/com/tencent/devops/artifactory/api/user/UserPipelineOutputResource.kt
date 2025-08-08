@@ -8,13 +8,14 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PIPELINE_OUTPUT", description = "流水线产出物管理")
 @Path("/user/pipeline/output")
@@ -39,6 +40,9 @@ interface UserPipelineOutputResource {
         @PathParam("buildId")
         buildId: String,
         @Parameter(description = "搜索过滤条件", required = false)
-        option: PipelineOutputSearchOption?
+        option: PipelineOutputSearchOption?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<List<PipelineOutput>>
 }

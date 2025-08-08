@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -372,7 +372,9 @@ class QualityRuleService @Autowired constructor(
         } else {
             mapOf()
         }
-        val templateRange = templateMap?.map { UserQualityRule.RangeItem(it.key, it.value.name) } ?: listOf()
+        val templateRange = templateMap?.map {
+            UserQualityRule.RangeItem(it.value.templateId, it.value.name)
+        } ?: listOf()
 
         // 获取模板对应的流水线总数
         val templatePipelineCount = client.get(ServiceTemplateInstanceResource::class)

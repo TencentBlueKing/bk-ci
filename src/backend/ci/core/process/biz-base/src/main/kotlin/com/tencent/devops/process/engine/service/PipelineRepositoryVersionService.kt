@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,15 +27,15 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -48,13 +48,12 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-@Suppress("LongParameterList", "ReturnCount")
+@Suppress("LongParameterList", "ReturnCount", "ComplexMethod")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: PipelineResourceDao,
@@ -107,23 +106,8 @@ class PipelineRepositoryVersionService(
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
             pipelineVersionLock.lock()
-            val count = pipelineBuildDao.countBuildNumByVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            )
-            if (count > 0) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
-                )
-            }
-            dslContext.transaction { t ->
-                val transactionContext = DSL.using(t)
-                // #8161 软删除数据，前端无法查询到该版本
-                pipelineResourceVersionDao.deleteByVersion(transactionContext, projectId, pipelineId, version)
-//                pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
-            }
+            // #8161 软删除数据，前端无法查询到该版本
+            pipelineResourceVersionDao.deleteByVersion(dslContext, projectId, pipelineId, version)
         } finally {
             pipelineVersionLock.unlock()
         }
@@ -180,61 +164,65 @@ class PipelineRepositoryVersionService(
     fun getPipelineVersionSimple(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineVersionSimple? {
         return pipelineResourceVersionDao.getPipelineVersionSimple(
-            dslContext = dslContext,
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
         )
     }
 
-    fun listPipelineVersion(
+    fun listPipelineReleaseVersion(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int,
-        includeDraft: Boolean?,
         excludeVersion: Int?,
         versionName: String?,
         creator: String?,
-        description: String?
+        description: String?,
+        buildOnly: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): Pair<Int, MutableList<PipelineVersionSimple>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
         }
-
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // 计算包括草稿在内的总数
         var count = pipelineResourceVersionDao.count(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            includeDraft = includeDraft,
+            includeDraft = false,
             versionName = versionName,
             creator = creator,
-            description = description
+            description = description,
+            buildOnly = buildOnly
         )
-        val result = mutableListOf<PipelineVersionSimple>()
-        result.addAll(
-            pipelineResourceVersionDao.listPipelineVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineInfo = pipelineInfo,
-                creator = creator,
-                description = description,
-                versionName = versionName,
-                includeDraft = includeDraft,
-                excludeVersion = excludeVersion,
-                offset = offset,
-                limit = limit
-            )
-        )
+        val result = pipelineResourceVersionDao.listPipelineVersion(
+            dslContext = finalDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            includeDraft = false,
+            excludeVersion = excludeVersion,
+            offset = offset,
+            limit = limit,
+            buildOnly = buildOnly
+        ).toMutableList()
+
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
-        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true) {
+        val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
+        if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
             pipelineResourceDao.getReleaseVersionResource(
-                dslContext, projectId, pipelineId
+                finalDslContext, projectId, pipelineId
             )?.let { record ->
                 count = 1
                 result.add(
@@ -431,36 +419,53 @@ class PipelineRepositoryVersionService(
 
     fun asyncBatchUpdateReferFlag(
         projectChannelCode: String,
-        routerTag: AuthSystemType? = null
+        routerTag: AuthSystemType? = null,
+        projectId: String? = null,
+        queryUnknownRelatedFlag: Boolean? = null
     ): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("begin asyncBatchUpdateReferFlag!!")
-            var offset = 0
-            val limit = PageUtil.DEFAULT_PAGE_SIZE
-            do {
-                val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
-                    projectConditionDTO = ProjectConditionDTO(
+        val executors = Executors.newFixedThreadPool(1)
+        try {
+            executors.submit {
+                logger.info("begin asyncBatchUpdateReferFlag!!")
+                var offset = 0
+                val limit = PageUtil.DEFAULT_PAGE_SIZE
+                do {
+                    val projectConditionDTO = ProjectConditionDTO(
                         channelCode = projectChannelCode,
                         routerTag = routerTag
-                    ),
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                projectInfos.forEach { projectInfo ->
-                    val projectId = projectInfo.englishName
-                    val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectId)
-                    pipelineIds.forEach { pipelineId ->
-                        updatePipelineReferFlag(projectId, pipelineId)
+                    ).apply {
+                        projectId?.let { projectCodes = listOf(it) }
                     }
-                }
-                offset += limit
-            } while (projectInfos.size == limit)
-            logger.info("end asyncBatchUpdateReferFlag!!")
+                    val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                        projectConditionDTO = projectConditionDTO,
+                        limit = limit,
+                        offset = offset
+                    ).data ?: break
+                    projectInfos.forEach { projectInfo ->
+                        val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectInfo.englishName)
+                        pipelineIds.forEach { pipelineId ->
+                            updatePipelineReferFlag(
+                                projectId = projectInfo.englishName,
+                                pipelineId = pipelineId,
+                                queryUnknownRelatedFlag = queryUnknownRelatedFlag
+                            )
+                        }
+                    }
+                    offset += limit
+                } while (projectInfos.size == limit)
+                logger.info("end asyncBatchUpdateReferFlag!!")
+            }
+        } finally {
+            executors.shutdown()
         }
         return true
     }
 
-    private fun updatePipelineReferFlag(projectId: String, pipelineId: String) {
+    private fun updatePipelineReferFlag(
+        projectId: String,
+        pipelineId: String,
+        queryUnknownRelatedFlag: Boolean? = null
+    ) {
         var offset = 0
         val limit = PageUtil.DEFAULT_PAGE_SIZE
         val pipelineInfo = pipelineInfoDao.convert(
@@ -470,13 +475,13 @@ class PipelineRepositoryVersionService(
         try {
             lock.lock()
             do {
-                // 查询关联状态未知的版本
+                // 查询流水线版本记录
                 val pipelineVersionList = pipelineResourceVersionDao.listPipelineVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineInfo = pipelineInfo,
-                    queryUnknownRelatedFlag = true,
+                    queryUnknownRelatedFlag = queryUnknownRelatedFlag,
                     offset = offset,
                     limit = limit
                 )

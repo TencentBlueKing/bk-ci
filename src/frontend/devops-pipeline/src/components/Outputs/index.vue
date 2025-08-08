@@ -1,83 +1,206 @@
 <template>
-    <div style="height: 100%;width: 100%;" v-bkloading="{ isLoading }">
+    <div
+        style="height: 100%;width: 100%;"
+        v-bkloading="{ isLoading }"
+    >
         <bk-resize-layout
+            :key="currentTab"
             :collapsible="true"
             class="pipeline-exec-outputs"
             :initial-divide="initWidth"
             :min="260"
             :max="800"
         >
-            <aside slot="aside" class="pipeline-exec-outputs-aside">
+            <aside
+                slot="aside"
+                class="pipeline-exec-outputs-aside"
+            >
                 <div class="pipeline-exec-outputs-filter-input">
-                    <bk-input clearable right-icon="bk-icon icon-search" :placeholder="filterPlaceholder"
-                        v-model="keyWord" />
+                    <div
+                        class="artifact-search"
+                        v-if="currentTab === 'artifacts'"
+                    >
+                        <p>{{ $t('metaData') }}</p>
+                        <bk-search-select
+                            class="select-search"
+                            :show-condition="false"
+                            :data="artifactFilterData"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="artifactValue"
+                            @change="updateSearchKey"
+                        />
+                    </div>
+                    <bk-input
+                        class="input-search"
+                        clearable
+                        right-icon="bk-icon icon-search"
+                        :placeholder="filterPlaceholder"
+                        v-model="keyWord"
+                    />
                 </div>
                 <!-- <div class="pipeline-exec-outputs-filter">
                     <i class="devops-icon icon-filter"></i>
                     {{ $t('条件查询') }}
                     <bk-tag class="output-filter-condition-count">2</bk-tag>
                 </div> -->
-                <ul v-if="visibleOutputs.length > 0" class="pipeline-exec-outputs-list">
-                    <li v-for="output in visibleOutputs" :key="output.id" :class="{
-                        active: output.id === activeOutput.id
-                    }" @click="setActiveOutput(output)">
+                <ul
+                    v-if="visibleOutputs.length > 0"
+                    class="pipeline-exec-outputs-list"
+                >
+                    <li
+                        v-for="output in visibleOutputs"
+                        :key="output.id"
+                        :class="{
+                            active: output.id === activeOutput.id
+                        }"
+                        @click="setActiveOutput(output)"
+                    >
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
-                        <span :title="output.name">{{ output.name }}</span>
+                        <span
+                            class="output-name"
+                            :title="output.name"
+                        >{{ output.name }}</span>
+                        <span class="output-size">{{ output.size }}</span>
                         <p class="output-hover-icon-box">
-                            <artifact-download-button v-if="output.downloadable" :output="output" download-icon
-                                :has-permission="hasPermission" :path="output.fullPath" :name="output.name"
-                                :artifactory-type="output.artifactoryType" />
-                            <i v-if="output.isReportOutput" class="devops-icon icon-full-screen"
-                                @click.stop="fullScreenViewReport(output)" />
+                            <artifact-download-button
+                                v-if="output.downloadable"
+                                :output="output"
+                                download-icon
+                                :has-permission="hasPermission"
+                                :path="output.fullPath"
+                                :name="output.name"
+                                :artifactory-type="output.artifactoryType"
+                            />
+                            <i
+                                v-if="output.isReportOutput"
+                                class="devops-icon icon-full-screen"
+                                @click.stop="fullScreenViewReport(output)"
+                            />
                         </p>
                     </li>
                 </ul>
 
-                <div v-else class="no-outputs-placeholder">
-                    <logo name="empty" size="180" />
+                <div
+                    v-else
+                    class="no-outputs-placeholder"
+                >
+                    <logo
+                        name="empty"
+                        size="180"
+                    />
                     <span>{{ $t("empty") }}</span>
                 </div>
-
             </aside>
-            <section slot="main" class="pipeline-exec-outputs-section">
-                <iframe-report v-if="isCustomizeReport" ref="iframeReport" :report-name="activeOutput.name"
-                    :index-file-url="activeOutput.indexFileUrl" />
-                <third-party-report v-else-if="isActiveThirdReport" :report-list="thirdPartyReportList" />
+            <section
+                slot="main"
+                class="pipeline-exec-outputs-section"
+            >
+                <iframe-report
+                    v-if="isCustomizeReport"
+                    ref="iframeReport"
+                    :report-name="activeOutput.name"
+                    :index-file-url="activeOutput.indexFileUrl"
+                />
+                <third-party-report
+                    v-else-if="isActiveThirdReport"
+                    :report-list="thirdPartyReportList"
+                />
                 <template v-else-if="activeOutputDetail">
                     <div class="pipeline-exec-output-header">
                         <span class="pipeline-exec-output-header-name">
                             <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
-                            {{ activeOutputDetail.name }}
+                            <span
+                                :title="activeOutputDetail.name"
+                                class="output-detail-name"
+                            >
+                                {{ activeOutputDetail.name }}
+                            </span>
                         </span>
                         <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                         <p class="pipeline-exec-output-actions">
-                            <artifact-download-button v-if="activeOutput.downloadable" :output="activeOutput"
-                                :has-permission="hasPermission" :path="activeOutput.fullPath" :name="activeOutput.name"
-                                :artifactory-type="activeOutput.artifactoryType" />
-                            <bk-button text theme="primary" v-for="btn in btns" :key="btn.text" @click="btn.handler">
+                            <artifact-download-button
+                                v-if="activeOutput.downloadable"
+                                :output="activeOutput"
+                                :has-permission="hasPermission"
+                                :path="activeOutput.fullPath"
+                                :name="activeOutput.name"
+                                :artifactory-type="activeOutput.artifactoryType"
+                            />
+                            <bk-button
+                                text
+                                theme="primary"
+                                v-for="btn in btns"
+                                :key="btn.text"
+                                @click="btn.handler"
+                            >
                                 {{ btn.text }}
                             </bk-button>
 
-                            <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail"
-                                :config="artifactMoreActions"></ext-menu>
+                            <ext-menu
+                                v-if="!activeOutputDetail.folder"
+                                :data="activeOutputDetail"
+                                :config="artifactMoreActions"
+                            ></ext-menu>
                         </p>
                     </div>
                     <div class="pipeline-exec-output-artifact">
-                        <div v-for="block in infoBlocks" :key="block.title" class="pipeline-exec-output-block">
+                        <div
+                            v-for="block in infoBlocks"
+                            :key="block.title"
+                            class="pipeline-exec-output-block"
+                        >
                             <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
-                            <bk-table v-if="block.key === 'meta'" :data="block.value">
-                                <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
-                                <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
-                                <bk-table-column :label="$t('desc')" prop="description">
+                            <bk-table
+                                v-if="block.key === 'meta'"
+                                :data="block.value"
+                            >
+                                <bk-table-column
+                                    :label="$t('view.key')"
+                                    prop="key"
+                                ></bk-table-column>
+                                <bk-table-column
+                                    :label="$t('view.value')"
+                                    prop="value"
+                                >
+                                    <template slot-scope="props">
+                                        <span
+                                            v-if="props.row.color"
+                                            :style="{ backgroundColor: props.row.color }"
+                                            class="color-block"
+                                        ></span>
+                                        <span>{{ props.row.value }}</span>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column
+                                    :label="$t('desc')"
+                                    prop="description"
+                                >
                                     <template slot-scope="scope">
                                         <span>{{ scope.row.description || '--' }}</span>
                                     </template>
                                 </bk-table-column>
                             </bk-table>
-                            <ul v-else slot="content" class="pipeline-exec-output-block-content">
-                                <li v-for="row in block.block" :key="row.key">
+                            <ul
+                                v-else
+                                slot="content"
+                                class="pipeline-exec-output-block-content"
+                            >
+                                <li
+                                    v-for="row in block.block"
+                                    :key="row.key"
+                                    :style="{ 'align-items': row.key === 'fullName' ? 'baseline' : 'center' }"
+                                >
                                     <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
-                                    <span class="pipeline-exec-output-block-row-value">
+                                    <span
+                                        class="pipeline-exec-output-block-row-full_name"
+                                        v-if="row.key === 'fullName'"
+                                    >
+                                        {{ block.value[row.key] || "--" }}
+                                    </span>
+                                    <span
+                                        v-else
+                                        class="pipeline-exec-output-block-row-value"
+                                    >
                                         {{ block.value[row.key] || "--" }}
                                     </span>
                                 </li>
@@ -85,13 +208,22 @@
                         </div>
                     </div>
                 </template>
-                <div v-else class="no-outputs-placeholder">
-                    <logo name="empty" size="180" />
+                <div
+                    v-else
+                    class="no-outputs-placeholder"
+                >
+                    <logo
+                        name="empty"
+                        size="180"
+                    />
                     <span>{{ $t("empty") }}</span>
                 </div>
             </section>
         </bk-resize-layout>
-        <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
+        <copy-to-custom-repo-dialog
+            ref="copyToDialog"
+            :artifact="activeOutput"
+        />
         <!-- <aside :class="['pipeline-outputs-filter-aside', {
             'pipeline-outputs-filter-aside-show': outputsFilterAsideVisible
         }]">
@@ -138,7 +270,7 @@
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -165,10 +297,33 @@
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false
+                isLoading: false,
+                artifactValue: [],
+                artifactFilterData: [],
+                qualityMetadata: {}
             }
         },
         computed: {
+            ...mapState('atom', ['execDetail']),
+            filterQuery () {
+                const uniqueKeys = new Set()
+                const result = []
+
+                this.artifactValue.forEach(item => {
+                    item.values?.forEach(value => {
+                        const keyValue = `${item.id}:${value.id}`
+                        if (!uniqueKeys.has(keyValue)) {
+                            uniqueKeys.add(keyValue)
+                            result.push({ key: item.id, value: value.id })
+                        }
+                    })
+                })
+
+                return result
+            },
+            isDebugExec () {
+                return this.execDetail?.debug ?? false
+            },
             initWidth () {
                 return this.currentTab === 'reports' ? '300px' : '40%'
             },
@@ -215,7 +370,11 @@
                         visibleOutputs = [...this.reports, ...thirdReportList]
                         break
                 }
-                return visibleOutputs.filter(output => output.name.toLowerCase().includes(this.keyWord.toLowerCase()))
+
+                return visibleOutputs.filter(output => output.name.toLowerCase().includes(this.keyWord.toLowerCase())).map(({ size, ...rest }) => ({
+                    ...rest,
+                    size: size ? convertFileSize(size, 'B') : '--'
+                }))
             },
             isActiveThirdReport () {
                 return this.isThirdReport(this.activeOutput?.reportType)
@@ -430,21 +589,95 @@
                 }
             },
             currentTab: function () {
+                this.keyWord = ''
+                this.artifactValue = []
                 this.$nextTick(this.init)
             },
             '$route.params.buildNo' () {
                 this.$nextTick(this.init)
+            },
+            '$route.query.metadataKey': {
+                handler (newVal) {
+                    if (newVal) {
+                        this.qualityMetadata = {
+                            labelKey: newVal,
+                            values: this.$route.query.metadataValues?.split(',')
+                        }
+                        this.initializeArtifactValue()
+                    }
+                },
+                immediate: true
             }
         },
-        mounted () {
-            this.init()
+        async mounted () {
+            await this.getArtifactDate()
+            if (!this.$route.query.metadataKey) {
+                this.init()
+            }
         },
         methods: {
             ...mapActions('common', [
                 'requestFileInfo',
                 'requestOutputs',
+                'getMetadataLabel',
                 'requestExecPipPermission'
             ]),
+            initializeArtifactValue () {
+                if (!Object.keys(this.qualityMetadata).length) return
+
+                const { labelKey, values } = this.qualityMetadata
+                if (labelKey && values) {
+                    this.artifactValue = [{
+                        id: labelKey,
+                        name: labelKey,
+                        multiable: true,
+                        values: values.map(item => ({
+                            id: item,
+                            name: item
+                        }))
+                    }]
+                } else {
+                    this.artifactValue = []
+                }
+                this.init()
+            },
+
+            async updateSearchKey (value) {
+                const metadataKey = this.$route.query.metadataKey
+                const hasMetadataKey = value.some(item => item.id === metadataKey)
+                const query = { ...this.$route.query }
+
+                if (!hasMetadataKey) {
+                    delete query.metadataKey
+                    delete query.metadataValues
+                    this.$router.replace({ query })
+                    this.init()
+                }
+            },
+            async getArtifactDate () {
+                const repoList = await this.getMetadataLabel({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId,
+                    ...(this.isDebugExec ? {debug: this.isDebugExec} : {})
+                })
+
+                this.artifactFilterData = repoList.map(item => {
+                    const labelColorMapKeys = Object.keys(item.labelColorMap)
+                    return {
+                        id: item.labelKey,
+                        name: item.labelKey,
+                        multiable: true,
+                        ...(item.enumType
+                            ? {
+                                children: labelColorMapKeys.map(key => ({
+                                    id: key,
+                                    name: key
+                                }))
+                            }
+                            : {})
+                    }
+                })
+            },
 
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
@@ -462,6 +695,7 @@
                             //     result[key] = this.filterConditionMap[key]
                             //     return result
                             // }, {})),
+                            qualityMetadata: this.filterQuery,
                             ...this.pagination
                         })
                     ])
@@ -684,7 +918,48 @@
         flex-direction: column;
 
         .pipeline-exec-outputs-filter-input {
+            display: flex;
+            width: 100%;
             margin: 12px 0;
+            flex-shrink: 0;
+
+            .artifact-search {
+                display: flex;
+                height: 32px;
+                margin-right: 4px;
+                flex: 0 0 40%;
+
+                p {
+                    min-width: 62px;
+                    text-align: center;
+                    height: 32px;
+                    line-height: 32px;
+                    background-color: #fafbfd;
+                    font-size: 12px;
+                    border: 1px solid #c4c6cc;
+                    border-radius: 2px;
+                    border-right: none;
+                }
+
+                .select-search {
+                    flex: 1;
+                    ::placeholder {
+                        font-size: 12px;
+                        color: #c4c6cc;
+                    }
+                    .search-tag-box {
+                        white-space: break-spaces;
+                    }
+                    .search-select-wrap {
+                        overflow-y: auto;
+                    }
+                }
+            }
+
+            .input-search {
+                flex-shrink: 0;
+                flex: 1;
+            }
         }
 
         .pipeline-exec-outputs-filter {
@@ -720,7 +995,7 @@
 
             >li {
                 display: flex;
-                align-items: center;
+                align-items: baseline;
                 padding: 10px 19px;
                 cursor: pointer;
                 border-radius: 2px;
@@ -737,7 +1012,7 @@
 
                 .output-hover-icon-box {
                     display: flex;
-                    align-items: center;
+                    align-items: baseline;
                     grid-gap: 6px;
 
                     :hover {
@@ -745,13 +1020,9 @@
                     }
                 }
 
-                >span {
+                .output-name {
                     flex: 1;
-                    display: -webkit-box;
-                    -webkit-box-orient: vertical;
-                    -webkit-line-clamp: 2;
-                    overflow: hidden;
-                    word-break: break-all;
+                    @include multiline-ellipsis();
                 }
 
                 &.active,
@@ -771,18 +1042,21 @@
 
         .pipeline-exec-output-header {
             display: flex;
-            align-items: center;
-            height: 48px;
             background: #fafbfd;
-            padding: 0 24px;
+            padding: 10px 24px;
             flex-shrink: 0;
 
             &-name {
                 display: flex;
-                align-items: center;
+                max-width: 60%;
+                align-items: baseline;
                 font-size: 16px;
                 color: #313238;
                 padding-right: 16px;
+
+                .output-detail-name {
+                    @include multiline-ellipsis();
+                }
 
                 >i {
                     padding-right: 12px;
@@ -793,7 +1067,7 @@
                 display: grid;
                 grid-gap: 16px;
                 grid-auto-flow: column;
-                align-items: center;
+                align-items: baseline;
                 justify-self: flex-end;
                 margin-left: auto;
             }
@@ -807,6 +1081,14 @@
         .pipeline-exec-output-block {
             padding: 16px 24px;
 
+            .color-block {
+                display: inline-block;
+                margin-right: 8px;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
+
             .pipeline-exec-output-block-title {
                 font-size: 14px;
                 border-bottom: 1px solid #dcdee5;
@@ -819,7 +1101,6 @@
 
                 >li {
                     display: flex;
-                    align-items: center;
                     margin-bottom: 16px;
 
                     .pipeline-exec-output-block-row-label {
@@ -828,6 +1109,12 @@
                         @include ellipsis();
                         width: 110px;
                         flex-shrink: 0;
+                    }
+
+                    .pipeline-exec-output-block-row-full_name {
+                        flex: 1;
+                        line-height: 1.5;
+                        word-break: break-all;
                     }
 
                     .pipeline-exec-output-block-row-value {

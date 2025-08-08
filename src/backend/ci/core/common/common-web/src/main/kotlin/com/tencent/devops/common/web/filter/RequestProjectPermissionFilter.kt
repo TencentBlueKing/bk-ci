@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,13 +43,13 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.HttpMethod
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.ResourceInfo
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.UriInfo
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.HttpMethod
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.container.ResourceInfo
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.UriInfo
+import jakarta.ws.rs.ext.Provider
 
 @Provider
 @RequestFilter

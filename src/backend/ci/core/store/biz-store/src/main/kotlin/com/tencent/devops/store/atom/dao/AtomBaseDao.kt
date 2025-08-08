@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -84,10 +84,19 @@ abstract class AtomBaseDao {
         }
     }
 
-    fun getMaxVersionAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+    fun getMaxVersionAtomByCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        atomStatus: AtomStatusEnum? = null
+    ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            if (atomStatus != null) {
+                conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
+            }
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(conditions)
                 .orderBy(
                     JooqUtils.subStr(
                         str = VERSION,

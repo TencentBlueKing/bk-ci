@@ -9,7 +9,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResu
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.service.SubPipelineRepositoryService
+import com.tencent.devops.process.service.SubPipelineCheckService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service
 class PipelineAuthorizationService constructor(
     val pipelinePermissionService: PipelinePermissionService,
     val authAuthorizationApi: AuthAuthorizationApi,
-    val subPipelineRepositoryService: SubPipelineRepositoryService
+    val subPipelineCheckService: SubPipelineCheckService
 ) {
     fun addResourceAuthorization(
         projectId: String,
@@ -54,7 +54,7 @@ class PipelineAuthorizationService constructor(
                 pipelineId = resourceCode,
                 permission = AuthPermission.EXECUTE
             )
-            val checkSubPipelinePermission = subPipelineRepositoryService.checkSubPipelinePermission(
+            val checkSubPipelinePermission = subPipelineCheckService.checkSubPipelinePermission(
                 projectId = projectCode,
                 pipelineId = resourceCode,
                 userId = handoverTo!!,
@@ -72,9 +72,7 @@ class PipelineAuthorizationService constructor(
                         messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_RESET_ERROR_TITLE,
                         params = arrayOf(handoverTo!!)
                     )
-                    val failMsg = checkSubPipelinePermission.map {
-                        it.errorMessage
-                    }.toSet().joinToString(FAIL_MESSAGE_SEPARATOR)
+                    val failMsg = checkSubPipelinePermission.joinToString(FAIL_MESSAGE_SEPARATOR)
                     ResourceAuthorizationHandoverResult(
                         status = ResourceAuthorizationHandoverStatus.FAILED,
                         message = "$failTitle$FAIL_MESSAGE_SEPARATOR$failMsg"

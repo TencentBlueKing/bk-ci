@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,10 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -61,6 +65,27 @@ class ContainerCmdLoop(
             commandContext.latestSummary == "agent_reuse_mutex_print"
         ) {
             commandContext.cmdFlowState = CmdFlowState.FINALLY
+            with(commandContext.container) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "container-queue-loop-$containerId", projectId = projectId,
+                        pipelineId = pipelineId, userId = commandContext.event.userId,
+                        buildId = buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = containerHashId, jobId = jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = executeCount,
+                        buildStatus = BuildStatus.QUEUE.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_QUEUE,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::jobMutexType.name to
+                                commandContext.latestSummary,
+                            PipelineBuildStatusBroadCastEvent.Labels::mutexGroup.name to
+                                (controlOption.mutexGroup?.runtimeMutexGroup ?: ""),
+                            PipelineBuildStatusBroadCastEvent.Labels::agentReuseMutex.name to
+                                (controlOption.agentReuseMutex?.runtimeAgentOrEnvId ?: "")
+                        )
+                    )
+                )
+            }
         }
     }
 }

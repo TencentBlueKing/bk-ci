@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,5 +48,11 @@ data class PipelineBuildMaterial(
     @get:Schema(title = "当前提交备注信息", required = false)
     val newCommitComment: String?,
     @get:Schema(title = "提交次数", required = false)
-    val commitTimes: Int?
+    val commitTimes: Int?,
+    @get:Schema(title = "是否为源材料主仓库", required = false)
+    val mainRepo: Boolean? = false,
+    @get:Schema(title = "提交时间", required = false)
+    val createTime: Long? = System.currentTimeMillis() / 1000,
+    @get:Schema(title = "插件ID", required = false)
+    val taskId: String? = null
 )

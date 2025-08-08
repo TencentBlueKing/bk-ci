@@ -8,10 +8,12 @@
         :empty-text="$t('turbo.暂无选项')"
         @change="changeParamValue"
     >
-        <bk-option v-for="(param, index) in renderList"
+        <bk-option
+            v-for="(param, index) in renderList"
             :key="index + param.paramValue"
             :id="param.paramValue"
-            :name="param.paramName">
+            :name="param.paramName"
+        >
         </bk-option>
     </bk-select>
 </template>

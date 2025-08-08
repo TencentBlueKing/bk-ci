@@ -1,8 +1,16 @@
 <template>
     <div class="status-loading">
-        <div class="loading mr5" :style="verticalAlign">
+        <div
+            class="loading mr5"
+            :style="verticalAlign"
+        >
             <section class="loading-origin">
-                <div class="loading-ball" v-for="index in 8" :key="index" :style="bgColor"></div>
+                <div
+                    class="loading-ball"
+                    v-for="index in 8"
+                    :key="index"
+                    :style="bgColor"
+                ></div>
             </section>
         </div>
         <slot></slot>

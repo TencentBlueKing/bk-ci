@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.common.db
 import com.mysql.cj.jdbc.Driver
 import com.tencent.devops.common.db.config.DBBaseConfiguration
 import com.zaxxer.hikari.HikariDataSource
+import javax.sql.DataSource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -42,7 +43,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
-import javax.sql.DataSource
 
 /**
  *
@@ -58,20 +58,30 @@ class DBAutoConfiguration {
 
     @Value("\${spring.datasource.url:#{null}}")
     private val datasourceUrl: String? = null
+
     @Value("\${spring.datasource.username:#{null}}")
     private val datasourceUsername: String? = null
+
     @Value("\${spring.datasource.password:#{null}}")
     private val datasourcePassword: String? = null
+
     @Value("\${spring.datasource.initSql:#{null}}")
     private val datasourceInitSql: String? = null
+
     @Value("\${spring.datasource.leakDetectionThreshold:#{0}}")
     private val datasouceLeakDetectionThreshold: Long = 0
+
     @Value("\${spring.datasource.minimumIdle:#{1}}")
     private val datasourceMinimumIdle: Int = 1
+
     @Value("\${spring.datasource.maximumPoolSize:#{50}}")
     private val datasourceMaximumPoolSize: Int = 50
+
     @Value("\${spring.datasource.idleTimeout:#{60000}}")
     private val datasourceIdleTimeout: Long = 60000
+
+    @Value("\${spring.datasource.connectionTestQuery:select 1;}")
+    private lateinit var dataSourceConnectionTestQuery: String
 
     @Bean
     @Primary
@@ -90,6 +100,7 @@ class DBAutoConfiguration {
             idleTimeout = datasourceIdleTimeout
             connectionInitSql = datasourceInitSql
             leakDetectionThreshold = datasouceLeakDetectionThreshold
+            connectionTestQuery = dataSourceConnectionTestQuery
         }
     }
 }

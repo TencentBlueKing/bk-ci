@@ -1,5 +1,8 @@
 <template>
-    <bk-exception :type="type" :scene="scene">
+    <bk-exception
+        :type="type"
+        :scene="scene"
+    >
         <div style="font-size: 14px;">{{ typeMap[type] }}</div>
         <template v-if="type === 'search-empty'">
             <i18n
@@ -7,8 +10,11 @@
                 path="clearFilterConditionTips"
                 class="empty-tips"
             >
-                <bk-button text @click="handleClear">
-                    {{$t('clearFilterCondition')}}
+                <bk-button
+                    text
+                    @click="handleClear"
+                >
+                    {{ $t('clearFilterCondition') }}
                 </bk-button>
             </i18n>
         </template>

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -90,11 +90,11 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.text.SimpleDateFormat
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.SimpleDateFormat
 
 @Service
 @Suppress("ALL")
@@ -364,6 +364,7 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
+                projectId = projectId,
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
@@ -434,6 +435,7 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
+                projectId = projectId,
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
@@ -453,9 +455,20 @@ class EnvService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENVIRONMENT_VIEW_CONTENT
     )
-    override fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission {
+    override fun getEnvironment(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        checkPermission: Boolean
+    ): EnvWithPermission {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
+        if (checkPermission && !environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
             )
@@ -617,7 +630,9 @@ class EnvService @Autowired constructor(
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
         val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
         val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
-
+        if (nodeList.isEmpty()) {
+            return emptyList()
+        }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIdMaps.keys, projectId).associateBy { it.nodeId }
         return nodeList.map {
@@ -679,6 +694,9 @@ class EnvService @Autowired constructor(
         } else {
             nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
         }
+        if (nodeList.isEmpty()) {
+            return Page(0, 0, 0, emptyList())
+        }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIdMaps.keys, projectId).associateBy { it.nodeId }
         val nodeRecList = nodeList.map {
@@ -705,7 +723,8 @@ class EnvService @Autowired constructor(
                 bakOperator = it.bakOperator,
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                size = it.size
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()
@@ -774,6 +793,7 @@ class EnvService @Autowired constructor(
         // 验证节点类型
         val existNodesMap = existNodes.associateBy { it.nodeId }
         val serverNodeTypes = listOf(NodeType.CMDB.name)
+        val buildNodeType = listOf(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name)
 
         toAddNodeIds.forEach {
             if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {
@@ -782,7 +802,7 @@ class EnvService @Autowired constructor(
                     params = arrayOf(HashUtil.encodeLongId(it))
                 )
             }
-            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType !in serverNodeTypes) {
+            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType in buildNodeType) {
                 throw ErrorCodeException(
                     errorCode = ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT,
                     params = arrayOf(HashUtil.encodeLongId(it))

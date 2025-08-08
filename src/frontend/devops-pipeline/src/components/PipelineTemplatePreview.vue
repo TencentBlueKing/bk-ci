@@ -12,6 +12,7 @@
         @cancel="handleCancel"
     >
         <mode-switch
+            style="width: 150px;"
             :is-yaml-support="isYamlSupport"
             :yaml-invalid-msg="yamlInvalidMsg"
             read-only
@@ -23,7 +24,11 @@
             read-only
             :highlight-ranges="highlightMarkList"
         />
-        <bk-tab v-else :active.sync="activePanel" type="unborder-card">
+        <bk-tab
+            v-else
+            :active.sync="activePanel"
+            type="unborder-card"
+        >
             <bk-tab-panel
                 v-for="panel in panels"
                 :key="panel.name"
@@ -31,6 +36,7 @@
                 :name="panel.name"
             >
                 <component
+                    v-if="value"
                     style="pointer-events: none"
                     v-bind="panel.props"
                     :is="panel.component"

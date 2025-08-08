@@ -4,7 +4,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,10 +32,12 @@ package job
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
@@ -55,6 +57,8 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
+	// windows特有环境变量
+	goEnv["DEVOPS_AGENT_WIN_SERVICE"] = config.GAgentEnv.WinTask
 	var err error
 	var exitGroup process.ProcessExitGroup
 	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
@@ -74,7 +78,7 @@ func doBuild(
 		}()
 	}
 
-	startCmd := config.GetJava()
+	startCmd := third_components.GetJavaLatest()
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	args := []string{

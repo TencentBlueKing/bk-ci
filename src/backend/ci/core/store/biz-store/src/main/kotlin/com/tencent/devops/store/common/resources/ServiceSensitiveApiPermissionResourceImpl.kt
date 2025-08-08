@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,7 +40,8 @@ class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
 ) : ServiceSensitiveApiPermissionResource {
 
     override fun verifyApi(
-        installedPkgShaContent: String?,
+        signFileName: String?,
+        fileShaContent: String?,
         osName: String?,
         osArch: String?,
         storeCode: String,
@@ -49,7 +50,8 @@ class ServiceSensitiveApiPermissionResourceImpl @Autowired constructor(
         version: String?
     ): Result<Boolean> {
         return sensitiveApiService.verifyApi(
-            installedPkgShaContent = installedPkgShaContent,
+            signFileName = signFileName,
+            fileShaContent = fileShaContent,
             osName = osName,
             osArch = osArch,
             storeType = StoreTypeEnum.valueOf(storeType),

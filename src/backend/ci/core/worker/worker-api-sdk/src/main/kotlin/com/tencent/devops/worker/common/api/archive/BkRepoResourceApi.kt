@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -157,13 +157,14 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         token: String,
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean = true,
-        parsePipelineMetadata: Boolean = true
+        parsePipelineMetadata: Boolean = true,
+        metadata: Map<String, String> = emptyMap()
     ) {
         val url = "/generic/temporary/upload/$projectId/$repoName/${urlEncode(destFullPath)}?token=$token"
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            getUploadHeader(file, buildVariables, parseAppMetadata, parsePipelineMetadata),
+            getUploadHeader(file, buildVariables, parseAppMetadata, parsePipelineMetadata, metadata),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val message = MessageUtil.getMessageByLocale(
@@ -303,13 +304,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         file: File,
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean = true,
-        parsePipelineMetadata: Boolean = true
+        parsePipelineMetadata: Boolean = true,
+        customMetadata: Map<String, String> = emptyMap()
     ): Map<String, String> {
         val header = mutableMapOf<String, String>()
         header[BKREPO_UID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         header[BKREPO_OVERRIDE] = "true"
+        header[BKREPO_COMMIT_EDGE] = "true"
 
         val metadata = mutableMapOf<String, String>()
+        metadata.putAll(customMetadata)
         if (parsePipelineMetadata) {
             metadata.putAll(getPipelineMetadata(buildVariables))
         }
@@ -520,6 +524,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         private const val BKREPO_METADATA = "X-BKREPO-META"
         private const val BKREPO_UID = "X-BKREPO-UID"
         private const val BKREPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+        private const val BKREPO_COMMIT_EDGE = "X-BKREPO-COMMIT-EDGE"
 
         private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
         private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"

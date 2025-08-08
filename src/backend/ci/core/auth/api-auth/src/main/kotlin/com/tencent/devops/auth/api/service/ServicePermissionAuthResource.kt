@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
@@ -37,20 +36,20 @@ import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_PERMISSION", description = "权限--权限校验以及资源操作相关接口")
-@Path("/open/service/auth/permission")
+@Path("/service/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
@@ -371,21 +370,5 @@ interface ServicePermissionAuthResource {
         @QueryParam("resourceCode")
         @Parameter(description = "资源Code")
         resourceCode: String
-    ): Result<Boolean>
-
-    @Path("/projects/{projectCode}/grant")
-    @POST
-    @Operation(summary = "授权实例级别权限")
-    fun grantInstancePermission(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "操作用户ID", required = true)
-        userId: String,
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @Parameter(description = "项目Id")
-        projectCode: String,
-        grantInstance: GrantInstanceDTO
     ): Result<Boolean>
 }

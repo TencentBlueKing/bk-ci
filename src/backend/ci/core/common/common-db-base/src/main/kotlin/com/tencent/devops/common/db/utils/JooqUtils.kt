@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,6 +38,19 @@ import org.jooq.impl.DSL
 import org.springframework.dao.DeadlockLoserDataAccessException
 import java.math.BigDecimal
 import java.sql.Timestamp
+import org.jooq.DSLContext
+import org.jooq.Select
+
+/**
+ * 兼容
+ */
+fun DSLContext.fetchCountFix(query: Select<*>, isMysql8: Boolean = false): Int {
+    return if (isMysql8) {
+        this.fetchCount(query)
+    } else {
+        this.selectCount().from(query).fetchOne(0, Int::class.java)!!
+    }
+}
 
 object JooqUtils {
 

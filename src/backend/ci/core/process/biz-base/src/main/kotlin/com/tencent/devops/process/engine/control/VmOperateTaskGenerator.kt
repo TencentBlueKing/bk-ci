@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
@@ -37,7 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import javax.xml.bind.Element
+import jakarta.xml.bind.Element
 import org.springframework.stereotype.Component
 
 /**
@@ -90,6 +91,8 @@ class VmOperateTaskGenerator {
         val taskType: String
         val taskName: String
         val taskAtom: String
+        var timeout: Long? = null
+        var timeoutVar: String? = null
         if (container is VMBuildContainer) {
             val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
             val baseOS = container.baseOS.name
@@ -97,14 +100,22 @@ class VmOperateTaskGenerator {
             taskType = EnvControlTaskType.VM.name
             taskName = "Prepare_Job#${container.id!!}"
             taskAtom = START_VM_TASK_ATOM
+            timeout = container.jobControlOption?.timeout?.toLong()
+            timeoutVar = container.jobControlOption?.timeoutVar
         } else {
             atomCode = START_NORMAL_TASK_ATOM
             taskType = EnvControlTaskType.NORMAL.name
             taskName = "Prepare_Job#${container.id!!}(N)"
             taskAtom = START_NORMAL_TASK_ATOM
+            if (container is NormalContainer) {
+                timeout = container.jobControlOption?.timeout?.toLong()
+                timeoutVar = container.jobControlOption?.timeoutVar
+            }
         }
         val additionalOptions = ElementAdditionalOptions(
-            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+            timeout = timeout,
+            timeoutVar = timeoutVar
         )
         return PipelineBuildTask(
             projectId = projectId,

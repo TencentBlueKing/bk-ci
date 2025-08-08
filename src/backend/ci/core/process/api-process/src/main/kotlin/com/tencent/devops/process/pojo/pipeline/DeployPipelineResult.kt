@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,5 +44,7 @@ data class DeployPipelineResult(
     @get:Schema(title = "目标链接", required = false)
     val targetUrl: String? = null,
     @get:Schema(title = "yaml信息", required = false)
-    val yamlInfo: PipelineYamlVo? = null
+    val yamlInfo: PipelineYamlVo? = null,
+    @get:Schema(title = "是否更新了推荐版本号基准值", required = false)
+    val updateBuildNo: Boolean? = null
 )

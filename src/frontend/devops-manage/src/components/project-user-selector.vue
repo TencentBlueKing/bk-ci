@@ -1,9 +1,10 @@
 <template>
   <bk-tag-input
+    v-model="value"
     ref="tagInputRef"
     class="manage-user-selector"
     clearable
-    :placeholder="t('输入授权人，选中回车进行校验')"
+    :placeholder="t('输入交接人，选中回车进行有效性校验')"
     :search-key="searchKeyArr"
     save-key="id"
     display-key="displayName"
@@ -18,10 +19,14 @@
 </template>
 
 <script setup name="ProjectUserSelector">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import http from '@/http/api';
+
+defineExpose({
+  removeAll,
+});
 
 const { t } = useI18n();
 const route = useRoute();
@@ -31,6 +36,7 @@ const tagInputRef = ref(null);
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const searchKeyArr = computed(() => ['id', 'name']);
 const searchValue = ref();
+const value = ref([])
 
 async function fetchProjectMembers (query) {
   const res = await http.getProjectMembers(projectId.value, query)
@@ -70,5 +76,6 @@ function pasteFn (val) {
 
 function removeAll (val) {
   emits('removeAll', val)
+  value.value=[]
 }
 </script>

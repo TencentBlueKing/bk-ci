@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,9 +37,11 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,11 +116,21 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        accessToken: String?
+        accessToken: String?,
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
     ): Result<List<ProjectVO>> {
         logger.info("OPENAPI_PROJECT_V4|$userId|list")
         return client.get(ServiceProjectResource::class).list(
-            userId = userId
+            userId = userId,
+            productIds = productIds,
+            channelCodes = channelCodes,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
         )
     }
 
@@ -183,6 +195,20 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         logger.info("getProjectListByProductId v4 |$appCode|$userId|$productId")
         return client.get(ServiceProjectResource::class).getProjectListByProductId(
             productId = productId
+        )
+    }
+
+    override fun updatePluginDetailsDisplay(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Result<Boolean> {
+        logger.info("updateProjectProductId v4 |$appCode|$userId|$projectId|$pluginDetailsDisplayOrder")
+        return client.get(ServiceProjectResource::class).updatePluginDetailsDisplay(
+            projectId = projectId,
+            pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
         )
     }
 }

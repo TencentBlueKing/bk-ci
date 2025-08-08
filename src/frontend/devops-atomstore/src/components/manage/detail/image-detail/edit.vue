@@ -1,20 +1,53 @@
 <template>
     <section v-bkloading="{ isLoading }">
-        <bk-form :label-width="100" :model="formData" class="manage-detail-edit" ref="editForm" v-if="!isLoading">
-            <bk-form-item :label="$t('store.镜像名称')" :rules="[requireRule($t('store.镜像名称')), nameRule, numMax(20)]" :required="true" property="imageName" error-display-type="normal">
-                <bk-input v-model="formData.imageName" :placeholder="$t('store.请输入中英文名称，不超过20个字符')"></bk-input>
+        <bk-form
+            :label-width="100"
+            :model="formData"
+            class="manage-detail-edit"
+            ref="editForm"
+            v-if="!isLoading"
+        >
+            <bk-form-item
+                :label="$t('store.镜像名称')"
+                :rules="[requireRule($t('store.镜像名称')), nameRule, numMax(20)]"
+                :required="true"
+                property="imageName"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.imageName"
+                    :placeholder="$t('store.请输入中英文名称，不超过20个字符')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.分类')" :rules="[requireRule($t('store.分类'))]" :required="true" property="classifyCode" error-display-type="normal">
-                <bk-select v-model="formData.classifyCode" searchable :clearable="false" @toggle="requestClassify" :loading="isLoadingClassify">
-                    <bk-option v-for="(option, index) in classifys"
+            <bk-form-item
+                :label="$t('store.分类')"
+                :rules="[requireRule($t('store.分类'))]"
+                :required="true"
+                property="classifyCode"
+                error-display-type="normal"
+            >
+                <bk-select
+                    v-model="formData.classifyCode"
+                    searchable
+                    :clearable="false"
+                    @toggle="requestClassify"
+                    :loading="isLoadingClassify"
+                >
+                    <bk-option
+                        v-for="(option, index) in classifys"
                         :key="index"
                         :id="option.classifyCode"
-                        :name="option.classifyName">
+                        :name="option.classifyName"
+                    >
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('store.标签')" property="labelIdList">
-                <bk-select :placeholder="$t('store.请选择功能标签')"
+            <bk-form-item
+                :label="$t('store.标签')"
+                property="labelIdList"
+            >
+                <bk-select
+                    :placeholder="$t('store.请选择功能标签')"
                     v-model="formData.labelIdList"
                     show-select-all
                     searchable
@@ -22,26 +55,31 @@
                     @toggle="requestLabels"
                     :loading="isLoadingLabel"
                 >
-                    <bk-option v-for="(option, index) in labelList"
+                    <bk-option
+                        v-for="(option, index) in labelList"
                         :key="index"
                         :id="option.id"
-                        :name="option.labelName">
+                        :name="option.labelName"
+                    >
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('store.范畴')"
+            <bk-form-item
+                :label="$t('store.范畴')"
                 property="category"
                 :required="true"
                 :rules="[requireRule($t('store.范畴'))]"
                 ref="category"
                 error-display-type="normal"
             >
-                <bk-select v-model="formData.category"
+                <bk-select
+                    v-model="formData.category"
                     searchable
                     @toggle="requestCategory"
                     :loading="isLoadingCategory"
                 >
-                    <bk-option v-for="(option, index) in categoryList"
+                    <bk-option
+                        v-for="(option, index) in categoryList"
                         :key="index"
                         :id="option.categoryCode"
                         :name="option.categoryName"
@@ -50,11 +88,24 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('store.简介')" :rules="[requireRule($t('store.功能标签')), numMax(70)]" :required="true" property="summary" error-display-type="normal">
-                <bk-input v-model="formData.summary" :placeholder="$t('store.请输入简介')"></bk-input>
+            <bk-form-item
+                :label="$t('store.简介')"
+                :rules="[requireRule($t('store.功能标签')), numMax(70)]"
+                :required="true"
+                property="summary"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.summary"
+                    :placeholder="$t('store.请输入简介')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.描述')" property="description">
-                <mavon-editor class="remark-input"
+            <bk-form-item
+                :label="$t('store.描述')"
+                property="description"
+            >
+                <mavon-editor
+                    class="remark-input"
                     ref="mdHook"
                     v-model="formData.description"
                     :toolbars="toolbars"
@@ -65,18 +116,57 @@
                     @imgAdd="addImage"
                 />
             </bk-form-item>
-            <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
-                <code-section :code.sync="formData.dockerFileContent" :cursor-blink-rate="530" :read-only="false" ref="codeEditor" />
+            <bk-form-item
+                label="Dockerfile"
+                property="dockerFileContent"
+                ref="dockerFileContent"
+            >
+                <code-section
+                    :code.sync="formData.dockerFileContent"
+                    :cursor-blink-rate="530"
+                    :read-only="false"
+                    ref="codeEditor"
+                />
             </bk-form-item>
-            <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
-                <bk-input v-model="formData.publisher" :placeholder="$t('store.请输入')"></bk-input>
+            <bk-form-item
+                :label="$t('store.发布者')"
+                :rules="[requireRule($t('store.发布者'))]"
+                :required="true"
+                property="publisher"
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.publisher"
+                    :placeholder="$t('store.请输入')"
+                ></bk-input>
             </bk-form-item>
-            <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
-                <select-logo :form="formData" type="IMAGE" :is-err="false" ref="logoUrlError"></select-logo>
+            <bk-form-item
+                :required="true"
+                property="logoUrl"
+                error-display-type="normal"
+                class="edit-logo"
+            >
+                <select-logo
+                    :form="formData"
+                    type="IMAGE"
+                    :is-err="false"
+                    ref="logoUrlError"
+                ></select-logo>
             </bk-form-item>
             <bk-form-item>
-                <bk-button theme="primary" @click="save" :loading="isSaving">{{ $t('store.保存') }}</bk-button>
-                <bk-button :disabled="isSaving" @click="$router.back()">{{ $t('store.取消') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    @click="save"
+                    :loading="isSaving"
+                >
+                    {{ $t('store.保存') }}
+                </bk-button>
+                <bk-button
+                    :disabled="isSaving"
+                    @click="$router.back()"
+                >
+                    {{ $t('store.取消') }}
+                </bk-button>
             </bk-form-item>
         </bk-form>
     </section>

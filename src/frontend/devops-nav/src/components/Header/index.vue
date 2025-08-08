@@ -6,7 +6,11 @@
                 to="/console/"
             >
                 <template v-if="platformInfo.appLogo">
-                    <img class="logo" :src="platformInfo.appLogo" alt="">
+                    <img
+                        class="logo"
+                        :src="platformInfo.appLogo"
+                        alt=""
+                    >
                     
                     <div class="app-name">{{ appName }}</div>
                 </template>
@@ -22,7 +26,8 @@
             </router-link>
 
             <template v-if="showProjectList">
-                <bk-select ref="projectDropdown"
+                <bk-select
+                    ref="projectDropdown"
                     class="bkdevops-project-selector"
                     :placeholder="$t('selectProjectPlaceholder')"
                     :value="projectId"
@@ -60,8 +65,16 @@
                                     v-bk-tooltips="$t('userManage')"
                                     @click.stop.prevent="goToUserManage(item)"
                                 >
-                                    <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
-                                    <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
+                                    <img
+                                        v-if="item.managePermission"
+                                        src="../../assets/scss/logo/user-manage.svg"
+                                        alt=""
+                                    >
+                                    <img
+                                        v-else
+                                        src="../../assets/scss/logo/user-manage-disabled.svg"
+                                        alt=""
+                                    >
                                 </span>
                             </div>
                         </template>
@@ -80,7 +93,11 @@
                                 class="bk-selector-create-item"
                                 @click.stop.prevent="handleApplyProject"
                             >
-                                <icon name="icon-apply" size="14" class="mr5" />
+                                <icon
+                                    name="icon-apply"
+                                    size="14"
+                                    class="mr5"
+                                />
                                 <span class="text">{{ $t('joinProject') }}</span>
                             </span>
                         </div>
@@ -112,16 +129,24 @@
                 :on-show="handleShow"
             >
                 <div class="flag-box">
-                    <Icon :name="curLang.icon" size="20" />
+                    <Icon
+                        :name="curLang.icon"
+                        size="20"
+                    />
                 </div>
                 <template slot="content">
                     <li
                         v-for="(item, index) in langs"
                         :key="index"
                         :class="['bkci-dropdown-item', { active: curLang.id === item.id }]"
-                        @click="handleChangeLang(item)">
-                        <Icon class="mr5" :name="item.icon" size="20" />
-                        {{item.name}}
+                        @click="handleChangeLang(item)"
+                    >
+                        <Icon
+                            class="mr5"
+                            :name="item.icon"
+                            size="20"
+                        />
+                        {{ item.name }}
                     </li>
                 </template>
             </bk-popover>
@@ -132,9 +157,13 @@
                 :arrow="false"
                 ref="popoverRef"
                 :on-hide="handleHide"
-                :on-show="handleShow">
+                :on-show="handleShow"
+            >
                 <div class="flag-box">
-                    <Icon name="help-fill" size="20" />
+                    <Icon
+                        name="help-fill"
+                        size="20"
+                    />
                 </div>
                 <template slot="content">
                     <li
@@ -182,17 +211,17 @@
 </template>
 
 <script lang="ts">
+    import eventBus from '@/utils/eventBus'
+    import { urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin } from '../../utils/util'
     import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
-    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
 
@@ -234,6 +263,11 @@
                 icon: 'english',
                 name: 'English',
                 id: 'en-US'
+            },
+            {
+                icon: 'japanese',
+                name: '日本語',
+                id: 'ja-JP'
             }
         ]
  
@@ -605,6 +639,10 @@
         align-items: center;
         cursor: pointer;
         font-size: 12px !important;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         i {
             font-size: 12px !important;
         }

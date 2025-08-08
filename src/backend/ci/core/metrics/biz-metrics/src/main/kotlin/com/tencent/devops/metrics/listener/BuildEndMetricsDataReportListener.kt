@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,7 @@ package com.tencent.devops.metrics.listener
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.metrics.service.MetricsDataReportService
 import org.slf4j.LoggerFactory
@@ -39,12 +39,11 @@ import org.springframework.stereotype.Component
 @Component
 class BuildEndMetricsDataReportListener @Autowired constructor(
     private val metricsDataReportService: MetricsDataReportService
-) : Listener<BuildEndMetricsBroadCastEvent> {
+) : EventListener<BuildEndMetricsBroadCastEvent> {
 
     override fun execute(event: BuildEndMetricsBroadCastEvent) {
         try {
-            val buildEndPipelineMetricsData = event.buildEndPipelineMetricsData
-            metricsDataReportService.metricsDataReport(buildEndPipelineMetricsData)
+            metricsDataReportService.metricsDataReport(event)
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert the metrics data", ignored)
             throw ErrorCodeException(
