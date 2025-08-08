@@ -249,7 +249,10 @@ const atomMixin = {
             return componentItem.maxSize
         },
         checkCanOverride (obj) {
-            return this.instanceFromTemplate && obj.canOverride && this.element?.isOverride
+            if (!this.instanceFromTemplate) {
+                return true
+            }
+            return obj.canOverride && this.element?.isOverride
         }
     }
 }
