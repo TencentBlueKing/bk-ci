@@ -264,6 +264,7 @@
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import webSocketMessage from '@/utils/webSocketMessage'
     import cookie from 'js-cookie'
+    import { mapActions } from 'vuex'
 
     const CSRFToken = cookie.get('backend_csrftoken')
 
@@ -350,8 +351,8 @@
         },
 
         async created () {
-            await this.requestRelease(this.routerParams.atomId)
-            await this.requestAtomDetail(this.routerParams.atomId)
+            await this.getRelease(this.routerParams.atomId)
+            await this.getAtomDetail(this.routerParams.atomId)
             webSocketMessage.installWsMessage(this.handleRelease)
         },
         beforeDestroy () {
@@ -359,6 +360,10 @@
             webSocketMessage.unInstallWsMessage()
         },
         methods: {
+            ...mapActions('store', [
+                'requestAtomDetail',
+                'requestRelease'
+            ]),
             toAtomList () {
                 this.$router.push({
                     name: 'atomWork'
@@ -369,11 +374,11 @@
                     name: 'atomHome'
                 })
             },
-            async requestAtomDetail (atomId) {
+            async getAtomDetail (atomId) {
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('store/requestAtomDetail', {
+                    const res = await this.requestAtomDetail({
                         atomId: atomId
                     })
 
@@ -382,11 +387,9 @@
                         return item.labelName
                     })
 
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            this.isOverflow = this.$refs.editor && this.$refs.editor.scrollHeight > 180
-                        }, 1000)
-                    })
+                    setTimeout(() => {
+                        this.isOverflow = this.$refs.editor && this.$refs.editor.scrollHeight > 180
+                    }, 1000)
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -409,16 +412,13 @@
                     this.storeBuildInfo = res.storeBuildInfo
                 }
             },
-            async requestRelease (atomId) {
+            async getRelease (atomId) {
                 try {
-                    const res = await this.$store.dispatch('store/requestRelease', {
+                    const res = await this.requestRelease({
                         atomId: atomId
                     })
 
                     this.handleRelease(res)
-                    // if (!this.isOver) {
-                    //     this.loopCheck()
-                    // }
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -440,7 +440,6 @@
 
                     message = this.$t('store.操作成功')
                     theme = 'success'
-                    // this.requestRelease(this.routerParams.atomId)
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -541,8 +540,8 @@
                                 theme = 'success'
                                 message = this.$t('store.上传成功')
 
-                                this.requestRelease(this.routerParams.atomId)
-                                this.requestAtomDetail(this.routerParams.atomId)
+                                this.getRelease(this.routerParams.atomId)
+                                this.getAtomDetail(this.routerParams.atomId)
                             } else if ([2120030, 2120031].includes(response.status)) {
                                 this.confirmSubmit(response.message, () => this.uploadFile(fileObj, true))
                                 return

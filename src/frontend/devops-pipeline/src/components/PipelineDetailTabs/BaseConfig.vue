@@ -1,5 +1,8 @@
 <template>
-    <bk-collapse v-model="activeName">
+    <bk-collapse
+        class="info-collapse-panel"
+        v-model="activeName"
+    >
         <bk-collapse-item
             hide-arrow
             ext-cls="no-animation-collapse"
@@ -52,7 +55,7 @@
                             </div>
                         </bk-popover>
                         <span class="base-info-block-row-value">
-                            <template v-if="['label', 'pipelineGroup'].includes(row.key)">
+                            <template v-if="Array.isArray(row.value)">
                                 <template v-if="row.value.length > 0">
                                     <bk-tag
                                         v-for="label in row.value"
@@ -67,12 +70,12 @@
                                     --
                                 </template>
                             </template>
-                            <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
-                                <span>{{ row.value || '--' }}</span>
-                                <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
-                            </template>
                             <template v-else>
-                                {{ row.value || '--' }}
+                                <span>{{ row.value || '--' }}</span>
+                                <span
+                                    v-if="row.grayDesc"
+                                    class="base-info-block-row-value-gray"
+                                >{{ row.grayDesc }}</span>
                             </template>
                         </span>
                     </template>
@@ -82,9 +85,9 @@
     </bk-collapse>
 </template>
 <script>
-    import { convertTime } from '@/utils/util'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
-    import { mapState, mapActions } from 'vuex'
+    import { convertTime } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     
     export default {
         components: {
@@ -107,6 +110,9 @@
             }
         },
         computed: {
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
             ...mapState('pipelines', [
                 'allPipelineGroup'
             ]),
@@ -123,42 +129,68 @@
                 const { basicInfo } = this
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
-                const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
-                const viweNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
-                return [
-                    {
-                        key: 'pipelineName',
-                        value: basicInfo?.pipelineName ?? '--'
-                    },
-                    {
-                        key: 'label',
-                        value: basicInfo?.labelNames ?? []
-                    },
-                    {
-                        key: 'pipelineGroup',
-                        value: viweNameList ?? []
-                    },
-                    {
-                        key: 'desc',
-                        value: basicInfo?.desc ?? '--'
-                    },
-                    {
-                        key: 'namingConvention',
-                        value: namingConvention ?? '--',
-                        grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
-                    },
-                    {
-                        key: 'modificationDetail',
-                        value: basicInfo?.versionUpdater ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
-                    },
-                    {
-                        key: 'creatorDetail',
-                        value: basicInfo?.creator ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
-                    }
-                ]
+                return this.isTemplate
+                    ? [
+                        {
+                            key: 'name',
+                            value: basicInfo?.name
+                        },
+                        {
+                            key: 'desc',
+                            value: basicInfo?.desc
+                        },
+                        {
+                            key: 'template.templateType',
+                            value: this.$t(`template.${basicInfo?.type}`)
+                        },
+                        {
+                            key: 'label',
+                            value: basicInfo?.labelNames ?? []
+                        },
+                        {
+                            key: 'creator',
+                            value: basicInfo?.creator
+                        },
+                        {
+                            key: 'createTime',
+                            value: basicInfo?.creatorTime
+                        }
+                    ]
+                    : [
+                        {
+                            key: 'pipelineName',
+                            value: basicInfo?.pipelineName
+                        },
+                        {
+                            key: 'label',
+                            value: basicInfo?.labelNames ?? []
+                        },
+                        {
+                            key: 'pipelineGroup',
+                            value: basicInfo?.viewNames ?? []
+                        },
+                        {
+                            key: 'desc',
+                            value: basicInfo?.desc
+                        },
+                        {
+                            key: 'namingConvention',
+                            value: namingConvention,
+                            grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
+                        },
+                        {
+                            key: 'modificationDetail',
+                            value: basicInfo?.versionUpdater,
+                            grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                        },
+                        {
+                            key: 'creatorDetail',
+                            value: basicInfo?.creator,
+                            grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
+                        }
+                    ]
             },
+
             executeConfRows () {
                 const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
                 return [
@@ -208,7 +240,7 @@
                                     label: 'settings.lagestTime',
                                     value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                                 }
-    
+
                             ]
                             : []
                         )
@@ -259,74 +291,5 @@
 </script>
 
 <style lang="scss">
-.pipeline-base-config-panel-header {
-    font-size: 14px;
-    font-weight: 700;
-    height: 24px;
-    line-height: 24px;
-    border-bottom: 1px solid #DCDEE5;
-}
-.no-animation-collapse {
-    .collapse-transition {
-        transition: none !important;
-    }
-}
-.base-info-panel-content {
-    display: grid;
-    grid-gap: 16px;
-    grid-template-rows: minmax(18px, auto);
-    margin-bottom: 32px;
-    .parallel-conf-detail {
-        border: 1px solid #DCDEE5;
-        margin-left: 130px;
-        padding: 0 25px;
-        border-radius: 2px;
-        width: 600px;
-        .parallel-conf-detail-row {
-            line-height: 32px;
-            align-items: center;
-            grid-template-columns: 150px 1fr;
-            > label {
-                color: #63656e;
-            }
-            > span {
-                color: #313238;
-            }
-        }
-    }
-
-    >p,
-    .parallel-conf-detail-row {
-        display: grid;
-        grid-auto-flow: column;
-        grid-template-columns: 120px 1fr;
-        align-items: flex-start;
-        grid-gap: 10px;
-        font-size: 12px;
-        color: #63656e;
-
-        >label {
-            text-align: right;
-            line-height: 18px;
-            color: #979BA5;
-        }
-
-        .bk-tag {
-            margin-top: 0;
-        }
-    }
-
-    .dotted {
-        line-height: 18px;
-        color: #979BA5;
-        border-bottom: 1px dashed #979BA5;
-    }
-    .bk-tooltip {
-        text-align: right !important;
-    }
-
-}
-.base-info-block-row-value-gray {
-    color: #979BA5;
-}
+    @import url('@/scss/info-collapsed.scss');
 </style>

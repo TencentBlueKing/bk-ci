@@ -121,7 +121,6 @@
                 ]
             }
         },
-        // <build-num-switcher v-bind="buildNumConf" />
         watch: {
             'pipelineInfo.pipelineName': {
                 handler (val) {

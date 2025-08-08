@@ -31,7 +31,7 @@
             }
         },
         render (h) {
-            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled, maxlength } = this
+            const { value, readOnlyCheck, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled, maxlength } = this
             return (
                 <textarea
                     placeholder={placeholder}
@@ -40,7 +40,7 @@
                     onInput={handleInput}
                     class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '', hoverUnfold && readOnly ? 'hover-textarea-styles' : '']}
                     name={name}
-                    disabled={readOnly || disabled}
+                    disabled={(readOnlyCheck && readOnly) || disabled}
                     value={value}
                     {...(maxlength ? { maxlength } : {})}
                 />

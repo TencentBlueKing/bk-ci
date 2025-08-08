@@ -54,7 +54,7 @@
         </div>
 
         <div
-            v-else-if="editable"
+            v-else
             class="current-edit-param-item"
         >
             <div class="edit-var-header">
@@ -72,6 +72,7 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
+                    :disabled="!editable"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -99,13 +100,13 @@
 </template>
 
 <script>
-    import { navConfirm, deepCopy } from '@/utils/util'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import ParamGroup from './children/param-group'
-    import PipelineParamForm from './pipeline-param-form'
     import {
         getParamsGroupByLabel
     } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy, navConfirm } from '@/utils/util'
+    import ParamGroup from './children/param-group'
+    import PipelineParamForm from './pipeline-param-form'
 
     export default {
         components: {
@@ -122,6 +123,10 @@
                 required: true
             },
             editable: {
+                type: Boolean,
+                default: true
+            },
+            canEditParam: {
                 type: Boolean,
                 default: true
             }
@@ -227,7 +232,7 @@
             },
             // toTop为true，表示移到最前, 为false为delete操作
             handleUpdate (paramId, toTop = false) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
                 const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
@@ -242,7 +247,7 @@
                 this.paramType = type
             },
             handleEdit (paramId) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
