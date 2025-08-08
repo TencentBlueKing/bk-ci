@@ -37,7 +37,6 @@ import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersi
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
-import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
