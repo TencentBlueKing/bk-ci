@@ -48,6 +48,7 @@
     var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
     var BK_SHARED_RES_URL = '<%= BK_SHARED_RES_URL %>'
     var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
+    var BK_CI_NO_COOKIE_PROJECT_PREFIX = '__BK_CI_NO_COOKIE_PROJECT_PREFIX__'
   </script>
   <script>
 
@@ -143,7 +144,7 @@
 
     function setProjectIdCookie(projectId) {
       try {
-        if (projectId.startsWith('git_')) {
+        if (BK_CI_NO_COOKIE_PROJECT_PREFIX.split(';').some(str => projectId.startsWith(str))) {
           console.log('current project is from stream')
           return
         }
