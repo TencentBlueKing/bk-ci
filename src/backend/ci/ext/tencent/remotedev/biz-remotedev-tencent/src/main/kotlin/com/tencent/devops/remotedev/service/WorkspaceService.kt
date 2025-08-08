@@ -56,8 +56,10 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_NODE_FOR_ENV_ID
 import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_USER_ENV_FOR_ENV_ID
@@ -1542,6 +1544,19 @@ class WorkspaceService @Autowired constructor(
         }.getOrNull() ?: kotlin.run {
             logger.error("fail to updateUserLocale|$userId")
             false
+        }
+    }
+
+    fun getSignatureStatus(userId: String, projectId: String): UserSignatureStatusResponse? {
+        logger.info("getSignatureStatus|$userId|$projectId")
+
+        return kotlin.runCatching {
+            client.get(ServiceSignatureManageResource::class).getSignatureStatus(userId, projectId).data
+        }.onFailure {
+            logger.error("error in workspaceService::getSignatureStatus|$userId", it)
+        }.getOrNull() ?: kotlin.run {
+            logger.error("fail to getSignatureStatus|$userId|$projectId")
+            null
         }
     }
 
