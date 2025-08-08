@@ -122,8 +122,7 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
-    pipelineEventDispatcher: PipelineEventDispatcher,
-    pipelineModelParser: PipelineModelParser
+    pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = recordModelDao,
@@ -134,8 +133,7 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
     pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService,
-    pipelineModelParser = pipelineModelParser
+    pipelineElementService = pipelineElementService
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:21}")
