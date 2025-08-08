@@ -245,10 +245,17 @@ class BkInternalPermissionService(
         resourceCodes: List<String>
     ): Map<AuthPermission, List<String>> {
         return createTimer(::filterUserResourcesByActions.name).record(Supplier {
+            // 过滤掉已删除的资源
+            val enabledResourceCodes = authResourceService.listByResourceCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = resourceCodes,
+            ).map { it.resourceCode }
             if (hasManagerPermission(userId = userId, projectCode = projectCode)) {
                 return@Supplier actions.associate {
                     val authPermission = it.substringAfterLast("_")
-                    AuthPermission.get(authPermission) to resourceCodes
+                    AuthPermission.get(authPermission) to enabledResourceCodes
                 }
             }
             val groupIds = listMemberGroupIdsInProjectWithCache(
@@ -273,7 +280,7 @@ class BkInternalPermissionService(
                     )
                 }
                 if (superManagerPermission || hasProjectLevelPermission) {
-                    permissionMap[authPermission] = resourceCodes
+                    permissionMap[authPermission] = enabledResourceCodes
                     return@forEach
                 }
                 // 否则获取用户有权限的操作，然后进行过滤
