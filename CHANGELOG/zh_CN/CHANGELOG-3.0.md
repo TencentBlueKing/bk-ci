@@ -26,11 +26,12 @@
 
 <!-- NEW RELEASE NOTES ENTRY -->
 # v3.0.15
-## 2025-08-06
+## 2025-08-08
 ### Changelog since v3.0.14
 #### 新增
 
 ##### 未分类
+- [新增] feat: Maven仓库发布从oss迁移到central [链接](http://github.com/TencentBlueKing/bk-ci/issues/11817)
 - [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
 - [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
 - [新增] feat: 升级turbo版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12055)
