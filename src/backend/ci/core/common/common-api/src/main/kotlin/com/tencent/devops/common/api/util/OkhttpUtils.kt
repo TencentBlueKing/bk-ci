@@ -207,7 +207,7 @@ object OkhttpUtils {
             if (
                 request.method == "POST" &&
                 (response.code == HttpURLConnection.HTTP_MOVED_PERM ||
-                    response.code == HttpURLConnection.HTTP_MOVED_TEMP)
+                        response.code == HttpURLConnection.HTTP_MOVED_TEMP)
             ) {
                 val location = response.header("Location")
                 if (location != null) {
