@@ -26,13 +26,13 @@
                     v-for="item in group.groups"
                     :key="item.id"
                     class="node-item"
-                    :class="{ 'active': $route.params.nodeType === item.id }"
+                    :class="{ 'active': activeNodeType === item.id }"
                     @click="handleNodeClick(item.id)"
                 >
                     <span class="node-name">{{ item.name }}</span>
                     <span
                         class="count-tag"
-                        :class="{ 'active': $route.params.nodeType === item.id }"
+                        :class="{ 'active': activeNodeType === item.id }"
                     >{{ item.nodeCount }}</span>
                 </li>
             </ul>
@@ -130,8 +130,8 @@
                             v-for="child in groupItem.tagValues"
                             :key="child.tagValueId"
                             class="node-item sub-node-item"
-                            :class="{ 'active': $route.params.nodeType === String(child.tagValueId) }"
-                            @click="handleNodeClick(child.tagValueId)"
+                            :class="{ 'active': activeNodeType === String(child.tagValueId) }"
+                            @click="handleSubNodeClick(child)"
                         >
                             <span
                                 class="node-name"
@@ -139,7 +139,7 @@
                             >{{ child.tagValueName }}</span>
                             <span
                                 class="count-tag"
-                                :class="{ 'active': $route.params.nodeType === String(child.tagValueId) }"
+                                :class="{ 'active': activeNodeType === String(child.tagValueId) }"
                             >{{ child.nodeCount }}</span>
                         </li>
                     </ul>
@@ -207,7 +207,7 @@
                                     :name="`tagValueName_${index}`"
                                     v-validate="'required'"
                                     class="value-input"
-                                    :class="{ 'is-danger': errors.has(`tagValueName_${index}`) }"
+                                    :class="{ 'is-danger': errors.has(`tagValueName_${index}`) || getDuplicateFlags()[index] }"
                                 />
                                 <i
                                     class="devops-icon icon-plus-circle"
@@ -242,7 +242,8 @@
   
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         name: 'NodeGroupTree',
@@ -250,10 +251,13 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 expandedGroupIds: [],
                 isAdd: false,
                 isShowTagChange: false,
                 dialogTopOffset: null,
+                storedActiveNodeType: localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE,
                 formData: {
                     tagKeyName: '',
                     canUpdate: 'TRUE',
@@ -293,6 +297,16 @@
             },
             tagTitle () {
                 return this.isAdd ? this.$t('environment.addTag') : this.$t('environment.updateTag')
+            },
+            activeNodeType () {
+                const stored = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE
+
+                if (this.$route.name === 'nodeList' && this.$route.params.nodeType) {
+                    return this.$route.params.nodeType
+                } else if (this.isTagValueId(stored)) {
+                    return stored
+                }
+                return stored
             }
         },
         watch: {
@@ -307,6 +321,15 @@
                     }
                 },
                 immediate: true
+            },
+            '$route': {
+                immediate: true,
+                deep: true,
+                handler (to, from) {
+                    if (from?.name === 'setNodeTag' && to.name === 'nodeList') {
+                        this.refreshSidebarData()
+                    }
+                }
             }
         },
         async mounted () {
@@ -316,6 +339,18 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            refreshSidebarData () {
+                this.getTagTypeList()
+            },
+            isTagValueId (value) {
+                if (!value) return false
+                const labelGroup = this.nodeGroup.find(g => g.type === 'tag_type')
+                if (!labelGroup) return false
+        
+                return labelGroup.groups.some(group =>
+                    group.tagValues?.some(v => String(v.tagValueId) === String(value))
+                )
+            },
             findGroupByNodeType () {
                 const nodeType = this.$route.params.nodeType
                 if (!nodeType) return null
@@ -354,7 +389,7 @@
                 await this.requestNodeTagList(this.projectId)
                 const isValidNodeType = this.getTagValues().includes(this.$route.params.nodeType)
                 if (this.$route.name === 'nodeList' && !isValidNodeType) {
-                    this.handleNodeClick('allNode')
+                    this.handleNodeClick(ALLNODE)
                 }
             },
             isGroupExpanded (groupId) {
@@ -375,9 +410,28 @@
                 }
             },
             handleNodeClick (nodeType) {
+                this.storedActiveNodeType = String(nodeType)
+                localStorage.setItem(ENV_ACTIVE_NODE_TYPE, nodeType)
+            
                 this.$router.push({
                     name: 'nodeList',
-                    params: { nodeType },
+                    params: {
+                        ...this.$route.params,
+                        nodeType
+                    },
+                    query: { ...this.$route.query }
+                })
+            },
+            handleSubNodeClick (child) {
+                this.storedActiveNodeType = String(child.tagValueId)
+                localStorage.setItem(ENV_ACTIVE_NODE_TYPE, this.storedActiveNodeType)
+        
+                this.$router.push({
+                    name: 'nodeList',
+                    params: {
+                        ...this.$route.params,
+                        nodeType: this.storedActiveNodeType
+                    },
                     query: { ...this.$route.query }
                 })
             },
@@ -399,7 +453,7 @@
                             if (res) {
                                 const currentNodeType = this.$route.params.nodeType
                                 const isDeleteCurNodeType = groupItem.tagValues.map(i => String(i.tagValueId)).includes(currentNodeType)
-                                isDeleteCurNodeType && this.handleNodeClick('allNode')
+                                isDeleteCurNodeType && this.handleNodeClick(ALLNODE)
 
                                 this.getTagTypeList()
                                 this.$bkMessage({
@@ -470,7 +524,35 @@
                     })
                 }
             },
+            getDuplicateFlags () {
+                const values = this.formData.tagValues.map(item => item.tagValueName.trim())
+                const flags = []
+
+                for (let i = 0; i < values.length; i++) {
+                    if (values[i] === "") {
+                        flags.push(false)
+                    } else {
+                        flags.push(values.indexOf(values[i]) !== i)
+                    }
+                }
+
+                return flags
+            },
+            hasDuplicateValues () {
+                const nonEmptyValues = this.formData.tagValues
+                    .map(item => item.tagValueName.trim())
+                    .filter(value => value !== "")
+
+                return new Set(nonEmptyValues).size !== nonEmptyValues.length
+            },
             async handleConfirm () {
+                if (this.hasDuplicateValues()) {
+                    this.$bkMessage({
+                        message: this.$t('environment.tagValueDuplicate'),
+                        theme: 'error'
+                    })
+                    return
+                }
                 const isValid = await this.$validator.validateAll()
                 if (isValid) {
                     try {
@@ -520,7 +602,7 @@
 <style scoped lang="scss">
   .node-group-tree {
     padding-top: 4px;
-    height: calc(100vh - 60px);
+    height: 100%;
     background-color: #fff;
     box-shadow: 1px 0 0 0 #EAEBF0;
   }
