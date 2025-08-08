@@ -28,10 +28,13 @@
 package com.tencent.devops.process.trigger.scm.converter
 
 import com.tencent.devops.process.pojo.trigger.WebhookChangeFiles
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.scm.api.pojo.Change
 
 object WebhookConverterUtils {
+
+    @SuppressWarnings("NestedBlockDepth")
     fun getChangeFiles(changes: List<Change>): WebhookChangeFiles {
         val allFiles = mutableSetOf<String>()
         val addedFiles = mutableSetOf<String>()
@@ -47,20 +50,26 @@ object WebhookConverterUtils {
                         addedFiles.add(path)
                     }
                     deleted -> {
-                        allFiles.add(oldPath)
-                        deletedFiles.add(oldPath)
+                        oldPath?.let { filePath ->
+                            allFiles.add(filePath)
+                            deletedFiles.add(filePath)
+                        }
                     }
                     renamed -> {
-                        renamedFiles[path] = oldPath
-                        renamedOldFiles[oldPath] = path
+                        oldPath?.let { filePath ->
+                            allFiles.add(filePath)
+                            renamedFiles[path] = filePath
+                            renamedOldFiles[filePath] = path
+                        }
                         allFiles.add(path)
-                        allFiles.add(oldPath)
                     }
                     else ->
                         updatedFiles.add(path)
                 }
             }
         }
+        // 文件移出.ci目录也算删除
+        deletedFiles.addAll(getRemovedCiFiles(renamedOldFiles))
         return WebhookChangeFiles(
             allFiles = allFiles,
             addedFiles = addedFiles,
@@ -81,5 +90,15 @@ object WebhookConverterUtils {
                 else -> YamlFileActionType.TRIGGER
             }
         }
+    }
+
+    /**
+     * 获取[重命名]场景下移出.ci目录的yaml文件
+     */
+    private fun getRemovedCiFiles(renamedOldFiles: Map<String, String>): List<String> {
+        return renamedOldFiles.filter { (oldFile, newFile) ->
+            GitActionCommon.isCiFile(oldFile) &&
+                    !GitActionCommon.isCiFile(newFile)
+        }.map { it.key }
     }
 }

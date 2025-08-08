@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_MSG
 import com.tencent.devops.common.api.constant.KEY_ARCHIVE
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
@@ -51,7 +52,7 @@ import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
-import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
+import com.tencent.devops.misc.pojo.process.DeleteDataParam
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
@@ -61,6 +62,9 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.pojo.PipelineOperationLog
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -76,7 +80,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     private var archiveShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDataMigrateDao: ProcessDataMigrateDao,
-    private val processMigrationDataDeleteService: ProcessMigrationDataDeleteService,
+    private val processDataDeleteService: ProcessDataDeleteService,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val redisOperation: RedisOperation,
@@ -196,16 +200,16 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     ) {
         try {
             if (archiveDbShardingRoutingRule != null) {
-                val deleteMigrationDataParam = DeleteMigrationDataParam(
+                val deleteDataParam = DeleteDataParam(
                     dslContext = archiveShardingDslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    lock = migrationLock,
+                    archivePipelineFlag = true,
                     targetClusterName = archiveDbShardingRoutingRule.clusterName,
-                    targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
-                    migrationLock = migrationLock,
-                    archivePipelineFlag = true
+                    targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName
                 )
-                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                processDataDeleteService.deleteProcessData(deleteDataParam)
             }
         } catch (ignored: Throwable) {
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doMigrationErrorBus fail", ignored)
@@ -276,14 +280,31 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     resourceCode = pipelineId
                 )
                 // 删除原库的数据
-                val deleteMigrationDataParam = DeleteMigrationDataParam(
+                val deleteDataParam = DeleteDataParam(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    targetClusterName = sourceClusterName,
+                    targetClusterName = targetClusterName,
                     targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
-                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                processDataDeleteService.deleteProcessData(deleteDataParam)
+                // 添加操作日志
+                val id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("T_PIPELINE_OPERATION_LOG").data
+                processDao.addPipelineOperationLog(
+                    dslContext = archiveShardingDslContext,
+                    pipelineOperationLog = PipelineOperationLog(
+                        id = id,
+                        operator = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = 1,
+                        operationLogType = OperationLogType.PIPELINE_ARCHIVE,
+                        params = "",
+                        operateTime = System.currentTimeMillis(),
+                        description = null
+                    )
+                )
                 // 保存流水线数据迁移成功记录
                 projectDataMigrateHistoryService.add(
                     userId = userId,
@@ -349,10 +370,10 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             .takeIf { it == true }
             ?.let {
                 throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                    errorCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
                     params = arrayOf(pipelineId),
                     defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                        messageCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
                         params = arrayOf(pipelineId)
                     )
                 )

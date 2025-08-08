@@ -18,6 +18,7 @@ RUN dnf makecache &&\
     dnf install -y redis &&\
     dnf install -y python3 &&\
     dnf install -y pip3 &&\
+    dnf install -y openssl &&\
     pip install requests
 
 # 安装Java工具
@@ -30,4 +31,4 @@ RUN wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/he
     wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/windows/jdk17.zip" -P /data/workspace/agent-package/jre/windows/ &&\
     wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos/jdk17.zip" -P /data/workspace/agent-package/jre/macos/ &&\
     wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/linux_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/linux_arm64/ &&\
-    wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/macos_arm64/ 
+    wget "https://raw.githubusercontent.com/bkdevops-projects/devops-jre/refs/heads/jdk17/macos_arm64/jdk17.zip" -P /data/workspace/agent-package/jre/macos_arm64/

@@ -20,11 +20,11 @@
 
 import {
     ARTIFACTORY_API_URL_PREFIX,
+    AUTH_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
-    AUTH_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
 import request from '@/utils/request'
@@ -37,10 +37,10 @@ import {
     REFRESH_QUALITY_LOADING_MUNTATION,
     REPOSITORY_MUTATION,
     SET_PAC_SUPPORT_SCM_TYPE_LIST,
+    SET_PROJECT_PERM,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
-    TEMPLATE_MUTATION,
-    SET_PROJECT_PERM
+    TEMPLATE_MUTATION
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -50,7 +50,7 @@ function rootCommit (commit, ACTION_CONST, payload) {
 export const state = {
     templateCategory: null,
     refreshLoading: false,
-    pipelineTemplateMap: null,
+    pipelineTemplateMap: new Map(),
     storeTemplate: null,
     template: null,
     reposList: null,
@@ -158,12 +158,21 @@ export const actions = {
     requestPipelineTemplate: async ({ commit }, { projectId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
+            const pipelineTemplateMap = new Map()
             for (const key in (response?.data?.templates ?? {})) {
                 const item = response.data.templates[key]
-                item.isStore = item.templateType === 'CONSTRAINT'
+                pipelineTemplateMap.set(key, {
+                    ...item,
+                    isStore: item.templateType === 'CONSTRAINT'
+                })
             }
+            if (pipelineTemplateMap.size) { // 设置第一个模板为空模板
+                const firstKey = pipelineTemplateMap.keys().next().value
+                pipelineTemplateMap.get(firstKey).isEmptyTemplate = true
+            }
+            
             commit(PIPELINE_TEMPLATE_MUTATION, {
-                pipelineTemplateMap: (response.data || {}).templates
+                pipelineTemplateMap
             })
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -295,6 +304,11 @@ export const actions = {
     },
     requestFileInfo: async ({ commit }, { projectId, path, type }) => {
         return request.get(`/${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/show?path=${encodeURIComponent(path)}`).then(response => {
+            return response.data
+        })
+    },
+    getMetadataLabel: async ({ commit }, { projectId, pipelineId, debug }) => {
+        return request.get(`/${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/quality/metadata/${projectId}/pipeline/${pipelineId}?debug=${debug}`).then(response => {
             return response.data
         })
     },

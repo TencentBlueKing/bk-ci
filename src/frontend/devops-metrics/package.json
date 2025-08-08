@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "@blueking/bkcharts": "3.7.0-beta.2",
-    "bkui-vue": "0.0.1-beta.416",
+    "bkui-vue": "2.0.2-beta.45",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.13",
     "vue": "~3.4.31",

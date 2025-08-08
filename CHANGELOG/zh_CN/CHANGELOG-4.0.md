@@ -1,4 +1,10 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.0-rc.6](#v400-rc6)
+   - [Changelog since v4.0.0-rc.5](#changelog-since-v400-rc5)
+
+- [v4.0.0-rc.5](#v400-rc5)
+   - [Changelog since v4.0.0-rc.4](#changelog-since-v400-rc4)
+
 - [v4.0.0-rc.4](#v400-rc4)
    - [Changelog since v4.0.0-rc.3](#changelog-since-v400-rc3)
 
@@ -16,6 +22,139 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.0-rc.6
+## 2025-08-01
+### Changelog since v4.0.0-rc.5
+#### 新增
+
+##### 流水线
+- [新增] feat：支持展示制品自动化测试结果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11462)
+- [新增] feat: 调整子流水线接口参数名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11979)
+- [新增] feat:流水线公共变量管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12010)
+- [新增] feat: GIT触发区分MR合并前后的检查 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11966)
+
+##### 代码库
+- [新增] feat：平台管理-代码源管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11379)
+
+##### 研发商店
+- [新增] feat：插件申请 get_credential 接口时，自动通过 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12039)
+
+##### 环境管理
+- [新增] feat：导入第三方构建机时支持自动切换启动用户 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11945)
+
+##### 权限中心
+- [新增] feat：权限模型优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11832)
+- [新增] feat：权限系统熔断设计 数据准确性校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11964)
+
+##### 调度
+- [新增] feat：无编译构建机轮训任务逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12046)
+
+##### Agent
+- [新增] feat: 支持插件output中传流水线制品元数据 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11940)
+
+##### 未分类
+- [新增] feat: 报告支持压缩预览 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11923)
+- [新增] feat: 蓝盾国际化支持日语版 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11877)
+- [新增] feat: okhttp客户端新增dns配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12026)
+
+#### 优化
+
+##### 流水线
+- [优化] pref：优化项目创建/修改 校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12052)
+- [优化] perf：流水线分组文案优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12056)
+- [优化] perf: 优化定时任务上锁规则 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12041)
+- [优化] perf：归档流水线时记录操作日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11922)
+- [优化] perf：已归档的流水线查看页面，导出和删除操作不可用 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12006)
+
+##### 研发商店
+- [优化] perf:优化研发商店组件查询 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12027)
+
+##### 未分类
+- [优化] pref:metrics服务部分接口完善权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11620)
+- [优化] pref:metrics构建数据上报接口在构建并发量大时可能出现线程阻塞情况 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12043)
+- [优化] pref: 消息队列配置优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11878)
+- [优化] pref: 增加构建机接口便于worker判断当前的环境类型 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11636)
+
+#### 修复
+
+##### 流水线
+- [修复] 静态流水线分组在搜索流水线，添加流水线保存之后，再次操作会出现整个页面无响应的问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12035)
+- [修复] bug：拥有项目管理员权限，但是无法操作删除流水线组 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12031)
+
+##### 未分类
+- [修复] bug: 移除接口冗余的userId参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12069)
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
+# v4.0.0-rc.5
+## 2025-07-18
+### Changelog since v4.0.0-rc.4
+#### 新增
+
+##### 流水线
+- [新增] feat: 新增流水线监控事件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11874)
+- [新增] 插件输出时，支持 isSensitive 属性 [链接](http://github.com/TencentBlueKing/bk-ci/issues/5534)
+- [新增] 插件配置支持字段间联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11251)
+- [新增] feat: 调整子流水线接口参数名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11979)
+- [新增] feat: TGIT 事件触发需要支持review事件监听 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11827)
+- [新增] feat: 人工审核插件获取参数支持矩阵 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11933)
+- [新增] feat：代码库开启PAC时对应的流水线组名称取值策略修改 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11741)
+
+##### 研发商店
+- [新增] feat:研发商城插件通知管理员审核文案增加审核按钮链接 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11938)
+- [新增] feat:增加组件创建后扩展处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11823)
+
+##### 环境管理
+- [新增] feat：第三方构建机节点支持标签管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11881)
+- [新增] feat：导入第三方构建机时支持自动切换启动用户 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11945)
+
+##### 权限中心
+- [新增] feat：权限系统熔断设计 数据准确性校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11964)
+
+##### 调度
+- [新增] feat：无编译构建机认领任务新增容器状态二重校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11904)
+
+##### Agent
+- [新增] 私有构建机用 Docker 运行构建任务也能获取到自定义环境变量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11955)
+- [新增] 修复mac下的agent掉线重连长时间失效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11918)
+
+##### 未分类
+- [新增] feat: 蓝盾国际化支持日语版 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11877)
+- [新增] Tencent开源License更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11919)
+
+#### 优化
+
+##### 流水线
+- [优化] perf：归档流水线时记录操作日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11922)
+- [优化] perf：流水线治理优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11968)
+- [优化] perf：流水线发布时描述是否必填优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11843)
+- [优化] perf：和草稿版本对比时的展示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11969)
+
+##### 研发商店
+- [优化] pref：插件运行时包文件下载超时时间优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11954)
+
+##### 未分类
+- [优化] pref:metrics服务数据上报接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12014)
+- [优化] pref:调整metrics服务数据上报接口分布式锁超时时间 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12005)
+- [优化] pref:获取制品库文件下载链接接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11999)
+- [优化] pref:metrics构建数据上报接口在同一条流水线构建并发量大时可能出现线程阻塞情况 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11921)
+- [优化] docs: 更新JDK制作文档 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11937)
+
+#### 修复
+
+##### 流水线
+- [修复] fix：条件判断过程日志描述有误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12008)
+- [修复] mac公共构建机无法选择xcode16版本配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11980)
+- [修复] bug: 流水线拥有者,无法导出流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11959)
+
+##### 研发商店
+- [修复] bug: 内置插件的target参数需要支持可空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11936)
+
+##### 环境管理
+- [修复] 环境管理节点功能右上角没有导入按钮,导致无法下载agent [链接](http://github.com/TencentBlueKing/bk-ci/issues/11950)
+
+##### 未分类
+- [修复] bug: publish-plugin插件不支持Nexus Pro 3 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11944)
+
 # v4.0.0-rc.4
 ## 2025-07-04
 ### Changelog since v4.0.0-rc.3

@@ -163,7 +163,9 @@
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canEdit && this.hasProjectPermission,
+                                hasPermission: this.archiveFlag
+                                    ? this.hasProjectPermission
+                                    : pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
@@ -264,7 +266,9 @@
                                 }
                             },
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canDelete && this.hasProjectPermission,
+                                hasPermission: this.archiveFlag
+                                    ? this.hasProjectPermission
+                                    : pipeline.permissions?.canDelete,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
@@ -389,7 +393,6 @@
   }
 }
 .more-operation-dropmenu {
-  width: 120px;
   > ul {
     &:first-child {
       border-bottom: 1px solid #dcdee5;

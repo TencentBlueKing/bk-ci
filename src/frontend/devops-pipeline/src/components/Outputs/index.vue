@@ -4,6 +4,7 @@
         v-bkloading="{ isLoading }"
     >
         <bk-resize-layout
+            :key="currentTab"
             :collapsible="true"
             class="pipeline-exec-outputs"
             :initial-divide="initWidth"
@@ -15,7 +16,22 @@
                 class="pipeline-exec-outputs-aside"
             >
                 <div class="pipeline-exec-outputs-filter-input">
+                    <div
+                        class="artifact-search"
+                        v-if="currentTab === 'artifacts'"
+                    >
+                        <p>{{ $t('metaData') }}</p>
+                        <bk-search-select
+                            class="select-search"
+                            :show-condition="false"
+                            :data="artifactFilterData"
+                            :placeholder="$t('settings.itemPlaceholder')"
+                            v-model="artifactValue"
+                            @change="updateSearchKey"
+                        />
+                    </div>
                     <bk-input
+                        class="input-search"
                         clearable
                         right-icon="bk-icon icon-search"
                         :placeholder="filterPlaceholder"
@@ -145,7 +161,16 @@
                                 <bk-table-column
                                     :label="$t('view.value')"
                                     prop="value"
-                                ></bk-table-column>
+                                >
+                                    <template slot-scope="props">
+                                        <span
+                                            v-if="props.row.color"
+                                            :style="{ backgroundColor: props.row.color }"
+                                            class="color-block"
+                                        ></span>
+                                        <span>{{ props.row.value }}</span>
+                                    </template>
+                                </bk-table-column>
                                 <bk-table-column
                                     :label="$t('desc')"
                                     prop="description"
@@ -245,7 +270,7 @@
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -272,10 +297,33 @@
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false
+                isLoading: false,
+                artifactValue: [],
+                artifactFilterData: [],
+                qualityMetadata: {}
             }
         },
         computed: {
+            ...mapState('atom', ['execDetail']),
+            filterQuery () {
+                const uniqueKeys = new Set()
+                const result = []
+
+                this.artifactValue.forEach(item => {
+                    item.values?.forEach(value => {
+                        const keyValue = `${item.id}:${value.id}`
+                        if (!uniqueKeys.has(keyValue)) {
+                            uniqueKeys.add(keyValue)
+                            result.push({ key: item.id, value: value.id })
+                        }
+                    })
+                })
+
+                return result
+            },
+            isDebugExec () {
+                return this.execDetail?.debug ?? false
+            },
             initWidth () {
                 return this.currentTab === 'reports' ? '300px' : '40%'
             },
@@ -541,21 +589,95 @@
                 }
             },
             currentTab: function () {
+                this.keyWord = ''
+                this.artifactValue = []
                 this.$nextTick(this.init)
             },
             '$route.params.buildNo' () {
                 this.$nextTick(this.init)
+            },
+            '$route.query.metadataKey': {
+                handler (newVal) {
+                    if (newVal) {
+                        this.qualityMetadata = {
+                            labelKey: newVal,
+                            values: this.$route.query.metadataValues?.split(',')
+                        }
+                        this.initializeArtifactValue()
+                    }
+                },
+                immediate: true
             }
         },
-        mounted () {
-            this.init()
+        async mounted () {
+            await this.getArtifactDate()
+            if (!this.$route.query.metadataKey) {
+                this.init()
+            }
         },
         methods: {
             ...mapActions('common', [
                 'requestFileInfo',
                 'requestOutputs',
+                'getMetadataLabel',
                 'requestExecPipPermission'
             ]),
+            initializeArtifactValue () {
+                if (!Object.keys(this.qualityMetadata).length) return
+
+                const { labelKey, values } = this.qualityMetadata
+                if (labelKey && values) {
+                    this.artifactValue = [{
+                        id: labelKey,
+                        name: labelKey,
+                        multiable: true,
+                        values: values.map(item => ({
+                            id: item,
+                            name: item
+                        }))
+                    }]
+                } else {
+                    this.artifactValue = []
+                }
+                this.init()
+            },
+
+            async updateSearchKey (value) {
+                const metadataKey = this.$route.query.metadataKey
+                const hasMetadataKey = value.some(item => item.id === metadataKey)
+                const query = { ...this.$route.query }
+
+                if (!hasMetadataKey) {
+                    delete query.metadataKey
+                    delete query.metadataValues
+                    this.$router.replace({ query })
+                    this.init()
+                }
+            },
+            async getArtifactDate () {
+                const repoList = await this.getMetadataLabel({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId,
+                    ...(this.isDebugExec ? {debug: this.isDebugExec} : {})
+                })
+
+                this.artifactFilterData = repoList.map(item => {
+                    const labelColorMapKeys = Object.keys(item.labelColorMap)
+                    return {
+                        id: item.labelKey,
+                        name: item.labelKey,
+                        multiable: true,
+                        ...(item.enumType
+                            ? {
+                                children: labelColorMapKeys.map(key => ({
+                                    id: key,
+                                    name: key
+                                }))
+                            }
+                            : {})
+                    }
+                })
+            },
 
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
@@ -573,6 +695,7 @@
                             //     result[key] = this.filterConditionMap[key]
                             //     return result
                             // }, {})),
+                            qualityMetadata: this.filterQuery,
                             ...this.pagination
                         })
                     ])
@@ -795,7 +918,48 @@
         flex-direction: column;
 
         .pipeline-exec-outputs-filter-input {
+            display: flex;
+            width: 100%;
             margin: 12px 0;
+            flex-shrink: 0;
+
+            .artifact-search {
+                display: flex;
+                height: 32px;
+                margin-right: 4px;
+                flex: 0 0 40%;
+
+                p {
+                    min-width: 62px;
+                    text-align: center;
+                    height: 32px;
+                    line-height: 32px;
+                    background-color: #fafbfd;
+                    font-size: 12px;
+                    border: 1px solid #c4c6cc;
+                    border-radius: 2px;
+                    border-right: none;
+                }
+
+                .select-search {
+                    flex: 1;
+                    ::placeholder {
+                        font-size: 12px;
+                        color: #c4c6cc;
+                    }
+                    .search-tag-box {
+                        white-space: break-spaces;
+                    }
+                    .search-select-wrap {
+                        overflow-y: auto;
+                    }
+                }
+            }
+
+            .input-search {
+                flex-shrink: 0;
+                flex: 1;
+            }
         }
 
         .pipeline-exec-outputs-filter {
@@ -916,6 +1080,14 @@
 
         .pipeline-exec-output-block {
             padding: 16px 24px;
+
+            .color-block {
+                display: inline-block;
+                margin-right: 8px;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
 
             .pipeline-exec-output-block-title {
                 font-size: 14px;

@@ -29,6 +29,8 @@ package com.tencent.devops.metrics.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.metrics.api.UserThirdPartyResource
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getEndDateTime
@@ -42,6 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserThirdPartyResourceImpl @Autowired constructor(
     private val thirdPartyManageService: ThirdPartyManageService
 ) : UserThirdPartyResource {
+
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineSummaryInfo(
         projectId: String,
         userId: String,

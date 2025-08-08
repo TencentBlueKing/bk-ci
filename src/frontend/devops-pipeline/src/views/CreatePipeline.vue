@@ -368,20 +368,22 @@
                 return this.isDisabled || !this.activeTemp?.installed || this.isActiveTempEmpty
             },
             projectedTemplateList () {
-                if (!this.pipelineTemplateMap) return []
-                return Object.values(this.pipelineTemplateMap).map(item => ({
-                    ...item,
-                    installed: true,
-                    hasPermission: true,
-                    btnText: 'pipelinesPreview'
-                }))
+                if (this.pipelineTemplateMap.size) {
+                    return Array.from(this.pipelineTemplateMap.values().map(item => ({
+                        ...item,
+                        installed: true,
+                        hasPermission: true,
+                        btnText: 'pipelinesPreview'
+                    })))
+                }
+                return []
             },
             tempList () {
                 if (this.activePanel === 'projected') {
                     return this.projectedTemplateList.filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1)
                 } else {
                     return this.storeTemplate?.map(item => {
-                        const temp = this.pipelineTemplateMap?.[item.code]
+                        const temp = this.pipelineTemplateMap.get(item.code) || {}
                         return {
                             ...item,
                             hasPermission: item.flag,
@@ -554,7 +556,7 @@
                     }
 
                     const params = {
-                        emptyTemplate: !this.activeTempIndex, // 0 为空模板
+                        emptyTemplate: this.activeTemp.isEmptyTemplate ?? false, // 0 为空模板
                         projectId: this.$route.params.projectId,
                         templateId: this.activeTemp.templateId,
                         templateVersion: this.activeTemp.version,

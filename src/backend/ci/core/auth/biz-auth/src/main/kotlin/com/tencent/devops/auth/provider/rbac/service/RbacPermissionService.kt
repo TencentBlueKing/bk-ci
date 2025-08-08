@@ -338,6 +338,7 @@ class RbacPermissionService(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -367,51 +368,51 @@ class RbacPermissionService(
                     projectCode = projectCode,
                     resourceType = resourceType
                 )
-            }
+            } else {
+                val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
+                when {
+                    resourceType == AuthResourceType.PROJECT.value ->
+                        instanceMap[resourceType] ?: emptyList()
+                    // 如果有项目下所有该资源权限,返回资源列表
+                    instanceMap[AuthResourceType.PROJECT.value]?.contains(projectCode) == true ->
+                        authResourceService.listByProjectAndType(
+                            projectCode = projectCode,
+                            resourceType = resourceType
+                        )
 
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            when {
-                resourceType == AuthResourceType.PROJECT.value ->
-                    instanceMap[resourceType] ?: emptyList()
-                // 如果有项目下所有该资源权限,返回资源列表
-                instanceMap[AuthResourceType.PROJECT.value]?.contains(projectCode) == true ->
-                    authResourceService.listByProjectAndType(
-                        projectCode = projectCode,
-                        resourceType = resourceType
-                    )
+                    resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
+                        val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { viewIds ->
+                            client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
+                                projectId = projectCode,
+                                viewIdsEncode = viewIds
+                            ).data
+                        } ?: emptyList()
 
-                resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
-                    val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
-                        client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
-                            projectId = projectCode,
-                            viewIdsEncode = authViewIds
-                        ).data
-                    } ?: emptyList()
-
-                    val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
-                    val pipelineIds = mutableSetOf<String>().apply {
-                        addAll(authViewPipelineIds)
-                        addAll(
-                            getFinalResourceCodes(
-                                projectCode = projectCode,
-                                resourceType = resourceType,
-                                iamResourceCodes = authPipelineIamIds,
-                                createUser = userId
+                        val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
+                        val pipelineIds = mutableSetOf<String>().apply {
+                            addAll(authViewPipelineIds)
+                            addAll(
+                                getFinalResourceCodes(
+                                    projectCode = projectCode,
+                                    resourceType = resourceType,
+                                    iamResourceCodes = authPipelineIamIds,
+                                    createUser = userId
+                                )
                             )
+                        }
+                        pipelineIds.toList()
+                    }
+
+                    // 返回具体资源列表
+                    else -> {
+                        val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
+                        getFinalResourceCodes(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            iamResourceCodes = iamResourceCodes,
+                            createUser = userId
                         )
                     }
-                    pipelineIds.toList()
-                }
-
-                // 返回具体资源列表
-                else -> {
-                    val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
-                    getFinalResourceCodes(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        iamResourceCodes = iamResourceCodes,
-                        createUser = userId
-                    )
                 }
             }
         } finally {

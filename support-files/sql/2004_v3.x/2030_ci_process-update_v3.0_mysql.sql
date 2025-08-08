@@ -38,23 +38,23 @@ BEGIN
     ALTER TABLE T_PIPELINE_INFO
         ADD COLUMN `LOCKED` bit(1) DEFAULT b'0' COMMENT '是否锁定，PAC v3.0新增锁定，取代原来setting表中的LOCK';
     END IF;
-		
+
 	IF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
                         AND COLUMN_NAME = 'JOB_ID') THEN
-        ALTER TABLE `T_PIPELINE_BUILD_TASK` 
+        ALTER TABLE `T_PIPELINE_BUILD_TASK`
 			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
     END IF;
-	
-	
+
+
 	IF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PIPELINE_BUILD_CONTAINER'
                         AND COLUMN_NAME = 'JOB_ID') THEN
-        ALTER TABLE `T_PIPELINE_BUILD_CONTAINER` 
+        ALTER TABLE `T_PIPELINE_BUILD_CONTAINER`
 			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
     END IF;
 
@@ -77,13 +77,13 @@ BEGIN
     ALTER TABLE T_PIPELINE_RESOURCE_VERSION
         ADD COLUMN RELEASE_TIME TIMESTAMP NULL COMMENT '发布时间';
     END IF;
-	
+
 	IF NOT EXISTS(SELECT 1
 	                      FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
                         AND COLUMN_NAME = 'STAGE_ID_FOR_USER') THEN
-    ALTER TABLE `T_PIPELINE_BUILD_STAGE` 
+    ALTER TABLE `T_PIPELINE_BUILD_STAGE`
 			ADD COLUMN `STAGE_ID_FOR_USER` varchar(64) DEFAULT NULL COMMENT '当前stageId 阶段ID (用户可编辑)';
     END IF;
 
@@ -204,6 +204,32 @@ BEGIN
                     AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
         ALTER TABLE `T_PIPELINE_SETTING_VERSION`
             ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_VIEW'
+                    AND COLUMN_NAME = 'NAME') THEN
+    ALTER TABLE T_PIPELINE_VIEW MODIFY COLUMN NAME varchar(255) NOT NULL COMMENT '名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                AND COLUMN_NAME = 'ARTIFACT_QUALITY_INFO') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
+        ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext CHARACTER SET utf8mb4 comment '制品质量分析结果' after `ARTIFACT_INFO`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                AND COLUMN_NAME = 'ARTIFACT_QUALITY_INFO') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY_DEBUG`
+        ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext CHARACTER SET utf8mb4 comment '制品质量分析结果' after `ARTIFACT_INFO`;
     END IF;
 
 COMMIT;

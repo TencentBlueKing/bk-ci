@@ -97,19 +97,19 @@ class WebhookManager @Autowired constructor(
                 "handle webhook data|scmCode:$scmCode|eventType:${webhook.eventType}|" +
                         "repos:${repositories.map { it.repoHashId} }"
             )
+            val eventDesc = with(webhook.eventDesc) {
+                I18Variable(
+                    code = code,
+                    params = params,
+                    defaultMessage = defaultMessage
+                ).toJsonStr()
+            }
             repositories.forEach { repository ->
                 var eventId = pipelineTriggerEventService.getEventIdOrNull(
                     projectId = repository.projectId!!,
                     requestId = requestId,
                     eventSource = repository.repoHashId!!
                 )
-                val eventDesc = with(webhook.eventDesc) {
-                    I18Variable(
-                        code = code,
-                        params = params,
-                        defaultMessage = defaultMessage
-                    ).toJsonStr()
-                }
                 if (eventId == null) {
                     eventId = pipelineTriggerEventService.getEventId()
                     val triggerEvent = PipelineTriggerEvent(
