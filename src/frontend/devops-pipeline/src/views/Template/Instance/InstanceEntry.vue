@@ -184,15 +184,16 @@
         }
         const fn = fnMap[proxy.$route.params?.type]
         try {
-            console.log(instanceList.value, '1')
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
                     pipelineId: item.pipelineId,
                     pipelineName: item.pipelineName,
-                    buildNo: {
-                        ...item.buildNo,
-                        required: item.buildNo.isRequiredParam
-                    },
+                    ...(item.buildNo ? {
+                        buildNo: {
+                            ...item?.buildNo,
+                            required: item.buildNo?.isRequiredParam
+                        }
+                    } : undefined),
                     param: item.param.map(i => ({
                         ...i,
                         required: i.isRequiredParam
@@ -218,7 +219,7 @@
             proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
             proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
         } catch (e) {
-            console.err(e)
+            console.error(e)
         }
     }
     function handleBatchEdit () {
