@@ -87,8 +87,7 @@ class TaskBuildRecordService(
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    redisOperation: RedisOperation,
-    pipelineModelParser: PipelineModelParser
+    redisOperation: RedisOperation
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
@@ -99,8 +98,7 @@ class TaskBuildRecordService(
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
     pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService,
-    pipelineModelParser = pipelineModelParser
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(

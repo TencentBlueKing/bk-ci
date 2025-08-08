@@ -83,11 +83,7 @@ data class Stage(
     @get:Schema(title = "模版版本名称", required = false)
     override var templateVersionName: String? = null,
     @get:Schema(title = "模板参数构建", required = false)
-    override var templateVariables: List<TemplateVariable>? = null,
-    @get:Schema(title = "解析后的模版ID", required = false)
-    override var parsedTemplateId: String? = null,
-    @get:Schema(title = "解析后的模版版本", required = false)
-    override var parsedTemplateVersion: Long? = null
+    override var templateVariables: List<TemplateVariable>? = null
 ) : TemplateDescriptor {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
