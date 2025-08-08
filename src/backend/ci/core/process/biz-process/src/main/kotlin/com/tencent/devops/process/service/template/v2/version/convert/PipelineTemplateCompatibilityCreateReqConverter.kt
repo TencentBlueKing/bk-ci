@@ -50,7 +50,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
-    private val pipelineTemplateCommonService: PipelineTemplateCommonService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer
 ) : PipelineTemplateVersionReqConverter {
@@ -72,10 +71,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
             if (templateId == null) {
                 throw IllegalArgumentException("templateId is null")
             }
-            pipelineTemplateCommonService.checkTemplateBasicInfo(
-                projectId = projectId,
-                name = model.name
-            )
             val transferResult = pipelineTemplateGenerator.transfer(
                 userId = userId,
                 projectId = projectId,
