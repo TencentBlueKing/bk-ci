@@ -1,6 +1,5 @@
 <template>
     <div class="sub-parameter">
-        {{ param }}
         <label class="bk-label">
             {{ title }}：
             <span
