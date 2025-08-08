@@ -426,7 +426,7 @@ class ProjectBillsService(
                                     kind = billKind.name,
                                     usage = usage,
                                     bgName = projectInfo.bgName ?: "",
-                                    flag = projectInfo.productId != null && projectInfo.bgId == IEG_BG_ID.toString()
+                                    flag = projectInfo.enabled ?: false
                                 )
                                 // 若是流水线用户类型，还额外需要上报用户名单
                                 if (billKind == BkBillKind.PIPELINE_USER_COUNT) {

@@ -25,23 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.shardingprocess.p3
+package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
-import org.jooq.DSLContext
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxOpStoreIndexResource
+import com.tencent.devops.store.common.service.TxStoreIndexCronService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class Process3ShardingDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext?
-) : ProcessShardingDataClearService() {
+@RestResource
+class TxOpStoreIndexResourceImpl @Autowired constructor(
+    private val txStoreIndexCronService: TxStoreIndexCronService
+) : TxOpStoreIndexResource {
 
-    override fun getDSLContext(): DSLContext? {
-        return dslContext
-    }
-
-    override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_2" && dslContext != null
+    override fun runAllindexComputeTasks(): Result<Boolean> {
+        return Result(txStoreIndexCronService.runAllindexComputeTasks())
     }
 }

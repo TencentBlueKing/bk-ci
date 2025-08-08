@@ -1,19 +1,13 @@
 package com.tencent.devops.remotedev.resources.service
 
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.TencentActionAuditContent
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.IWhiteList
@@ -34,7 +28,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
-import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
@@ -70,7 +63,6 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
-import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
@@ -95,8 +87,6 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
-import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -117,7 +107,6 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val notifyControl: NotifyControl,
-    private val client: Client,
     private val workspaceLoginService: WorkspaceLoginService,
     private val startWorkspaceService: StartWorkspaceService,
     private val streamBridge: StreamBridge,
@@ -136,7 +125,6 @@ class ServiceRemoteDevResourceImpl(
     private val upgradeWorkspaceHandler: UpgradeWorkspaceHandler,
     private val cloneWorkspaceHandler: CloneWorkspaceHandler,
     private val workspaceHookService: WorkspaceHookService,
-    private val configCacheService: ConfigCacheService,
     private val remotedevProjectService: RemotedevProjectService,
     private val bkItsmService: BKItsmService,
     private val projectStrategyService: ProjectStrategyService
@@ -223,91 +211,9 @@ class ServiceRemoteDevResourceImpl(
     override fun assignWorkspace(
         operator: String,
         owner: String?,
-        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
-        val projectId = checkNotNull(data.projectId)
-        val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
-        // 增加可以分配的配额
-        if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
-            client.get(ServiceTxProjectResource::class).updateRemotedev(
-                userId = operator,
-                projectCode = projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null,
-                data = UpdateRemotedevBody(null)
-            )
-        }
-        cgsData.forEach { cgs ->
-            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
-            // 先校验该cgsId是否已被申领分配并运行中
-            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
-            // 审计
-            ActionAuditContext.current()
-                .addInstanceInfo(
-                    cgs.cgsId,
-                    cgs.cgsId,
-                    null,
-                    null
-                )
-                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
-                .scopeId = data.projectId
-            // 再根据机型和地域获取硬件资源配置
-            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
-                machineType = cgs.machineType
-            ) ?: return Result(false)
-            // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.projectCreateWorkspace(
-                pmUserId = owner ?: operator,
-                projectId = projectId,
-                cgsId = cgs.cgsId,
-                workspaceCreate = WindowsWorkspaceCreate(
-                    windowsType = windowsResourceConfigId.size,
-                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
-                    baseImageId = 0,
-                    count = 1,
-                    assignOwners = owner?.let { listOf(owner) } ?: emptyList()
-                ),
-                zoneType = zoneType
-            )
-            Thread.sleep(500)
-        }
-        // 启动流水线完成剩下的分配工作
-        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
-            return Result(true)
-        }
-        try {
-            val infoS = configCacheService.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
-            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-
-            val cgsIps = data.cgsIds?.map {
-                val hostIdSub = it.split(".")
-                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-            }?.toSet()
-            val resIps = mutableSetOf<String>()
-            resIps.addAll(cgsIps ?: emptySet())
-            resIps.addAll(data.ips ?: emptySet())
-
-            val newParam = mutableMapOf<String, String>()
-            info.buildParam.forEach { (k, v) ->
-                when (v) {
-                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                    "repoId" -> newParam[k] = data.repoId ?: ""
-                    "localDriver" -> newParam[k] = data.localDriver ?: ""
-                    else -> newParam[k] = v
-                }
-            }
-            AsyncExecute.dispatch(
-                streamBridge, AsyncPipelineEvent(
-                    userId = info.userId ?: operator,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
-            )
-        } catch (e: Exception) {
-            logger.warn("execute assignWorkspace pipeline error", e)
-        }
+        createControl.assignWorkspace(operator, data, owner)
         return Result(true)
     }
 

@@ -2167,6 +2167,7 @@ class TemplateFacadeService @Autowired constructor(
                         pipeline.required = template.required
                         pipeline.desc = template.desc
                         pipeline.constant = template.constant
+                        pipeline.displayCondition = template.displayCondition
                         result.add(pipeline)
                     }
                     return@outside

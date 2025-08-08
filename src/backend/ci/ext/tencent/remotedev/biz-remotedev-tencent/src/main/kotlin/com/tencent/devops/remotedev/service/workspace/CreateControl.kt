@@ -34,6 +34,7 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
@@ -49,6 +50,7 @@ import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -75,16 +77,20 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
+import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
-import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import java.time.LocalDateTime
@@ -93,6 +99,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Service
@@ -116,7 +123,7 @@ class CreateControl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val softwareManageService: SoftwareManageService,
-    private val imageManageService: ImageManageService,
+    private val streamBridge: StreamBridge,
     private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     companion object {
@@ -766,6 +773,140 @@ class CreateControl @Autowired constructor(
             )
         )
         return true
+    }
+
+    fun assignWorkspace(
+        userId: String,
+        data: OpProjectWorkspaceAssignData,
+        assignOwner: String? = null
+    ) {
+        data.check()
+        val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return
+        // 增加可以分配的配额
+        if (data.type.projectUse()) {
+            client.get(ServiceTxProjectResource::class).updateRemotedev(
+                userId = userId,
+                projectCode = checkNotNull(data.projectId),
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null,
+                data = UpdateRemotedevBody(null)
+            )
+        }
+        // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
+        val allSpecSize = lazy {
+            windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        }
+        val allowSpecSize = lazy {
+            windowsResourceConfigService.fetchSpec(
+                projectId = checkNotNull(data.projectId),
+                machineType = null
+            ).associate { it.size to it.quota }
+        }
+        cgsData.forEach { cgs ->
+            // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
+            if (data.type.projectUse() && cgs.machineType in allSpecSize.value) {
+                windowsResourceConfigService.createOrUpdateSpec(
+                    WindowsSpecResInfo(
+                        projectId = checkNotNull(data.projectId),
+                        size = cgs.machineType.trim(),
+                        quota = ((allowSpecSize.value[cgs.machineType.trim()] ?: 0) + 1)
+                    )
+                )
+            }
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
+            // 先校验该cgsId是否已被申领分配并运行中
+            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
+            // 审计
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    cgs.cgsId,
+                    cgs.cgsId,
+                    null,
+                    null
+                )
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .scopeId = data.projectId
+            // 再根据机型和地域获取硬件资源配置
+            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
+                machineType = cgs.machineType
+            ) ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(cgs.machineType)
+            )
+            // 发起创建
+            val windowsZone = windowsResourceConfigService.getZoneConfig(cgs.zoneId)
+                ?: windowsResourceConfigService.getZoneConfig(cgs.zoneId.replace(Regex("\\d+"), ""))
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                    params = arrayOf(cgs.zoneId)
+                )
+            if (data.type.projectUse()) {
+                projectCreateWorkspace(
+                    pmUserId = userId,
+                    projectId = checkNotNull(data.projectId),
+                    cgsId = cgs.cgsId,
+                    workspaceCreate = WindowsWorkspaceCreate(
+                        windowsType = windowsResourceConfigId.size,
+                        windowsZone = windowsZone.zoneShortName,
+                        baseImageId = 0,
+                        count = 1,
+                        assignOwners = assignOwner?.let { listOf(it) } ?: emptyList()
+                    ),
+                    zoneType = windowsZone.type
+                )
+            }
+
+            if (data.type.personalUse()) {
+                loadWorkspaceWithPersonalWindows(
+                    userId = checkNotNull(data.owner),
+                    workspaceCreate = WindowsWorkspaceCreate(
+                        windowsType = windowsResourceConfigId.size,
+                        windowsZone = windowsZone.zoneShortName,
+                        baseImageId = 0,
+                        count = 1
+                    ),
+                    cgsId = cgs.cgsId
+                )
+            }
+            Thread.sleep(200)
+        }
+        // 启动流水线完成剩下的分配工作
+        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
+            return
+        }
+
+        try {
+            val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+            val cgsIps = data.cgsIds?.map {
+                val hostIdSub = it.split(".")
+                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            }?.toSet()
+            val resIps = mutableSetOf<String>()
+            resIps.addAll(cgsIps ?: emptySet())
+            resIps.addAll(data.ips ?: emptySet())
+
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = data.repoId ?: ""
+                    "localDriver" -> newParam[k] = data.localDriver ?: ""
+                    else -> newParam[k] = v
+                }
+            }
+            AsyncExecute.dispatch(
+                streamBridge, AsyncPipelineEvent(
+                    userId = info.userId ?: userId,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("execute assignWorkspace pipeline error", e)
+        }
     }
 
     private fun workspaceCreateFail(

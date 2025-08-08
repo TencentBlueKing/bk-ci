@@ -25,58 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service.service
+package com.tencent.devops.misc.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_SIGNATURE_MANAGE", description = "用户电子合同签署-服务接口")
-@Path("/service/signature")
+@Tag(name = "OP_PROCESS_SHARDING_DB", description = "op-PROCESS分库")
+@Path("/op/process/sharding/dbs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceSignatureManageResource {
-    @GET
-    @Path("/{projectId}/getSignatureStatus")
-    @Operation(summary = "获取状态")
-    fun fetchLiveSignatureStatus(
+interface OpProcessShardingDbResource {
+
+    @Operation(summary = "按项目ID清理分片数据")
+    @PUT
+    @Path("/{dataSourceName}/clusters/{clusterName}/projects/{projectId}/data/clear")
+    fun clearShardingDataByProjectId(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "集群名称", required = true)
+        @PathParam("clusterName")
+        clusterName: String,
+        @Parameter(description = "数据源名称", required = true)
+        @PathParam("dataSourceName")
+        dataSourceName: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
-    ): Result<UserSignatureStatusResponse>
-
-    @GET
-    @Path("/{projectId}/project/getSignatureStatus")
-    @Operation(summary = "获取状态")
-    fun getSignatureStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<UserSignatureStatusResponse>
-
-    @GET
-    @Path("/listSignatureProjects")
-    @Operation(summary = "获取项目列表")
-    fun listSignatureProjects(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
-    ): Result<List<String>>
+        projectId: String,
+        @Parameter(description = "广播表删除标识")
+        @QueryParam("broadcastTableDeleteFlag")
+        broadcastTableDeleteFlag: Boolean = false
+    ): Result<Boolean>
 }
