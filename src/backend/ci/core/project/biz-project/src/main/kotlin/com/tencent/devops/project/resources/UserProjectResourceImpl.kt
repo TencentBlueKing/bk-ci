@@ -163,7 +163,7 @@ class UserProjectResourceImpl @Autowired constructor(
                 status = true,
                 projectId = TenantUtils.parseEnglishName(
                     tenantId = projectCreateInfo.tenantId,
-                    tenantEnglishName = projectCreateInfo.projectName
+                    tenantEnglishName = projectCreateInfo.englishName
                 )
             )
         )
