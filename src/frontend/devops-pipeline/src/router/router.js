@@ -35,7 +35,7 @@ const TemplateListEntry = () => import(/* webpackChunkName: "pipelinesNewList" *
 const TemplateList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/List/')
 const TemplateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
 const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
-const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
+const TemplateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEdit.vue')
 const InstanceEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/Instance/InstanceEntry.vue')
 
 // const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
@@ -145,7 +145,7 @@ const routes = [
                     {
                         path: 'edit',
                         name: 'templateEdit',
-                        component: templateEdit
+                        component: TemplateEdit
                     },
                     {
                         path: ':type?',
