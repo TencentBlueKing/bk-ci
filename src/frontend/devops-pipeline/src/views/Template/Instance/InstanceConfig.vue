@@ -350,7 +350,7 @@
                     variables: i.startParams,
                     name: i.name,
                     version: i.version,
-                    isFollowTemplate: (instance?.overrideTemplateField?.triggerStepIds || []).includes(i.stepId)
+                    isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
                 }))
                 instanceTriggerConfigs = compareTriggerConfigs(triggerConfigs, templateTriggerConfigs.value)
             }
@@ -554,6 +554,12 @@
                 ...templateBuildNo
             }
         }
+        if (instanceBuildNo && templateBuildNo) {
+            return {
+                ...instanceBuildNo,
+                required: templateBuildNo.required
+            }
+        }
         return instanceBuildNo
     }
     
@@ -680,7 +686,7 @@
      * @param id 流水线入参 id |  触发器 stepId
      */
     function handleFollowTemplate (key, id) {
-        const paramIds = [...curInstance.value.overrideTemplateField?.paramIds]
+        const paramIds = [...curInstance.value.overrideTemplateField?.paramIds ?? []]
         let target = id, index
         switch (key) {
             case 'introVersion':
@@ -715,10 +721,13 @@
                             ...curInstance.value.overrideTemplateField,
                             triggerStepIds
                         },
-                        triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => ({
-                            ...trigger,
-                            isFollowTemplate: triggerStepIds.includes(id)
-                        }))
+
+                        triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
+                            return {
+                                ...trigger,
+                                isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
+                            }
+                        })
                     }
                 })
                 break

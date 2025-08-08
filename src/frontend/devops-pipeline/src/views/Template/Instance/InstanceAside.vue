@@ -127,6 +127,18 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value].pipelineName
     })
+    const templateTriggerConfigs = computed(() => {
+        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
+            atomCode: i.atomCode,
+            stepId: i.stepId ?? '',
+            disabled: i.additionalOptions?.enable ?? true,
+            cron: i.advanceExpression,
+            variables: i.startParams,
+            name: i.name,
+            version: i.version,
+            isFollowTemplate: false
+        }))
+    })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     function handleInstanceClick (index) {
         if (editingIndex.value) return
@@ -188,9 +200,11 @@
                 const overrideTemplateField = res[item.pipelineId]?.overrideTemplateField ?? {}
                 item.param.forEach(p => {
                     proxy.$set(p, 'isRequiredParam', p.required)
-                    proxy.$set(p, 'isFollowTemplate', overrideTemplateField?.paramIds?.includes(p.id))
+                    proxy.$set(p, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes(p.id))
                 })
-                proxy.$set(item.buildNo, 'isRequiredParam', item.buildNo.required)
+                if (item.buildNo) {
+                    proxy.$set(item.buildNo, 'isRequiredParam', item?.buildNo?.required)
+                }
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
         } catch (e) {
@@ -209,7 +223,12 @@
                     isFollowTemplate: false
                 }
             }),
-            buildNo
+            buildNo: {
+                ...buildNo,
+                isRequiredParam: buildNo.required,
+                isFollowTemplate: false
+            },
+            triggerConfigs: templateTriggerConfigs.value
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
         proxy?.$nextTick(() => {

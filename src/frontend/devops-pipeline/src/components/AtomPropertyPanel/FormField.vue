@@ -180,7 +180,9 @@
 
                     {
                         showOperateBtn && !isDelete && <span
-                            class='operate-btn'
+                            class={['operate-btn', {
+                                'show': isRequiredParam || isFollowTemplate
+                            }]}
                         >
                             {
                                 isChange && (
@@ -192,13 +194,13 @@
                                     >
                                         <Logo
                                             name="use-default"
-                                            size="20"
+                                            size="18"
                                         />
                                     </span>
                                 )
                             }
                             <span class={['icon-item', {
-                                    active: isRequiredParam
+                                    'active': isRequiredParam
                                 }]}
                                 v-bk-tooltips={
                                     isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
@@ -207,11 +209,11 @@
                             >
                                 <Logo
                                     name={isRequiredParam ? 'set-param-active' : 'set-param-default'}
-                                    size="14"
+                                    size="12"
                                 />
                             </span>
                             <span class={['icon-item', {
-                                    active: isFollowTemplate
+                                    'is-follow': isFollowTemplate
                                 }]}
                                 key={'follow'}
                                 v-bk-tooltips={
@@ -223,8 +225,8 @@
                                 onClick={handleFollowTemplate}
                             >
                                 <Logo
-                                    name={isFollowTemplate ? 'template-mode-color' : 'template-mode'}
-                                    size="14"
+                                    name="template-mode"
+                                    size="12"
                                 />
                             </span>
                         </span>
@@ -329,17 +331,24 @@
         align-items: center;
         visibility: hidden;
         height: 32px;
+        &.show {
+            visibility: visible;
+        }
         .icon-item {
             position: relative;
             display: flex;
             align-items: center;
             justify-content: space-around;
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             background: #EAEBF0;
             border-radius: 2px;
             margin-left: 6px;
             cursor: pointer;
+            &.is-follow {
+                background: #CDDFFE;
+                color: #3A84FF;
+            }
             &.active {
                 background: #CDDFFE;
             }
