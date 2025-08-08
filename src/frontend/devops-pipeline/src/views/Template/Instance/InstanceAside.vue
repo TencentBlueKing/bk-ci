@@ -223,11 +223,13 @@
                     isFollowTemplate: false
                 }
             }),
-            buildNo: {
-                ...buildNo,
-                isRequiredParam: buildNo.required,
-                isFollowTemplate: false
-            },
+            ...(buildNo ? {
+                buildNo: {
+                    ...buildNo,
+                    isRequiredParam: buildNo.required,
+                    isFollowTemplate: false
+                }
+            } : undefined),
             triggerConfigs: templateTriggerConfigs.value
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
