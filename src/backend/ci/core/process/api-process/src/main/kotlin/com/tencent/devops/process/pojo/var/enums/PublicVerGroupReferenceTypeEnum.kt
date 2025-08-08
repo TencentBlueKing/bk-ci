@@ -25,20 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.pojo.`var`.enums
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import io.swagger.v3.oas.annotations.media.Schema
-
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
-)
+enum class PublicVerGroupReferenceTypeEnum {
+    PIPELINE, // 流水线
+    TEMPLATE; // 模板
+}

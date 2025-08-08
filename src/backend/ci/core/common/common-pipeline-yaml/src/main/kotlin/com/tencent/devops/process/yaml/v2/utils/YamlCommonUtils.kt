@@ -35,6 +35,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
+import java.net.URLEncoder
 
 object YamlCommonUtils {
     private val objectMapper = ObjectMapper(
@@ -54,5 +58,21 @@ object YamlCommonUtils {
         val objectMapper = getObjectMapper()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
         return objectMapper.writeValueAsString(bean)!!
+    }
+
+    fun exportToFile(yaml: String, fileName: String): Response {
+        // 流式下载
+        val fileStream = StreamingOutput { output ->
+            val sb = StringBuilder()
+            sb.append(yaml)
+            output.write(sb.toString().toByteArray())
+            output.flush()
+        }
+        val encodedFileName = URLEncoder.encode("$fileName.yml", "UTF-8")
+        return Response
+            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = $encodedFileName")
+            .header("Cache-Control", "no-cache")
+            .build()
     }
 }

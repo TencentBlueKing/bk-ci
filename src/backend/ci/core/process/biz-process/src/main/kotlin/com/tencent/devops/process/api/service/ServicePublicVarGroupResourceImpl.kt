@@ -25,20 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.`var`.PublicVarGroupService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
-)
+@RestResource
+class ServicePublicVarGroupResourceImpl @Autowired constructor(
+    private val publicVarGroupService: PublicVarGroupService
+) : ServicePublicVarGroupResource {
+
+    override fun getProjectPublicParam(
+        userId: String,
+        projectId: String,
+        varGroupRefs: List<PublicVarGroupRef>
+    ): Result<List<BuildFormProperty>> {
+        return Result(publicVarGroupService.getProjectPublicParamByRef(
+            userId = userId,
+            projectId = projectId,
+            varGroupRefs = varGroupRefs
+        ))
+    }
+}

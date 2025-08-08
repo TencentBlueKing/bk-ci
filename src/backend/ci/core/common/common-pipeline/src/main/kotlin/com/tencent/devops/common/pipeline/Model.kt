@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -79,7 +80,9 @@ data class Model(
     @get:Schema(title = "实例化模版信息", required = true)
     var template: TemplateInstanceDescriptor? = null,
     @get:Schema(title = "流水线覆盖模版的字段", required = false)
-    var overrideTemplateField: TemplateInstanceField? = null
+    var overrideTemplateField: TemplateInstanceField? = null,
+    @get:Schema(title = "公共变量组引用", required = false)
+    var publicVarGroups: List<PublicVarGroupRef> = emptyList()
 ) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0

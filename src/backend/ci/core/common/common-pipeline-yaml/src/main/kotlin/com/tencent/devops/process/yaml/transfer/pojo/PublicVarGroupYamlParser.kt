@@ -25,20 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.yaml.transfer.pojo
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
+import com.tencent.devops.process.yaml.v3.models.Variable
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
+@Schema(title = "公共变量组yaml解析")
+data class PublicVarGroupYamlParser(
+    @get:Schema(title = "yaml版本")
+    val version: String,
+    @get:Schema(title = "变量组名称")
+    val name: String,
+    @get:Schema(title = "变量组描述")
+    val desc: String? = null,
+    @get:Schema(title = "变量列表")
+    val variables: Map<String, Variable>
 )

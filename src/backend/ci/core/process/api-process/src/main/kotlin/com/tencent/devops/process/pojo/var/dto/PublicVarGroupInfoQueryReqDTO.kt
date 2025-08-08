@@ -27,18 +27,30 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
+@Schema(title = "公共变量组信息分页查询请求传输对象")
+data class PublicVarGroupInfoQueryReqDTO (
+    @get:Schema(description = "项目ID")
     val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
+    @get:Schema(description = "变量组名称")
+    val groupName: String? = null,
+    @get:Schema(description = "变量名称")
+    val varName: String? = null,
+    @get:Schema(description = "版本号")
+    val version: Int? = null,
+    @get:Schema(description = "按变量组名称过滤")
+    val filterByGroupName: String? = null,
+    @get:Schema(description = "按变量组描述过滤")
+    val filterByGroupDesc: String? = null,
+    @get:Schema(description = "按更新人过滤")
+    val filterByUpdater: String? = null,
+    @get:Schema(description = "按变量名称过滤")
+    val filterByVarName: String? = null,
+    @get:Schema(description = "按变量别名过滤")
+    val filterByVarAlias: String? = null,
+    @get:Schema(title = "第几页")
+    val page: Int,
+    @get:Schema(title = "每页大小")
+    val pageSize: Int
 )

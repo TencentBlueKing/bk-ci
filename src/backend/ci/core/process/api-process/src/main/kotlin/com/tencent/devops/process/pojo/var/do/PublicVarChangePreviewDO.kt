@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.pojo.`var`.`do`
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
+@Schema(title = "公共变量组变更预览")
+data class PublicVarChangePreviewDO(
+    @get:Schema(title = "发布时间")
+    val pubTime: LocalDateTime,
+    @get:Schema(title = "发布人")
+    val publisher: String,
+    @get:Schema(title = "变更内容")
+    val content: String,
+    @get:Schema(title = "变更描述")
+    val desc: String? = null
 )
+

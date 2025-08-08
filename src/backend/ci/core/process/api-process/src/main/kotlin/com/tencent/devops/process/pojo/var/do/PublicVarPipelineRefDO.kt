@@ -25,20 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.pojo.`var`.`do`
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
+@Schema(title = "流水线公共变量流水线引用信息")
+data class PublicVarPipelineRefDO(
+    @get:Schema(title = "流水线ID")
+    val referId: String,
+    @get:Schema(title = "流水线名称")
+    val referName: String,
+    @get:Schema(title = "流水线链接")
+    val referUrl: String,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "最近更新人")
+    val modifier: String,
+    @get:Schema(title = "最近更新时间")
+    val updateTime: LocalDateTime,
+    @get:Schema(title = "最近一个月的执行次数")
+    val executeCount: Int
 )

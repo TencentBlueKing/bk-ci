@@ -58,9 +58,16 @@ class VariableTransfer {
             listOf(MAJORVERSION, "MajorVersion", MINORVERSION, "MinorVersion", FIXVERSION, "FixVersion")
     }
 
-    fun makeVariableFromModel(triggerContainer: TriggerContainer?): Map<String, Variable>? {
+    fun makeVariableFromModel(triggerContainer: TriggerContainer?): Map<String, Any>? {
+        if (triggerContainer != null) {
+            return makeVariableFromBuildParams(triggerContainer.params, true)
+        }
+        return null
+    }
+
+    fun makeVariableFromBuildParams(params:  List<BuildFormProperty>, skipPublicVar: Boolean): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        triggerContainer?.params?.forEach {
+        params.forEach {
             if (it.id in ignoredVariable) return@forEach
             var props = when {
                 // 字符串

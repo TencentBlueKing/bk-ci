@@ -25,20 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
+@Schema(title = "流水线公共变量组发布记录数据")
+data class PipelinePublicVarGroupReleaseRecordPO(
+    @get:Schema(title = "主键ID")
+    val id: Long,
     @get:Schema(title = "项目ID")
     val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "版本号")
+    val version: Int,
+    @get:Schema(title = "发布人")
+    val publisher: String,
+    @get:Schema(title = "发布时间")
+    val pubTime: LocalDateTime,
+    @get:Schema(title = "描述")
+    val desc: String? = null,
+    @get:Schema(title = "内容")
+    val content: String? = null,
+    @get:Schema(title = "创建者")
+    val creator: String,
+    @get:Schema(title = "修改者")
+    val modifier: String,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime
 )

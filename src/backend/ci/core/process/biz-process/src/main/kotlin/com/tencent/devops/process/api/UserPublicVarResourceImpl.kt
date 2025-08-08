@@ -25,20 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.api
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserPublicVarResource
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.process.service.`var`.PublicVarGroupService
+import com.tencent.devops.process.service.`var`.PublicVarService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
-)
+@RestResource
+class UserPublicVarResourceImpl @Autowired constructor(
+    val publicVarGroupService: PublicVarGroupService,
+    val publicVarService: PublicVarService
+) : UserPublicVarResource {
+
+    override fun listGroupPublicVar(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): Result<PublicVarGroupVO> {
+        return Result(publicVarGroupService.getPipelineGroupsVar(
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        ))
+    }
+
+    override fun getVariables(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): Result<List<PublicVarDO>> {
+        return Result(publicVarService.getVariables(userId, projectId, groupName, version))
+    }
+
+}

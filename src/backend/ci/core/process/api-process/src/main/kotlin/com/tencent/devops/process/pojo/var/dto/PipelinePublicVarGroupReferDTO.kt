@@ -27,18 +27,19 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "公共变量组传输对象")
-data class PublicVarGroupDTO(
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "userId")
-    val userId: String,
-    @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO,
-    @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum
+@Schema(title = "流水线公共变量组关联传输对象")
+data class PipelinePublicVarGroupReferDTO(
+    @get:Schema(title = "关联资源ID")
+    val referId: String,
+    @get:Schema(title = "流水线/模板类型")
+    val referType: PublicVerGroupReferenceTypeEnum,
+    @get:Schema(title = "流水线/模板名称")
+    val referName: String,
+    @get:Schema(title = "流水线/模板版本名称")
+    val referVersionName: String,
+    @get:Schema(title = "变量组名称列表")
+    val groupNames: List<String>
 )
