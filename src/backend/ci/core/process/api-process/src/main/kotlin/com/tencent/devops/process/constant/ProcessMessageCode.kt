@@ -392,6 +392,13 @@ object ProcessMessageCode {
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
 
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
+
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101286" // 流水线公共变量组中变量名称重复
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101287" // 流水线公共变量组中变量名称格式错误
+    const val PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST = "2101288" // 流水线公共变量组({0})已存在
+    const val PIPELINE_PUBLIC_VAR_GROUP_REFERENCED = "2124007" // 流水线公共变量组({0})已被引用，无法删除
+
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.dao.`var`
 
+import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
+import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupRecord
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -38,6 +40,141 @@ class PublicVarGroupDao {
         dslContext: DSLContext,
         publicVarGroupPO: PublicVarGroupPO
     ) {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            dslContext.insertInto(this)
+                .set(ID, publicVarGroupPO.id)
+                .set(PROJECT_ID, publicVarGroupPO.projectId)
+                .set(GROUP_NAME, publicVarGroupPO.groupName)
+                .set(VERSION, publicVarGroupPO.version)
+                .set(LATEST_FLAG, publicVarGroupPO.latestFlag)
+                .set(DESC, publicVarGroupPO.desc)
+                .set(REFER_COUNT, publicVarGroupPO.referCount)
+                .set(VAR_COUNT, publicVarGroupPO.varCount)
+                .set(LATEST_FLAG, true)
+                .set(CREATOR, publicVarGroupPO.creator)
+                .set(MODIFIER, publicVarGroupPO.modifier)
+                .set(UPDATE_TIME, publicVarGroupPO.updateTime)
+                .set(CREATE_TIME, publicVarGroupPO.createTime)
+                .execute()
+        }
+    }
 
+    fun getLatestVersionByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): Int? {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(VERSION).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(LATEST_FLAG.eq(true))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun listGroupsByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<PublicVarGroupPO> {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LATEST_FLAG.eq(true))
+                .fetch { record ->
+                    PublicVarGroupPO(
+                        id = record.id,
+                        projectId = record.projectId,
+                        groupName = record.groupName,
+                        version = record.version,
+                        latestFlag = record.latestFlag,
+                        desc = record.desc,
+                        referCount = record.referCount,
+                        varCount = record.varCount,
+                        creator = record.creator,
+                        modifier = record.modifier,
+                        createTime = record.createTime,
+                        updateTime = record.updateTime
+                    )
+                }
+        }
+    }
+
+    fun listGroupsByProjectIdPage(
+        dslContext: DSLContext,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): List<PublicVarGroupPO> {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LATEST_FLAG.eq(true))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(pageSize)
+                .offset((page - 1) * pageSize)
+                .fetch { record ->
+                    PublicVarGroupPO(
+                        id = record.id,
+                        projectId = record.projectId,
+                        groupName = record.groupName,
+                        version = record.version,
+                        latestFlag = record.latestFlag,
+                        desc = record.desc,
+                        referCount = record.referCount,
+                        varCount = record.varCount,
+                        creator = record.creator,
+                        modifier = record.modifier,
+                        createTime = record.createTime,
+                        updateTime = record.updateTime
+                    )
+                }
+        }
+    }
+
+    fun countGroupsByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LATEST_FLAG.eq(true))
+                .fetchOne(0, Long::class.java) ?: 0
+        }
+    }
+
+    fun getRecordByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int? = null
+    ): TPipelinePublicVarGroupRecord? {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            val condition = if (version == null) {
+                LATEST_FLAG.eq(true)
+            } else {
+                VERSION.eq(version)
+            }
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(condition)
+                .fetchOne()
+        }
+    }
+
+    fun deleteByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ) {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .execute()
+        }
     }
 }

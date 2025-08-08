@@ -27,14 +27,17 @@
 
 package com.tencent.devops.process.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVerGroupReferenceDO
-import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupYamlStringPO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
+import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
+import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -43,7 +46,6 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
-import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -80,22 +82,14 @@ interface UserPublicVarGroupResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int
     ): Result<Page<PublicVarGroupDO>>
-
-    @Operation(summary = "编辑变量组")
-    @PUT
-    @Path("/{groupId}")
-    fun updateGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "变量组更新数据", required = true)
-        group: PublicVarGroupVO
-    ): Result<Boolean>
 
     @Operation(summary = "导入公共变量组(YAML格式)")
     @POST
@@ -107,36 +101,30 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "操作类型", required = true)
+        @QueryParam("operateType")
+        operateType: OperateTypeEnum,
         @Parameter(description = "YAML文件", required = true)
-        yaml: PublicVarGroupYamlStringPO
-    ): Result<String>
+        yaml: PublicVarGroupYamlStringVO
+    ): Result<Boolean>
 
     @Operation(summary = "导出公共变量组(YAML格式)")
     @GET
-    @Path("/{groupId}/export")
+    @Path("/projects/{projectId}/{groupName}/export")
     fun exportGroup(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String
-    ): Response
-
-    @Operation(summary = "发布变量组")
-    @POST
-    @Path("/{groupName}/publish")
-    fun publishGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "版本描述", required = true)
-        @QueryParam("versionDesc")
-        versionDesc: String
-    ): Result<Boolean>
+        @Parameter(description = "版本号", required = true)
+        @QueryParam("version")
+        version: Int
+    ): Response
 
     @Operation(summary = "删除变量组")
     @DELETE
@@ -145,6 +133,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String
@@ -152,19 +143,43 @@ interface UserPublicVarGroupResource {
 
     @Operation(summary = "获取引用变量组的流水线/模板列表")
     @GET
-    @Path("/{groupId}/references")
+    @Path("/{groupName}/references")
     fun getReferences(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "页码", required = false)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<PublicVerGroupReferenceDO>>
+        pageSize: Int
+    ): Result<Page<PublicVarVariableReferenceDO>>
+
+    @Operation(summary = "获取变量组的发布记录")
+    @GET
+    @Path("/{groupName}/releaseHistory")
+    fun getReleaseHistory(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "变量组名称", required = true)
+        @PathParam("groupName")
+        groupName: String,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<PublicVarReleaseDO>>
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,21 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-audit"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:store:api-store"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:common:common-webhook:api-common-webhook"))
-    api(project(":core:common:common-pipeline-yaml"))
-}
+package com.tencent.devops.process.pojo.`var`.dto
 
-plugins {
-    `task-deploy-to-maven`
-}
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "公共变量组发布信息传输对象")
+data class PublicVarGroupReleseDTO(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "userId")
+    val userId: String,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "变量组版本")
+    val version: Int,
+    @get:Schema(title = "历史变量列表")
+    val oldVarPOs: List<PublicVarPO>,
+    @get:Schema(title = "当前变量列表")
+    val newVarPOs: List<PublicVarPO>
+)

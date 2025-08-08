@@ -32,9 +32,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
+import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
+import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -54,7 +59,83 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getGroups(userId: String, projectId: String): Result<Page<PublicVarGroupDO>> {
-        TODO("Not yet implemented")
+    override fun getGroups(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarGroupDO>> {
+        return Result(publicVarGroupService.getGroups(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize
+        ))
+    }
+
+    override fun importGroup(
+        userId: String,
+        projectId: String,
+        operateType: OperateTypeEnum,
+        yaml: PublicVarGroupYamlStringVO
+    ): Result<Boolean> {
+        return Result(publicVarGroupService.importGroup(
+            userId = userId,
+            projectId = projectId,
+            operateType = operateType,
+            yaml = yaml
+        ))
+    }
+
+    override fun exportGroup(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        version: Int
+    ): Response {
+        return publicVarGroupService.exportGroup(
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        )
+    }
+
+    override fun deleteGroup(userId: String, projectId: String, groupName: String): Result<Boolean> {
+        return Result(publicVarGroupService.deleteGroup(
+            userId = userId,
+            projectId = projectId,
+            groupName = groupName
+        ))
+    }
+
+    override fun getReferences(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarVariableReferenceDO>> {
+        return Result(publicVarGroupService.listVarGroupReferInfo(
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        ))
+    }
+
+    override fun getReleaseHistory(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarReleaseDO>> {
+        return Result(publicVarGroupService.getReleaseHistory(
+            userId = userId,
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        ))
     }
 }

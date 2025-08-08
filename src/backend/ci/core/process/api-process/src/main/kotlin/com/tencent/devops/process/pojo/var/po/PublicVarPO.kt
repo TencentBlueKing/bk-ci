@@ -27,27 +27,37 @@
 
 package com.tencent.devops.process.pojo.`var`.po
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "公共变量组数据")
-data class PublicVarGroupPO(
+@Schema(title = "公共变量数据")
+data class PublicVarPO(
     @get:Schema(title = "主键ID")
     val id: Long,
     @get:Schema(title = "项目ID")
     val projectId: String,
-    @get:Schema(title = "变量组名称")
-    val groupName: String,
+    @get:Schema(title = "变量名称")
+    val varName: String,
+    @get:Schema(title = "别名")
+    val alias: String,
+    @get:Schema(title = "变量组件类型(常量/变量)")
+    val type: PublicVarTypeEnum,
+    @get:Schema(title = "变量值类型", required = true)
+    var valueType: BuildFormPropertyType,
+    @get:Schema(title = "默认值")
+    val defaultValue: Any? = null,
+    @get:Schema(title = "变量描述")
+    val desc: String? = null,
     @get:Schema(title = "关联流水线/模板总数")
     val referCount: Int,
-    @get:Schema(title = "变量个数")
-    val varCount: Int,
-    @get:Schema(title = "变量组描述")
-    val desc: String? = null,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
     @get:Schema(title = "版本号")
     val version: Int,
-    @get:Schema(title = "是否为最新版本变量组 true：最新 false：非最新", required = true)
-    val latestFlag: Boolean,
+    @get:Schema(title = "构建模型")
+    val buildFormProperty: String,
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "修改人")

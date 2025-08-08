@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,21 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-audit"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:store:api-store"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:common:common-webhook:api-common-webhook"))
-    api(project(":core:common:common-pipeline-yaml"))
-}
+package com.tencent.devops.process.pojo.`var`.enums
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.util.MessageUtil
+
+/**
+ * 操作类型枚举
+ */
+enum class OperateTypeEnum {
+    DELETE,
+    ADD,
+    UPDATE;
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "OPERATE_TYPE_${this.name}",
+            language = language
+        )
+    }
 }
