@@ -62,7 +62,6 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
-import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -81,8 +80,7 @@ open class BaseBuildRecordService(
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
-    private val pipelineElementService: PipelineElementService,
-    private val pipelineModelParser: PipelineModelParser
+    private val pipelineElementService: PipelineElementService
 ) {
 
     protected fun update(
@@ -191,11 +189,7 @@ open class BaseBuildRecordService(
         var recordMap: Map<String, Any>? = null
         return try {
             watcher.start("fillElementWhenNewBuild")
-            val fullModel = pipelineModelParser.parseBuildRecordModel(
-                projectId = projectId,
-                model = JsonUtil.to(resourceStr, Model::class.java),
-                buildRecordModel = buildRecordModel
-            )
+            val fullModel = JsonUtil.to(resourceStr, Model::class.java)
             fullModel.stages.forEach {
                 PipelineUtils.transformUserIllegalReviewParams(it.checkIn?.reviewParams)
             }

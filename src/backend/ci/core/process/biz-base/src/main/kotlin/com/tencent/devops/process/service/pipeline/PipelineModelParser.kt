@@ -128,36 +128,6 @@ class PipelineModelParser @Autowired constructor(
         }
     }
 
-    /**
-     * 解析构建记录编排
-     */
-    fun parseBuildRecordModel(
-        projectId: String,
-        model: Model,
-        buildRecordModel: BuildRecordModel
-    ): Model {
-        return if (model.fromTemplate == true) {
-            val parsedTemplateId = buildRecordModel.modelVar[Model::parsedTemplateId.name] as String
-            val parsedTemplateVersion =
-                (buildRecordModel.modelVar[Model::parsedTemplateVersion.name] as Number).toLong()
-            val templateResource = pipelineTemplateResourceDao.get(
-                dslContext = dslContext,
-                projectId = projectId,
-                templateId = parsedTemplateId,
-                version = parsedTemplateVersion
-            ) ?: throw ErrorCodeException(
-                errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_VERSION_NOT_FOUND,
-                params = arrayOf(parsedTemplateId, parsedTemplateVersion.toString())
-            )
-            TemplateInstanceUtil.instanceModel(
-                model = model,
-                templateResource = templateResource
-            )
-        } else {
-            model
-        }
-    }
-
     /*fun parseTemplateModel(
         projectId: String,
         model: ITemplateModel

@@ -97,11 +97,7 @@ data class Model(
      * 流水线覆盖模版字段
      */
     @get:Schema(title = "覆盖模版字段", required = false)
-    var overrideTemplateField: TemplateInstanceField? = null,
-    @get:Schema(title = "解析后的模版ID", required = false)
-    override var parsedTemplateId: String? = null,
-    @get:Schema(title = "解析后的模版版本", required = false)
-    override var parsedTemplateVersion: Long? = null
+    var overrideTemplateField: TemplateInstanceField? = null
 ) : ITemplateModel, TemplateDescriptor {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0

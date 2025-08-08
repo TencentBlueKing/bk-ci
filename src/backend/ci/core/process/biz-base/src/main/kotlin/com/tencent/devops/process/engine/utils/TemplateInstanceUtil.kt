@@ -103,9 +103,7 @@ object TemplateInstanceUtil {
             }
         }
         return model.copy(
-            stages = stages,
-            parsedTemplateId = templateResource.templateId,
-            parsedTemplateVersion = templateResource.version
+            stages = stages
         )
     }
 
