@@ -170,13 +170,11 @@ class PipelineSettingFacadeService @Autowired constructor(
                     projectId = setting.projectId
                 )
             )
-            if (checkPermission) {
-                pipelinePermissionService.modifyResource(
-                    projectId = setting.projectId,
-                    pipelineId = setting.pipelineId,
-                    pipelineName = setting.pipelineName
-                )
-            }
+            pipelinePermissionService.modifyResource(
+                projectId = setting.projectId,
+                pipelineId = setting.pipelineId,
+                pipelineName = setting.pipelineName
+            )
         }
 
         if (updateLabels) {
