@@ -7,7 +7,6 @@
             <router-view
                 v-if="hasViewPermission && isInfoReady"
                 class="biz-content"
-                :is-enabled-permission="isEnabledPermission"
             >
             </router-view>
             <empty-tips
@@ -41,7 +40,6 @@
         data () {
             return {
                 isLoading: true,
-                isEnabledPermission: false,
                 hasViewPermission: true
             }
         },
@@ -92,8 +90,7 @@
                 try {
                     this.isLoading = true
                     const { projectId, templateId } = this.$route.params
-                    const [enablePermRes, viewPermRes] = await Promise.all([
-                        this.enableTemplatePermissionManage(projectId),
+                    const [viewPermRes] = await Promise.all([
                         this.getTemplateHasViewPermission({ projectId, templateId }),
                         this.requestTemplateSummary({
                             projectId,
@@ -101,7 +98,6 @@
                         }),
                         this.requestProjectDetail({ projectId })
                     ])
-                    this.isEnabledPermission = enablePermRes.data
                     this.hasViewPermission = viewPermRes.data
                     if (!this.hasViewPermission) {
                         await this.handleApply()

@@ -32,7 +32,9 @@ export default {
         isInstanceReleasing: false, // 实例正在发布状态
         releaseBaseId: '', // 实例发布任务ID,
         showTaskDetail: false,
-        instanceTaskDetail: {}
+        instanceTaskDetail: {},
+        templateRefType: 'ID',
+        templateRef: ''
     },
     mutations,
     actions,

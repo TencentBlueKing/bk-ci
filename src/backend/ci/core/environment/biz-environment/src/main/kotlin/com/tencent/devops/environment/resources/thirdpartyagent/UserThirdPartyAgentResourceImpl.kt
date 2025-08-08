@@ -83,7 +83,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         zoneName: String?,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): Result<String> {
         checkUserId(userId)
         checkProjectId(projectId)
@@ -95,7 +96,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
                 zoneName = zoneName,
                 loginName = loginName,
                 loginPassword = loginPassword,
-                installType = installType
+                installType = installType,
+                reInstallId = reInstallId
             )
         )
     }

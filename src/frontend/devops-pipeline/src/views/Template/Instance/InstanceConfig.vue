@@ -1,8 +1,28 @@
 <template>
     <section
-        class="instance-config-wrapper"
+        :class="{
+            'instance-config-wrapper': true,
+            'has-ref-tips': !templateRefTypeById
+        }"
         v-bkloading="{ isLoading: isLoading }"
     >
+        <bk-alert
+            v-if="!templateRefTypeById"
+            closable
+            type="warning"
+        >
+            <div slot="title">
+                <p>
+                    {{ $t('template.notSpecifiedRef.tips1') }}
+                    <span class="doc-btn">
+                        {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
+                    </span>
+                </p>
+                <p>
+                    {{ $t('template.notSpecifiedRef.tips2') }}
+                </p>
+            </div>
+        </bk-alert>
         <section class="instance-config-constant">
             <header class="config-header">
                 <div class="left">
@@ -12,7 +32,7 @@
                 </div>
                 <div
                     class="right"
-                    v-if="!isInstanceCreateType && !!curTemplateVersion"
+                    v-if="!isInstanceCreateType && (!!curTemplateVersion || !!templateRef)"
                 >
                     <ul class="params-compare-content">
                         <bk-checkbox
@@ -70,6 +90,8 @@
                                 :hide-deleted="hideDeleted"
                                 :handle-use-default-value="handleUseDefaultValue"
                                 :handle-set-parma-required="handleSetParmaRequired"
+                                follow-template-key="param"
+                                :handle-follow-template="handleFollowTemplate"
                             >
                                 <template
                                     slot="versionParams"
@@ -78,6 +100,14 @@
                                     <renderSortCategoryParams
                                         :name="$t('preview.introVersion')"
                                         default-layout
+                                        show-follow-template-btn
+                                        show-set-required-btn
+                                        v-bind="versionParams"
+                                        follow-template-key="introVersion"
+                                        :handle-follow-template="handleFollowTemplate"
+                                        :handle-set-build-no-required="handleSetBuildNoRequired"
+                                        :is-required-param="curInstance.buildNo.isRequiredParam"
+                                        :is-follow-template="curInstance.buildNo.isFollowTemplate"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -85,10 +115,11 @@
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
                                                 is-instance
-                                                is-init-instance
+                                                :is-reset-build-no="isResetBuildNo"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
+                                                :handle-check-change="handleCheckChange"
                                                 :version-param-list="versionParams"
                                             />
                                         </template>
@@ -170,6 +201,8 @@
                                     <renderSortCategoryParams
                                         :name="$t('preview.introVersion')"
                                         default-layout
+                                        key="introVersion"
+                                        v-bind="versionParams"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -188,6 +221,48 @@
                                     </renderSortCategoryParams>
                                 </template>
                             </pipeline-params-form>
+                        </div>
+                    </section>
+                </template>
+
+                <template>
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(4)
+                            }]"
+                            @click="toggleCollapse(4)"
+                        >
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+    
+                            {{ $t('template.triggers') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(4)"
+                            class="params-collapse-content"
+                        >
+                            <renderSortCategoryParams
+                                v-for="(trigger, index) in triggerConfigs"
+                                :key="index"
+                                :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
+                                default-layout
+                                show-follow-template-btn
+                                follow-template-key="trigger"
+                                check-step-id
+                                v-bind="trigger"
+                                :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
+                            >
+                                <template slot="content">
+                                    <render-trigger
+                                        :trigger="trigger"
+                                        :index="index"
+                                        :handle-change-trigger="handleChangeTrigger"
+                                    />
+                                </template>
+                            </renderSortCategoryParams>
                         </div>
                     </section>
                 </template>
@@ -211,6 +286,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
+    import RenderTrigger from '@/components/Template/RenderTrigger.vue'
     import UseInstance from '@/hook/useInstance'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
@@ -226,6 +302,7 @@
     const isLoading = ref(true)
     const paramsList = ref([])
     const paramsValues = ref({})
+    const triggerConfigs = ref([])
     const otherParams = ref([])
     const otherValues = ref({})
     const constantParams = ref([])
@@ -234,6 +311,10 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
+    const isResetBuildNo = ref(false)
+    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
+    const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
+    const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
@@ -252,20 +333,34 @@
             })
         }
         // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
-        let instanceParams, instanceBuildNo
-        if (!props.isInstanceCreateType && instance) {
-            if (instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params) {
+        let instanceParams, instanceBuildNo, instanceTriggerConfigs
+        if (!props.isInstanceCreateType && instance && (curTemplateVersion.value || templateRef.value)) {
+            if (curTemplateDetail.value?.params) {
                 instanceParams = compareParams(instance, curTemplateDetail.value)
             }
-            if (instance?.buildNo && curTemplateVersion.value && curTemplateDetail.value?.buildNo) {
-                instanceBuildNo = compareBuild(instance.buildNo, curTemplateDetail.value.buildNo)
+            if (curTemplateDetail.value?.buildNo) {
+                instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
+            }
+            if (templateTriggerConfigs.value.length) {
+                const triggerConfigs = instance.triggerElements?.map(i => ({
+                    atomCode: i.atomCode,
+                    stepId: i.stepId ?? '',
+                    disabled: i.additionalOptions?.enable ?? true,
+                    cron: i.advanceExpression,
+                    variables: i.startParams,
+                    name: i.name,
+                    version: i.version,
+                    isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
+                }))
+                instanceTriggerConfigs = compareTriggerConfigs(triggerConfigs, templateTriggerConfigs.value)
             }
         }
-        if (instanceParams || instanceBuildNo) {
+        if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
             return {
                 ...instance,
                 param: instanceParams ?? instance.param,
-                buildNo: instanceBuildNo ?? instance.buildNo
+                buildNo: instanceBuildNo ?? instance.buildNo,
+                triggerConfigs: instanceTriggerConfigs ?? instance.triggerConfigs
             }
         }
         return instance
@@ -276,6 +371,7 @@
             added: 0,
             deleted: 0
         }
+        // 流水线入参 新增/删除/变更统计
         curInstance?.value?.param?.forEach(item => {
             if (item.isChange) {
                 counts.changed++
@@ -287,6 +383,16 @@
                 counts.deleted++
             }
         })
+
+        // 触发器新增/删除统计
+        // curInstance?.value?.triggerConfigs?.forEach(item => {
+        //     if (item.isNew) {
+        //         counts.added++
+        //     }
+        //     if (item.isDelete) {
+        //         counts.deleted++
+        //     }
+        // })
 
         return counts
     })
@@ -321,7 +427,7 @@
         return buildNo.value?.required
     })
     const hasOtherParams = computed(() => {
-        if (isVisibleVersion.value) {
+        if (!isVisibleVersion.value) {
             return [...otherParams.value, ...versionParams.value].length
         }
         return otherParams.value.length
@@ -332,6 +438,18 @@
         }
         return paramsList.value.length
     })
+    const templateTriggerConfigs = computed(() => {
+        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
+            atomCode: i.atomCode,
+            stepId: i.stepId ?? '',
+            disabled: i.additionalOptions?.enable ?? true,
+            cron: i.advanceExpression,
+            variables: i.startParams,
+            name: i.name,
+            version: i.version,
+            isFollowTemplate: true
+        }))
+    })
     watch(() => activeIndex.value, () => {
         isLoading.value = true
     })
@@ -341,7 +459,7 @@
     }, {
         deep: true
     })
-    watch(() => curTemplateVersion.value, () => {
+    watch(() => [curTemplateVersion.value, templateRef.value], () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
@@ -364,7 +482,7 @@
 
         // 非入参的参数直接赋值模板配置的入参默认值
         if (instanceBuildNo?.required && !templateBuildNo?.required) {
-            instanceParams.forEach(i => {
+            instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
                     const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
                     i.defaultValue = newValue ?? i.defaultValue
@@ -372,7 +490,7 @@
             })
         }
 
-        instanceParams.forEach(i => {
+        instanceParams?.forEach(i => {
             // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
             if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
                 const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
@@ -408,15 +526,40 @@
         
         return instanceParams
     }
+
+    function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
+        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.stepId, item]))
+        const result = templateTriggerConfigs.map(item => {
+            if (!instanceTriggerMap.has(item.stepId)) {
+                return { ...item, isNew: true }
+            }
+            const instanceTrigger = instanceTriggerMap.get(item.stepId)
+            return { ...item, ...instanceTrigger }
+        })
+
+        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.stepId, item]))
+
+        instanceTriggerConfigs.forEach(item => {
+            if (!templateTriggerMap.has(item.stepId)) {
+                result.push({ ...item, isDelete: true })
+            }
+        })
+        return result
+    }
     function compareBuild (instanceBuildNo, templateBuildNo) {
-        // 将模板的推荐版本号配置覆盖实例推荐版本号
-        if (instanceBuildNo?.required !== templateBuildNo?.required) {
+        if (!instanceBuildNo && !!templateBuildNo) {
+            // 将模板的推荐版本号配置覆盖实例推荐版本号
             return {
                 ...instanceBuildNo,
                 ...templateBuildNo
             }
         }
-        
+        if (instanceBuildNo && templateBuildNo) {
+            return {
+                ...instanceBuildNo,
+                required: templateBuildNo.required
+            }
+        }
         return instanceBuildNo
     }
     
@@ -427,7 +570,7 @@
                 ...curInstance.value,
                 param: curInstance.value?.param.map(p => ({
                     ...p,
-                    isRequiredParam: !p.isRequiredParam
+                    isRequiredParam: p.id === id ? !p.isRequiredParam : p.isRequiredParam
                 }))
             }
         })
@@ -494,6 +637,122 @@
             }
         })
     }
+    function handleCheckChange (value) {
+        isResetBuildNo.value = value
+        if (!value) return
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                buildNo: {
+                    ...curInstance.value?.buildNo,
+                    currentBuildNo: curInstance.value.buildNo?.buildNo
+                }
+            }
+        })
+    }
+    function handleSetBuildNoRequired () {
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                buildNo: {
+                    ...curInstance.value?.buildNo,
+                    isRequiredParam: !curInstance.value.buildNo.isRequiredParam
+                }
+            }
+        })
+    }
+    function handleChangeTrigger (name, index, value) {
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                triggerConfigs: curInstance.value?.triggerConfigs.map((trigger, idx) => {
+                    if (idx === index) {
+                        return {
+                            ...trigger,
+                            [name]: value
+                        }
+                    }
+                    return trigger
+                })
+            }
+        })
+    }
+    /**
+     *
+     * @param key 区分 推荐版本号/流水线参数/触发器
+     * @param id 流水线入参 id |  触发器 stepId
+     */
+    function handleFollowTemplate (key, id) {
+        const paramIds = [...curInstance.value.overrideTemplateField?.paramIds ?? []]
+        let target = id, index
+        switch (key) {
+            case 'introVersion':
+                target = 'BK_CI_BUILD_NO'
+                index = paramIds.indexOf(target)
+                index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance.value.overrideTemplateField,
+                            paramIds
+                        },
+                        buildNo: {
+                            ...curInstance.value?.buildNo,
+                            isFollowTemplate: !curInstance.value.buildNo.isFollowTemplate
+                        }
+                    }
+                })
+                break
+
+            case 'trigger':
+                const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
+                index = triggerStepIds.indexOf(target)
+                index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance.value.overrideTemplateField,
+                            triggerStepIds
+                        },
+
+                        triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
+                            return {
+                                ...trigger,
+                                isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
+                            }
+                        })
+                    }
+                })
+                break
+            case 'param':
+                index = paramIds.indexOf(target)
+                index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance.value.overrideTemplateField,
+                            paramIds
+                        },
+                        param: curInstance.value?.param.map(p => ({
+                            ...p,
+                            isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate
+                        }))
+                    }
+                })
+                break
+            default:
+                break
+        }
+    }
     function initData () {
         const params = curInstance.value?.param
         if (!params) return
@@ -513,7 +772,11 @@
             ...p,
             isChanged: p.defaultValue !== p.value
         }))
-        buildNo.value = curInstance.value?.buildNo || {}
+        buildNo.value = {
+            ...curInstance.value?.buildNo,
+            isRequiredParam: curInstance.value?.buildNo?.required ?? false
+        } || {}
+        triggerConfigs.value = curInstance.value?.triggerConfigs || []
         getParamsValue()
         setTimeout(() => {
             isLoading.value = false
@@ -525,6 +788,13 @@
     $header-height: 36px;
     .instance-config-wrapper {
         height: calc(100% - 148px);
+        &.has-ref-tips {
+            height: calc(100% - 188px);
+        }
+        .doc-btn {
+            color: #3a84ff;
+            cursor: pointer;
+        }
     }
     .instance-config-constant {
         height: 100%;
@@ -651,5 +921,6 @@
         padding: 0 20px;
         background: #FFFFFF;
         border: 1px solid #DCDEE5;
+        z-index: 100;
     }
 </style>

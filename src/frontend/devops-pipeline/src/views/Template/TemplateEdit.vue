@@ -68,9 +68,6 @@
             ModeSwitch,
             Edit
         },
-        props: {
-            isEnabledPermission: Boolean
-        },
         data () {
             return {
                 isLoading: true,

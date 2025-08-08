@@ -20,7 +20,6 @@
                         <span>{{ $t('template.batchUpdate') }}</span>
                     </bk-button>
                     <bk-button
-                        v-if="isEnabledPermission"
                         theme="primary"
                         @click="createInstance()"
                         v-perm="{
@@ -35,13 +34,6 @@
                         }"
                     >
                         {{ $t('template.addInstance') }}
-                    </bk-button>
-                    <bk-button
-                        v-else
-                        theme="primary"
-                        @click="createInstance()"
-                    >
-                        <span>{{ $t('template.addInstance') }}</span>
                     </bk-button>
                 </div>
                 <bk-input
@@ -125,7 +117,6 @@
                     >
                         <template slot-scope="props">
                             <bk-button
-                                v-if="isEnabledPermission"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -144,16 +135,6 @@
                                 {{ $t('edit') }}
                             </bk-button>
                             <bk-button
-                                v-else
-                                theme="primary"
-                                text
-                                :disabled="!props.row.hasPermission"
-                                @click="updateInstance(props.row)"
-                            >
-                                {{ $t('edit') }}
-                            </bk-button>
-                            <bk-button
-                                v-if="isEnabledPermission"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -168,16 +149,6 @@
                                         action: RESOURCE_ACTION.EDIT
                                     }
                                 }"
-                            >
-                                {{ $t('copy') }}
-                            </bk-button>
-                            <bk-button
-                                v-else
-                                class="mr10"
-                                theme="primary"
-                                text
-                                @click="copyAsTemplateInstance(props.row)"
-                                :disabled="!props.row.hasPermission"
                             >
                                 {{ $t('copy') }}
                             </bk-button>
@@ -225,22 +196,19 @@
 
 <script>
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
-import instanceCompared from '@/components/Template/instance-compared.vue'
-import instanceMessage from '@/components/Template/instance-message.vue'
-import {
-RESOURCE_ACTION,
-TEMPLATE_RESOURCE_ACTION
-} from '@/utils/permission'
-import { convertTime } from '@/utils/util'
+    import instanceCompared from '@/components/Template/instance-compared.vue'
+    import instanceMessage from '@/components/Template/instance-message.vue'
+    import {
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
             emptyTips,
             instanceCompared,
             instanceMessage
-        },
-        props: {
-            isEnabledPermission: Boolean
         },
         data () {
             return {

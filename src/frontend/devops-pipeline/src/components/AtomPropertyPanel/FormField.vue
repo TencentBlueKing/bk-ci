@@ -82,11 +82,19 @@
                 type: Boolean,
                 default: false
             },
+            isFollowTemplate: {
+                type: Boolean,
+                default: false
+            },
             handleUseDefaultValue: {
                 type: Function,
                 default: () => () => {}
             },
             handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
             }
@@ -119,7 +127,8 @@
             const {
                 label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink,
                 descLink, descLinkText, type, widthStyle, bottomDivider, customDesc, showOperateBtn,
-                statusTagConfig, isDelete, isChange, isRequiredParam, $t, handleSetParmaRequired, handleUseDefaultValue
+                statusTagConfig, isDelete, isChange, isRequiredParam, isFollowTemplate, $t, handleSetParmaRequired,
+                handleUseDefaultValue, handleFollowTemplate
             } = this
             const descMap = desc.split('\n')
             return (
@@ -171,7 +180,9 @@
 
                     {
                         showOperateBtn && !isDelete && <span
-                            class='operate-btn'
+                            class={['operate-btn', {
+                                'show': isRequiredParam || isFollowTemplate
+                            }]}
                         >
                             {
                                 isChange && (
@@ -183,13 +194,13 @@
                                     >
                                         <Logo
                                             name="use-default"
-                                            size="20"
+                                            size="18"
                                         />
                                     </span>
                                 )
                             }
                             <span class={['icon-item', {
-                                    active: isRequiredParam
+                                    'active': isRequiredParam
                                 }]}
                                 v-bk-tooltips={
                                     isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
@@ -198,7 +209,24 @@
                             >
                                 <Logo
                                     name={isRequiredParam ? 'set-param-active' : 'set-param-default'}
-                                    size="14"
+                                    size="12"
+                                />
+                            </span>
+                            <span class={['icon-item', {
+                                    'is-follow': isFollowTemplate
+                                }]}
+                                key={'follow'}
+                                v-bk-tooltips={
+                                    {
+                                        content: isFollowTemplate ? $t('template.notFollowTemplateTips') : $t('template.followTemplateTips'),
+                                        width: 320
+                                    }
+                                }
+                                onClick={handleFollowTemplate}
+                            >
+                                <Logo
+                                    name="template-mode"
+                                    size="12"
                                 />
                             </span>
                         </span>
@@ -303,18 +331,24 @@
         align-items: center;
         visibility: hidden;
         height: 32px;
+        &.show {
+            visibility: visible;
+        }
         .icon-item {
-            position: relative;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: space-around;
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             background: #EAEBF0;
             border-radius: 2px;
             margin-left: 6px;
             cursor: pointer;
+            &.is-follow {
+                background: #CDDFFE;
+                color: #3A84FF;
+            }
             &.active {
                 background: #CDDFFE;
             }
