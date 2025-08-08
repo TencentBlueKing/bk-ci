@@ -94,4 +94,17 @@ interface UserNodeTagResource {
         projectId: String,
         data: NodeTagUpdateReq
     ): Result<Boolean>
+
+    @Operation(summary = "编辑节点标签信息")
+    @POST
+    @Path("/batchEditTag")
+    fun batchEditTag(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        data: List<UpdateNodeTag>
+    ): Result<Boolean>
 }
