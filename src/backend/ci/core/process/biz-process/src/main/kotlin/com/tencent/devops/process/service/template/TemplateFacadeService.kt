@@ -240,7 +240,8 @@ class TemplateFacadeService @Autowired constructor(
         val setting = templateCommonService.getDefaultSetting(
             projectId = projectId,
             templateId = templateId,
-            templateName = template.name
+            templateName = template.name,
+            creator = userId
         )
         val request = PipelineTemplateCompatibilityCreateReq(
             model = template,
@@ -303,13 +304,15 @@ class TemplateFacadeService @Autowired constructor(
                     templateId = srcTemplateId
                 ),
                 templateId,
-                copyTemplateReq.templateName
+                copyTemplateReq.templateName,
+                userId
             )
         } else {
             templateCommonService.getDefaultSetting(
                 projectId = projectId,
                 templateId = templateId,
-                templateName = copyTemplateReq.templateName
+                templateName = copyTemplateReq.templateName,
+                creator = userId
             )
         }
         val request = PipelineTemplateCompatibilityCreateReq(
@@ -375,16 +378,17 @@ class TemplateFacadeService @Autowired constructor(
                     templateId = saveAsTemplateReq.pipelineId
                 ),
                 pipelineId = templateId,
-                templateName = saveAsTemplateReq.templateName
+                templateName = saveAsTemplateReq.templateName,
+                creator = userId
             )
         } else {
             templateCommonService.getDefaultSetting(
                 projectId = projectId,
                 templateId = templateId,
-                templateName = saveAsTemplateReq.templateName
+                templateName = saveAsTemplateReq.templateName,
+                creator = userId
             )
         }
-
         val request = PipelineTemplateCompatibilityCreateReq(
             model = templateModel,
             setting = setting
@@ -673,7 +677,9 @@ class TemplateFacadeService @Autowired constructor(
             setting = PipelineSetting(
                 pipelineName = template.name,
                 desc = template.desc ?: "",
-                pipelineAsCodeSettings = null
+                pipelineAsCodeSettings = null,
+                creator = userId,
+                updater = userId
             ),
             versionName = versionName,
             category = v1LatestTemplate.category,
