@@ -130,7 +130,7 @@ class ServiceOauthResourceImpl @Autowired constructor(
     override fun scmRepoOauthUrl(
         userId: String,
         scmCode: String,
-        redirectUrl : String
+        redirectUrl: String
     ): Result<String> {
         return Result(
             scmTokenService.getRedirectUrl(
