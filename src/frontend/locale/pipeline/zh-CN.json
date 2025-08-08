@@ -1744,6 +1744,7 @@
     "下次：": "下次：",
     "小时": "小时"
   },
+  "validVariableFormat": "请输入有效的变量格式",
   "enterRepoAlias": "请输入代码库别名",
   "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
   "addParam": "添加参数",

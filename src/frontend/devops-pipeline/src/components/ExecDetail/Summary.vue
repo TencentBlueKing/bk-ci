@@ -522,7 +522,7 @@
     display: flex;
     flex-wrap: wrap;
     padding-top: 6px;
-    padding-bottom: 10px;
+    padding-bottom: 16px;
     font-size: 12px;
     
     .part-quality-block-title {

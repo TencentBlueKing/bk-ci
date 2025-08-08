@@ -87,7 +87,6 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             )
             return Result(buildHistory)
         }
-
         throw ErrorCodeException(
             errorCode = ERROR_UPDATE_FAILED,
             params = arrayOf(buildId)
