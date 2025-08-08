@@ -40,7 +40,6 @@ import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.dao.template.PipelineTemplateSettingDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
