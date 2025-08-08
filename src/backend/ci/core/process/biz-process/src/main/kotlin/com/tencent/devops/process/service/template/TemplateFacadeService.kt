@@ -315,8 +315,10 @@ class TemplateFacadeService @Autowired constructor(
                 creator = userId
             )
         }
+        val model = JsonUtil.to(latestTemplate.template, Model::class.java)
+        model.name = copyTemplateReq.templateName
         val request = PipelineTemplateCompatibilityCreateReq(
-            model = JsonUtil.to(latestTemplate.template, Model::class.java),
+            model = model,
             setting = setting,
             category = latestTemplate.category,
             logoUrl = latestTemplate.logoUrl
