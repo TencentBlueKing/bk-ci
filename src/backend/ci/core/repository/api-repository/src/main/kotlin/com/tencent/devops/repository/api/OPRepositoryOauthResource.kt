@@ -25,34 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service.oauth2
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-/**
- * oauth2 token存储服务
- */
-interface IOauth2TokenStoreService {
-    fun support(scmCode: String): Boolean
+@Path("/op/repo/oauth")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPRepositoryOauthResource {
+    @Operation(summary = "填充操作人信息")
+    @POST
+    @Path("/addGithubOperator")
+    fun addGithubOperator(): Result<Boolean>
 
-    fun get(userId: String, scmCode: String): OauthTokenInfo?
-
-    fun store(
-        scmCode: String,
-        oauthTokenInfo: OauthTokenInfo
-    )
-
-    /**
-     * 删除指定用户名的OAUTH信息
-     * @param username 用户名(server端用户名)
-     * @param scmCode 仓库标识
-     * @param userId 用户ID(蓝盾用户ID)
-     */
-    fun delete(userId: String, scmCode: String, username: String)
-
-    /**
-     * 获取目标用户下管理的所有OAUTH信息
-     * @param userId 用户ID(蓝盾用户ID)
-     */
-    fun list(userId: String, scmCode: String): List<OauthTokenInfo>
+    @Operation(summary = "填充操作人信息")
+    @POST
+    @Path("/addGitOperator")
+    fun addGitOperator(): Result<Boolean>
 }
