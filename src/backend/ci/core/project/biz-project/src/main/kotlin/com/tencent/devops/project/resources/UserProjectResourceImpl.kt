@@ -119,11 +119,11 @@ class UserProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun show(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+    override fun show(userId: String, tenantId: String?, projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(
             projectService.show(
                 userId = userId,
-                englishName = projectId,
+                englishName = TenantUtils.parseEnglishName(tenantId, projectId),
                 accessToken = accessToken
             ) ?: throw OperationException("project $projectId not found")
         )
