@@ -40,7 +40,6 @@ import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.Oauth2State
 import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

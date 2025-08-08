@@ -127,6 +127,8 @@ class RepositoryScmTokenDao {
                                 .and(SCM_CODE.eq(scmCode))
                                 .and(APP_TYPE.eq(appType))
                     )
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(1)
                     .fetchOne()
         }
     }
