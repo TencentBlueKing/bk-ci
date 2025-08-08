@@ -396,7 +396,7 @@
         padding: 0 8px;
         .no-exec-material {
           display: flex;
-          flex: 1;
+          line-height: 48px;
           align-items: center;
           padding-left: 8px;
         }
@@ -449,12 +449,13 @@
     }
 
     &-block-content {
-      flex: 1;
       align-self: stretch;
       display: flex;
       align-items: center;
-      line-height: 48px;
+      height: 48px;
       .pipeline-cur-version-span {
+        display: inline-block;
+        line-height: 48px;
         @include ellipsis();
         text-decoration: underline;
         text-decoration-skip-ink: none;
@@ -520,7 +521,7 @@
 .part-quality-block {
     display: flex;
     flex-wrap: wrap;
-    padding-top: 18px;
+    padding-top: 6px;
     padding-bottom: 10px;
     font-size: 12px;
     
