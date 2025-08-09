@@ -399,6 +399,27 @@ class TemplateDao {
         }
     }
 
+    fun countTemplateVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versionName: String? = null
+    ): Int {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(ID.eq(templateId))
+                .and(PROJECT_ID.eq(projectId))
+                .let {
+                    if (versionName != null) {
+                        it.and(VERSION_NAME.eq(versionName))
+                    } else {
+                        it
+                    }
+                }.fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun getSrcTemplateCodes(dslContext: DSLContext, projectId: String): List<String> {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(SRC_TEMPLATE_ID).from(this)
