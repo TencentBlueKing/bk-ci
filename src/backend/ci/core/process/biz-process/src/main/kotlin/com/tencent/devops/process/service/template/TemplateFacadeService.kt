@@ -1308,6 +1308,7 @@ class TemplateFacadeService @Autowired constructor(
         val currentVersion = TemplateVersion(
             template.version,
             template.versionName,
+            template.createdTime.timestampmilli(),
             template.updateTime.timestampmilli(),
             template.creator
         )
@@ -1324,6 +1325,7 @@ class TemplateFacadeService @Autowired constructor(
         val latestVersion = TemplateVersion(
             version = latestTemplate.version,
             versionName = latestTemplate.versionName,
+            createTime = latestTemplate.createdTime.timestampmilli(),
             updateTime = latestTemplate.updateTime.timestampmilli(),
             creator = latestTemplate.creator
         )
@@ -1387,6 +1389,7 @@ class TemplateFacadeService @Autowired constructor(
                     TemplateVersion(
                         version = versionInfo[tTemplate.VERSION],
                         versionName = versionName,
+                        createTime = versionInfo[tTemplate.CREATED_TIME].timestampmilli(),
                         updateTime = versionInfo[tTemplate.UPDATE_TIME].timestampmilli(),
                         creator = versionInfo[tTemplate.CREATOR]
                     )
@@ -1430,6 +1433,7 @@ class TemplateFacadeService @Autowired constructor(
             TemplateVersion(
                 version = versionInfo[tTemplate.VERSION],
                 versionName = versionInfo[tTemplate.VERSION_NAME],
+                createTime = versionInfo[tTemplate.CREATED_TIME].timestampmilli(),
                 updateTime = versionInfo[tTemplate.UPDATE_TIME].timestampmilli(),
                 creator = versionInfo[tTemplate.CREATOR]
             )
@@ -2369,6 +2373,7 @@ class TemplateFacadeService @Autowired constructor(
             latestVersion = TemplateVersion(
                 version = latestVersion.version,
                 versionName = latestVersion.versionName,
+                createTime = latestVersion.createdTime.timestampmilli(),
                 updateTime = latestVersion.updateTime.timestampmilli(),
                 creator = latestVersion.creator
             ),

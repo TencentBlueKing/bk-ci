@@ -382,6 +382,7 @@ class TemplateDao {
                 ID,
                 VERSION,
                 VERSION_NAME,
+                CREATED_TIME,
                 UPDATE_TIME,
                 CREATOR
             )
