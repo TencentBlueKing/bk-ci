@@ -85,8 +85,8 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 yaml = null
             )
 
-            // 新版本中，版本名称都是唯一的，需要添加尾缀-1 -2 ...标识
-            val customVersionName = versionName?.let { name ->
+            // v2新版本中，版本名称都是唯一的，若存在重复，需要添加尾缀-1 -2 ...标识
+            val v2CustomVersionName = v1VersionName.let { name ->
                 val existingCount = templateDao.countTemplateVersions(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -98,7 +98,7 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 } else {
                     name
                 }
-            } ?: "init"
+            }
 
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
                 id = templateId,
@@ -134,7 +134,8 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                customVersionName = customVersionName,
+                v1VersionName = v1VersionName,
+                customVersionName = v2CustomVersionName,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
