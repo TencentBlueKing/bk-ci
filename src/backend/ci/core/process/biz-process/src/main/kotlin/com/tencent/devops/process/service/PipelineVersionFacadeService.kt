@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.NUM_ZERO
 import com.tencent.devops.common.api.enums.RepositoryConfig
@@ -40,7 +39,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
@@ -48,25 +46,14 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
-import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.control.lock.PipelineReleaseLock
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
@@ -75,22 +62,18 @@ import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
+import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.TemplateFacadeService
-import com.tencent.devops.process.service.view.PipelineViewGroupService
-import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import jakarta.ws.rs.core.Response
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -98,28 +81,18 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineVersionFacadeService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
-    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val templateService: TemplateService,
     private val transferService: PipelineTransferYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService,
-    private val pipelineGroupService: PipelineGroupService,
-    private val pipelineViewGroupService: PipelineViewGroupService,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineBuildDao: PipelineBuildDao,
-    private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineAsCodeService: PipelineAsCodeService,
     private val scmProxyService: ScmProxyService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineVersionManager: PipelineVersionManager
 ) {
 
     companion object {
@@ -321,250 +294,13 @@ class PipelineVersionFacadeService @Autowired constructor(
         version: Int,
         request: PipelineVersionReleaseRequest
     ): DeployPipelineResult {
-        PipelineReleaseLock(redisOperation, pipelineId).use {
-            val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-                ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-                )
-//        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
-//            throw ErrorCodeException(
-//                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
-//            )
-//        }
-            val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                includeDraft = true
-            ) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
-            )
-            val originSetting = draftVersion.settingVersion?.let {
-                pipelineSettingFacadeService.userGetSetting(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = it
-                )
-            } ?: pipelineSettingFacadeService.userGetSetting(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            // 提前初始化检查一次让编排报错，避免PAC代码库操作后报错
-            pipelineRepositoryService.initModel(
-                model = draftVersion.model, projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                create = false,
-                versionStatus = VersionStatus.RELEASED,
-                channelCode = pipeline.channelCode,
-                yamlInfo = request.yamlInfo,
-                pipelineDialect = pipelineAsCodeService.getPipelineDialect(
-                    projectId = projectId,
-                    asCodeSettings = originSetting.pipelineAsCodeSettings
-                )
-            )
-            val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
-            // 如果不匹配已有状态则报错，需要用户重新刷新页面
-            if (originYaml != null && !request.enablePac) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
-            )
-            // 根据项目PAC状态进行接口调用
-            val enabled = originYaml != null || request.enablePac
-            val targetSettings = originSetting.copy(
-                pipelineAsCodeSettings = originSetting.pipelineAsCodeSettings?.copy(enable = enabled)
-            )
-            val targetAction = request.targetAction ?: CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
-            val (versionStatus, branchName) = if (enabled) {
-                if (request.yamlInfo == null) throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                    params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
-                )
-                getVersionStatusAndName(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    draftVersion = draftVersion,
-                    targetAction = targetAction,
-                    repoHashId = request.yamlInfo!!.repoHashId,
-                    targetBranch = request.targetBranch
-                )
-            } else {
-                Pair(VersionStatus.DRAFT_RELEASE, null)
-            }
-
-            if (enabled) {
-                if (draftVersion.yaml.isNullOrBlank()) {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        actionType = TransferActionType.FULL_MODEL2YAML,
-                        data = TransferBody(
-                            modelAndSetting = PipelineModelAndSetting(draftVersion.model, targetSettings),
-                            yamlFileName = request.yamlInfo?.filePath
-                        )
-                    )
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY
-                    )
-                }
-                val yamlInfo = request.yamlInfo ?: throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                    params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
-                )
-                // 对前端的YAML信息进行校验
-                val filePath = if (yamlInfo.filePath.endsWith(".yaml") ||
-                    yamlInfo.filePath.endsWith(".yml")
-                ) {
-                    yamlInfo.filePath
-                } else {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_YAML_FILENAME,
-                        params = arrayOf(yamlInfo.filePath)
-                    )
-                }
-                pipelineYamlFacadeService.checkPushParam(
-                    PipelineYamlFileReleaseReq(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        pipelineName = targetSettings.pipelineName,
-                        version = draftVersion.version,
-                        versionName = branchName,
-                        repoHashId = yamlInfo.repoHashId,
-                        scmType = yamlInfo.scmType!!,
-                        filePath = filePath,
-                        content = draftVersion.yaml ?: "",
-                        commitMessage = request.description ?: "update",
-                        targetAction = targetAction,
-                        targetBranch = request.targetBranch
-                    )
-                )
-            }
-
-            val savedSetting = pipelineSettingFacadeService.saveSetting(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                updateVersion = false,
-                versionStatus = versionStatus,
-                setting = targetSettings,
-                dispatchPipelineUpdateEvent = false
-            )
-            if (versionStatus.isReleasing()) {
-                val existModel = pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )?.model ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                )
-                // 对已经存在的模型做处理
-                val param = BeforeDeleteParam(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-                modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, draftVersion.model, param)
-            }
-            val result = pipelineRepositoryService.deployPipeline(
-                model = draftVersion.model,
-                projectId = projectId,
-                signPipelineId = pipelineId,
-                userId = userId,
-                channelCode = pipeline.channelCode,
-                create = false,
-                updateLastModifyUser = true,
-                setting = savedSetting,
-                versionStatus = versionStatus,
-                branchName = branchName,
-                description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
-                yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
-                baseVersion = draftVersion.baseVersion,
-                yamlInfo = request.yamlInfo,
-                // 发布草稿是否禁用流水线以yaml的配置为准，如果为null表示为没有明确指出是否禁用流水线，将不会更改此设置。
-                pipelineDisable = draftVersion.yaml?.let { transferService.loadYaml(it).disablePipeline == true }
-            )
-            // 添加标签
-            pipelineGroupService.addPipelineLabel(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                labelIds = targetSettings.labels
-            )
-            // 添加到动态分组
-            pipelineViewGroupService.updateGroupAfterPipelineUpdate(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                creator = userId,
-                pipelineName = savedSetting.pipelineName
-            )
-            // 添加到静态流水线组
-            pipelineViewGroupService.bulkAddStatic(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                staticViewIds = request.staticViews
-            )
-            // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
-            pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId).forEach { debug ->
-                if (!debug.status.isFinish()) {
-                    buildLogPrinter.addWarnLine(
-                        buildId = debug.buildId, executeCount = debug.executeCount ?: 1,
-                        tag = "", jobId = null, stepId = null,
-                        message = ""
-                    )
-                    pipelineBuildFacadeService.buildManualShutdown(
-                        userId = userId, projectId = projectId, pipelineId = pipelineId,
-                        buildId = debug.buildId, channelCode = pipeline.channelCode, terminateFlag = true
-                    )
-                }
-            }
-            // 查询编排中的基准值，并把调试的版本号刷为基准值
-            val debugBuildNo = draftVersion.model.getTriggerContainer()
-                .buildNo?.buildNo ?: 0
-            pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId, debugBuildNo)
-            pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId)
-
-            var targetUrl: String? = null
-            // 推送代码库应该在流水线变更成功之后,蓝盾发布形成闭环,如果代码库推送失败,应该引导用户手工修复
-            if (enabled) {
-                val yamlInfo = request.yamlInfo!!
-                // #8161 如果调用代码库同步失败则有报错或提示
-                val pushResult = pipelineYamlFacadeService.pushYamlFile(
-                    PipelineYamlFileReleaseReq(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        version = draftVersion.version,
-                        versionName = branchName,
-                        pipelineName = targetSettings.pipelineName,
-                        content = draftVersion.yaml ?: "",
-                        commitMessage = request.description ?: "update",
-                        repoHashId = yamlInfo.repoHashId,
-                        scmType = yamlInfo.scmType!!,
-                        filePath = yamlInfo.filePath,
-                        targetAction = targetAction,
-                        targetBranch = request.targetBranch
-                    )
-                )
-                targetUrl = pushResult.mrUrl
-            }
-            val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
-            return DeployPipelineResult(
-                pipelineId = pipelineId,
-                pipelineName = draftVersion.model.name,
-                version = result.version,
-                versionNum = result.versionNum,
-                versionName = result.versionName,
-                targetUrl = targetUrl,
-                yamlInfo = yamlInfo,
-                updateBuildNo = result.updateBuildNo
-            )
-        }
+        return pipelineVersionManager.deployPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            request = request
+        )
     }
 
     private fun getVersionStatusAndName(
@@ -781,11 +517,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         } catch (e: PipelineTransferException) {
             Triple(
                 false, null, I18nUtil.getCodeLanMessage(
-                    messageCode = e.errorCode,
-                    params = e.params,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    defaultMessage = e.defaultMessage
-                )
+                messageCode = e.errorCode,
+                params = e.params,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = e.defaultMessage
+            )
             )
         }
         return PipelineVersionWithModel(
@@ -827,117 +563,12 @@ class PipelineVersionFacadeService @Autowired constructor(
         projectId: String,
         modelAndYaml: PipelineVersionWithModelRequest
     ): DeployPipelineResult {
-        val pipelineId = modelAndYaml.pipelineId
-        val versionStatus = VersionStatus.COMMITTING
-        val model: Model?
-        val setting: PipelineSetting?
-        var newYaml: YamlWithVersion?
-        if (modelAndYaml.storageType == PipelineStorageType.YAML) {
-            // YAML形式的保存需要所有插件都为支持转换的市场插件
-            val transferResult = transferService.transfer(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(
-                    modelAndSetting = modelAndYaml.modelAndSetting,
-                    oldYaml = modelAndYaml.yaml ?: ""
-                )
-            )
-            model = transferResult.modelAndSetting?.model
-            setting = transferResult.modelAndSetting?.setting
-            newYaml = transferResult.yamlWithVersion
-        } else {
-            // MODEL形式的保存需要兼容旧数据
-            try {
-                val result = transferService.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    actionType = TransferActionType.FULL_MODEL2YAML,
-                    data = TransferBody(
-                        modelAndSetting = modelAndYaml.modelAndSetting,
-                        oldYaml = pipelineId?.let {
-                            pipelineRepositoryService.getPipelineResourceVersion(
-                                projectId = projectId,
-                                pipelineId = it,
-                                version = modelAndYaml.baseVersion,
-                                includeDraft = true
-                            )?.yaml
-                        } ?: ""
-                    )
-                )
-                newYaml = result.yamlWithVersion
-            } catch (ignore: Throwable) {
-                // 旧流水线可能无法转换，用空YAML代替
-                logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
-                newYaml = null
-            }
-            model = Preconditions.checkNotNull(
-                modelAndYaml.modelAndSetting?.model,
-                "modelAndYaml.modelAndSetting.model must not be null"
-            )
-            setting = Preconditions.checkNotNull(
-                modelAndYaml.modelAndSetting?.setting,
-                "modelAndYaml.modelAndSetting.setting must not be null"
-            )
-        }
-        return if (pipelineId.isNullOrBlank()) {
-            // 新建流水线产生草稿
-            pipelineInfoFacadeService.createPipeline(
-                userId = userId,
-                projectId = projectId,
-                model = model ?: Preconditions.checkNotNull(
-                    modelAndYaml.modelAndSetting?.model,
-                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.model must not be null"
-                ),
-                setting = setting ?: Preconditions.checkNotNull(
-                    modelAndYaml.modelAndSetting?.setting,
-                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.setting must not be null"
-                ),
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                versionStatus = versionStatus,
-                yaml = newYaml
-            )
-        } else {
-            // 修改已存在的流水线
-            val isTemplate = templateService.isTemplatePipeline(projectId, pipelineId)
-            val release = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
-            val savedSetting = pipelineSettingFacadeService.saveSetting(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                setting = setting ?: Preconditions.checkNotNull(
-                    modelAndYaml.modelAndSetting?.setting,
-                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.setting must not be null"
-                ),
-                checkPermission = false,
-                versionStatus = versionStatus,
-                dispatchPipelineUpdateEvent = false,
-                updateLabels = false
-            )
-            pipelineInfoFacadeService.editPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                model = if (isTemplate) {
-                    release?.model
-                } else {
-                    model
-                } ?: Preconditions.checkNotNull(
-                    modelAndYaml.modelAndSetting?.model,
-                    "The transfer data is incorrect, so the modelAndYaml.modelAndSetting.model must not be null"
-                ),
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                checkTemplate = false,
-                versionStatus = versionStatus,
-                description = modelAndYaml.description,
-                yaml = newYaml,
-                savedSetting = savedSetting
-            )
-        }
+        return pipelineVersionManager.deployPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = modelAndYaml.pipelineId,
+            request = PipelineDraftSaveReq(modelAndYaml)
+        )
     }
 
     fun listPipelineVersionInfo(
@@ -1165,6 +796,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         checkPermission: Boolean = true
     ): String {
         repositoryVersionService.deletePipelineVersion(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version

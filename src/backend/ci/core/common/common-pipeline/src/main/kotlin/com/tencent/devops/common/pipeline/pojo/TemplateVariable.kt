@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,20 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.common.pipeline.pojo
 
-/**
- * model中报错模板信息的扩展参数
- */
-interface IModelTemplate {
+import io.swagger.v3.oas.annotations.media.Schema
 
-    var template: String?
-    var ref: String?
-    var variables: Map<String, String>?
-
-    /**
-     * 判读是否来自于模板
-     * @return true 是来自于模板|false 不是来自于模板
-     */
-    fun fromTemplate() = !template.isNullOrBlank()
+@Schema(title = "模版-模版参数")
+data class TemplateVariable(
+    @get:Schema(title = "元素值ID-标识符", required = true)
+    val key: String,
+    @get:Schema(title = "元素值名称-显示用", required = true)
+    val value: Any,
+    @get:Schema(title = "是否为入参", required = true)
+    var allowModifyAtStartup: Boolean? = null
+) {
+    constructor(buildFormProperty: BuildFormProperty) : this(
+        key = buildFormProperty.id,
+        value = buildFormProperty.defaultValue,
+        allowModifyAtStartup = buildFormProperty.required
+    )
 }

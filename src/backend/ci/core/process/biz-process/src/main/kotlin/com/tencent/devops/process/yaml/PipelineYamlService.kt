@@ -627,4 +627,15 @@ class PipelineYamlService(
             branch = branch
         )
     }
+
+    fun listByPipelineIds(
+        projectId: String,
+        pipelineIds: List<String>
+    ): List<PipelineYamlInfo> {
+        return pipelineYamlInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+    }
 }

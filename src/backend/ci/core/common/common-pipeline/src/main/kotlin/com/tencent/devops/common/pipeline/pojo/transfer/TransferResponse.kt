@@ -28,12 +28,15 @@
 package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线互转-Response")
 data class TransferResponse(
-    @get:Schema(title = "modelAndSetting")
+    @get:Schema(title = "完整model、流水线级模板以及配套设置")
     val modelAndSetting: PipelineModelAndSetting? = null,
+    @get:Schema(title = "局部模板model和setting")
+    val templateModelAndSetting: TemplateModelAndSetting? = null,
     @get:Schema(title = "当前yaml内容")
     val yamlWithVersion: YamlWithVersion? = null,
     @get:Schema(title = "定位")
