@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineTemplateCompatibilityCreateReq(
     val model: Model,
     val setting: PipelineSetting,
-    val versionName: String? = null,
+    val v1VersionName: String = "init",
     val category: String? = null,
     val logoUrl: String? = null
 ) : PipelineTemplateVersionReq
