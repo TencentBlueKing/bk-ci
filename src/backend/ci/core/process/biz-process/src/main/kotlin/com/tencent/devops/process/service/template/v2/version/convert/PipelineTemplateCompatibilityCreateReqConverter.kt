@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
@@ -40,6 +41,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,7 +52,9 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
-    private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer
+    private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer,
+    private val templateDao: TemplateDao,
+    private val dslContext: DSLContext
 ) : PipelineTemplateVersionReqConverter {
 
     override fun support(request: PipelineTemplateVersionReq): Boolean {
@@ -80,6 +84,21 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 params = model.getTriggerContainer().params,
                 yaml = null
             )
+
+            // 新版本中，版本名称都是唯一的，需要添加尾缀-1 -2 ...标识
+            val customVersionName = versionName?.let { name ->
+                val existingCount = templateDao.countTemplateVersions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    versionName = name
+                )
+                if (existingCount > 0) {
+                    "$name-${existingCount + 1}"
+                } else {
+                    name
+                }
+            } ?: "init"
 
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
                 id = templateId,
@@ -115,7 +134,7 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                customVersionName = versionName ?: "init",
+                customVersionName = customVersionName,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,

@@ -13,7 +13,6 @@ import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -29,9 +28,6 @@ class PTemplateCompatibilityVersionPostProcessor(
     val dslContext: DSLContext
 ) : PTemplateVersionCreatePostProcessor {
 
-    @Value("\${template.maxSaveVersionRecordNum:2}")
-    private val maxSaveVersionRecordNum: Int = 2
-
     override fun postProcessAfterVersionCreate(
         context: PipelineTemplateVersionCreateContext,
         pipelineTemplateResource: PipelineTemplateResource,
@@ -42,13 +38,6 @@ class PTemplateCompatibilityVersionPostProcessor(
                 return
             }
             val version = pipelineTemplateResource.version
-            val versionName = pipelineTemplateResource.versionName
-
-            val v1TemplateRecord = v1TemplateDao.getTemplate(
-                dslContext = dslContext,
-                projectId = projectId,
-                version = version
-            )
             val v2TemplateInfo = v2TemplateInfoService.get(
                 projectId = projectId,
                 templateId = templateId
@@ -63,33 +52,31 @@ class PTemplateCompatibilityVersionPostProcessor(
                 templateId = templateId,
                 settingVersion = v2TemplateResource.settingVersion
             )
+            val v2VersionName = v2TemplateResource.versionName!!
+
+            // v1 相同版本名称不携带 -1 ，-2 标识，若有重复版本名称，去掉标识
+            val v1VersionName = v2VersionName.let { name ->
+                val existingCount = v1TemplateDao.countTemplateVersions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    versionName = name
+                )
+                if (existingCount > 0) {
+                    name.substringBeforeLast("-")
+                } else {
+                    name
+                }
+            }
+
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                if (v1TemplateRecord != null) {
-                    val saveRecordVersions = v1TemplateDao.listSaveRecordVersions(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        templateId = templateId,
-                        versionName = versionName!!,
-                        saveNum = maxSaveVersionRecordNum
-                    )
-                    if (saveRecordVersions?.isNotEmpty == true) {
-                        // 版本名称为versionName的版本只保存最近maxSaveVersionRecordNum条记录
-                        v1TemplateDao.deleteSpecVersion(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            templateId = templateId,
-                            versionName = versionName,
-                            saveVersions = saveRecordVersions.map { it.value1() }
-                        )
-                    }
-                }
                 v1TemplateDao.createTemplate(
                     dslContext = transactionContext,
                     projectId = projectId,
                     templateId = templateId,
                     templateName = v2TemplateInfo.name,
-                    versionName = v2TemplateResource.versionName!!,
+                    versionName = v1VersionName,
                     userId = userId,
                     template = JsonUtil.toJson(v2TemplateResource.model),
                     type = v2TemplateInfo.mode.name,
