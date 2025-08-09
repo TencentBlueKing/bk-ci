@@ -57,4 +57,5 @@ object ProcessTemplateMessageCode {
     const val ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST = "2101306" // 模板{0}的最近安装记录不存在
     const val ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST = "2101307" // 模板{0}的最新发布版本记录不存在
     const val ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM = "2101308" // 模板处于非约束状态，不允许转化自定义
+    const val ERROR_TEMPLATE_SETTING_NOT_EXISTS = "2101309" // 模板设置不存在
 }
