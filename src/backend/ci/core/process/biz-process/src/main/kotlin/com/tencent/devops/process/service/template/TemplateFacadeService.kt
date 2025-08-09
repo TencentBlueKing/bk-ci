@@ -677,7 +677,9 @@ class TemplateFacadeService @Autowired constructor(
         val request = PipelineTemplateCompatibilityCreateReq(
             model = template,
             setting = PipelineSetting(
-                pipelineName = template.name,
+                projectId = projectId,
+                pipelineId = templateId,
+                pipelineName = v1LatestTemplate.templateName,
                 desc = template.desc ?: "",
                 pipelineAsCodeSettings = null,
                 creator = userId,
