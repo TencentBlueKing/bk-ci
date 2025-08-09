@@ -334,10 +334,10 @@ class PipelineTemplateMigrateService(
      * [辅助函数 2] - 核心执行：遍历所有版本并调用单个版本的迁移逻辑。
      */
     private fun migrateAllTemplateVersions(context: MigrationContext) {
-        val versionCounters = VersionCounters(pipelineVersion = 0, triggerVersion = 0)
+        val versionCounters = VersionCounters(pipelineVersion = 1, triggerVersion = 1)
 
         context.templateVersionInfos.forEachIndexed { index, versionInfo ->
-            migrateSingleVersion(context, versionInfo, index, versionCounters)
+            migrateSingleVersion(context, versionInfo, versionSequence = index + 1, versionCounters)
         }
     }
 
@@ -347,7 +347,7 @@ class PipelineTemplateMigrateService(
     private fun migrateSingleVersion(
         context: MigrationContext,
         versionInfo: TemplateVersion,
-        index: Int,
+        versionSequence: Int,
         counters: VersionCounters
     ) {
         val currentProjectId = context.srcTemplateProjectId ?: context.projectId
@@ -355,10 +355,10 @@ class PipelineTemplateMigrateService(
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
 
         // 步骤 3.1: 计算新版本的 pipelineVersion 和 triggerVersion
-        calculateNextVersions(context, currentTemplate, currentProjectId, index, counters)
+        calculateNextVersions(context, currentTemplate, currentProjectId, versionSequence, counters)
 
         // 步骤 3.2: 执行模型转换
-        val modelTransferResult = performModelTransfer(context, currentTemplate, counters.pipelineVersion, versionInfo)
+        val modelTransferResult = performModelTransfer(context, currentTemplate, versionSequence, versionInfo)
 
         // 步骤 3.3: 根据转换结果创建新的 PipelineTemplateResource
         val currentTemplateModel = JsonUtil.to(currentTemplate.template, Model::class.java)
@@ -366,7 +366,7 @@ class PipelineTemplateMigrateService(
             versionInfo = versionInfo,
             latestTemplate = context.latestTemplate,
             currentTemplate = currentTemplate,
-            seq = index + 1,
+            versionSequence = versionSequence,
             pipelineVersion = counters.pipelineVersion,
             triggerVersion = counters.triggerVersion,
             params = currentTemplateModel.getTriggerContainer().params,
@@ -393,14 +393,11 @@ class PipelineTemplateMigrateService(
         context: MigrationContext,
         currentTemplate: TTemplateRecord,
         currentProjectId: String,
-        index: Int,
+        versionSequence: Int,
         counters: VersionCounters
     ) {
-        if (index == 0) {
-            counters.pipelineVersion = 1
-            counters.triggerVersion = 1
-        } else {
-            val previousVersionInfo = context.templateVersionInfos[index - 1]
+        if (versionSequence > 1) {
+            val previousVersionInfo = context.templateVersionInfos[versionSequence - 1]
             val previousTemplate = templateDao.getTemplate(dslContext, currentProjectId, previousVersionInfo.version)
                 ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
 
@@ -434,8 +431,8 @@ class PipelineTemplateMigrateService(
         val currentSetting = context.setting.copy(
             version = versionSequence,
             creator = versionInfo.creator,
-            createdTime = context.latestTemplate.createdTime.timestampmilli(),
-            updateTime = context.latestTemplate.updateTime.timestampmilli()
+            createdTime = versionInfo.updateTime,
+            updateTime = versionInfo.updateTime
         )
         val currentTemplateModel = JsonUtil.to(currentTemplate.template, Model::class.java)
         val currentTemplateParams = currentTemplateModel.getTriggerContainer().params
@@ -642,7 +639,7 @@ class PipelineTemplateMigrateService(
         currentTemplate: TTemplateRecord,
         params: List<BuildFormProperty>,
         modelTransferResult: PTemplateModelTransferResult,
-        seq: Int,
+        versionSequence: Int,
         pipelineVersion: Int,
         triggerVersion: Int,
         marketTemplateStatus: TemplateStatusEnum
@@ -669,13 +666,13 @@ class PipelineTemplateMigrateService(
             projectId = latestTemplate.projectId,
             templateId = latestTemplate.id,
             type = PipelineTemplateType.PIPELINE,
-            settingVersion = seq,
+            settingVersion = versionSequence,
             version = version,
             storeStatus = marketTemplateStatus,
-            number = seq,
+            number = versionSequence,
             versionName = versionInfo.versionName,
-            versionNum = seq,
-            settingVersionNum = seq,
+            versionNum = versionSequence,
+            settingVersionNum = versionSequence,
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             srcTemplateProjectId = srcTemplateProjectId,
