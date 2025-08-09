@@ -531,7 +531,6 @@ class PipelineTemplateMigrateService(
      * [辅助函数 4.1] - 清理在新表中存在但在旧表中不存在的“脏”版本。
      */
     private fun cleanupOrphanedVersions(context: MigrationContext) {
-        // 使用 Set 以获得 O(1) 的平均查找复杂度，性能更优
         val v1TemplateVersions = context.templateVersionInfos.map { it.version }.toSet()
 
         val v2TemplateVersions = pipelineTemplateResourceService.getTemplateVersions(
@@ -614,7 +613,13 @@ class PipelineTemplateMigrateService(
                 projectId = srcLatestTemplate.projectId,
                 templateId = srcLatestTemplate.id,
                 ascSort = true
-            )
+            ).map {
+                it.copy(
+                    createTime = latestTemplate.createdTime.timestampmilli(),
+                    updateTime = latestTemplate.updateTime.timestampmilli(),
+                    creator = latestTemplate.creator
+                )
+            }
         } else {
             templateFacadeService.listTemplateAllVersions(
                 projectId = latestTemplate.projectId,
@@ -684,11 +689,11 @@ class PipelineTemplateMigrateService(
             status = VersionStatus.RELEASED,
             description = currentTemplate.desc,
             sortWeight = 0,
-            creator = latestTemplate.creator,
-            updater = latestTemplate.creator,
-            releaseTime = (currentTemplate.updateTime ?: currentTemplate.createdTime).timestampmilli(),
-            createdTime = currentTemplate.createdTime.timestampmilli(),
-            updateTime = currentTemplate.updateTime.timestampmilli()
+            creator = versionInfo.creator,
+            updater = versionInfo.creator,
+            releaseTime = versionInfo.updateTime,
+            createdTime = versionInfo.createTime,
+            updateTime = versionInfo.updateTime
         )
     }
 
