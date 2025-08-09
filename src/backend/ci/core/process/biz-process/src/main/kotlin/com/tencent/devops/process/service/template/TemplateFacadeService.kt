@@ -686,7 +686,7 @@ class TemplateFacadeService @Autowired constructor(
                 creator = userId,
                 updater = userId
             ),
-            versionName = versionName,
+            v1VersionName = versionName,
             category = v1LatestTemplate.category,
             logoUrl = v1LatestTemplate.logoUrl
         )

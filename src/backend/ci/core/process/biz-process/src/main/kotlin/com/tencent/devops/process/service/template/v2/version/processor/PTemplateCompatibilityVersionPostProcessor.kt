@@ -54,21 +54,6 @@ class PTemplateCompatibilityVersionPostProcessor(
             )
             val v2VersionName = v2TemplateResource.versionName!!
 
-            // v1 相同版本名称不携带 -1 ，-2 标识，若有重复版本名称，去掉标识
-            val v1VersionName = v2VersionName.let { name ->
-                val existingCount = v1TemplateDao.countTemplateVersions(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    templateId = templateId,
-                    versionName = name
-                )
-                if (existingCount > 0) {
-                    name.substringBeforeLast("-")
-                } else {
-                    name
-                }
-            }
-
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 v1TemplateDao.createTemplate(
@@ -76,7 +61,7 @@ class PTemplateCompatibilityVersionPostProcessor(
                     projectId = projectId,
                     templateId = templateId,
                     templateName = v2TemplateInfo.name,
-                    versionName = v1VersionName,
+                    versionName = v1VersionName ?: v2VersionName,
                     userId = userId,
                     template = JsonUtil.toJson(v2TemplateResource.model),
                     type = v2TemplateInfo.mode.name,
