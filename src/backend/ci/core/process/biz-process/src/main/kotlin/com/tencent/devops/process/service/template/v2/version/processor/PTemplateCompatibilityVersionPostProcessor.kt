@@ -5,6 +5,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
@@ -37,6 +39,7 @@ class PTemplateCompatibilityVersionPostProcessor(
             if (!versionAction.isCreateReleaseVersion()) {
                 return
             }
+            logger.info("template compatibility version post processor :$context")
             val version = pipelineTemplateResource.version
             val v2TemplateInfo = v2TemplateInfoService.get(
                 projectId = projectId,
@@ -53,9 +56,27 @@ class PTemplateCompatibilityVersionPostProcessor(
                 settingVersion = v2TemplateResource.settingVersion
             )
             val v2VersionName = v2TemplateResource.versionName!!
-
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                val existingCount = v1TemplateDao.countTemplateVersions(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    versionName = v1VersionName
+                )
+                if (existingCount == 1) {
+                    v2TemplateResourceService.update(
+                        transactionContext = transactionContext,
+                        PipelineTemplateResourceUpdateInfo(
+                            versionName = "$v1VersionName-1"
+                        ),
+                        PipelineTemplateResourceCommonCondition(
+                            projectId = projectId,
+                            templateId = templateId,
+                            versionName = v1VersionName
+                        )
+                    )
+                }
                 v1TemplateDao.createTemplate(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -82,6 +103,6 @@ class PTemplateCompatibilityVersionPostProcessor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(PTemplateCompatibilityVersionPostProcessor::class.java)
+        private val logger = LoggerFactory.getLogger(PTemplateCompatibilityVersionPostProcessor::class.java)
     }
 }
