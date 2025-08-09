@@ -613,18 +613,19 @@ class TemplateFacadeService @Autowired constructor(
             )
 
             // 清理超出数量限制的旧版本记录
-            val saveRecordVersions = templateDao.listSaveRecordVersions(
-                context, projectId, templateId, versionName, maxSaveVersionRecordNum
-            )
-            if (saveRecordVersions?.isNotEmpty == true) {
-                templateDao.deleteSpecVersion(
-                    dslContext = context,
-                    projectId = projectId,
-                    templateId = templateId,
-                    versionName = versionName,
-                    saveVersions = saveRecordVersions.map { it.value1() }
-                )
-            }
+            // 新版本不清理同个版本名称的记录
+//            val saveRecordVersions = templateDao.listSaveRecordVersions(
+//                context, projectId, templateId, versionName, maxSaveVersionRecordNum
+//            )
+//            if (saveRecordVersions?.isNotEmpty == true) {
+//                templateDao.deleteSpecVersion(
+//                    dslContext = context,
+//                    projectId = projectId,
+//                    templateId = templateId,
+//                    versionName = versionName,
+//                    saveVersions = saveRecordVersions.map { it.value1() }
+//                )
+//            }
 
             // 在v1表中创建新版本
             newVersion = templateDao.createTemplate(
