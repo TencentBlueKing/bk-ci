@@ -80,7 +80,7 @@ class UserGitResourceImpl @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 search = search,
-                oauthUserId = oauthUserId
+                username = oauthUserId
             )
         )
     }
