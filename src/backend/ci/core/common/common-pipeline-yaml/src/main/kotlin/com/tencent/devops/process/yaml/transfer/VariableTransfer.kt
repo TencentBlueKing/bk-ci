@@ -190,7 +190,7 @@ class VariableTransfer {
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
                 props = if (props?.empty() == false) props else null,
-                ifCondition = it.displayCondition
+                ifCondition = it.displayCondition?.ifEmpty { null }
             )
         }
         return if (result.isEmpty()) {
@@ -278,7 +278,7 @@ class VariableTransfer {
                     },
                     valueNotEmpty = variable.props?.required ?: false,
                     payload = variable.props?.payload,
-                    displayCondition = variable.ifCondition
+                    displayCondition = variable.ifCondition ?: emptyMap()
                 )
             )
         }
