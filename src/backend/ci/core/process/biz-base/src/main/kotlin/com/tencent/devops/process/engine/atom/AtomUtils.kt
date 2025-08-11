@@ -328,9 +328,6 @@ object AtomUtils {
                 override fun after(jp: PipelineTransferJoinPoint) {
                     if (jp.modelElement() != null && jp.modelElement()?.additionalOptions?.pauseBeforeExec == true) {
                         val element = jp.modelElement()!!
-                        if (isHisAtomElement(element)) {
-                            return
-                        }
                         var version = element.version
                         if (version.isBlank()) {
                             version = "1.*"
@@ -341,7 +338,7 @@ object AtomUtils {
                                 storeCode = atomCode,
                                 storeName = element.name,
                                 version = version,
-                                historyFlag = false
+                                historyFlag = isHisAtomElement(element)
                             )
                         )
                     }
