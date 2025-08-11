@@ -69,6 +69,8 @@ data class PipelineTemplateResourceCommonCondition(
     val storeStatus: TemplateStatusEnum? = null,
     @get:Schema(title = "可升级的版本查询（用于研发商店安装的模板）", required = false)
     val upgradableVersionsQuery: Boolean? = null,
+    @get:Schema(title = "是否包含已删除的", required = false)
+    val includeDeleted: Boolean = false,
     @get:Schema(title = "page", required = true)
     val page: Int? = null,
     @get:Schema(title = "pageSize", required = true)
