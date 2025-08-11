@@ -25,12 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.vo
+package com.tencent.devops.process.yaml.transfer.pojo
 
+import com.tencent.devops.process.yaml.v3.models.Variable
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "公共变量组yaml解析视图")
-data class PublicVarGroupYamlParserVO(
+@Schema(title = "公共变量组yaml解析")
+data class PublicVarGroupYamlParser(
     @get:Schema(title = "yaml版本")
     val version: String,
     @get:Schema(title = "变量组名称")
@@ -38,5 +39,5 @@ data class PublicVarGroupYamlParserVO(
     @get:Schema(title = "变量组描述")
     val desc: String? = null,
     @get:Schema(title = "变量列表")
-    val variables: Map<String, Any>
+    val variables: Map<String, Variable>
 )

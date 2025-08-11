@@ -52,7 +52,7 @@ import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlParserVO
+import com.tencent.devops.process.yaml.transfer.pojo.PublicVarGroupYamlParser
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.process.yaml.transfer.TransferMapper
@@ -222,7 +222,7 @@ class PublicVarGroupService @Autowired constructor(
         val parserVO = try {
             TransferMapper.getObjectMapper().readValue(
                 yaml.yaml,
-                object : TypeReference<PublicVarGroupYamlParserVO>() {}
+                object : TypeReference<PublicVarGroupYamlParser>() {}
             )
         } catch (e: Throwable) {
             logger.warn("Failed to parse YAML for public variable group", e)
@@ -230,9 +230,7 @@ class PublicVarGroupService @Autowired constructor(
         }
 
         // 将variables转换为List<BuildFormProperty>
-//        val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
-
-        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
         val publicVars = buildFormProperties.map { property ->
             PublicVarVO(
                 varName = property.id,
@@ -283,7 +281,7 @@ class PublicVarGroupService @Autowired constructor(
         )
         val params = varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
         val variables = variableTransfer.makeVariableFromBuildParams(params)
-        val parserVO = PublicVarGroupYamlParserVO(
+        val parserVO = PublicVarGroupYamlParser(
             version = "v3.0",
             name = groupInfo.groupName,
             desc = groupInfo.desc,
