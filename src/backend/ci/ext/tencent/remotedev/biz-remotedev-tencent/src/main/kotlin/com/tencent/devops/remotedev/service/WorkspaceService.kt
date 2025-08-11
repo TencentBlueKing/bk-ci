@@ -118,7 +118,6 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -877,11 +876,7 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         status: ComputerStatusRespV2?
     ): WorkspaceStatus {
-        if (it.status.notOk2doNextAction() && Duration.between(
-                it.lastStatusUpdateTime ?: LocalDateTime.now(),
-                LocalDateTime.now()
-            ).seconds > DEFAULT_WAIT_TIME
-        ) {
+        if (it.status.notOk2doNextAction()) {
             return workspaceCommon.fixUnexpectedStatus(
                 userId = userId,
                 workspaceName = it.workspaceName,
