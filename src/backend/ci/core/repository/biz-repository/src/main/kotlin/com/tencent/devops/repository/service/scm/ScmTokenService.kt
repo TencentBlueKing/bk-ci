@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,17 +30,21 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.Oauth2State
+import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
+import com.tencent.devops.scm.api.pojo.Oauth2AccessToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,28 +61,41 @@ class ScmTokenService @Autowired constructor(
     private val repoAuthServiceCode: RepoAuthServiceCode,
     private val scmTokenApiService: ScmTokenApiService
 ) {
-    @Value("\${aes.github:#{null}}")
+    @Value("\${aes.git:#{null}}")
     private val aesKey = ""
 
     fun getAccessToken(
         userId: String,
-        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        scmCode: String,
+        appType: TokenAppTypeEnum = TokenAppTypeEnum.OAUTH2
     ): GitToken? {
         val scmTokenRecord = scmTokenDao.getToken(
             dslContext = dslContext,
             userId = userId,
-            appType = "",
-            scmCode = ""
+            appType = appType.name,
+            scmCode = scmCode
         ) ?: return null
+        // 判断是否过期
+        val token = if (isTokenExpire(scmTokenRecord.updateTime.timestamp(), scmTokenRecord.expiresIn)) {
+            val accessToken = refreshToken(scmCode, userId, scmTokenRecord)
+            accessToken.accessToken
+        } else {
+            BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken)
+        }
         return GitToken(
-            accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken),
+            accessToken = token,
             tokenType = scmTokenRecord.appType,
             operator = scmTokenRecord.operator,
             userId = userId
         )
     }
 
-    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken? {
+    fun checkAndGetAccessToken(
+        projectId: String,
+        buildId: String,
+        userId: String,
+        scmCode: String
+    ): GitToken? {
         logger.info("buildId: $buildId, userId: $userId")
         val buildInfo = client.get(ServiceBuildResource::class)
                 .serviceBasic(
@@ -92,7 +109,7 @@ class ScmTokenService @Autowired constructor(
                     }
                     it
                 }
-        val accessToken = getAccessToken(userId) ?: return null
+        val accessToken = getAccessToken(userId, scmCode) ?: return null
         val operator = (accessToken.operator ?: "").ifBlank { userId }
         val buildBasicInfo = buildInfo.data ?: throw RemoteServiceException(
             "Failed to get the basic information based on the buildId: $buildId"
@@ -121,6 +138,41 @@ class ScmTokenService @Autowired constructor(
             scmCode = scmCode,
             state = URLEncoder.encode(JsonUtil.toJson(oauthState, false), "UTF-8")
         )
+    }
+
+    /**
+     * token是否过期
+     * @param updateTime token的最后更新时间(秒)
+     * @param expiresIn token的过期时间(秒)
+     */
+    private fun isTokenExpire(updateTime: Long?, expiresIn: Long): Boolean {
+        // 提前半个小时刷新token
+        return ((updateTime ?: 0) + expiresIn - 1800) * 1000 <= System.currentTimeMillis()
+    }
+
+    private fun refreshToken(
+        scmCode: String,
+        userId: String,
+        scmTokenRecord: TRepositoryScmTokenRecord
+    ): Oauth2AccessToken {
+        logger.info("[$scmCode|$userId]token expired, attempting refresh")
+        val accessToken = scmTokenApiService.refresh(
+            scmCode = scmCode,
+            refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.refreshToken)
+        )
+        scmTokenDao.saveAccessToken(
+            dslContext = dslContext,
+            scmToken = RepositoryScmToken(
+                userId = scmTokenRecord.userId,
+                scmCode = scmTokenRecord.scmCode,
+                appType = scmTokenRecord.appType,
+                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken.accessToken),
+                refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken.refreshToken),
+                expiresIn = accessToken.expiresIn,
+                operator = scmTokenRecord.operator
+            )
+        )
+        return accessToken
     }
 
     companion object {

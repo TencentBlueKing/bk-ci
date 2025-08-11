@@ -59,12 +59,18 @@ class DefaultOauth2TokenStoreService(
     }
 
     override fun get(userId: String, scmCode: String): OauthTokenInfo? {
-        return repositoryScmTokenDao.getToken(
+        val scmTokenRecord = repositoryScmTokenDao.getToken(
             dslContext = dslContext,
             userId = userId,
             scmCode = scmCode,
             appType = TokenAppTypeEnum.OAUTH2.name
-        )?.let {
+        ) ?: repositoryScmTokenDao.getTokenByOperator(
+            dslContext = dslContext,
+            operator = userId,
+            scmCode = scmCode,
+            appType = TokenAppTypeEnum.OAUTH2.name
+        )
+        return scmTokenRecord?.let {
             OauthTokenInfo(
                 accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
                 tokenType = "",

@@ -99,7 +99,8 @@ class BuildOauthResourceImpl @Autowired constructor(
             scmTokenService.checkAndGetAccessToken(
                 projectId = projectId,
                 buildId = buildId,
-                userId = username
+                userId = username,
+                scmCode = scmCode
             )
         )
     }

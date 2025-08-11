@@ -84,9 +84,9 @@ class GitOauthService @Autowired constructor(
         projectId: String,
         repoHashId: String?,
         search: String?,
-        oauthUserId: String?
+        username: String?
     ): AuthorizeResult {
-        logger.info("start to get project: userId:$userId|oauthUserId:$oauthUserId")
+        logger.info("start to get project: userId:$userId|username:$username")
         // 1. 获取accessToken，没有就返回403
         val authParams = mapOf(
             "projectId" to projectId,
@@ -95,10 +95,10 @@ class GitOauthService @Autowired constructor(
             "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
         )
         val accessToken = getAccessToken(
-            userId = if (oauthUserId.isNullOrBlank()) {
+            userId = if (username.isNullOrBlank()) {
                 userId
             } else {
-                oauthUserId
+                username
             }
         ) ?: return AuthorizeResult(403, getAuthUrl(authParams))
         val authResult = AuthorizeResult(200, "")

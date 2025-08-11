@@ -74,6 +74,15 @@ BEGIN
         ADD COLUMN `CREDENTIAL_TYPE` varchar(64) DEFAULT NULL COMMENT '凭证类型';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_REPOSITORY_SCM_TOKEN'
+                     AND INDEX_NAME = 'IDX_REPOSITORY_SCM_TOKEN_OPERATOR') THEN
+    ALTER TABLE `T_REPOSITORY_SCM_TOKEN`
+        ADD INDEX `IDX_REPOSITORY_SCM_TOKEN_OPERATOR`(`OPERATOR`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

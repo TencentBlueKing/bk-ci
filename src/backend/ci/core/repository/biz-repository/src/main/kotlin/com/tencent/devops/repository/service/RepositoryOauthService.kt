@@ -268,7 +268,7 @@ class RepositoryOauthService @Autowired constructor(
                 expired = true,
                 authorized = false,
                 scmType = scmType,
-                name = generateI18nConfigName(scmCode),
+                name = generateI18nConfigName(scmCode).ifBlank { name },
                 operator = userId
             )
         }
