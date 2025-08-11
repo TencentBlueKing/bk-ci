@@ -111,7 +111,7 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
-    fun updateSetting4Op(operator: String,data: OPUserSetting) {
+    fun updateSetting4Op(operator: String, data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         data.userIds.forEach { userId ->
             remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
