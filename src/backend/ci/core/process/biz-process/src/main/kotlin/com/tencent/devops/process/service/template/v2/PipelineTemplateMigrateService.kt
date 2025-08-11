@@ -562,7 +562,8 @@ class PipelineTemplateMigrateService(
                         templateId = context.templateId,
                         srcTemplateVersions = if (context.isConstraint) versionsToDelete else null,
                         versions = if (context.isConstraint) null else versionsToDelete,
-                        status = VersionStatus.RELEASED
+                        status = VersionStatus.RELEASED,
+                        includeDeleted = true
                     )
                 )
 
