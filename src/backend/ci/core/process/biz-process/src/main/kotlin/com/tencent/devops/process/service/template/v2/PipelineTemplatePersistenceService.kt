@@ -646,7 +646,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 transactionContext = context,
                 commonCondition = PipelineTemplateResourceCommonCondition(
                     projectId = projectId,
-                    templateId = templateId
+                    templateId = templateId,
+                    includeDeleted = true
                 )
             )
             pipelineTemplateSettingService.delete(
