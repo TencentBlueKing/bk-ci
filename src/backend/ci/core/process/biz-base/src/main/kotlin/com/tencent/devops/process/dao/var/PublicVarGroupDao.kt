@@ -50,7 +50,6 @@ class PublicVarGroupDao {
                 .set(DESC, publicVarGroupPO.desc)
                 .set(REFER_COUNT, publicVarGroupPO.referCount)
                 .set(VAR_COUNT, publicVarGroupPO.varCount)
-                .set(LATEST_FLAG, true)
                 .set(CREATOR, publicVarGroupPO.creator)
                 .set(MODIFIER, publicVarGroupPO.modifier)
                 .set(UPDATE_TIME, publicVarGroupPO.updateTime)
