@@ -39,12 +39,17 @@
 
         methods: {
             initData () {
-                this.isLoadingMore = true
+                
                 const methodGenerator = {
                     atom: this.getAtomData,
                     service: this.getImageData
                 }
 
+                if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+                this.isLoadingMore = true
                 const currentMethod = methodGenerator[this.type]
                 currentMethod().then(() => {
                     this.current += 1

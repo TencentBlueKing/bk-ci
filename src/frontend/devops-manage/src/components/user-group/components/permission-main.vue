@@ -46,10 +46,10 @@
 </template>
 
 <script>
+import ajax from '../ajax/index';
 import NoEnablePermission from './children/no-enable-permission/no-enable-permission.vue';
 import NoPermission from './children/no-permission/no-permission.vue';
 import PermissionManage from './children/permission-manage/permission-manage.vue';
-import ajax from '../ajax/index';
 
 export default {
   components: {
@@ -101,11 +101,11 @@ export default {
 
   methods: {
     initStatus() {
-      const commonPerfix = `${this.ajaxPrefix}/auth/api/user/auth/resource`;
+      const commonPrefix = `${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}`;
       Promise
         .all([
-          ajax.get(`${commonPerfix}/${this.projectCode}/${this.resourceType}/${this.resourceCode}/hasManagerPermission`),
-          ajax.get(`${commonPerfix}/${this.projectCode}/${this.resourceType}/${this.resourceCode}/isEnablePermission`),
+          ajax.get(`${commonPrefix}/hasManagerPermission`),
+          ajax.get(`${commonPrefix}/isEnablePermission`),
         ])
         .then(([hasManagerData, isEnableData]) => {
           this.isEnablePermission = isEnableData?.data;
