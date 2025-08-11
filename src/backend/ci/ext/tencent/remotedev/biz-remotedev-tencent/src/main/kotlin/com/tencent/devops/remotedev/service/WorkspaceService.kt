@@ -1146,7 +1146,7 @@ class WorkspaceService @Autowired constructor(
     fun getEnvs4PublicWorkspace(userId: String): List<WorkspaceEnv> {
         /*提供给查询接口的走缓存*/
         val data = userEnvCache.get(userId) ?: return emptyList()
-        val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet()
+        val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet().ifEmpty { return emptyList() }
 
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
             workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
