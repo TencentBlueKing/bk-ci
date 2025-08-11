@@ -92,5 +92,7 @@ interface MarketAtomCommonService {
 
     fun getInitProjectCode(atomCode: String, classType: String, htmlTemplateVersion: String): String?
 
+    fun getAtomCanPauseBeforeRun(props: String): Boolean
+
     fun getAtomSensitiveParams(props: String): List<String>?
 }

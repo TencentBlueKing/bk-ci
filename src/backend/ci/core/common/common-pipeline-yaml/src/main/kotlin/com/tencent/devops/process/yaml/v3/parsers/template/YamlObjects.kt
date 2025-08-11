@@ -213,6 +213,11 @@ object YamlObjects {
             timeoutMinutes = getNullValue("timeout-minutes", step),
             continueOnError = getNullValue("continue-on-error", step),
             retryTimes = getNullValue("retry-times", step)?.toInt(),
+            canPauseBeforeRun = getNullValue("can-pause-before-run", step)?.toBooleanStrictOrNull(),
+            pauseNoticeReceivers = if (step["pause-notice-receivers"] is List<*>) {
+                val receivers = step["pause-notice-receivers"] as List<*>
+                receivers.map { it.toString() }.toList()
+            } else null,
             env = if (step["env"] == null) {
                 null
             } else {
