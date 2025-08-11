@@ -37,11 +37,10 @@
             </bk-radio-group>
         </aside>
     </div>
-
 </template>
 
 <script>
-     export default {
+    export default {
         props: {
             pacEnabled: {
                 type: Boolean,

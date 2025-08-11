@@ -67,7 +67,7 @@
 
 <script>
     import Logo from '@/components/Logo/index.vue'
-    import useTemplateConstraint from '@/hook/useTemplateConstraint'
+    import useTemplateConstraint, { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { computed, getCurrentInstance, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n-bridge'
     export default {
@@ -133,7 +133,7 @@
                 return isOverrideTemplate(props.classify, fieldAlias.value)
             })
             const isTriggerClassify = computed(() => {
-                return props.classify === ''
+                return props.classify === CLASSIFY_ENUM.TRIGGER
             })
 
             const constraintTipsContent = computed(() => {
