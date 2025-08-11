@@ -15,7 +15,7 @@ data class ComputerStatusResp(
 
 @Schema(title = "windows 机器状态信息V2")
 data class ComputerStatusRespV2(
-    @Parameter(description = "机器总数")
+    @Parameter(description = "登录用户列表")
     var loginUsers: List<String>,
     @Parameter(description = "机器状态信息")
     val status: ComputerStatusEnum
