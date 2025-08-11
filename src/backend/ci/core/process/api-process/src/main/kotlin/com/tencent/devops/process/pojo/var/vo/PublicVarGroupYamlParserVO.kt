@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.`var`.vo
 
-import com.tencent.devops.process.yaml.v3.models.Variable
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量组yaml解析视图")
