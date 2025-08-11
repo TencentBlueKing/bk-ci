@@ -83,12 +83,17 @@ class RemoteDevSettingService @Autowired constructor(
         // 配置示例  zone1=https://zone1.bkrepo.com,zone2=https://zone2.bkrepo.com
         return configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.mapNotNull {
             val parts = it.split("=", limit = 2)
-            if (parts.size == 2) {
-                parts[0].trim() to parts[1].trim()
-            } else {
+            if (parts.size != 2) {
                 logger.warn("Invalid file gateway configuration item: $it")
-                null
+                return@mapNotNull null
             }
+            val key = parts[0].trim()
+            val value = parts[1].trim()
+            if (key.isEmpty() || value.isEmpty()) {
+                logger.warn("Invalid file gateway configuration item: $it")
+                return@mapNotNull null
+            }
+            key to value
         }?.toMap() ?: emptyMap()
     }
 
