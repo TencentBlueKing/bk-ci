@@ -575,7 +575,7 @@
             handleClearTagSearch () {
                 this.tagSearchValue = []
                 this.currentTags = []
-                if (!this.currentNodeType) {
+                if (!this.currentNodeType && this.$route.params.nodeType !== ALLNODE) {
                     this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
                     this.requestList()
