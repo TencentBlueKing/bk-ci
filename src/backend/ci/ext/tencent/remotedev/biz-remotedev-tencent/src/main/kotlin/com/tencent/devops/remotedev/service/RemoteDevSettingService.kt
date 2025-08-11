@@ -81,10 +81,15 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun getFileGateway(): Map<String, String> {
         // 配置示例  zone1=https://zone1.bkrepo.com,zone2=https://zone2.bkrepo.com
-        return configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.associate {
-            val (left, right) = it.split("=", limit = 2)
-            left to right
-        } ?: emptyMap()
+        return configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.mapNotNull {
+            val parts = it.split("=", limit = 2)
+            if (parts.size == 2) {
+                parts[0].trim() to parts[1].trim()
+            } else {
+                logger.warn("Invalid file gateway configuration item: $it")
+                null
+            }
+        }?.toMap() ?: emptyMap()
     }
 
     fun userWinTimeLeft(userId: String): Int {
