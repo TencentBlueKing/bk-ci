@@ -37,13 +37,13 @@ import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.api.template.v2.ServicePipelineTemplateV2Resource
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
+import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
-import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -333,6 +333,31 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
                 }
             }
         }
+
+        val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, templateRecord.id)
+        val categoryCodeList = mutableListOf<String>()
+        categoryRecords?.forEach {
+            categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
+        }
+        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = templateRecord.templateCode,
+            storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+        )
+        val addMarketTemplateRequest = MarketTemplateRequest(
+            projectCodeList = arrayListOf(projectCode!!),
+            templateCode = templateRecord.templateCode,
+            templateName = templateRecord.templateName,
+            logoUrl = templateRecord.logoUrl,
+            categoryCodeList = categoryCodeList,
+            publicFlag = templateRecord.publicFlag,
+            publisher = templateRecord.publisher
+        )
+        logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
+        val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
+            .updateMarketTemplateReference("system", projectCode, addMarketTemplateRequest)
+        logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
+
         return Result(templateId)
     }
 
@@ -667,31 +692,6 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
             latestFlag = latestFlag,
             pubTime = pubTime
         )
-        if (approveResult == PASS) {
-            val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, template.id)
-            val categoryCodeList = mutableListOf<String>()
-            categoryRecords?.forEach {
-                categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
-            }
-            val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                dslContext = dslContext,
-                storeCode = template.templateCode,
-                storeType = StoreTypeEnum.TEMPLATE.type.toByte()
-            )
-            val addMarketTemplateRequest = MarketTemplateRequest(
-                projectCodeList = arrayListOf(projectCode!!),
-                templateCode = template.templateCode,
-                templateName = template.templateName,
-                logoUrl = template.logoUrl,
-                categoryCodeList = categoryCodeList,
-                publicFlag = template.publicFlag,
-                publisher = template.publisher
-            )
-            logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
-            val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
-                .updateMarketTemplateReference("system", projectCode, addMarketTemplateRequest)
-            logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
-        }
     }
 
     abstract fun validateTemplateVisibleDept(templateCode: String)
