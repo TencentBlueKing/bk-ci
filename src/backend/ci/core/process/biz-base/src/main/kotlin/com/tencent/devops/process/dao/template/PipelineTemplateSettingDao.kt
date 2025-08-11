@@ -47,6 +47,7 @@ class PipelineTemplateSettingDao {
                 FAILURE_SUBSCRIPTION,
                 RUN_LOCK_TYPE,
                 MAX_CON_RUNNING_QUEUE_SIZE,
+                FAIL_IF_VARIABLE_INVALID,
                 CREATOR,
                 UPDATER,
                 CREATED_TIME,
@@ -68,6 +69,7 @@ class PipelineTemplateSettingDao {
                 JsonUtil.toJson(failSubscriptionList),
                 PipelineRunLockType.toValue(record.runLockType),
                 record.maxConRunningQueueSize ?: 50,
+                record.failIfVariableInvalid,
                 record.creator,
                 record.updater,
                 record.createdTime.toLocalDateTimeOrDefault(),
@@ -86,6 +88,7 @@ class PipelineTemplateSettingDao {
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(record.runLockType))
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, record.maxConRunningQueueSize)
+                .set(FAIL_IF_VARIABLE_INVALID, record.failIfVariableInvalid)
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
                 .execute()
@@ -252,6 +255,7 @@ class PipelineTemplateSettingDao {
             concurrencyCancelInProgress = this.concurrencyCancelInProgress,
             concurrencyGroup = this.concurrencyGroup,
             maxConRunningQueueSize = this.maxConRunningQueueSize,
+            failIfVariableInvalid = this.failIfVariableInvalid,
             pipelineAsCodeSettings = this.pipelineAsCodeSettings?.let { self ->
                 JsonUtil.to(self, PipelineAsCodeSettings::class.java)
             },
