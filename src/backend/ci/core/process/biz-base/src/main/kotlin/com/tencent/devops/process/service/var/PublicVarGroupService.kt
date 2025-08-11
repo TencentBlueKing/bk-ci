@@ -230,8 +230,9 @@ class PublicVarGroupService @Autowired constructor(
         }
 
         // 将variables转换为List<BuildFormProperty>
-        val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
+//        val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
 
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
         val publicVars = buildFormProperties.map { property ->
             PublicVarVO(
                 varName = property.id,
