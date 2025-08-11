@@ -86,7 +86,6 @@ import java.util.concurrent.Executors
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
     private val v2ManagerService: V2ManagerService,
-    @Lazy
     private val rbacCommonService: RbacCommonService,
     private val monitorSpaceService: AuthMonitorSpaceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
