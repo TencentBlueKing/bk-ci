@@ -130,13 +130,21 @@ export default function useTemplateConstraint () {
     async function revertTemplateConstraint (classify, field) {
         try {
             reverting.value = true
-            const templateRes = await vm.proxy.$store.dispatch('atom/revertPipelineConstraint', vm.proxy.$route.params)
+            const templateRes = await vm.proxy.$store.dispatch('atom/revertPipelineConstraint', {
+                ...vm.proxy.$route.params,
+                version: vm.proxy.$route.params.version ?? vm.proxy.$store.state.atom?.pipelineInfo?.version
+            })
             partialRevert({
                 model: templateRes.resource.model,
                 setting: templateRes.setting
             }, classify, field)
+
+            vm.proxy.$store.dispatch('atom/setPipelineEditing', true)
+            return true
         } catch (error) {
             console.error(error)
+            vm.proxy.$bkMessage({ theme: 'error', message: error.message })
+            return false
         } finally {
             reverting.value = false
         }
@@ -145,7 +153,7 @@ export default function useTemplateConstraint () {
         if (reverting.value) return
         let constraintList = overrideTemplateGroups.value[classify] || []
         const pos = constraintList.indexOf(fieldAlias)
-      
+        let result = true
         if (pos === -1) {
             constraintList = [
                 ...constraintList,
@@ -156,13 +164,14 @@ export default function useTemplateConstraint () {
                 ...constraintList.slice(0, pos),
                 ...constraintList.slice(pos + 1)
             ]
-            await revertTemplateConstraint(classify, field)
+            result = await revertTemplateConstraint(classify, field)
         }
-        
-        vm.proxy.$store.dispatch('atom/updatePipelineConstraintGroup', {
-            classify,
-            constraintList
-        })
+        if (result) {
+            vm.proxy.$store.dispatch('atom/updatePipelineConstraintGroup', {
+                classify,
+                constraintList
+            })
+        }
     }
 
     return {
