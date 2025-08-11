@@ -85,10 +85,6 @@ object OkhttpUtils {
     private const val connectTimeout = 5L
     private const val readTimeout = 30L
     private const val writeTimeout = 30L
-    const val PROTOCOL_HTTP = "http"
-    const val PROTOCOL_HTTPS = "https"
-    const val PROTOCOL_HTTP_DEFAULT_PORT = 80
-    const val PROTOCOL_HTTPS_DEFAULT_PORT = 443
 
     init {
         logger.info("[OkhttpUtils init]")
@@ -438,17 +434,7 @@ object OkhttpUtils {
     fun getPort(urlStr: String): Int? {
         return try {
             val url = URL(urlStr)
-            val port = url.port
-            // 处理默认端口（未显式指定时返回-1）
-            if (port == -1) {
-                when (url.protocol) {
-                    PROTOCOL_HTTP -> PROTOCOL_HTTP_DEFAULT_PORT
-                    PROTOCOL_HTTPS -> PROTOCOL_HTTPS_DEFAULT_PORT
-                    else -> null // 其他协议可根据需求补充
-                }
-            } else {
-                port
-            }
+            return url.port
         } catch (ignored: Exception) {
             logger.warn("url[] Invalid", ignored)
             // 处理无效URL格式的异常
