@@ -1071,7 +1071,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            val nodeHashIds = find.nodeHashIds?.toSet() ?: run {
+            val nodeHashIds = find.nodeHashIds?.toSet()?.ifEmpty { null } ?: run {
                 logger.warn("env for $envId has empty public node")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
