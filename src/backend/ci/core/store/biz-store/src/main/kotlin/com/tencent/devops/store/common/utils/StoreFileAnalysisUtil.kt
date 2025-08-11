@@ -37,11 +37,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
@@ -148,13 +148,13 @@ object StoreFileAnalysisUtil {
     ): Result<Boolean?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveComponentFileResource::class)
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/component/pkg/archive" +
-                "?userId=$userId&storeType=${archiveStorePkgRequest.storeType.name}" +
-                "&storeCode=${archiveStorePkgRequest.storeCode}&version=${archiveStorePkgRequest.version}" +
-                "&releaseType=${archiveStorePkgRequest.releaseType.name}"
-        OkhttpUtils.uploadFile(
+            "?userId=$userId&storeType=${archiveStorePkgRequest.storeType.name}" +
+            "&storeCode=${archiveStorePkgRequest.storeCode}&version=${archiveStorePkgRequest.version}" +
+            "&releaseType=${archiveStorePkgRequest.releaseType.name}"
+        CommonServiceUtils.uploadFileToService(
             url = serviceUrl,
             uploadFile = file,
-            headers = mapOf(AUTH_HEADER_USER_ID to userId)
+            headers = mutableMapOf(AUTH_HEADER_USER_ID to userId)
         ).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
@@ -174,16 +174,18 @@ object StoreFileAnalysisUtil {
         file: File
     ): Result<Boolean?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
-        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
+        val serviceUrl = StringBuilder(
+            "$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
                 "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
-                "&version=${archiveAtomRequest.version}")
+                "&version=${archiveAtomRequest.version}"
+        )
         archiveAtomRequest.releaseType?.let {
             serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
         }
         archiveAtomRequest.os?.let {
             serviceUrl.append("&os=${archiveAtomRequest.os}")
         }
-        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+        CommonServiceUtils.uploadFileToService(serviceUrl.toString(), file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
                 return I18nUtil.generateResponseDataObject(
