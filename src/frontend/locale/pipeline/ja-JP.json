@@ -1789,7 +1789,6 @@
   "editDraft": "元のドラフトを編集",
   "thinkthink": "再考する",
   "editCurDraft": "ドラフトを編集",
-  "templateYamlNotSupport": "制約モードのパイプライン（テンプレートインスタンス）は、暫定Code方式の表示とPACモードのリリースをサポートしていません。",
   "eventID": "イベントID",
   "runningSteps": "実行中のステップ：",
   "completeness": "完了度：",

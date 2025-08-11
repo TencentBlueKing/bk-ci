@@ -85,7 +85,6 @@
                                 :disabled="disabledPacSwitcher"
                                 theme="primary"
                                 name="enablePac"
-                                :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
                                 v-model="releaseParams.enablePac"
                                 @change="handlePacEnableChange"
                             />
@@ -530,9 +529,6 @@
             pipelineName () {
                 return this.pipelineSetting?.pipelineName
             },
-            isTemplatePipeline () {
-                return this.pipelineInfo?.instanceFromTemplate ?? false
-            },
             isCommitToBranch () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH
             },
@@ -637,7 +633,7 @@
                 return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
             },
             disabledPacSwitcher () {
-                return this.isTemplateInstanceMode ? false : this.pacEnabled || this.isTemplatePipeline
+                return this.isTemplateInstanceMode ? false : this.pacEnabled
             },
             disabledYamlCodeLib () {
                 return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
