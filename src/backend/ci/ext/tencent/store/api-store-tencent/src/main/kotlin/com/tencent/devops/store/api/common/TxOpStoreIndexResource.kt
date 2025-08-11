@@ -25,23 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.shardingprocess.p6
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-@Service
-class Process6ShardingDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext?
-) : ProcessShardingDataClearService() {
+@Tag(name = "OP_STORE_DEPT", description = "OP-商店-组件所属组织")
+@Path("/op/store/index")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpStoreIndexResource {
 
-    override fun getDSLContext(): DSLContext? {
-        return dslContext
-    }
-
-    override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_5" && dslContext != null
-    }
+    @Operation(summary = "触发所有指标计算任务")
+    @PUT
+    @Path("/run/all")
+    fun runAllindexComputeTasks(): Result<Boolean>
 }

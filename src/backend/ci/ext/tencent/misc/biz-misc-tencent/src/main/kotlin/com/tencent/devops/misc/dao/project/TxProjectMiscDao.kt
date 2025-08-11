@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
+import com.tencent.devops.model.project.tables.records.TShardingRoutingRuleRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -78,5 +79,29 @@ class TxProjectMiscDao {
             tsrr.ROUTING_RULE.`as`("ROUTING_RULE")
         ).from(tp).leftJoin(tsrr).on(tp.ENGLISH_NAME.eq(tsrr.ROUTING_NAME))
             .where(conditions).fetch()
+    }
+
+    fun getShardingRoutingRule(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        routingName: String,
+        tableName: String? = null
+    ): TShardingRoutingRuleRecord? {
+        with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(CLUSTER_NAME.eq(clusterName))
+                add(MODULE_CODE.eq(moduleCode.name))
+                add(TYPE.eq(type.name))
+                add(ROUTING_NAME.eq(routingName))
+                tableName?.takeIf { it.isNotBlank() }?.let {
+                    add(TABLE_NAME.eq(it))
+                }
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchOne()
+        }
     }
 }

@@ -18,4 +18,10 @@ data class OpProjectWorkspaceAssignData(
     val localDriver: String?,
     @Parameter(description = "分配类型")
     val type: WorkspaceOwnerType = WorkspaceOwnerType.PROJECT
-)
+) {
+    fun check() {
+        if (cgsIds.isNullOrEmpty() && ips.isNullOrEmpty()) {
+            throw IllegalArgumentException("cgsIds or ips can not be null")
+        }
+    }
+}

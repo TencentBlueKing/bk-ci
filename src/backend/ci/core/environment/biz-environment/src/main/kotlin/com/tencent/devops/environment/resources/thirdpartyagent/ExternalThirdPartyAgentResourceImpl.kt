@@ -81,7 +81,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         zoneName: String?,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): Response {
         return batchInstallAgentService.genAgentInstallScript(
             token = token,
@@ -89,7 +90,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
             zoneName = zoneName,
             loginName = loginName,
             loginPassword = loginPassword,
-            installType = installType
+            installType = installType,
+            reInstallId = reInstallId
         )
     }
 }

@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.common.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -75,6 +76,19 @@ class TxStoreIndexCronService(
 
     @Value("\${codecc.opensource.tag:#{null}}")
     private val codeccOpensourceTag: String = ""
+
+    fun runAllindexComputeTasks(): Boolean {
+        val syncExecutorService = Executors.newFixedThreadPool(2)
+        try {
+            logger.info("start runAllindexComputeTasks")
+            syncExecutorService.submit { computeAtomSlaIndexData() }
+            syncExecutorService.submit { computeAtomQualityIndexInfo() }
+            logger.info("end runAllindexComputeTasks")
+        } finally {
+            syncExecutorService.shutdown()
+        }
+        return true
+    }
 
     /**
      * 计算插件SLA指标数据

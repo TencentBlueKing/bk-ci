@@ -34,14 +34,15 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.project.dao.TxMigrateProjectLogoDao
+import java.nio.file.Files
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.nio.file.Files
-import java.util.concurrent.Executors
 
 @Service
 class TxOpMigrateProjectLogoService @Autowired constructor(
@@ -103,7 +104,7 @@ class TxOpMigrateProjectLogoService @Autowired constructor(
             val destPath = "file/$fileType/$fileName"
             val serviceUrl =
                 "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
-            OkhttpUtils.uploadFile(serviceUrl, tmpFile).use { response ->
+            CommonServiceUtils.uploadFileToService(serviceUrl, tmpFile).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
