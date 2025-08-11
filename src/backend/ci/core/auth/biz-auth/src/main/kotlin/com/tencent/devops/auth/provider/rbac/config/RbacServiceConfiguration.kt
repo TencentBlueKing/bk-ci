@@ -69,20 +69,12 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceTypeDao: AuthResourceTypeDao,
         authActionDao: AuthActionDao,
-        iamV2PolicyService: PolicyService,
-        iamConfiguration: IamConfiguration,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authProjectUserMetricsService: AuthProjectUserMetricsService,
-        bkInternalPermissionComparator: BkInternalPermissionComparator
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao
     ) = RbacCommonService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
-        policyService = iamV2PolicyService,
-        iamConfiguration = iamConfiguration,
-        authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authUserDailyService = authProjectUserMetricsService,
-        bkInternalPermissionComparator = bkInternalPermissionComparator
+        authResourceGroupConfigDao = authResourceGroupConfigDao
     )
 
     @Bean
