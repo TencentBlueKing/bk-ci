@@ -313,8 +313,9 @@ class PipelineTemplateMigrateService(
                 marketTemplateStatus == TemplateStatusEnum.UNDERCARRIAGED)
 
         logger.info(
-            "Migration context setup complete for templateId={}: isConstraint={}, hasBeenPublished={}," +
-                " versionsToMigrate={}", templateId, isConstraint, hasBeenPublished, templateVersionInfos.size
+            "Migration context setup complete for templateId={}: isConstraint={}, marketTemplateStatus={}, " +
+                "hasBeenPublished={}, versionsToMigrate={}", templateId, isConstraint, marketTemplateStatus,
+            hasBeenPublished, templateVersionInfos.size
         )
 
         return MigrationContext(
