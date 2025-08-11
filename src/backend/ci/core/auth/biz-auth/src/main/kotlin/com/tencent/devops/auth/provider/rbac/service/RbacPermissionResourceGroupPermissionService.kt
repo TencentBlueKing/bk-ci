@@ -73,7 +73,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import groovy.lang.Lazy
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -188,8 +187,10 @@ class RbacPermissionResourceGroupPermissionService(
             )
             authorizationScopes.addAll(monitorAuthorizationScopes)
         }
-        logger.info("grant group permissions authorization scopes :{}|{}|{}|{}",
-                    projectCode,iamGroupId,resourceType,JsonUtil.toJson(authorizationScopes))
+        logger.info(
+            "grant group permissions authorization scopes :{}|{}|{}|{}",
+            projectCode, iamGroupId, resourceType, JsonUtil.toJson(authorizationScopes)
+        )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
