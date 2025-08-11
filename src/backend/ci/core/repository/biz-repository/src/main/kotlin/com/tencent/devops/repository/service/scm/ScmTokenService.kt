@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
@@ -43,6 +44,7 @@ import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
+import com.tencent.devops.scm.api.pojo.Oauth2AccessToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,23 +77,7 @@ class ScmTokenService @Autowired constructor(
         ) ?: return null
         // 判断是否过期
         val token = if (isTokenExpire(scmTokenRecord.updateTime.timestamp(), scmTokenRecord.expiresIn)) {
-            logger.info("[$scmCode|$userId]token expired, attempting refresh")
-            val accessToken = scmTokenApiService.refresh(
-                scmCode = scmCode,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.refreshToken)
-            )
-            scmTokenDao.saveAccessToken(
-                dslContext = dslContext,
-                scmToken = RepositoryScmToken(
-                    userId = scmTokenRecord.userId,
-                    scmCode = scmTokenRecord.scmCode,
-                    appType = scmTokenRecord.appType,
-                    accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, accessToken.accessToken),
-                    refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, accessToken.refreshToken),
-                    expiresIn = accessToken.expiresIn,
-                    operator = scmTokenRecord.operator
-                )
-            )
+            val accessToken = refreshToken(scmCode, userId, scmTokenRecord)
             accessToken.accessToken
         } else {
             BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken)
@@ -162,6 +148,31 @@ class ScmTokenService @Autowired constructor(
     private fun isTokenExpire(updateTime: Long?, expiresIn: Long): Boolean {
         // 提前半个小时刷新token
         return ((updateTime ?: 0) + expiresIn - 1800) * 1000 <= System.currentTimeMillis()
+    }
+
+    private fun refreshToken(
+        scmCode: String,
+        userId: String,
+        scmTokenRecord: TRepositoryScmTokenRecord
+    ): Oauth2AccessToken {
+        logger.info("[$scmCode|$userId]token expired, attempting refresh")
+        val accessToken = scmTokenApiService.refresh(
+            scmCode = scmCode,
+            refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.refreshToken)
+        )
+        scmTokenDao.saveAccessToken(
+            dslContext = dslContext,
+            scmToken = RepositoryScmToken(
+                userId = scmTokenRecord.userId,
+                scmCode = scmTokenRecord.scmCode,
+                appType = scmTokenRecord.appType,
+                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken.accessToken),
+                refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken.refreshToken),
+                expiresIn = accessToken.expiresIn,
+                operator = scmTokenRecord.operator
+            )
+        )
+        return accessToken
     }
 
     companion object {
