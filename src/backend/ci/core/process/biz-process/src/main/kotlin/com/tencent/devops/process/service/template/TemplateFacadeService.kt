@@ -1249,8 +1249,12 @@ class TemplateFacadeService @Autowired constructor(
                 templateType = type,
                 templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
                 logoUrl = logoUrl ?: "",
-                category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
-                    .readValue(categoryStr, List::class.java) as List<String> else listOf(),
+                category = try {
+                    if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+                        .readValue(categoryStr, List::class.java) as List<String> else listOf()
+                } catch (ex: Exception) {
+                    emptyList()
+                },
                 stages = model.stages,
                 cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
                     setting, pipelinesWithLabels
