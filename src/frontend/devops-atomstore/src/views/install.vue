@@ -221,7 +221,7 @@
                     image: this.getImageDetail,
                     service: this.getServiceDetail
                 }
-                if (!Object.hasOwnProperty.call(methods, this.type) || typeof methods[this.type] !== 'function') {
+                if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
@@ -327,7 +327,7 @@
                     image: this.installImage,
                     service: this.installService
                 }
-                if (!Object.hasOwnProperty.call(methods, this.type)) {
+                if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }

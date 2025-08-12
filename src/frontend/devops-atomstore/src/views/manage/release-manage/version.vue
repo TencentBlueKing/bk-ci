@@ -74,7 +74,7 @@
                     service: this.getServiceVersion
                 }
                 const type = this.$route.params.type
-                if (!Object.hasOwnProperty.call(methodMap, type)) {
+                if (!Object.keys(methodMap).includes(type) || typeof methodMap[type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
