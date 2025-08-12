@@ -1,7 +1,6 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.AuthResourceDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
