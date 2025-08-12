@@ -221,7 +221,7 @@
                     image: this.getImageDetail,
                     service: this.getServiceDetail
                 }
-                if (!Object.hasOwnProperty.call(methods, this.type)) {
+                if (!Object.hasOwnProperty.call(methods, this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }

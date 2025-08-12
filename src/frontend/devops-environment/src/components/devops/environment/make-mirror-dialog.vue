@@ -119,7 +119,7 @@
                 },
                 mirrorNameRule: {
                     getMessage: field => this.$t('environment.mirrorNameRule'),
-                    validate: value => /^[a-z0-9]([a-z0-9_.-]*[a-z0-9])*$/.test(value)
+                    validate: value => /^[a-z0-9](?:[a-z0-9_.-]*[a-z0-9])?$/.test(value)
                 },
                 mirrorTagRule: {
                     getMessage: field => this.$t('environment.mirrorTagRule'),

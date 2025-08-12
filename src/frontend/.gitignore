@@ -18,3 +18,7 @@ src/assets/static/manifest.json
 
 .nx/cache
 .nx/workspace-data
+
+*.csv
+codeql.sh
+*.sarif
