@@ -300,7 +300,7 @@ const actions = {
                 projectId,
                 scmCode,
                 search,
-                username
+                oauthUserId: username
             }
             commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
@@ -335,7 +335,7 @@ const actions = {
                 projectId,
                 repositoryHashId,
                 search,
-                username
+                oauthUserId: username
             }
             commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')

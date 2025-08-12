@@ -97,7 +97,12 @@ const  createdTimeAgo = (name: string, ts: any) => {
 const fetchRelSourceList = () => {
   try {
     isLoading.value = true;
-    http.getOauthRelSource(scmCode.value, page.value, pageSize.value).then(res => {
+    http.getOauthRelSource({
+      scmCode: scmCode.value,
+      page: page.value,
+      pageSize: pageSize.value,
+      oauthUserId: props.oauth?.username
+    }).then(res => {
       relSourceList.value = [...relSourceList.value, ...res.records];
       hasLoadEnd.value = relSourceList.value.length === res.count;
     })
