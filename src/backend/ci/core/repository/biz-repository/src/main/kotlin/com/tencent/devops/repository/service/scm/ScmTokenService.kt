@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -51,6 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.time.LocalDateTime
 
 @Service
 class ScmTokenService @Autowired constructor(
@@ -59,7 +62,8 @@ class ScmTokenService @Autowired constructor(
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
     private val repoAuthServiceCode: RepoAuthServiceCode,
-    private val scmTokenApiService: ScmTokenApiService
+    private val scmTokenApiService: ScmTokenApiService,
+    private val redisOperation: RedisOperation
 ) {
     @Value("\${aes.git:#{null}}")
     private val aesKey = ""
@@ -69,21 +73,20 @@ class ScmTokenService @Autowired constructor(
         scmCode: String,
         appType: TokenAppTypeEnum = TokenAppTypeEnum.OAUTH2
     ): GitToken? {
-        val scmTokenRecord = scmTokenDao.getToken(
-            dslContext = dslContext,
+        val scmTokenRecord = getToken(
             userId = userId,
             appType = appType.name,
             scmCode = scmCode
         ) ?: return null
+        val token = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken)
         // 判断是否过期
-        val token = if (isTokenExpire(scmTokenRecord.updateTime.timestamp(), scmTokenRecord.expiresIn)) {
-            val accessToken = refreshToken(scmCode, userId, scmTokenRecord)
-            accessToken.accessToken
+        val finalToken = if (isTokenExpire(scmTokenRecord.updateTime.timestamp(), scmTokenRecord.expiresIn)) {
+            tryRefreshToken(scmCode, userId, appType)?.accessToken ?: token
         } else {
-            BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken)
+            token
         }
         return GitToken(
-            accessToken = token,
+            accessToken = finalToken,
             tokenType = scmTokenRecord.appType,
             operator = scmTokenRecord.operator,
             userId = userId
@@ -145,34 +148,98 @@ class ScmTokenService @Autowired constructor(
      * @param updateTime token的最后更新时间(秒)
      * @param expiresIn token的过期时间(秒)
      */
-    private fun isTokenExpire(updateTime: Long?, expiresIn: Long): Boolean {
+    fun isTokenExpire(updateTime: Long?, expiresIn: Long): Boolean {
         // 提前半个小时刷新token
         return ((updateTime ?: 0) + expiresIn - 1800) * 1000 <= System.currentTimeMillis()
+    }
+
+    fun tryRefreshToken(
+        scmCode: String,
+        userId: String,
+        appType: TokenAppTypeEnum
+    ): RepositoryScmToken? {
+        val lock = RedisLock(
+            redisOperation,
+            "OAUTH_REFRESH_TOKEN_${scmCode}_${userId}_${appType.name}",
+            60L
+        )
+        // 防止并发刷新token
+        return lock.use {
+            lock.lock()
+            val record = getToken(userId, appType.name, scmCode) ?: return null
+            // 二次校验是否已过期
+            val expired = isTokenExpire(record.updateTime.timestamp(), record.expiresIn)
+            if (expired) {
+                refreshToken(scmCode, userId, record)?.let {
+                    RepositoryScmToken(
+                        userId = userId,
+                        scmCode = scmCode,
+                        appType = appType.name,
+                        accessToken = it.accessToken,
+                        refreshToken = it.refreshToken,
+                        expiresIn = it.expiresIn,
+                        createTime = LocalDateTime.now().timestamp(), // token的创建时间
+                        operator = record.operator
+                    )
+                }
+            } else {
+                RepositoryScmToken(
+                    userId = userId,
+                    scmCode = scmCode,
+                    appType = appType.name,
+                    accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, record.accessToken),
+                    refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, record.refreshToken),
+                    expiresIn = record.expiresIn,
+                    createTime = record.updateTime.timestamp(), // token最后刷新时间
+                    operator = record.operator
+                )
+            }
+        }
     }
 
     private fun refreshToken(
         scmCode: String,
         userId: String,
         scmTokenRecord: TRepositoryScmTokenRecord
-    ): Oauth2AccessToken {
+    ): Oauth2AccessToken? {
         logger.info("[$scmCode|$userId]token expired, attempting refresh")
-        val accessToken = scmTokenApiService.refresh(
-            scmCode = scmCode,
-            refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.refreshToken)
-        )
-        scmTokenDao.saveAccessToken(
-            dslContext = dslContext,
-            scmToken = RepositoryScmToken(
-                userId = scmTokenRecord.userId,
-                scmCode = scmTokenRecord.scmCode,
-                appType = scmTokenRecord.appType,
-                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken.accessToken),
-                refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken.refreshToken),
-                expiresIn = accessToken.expiresIn,
-                operator = scmTokenRecord.operator
+        val accessToken = try {
+            scmTokenApiService.refresh(
+                scmCode = scmCode,
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.refreshToken)
             )
-        )
+        } catch (ignored: Exception) {
+            logger.warn("failed to refresh token", ignored)
+            null
+        }
+        accessToken?.let {
+            scmTokenDao.saveAccessToken(
+                dslContext = dslContext,
+                scmToken = RepositoryScmToken(
+                    userId = scmTokenRecord.userId,
+                    scmCode = scmTokenRecord.scmCode,
+                    appType = scmTokenRecord.appType,
+                    accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, it.accessToken),
+                    refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, it.refreshToken),
+                    expiresIn = it.expiresIn,
+                    operator = scmTokenRecord.operator
+                )
+            )
+        }
         return accessToken
+    }
+
+    fun getToken(
+        userId: String,
+        scmCode: String,
+        appType: String
+    ): TRepositoryScmTokenRecord? {
+        return scmTokenDao.getToken(
+            dslContext = dslContext,
+            userId = userId,
+            appType = appType,
+            scmCode = scmCode
+        )
     }
 
     companion object {

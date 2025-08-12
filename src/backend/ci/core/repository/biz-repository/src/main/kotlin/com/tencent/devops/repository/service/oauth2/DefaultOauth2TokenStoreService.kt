@@ -29,13 +29,16 @@ package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
+import com.tencent.devops.repository.service.scm.ScmTokenService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -46,7 +49,8 @@ import org.springframework.stereotype.Service
 @Service
 class DefaultOauth2TokenStoreService(
     private val dslContext: DSLContext,
-    private val repositoryScmTokenDao: RepositoryScmTokenDao
+    private val repositoryScmTokenDao: RepositoryScmTokenDao,
+    private val scmTokenService: ScmTokenService
 ) : IOauth2TokenStoreService {
 
     @Value("\${aes.git:#{null}}")
@@ -71,15 +75,7 @@ class DefaultOauth2TokenStoreService(
             appType = TokenAppTypeEnum.OAUTH2.name
         )
         return scmTokenRecord?.let {
-            OauthTokenInfo(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                tokenType = "",
-                expiresIn = it.expiresIn,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
-                createTime = it.createTime.timestampmilli(),
-                userId = userId,
-                operator = it.operator ?: userId
-            )
+            checkExpire(it, userId)
         }
     }
 
@@ -123,15 +119,43 @@ class DefaultOauth2TokenStoreService(
             scmCode = scmCode,
             operator = userId
         ).map {
-            OauthTokenInfo(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                tokenType = it.appType,
-                expiresIn = it.expiresIn,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
-                createTime = it.createTime.timestampmilli(),
+            checkExpire(it, userId)
+        }
+    }
+
+    /**
+     * 检查是否过期，过期则尝试续期
+     */
+    private fun checkExpire(
+        it: TRepositoryScmTokenRecord,
+        userId: String
+    ): OauthTokenInfo {
+        val oauthTokenInfo = OauthTokenInfo(
+            accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+            tokenType = "",
+            expiresIn = it.expiresIn,
+            refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+            createTime = it.createTime.timestampmilli(),
+            userId = userId,
+            operator = it.operator ?: userId
+        )
+        return if (scmTokenService.isTokenExpire(it.updateTime.timestamp(), it.expiresIn)) {
+            val refreshToken = scmTokenService.tryRefreshToken(
+                scmCode = it.scmCode,
                 userId = it.userId,
-                operator = it.operator
+                appType = TokenAppTypeEnum.OAUTH2
             )
+            // 刷新成功，返回新值
+            refreshToken?.let {
+                oauthTokenInfo.copy(
+                    accessToken = it.accessToken,
+                    expiresIn = it.expiresIn,
+                    refreshToken = it.refreshToken,
+                    createTime = it.createTime
+                )
+            } ?: oauthTokenInfo
+        } else {
+            oauthTokenInfo
         }
     }
 }
