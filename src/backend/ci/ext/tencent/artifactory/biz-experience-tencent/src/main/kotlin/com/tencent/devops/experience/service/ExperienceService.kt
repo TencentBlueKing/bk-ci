@@ -508,9 +508,21 @@ class ExperienceService @Autowired constructor(
             experience.outerUsers
         }
 
+        val platform = if (experience.platform == null) {
+            PlatformEnum.ofTail(experience.path)
+        } else {
+            PlatformEnum.ofName(experience.platform!!).also {
+                for (t in it.tails) {
+                    if (experience.path.endsWith(t)) {
+                        return@also
+                    }
+                }
+                logger.warn("experience path not match platform")
+                throw RuntimeException("experience path not match platform")
+            }
+        }
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val platform = PlatformEnum.ofTail(experience.path)
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -914,7 +926,8 @@ class ExperienceService @Autowired constructor(
             categoryId = experience.categoryId,
             productOwner = experience.productOwner,
             sendNotification = experience.sendNotification,
-            classify = experience.classify
+            classify = experience.classify,
+            platform = experience.platform
         )
 
         val experienceId = createExperience(

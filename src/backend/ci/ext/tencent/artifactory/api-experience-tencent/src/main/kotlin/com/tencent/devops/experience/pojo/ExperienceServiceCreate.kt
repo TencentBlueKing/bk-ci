@@ -65,5 +65,7 @@ data class ExperienceServiceCreate(
     @get:Schema(title = "scheme", required = false)
     val scheme: String? = null,
     @get:Schema(title = "分类", required = false)
-    val classify: String? = null
+    val classify: String? = null,
+    @get:Schema(title = "平台", required = false)
+    val platform: String? = null
 )

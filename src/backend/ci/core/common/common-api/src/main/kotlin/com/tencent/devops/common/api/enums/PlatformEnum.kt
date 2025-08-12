@@ -65,7 +65,7 @@ enum class PlatformEnum(
          */
         fun ofName(name: String): PlatformEnum {
             for (platformEnum in values()) {
-                if (platformEnum.mean.equals(name, true)) {
+                if (platformEnum.toString().equals(name, true)) {
                     return platformEnum
                 }
             }
