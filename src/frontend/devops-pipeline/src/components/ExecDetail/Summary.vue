@@ -155,6 +155,7 @@
                         v-if="remarkEditable"
                         type="textarea"
                         v-model="tempRemark"
+                        :maxlength="4096"
                         :placeholder="$t('details.addRemarkForBuild')"
                         class="exec-remark"
                     />
