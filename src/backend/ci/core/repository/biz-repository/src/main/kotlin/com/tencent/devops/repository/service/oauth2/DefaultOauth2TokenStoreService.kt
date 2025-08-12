@@ -138,7 +138,7 @@ class DefaultOauth2TokenStoreService(
             expiresIn = it.expiresIn,
             refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
             createTime = it.createTime.timestampmilli(),
-            userId = userId,
+            userId = it.userId,
             operator = it.operator ?: userId
         )
         return if (scmTokenService.isTokenExpire(it.updateTime.timestamp(), it.expiresIn)) {
