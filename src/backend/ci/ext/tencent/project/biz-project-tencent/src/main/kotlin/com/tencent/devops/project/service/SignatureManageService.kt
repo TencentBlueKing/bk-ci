@@ -186,10 +186,10 @@ class SignatureManageService(
             )
         } catch (ex: Exception) {
             // 若第三方接口出现故障，不影响用户使用，告警，通知开发人员处理
-            logger.error("fetch Live Signature Status failed! {}|{}|{}", platform, projectId, userId, ex)
+            logger.warn("fetch Live Signature Status failed! {}|{}|{}", platform, projectId, userId, ex)
             return UserSignatureStatusResponse(
                 userId = userId,
-                signed = true
+                signed = false
             )
         }
     }
