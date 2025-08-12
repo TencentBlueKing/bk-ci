@@ -627,13 +627,15 @@
         },
         methods: {
             branchBlur (value) {
-                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value) {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && this.initReleaseType === 'CANCEL_RE_RELEASE') {
                     this.getAtomLog(value)
                 }
             },
             releaseTypeChange (value) {
                 const branch = (value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch) ? this.atomForm.branch : null
-                this.getAtomLog(branch)
+                if (this.initReleaseType === 'CANCEL_RE_RELEASE') {
+                    this.getAtomLog(branch)
+                }
             },
             async getAtomLog (branch) {
                 try {
@@ -705,7 +707,6 @@
                     const { showVersionList } = await api.requestAtomVersionDetail(res.atomCode)
                     if (res) {
                         Object.assign(this.atomForm, res, {})
-                        this.getAtomLog()
                         this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
                         this.initJobType = this.atomForm.jobType
                         this.atomForm.labelIdList = (this.atomForm.labelList || []).map(item => {
@@ -721,6 +722,9 @@
                                 this.initReleaseType = versionInfo.releaseType
                             }
                         })
+                        if (this.initReleaseType === 'CANCEL_RE_RELEASE') {
+                            this.getAtomLog()
+                        }
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
