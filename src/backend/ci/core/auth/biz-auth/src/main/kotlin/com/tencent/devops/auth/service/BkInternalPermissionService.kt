@@ -288,13 +288,14 @@ class BkInternalPermissionService(
         memberId: String
     ): List<Int> {
         return createTimer(::listMemberGroupIdsInProject.name).record(Supplier {
-            // 获取用户加入的项目级用户组模板ID
-            val iamTemplateIds = listProjectMemberGroupTemplateIds(
-                projectCode = projectCode,
-                memberId = memberId
-            )
             // 获取用户的所属组织
             val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
+            // 获取用户及所属部门加入的项目级用户组模板ID
+            val iamTemplateIds = listProjectMemberGroupTemplateIds(
+                projectCode = projectCode,
+                memberId = memberId,
+                memberDeptInfos = memberDeptInfos
+            )
             authResourceGroupMemberDao.listMemberGroupIdsInProject(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -307,15 +308,15 @@ class BkInternalPermissionService(
 
     private fun listProjectMemberGroupTemplateIds(
         projectCode: String,
-        memberId: String
+        memberId: String,
+        memberDeptInfos: List<String>
     ): List<String> {
-        // 查询项目下包含该成员的组列表
+        // 查询项目下包含该成员及所属组织的用户组列表
         val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
-            memberId = memberId,
-            minExpiredTime = LocalDateTime.now()
+            memberIds = memberDeptInfos + memberId
         ).map { it.iamGroupId.toString() }
         // 通过项目组ID获取人员模板ID
         return authResourceGroupDao.listByRelationId(
