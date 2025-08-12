@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.startcloud.StartMessageType
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusData
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusRespV2
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserData
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserEnum
 import com.tencent.devops.remotedev.service.client.StartCloudClient
@@ -40,6 +41,7 @@ class StartWorkspaceService @Autowired constructor(
     private val client: Client,
     val checkTokenService: ClientTokenService
 ) {
+    @Deprecated("use computerStatusV2")
     fun computerStatus(
         projectId: String?,
         cgsIds: MutableSet<String> = mutableSetOf()
@@ -98,14 +100,31 @@ class StartWorkspaceService @Autowired constructor(
         )
     }
 
+    fun computerStatusV2(
+        cgsIds: Set<String>
+    ): Map<String, ComputerStatusRespV2> {
+        if (cgsIds.isEmpty()) {
+            return emptyMap()
+        }
+        // 获取状态信息
+        val resp = startCloudClient.computerStatus(cgsIds)
+            ?: return emptyMap()
+
+        return resp.associate {
+            it.cgsId to ComputerStatusRespV2(
+                loginUsers = it.userInfos?.map { user -> user.account } ?: emptyList(),
+                status = ComputerStatusEnum.getEnumFromStatus(it.state))
+        }
+    }
+
     private val userEnvCache = Caffeine.newBuilder()
         .expireAfterWrite(Duration.ofSeconds(5))
-        .build<String, List<String>>()
+        .build<String, ComputerStatusRespV2>()
 
     fun cachingLoginUsers(
         cgsIds: Set<String>
-    ): Map<String, List<String>> {
-        val res = mutableMapOf<String, List<String>>()
+    ): Map<String, ComputerStatusRespV2> {
+        val res = mutableMapOf<String, ComputerStatusRespV2>()
         cgsIds.forEach { cgsId ->
             res[cgsId] = userEnvCache.getIfPresent(cgsId) ?: return@forEach
         }
@@ -117,18 +136,17 @@ class StartWorkspaceService @Autowired constructor(
         userEnvCache.putAll(load)
         res.putAll(load)
         val invalid = diff - load.keys
-        userEnvCache.putAll(invalid.associateWith { emptyList() })
+        userEnvCache.putAll(invalid.associateWith { ComputerStatusRespV2(emptyList(), ComputerStatusEnum.NORMAL) })
         return res
     }
 
     fun loginUsers(
         cgsIds: Set<String>
-    ): Map<String, List<String>> {
+    ): Map<String, ComputerStatusRespV2> {
         return kotlin.runCatching {
-            computerStatus(
-                null,
-                cgsIds.toMutableSet()
-            ).users.find { it.type == ComputerUserEnum.LOGIN }?.names
+            computerStatusV2(
+                cgsIds
+            )
         }.getOrNull() ?: emptyMap()
     }
 

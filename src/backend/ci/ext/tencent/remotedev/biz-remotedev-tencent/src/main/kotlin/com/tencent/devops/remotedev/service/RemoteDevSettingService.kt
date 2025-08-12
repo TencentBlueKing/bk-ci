@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,11 +51,13 @@ class RemoteDevSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val whiteListService: WhiteListService,
-    private val taiClient: TaiClient
+    private val taiClient: TaiClient,
+    private val configCacheService: ConfigCacheService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevSettingService::class.java)
+        private const val BKREPO_HOST_KEY = "remotedev:bkrepoHost"
     }
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
@@ -73,6 +76,24 @@ class RemoteDevSettingService @Autowired constructor(
             }
         }
         return setting
+    }
+
+    fun getFileGateway(): Map<String, String> {
+        // 配置示例  zone1=https://zone1.bkrepo.com,zone2=https://zone2.bkrepo.com
+        return configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.mapNotNull {
+            val parts = it.split("=", limit = 2)
+            if (parts.size != 2) {
+                logger.warn("Invalid file gateway configuration item: $it")
+                return@mapNotNull null
+            }
+            val key = parts[0].trim()
+            val value = parts[1].trim()
+            if (key.isEmpty() || value.isEmpty()) {
+                logger.warn("Invalid file gateway configuration item: $it")
+                return@mapNotNull null
+            }
+            key to value
+        }?.toMap() ?: emptyMap()
     }
 
     fun userWinTimeLeft(userId: String): Int {
@@ -111,7 +132,7 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
-    fun updateSetting4Op(operator: String,data: OPUserSetting) {
+    fun updateSetting4Op(operator: String, data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         data.userIds.forEach { userId ->
             remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
