@@ -192,7 +192,8 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         authResourceDao: AuthResourceDao,
         resourceGroupSyncService: PermissionResourceGroupSyncService,
-        redisOperation: RedisOperation
+        redisOperation: RedisOperation,
+        userManageService: UserManageService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -203,7 +204,8 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         authResourceDao = authResourceDao,
         resourceGroupSyncService = resourceGroupSyncService,
-        redisOperation = redisOperation
+        redisOperation = redisOperation,
+        userManageService = userManageService
     )
 
     @Bean
