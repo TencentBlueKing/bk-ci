@@ -170,10 +170,10 @@ class GithubTokenService @Autowired constructor(
         )
     }
 
-    fun listEmptyToken(
+    fun listEmptyOperator(
         dsl: DSLContext = dslContext,
         limit: Int
-    ) = githubTokenDao.listEmptyToken(dsl, limit)
+    ) = githubTokenDao.listEmptyOperator(dsl, limit)
 
     fun updateOperator(
         dsl: DSLContext = dslContext,

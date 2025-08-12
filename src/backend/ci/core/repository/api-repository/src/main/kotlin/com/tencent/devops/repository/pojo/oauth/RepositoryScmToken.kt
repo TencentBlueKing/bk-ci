@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Token模型")
 data class RepositoryScmToken(
-    @get:Schema(title = "服务端用户名")
+    @get:Schema(title = "授权用户ID")
     var userId: String = "",
     @get:Schema(title = "代码库类型")
     var scmCode: String = "",

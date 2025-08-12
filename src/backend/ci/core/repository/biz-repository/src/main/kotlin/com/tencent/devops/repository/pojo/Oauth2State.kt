@@ -36,5 +36,5 @@ data class Oauth2State(
     @get:Schema(title = "回调url", required = true)
     val redirectUrl: String,
     @get:Schema(title = "目标用户名", required = false)
-    val username: String?
+    val oauthUserId: String?
 )

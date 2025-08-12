@@ -306,7 +306,7 @@ class GitOauthService @Autowired constructor(
                 createTime = it.createTime.timestampmilli(),
                 updateTime = LocalDateTime.now().timestampmilli(),
                 operator = it.operator ?: userId,
-                userId = userId
+                oauthUserId = userId
             )
         }
     }

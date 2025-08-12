@@ -89,7 +89,7 @@ class ScmTokenService @Autowired constructor(
             accessToken = finalToken,
             tokenType = scmTokenRecord.appType,
             operator = scmTokenRecord.operator,
-            userId = userId
+            oauthUserId = userId
         )
     }
 
@@ -135,7 +135,7 @@ class ScmTokenService @Autowired constructor(
         val oauthState = Oauth2State(
             userId = userId,
             redirectUrl = redirectUrl,
-            username = null
+            oauthUserId = null
         )
         return scmTokenApiService.authorizationUrl(
             scmCode = scmCode,
@@ -166,7 +166,11 @@ class ScmTokenService @Autowired constructor(
         // 防止并发刷新token
         return lock.use {
             lock.lock()
-            val record = getToken(userId, appType.name, scmCode) ?: return null
+            val record = getToken(
+                userId = userId,
+                appType = appType.name,
+                scmCode = scmCode
+            ) ?: return null
             // 二次校验是否已过期
             val expired = isTokenExpire(record.updateTime.timestamp(), record.expiresIn)
             if (expired) {

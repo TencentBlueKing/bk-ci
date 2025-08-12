@@ -110,7 +110,7 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
                     errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
                 )
             }
-            githubTokenDao.delete(dslContext = dslContext, username = username)
+            githubTokenDao.delete(dslContext = dslContext, oauthUserId = username)
         }
     }
 

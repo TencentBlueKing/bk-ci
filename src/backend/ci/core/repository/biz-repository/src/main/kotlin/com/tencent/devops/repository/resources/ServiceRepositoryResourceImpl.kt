@@ -41,14 +41,24 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import java.net.URLDecoder
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -56,7 +66,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ALL")
 class ServiceRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService,
-    private val repoPipelineService: RepoPipelineService
+    private val repoPipelineService: RepoPipelineService,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) : ServiceRepositoryResource {
 
     @BkTimed(extraTags = ["operate", "create"])

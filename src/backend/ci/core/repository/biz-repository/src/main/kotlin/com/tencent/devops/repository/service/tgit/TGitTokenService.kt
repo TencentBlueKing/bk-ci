@@ -78,7 +78,7 @@ class TGitTokenService @Autowired constructor(
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli(),
-                userId = userId
+                oauthUserId = userId
             )
         }
     }

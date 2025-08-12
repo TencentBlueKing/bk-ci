@@ -114,6 +114,8 @@ object RepositoryMessageCode {
     const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2115062" // 仅支持git类型代码库开启PAC
     const val ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE = "2115063" // 非OAUTH授权代持人无法删除
     const val ERROR_AUTHORIZATION_USER_INFO_EXPIRED = "2115064" // [{0}]授权用户信息已失效
+    const val ERROR_REPOSITORY_NOT_OAUTH_AUTHORIZED = "2115065" // 当前代码库不是 OAUTH 授权
+    const val ERROR_USER_NO_PERMISSION_OAUTH_ACCOUNT = "2115066" // 用户 [{0}] 没有 oauth 账户 [{1}] 的使用权限
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

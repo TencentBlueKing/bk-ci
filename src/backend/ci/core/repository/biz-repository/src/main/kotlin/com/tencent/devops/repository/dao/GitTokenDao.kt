@@ -102,7 +102,7 @@ class GitTokenDao {
         }
     }
 
-    fun listEmptyToken(dslContext: DSLContext, limit: Int): List<TRepositoryGitTokenRecord> {
+    fun listEmptyOperator(dslContext: DSLContext, limit: Int): List<TRepositoryGitTokenRecord> {
         return with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             dslContext.selectFrom(this)
                     .where(OPERATOR.isNull())
