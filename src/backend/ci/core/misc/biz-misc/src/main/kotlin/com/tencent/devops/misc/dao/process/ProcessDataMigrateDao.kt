@@ -443,12 +443,14 @@ class ProcessDataMigrateDao {
 
     fun getPipelineJobMutexGroupRecords(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        limit: Int,
+        offset: Int
     ): List<TPipelineJobMutexGroupRecord> {
         with(TPipelineJobMutexGroup.T_PIPELINE_JOB_MUTEX_GROUP) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchInto(TPipelineJobMutexGroupRecord::class.java)
+                .limit(limit).offset(offset).fetchInto(TPipelineJobMutexGroupRecord::class.java)
         }
     }
 
@@ -465,23 +467,14 @@ class ProcessDataMigrateDao {
     fun getPipelineLabelRecords(
         dslContext: DSLContext,
         projectId: String,
-        labelIds: List<Long>? = null,
-        limit: Int? = null,
-        offset: Int? = null
+        limit: Int,
+        offset: Int
     ): List<TPipelineLabelRecord> {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            if (!labelIds.isNullOrEmpty()) {
-                conditions.add(ID.`in`(labelIds))
-            }
-            val baseStep = dslContext.selectFrom(this)
-                .where(conditions)
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
                 .orderBy(CREATE_TIME.asc(), ID.asc())
-            if (limit != null && offset != null) {
-                baseStep.limit(limit).offset(offset)
-            }
-            return baseStep.fetchInto(TPipelineLabelRecord::class.java)
+                .limit(limit).offset(offset).fetchInto(TPipelineLabelRecord::class.java)
         }
     }
 
@@ -490,20 +483,8 @@ class ProcessDataMigrateDao {
         pipelineLabelRecords: List<TPipelineLabelRecord>
     ) {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
-            migratingShardingDslContext.batch(
-                pipelineLabelRecords.map { pipelineLabelRecord ->
-                    migratingShardingDslContext.insertInto(this)
-                        .set(pipelineLabelRecord)
-                        .onDuplicateKeyUpdate()
-                        .set(GROUP_ID, pipelineLabelRecord.groupId)
-                        .set(NAME, pipelineLabelRecord.name)
-                        .set(CREATE_TIME, pipelineLabelRecord.createTime)
-                        .set(UPDATE_TIME, pipelineLabelRecord.updateTime)
-                        .set(CREATE_USER, pipelineLabelRecord.createUser)
-                        .set(UPDATE_USER, pipelineLabelRecord.updateUser)
-                        .set(PROJECT_ID, pipelineLabelRecord.projectId)
-                }
-            ).execute()
+            val insertRecords = pipelineLabelRecords.map { migratingShardingDslContext.newRecord(this, it) }
+            migratingShardingDslContext.batchInsert(insertRecords).execute()
         }
     }
 
@@ -1161,34 +1142,6 @@ class ProcessDataMigrateDao {
         with(TPipelineTriggerReview.T_PIPELINE_TRIGGER_REVIEW) {
             val insertRecords = pipelineTriggerReviewRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
-        }
-    }
-
-    fun getPipelineTimerRecord(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): TPipelineTimerRecord? {
-        with(TPipelineTimer.T_PIPELINE_TIMER) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne()
-        }
-    }
-
-    fun migratePipelineTimerData(
-        migratingShardingDslContext: DSLContext,
-        pipelineTimerRecord: TPipelineTimerRecord
-    ) {
-        with(TPipelineTimer.T_PIPELINE_TIMER) {
-            migratingShardingDslContext.insertInto(this)
-                .set(pipelineTimerRecord)
-                .onDuplicateKeyUpdate()
-                .set(PROJECT_ID, pipelineTimerRecord.projectId)
-                .set(CRONTAB, pipelineTimerRecord.crontab)
-                .set(CREATOR, pipelineTimerRecord.creator)
-                .set(CREATE_TIME, pipelineTimerRecord.createTime)
-                .set(CHANNEL, pipelineTimerRecord.channel)
         }
     }
 
