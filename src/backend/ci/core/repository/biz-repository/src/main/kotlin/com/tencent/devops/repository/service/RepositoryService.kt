@@ -557,10 +557,7 @@ class RepositoryService @Autowired constructor(
         if (isOauth) {
             val operator = oauth2TokenStoreManager.get(userId = oauthUserId, scmCode = repository.scmCode)?.operator
             if (userId != operator) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_USER_NO_PERMISSION_OAUTH_ACCOUNT,
-                    params = arrayOf(userId, oauthUserId)
-                )
+                logger.warn("user [$userId] does not have permission to use the OAUTH account [$oauthUserId]")
             }
         }
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
