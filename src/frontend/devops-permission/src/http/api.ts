@@ -56,7 +56,7 @@ export default {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return fetch.get(`${repositoryPerfix}/repositories/oauth/relSource?scmCode=${query}`)
+    return fetch.get(`${repositoryPerfix}/repositories/oauth/relSource?${query}`)
   },
   refreshOauth(oauthType: any, username: string, redirectUrl: any) {
     return fetch.post(`${repositoryPerfix}/repositories/oauth/reset?scmCode=${oauthType}&oauthUserId=${username}&redirectUrl=${redirectUrl}`)
