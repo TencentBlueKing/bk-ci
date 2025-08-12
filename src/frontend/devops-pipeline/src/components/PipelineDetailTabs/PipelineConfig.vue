@@ -126,12 +126,6 @@
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
                 isBranchVersion: 'atom/isBranchVersion'
             }),
-            projectId () {
-                return this.$route.params.projectId
-            },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
             canEdit () {
                 return this.pipelineInfo?.permissions?.canEdit ?? true
             },

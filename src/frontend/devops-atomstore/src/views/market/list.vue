@@ -169,7 +169,7 @@
                     template: () => this.$store.dispatch('store/requestMarketTemplate', postData),
                     image: () => this.$store.dispatch('store/requestMarketImage', postData)
                 }
-                if (Object.hasOwnProperty.call(apiFun, pipeType) === false) {
+                if (!Object.hasOwnProperty.call(apiFun, pipeType) || typeof apiFun[pipeType] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }

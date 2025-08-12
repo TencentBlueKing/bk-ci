@@ -82,5 +82,12 @@ module.exports = (env, argv) => {
             { from: /^\/pipeline/, to: '/pipeline/index.html' }
         ]
     }
+    config.devServer.proxy = [
+        {
+            context: ['/ms/'],
+            target: 'http://dev.devops.woa.com',
+            changeOrigin: true
+        }
+    ]
     return config
 }

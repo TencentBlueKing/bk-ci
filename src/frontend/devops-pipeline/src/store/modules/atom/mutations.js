@@ -42,13 +42,13 @@ import {
     RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
-    SET_ATOMS,
-    SET_ATOMS_CLASSIFY,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
     SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
@@ -68,6 +68,7 @@ import {
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
+    SET_PLUGIN_HEAD_TAB,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -76,7 +77,6 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
-    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -88,6 +88,7 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
+    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -139,17 +140,19 @@ export default {
      */
     [SET_PIPELINE_INFO]: (state, obj) => {
         Vue.set(state, 'pipelineInfo', obj)
-        console.log(obj, 'set123')
     },
     [UPDATE_PIPELINE_INFO]: (state, partOfInfo) => {
         const pipelineInfo = {
             ...(state.pipelineInfo ?? {})
         }
         Object.assign(pipelineInfo, partOfInfo)
-        console.log(pipelineInfo, 123, partOfInfo)
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
+        if (pipeline && !pipeline.overrideTemplateField) {
+            Object.assign(pipeline, { overrideTemplateField: {} })
+        }
+
         if (!state.pipeline || !pipeline) {
             Vue.set(state, 'pipeline', pipeline)
             return state
@@ -509,5 +512,13 @@ export default {
         return Object.assign(state, {
             isGetPluginHeadTab
         })
+    },
+    [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {
+       
+        Object.assign(state.pipeline, { overrideTemplateField: {
+            ...state.pipeline.overrideTemplateField,
+            [classify]: constraintList
+        } })
+        return state
     }
 }

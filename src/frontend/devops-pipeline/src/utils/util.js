@@ -20,6 +20,10 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import {
+    ALL_TEMPLATE_VIEW_ID,
+    TEMPLATE_VIEW_ID_CACHE
+} from '@/store/modules/templates/constants'
 import { v4 as uuidv4 } from 'uuid'
 import { isFileParam } from '@/store/modules/atom/paramsConfig'
 
@@ -758,6 +762,10 @@ export function cacheViewId (projectId, viewId) {
 
 export function getCacheViewId (projectId) {
     return localStorage.getItem(cacheViewIdKey(projectId)) ?? ALL_PIPELINE_VIEW_ID
+}
+
+export function getTemplateCacheViewId () {
+    return localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) ?? ALL_TEMPLATE_VIEW_ID
 }
 
 export function getMaterialIconByType (type) {
