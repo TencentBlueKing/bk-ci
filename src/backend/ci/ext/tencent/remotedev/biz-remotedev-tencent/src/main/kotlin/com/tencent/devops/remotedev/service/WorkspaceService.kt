@@ -878,7 +878,11 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         status: ComputerStatusRespV2?
     ): WorkspaceStatus {
-        if (it.status.notOk2doNextAction()) {
+        if (it.status.notOk2doNextAction() && Duration.between(
+                it.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds > DEFAULT_WAIT_TIME
+        ) {
             return workspaceCommon.fixUnexpectedStatus(
                 userId = userId,
                 workspaceName = it.workspaceName,
@@ -1581,6 +1585,7 @@ class WorkspaceService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
+        private const val DEFAULT_WAIT_TIME = 10
         private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"
 
         private fun String.removeSuffixNumb(): String {
