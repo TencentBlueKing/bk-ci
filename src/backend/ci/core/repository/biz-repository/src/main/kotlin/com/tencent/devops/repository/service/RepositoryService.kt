@@ -61,6 +61,7 @@ import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_USER_HAVE_NOT_DOWNLOAD_PEM
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_USER_NO_PERMISSION_OAUTH_ACCOUNT
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_GITHUB_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_DELETE
@@ -89,10 +90,12 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -126,7 +129,8 @@ class RepositoryService @Autowired constructor(
     private val githubService: IGithubService,
     private val client: Client,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val repositoryScmConfigDao: RepositoryScmConfigDao
+    private val repositoryScmConfigDao: RepositoryScmConfigDao,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -547,6 +551,17 @@ class RepositoryService @Autowired constructor(
                 errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
                 params = arrayOf(repository.aliasName)
             )
+        }
+        // OAUTH 关联是需校验操作人是否有权限使用OAUTH账号
+        val (isOauth, oauthUserId) = RepositoryUtils.getOauthUser(repository)
+        if (isOauth) {
+            val operator = oauth2TokenStoreManager.get(userId = oauthUserId, scmCode = repository.scmCode)?.operator
+            if (userId != operator) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_USER_NO_PERMISSION_OAUTH_ACCOUNT,
+                    params = arrayOf(userId, oauthUserId)
+                )
+            }
         }
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
         val repositoryId =

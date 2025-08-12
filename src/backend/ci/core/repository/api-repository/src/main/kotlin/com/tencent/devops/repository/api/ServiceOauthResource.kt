@@ -145,16 +145,16 @@ interface ServiceOauthResource {
         scmCode: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取accessToken信息[SCM_REPO]")
+    @Operation(summary = "根据HashId获取accessToken信息[SCM_REPO]")
     @GET
-    @Path("/{scmCode}/token/{username}")
+    @Path("/{projectId}/repo/{repoHashId}/oauth")
     fun scmRepoOauthToken(
-        @Parameter(description = "代码库标识", required = true)
-        @PathParam("scmCode")
-        scmCode: String,
-        @Parameter(description = "用户ID", required = true)
-        @PathParam("username")
-        username: String
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库HashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
     ): Result<GitToken?>
 
     @Operation(summary = "获取授权链接[SCM_REPO]")

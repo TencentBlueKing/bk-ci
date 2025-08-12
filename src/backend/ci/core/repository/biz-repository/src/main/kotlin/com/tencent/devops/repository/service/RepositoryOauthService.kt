@@ -177,10 +177,10 @@ class RepositoryOauthService @Autowired constructor(
         val oauth2AccessToken = scmTokenApiService.callback(scmCode = scmCode, code = code)
         val user = scmUserApiService.getUser(scmCode = scmCode, accessToken = oauth2AccessToken.accessToken)
         // 重置的授权用户与实际用户不一致
-        if (user.username != oauth2State.username) {
+        if (user.username != oauth2State.oauthUserId) {
             logger.warn(
                 "oauth authorization mismatch: actual user [${user.username}] does not match " +
-                        "target user [${oauth2State.username}], potential security risk"
+                        "target user [${oauth2State.oauthUserId}], potential security risk"
             )
         }
         val oauthTokenInfo = with(oauth2AccessToken) {
@@ -222,7 +222,7 @@ class RepositoryOauthService @Autowired constructor(
         redirectUrl: String,
         username: String
     ): String {
-        val oauth2State = Oauth2State(userId = userId, redirectUrl = redirectUrl, username = username)
+        val oauth2State = Oauth2State(userId = userId, redirectUrl = redirectUrl, oauthUserId = username)
         return Base64.getEncoder().encodeToString(JsonUtil.toJson(oauth2State, false).toByteArray())
     }
 

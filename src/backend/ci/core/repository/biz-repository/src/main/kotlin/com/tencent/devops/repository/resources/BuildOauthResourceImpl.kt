@@ -93,13 +93,13 @@ class BuildOauthResourceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         scmCode: String,
-        username: String
+        oauthUserId: String
     ): Result<GitToken?> {
         return Result(
             scmTokenService.checkAndGetAccessToken(
                 projectId = projectId,
                 buildId = buildId,
-                userId = username,
+                userId = oauthUserId,
                 scmCode = scmCode
             )
         )

@@ -77,7 +77,7 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
                 operator = operator,
-                userId = userId
+                oauthUserId = userId
             )
             tGitTokenDao.saveAccessToken(
                 dslContext,

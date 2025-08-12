@@ -118,7 +118,7 @@ interface BuildOauthResource {
 
     @Operation(summary = "获取accessToken信息[SCM_REPO]")
     @GET
-    @Path("/{scmCode}/token/{username}")
+    @Path("/{scmCode}/token/{oauthUserId}")
     fun scmRepoOauthToken(
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
@@ -129,9 +129,9 @@ interface BuildOauthResource {
         @Parameter(description = "代码库标识", required = true)
         @PathParam("scmCode")
         scmCode: String,
-        @Parameter(description = "username", required = true)
-        @PathParam("username")
-        username: String
+        @Parameter(description = "oauthUserId", required = true)
+        @PathParam("oauthUserId")
+        oauthUserId: String
     ): Result<GitToken?>
 
     @Operation(summary = "获取授权链接[SCM_REPO]")

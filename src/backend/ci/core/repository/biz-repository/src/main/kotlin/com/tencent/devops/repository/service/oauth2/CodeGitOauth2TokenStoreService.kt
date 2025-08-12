@@ -79,7 +79,7 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
                 operator = operator,
-                userId = userId
+                oauthUserId = userId
             )
         }
         gitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)

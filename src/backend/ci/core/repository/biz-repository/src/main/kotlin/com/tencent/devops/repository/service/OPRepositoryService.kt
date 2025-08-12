@@ -720,7 +720,7 @@ class OPRepositoryService @Autowired constructor(
             action = {
                 val limit = 100
                 do {
-                    val list = githubTokenService.listEmptyToken(
+                    val list = githubTokenService.listEmptyOperator(
                         dsl = dslContext,
                         limit = limit
                     )
@@ -739,7 +739,7 @@ class OPRepositoryService @Autowired constructor(
             action = {
                 val limit = 100
                 do {
-                    val list = gitTokenDao.listEmptyToken(
+                    val list = gitTokenDao.listEmptyOperator(
                         dslContext = dslContext,
                         limit = limit
                     )
