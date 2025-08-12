@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
@@ -85,6 +86,67 @@ class RbacPermissionService(
                     "$userId|$action"
             )
         }
+    }
+
+    override fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        logger.info("[rbac] validate user project permission|userId = $userId|permission=$permission")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val actionDTO = ActionDTO()
+            val action = RbacAuthUtils.buildAction(
+                authPermission = permission,
+                authResourceType = AuthResourceType.PROJECT
+            )
+            actionDTO.id = action
+            val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
+                .type(AuthResourceType.PROJECT.value)
+                .id(projectCode)
+                .build()
+
+            val subject = SubjectDTO.builder()
+                .id(userId)
+                .type(MemberType.USER.type)
+                .build()
+            val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
+                .subject(subject)
+                .action(actionDTO)
+                .resources(listOf(resourceNode))
+                .build()
+
+            val result = policyService.verifyPermissions(queryPolicyDTO)
+            if (result) {
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = action
+                )
+            }
+            bkInternalPermissionComparator.validateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = ResourceTypeId.PROJECT,
+                resourceCode = projectCode,
+                action = action,
+                expectedResult = result
+            )
+            return result
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user project permission"
+            )
+        }
+    }
+
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        return validateUserProjectPermission(
+            userId = userId,
+            projectCode = projectCode,
+            permission = AuthPermission.MANAGE
+        )
     }
 
     /**
@@ -161,7 +223,7 @@ class RbacPermissionService(
             } else {
                 action
             }
-            if (isManager(
+            if (checkProjectOrSuperManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resource.resourceType,
@@ -275,7 +337,7 @@ class RbacPermissionService(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+            if (checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associateWith { true }
             }
             val actionList = actions.map { action ->
@@ -357,7 +419,7 @@ class RbacPermissionService(
         }
         val result = try {
             // 拥有超级管理员权限,返回所有数据
-            if (isManager(
+            if (checkProjectOrSuperManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resourceType,
@@ -472,7 +534,7 @@ class RbacPermissionService(
         val startEpoch = System.currentTimeMillis()
         try {
             // 如果拥有超管权限,则拥有项目下所有数据
-            if (isManager(
+            if (checkProjectOrSuperManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resourceType,
@@ -509,7 +571,7 @@ class RbacPermissionService(
         )
         val startEpoch = System.currentTimeMillis()
         val result = try {
-            if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+            if (checkProjectManager(userId = userId, projectCode = projectCode)) {
                 actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
@@ -669,7 +731,7 @@ class RbacPermissionService(
     /**
      * 判断是否是管理员
      */
-    private fun isManager(
+    private fun checkProjectOrSuperManager(
         userId: String,
         projectCode: String,
         resourceType: String,
@@ -680,7 +742,7 @@ class RbacPermissionService(
             projectCode = projectCode,
             resourceType = resourceType,
             action = action
-        ) || rbacCommonService.checkProjectManager(
+        ) || checkProjectManager(
             userId = userId,
             projectCode = projectCode
         )
