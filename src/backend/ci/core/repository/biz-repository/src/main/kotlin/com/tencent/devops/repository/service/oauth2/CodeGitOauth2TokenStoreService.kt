@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
@@ -66,7 +67,8 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
                 userId = userId,
-                operator = it.operator
+                operator = it.operator,
+                updateTime = it.updateTime.timestampmilli()
             )
         }
     }
@@ -94,7 +96,8 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
                 userId = it.userId,
-                operator = it.operator
+                operator = it.operator,
+                updateTime = it.updateTime.timestampmilli()
             )
         }
     }

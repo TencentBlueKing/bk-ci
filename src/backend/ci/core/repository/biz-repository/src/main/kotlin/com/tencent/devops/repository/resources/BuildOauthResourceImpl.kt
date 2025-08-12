@@ -35,10 +35,12 @@ import com.tencent.devops.repository.api.BuildOauthResource
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.ScmTokenService
+import com.tencent.devops.repository.utils.RepositoryUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -46,7 +48,8 @@ class BuildOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val githubTokenService: GithubTokenService,
     private val githubOAuthService: GithubOAuthService,
-    private val scmTokenService: ScmTokenService
+    private val scmTokenService: ScmTokenService,
+    private val repositoryService: RepositoryService
 ) : BuildOauthResource {
 
     @SensitiveApiPermission("get_oauth_token")
@@ -89,18 +92,23 @@ class BuildOauthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun scmRepoOauthToken(
-        projectId: String,
-        buildId: String,
-        scmCode: String,
-        oauthUserId: String
-    ): Result<GitToken?> {
+    override fun scmRepoOauthToken(projectId: String, buildId: String, repoHashId: String): Result<GitToken?> {
+        val repository = repositoryService.getRepository(
+            projectId = projectId,
+            repositoryHashId = repoHashId,
+            null
+        )
+        val (isOauth, oauthUserId) = RepositoryUtils.getOauthUser(repository)
+        if (!isOauth) {
+            return Result(null)
+        }
+
         return Result(
             scmTokenService.checkAndGetAccessToken(
                 projectId = projectId,
                 buildId = buildId,
                 userId = oauthUserId,
-                scmCode = scmCode
+                scmCode = repository.scmCode
             )
         )
     }

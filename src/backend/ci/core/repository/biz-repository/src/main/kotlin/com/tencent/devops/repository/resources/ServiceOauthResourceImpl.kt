@@ -27,11 +27,9 @@
 
 package com.tencent.devops.repository.resources
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_REPOSITORY_NOT_OAUTH_AUTHORIZED
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
@@ -42,7 +40,6 @@ import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.ScmTokenService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
-import com.tencent.devops.repository.utils.RepositoryUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,8 +48,7 @@ class ServiceOauthResourceImpl @Autowired constructor(
     private val tGitOAuthService: TGitOAuthService,
     private val githubService: IGithubService,
     private val oauth2TokenStoreManager: Oauth2TokenStoreManager,
-    private val scmTokenService: ScmTokenService,
-    private val repositoryService: RepositoryService
+    private val scmTokenService: ScmTokenService
 ) : ServiceOauthResource {
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitOauthService.getAccessToken(userId))
@@ -123,16 +119,11 @@ class ServiceOauthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun scmRepoOauthToken(projectId: String, repoHashId: String): Result<GitToken?> {
-        val repo = repositoryService.getRepository(projectId, repoHashId, null)
-        val (isOauth, oauthUserId) = RepositoryUtils.getOauthUser(repo)
-        if (!isOauth) {
-            throw ErrorCodeException(errorCode = ERROR_REPOSITORY_NOT_OAUTH_AUTHORIZED)
-        }
+    override fun scmRepoOauthToken(scmCode: String, username: String): Result<GitToken?> {
         return Result(
             scmTokenService.getAccessToken(
-                userId = oauthUserId,
-                scmCode = repo.scmCode
+                userId = username,
+                scmCode = scmCode
             )
         )
     }
