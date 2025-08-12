@@ -50,6 +50,9 @@ class RemoteDevCommonConfig {
     @Value("\${startCloud.apiUrl}")
     val apiUrl: String = ""
 
+    @Value("\${startCloud.apiUrlSZ:}")
+    val apiUrlSZ: String = ""
+
     @Value("\${startCloud.bkciAppName}")
     val bkciAppName: String = "IEG_BKCI"
 
