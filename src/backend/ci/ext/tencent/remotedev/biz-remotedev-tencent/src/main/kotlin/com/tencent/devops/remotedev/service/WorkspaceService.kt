@@ -118,7 +118,6 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -1567,6 +1566,7 @@ class WorkspaceService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
+        private const val DEFAULT_WAIT_TIME = 10
         private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"
 
         private fun String.removeSuffixNumb(): String {
