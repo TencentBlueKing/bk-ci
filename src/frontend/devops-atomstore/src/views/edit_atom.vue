@@ -293,6 +293,7 @@
                             <bk-radio-group
                                 v-model="atomForm.releaseType"
                                 class="radio-group"
+                                @change="releaseTypeChange"
                             >
                                 <bk-radio
                                     :value="entry.value"
@@ -389,7 +390,10 @@
                 >
                     <label class="bk-label"> {{ $t('store.分支') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <bk-input v-model="atomForm.branch"></bk-input>
+                        <bk-input
+                            v-model="atomForm.branch"
+                            @blur="branchBlur"
+                        ></bk-input>
                     </div>
                 </div>
                 <div class="bk-form-item release-package-form-item is-required">
@@ -622,6 +626,29 @@
             this.requestAtomClassify()
         },
         methods: {
+            branchBlur (value) {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value) {
+                    this.getAtomLog(value)
+                }
+            },
+            releaseTypeChange (value) {
+                const branch = (value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch) ? this.atomForm.branch : null
+                this.getAtomLog(branch)
+            },
+            async getAtomLog (branch) {
+                try {
+                    const data = await this.$store.dispatch('store/requestAtomLog', {
+                        codeSrc: this.atomForm.codeSrc,
+                        ...(branch ? { branch }:{})
+                    })
+                    this.atomForm.versionContent = data
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
+            },
             fetchContainerList () {
                 this.$store.dispatch('store/getContainerList').then(res => {
                     this.containerList = res
@@ -678,6 +705,7 @@
                     const { showVersionList } = await api.requestAtomVersionDetail(res.atomCode)
                     if (res) {
                         Object.assign(this.atomForm, res, {})
+                        this.getAtomLog()
                         this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
                         this.initJobType = this.atomForm.jobType
                         this.atomForm.labelIdList = (this.atomForm.labelList || []).map(item => {
@@ -1173,5 +1201,8 @@
         .bk-dialog-default-status {
             padding-top: 10px;
         }
+    }
+    .input-width-full {
+        width: 100%;
     }
 </style>
