@@ -339,9 +339,6 @@ interface ServiceArtifactoryResource {
     @GET
     @Path("/file/content")
     fun getFileContent(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "仓库项目", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -357,9 +354,6 @@ interface ServiceArtifactoryResource {
     @GET
     @Path("/fileNames/list")
     fun listFileNamesByPath(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "仓库项目", required = true)
         @QueryParam("projectId")
         projectId: String,

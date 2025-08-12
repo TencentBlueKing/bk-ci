@@ -370,7 +370,7 @@ bkci:
   security:
     public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
     private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
-    enable: false
+    enable: "__BK_CI_JWT_ENABLE__"
   defaultLocale: __BK_CI_DEFAULT_LOCALE__
   supportLanguages: __BK_CI_SUPPORT_LANGUAGES__
 
@@ -431,3 +431,11 @@ sm4:
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__
+
+scm:
+  webhook:
+    url:
+      # 外部hookUrl
+      outerUrl: /outUrl
+      # 内部hookUrl
+      innerUrl: /inUrl

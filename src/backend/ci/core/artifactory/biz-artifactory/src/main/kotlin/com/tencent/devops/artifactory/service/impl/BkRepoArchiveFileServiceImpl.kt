@@ -629,7 +629,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         modifiedTimeDesc: Boolean?
     ): Page<FileInfo> {
         val data = bkRepoClient.listFilePage(
-            userId = userId,
+            userId = BKREPO_DEFAULT_USER,
             projectId = projectId,
             repoName = REPO_NAME_CUSTOM,
             path = filePath,
@@ -666,7 +666,6 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -674,7 +673,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val tmpFile = DefaultPathUtils.randomFile()
         return try {
             bkRepoClient.downloadFile(
-                userId = userId,
+                userId = BKREPO_DEFAULT_USER,
                 projectId = projectId,
                 repoName = repoName,
                 fullPath = filePath,
@@ -693,7 +692,6 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -702,7 +700,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val fileNames = mutableListOf<String>()
         do {
             val nodeInfos = bkRepoClient.listFilePage(
-                userId = userId,
+                userId = BKREPO_DEFAULT_USER,
                 projectId = projectId,
                 repoName = repoName,
                 path = filePath,

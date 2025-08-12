@@ -145,10 +145,10 @@
         watch: {
             paramValues: {
                 handler (value, oldValue) {
-                    this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
-                        ? this.requiredParams[value.branch.extractBkVar()]
-                        : value.branch
-                    if (oldValue !== undefined && ((value?.subPip !== oldValue?.subPip) || (value?.branch !== oldValue?.branch))) {
+                    this.pipelineRequiredParams.subBranch = typeof value.subBranch === 'string' && value.subBranch.isBkVar()
+                        ? this.requiredParams[value.subBranch.extractBkVar()]
+                        : value.subBranch
+                    if (oldValue !== undefined && ((value?.subPip !== oldValue?.subPip) || (value?.subBranch !== oldValue?.subBranch))) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()

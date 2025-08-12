@@ -29,6 +29,8 @@ package com.tencent.devops.metrics.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
@@ -55,6 +57,7 @@ class ServiceMetricsResourceImpl constructor(
     private val dispatchJobMetricsService: DispatchJobMetricsService
 ) : ServiceMetricsResource {
 
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineSumInfo(
         projectId: String,
         userId: String,
@@ -81,6 +84,7 @@ class ServiceMetricsResourceImpl constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineSummaryInfo(
         projectId: String,
         userId: String,
