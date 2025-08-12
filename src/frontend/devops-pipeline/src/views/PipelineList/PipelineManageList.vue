@@ -331,7 +331,7 @@
                 return this.$route.params.viewId === ARCHIVE_VIEW_ID
             },
             isTableLayout () {
-                return this.isDeleteView || this.layout === TABLE_LAYOUT
+                return this.isDeleteView || this.isArchiveView || this.layout === TABLE_LAYOUT
             },
             isCardLayout () {
                 return this.layout === CARD_LAYOUT

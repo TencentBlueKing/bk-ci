@@ -42,7 +42,10 @@
                         {{ $t('history.branch') }}
                     </bk-tag>
                 </h3>
-                <p class="bk-pipeline-card-summary">
+                <p
+                    v-if="!pipeline.delete"
+                    class="bk-pipeline-card-summary"
+                >
                     <span>
                         <logo
                             size="16"
@@ -63,8 +66,17 @@
                         </span>
                     </span>
                 </p>
+                <p
+                    v-else
+                    class="bk-pipeline-card-summary"
+                >
+                    {{ $t('restore.deleter') }}: {{ getPipelineDeleteInfo(pipeline.pipelineDesc) }}
+                </p>
             </aside>
-            <aside class="bk-pipeline-card-header-right-aside">
+            <aside
+                class="bk-pipeline-card-header-right-aside"
+                v-if="!pipeline.delete"
+            >
                 <span
                     v-if="!executeable"
                     class="bk-pipeline-card-trigger-btn"
@@ -139,7 +151,10 @@
                 </bk-button>
             </div>
         </header>
-        <section class="bk-pipeline-card-info">
+        <section
+            class="bk-pipeline-card-info"
+            v-if="!pipeline.delete"
+        >
             <i
                 class="bk-pipeline-card-info-status-bar"
                 :style="`background: ${statusColor}`"
@@ -201,9 +216,9 @@
                 {{ $t('unexecute') }}
             </div>
         </section>
-        <div
-            v-if="pipeline.delete"
-            class="pipeline-card-delete-mask"
+        <section
+            class="delete-card-info"
+            v-else
         >
             <span>{{ $t('alreadyDeleted') }}</span>
             <bk-button
@@ -215,9 +230,9 @@
             >
                 {{ $t('removeFromGroup') }}
             </bk-button>
-        </div>
+        </section>
         <div
-            v-else-if="!pipeline.permissions.canView && !pipeline.delete"
+            v-if="!pipeline.permissions.canView && !pipeline.delete"
             class="pipeline-card-apply-mask"
         >
             <bk-button
@@ -296,6 +311,29 @@
 
         },
         methods: {
+            parseExpression (str) {
+                const year = '20' + str.slice(0, 2)
+                const month = str.slice(2, 4)
+                const day = str.slice(4, 6)
+                const hour = str.slice(6, 8)
+                const minute = str.slice(8, 10)
+                let second = str.slice(10, 12)
+
+                second = (parseInt(second, 10) % 60).toString().padStart(2, '0')
+
+                return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+            },
+            getPipelineDeleteInfo (pipeline){
+                const regex = /^DELETE BY (\S+) in (\S+)$/
+                const match = pipeline.match(regex)
+
+                if (match) {
+                    const deletedBy = match[1]
+                    const deleteTime = this.parseExpression(match[2])
+                    
+                    return `${deletedBy} ${deleteTime}`
+                }
+            },
             applyPermission (pipeline) {
                 handlePipelineNoPermission({
                     projectId: this.projectId,
@@ -443,6 +481,17 @@
                     }
                 }
             }
+        }
+        .delete-card-info {
+            padding: 32px 16px;
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 96px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #C4C6CC;
         }
         .bk-pipeline-card-info {
             position: relative;
