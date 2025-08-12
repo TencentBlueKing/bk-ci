@@ -64,7 +64,8 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
                 userId = it.oauthUserId,
-                operator = userId
+                operator = userId,
+                updateTime = it.createTime.timestampmilli()
             )
         }
     }

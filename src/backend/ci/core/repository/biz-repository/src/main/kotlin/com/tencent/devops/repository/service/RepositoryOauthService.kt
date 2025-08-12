@@ -252,7 +252,7 @@ class RepositoryOauthService @Autowired constructor(
                 operator = operator ?: userId,
                 createTime = createTime,
                 expired = expiresIn?.let { expiresIn ->
-                    (createTime ?: 0L) + expiresIn * 1000 <= System.currentTimeMillis()
+                    (updateTime ?: 0L) + expiresIn * 1000 <= System.currentTimeMillis()
                 } ?: false,
                 authorized = true
             )

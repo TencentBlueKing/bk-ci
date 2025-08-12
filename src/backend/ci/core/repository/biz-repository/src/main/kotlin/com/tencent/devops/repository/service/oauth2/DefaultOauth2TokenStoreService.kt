@@ -139,7 +139,8 @@ class DefaultOauth2TokenStoreService(
             refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
             createTime = it.createTime.timestampmilli(),
             userId = it.userId,
-            operator = it.operator ?: userId
+            operator = it.operator ?: userId,
+            updateTime = it.updateTime.timestampmilli()
         )
         return if (scmTokenService.isTokenExpire(it.updateTime.timestamp(), it.expiresIn)) {
             val refreshToken = scmTokenService.tryRefreshToken(

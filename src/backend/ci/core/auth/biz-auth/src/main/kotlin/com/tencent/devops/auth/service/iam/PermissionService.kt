@@ -36,6 +36,17 @@ interface PermissionService {
         action: String
     ): Boolean
 
+    fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean
+
+    fun checkProjectManager(
+        userId: String,
+        projectCode: String
+    ): Boolean
+
     fun validateUserResourcePermission(
         userId: String,
         action: String,
