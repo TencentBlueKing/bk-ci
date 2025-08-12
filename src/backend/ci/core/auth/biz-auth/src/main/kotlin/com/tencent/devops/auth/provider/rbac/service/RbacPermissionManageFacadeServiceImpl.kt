@@ -118,7 +118,8 @@ class RbacPermissionManageFacadeServiceImpl(
     private val client: Client,
     private val config: CommonConfig,
     private val userManageService: UserManageService,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val permissionService: RbacPermissionService
 ) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
@@ -2202,7 +2203,7 @@ class RbacPermissionManageFacadeServiceImpl(
             userId = userId,
             iamTemplateIds = iamTemplateIds,
             memberDeptInfos = memberDeptInfos
-        ) || rbacCommonService.validateUserProjectPermission(
+        ) || permissionService.validateUserProjectPermission(
             userId = userId,
             projectCode = projectCode,
             permission = AuthPermission.VISIT

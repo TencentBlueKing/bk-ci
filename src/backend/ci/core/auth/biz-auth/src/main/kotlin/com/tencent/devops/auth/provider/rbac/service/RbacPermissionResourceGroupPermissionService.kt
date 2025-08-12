@@ -187,8 +187,10 @@ class RbacPermissionResourceGroupPermissionService(
             )
             authorizationScopes.addAll(monitorAuthorizationScopes)
         }
-        logger.info("grant group permissions authorization scopes :{}|{}|{}|{}",
-                    projectCode,iamGroupId,resourceType,JsonUtil.toJson(authorizationScopes))
+        logger.info(
+            "grant group permissions authorization scopes :{}|{}|{}|{}",
+            projectCode, iamGroupId, resourceType, JsonUtil.toJson(authorizationScopes)
+        )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
