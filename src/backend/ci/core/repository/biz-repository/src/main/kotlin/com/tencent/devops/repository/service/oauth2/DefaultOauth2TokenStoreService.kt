@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import com.tencent.devops.repository.service.scm.ScmTokenService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 /**
@@ -50,6 +51,7 @@ import org.springframework.stereotype.Service
 class DefaultOauth2TokenStoreService(
     private val dslContext: DSLContext,
     private val repositoryScmTokenDao: RepositoryScmTokenDao,
+    @Lazy
     private val scmTokenService: ScmTokenService
 ) : IOauth2TokenStoreService {
 
