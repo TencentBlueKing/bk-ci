@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
@@ -113,7 +113,7 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             projectId = projectId, templateId = templateId, version = version!!
         )
         if (draftResource.status != VersionStatus.COMMITTING) {
-            throw ErrorCodeException(errorCode = ProcessTemplateMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION)
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION)
         }
         val templateSetting = pipelineTemplateSettingService.get(
             projectId = projectId, templateId = templateId, settingVersion = draftResource.settingVersion

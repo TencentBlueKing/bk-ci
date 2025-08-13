@@ -27,10 +27,9 @@ import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode.ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode.ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode.ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -715,7 +714,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = templateId,
         ) ?: throw ErrorCodeException(
-            errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_NOT_ENABLE_PAC
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_ENABLE_PAC
         )
         val pipelineYamlVersion = pipelineYamlRefResolver.resolvePipelineYamlVersion(
             projectId = projectId,
@@ -775,7 +774,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         )
         if (resource.model.fromTemplate != true) {
             throw ErrorCodeException(
-                errorCode = ProcessTemplateMessageCode.ERROR_PIPELINE_NOT_RELATED_TEMPLATE
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_RELATED_TEMPLATE
             )
         }
         val templateResource = pipelineModelParser.parseTemplateDescriptor(

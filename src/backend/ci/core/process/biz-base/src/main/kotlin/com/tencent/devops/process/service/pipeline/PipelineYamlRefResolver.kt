@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -40,7 +39,7 @@ class PipelineYamlRefResolver @Autowired constructor(
             repositoryId = repoHashId,
             repositoryType = RepositoryType.ID
         ).data ?: throw ErrorCodeException(
-            errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_YAML_REPOSITORY_NOT_FOUND
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_YAML_REPOSITORY_NOT_FOUND
         )
 
         val authRepository = AuthRepository(repository)
@@ -70,7 +69,7 @@ class PipelineYamlRefResolver @Autowired constructor(
             blobId = fileContent.blobId,
             defaultBranch = defaultBranch
         ) ?: throw ErrorCodeException(
-            errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND,
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND,
             params = arrayOf(finalRef!!, filePath)
         )
     }

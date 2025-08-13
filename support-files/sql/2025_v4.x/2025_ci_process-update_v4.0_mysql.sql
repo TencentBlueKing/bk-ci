@@ -12,14 +12,22 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
-IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_TEMPLATE_PIPELINE'
-                    AND COLUMN_NAME = 'INSTANCE_ERROR_INFO') THEN
-ALTER TABLE T_TEMPLATE_PIPELINE
-    ADD COLUMN `INSTANCE_ERROR_INFO` text null comment '实例化错误信息';
-END IF;
+                    AND TABLE_NAME = 'T_TEMPLATE_INSTANCE_BASE'
+                    AND COLUMN_NAME = 'GRAY') THEN
+    ALTER TABLE `T_TEMPLATE_INSTANCE_BASE` ADD `GRAY` bit(1) DEFAULT b'0' COMMENT '灰度功能';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_TEMPLATE_PIPELINE'
+                        AND COLUMN_NAME = 'INSTANCE_ERROR_INFO') THEN
+    ALTER TABLE T_TEMPLATE_PIPELINE
+        ADD COLUMN `INSTANCE_ERROR_INFO` text null comment '实例化错误信息';
+    END IF;
 
     -- 1. 为 T_TEMPLATE_INSTANCE_BASE 表添加多个字段
     --    通过检查第一个字段`PAC`是否存在来判断是否需要执行整个ALTER语句

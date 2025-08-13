@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineBasicInfo
@@ -206,7 +206,7 @@ class PipelineResourceFactory @Autowired constructor(
         )
         if (templateInfo.type != PipelineTemplateType.PIPELINE) {
             throw ErrorCodeException(
-                errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE
             )
         }
         val instanceModel = TemplateInstanceUtil.instanceModel(
