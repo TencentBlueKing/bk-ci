@@ -131,7 +131,8 @@ class RbacPermissionService(
                 resourceType = ResourceTypeId.PROJECT,
                 resourceCode = projectCode,
                 action = action,
-                expectedResult = result
+                expectedResult = result,
+                enableSuperManagerCheck = false
             )
             return result
         } finally {
@@ -290,7 +291,8 @@ class RbacPermissionService(
                 resourceType = resource.resourceType,
                 resourceCode = resource.resourceCode,
                 action = useAction,
-                expectedResult = result
+                expectedResult = result,
+                enableSuperManagerCheck = true
             )
             return result
         } finally {
