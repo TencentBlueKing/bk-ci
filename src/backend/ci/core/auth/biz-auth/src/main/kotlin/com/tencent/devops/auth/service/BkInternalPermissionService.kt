@@ -31,7 +31,7 @@ class BkInternalPermissionService(
     private val meterRegistry: MeterRegistry
 ) {
     // 1. 单条权限校验结果
-    private val permissionCache = CacheHelper.createCache<String, Boolean>()
+    private val permissionCache = CacheHelper.createCache<String, Boolean>(100000)
 
     // 2. 用户在项目下加入的用户组
     private val projectUserGroupCache = CacheHelper.createCache<String, List<Int>>()
@@ -62,7 +62,8 @@ class BkInternalPermissionService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        action: String
+        action: String,
+        enableSuperManagerCheck: Boolean = true
     ): Boolean {
         return createTimer(::validateUserResourcePermission.name).record(Supplier {
             val (fixResourceType, fixResourceCode) =
@@ -76,7 +77,8 @@ class BkInternalPermissionService(
                 val isProjectOrSuperManager = checkProjectOrSuperManager(
                     userId = userId,
                     projectCode = projectCode,
-                    action = action
+                    action = action,
+                    enableSuperManagerCheck = enableSuperManagerCheck
                 )
                 if (isProjectOrSuperManager) {
                     true
@@ -97,14 +99,24 @@ class BkInternalPermissionService(
     private fun checkProjectOrSuperManager(
         userId: String,
         projectCode: String,
-        action: String
+        action: String,
+        enableSuperManagerCheck: Boolean
     ): Boolean {
-        return superManagerService.projectManagerCheck(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = action.substringBeforeLast("_"),
-            action = action
-        ) || checkProjectManager(
+        // 首先检查最高权限（超级管理员）
+        if (enableSuperManagerCheck) {
+            val isSuperManager = superManagerService.projectManagerCheck(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = action.substringBeforeLast("_"),
+                action = action
+            )
+            if (isSuperManager) {
+                return true // 如果是超级管理员，立即返回 true
+            }
+        }
+
+        // 如果不是超级管理员，再检查是否为项目管理员
+        return checkProjectManager(
             projectCode = projectCode,
             userId = userId
         )
@@ -136,7 +148,8 @@ class BkInternalPermissionService(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                action = action
+                action = action,
+                enableSuperManagerCheck = false
             )
         }
     }
@@ -275,10 +288,19 @@ class BkInternalPermissionService(
 
     fun listMemberGroupIdsInProjectWithCache(
         projectCode: String,
-        userId: String
+        userId: String,
+        enableTemplateInvalidationOnUserExpiry: Boolean? = null
     ): List<Int> {
-        return CacheHelper.getOrLoad(projectUserGroupCache, projectCode, userId) {
-            permissionResourceGroupService.listMemberGroupIdsInProject(projectCode, userId)
+        return CacheHelper.getOrLoad(
+            projectUserGroupCache,
+            projectCode, userId,
+            enableTemplateInvalidationOnUserExpiry
+        ) {
+            permissionResourceGroupService.listMemberGroupIdsInProject(
+                projectCode = projectCode,
+                memberId = userId,
+                enableTemplateInvalidationOnUserExpiry = enableTemplateInvalidationOnUserExpiry
+            )
         }
     }
 

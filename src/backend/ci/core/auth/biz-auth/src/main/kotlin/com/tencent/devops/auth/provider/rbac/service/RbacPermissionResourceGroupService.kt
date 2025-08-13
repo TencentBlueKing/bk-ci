@@ -75,6 +75,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
@@ -606,6 +607,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     override fun listProjectMemberGroupTemplateIds(
         projectCode: String,
         memberId: String,
+        // 用户组权限过期是否导致模板权限失效
+        enableTemplateInvalidationOnUserExpiry: Boolean?
     ): List<String> {
         // 获取用户的所属组织
         val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
@@ -614,7 +617,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
-            memberIds = memberDeptInfos + memberId
+            memberIds = memberDeptInfos + memberId,
+            minExpiredTime = if (enableTemplateInvalidationOnUserExpiry == true) LocalDateTime.now() else null
         ).map { it.iamGroupId.toString() }
         // 通过项目组ID获取人员模板ID
         return authResourceGroupDao.listByRelationId(
@@ -627,12 +631,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
 
     override fun listMemberGroupIdsInProject(
         projectCode: String,
-        memberId: String
+        memberId: String,
+        // 用户组权限过期是否导致模板权限失效
+        enableTemplateInvalidationOnUserExpiry: Boolean?
     ): List<Int> {
         // 获取用户加入的项目级用户组模板ID
         val iamTemplateIds = listProjectMemberGroupTemplateIds(
             projectCode = projectCode,
-            memberId = memberId
+            memberId = memberId,
+            enableTemplateInvalidationOnUserExpiry = enableTemplateInvalidationOnUserExpiry
         )
         // 获取用户的所属组织
         val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
