@@ -68,18 +68,7 @@
             text-align: left;
         }
         .bk-tab-content {
-            border: 1px solid #dcdee5;
             border-top: none
-        }
-        .bk-tab.bk-tab-unborder-card .bk-tab-label-list {
-            border-top: 1px solid #dcdee5 !important;
-        }
-        .bk-tab.bk-tab-card .bk-tab-label-list .bk-tab-label-item {
-            border-right: 1px solid #dcdee5 !important;
-            border-top: 1px solid #dcdee5 !important;
-        }
-        .bk-tab.bk-tab-card .bk-tab-label-list .bk-tab-label-item.is-first {
-            border-left: 1px solid #dcdee5 !important;
         }
     }
 </style>
