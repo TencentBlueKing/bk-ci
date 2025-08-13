@@ -579,8 +579,10 @@ class PipelineTemplateGenerator @Autowired constructor(
                 templateModel = newTemplateModel,
                 yamlWithVersion = result.yamlWithVersion,
                 templateSetting = newTemplateSetting,
-                // todo 需要改造，由code转化接口中获取。
-                params = (newTemplateModel as Model).getTriggerContainer().params
+                // todo 局部模板时，需要优化
+                params = takeIf { templateType == PipelineTemplateType.PIPELINE }?.let {
+                    (newTemplateModel as Model).getTriggerContainer().params
+                } ?: emptyList(),
             )
         }
     }

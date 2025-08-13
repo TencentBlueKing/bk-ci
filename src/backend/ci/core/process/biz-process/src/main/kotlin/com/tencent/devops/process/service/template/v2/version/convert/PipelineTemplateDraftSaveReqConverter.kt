@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftSaveReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
@@ -75,16 +76,30 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
             } else {
                 request.params
             }
-            val transferResult = pipelineTemplateGenerator.transfer(
-                userId = userId,
-                projectId = projectId,
-                storageType = storageType,
-                templateType = type,
-                templateModel = model,
-                params = params,
-                templateSetting = templateSetting,
-                yaml = yaml
-            )
+            val transferResult = try {
+                pipelineTemplateGenerator.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    storageType = storageType,
+                    templateType = type,
+                    templateModel = model,
+                    params = params,
+                    templateSetting = templateSetting,
+                    yaml = yaml
+                )
+            } catch (ex: Exception) {
+                if (storageType == PipelineStorageType.YAML) {
+                    throw ex
+                } else {
+                    PTemplateModelTransferResult(
+                        templateType = type!!,
+                        templateModel = model!!,
+                        templateSetting = templateSetting!!,
+                        params = params ?: emptyList(),
+                        yamlWithVersion = null
+                    )
+                }
+            }
             val templateInfo = if (templateId != null) {
                 pipelineTemplateInfoService.get(
                     projectId = projectId,
