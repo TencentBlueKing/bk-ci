@@ -132,7 +132,7 @@
 
     function setProjectIdCookie (projectId) {
       try {
-        if (BK_CI_NO_COOKIE_PROJECT_PREFIX.split(';').some(str => projectId.startsWith(str))) return
+        if (BK_CI_NO_COOKIE_PROJECT_PREFIX.split(';').some(str => !!str &&  projectId.startsWith(str))) return
         var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
         var topDomain =
           domainMatch.length > 2 ? domainMatch[2] : location.hostname
