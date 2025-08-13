@@ -18,6 +18,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODES_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NOW_UPDATING
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
@@ -184,12 +185,84 @@ class NodeTagService @Autowired constructor(
             .addInstanceInfo(data.nodeId.toString(), JsonUtil.toJson(data.tags), null, null)
         dslContext.transaction { config ->
             val ctx = DSL.using(config)
-            nodeTagDao.deleteNodesTags(ctx, projectId, data.nodeId)
+            nodeTagDao.deleteNodesTags(ctx, projectId, setOf(data.nodeId))
             nodeTagDao.batchAddNodeTags(
                 dslContext = ctx,
                 projectId = projectId,
-                nodeId = data.nodeId,
-                valueAndKeyIds = data.tags.associate { it.tagValueId to it.tagKeyId }
+                nodeAndValueAndKeyIds = mapOf(data.nodeId to data.tags.associate { it.tagValueId to it.tagKeyId })
+            )
+        }
+    }
+
+    // 批量更新节点标签，先删后添加
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_TAG_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE_TAG
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_TAG_EDIT_CONTENT
+    )
+    fun batchAddNodeTag(userId: String, projectId: String, data: List<UpdateNodeTag>) {
+        val nodeIds = data.map { it.nodeId }.toSet()
+        val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds).associateBy { it.nodeId }
+        // 只有第三方机器支持节点
+        if (nodes.values.any { it.nodeType != NodeType.THIRDPARTY.name }) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_ONLY_SUP_THIRD)
+        }
+        // 校验权限
+        val hasRbacPermissionNodeIds =
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.EDIT)
+        val noPermissionNodes = nodeIds.filter { !hasRbacPermissionNodeIds.contains(it) }.toSet()
+        if (noPermissionNodes.isNotEmpty()) {
+            val names =
+                nodes.filter { it.key in noPermissionNodes }.values.joinToString(separator = ",") { it.displayName }
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODES_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(names)
+                )
+            )
+        }
+        // 检查标签是否支持多个值同时添加
+        val tagKeyIds = data.map { it.tags.map { tag -> tag.tagKeyId } }.flatten().toSet()
+        val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            keyIds = tagKeyIds
+        ).associate { it.id to Pair((it.allowMulValues ?: false), it.keyName) }
+        data.forEach { nodeTag ->
+            val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
+            nodeTag.tags.forEach { tag ->
+                tagsMap.putIfAbsent(tag.tagKeyId, mutableSetOf(tag.tagValueId))?.add(tag.tagValueId)
+            }
+            nodeTag.tags.forEach { tag ->
+                if (tagKeys[tag.tagKeyId]?.first == false && (tagsMap[tag.tagKeyId]?.size ?: 0) > 1) {
+                    throw ErrorCodeException(
+                        errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_NO_ALLOW_VALUES,
+                        params = arrayOf(tagKeys[tag.tagKeyId]?.second ?: "")
+                    )
+                }
+            }
+        }
+        ActionAuditContext.current()
+            .addInstanceInfo(
+                data.map { it.nodeId }.joinToString(separator = ","),
+                JsonUtil.toJson(data),
+                null,
+                null
+            )
+        dslContext.transaction { config ->
+            val ctx = DSL.using(config)
+            nodeTagDao.deleteNodesTags(ctx, projectId, nodeIds)
+            nodeTagDao.batchAddNodeTags(
+                dslContext = ctx,
+                projectId = projectId,
+                nodeAndValueAndKeyIds = data.associate {
+                    it.nodeId to it.tags.associate { tag -> tag.tagValueId to tag.tagKeyId }
+                }
             )
         }
     }
@@ -421,7 +494,7 @@ class NodeTagService @Autowired constructor(
         }
         logger.info("editNodeInternalTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap")
         try {
-            nodeTagDao.batchAddNodeTags(dslContext, projectId, tpa.nodeId, tagMap)
+            nodeTagDao.batchAddNodeTags(dslContext, projectId, mapOf(tpa.nodeId to tagMap))
         } catch (e: Exception) {
             logger.warn("editNodeInternalTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap error", e)
         }

@@ -92,10 +92,10 @@
 <script>
     import nodeDetailTab from '@/components/devops/node-detail-tab'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     import { bus } from '@/utils/bus'
     import { copyText } from '@/utils/util'
     import { mapState } from 'vuex'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE  } from '@/store/constants'
 
     export default {
         components: {

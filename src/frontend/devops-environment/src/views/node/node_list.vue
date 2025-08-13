@@ -256,6 +256,7 @@
     import installAgent from '@/components/devops/environment/install-agent'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
@@ -264,7 +265,6 @@
     import { mapActions, mapState } from 'vuex'
     import ListTable from './list_table.vue'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
     export default {
         components: {
             thirdConstruct,
@@ -1311,6 +1311,12 @@
         margin-right: 8px;
     }
 
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
+        }
+    }
+    
     .info-content {
         .bk-dialog-header-inner {
             white-space: normal !important;
