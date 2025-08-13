@@ -46,17 +46,18 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
+import com.tencent.devops.process.pojo.`var`.dto.PipelinePublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import com.tencent.devops.process.yaml.transfer.pojo.PublicVarGroupYamlParser
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.VariableTransfer
+import com.tencent.devops.process.yaml.transfer.pojo.PublicVarGroupYamlParser
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
@@ -280,7 +281,7 @@ class PublicVarGroupService @Autowired constructor(
             version = version
         )
         val params = varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
-        val variables = variableTransfer.makeVariableFromBuildParams(params)
+        val variables = variableTransfer.makeVariableFromBuildParams(params, false)
         val parserVO = PublicVarGroupYamlParser(
             version = "v3.0",
             name = groupInfo.groupName,
@@ -396,5 +397,17 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
         )
+    }
+
+    fun addPipelineGroupRefer(
+        userId: String,
+        projectId: String,
+        pipelinePublicVarGroupReferInfo: PipelinePublicVarGroupReferDTO
+    ): Boolean {
+
+    }
+
+    fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<String>): List<BuildFormProperty>  {
+
     }
 }

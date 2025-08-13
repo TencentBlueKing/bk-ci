@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_YAML_PUB_VAR_GRROUP_ID
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -277,7 +278,16 @@ class ModelTransfer @Autowired constructor(
             stages.add(ymlStage)
         }
         yaml.stages = TransferMapper.anyTo(stages)
-        yaml.variables = variableTransfer.makeVariableFromModel(modelInput.model)
+        val variables = mutableMapOf<String, Any>()
+        val publicvarGroupNames =
+            modelInput.model.getTriggerContainer().params.filter { !it.varGroupName.isNullOrBlank() }.map {
+                it.varGroupName!!
+            }
+        if (publicvarGroupNames.isNotEmpty()) {
+            variables[BK_PIPELINE_YAML_PUB_VAR_GRROUP_ID] = publicvarGroupNames
+        }
+        variableTransfer.makeVariableFromModel(modelInput.model)?.let { variables.putAll(it) }
+        yaml.variables = if (variables.isEmpty()) null else variables
         val lastStage = modelInput.model.stages.last()
         val finally = if (lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)

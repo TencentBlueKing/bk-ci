@@ -184,6 +184,9 @@ data class VariableDatasource(
     val itemTargetUrl: String? = null
 )
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class VariableTemplate(val name: String)
+
 enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),
     VUEX_TEXTAREA("vuex-textarea"),

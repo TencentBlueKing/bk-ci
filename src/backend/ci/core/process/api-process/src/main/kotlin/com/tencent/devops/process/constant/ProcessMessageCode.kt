@@ -630,4 +630,6 @@ object ProcessMessageCode {
     const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
+
+    const val BK_PIPELINE_YAML_PUB_VAR_GRROUP_ID = "template"
 }
