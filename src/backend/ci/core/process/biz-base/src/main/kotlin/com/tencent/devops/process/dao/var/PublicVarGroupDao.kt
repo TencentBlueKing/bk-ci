@@ -30,6 +30,7 @@ package com.tencent.devops.process.dao.`var`
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
 import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupRecord
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -173,6 +174,24 @@ class PublicVarGroupDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
+                .execute()
+        }
+    }
+
+fun updateReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        referCount: Int
+    ) {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
                 .execute()
         }
     }

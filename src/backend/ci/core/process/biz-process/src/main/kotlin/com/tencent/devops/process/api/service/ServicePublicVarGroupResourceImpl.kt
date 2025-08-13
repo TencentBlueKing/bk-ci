@@ -25,19 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.`var`.PublicVarGroupService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "流水线公共变量组关联传输对象")
-data class PipelinePublicVarGroupReferDTO(
-    @get:Schema(title = "关联资源ID")
-    val referId: String,
-    @get:Schema(title = "流水线/模板类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "流水线/模板名称")
-    val referName: String,
-    @get:Schema(title = "变量组名称列表")
-    val groupNames: List<String>
-)
+@RestResource
+class ServicePublicVarGroupResourceImpl @Autowired constructor(
+    private val publicVarGroupService: PublicVarGroupService
+) : ServicePublicVarGroupResource {
+
+    override fun getProjectPublicParam(
+        userId: String,
+        projectId: String,
+        groupNames: List<String>
+    ): Result<List<BuildFormProperty>> {
+        return Result(publicVarGroupService.getProjectPublicParam(
+            userId = userId,
+            projectId = projectId,
+            groupNames = groupNames
+        ))
+    }
+}

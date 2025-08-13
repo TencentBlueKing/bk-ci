@@ -67,7 +67,8 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
 
             records.add(
                 PipelinePublicVarGroupReleaseRecordPO(
-                    id = 0,
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
                     projectId = it.projectId,
                     groupName = it.groupName,
                     version = publicVarGroupReleseDTO.version,
@@ -101,7 +102,8 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
 
             records.add(
                 PipelinePublicVarGroupReleaseRecordPO(
-                    id = 0,
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
                     projectId = it.projectId,
                     groupName = it.groupName,
                     version = publicVarGroupReleseDTO.version,

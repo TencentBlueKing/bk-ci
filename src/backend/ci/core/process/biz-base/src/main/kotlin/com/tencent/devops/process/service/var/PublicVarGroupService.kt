@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_REFERENCED
 import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReferInfoDao
@@ -51,6 +52,7 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
+import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
@@ -404,10 +406,142 @@ class PublicVarGroupService @Autowired constructor(
         projectId: String,
         pipelinePublicVarGroupReferInfo: PipelinePublicVarGroupReferDTO
     ): Boolean {
+        val referId = pipelinePublicVarGroupReferInfo.referId
+        val referType = pipelinePublicVarGroupReferInfo.referType
+        val groupNames = pipelinePublicVarGroupReferInfo.groupNames
+        val referName = pipelinePublicVarGroupReferInfo.referName
 
+        if (groupNames.isEmpty()) {
+            return true
+        }
+
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_${referId}_${referType.value}",
+            expiredTimeInSeconds = expiredTimeInSeconds
+        )
+
+        redisLock.lock()
+        try {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+
+                groupNames.forEach { groupName ->
+                    // 检查变量组是否存在
+                    val groupRecord = publicVarGroupDao.getRecordByGroupName(
+                        dslContext = context,
+                        projectId = projectId,
+                        groupName = groupName
+                    ) ?: throw ErrorCodeException(
+                        errorCode = ERROR_INVALID_PARAM_,
+                        params = arrayOf(groupName)
+                    )
+
+                    // 检查该流水线是否已与该变量组（groupName+version）建立引用
+                    val existingReferCount = pipelinePublicVarGroupReferInfoDao.countByReferId(
+                        dslContext = context,
+                        projectId = projectId,
+                        referId = referId,
+                        referType = referType,
+                        groupName = groupName,
+                        version = groupRecord.version
+                    )
+
+                    if (existingReferCount > 0) {
+                        return@forEach
+                    }
+
+                    // 插入引用记录
+                    pipelinePublicVarGroupReferInfoDao.save(
+                        dslContext = context,
+                        PipelinePublicVarGroupReferPO(
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
+                            projectId = projectId,
+                            groupName = groupName,
+                            version = groupRecord.version,
+                            referId = referId,
+                            referName = referName,
+                            referType = referType,
+                            modifier = userId,
+                            updateTime = LocalDateTime.now(),
+                            creator = userId,
+                            createTime = LocalDateTime.now()
+                        )
+                    )
+
+                    val currentCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(
+                        dslContext = context,
+                        projectId = projectId,
+                        groupName = groupName
+                    )
+
+                    // 更新变量组引用计数
+                    publicVarGroupDao.updateReferCount(
+                        dslContext = context,
+                        projectId = projectId,
+                        groupName = groupName,
+                        version = groupRecord.version,
+                        referCount = currentCount
+                    )
+                }
+            }
+        } catch (t: Throwable) {
+            logger.warn("Failed to add pipeline group refer for $referId", t)
+            throw t
+        } finally {
+            redisLock.unlock()
+        }
+
+        return true
     }
 
-    fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<String>): List<BuildFormProperty>  {
+fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<String>): List<BuildFormProperty> {
+        if (groupNames.isEmpty()) {
+            return emptyList()
+        }
 
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        val processedVarNames = mutableSetOf<String>()
+
+        groupNames.forEach { groupName ->
+            try {
+                // 获取变量组信息（默认获取最新版本）
+                val groupRecord = publicVarGroupDao.getRecordByGroupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName
+                ) ?: run {
+                    logger.warn("Variable group $groupName not found in project $projectId")
+                    return@forEach
+                }
+
+                // 获取变量组中的变量
+                val varPOs = publicVarService.getGroupPublicVar(
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = groupRecord.version
+                )
+
+                // 转换为BuildFormProperty并检查同名变量
+                varPOs.forEach { po ->
+                    if (processedVarNames.contains(po.varName)) {
+                        throw ErrorCodeException(
+                            errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
+                            params = arrayOf(groupName, po.varName)
+                        )
+                    }
+                    val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+                    buildFormProperty.varGroupName = groupName
+                    buildFormProperties.add(buildFormProperty)
+                    processedVarNames.add(po.varName)
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to get variables from group $groupName", e)
+                throw e
+            }
+        }
+
+        return buildFormProperties
     }
 }

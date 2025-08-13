@@ -541,6 +541,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         PipelinePublicVarGroupReferDTO(
                             referId = pipelineId,
                             referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                            referName = model.name,
                             groupNames = varGroupNames
                         )
                     )
@@ -1159,6 +1160,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     PipelinePublicVarGroupReferDTO(
                         referId = pipelineId,
                         referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
                         groupNames = varGroupNames
                     )
                 )

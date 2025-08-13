@@ -79,12 +79,66 @@ class PipelinePublicVarGroupReferInfoDao {
         }
     }
 
+    fun countByReferId(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        groupName: String,
+        version: Int
+    ): Int {
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.value))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
     fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.`in`(groupName))
                 .execute()
+        }
+    }
+
+fun save(
+        dslContext: DSLContext,
+        pipelinePublicVarGroupReferPO: PipelinePublicVarGroupReferPO
+    ) {
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                GROUP_NAME,
+                VERSION,
+                REFER_ID,
+                REFER_TYPE,
+                REFER_NAME,
+                CREATOR,
+                MODIFIER,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                pipelinePublicVarGroupReferPO.id,
+                pipelinePublicVarGroupReferPO.projectId,
+                pipelinePublicVarGroupReferPO.groupName,
+                pipelinePublicVarGroupReferPO.version,
+                pipelinePublicVarGroupReferPO.referId,
+                pipelinePublicVarGroupReferPO.referType.value,
+                pipelinePublicVarGroupReferPO.referName,
+                pipelinePublicVarGroupReferPO.creator,
+                pipelinePublicVarGroupReferPO.modifier,
+                pipelinePublicVarGroupReferPO.createTime,
+                pipelinePublicVarGroupReferPO.updateTime
+            ).execute()
         }
     }
 }
