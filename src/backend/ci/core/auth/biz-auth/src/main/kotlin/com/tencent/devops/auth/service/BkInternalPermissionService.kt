@@ -99,6 +99,7 @@ class BkInternalPermissionService(
         projectCode: String,
         action: String
     ): Boolean {
+        // todo 设置白名单
         return superManagerService.projectManagerCheck(
             userId = userId,
             projectCode = projectCode,
