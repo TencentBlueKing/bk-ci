@@ -1094,8 +1094,11 @@
                         theme: 'success'
                     })
                     this.toNodeList()
-                } catch (error) {
-                    console.log(error)
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
                 } finally {
                     this.isSaveLoading = false
                 }
