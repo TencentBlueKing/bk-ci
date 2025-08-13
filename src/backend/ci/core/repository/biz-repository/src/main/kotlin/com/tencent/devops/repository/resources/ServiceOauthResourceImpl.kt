@@ -118,10 +118,10 @@ class ServiceOauthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun scmRepoOauthToken(scmCode: String, username: String): Result<GitToken?> {
+    override fun scmRepoOauthToken(scmCode: String, oauthUserId: String): Result<GitToken?> {
         return Result(
             scmTokenService.getAccessToken(
-                userId = username,
+                userId = oauthUserId,
                 scmCode = scmCode
             )
         )
