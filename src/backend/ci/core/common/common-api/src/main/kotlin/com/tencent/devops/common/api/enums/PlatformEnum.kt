@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.api.enums.PlatformEnum.values
-
 
 enum class PlatformEnum(
     val id: Int,
@@ -41,7 +39,9 @@ enum class PlatformEnum(
 
     IOS(2, "IOS", listOf(".ipa")),
 
-    HAP(3, "鸿蒙", listOf(".hap"))
+    HAP(3, "鸿蒙", listOf(".hap")),
+
+    WIN(4, "Windows", listOf(".zip"))
 
     ;
 
