@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
@@ -93,7 +92,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
             )
             if (draftResource.status != VersionStatus.COMMITTING) {
                 throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
                 )
             }
             if (enablePac) {

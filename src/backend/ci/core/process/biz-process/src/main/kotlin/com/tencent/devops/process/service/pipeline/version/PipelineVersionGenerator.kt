@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -429,7 +428,7 @@ class PipelineVersionGenerator constructor(
                     pipelineId = pipelineId,
                     version = baseVersion
                 ) ?: throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_PIPELINE_BASE_VERSION_NOT_FOUND,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BASE_VERSION_NOT_FOUND,
                     params = arrayOf(baseVersion.toString())
                 )
                 generateBranchVersion(
@@ -568,7 +567,7 @@ class PipelineVersionGenerator constructor(
                     pipelineId = pipelineId,
                     version = baseVersion
                 ) ?: throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_PIPELINE_BASE_VERSION_NOT_FOUND,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BASE_VERSION_NOT_FOUND,
                     params = arrayOf(baseVersion.toString())
                 )
                 Pair(VersionStatus.BRANCH, pipelineVersionSimple.versionName)

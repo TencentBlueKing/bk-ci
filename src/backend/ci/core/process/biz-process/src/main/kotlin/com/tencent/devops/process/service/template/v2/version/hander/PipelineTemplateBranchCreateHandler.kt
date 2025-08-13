@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
@@ -51,7 +51,7 @@ class PipelineTemplateBranchCreateHandler @Autowired constructor(
             }
             if (pTemplateResourceWithoutVersion.status != VersionStatus.BRANCH) {
                 throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_STATUS_NOT_MATCHED,
+                    errorCode = ProcessMessageCode.ERROR_STATUS_NOT_MATCHED,
                     params = arrayOf(VersionStatus.BRANCH.name, pTemplateResourceWithoutVersion.status.name)
                 )
             }

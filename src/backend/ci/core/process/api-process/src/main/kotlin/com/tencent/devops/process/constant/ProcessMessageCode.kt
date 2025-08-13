@@ -376,6 +376,7 @@ object ProcessMessageCode {
     const val ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED = "2101269" // 默认分支yaml文件已删除
     const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2101270" // 仅支持git类型代码库开启PAC
     const val ERROR_NOT_REPOSITORY_PUSH_PERMISSION = "2101271" // 用户 [{0}] 没有仓库 [{1}] PUSH权限
+
     // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
     const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
     const val ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
@@ -383,19 +384,48 @@ object ProcessMessageCode {
     const val ERROR_OP_PIPELINE_NUM_INVALID = "2101275" // 处理的流水线数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
     const val ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID = "2101276" // 流水线[{0}]正在运行中，无法归档
     const val ERROR_RETRY_TASK_NOT_FAILED = "2101277" // 重试的插件不是失败状态，不能进行插件级重试
-    const val ERROR_USER_NO_PUSH_PERMISSION = "2101280" // 用户[{0}]没有仓库[{1}]的推送权限, 请联系仓库管理员添加权限
-    const val ERROR_BUILD_REMARK_MAX_LENGTH = "2101281" // 构建备注最多只能输入{0}个字符
-    const val ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = "2101282" // 批量获取构建状态buildId数量不能超过{0}
 
-    const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
     // 流水线[<a href="{0}" target="_blank">{1}</a>]分支版本[{2}]不存在
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101278"
+    const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
+    const val ERROR_USER_NO_PUSH_PERMISSION = "2101280" // 用户[{0}]没有仓库[{1}]的推送权限, 请联系仓库管理员添加权限
+    const val ERROR_BUILD_REMARK_MAX_LENGTH = "2101281" // 构建备注最多只能输入{0}个字符
+    const val ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = "2101282" // 批量获取构建状态buildId数量不能超过{0}\
+
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
     // URL[{0}]中存在高危端口号
     const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101286"
 
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
+
+    const val ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE = "2101287" // 实例化仅支持流水线类型
+    const val ERROR_TEMPLATE_PATH_REF_TEMPLATE_NEED_PAC = "2101288" // 模版没有开启PAC不能使用路径引用
+    const val ERROR_TEMPLATE_PATH_REF_TEMPLATE_REF_NOT_EMPTY = "2101289" // 路径引用,模板分支不能为空
+    const val ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH = "2101290" // 模版类型和编排类型不匹配
+    const val ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION = "2101291" // 发布流水线时必须使用草稿版本
+    const val ERROR_PIPELINE_BASE_VERSION_NOT_FOUND = "2101292" // 未找到基线版本
+    const val ERROR_TEMPLATE_YAML_REPOSITORY_NOT_FOUND = "2101293" // 模板YAML文件所属的代码仓库不存在
+    const val ERROR_YAML_FOR_TEMPLATE_NOT_FOUND = "2101294" // YAML文件{0}对应的模板不存在
+    const val ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND = "2101295" // 分支{0}下的文件{1}对应的模版版本不存在
+    const val ERROR_TEMPLATE_VERSION_BY_ID_NOT_FOUND = "2101296" // 模版{0}对应的版本{1}不存在
+    const val ERROR_TEMPLATE_VERSION_BY_PATH_NOT_FOUND = "2101297" // 模版{0}在分支{1}对应的版本不存在
+    const val ERROR_TEMPLATE_REF_TYPE = "2101298" // 模版引用templateId和templatePath不能同时为空
+    const val ERROR_TEMPLATE_VERSION_NAME_NOT_EMPTY = "2101299" // 模版版本名称不能为空
+    const val ERROR_TEMPLATE_VERSION_NOT_FOUND = "21012300" // 模版{0}对应的版本{1}不存在
+    const val ERROR_TEMPLATE_NOT_ENABLE_PAC = "2101301" // 模版没有开启PAC,不能通过路径引用查询
+    const val ERROR_STATUS_NOT_MATCHED = "2101302" // 状态不匹配,预期状态为{0},实际状态为{1}
+    const val ERROR_PIPELINE_NOT_RELATED_TEMPLATE = "2101303" // 流水线没有关联模板
+    const val ERROR_TEMPLATE_LATEST_VERSION_NOT_PUBLISHED = "2101304" // 模板{0}的最新状态处于非发布状态
+    const val ERROR_TEMPLATE_TYPE_INVALID = "2101305" // 无效的模板类型
+    const val ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST = "2101306" // 模板{0}的最近安装记录不存在
+    const val ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST = "2101307" // 模板{0}的最新发布版本记录不存在
+    const val ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM = "2101308" // 模板处于非约束状态，不允许转化自定义
+    const val ERROR_TEMPLATE_SETTING_NOT_EXISTS = "2101309" // 模板设置不存在
+    const val ERROR_PIPELINE_TRIGGER_CONFIG_STEP_ID_NOT_FOUND = "2101310" // 触发器的StepID不存在
+    const val ERROR_TEMPLATE_PATH_REF_PIPELINE_NEED_PAC = "2101311" // 路径引用流水线必须开启PAC
+    const val ERROR_TEMPLATE_INSTANCE_NOT_EXISTS = "2101312" // 模板实例不存在
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
@@ -618,19 +648,25 @@ object ProcessMessageCode {
 
     // [<a href={0}>{1}</a>]创建成功,版本:{2}
     const val BK_YAML_PIPELINE_CREATE_SUCCESS = "bkYamlPipelineCreateSuccess"
+
     // [<a href={0}>{1}</a>]更新成功,版本:{2}
     const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
+
     // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
+
     // [{0}]删除成功,流水线ID:{1}
     const val BK_YAML_PIPELINE_DELETE_SUCCESS = "bkYamlPipelineDeleteSuccess"
 
     // 创建流水线失败
     const val BK_YAML_PIPELINE_CREATE_FAILED = "bkYamlPipelineCreateFailed"
+
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+
     // [<a href={0}>{1}</a>]删除版本失败,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
+
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
 
