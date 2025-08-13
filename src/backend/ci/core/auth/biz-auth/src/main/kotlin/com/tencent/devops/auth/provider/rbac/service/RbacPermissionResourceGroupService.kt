@@ -54,6 +54,7 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -86,7 +87,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val authResourceDao: AuthResourceDao,
     private val resourceGroupSyncService: PermissionResourceGroupSyncService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val userManageService: UserManageService
 ) : PermissionResourceGroupService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
@@ -171,7 +173,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private fun getI18nGroupName(resourceGroup: AuthResourceGroup): String {
         return I18nUtil.getCodeLanMessage(
             messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
-                    AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
             defaultMessage = resourceGroup.groupName
         )
     }
@@ -598,6 +600,48 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             groupCode = groupCode.value
+        )
+    }
+
+    override fun listProjectMemberGroupTemplateIds(
+        projectCode: String,
+        memberId: String,
+    ): List<String> {
+        // 获取用户的所属组织
+        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
+        // 查询项目下包含该成员及所属组织的用户组列表
+        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            memberIds = memberDeptInfos + memberId
+        ).map { it.iamGroupId.toString() }
+        // 通过项目组ID获取人员模板ID
+        return authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = projectGroupIds
+        ).filter { it.iamTemplateId != null }
+            .map { it.iamTemplateId.toString() }
+    }
+
+    override fun listMemberGroupIdsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> {
+        // 获取用户加入的项目级用户组模板ID
+        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+            projectCode = projectCode,
+            memberId = memberId
+        )
+        // 获取用户的所属组织
+        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
+        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
         )
     }
 

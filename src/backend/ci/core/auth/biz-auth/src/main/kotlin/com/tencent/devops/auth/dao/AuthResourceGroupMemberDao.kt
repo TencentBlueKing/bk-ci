@@ -325,6 +325,7 @@ class AuthResourceGroupMemberDao {
         resourceCode: String? = null,
         excludeResourceType: String? = null,
         memberId: String? = null,
+        memberIds: List<String>? = null,
         memberName: String? = null,
         memberType: String? = null,
         iamGroupId: Int? = null,
@@ -340,6 +341,9 @@ class AuthResourceGroupMemberDao {
             resourceType?.let { select.and(RESOURCE_TYPE.eq(resourceType)) }
             excludeResourceType?.let { select.and(RESOURCE_TYPE.notEqual(excludeResourceType)) }
             memberId?.let { select.and(MEMBER_ID.eq(memberId)) }
+            if (!memberIds.isNullOrEmpty()) {
+                select.and(MEMBER_ID.`in`(memberIds))
+            }
             memberName?.let { select.and(MEMBER_NAME.eq(memberName)) }
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
             iamGroupId?.let { select.and(IAM_GROUP_ID.eq(iamGroupId)) }
