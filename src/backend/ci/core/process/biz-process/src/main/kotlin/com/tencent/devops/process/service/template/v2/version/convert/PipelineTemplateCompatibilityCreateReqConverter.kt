@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
@@ -74,16 +75,27 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
             if (templateId == null) {
                 throw IllegalArgumentException("templateId is null")
             }
-            val transferResult = pipelineTemplateGenerator.transfer(
-                userId = userId,
-                projectId = projectId,
-                storageType = PipelineStorageType.MODEL,
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = model,
-                templateSetting = setting,
-                params = model.getTriggerContainer().params,
-                yaml = null
-            )
+            val transferResult = try {
+                pipelineTemplateGenerator.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    storageType = PipelineStorageType.MODEL,
+                    templateType = PipelineTemplateType.PIPELINE,
+                    templateModel = model,
+                    templateSetting = setting,
+                    params = model.getTriggerContainer().params,
+                    yaml = null
+                )
+            } catch (ex: Exception) {
+                logger.warn("TRANSFER_TEMPLATE_YAML_FAILED|$projectId|$templateId", ex)
+                PTemplateModelTransferResult(
+                    templateType = PipelineTemplateType.PIPELINE,
+                    templateModel = model,
+                    templateSetting = setting,
+                    params = model.getTriggerContainer().params,
+                    yamlWithVersion = null
+                )
+            }
 
             // v2新版本中，版本名称都是唯一的，若存在重复，需要添加尾缀-1 -2 ...标识
             val v2CustomVersionName = v1VersionName.let { name ->
