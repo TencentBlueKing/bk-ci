@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -108,7 +107,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
         // 加锁之后,再次验证草稿版本是否已经发布
         if (draftResource.status != VersionStatus.COMMITTING) {
             throw ErrorCodeException(
-                errorCode = ProcessTemplateMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
             )
         }
         val resourceOnlyVersion = pipelineVersionGenerator.generateDratReleaseVersion(

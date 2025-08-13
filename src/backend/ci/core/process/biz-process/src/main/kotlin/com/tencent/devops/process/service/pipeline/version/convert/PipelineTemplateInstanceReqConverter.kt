@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -118,12 +118,12 @@ class PipelineTemplateInstanceReqConverter(
             if (templateRefType == TemplateRefType.PATH) {
                 if (!enablePac) {
                     throw ErrorCodeException(
-                        errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_PATH_REF_PIPELINE_NEED_PAC
+                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_PATH_REF_PIPELINE_NEED_PAC
                     )
                 }
                 if (templateRef.isNullOrEmpty()) {
                     throw ErrorCodeException(
-                        errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_PATH_REF_TEMPLATE_REF_NOT_EMPTY,
+                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_PATH_REF_TEMPLATE_REF_NOT_EMPTY,
                     )
                 }
             }
@@ -157,7 +157,7 @@ class PipelineTemplateInstanceReqConverter(
             val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
             if (templateInfo.type != PipelineTemplateType.PIPELINE) {
                 throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE,
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE,
                 )
             }
             val templateResource = pipelineTemplateResourceService.get(
@@ -168,7 +168,7 @@ class PipelineTemplateInstanceReqConverter(
             val templateModel = templateResource.model
             if (templateModel !is Model) {
                 throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
                 )
             }
 
@@ -178,7 +178,7 @@ class PipelineTemplateInstanceReqConverter(
                     projectId = projectId,
                     pipelineId = templateId
                 )?.filePath ?: throw ErrorCodeException(
-                    errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_PATH_REF_TEMPLATE_NEED_PAC
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_PATH_REF_TEMPLATE_NEED_PAC
                 )
             }
 

@@ -19,7 +19,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedR
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
@@ -193,7 +192,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 targetBranch = request.targetBranch,
                 description = request.description,
                 templateRefType = request.templateRefType,
-                templateRef = request.templateRef
+                templateRef = request.templateRef,
+                gray = true
             )
             templateInstanceItemDao.createTemplateInstanceItemsV2(
                 dslContext = context,
@@ -253,7 +253,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 repoHashId = request.repoHashId,
                 targetBranch = request.targetBranch,
                 templateRefType = request.templateRefType,
-                templateRef = request.templateRef
+                templateRef = request.templateRef,
+                gray = true
             )
             templateInstanceItemDao.createTemplateInstanceItemsV2(
                 dslContext = context,
@@ -536,7 +537,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             projectId = projectId,
             baseId = baseId
         ) ?: throw ErrorCodeException(
-            errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
             params = arrayOf(baseId)
         )
         val templateInstanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
@@ -622,7 +623,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             projectId = projectId,
             baseId = baseId
         ) ?: throw ErrorCodeException(
-            errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
             params = arrayOf(baseId)
         )
         val templateInstanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(

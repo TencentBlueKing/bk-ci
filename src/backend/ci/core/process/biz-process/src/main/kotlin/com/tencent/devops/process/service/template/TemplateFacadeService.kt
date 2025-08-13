@@ -2110,7 +2110,8 @@ class TemplateFacadeService @Autowired constructor(
                     projectId = projectId,
                     totalItemNum = instances.size,
                     status = TemplateInstanceStatus.INIT.name,
-                    userId = userId
+                    userId = userId,
+                    gray = false
                 )
                 templateInstanceItemDao.createTemplateInstanceItem(
                     dslContext = context,

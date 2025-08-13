@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessTemplateMessageCode
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.dao.template.PipelineTemplateSettingDao
@@ -279,7 +278,7 @@ class PipelineModelParser @Autowired constructor(
                 !templateId.isNullOrEmpty() -> {
                     if (templateVersionName.isNullOrEmpty()) {
                         throw ErrorCodeException(
-                            errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_VERSION_NAME_NOT_EMPTY
+                            errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_NOT_EMPTY
                         )
                     }
                     logger.info(
@@ -299,7 +298,7 @@ class PipelineModelParser @Autowired constructor(
                         templateId = templateId!!,
                         versionName = templateVersionName!!
                     ) ?: throw ErrorCodeException(
-                        errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_VERSION_BY_ID_NOT_FOUND,
+                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_BY_ID_NOT_FOUND,
                         params = arrayOf(templateId!!, templateVersionName!!)
                     )
                 }
@@ -331,7 +330,7 @@ class PipelineModelParser @Autowired constructor(
                         repoHashId = finalRepoHashId,
                         filePath = templatePath!!
                     ) ?: throw ErrorCodeException(
-                        errorCode = ProcessTemplateMessageCode.ERROR_YAML_FOR_TEMPLATE_NOT_FOUND,
+                        errorCode = ProcessMessageCode.ERROR_YAML_FOR_TEMPLATE_NOT_FOUND,
                         params = arrayOf(templatePath!!)
                     )
                     // 2. 获取yaml文件对应的模版版本
@@ -362,13 +361,13 @@ class PipelineModelParser @Autowired constructor(
                         templateId = pipelineYamlInfo.pipelineId,
                         version = pipelineYamlVersion.version.toLong()
                     ) ?: throw ErrorCodeException(
-                        errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_VERSION_BY_PATH_NOT_FOUND
+                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_BY_PATH_NOT_FOUND
                     )
                 }
 
                 else -> {
                     throw ErrorCodeException(
-                        errorCode = ProcessTemplateMessageCode.ERROR_TEMPLATE_REF_TYPE
+                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_REF_TYPE
                     )
                 }
             }
