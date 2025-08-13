@@ -558,7 +558,7 @@
               "type" : "string",
               "uniqueItems" : true,
               "items" : {
-                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
+                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
               },
               "additionalItems" : false
             },
@@ -716,6 +716,9 @@
                   }
                 }
               } ]
+            },
+            "scm-code" : {
+              "type" : "string"
             }
           }
         }
@@ -1255,7 +1258,7 @@
             "type" : "string",
             "uniqueItems" : true,
             "items" : {
-              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
+              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
             },
             "additionalItems" : false
           },
@@ -1413,6 +1416,9 @@
                 }
               }
             } ]
+          },
+          "scm-code" : {
+            "type" : "string"
           }
         }
       } ]
