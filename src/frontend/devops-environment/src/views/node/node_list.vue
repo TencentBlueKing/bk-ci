@@ -14,6 +14,7 @@
                             <bk-dropdown-menu
                                 trigger="click"
                                 class="mr10"
+                                :font-size="'medium'"
                                 @show="dropdown"
                                 @hide="dropdown"
                             >
@@ -83,8 +84,63 @@
                         >
                             {{ $t('environment.nodeInfo.importNode') }}
                         </bk-button>
+                        <bk-dropdown-menu
+                            trigger="click"
+                            ext-cls="batch-menu"
+                            :font-size="'medium'"
+                            @show="batchDropdown"
+                            @hide="batchDropdown"
+                        >
+                            <bk-button
+                                key="batchOperation"
+                                slot="dropdown-trigger"
+                            >
+                                {{ $t('environment.batchOperation') }}
+                                <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isBatchDropdownShow }]"></i>
+                            </bk-button>
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
+                                <li>
+                                    <a
+                                        href="javascript:;"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: projectId,
+                                                action: NODE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                        @click="batchSetTag"
+                                        key="thirdPartyBuildMachine"
+                                    >
+                                        {{ $t('environment.batchSetTag') }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        href="javascript:;"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: projectId,
+                                                action: NODE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                        theme="primary"
+                                        @click="batchDeleteNode"
+                                        key="idcTestMachine"
+                                    >
+                                        {{ $t('environment.batchDeleteNode') }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </bk-dropdown-menu>
                         <bk-button
-                            class="mr10"
+                            
                             @click="handleExportCSV"
                         >
                             {{ $t('environment.export') }}
@@ -141,6 +197,7 @@
                     @node="handleNode"
                     @showLogDetail="handleShowLogDetail"
                     @reImport="handleReImport"
+                    @selected-change="handleSelectedChange"
                 />
             </template>
         </section>
@@ -199,6 +256,7 @@
     import installAgent from '@/components/devops/environment/install-agent'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
@@ -221,6 +279,8 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 curEditNodeItem: '',
                 createImageNode: '',
                 nodeIp: '',
@@ -327,6 +387,8 @@
                 currentTags: [],
                 tagSearchValue: [],
                 isDropdownShow: false,
+                isBatchDropdownShow: false,
+                selectedNodes: [],
                 reInstallId: ''
             }
         },
@@ -519,6 +581,59 @@
             dropdown () {
                 this.isDropdownShow = !this.isDropdownShow
             },
+            batchDropdown () {
+                this.isBatchDropdownShow = !this.isBatchDropdownShow
+            },
+            batchSetTag () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                } else {
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
+                    this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
+                    this.$router.push({
+                        name: 'setNodeTag',
+                        params: {
+                            projectId: this.projectId
+                        }
+                    })
+                }
+            },
+            async batchDeleteNode () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                    return
+                }
+                this.$bkInfo({
+                    title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
+                    extCls: 'info-content',
+                    confirmFn: async () => {
+                        try {
+                            const params = this.selectedNodes.map(i=>i.nodeHashId)
+                            await this.$store.dispatch('environment/toDeleteNode', {
+                                projectId: this.projectId,
+                                params
+                            })
+
+                            this.$bkMessage({
+                                message: this.$t('environment.successfullyDeleted'),
+                                theme: 'success'
+                            })
+                        } catch (err) {
+                            console.log(err)
+                        } finally {
+                            this.requestList()
+                            await this.requestGetCounts(this.projectId)
+                        }
+                    }
+                })
+            },
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
@@ -546,7 +661,7 @@
             
                 const nodeType = this.$route.params.nodeType
                 if (['allNode', 'THIRDPARTY', 'CMDB'].includes(nodeType)) {
-                    this.currentNodeType = nodeType !== 'allNode' ? nodeType : ''
+                    this.currentNodeType = nodeType !== ALLNODE ? nodeType : ''
                     this.currentTags = []
                 } else {
                     this.currentTags = this.findTagByValueId(nodeType)
@@ -577,8 +692,8 @@
             handleClearTagSearch () {
                 this.tagSearchValue = []
                 this.currentTags = []
-                if (!this.currentNodeType) {
-                    this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                if (!this.currentNodeType && this.$route.params.nodeType !== ALLNODE) {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
                     this.requestList()
                 }
@@ -950,6 +1065,9 @@
             cancelCmdbFn () {
                 this.cmdbNodeSelectConf.isShow = false
             },
+            handleSelectedChange (selection) {
+                this.selectedNodes = selection
+            },
             handlePageChange (page) {
                 this.pagination.current = page
                 this.requestList(this.requestParams)
@@ -1048,7 +1166,7 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
             },
             handleInstallEnd () {
                 this.requestList(this.requestParams)
@@ -1066,7 +1184,7 @@
     }
 
     .node-list-wrapper {
-        height: calc(100vh - 146px);
+        height: 100%;
         overflow: hidden;
 
         .sub-view-port {
@@ -1159,6 +1277,7 @@
         .search-part {
             display: flex;
             flex: 1;
+            justify-content: end;
 
             .bk-date-picker.long {
                 max-width: 170px;
@@ -1175,7 +1294,7 @@
             align-items: center;
         }
         .search-input {
-            flex: 1;
+            width: 50%;
             background: #fff;
             margin-right: 10px;
             ::placeholder {
@@ -1185,6 +1304,22 @@
         .tag-search {
             width: 140px;
             margin-right: 10px;
+        }
+    }
+
+    .batch-menu {
+        margin-right: 8px;
+    }
+
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
+        }
+    }
+    
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
         }
     }
 </style>

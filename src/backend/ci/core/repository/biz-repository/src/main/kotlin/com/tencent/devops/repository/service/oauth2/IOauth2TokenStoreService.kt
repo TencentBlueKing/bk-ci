@@ -42,5 +42,17 @@ interface IOauth2TokenStoreService {
         oauthTokenInfo: OauthTokenInfo
     )
 
-    fun delete(userId: String, scmCode: String)
+    /**
+     * 删除指定用户名的OAUTH信息
+     * @param username 用户名(server端用户名)
+     * @param scmCode 仓库标识
+     * @param userId 用户ID(蓝盾用户ID)
+     */
+    fun delete(userId: String, scmCode: String, username: String)
+
+    /**
+     * 获取目标用户下管理的所有OAUTH信息
+     * @param userId 用户ID(蓝盾用户ID)
+     */
+    fun list(userId: String, scmCode: String): List<OauthTokenInfo>
 }

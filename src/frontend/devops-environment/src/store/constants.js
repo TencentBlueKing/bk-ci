@@ -20,3 +20,5 @@
 export const SET_ENVIRONMENT_EXTENSIONS = 'SET_ENVIRONMENT_EXTENSIONS'
 export const NODE_LIST_ASIDE_WIDTH_CACHE = 'node_list_aside_width_cache'
 export const NODE_LIST_ASIDE_PANEL_TOGGLE = 'node_list_aside_panel_toggle'
+export const ENV_ACTIVE_NODE_TYPE = 'ENV_ACTIVE_NODE_TYPE'
+export const ALLNODE = 'allNode'

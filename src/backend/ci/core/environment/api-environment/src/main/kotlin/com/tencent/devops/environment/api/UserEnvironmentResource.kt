@@ -113,7 +113,16 @@ interface UserEnvironmentResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "环境名称", required = true)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "环境类型", required = true)
+        @QueryParam("envType")
+        envType: EnvType?,
+        @Parameter(description = "节点", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?
     ): Result<List<EnvWithPermission>>
 
     @Operation(summary = "根据类型获取环境列表")

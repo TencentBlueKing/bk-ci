@@ -161,6 +161,12 @@ class WorkspaceCommon @Autowired constructor(
         if (status.checkException()) {
             val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)
             when {
+                fix == WorkspaceStatus.EXCEPTION_CDS_OFFLINE -> {
+                    logger.info("$workspaceName is EXCEPTION_CDS_OFFLINE, return error.")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode
+                    )
+                }
                 fix.checkException() -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
