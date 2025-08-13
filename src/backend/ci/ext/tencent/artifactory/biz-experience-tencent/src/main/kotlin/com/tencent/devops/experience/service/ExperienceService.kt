@@ -472,6 +472,29 @@ class ExperienceService @Autowired constructor(
             experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
         }
 
+        val platform = if (experience.platform == null) {
+            PlatformEnum.ofTail(experience.path)
+        } else {
+            PlatformEnum.ofName(experience.platform!!).also {
+                for (t in it.tails) {
+                    if (experience.path.endsWith(t)) {
+                        return@also
+                    }
+                }
+                logger.warn("experience path not match platform")
+                throw RuntimeException("experience path not match platform")
+            }
+        }
+
+        if (platform == PlatformEnum.WIN) {
+            if (experience.experienceName.isNullOrBlank()) {
+                throw RuntimeException("windows experience name is empty")
+            }
+            if (experience.bundleIdentifier.isNullOrBlank()) {
+                throw RuntimeException("windows experience bundleIdentifier is empty")
+            }
+        }
+
         val fileDetail =
             client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
@@ -508,20 +531,11 @@ class ExperienceService @Autowired constructor(
             experience.outerUsers
         }
 
-        val platform = if (experience.platform == null) {
-            PlatformEnum.ofTail(experience.path)
+        val appBundleIdentifier = if (platform == PlatformEnum.WIN) {
+            experience.bundleIdentifier!!
         } else {
-            PlatformEnum.ofName(experience.platform!!).also {
-                for (t in it.tails) {
-                    if (experience.path.endsWith(t)) {
-                        return@also
-                    }
-                }
-                logger.warn("experience path not match platform")
-                throw RuntimeException("experience path not match platform")
-            }
+            propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         }
-        val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
@@ -927,7 +941,8 @@ class ExperienceService @Autowired constructor(
             productOwner = experience.productOwner,
             sendNotification = experience.sendNotification,
             classify = experience.classify,
-            platform = experience.platform
+            platform = experience.platform,
+            bundleIdentifier = experience.bundleIdentifier
         )
 
         val experienceId = createExperience(
