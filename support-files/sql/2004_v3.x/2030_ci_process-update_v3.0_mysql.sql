@@ -232,6 +232,14 @@ BEGIN
         ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext CHARACTER SET utf8mb4 comment '制品质量分析结果' after `ARTIFACT_INFO`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_TEMPLATE_INSTANCE_BASE'
+                AND COLUMN_NAME = 'GRAY') THEN
+    ALTER TABLE `T_TEMPLATE_INSTANCE_BASE` ADD `GRAY` bit(1) DEFAULT b'0' COMMENT '灰度功能';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>
