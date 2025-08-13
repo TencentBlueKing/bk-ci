@@ -108,7 +108,7 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             reg = /^https\:\/\/github\.com\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `${codelibLocaleObj.githubRule}`
             break
-        case (authType === 'OAUTH') || (isGit(type) && authType === 'HTTP'):
+        case (isGit(type) && authType === 'OAUTH') || (isGit(type) && authType === 'HTTP'):
             reg = /^https?\:\/\/git((\.code\.w?)|(\.w))oa\.com[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.httpsRule}`
             nameMatchIndex = 4
@@ -189,7 +189,6 @@ export function extendParsePathAlias (type, path, authType, svnType) {
     }
 
     const matchResult = path.match(reg)
-
     return matchResult
         ? {
             alias: matchResult[nameMatchIndex]
