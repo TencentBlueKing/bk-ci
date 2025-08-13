@@ -1062,8 +1062,7 @@ class WorkspaceService @Autowired constructor(
             }
             if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
-                    params = arrayOf(workspace.hostIp ?: workspaceName)
+                    errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
