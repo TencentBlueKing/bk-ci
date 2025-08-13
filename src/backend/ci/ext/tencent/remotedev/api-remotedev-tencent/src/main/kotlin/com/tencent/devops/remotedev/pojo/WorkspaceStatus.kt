@@ -63,7 +63,8 @@ enum class WorkspaceStatus {
     EXCEPTION_CREATE_FAILED, // 22 异常 创建异常
     CLONING, // 23 正在克隆
     EXPANDING, // 24 磁盘扩容中
-    OPERATING; // 25 操作中
+    OPERATING, // 25 操作中
+    EXCEPTION_CDS_OFFLINE; // 26 异常 CDS离线
 
     enum class Types {
         USING {
@@ -95,7 +96,8 @@ enum class WorkspaceStatus {
                 EXCEPTION_STOP_FAILED,
                 EXCEPTION_ABNORMAL_AFTER_RUNNING,
                 EXCEPTION_ABNORMAL_AFTER_READY,
-                EXCEPTION_CREATE_FAILED
+                EXCEPTION_CREATE_FAILED,
+                EXCEPTION_CDS_OFFLINE
             )
         };
 
@@ -110,7 +112,7 @@ enum class WorkspaceStatus {
 
     fun checkException() = this == EXCEPTION || this == EXCEPTION_START_FAILED || this == EXCEPTION_STOP_FAILED ||
         this == EXCEPTION_ABNORMAL_AFTER_RUNNING || this == EXCEPTION_ABNORMAL_AFTER_READY ||
-        this == EXCEPTION_CREATE_FAILED
+        this == EXCEPTION_CREATE_FAILED || this == EXCEPTION_CDS_OFFLINE
 
     fun checkDelivering() = this == DELIVERING || checkDeliveringFailed()
 
@@ -184,6 +186,7 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.CLONING -> "克隆中"
         WorkspaceStatus.EXPANDING -> "磁盘扩容中"
         WorkspaceStatus.OPERATING -> "操作中"
+        WorkspaceStatus.EXCEPTION_CDS_OFFLINE -> "CDS离线"
     }
 }
 
