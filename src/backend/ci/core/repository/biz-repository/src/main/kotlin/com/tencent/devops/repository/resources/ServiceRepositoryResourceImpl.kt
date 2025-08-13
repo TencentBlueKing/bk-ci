@@ -49,6 +49,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import java.net.URLDecoder
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -56,7 +57,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ALL")
 class ServiceRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService,
-    private val repoPipelineService: RepoPipelineService
+    private val repoPipelineService: RepoPipelineService,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) : ServiceRepositoryResource {
 
     @BkTimed(extraTags = ["operate", "create"])
