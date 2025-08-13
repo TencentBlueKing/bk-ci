@@ -49,32 +49,38 @@
             return {
                 isLoading: false,
                 rate: 0,
-                comment: '',
-                modifyCommentGenerator: {
+                comment: ''
+            }
+        },
+
+        computed: {
+            modifyCommentGenerator () {
+                return {
                     atom: this.requestAtomModifyComment,
                     template: this.requestTemplateModifyComment,
                     ide: this.requestIDEModifyComment,
                     image: this.requestImageModifyComment,
                     service: this.requestServiceModifyComment
-                },
-                addCommentGenerator: {
+                }
+            },
+            addCommentGenerator () {
+                return {
                     atom: this.requestAddAtomComment,
                     template: this.requestAddTemplateComment,
                     ide: this.requestAddIDEComment,
                     image: this.requestAddImageComment,
                     service: this.requestAddServiceComment
-                },
-                getCommentGenerator: {
+                }
+            },
+            getCommentGenerator () {
+                return {
                     atom: this.requestAtomUserComment,
                     template: this.requestTemplateUserComment,
                     ide: this.requestIDEUserComment,
                     image: this.requestImageUserComment,
                     service: this.requestServiceUserComment
                 }
-            }
-        },
-
-        computed: {
+            },
             type () {
                 return this.$route.params.type
             }

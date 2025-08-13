@@ -103,7 +103,7 @@ export default {
   methods: {
     initStatus() {
       if (!validProjectCode(this.projectCode)) {
-        return Promise.resolve();
+        return;
       }
       const commonPrefix = `${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.projectCode)}/${this.resourceType}/${this.resourceCode}`;
       Promise
