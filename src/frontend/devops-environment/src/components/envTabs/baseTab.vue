@@ -1,12 +1,12 @@
 <template>
     <div class="base-message-wrapper">
         <form
-            class="bk-form base-env-form"
+            class="base-env-form"
             ref="modifyEnv"
         >
-            <div class="bk-form-item">
-                <label class="bk-label env-item-label">{{ $t('environment.envInfo.name') }}</label>
-                <div class="bk-form-content env-item-content">
+            <div class="base-form-item">
+                <label class="env-item-label">{{ $t('environment.envInfo.name') }}</label>
+                <div class="env-item-content">
                     <div
                         class="edit-content"
                         v-if="isEditingName"
@@ -60,9 +60,9 @@
                     </div>
                 </div>
             </div>
-            <div class="bk-form-item">
-                <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.envRemark') }}</label>
-                <div class="bk-form-content env-item-content">
+            <div class="base-form-item">
+                <label class="env-item-label env-desc-label">{{ $t('environment.envInfo.envRemark') }}</label>
+                <div class="env-item-content">
                     <div
                         class="edit-content"
                         v-if="isEditingDesc"
@@ -74,8 +74,7 @@
                             v-if="isEditingDesc"
                             maxlength="100"
                             v-model="editEnvForm.desc"
-                        >
-                                    </textarea>
+                        ></textarea>
                     </div>
                     <p
                         v-else
@@ -119,9 +118,9 @@
                     </div>
                 </div>
             </div>
-            <div class="bk-form-item">
-                <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.envType') }}</label>
-                <div class="bk-form-content env-item-content">
+            <div class="base-form-item">
+                <label class="env-item-label env-desc-label">{{ $t('environment.envInfo.envType') }}</label>
+                <div class="env-item-content">
                     <div
                         class="edit-content"
                         v-if="isEditingType"
@@ -182,21 +181,21 @@
                     </div>
                 </div>
             </div>
-            <div class="bk-form-item">
-                <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.nodeCount') }}</label>
-                <div class="bk-form-content env-item-content">
+            <div class="base-form-item">
+                <label class="env-item-label env-desc-label">{{ $t('environment.envInfo.nodeCount') }}</label>
+                <div class="env-item-content">
                     <p class="env-base">{{ curEnvDetail.nodeCount }}</p>
                 </div>
             </div>
-            <div class="bk-form-item">
-                <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.creationTime') }}</label>
-                <div class="bk-form-content env-item-content">
+            <div class="base-form-item">
+                <label class="env-item-label env-desc-label">{{ $t('environment.envInfo.creationTime') }}</label>
+                <div class="env-item-content">
                     <p class="env-base">{{ localConvertTime(curEnvDetail.createdTime) }}</p>
                 </div>
             </div>
-            <div class="bk-form-item create-user-item">
-                <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.creator') }}</label>
-                <div class="bk-form-content env-item-content">
+            <div class="base-form-item create-user-item">
+                <label class="env-item-label env-desc-label">{{ $t('environment.envInfo.creator') }}</label>
+                <div class="env-item-content">
                     <p class="env-base">{{ curEnvDetail.createdUser }}</p>
                 </div>
             </div>

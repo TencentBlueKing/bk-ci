@@ -1,10 +1,10 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.AuthResourceDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -14,7 +14,6 @@ import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import java.util.function.Supplier
 
 /**
@@ -25,7 +24,7 @@ class BkInternalPermissionService(
     private val dslContext: DSLContext,
     private val userManageService: UserManageService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val superManagerService: SuperManagerService,
     private val authResourceService: AuthResourceDao,
@@ -279,52 +278,10 @@ class BkInternalPermissionService(
         userId: String
     ): List<Int> {
         return CacheHelper.getOrLoad(projectUserGroupCache, projectCode, userId) {
-            listMemberGroupIdsInProject(projectCode, userId)
+            permissionResourceGroupService.listMemberGroupIdsInProject(projectCode, userId)
         }
     }
 
-    fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int> {
-        return createTimer(::listMemberGroupIdsInProject.name).record(Supplier {
-            // 获取用户加入的项目级用户组模板ID
-            val iamTemplateIds = listProjectMemberGroupTemplateIds(
-                projectCode = projectCode,
-                memberId = memberId
-            )
-            // 获取用户的所属组织
-            val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
-            authResourceGroupMemberDao.listMemberGroupIdsInProject(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                memberId = memberId,
-                iamTemplateIds = iamTemplateIds,
-                memberDeptInfos = memberDeptInfos
-            )
-        }) ?: emptyList()
-    }
-
-    private fun listProjectMemberGroupTemplateIds(
-        projectCode: String,
-        memberId: String
-    ): List<String> {
-        // 查询项目下包含该成员的组列表
-        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            memberId = memberId,
-            minExpiredTime = LocalDateTime.now()
-        ).map { it.iamGroupId.toString() }
-        // 通过项目组ID获取人员模板ID
-        return authResourceGroupDao.listByRelationId(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            iamGroupIds = projectGroupIds
-        ).filter { it.iamTemplateId != null }
-            .map { it.iamTemplateId.toString() }
-    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkInternalPermissionComparator::class.java)
