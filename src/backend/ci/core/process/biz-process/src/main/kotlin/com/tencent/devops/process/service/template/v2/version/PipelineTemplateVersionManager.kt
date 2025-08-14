@@ -27,15 +27,17 @@
 
 package com.tencent.devops.process.service.template.v2.version
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
-import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateVersionValidator
 import com.tencent.devops.process.service.template.v2.version.convert.PipelineTemplateVersionReqConverter
 import com.tencent.devops.process.service.template.v2.version.hander.PipelineTemplateVersionCreateHandler
 import com.tencent.devops.process.service.template.v2.version.hander.PipelineTemplateVersionDeleteHandler
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -48,7 +50,8 @@ class PipelineTemplateVersionManager @Autowired constructor(
     private val versionReqConverters: List<PipelineTemplateVersionReqConverter>,
     private val pipelineTemplateVersionValidator: PipelineTemplateVersionValidator,
     private val versionDeleteHandler: PipelineTemplateVersionDeleteHandler,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val templateDao: TemplateDao,
+    private val dslContext: DSLContext
 ) {
 
     fun deployTemplate(
@@ -79,13 +82,13 @@ class PipelineTemplateVersionManager @Autowired constructor(
         if (version == null && versionName == null) {
             throw IllegalArgumentException("Version and version name cannot be null")
         }
-        val finalVersion = version ?: pipelineTemplateResourceService.get(
-            PipelineTemplateResourceCommonCondition(
-                projectId = projectId,
-                templateId = templateId,
-                versionName = versionName
-            )
-        ).version
+        // TODO pac模板 待稳定后，使用新表
+        val finalVersion = version ?: (templateDao.getTemplate(
+            dslContext = dslContext,
+            templateId = templateId,
+            versionName = versionName
+        ) ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS)).version
+
         val context = PipelineTemplateVersionDeleteContext(
             userId = userId,
             projectId = projectId,
