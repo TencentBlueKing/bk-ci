@@ -1601,6 +1601,9 @@
               },
               "name" : {
                 "type" : "string"
+              },
+              "if" : {
+                "type" : "object"
               }
             }
           } ]
