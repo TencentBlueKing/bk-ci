@@ -227,7 +227,7 @@ export default {
             
 
             const allContainers = getters.getAllContainers(stages)
-            if (allContainers.length > 0 && pipelineSetting.failIfVariableInvalid) {
+            if (allContainers.length > 0 && pipelineSetting?.failIfVariableInvalid) {
                 const invalidList = allContainers[0].params.filter(param => typeof param.defaultValue === 'string' && param.defaultValue.length > VAR_MAX_LENGTH)
                 if (invalidList.length) {
                     invalidList.forEach(item => {
