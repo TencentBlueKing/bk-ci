@@ -387,7 +387,9 @@
             },
             async getTagTypeList () {
                 await this.requestNodeTagList(this.projectId)
-                const isValidNodeType = this.getTagValues().includes(this.$route.params.nodeType)
+                const nodeType = this.$route.params.nodeType
+                const validNodeTypes = ['allNode', 'THIRDPARTY', 'CMDB']
+                const isValidNodeType = validNodeTypes.includes(nodeType) || this.getTagValues().includes(nodeType)
                 if (this.$route.name === 'nodeList' && !isValidNodeType) {
                     this.handleNodeClick(ALLNODE)
                 }
