@@ -127,7 +127,7 @@ export default function useTemplateConstraint () {
         }
     }
 
-    async function revertPipelineConstraint (classify, field) {
+    async function revertTemplateConstraint (classify, field) {
         try {
             reverting.value = true
             const templateRes = await vm.proxy.$store.dispatch('atom/revertPipelineConstraint', {
