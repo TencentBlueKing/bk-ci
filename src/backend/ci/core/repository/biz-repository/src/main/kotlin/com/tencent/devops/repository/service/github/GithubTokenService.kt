@@ -141,10 +141,17 @@ class GithubTokenService @Autowired constructor(
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(operator, buildBasicInfo.projectId)
-            )
+            if (operator != userId) {
+                logger.warn(
+                    "Github OAuth account [$userId]'s operator [$operator] " +
+                            "is not a member of project [${buildBasicInfo.projectId}]"
+                )
+            } else {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                    params = arrayOf(operator, buildBasicInfo.projectId)
+                )
+            }
         }
         return accessToken
     }
