@@ -138,4 +138,12 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             pageSize = pageSize
         ))
     }
+
+    override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
+        return Result(publicVarGroupService.convertGroupYaml(
+            userId = userId,
+            projectId = projectId,
+            publicVarGroup = publicVarGroup
+        ))
+    }
 }

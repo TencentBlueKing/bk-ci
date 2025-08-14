@@ -182,4 +182,18 @@ interface UserPublicVarGroupResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<PublicVarReleaseDO>>
+
+    @Operation(summary = "转换变量组的YAML内容")
+    @POST
+    @Path("/projects/{projectId}/{groupName}/yaml")
+    fun convertGroupYaml(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "公共变量组请求报文", required = true)
+        publicVarGroup: PublicVarGroupVO
+    ): Result<String>
 }

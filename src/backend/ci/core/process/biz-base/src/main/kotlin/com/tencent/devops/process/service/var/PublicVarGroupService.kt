@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -263,6 +264,7 @@ class PublicVarGroupService @Autowired constructor(
     }
 
     fun getGroupYaml(groupName: String, version: Int, projectId: String): String {
+
         val groupInfo = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
             projectId = projectId,
@@ -543,5 +545,19 @@ fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<St
         }
 
         return buildFormProperties
+    }
+
+    fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): String {
+        val params = publicVarGroup.publicVars.map { it.buildFormProperty }
+        val variables = variableTransfer.makeVariableFromBuildParams(params, false)
+
+        val parserVO = PublicVarGroupYamlParser(
+            version = "v3.0",
+            name = publicVarGroup.groupName,
+            desc = publicVarGroup.desc ?: "",
+            variables = variables ?: emptyMap()
+        )
+
+        return TransferMapper.getObjectMapper().writeValueAsString(parserVO)
     }
 }
