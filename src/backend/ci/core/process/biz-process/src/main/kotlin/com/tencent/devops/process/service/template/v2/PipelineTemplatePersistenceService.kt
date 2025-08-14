@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.service.template.v2
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.PipelineTemplateConstant
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
@@ -70,6 +73,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val client: Client,
     private val templatePipelineDao: TemplatePipelineDao,
+    private val templateDao: TemplateDao,
     private val versionCreateListeners: List<PTemplateVersionCreatePostProcessor>
 ) {
 
@@ -624,10 +628,11 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val templateInfo = pipelineTemplateInfoService.get(
-                projectId = projectId,
+            // TODO pac模板 待稳定后，获取新表数据
+            val templateInfo = templateDao.getTemplate(
+                dslContext = dslContext,
                 templateId = templateId
-            )
+            ) ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
             pipelineTemplateRelatedService.delete(
                 transactionContext = context,
                 condition = PipelineTemplateRelatedCommonCondition(
@@ -657,7 +662,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId
                 )
             )
-            if (templateInfo.mode == TemplateType.CONSTRAINT) {
+            if (templateInfo.type == TemplateType.CONSTRAINT.name) {
                 client.get(ServiceStoreResource::class).uninstall(
                     storeCode = templateInfo.srcTemplateId!!,
                     storeType = StoreTypeEnum.TEMPLATE,
