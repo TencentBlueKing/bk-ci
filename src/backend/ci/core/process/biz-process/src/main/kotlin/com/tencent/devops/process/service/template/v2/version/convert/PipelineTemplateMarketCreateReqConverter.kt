@@ -87,7 +87,9 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 ?: pipelineTemplateResourceService.getLatestPublishedResource(
                     projectId = marketTemplateProjectId,
                     templateId = marketTemplateId
-                )?.version ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
+                )?.version ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_LATEST_PUBLISHED_VERSION_NOT_EXIST
+                )
 
             val marketTemplateResource = pipelineTemplateResourceService.get(
                 projectId = marketTemplateProjectId,

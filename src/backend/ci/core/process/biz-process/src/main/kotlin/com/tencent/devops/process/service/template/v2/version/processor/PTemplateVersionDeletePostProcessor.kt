@@ -1,6 +1,8 @@
 package com.tencent.devops.process.service.template.v2.version.processor
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.enums.OperationLogType
@@ -26,11 +28,12 @@ class PTemplateVersionDeletePostProcessor(
         with(context) {
             when (versionAction) {
                 PipelineVersionAction.DELETE_VERSION -> {
-                    val resource = pipelineTemplateResourceService.get(
-                        projectId = projectId,
+                    // TODO pac模板 待稳定后，获取新表数据
+                    val resource = templateDao.getTemplate(
+                        dslContext = dslContext,
                         templateId = templateId,
                         version = version!!
-                    )
+                    ) ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS)
                     operationLogService.addOperationLog(
                         userId = userId,
                         projectId = projectId,

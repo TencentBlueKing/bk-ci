@@ -2,7 +2,7 @@ package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
@@ -164,7 +164,7 @@ class PipelineTemplateResourceService @Autowired constructor(
         return pipelineTemplateResourceDao.get(
             commonCondition = commonCondition,
             dslContext = dslContext
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
     }
 
     fun getOrNull(commonCondition: PipelineTemplateResourceCommonCondition): PipelineTemplateResource? {
@@ -184,7 +184,7 @@ class PipelineTemplateResourceService @Autowired constructor(
             projectId = projectId,
             templateId = templateId,
             version = version
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
     }
 
     fun count(commonCondition: PipelineTemplateResourceCommonCondition): Int {

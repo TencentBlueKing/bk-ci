@@ -394,6 +394,7 @@ object ProcessMessageCode {
 
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
+
     // URL[{0}]中存在高危端口号
     const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101286"
 
@@ -425,6 +426,11 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_TRIGGER_CONFIG_STEP_ID_NOT_FOUND = "2101310" // 触发器的StepID不存在
     const val ERROR_TEMPLATE_PATH_REF_PIPELINE_NEED_PAC = "2101311" // 路径引用流水线必须开启PAC
     const val ERROR_TEMPLATE_INSTANCE_NOT_EXISTS = "2101312" // 模板实例不存在
+    const val ERROR_TEMPLATE_LATEST_VERSION_CAN_NOT_DELETE = "2101313" // 模板的最新版本不允许删除
+    const val ERROR_TEMPLATE_VERSION_NOT_EXISTS = "2101314" // 模板版本记录不存在
+    const val ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST = "2101315" // 模板的最新版本不存在
+    const val ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST = "2101316" // 模板的最新发布版本不存在
+    const val ERROR_TEMPLATE_LATEST_PUBLISHED_VERSION_NOT_EXIST = "2101317" // 模板的最新上架研发商店版本不存在
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.template.StageTemplateModel
 import com.tencent.devops.common.pipeline.template.StepTemplateModel
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
@@ -191,7 +192,7 @@ class PipelineTemplateGenerator @Autowired constructor(
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId,
             templateId = templateId
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
         return PTemplateResourceOnlyVersion(
             version = generateTemplateVersion(),
             number = latestResource.number + 1,
@@ -212,7 +213,7 @@ class PipelineTemplateGenerator @Autowired constructor(
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId,
             templateId = templateId
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
         // 如果已经存在分支版本,则基准版本为分支版本
         val branchResource = pipelineTemplateResourceService.getLatestBranchResource(
             projectId = projectId,
@@ -364,7 +365,7 @@ class PipelineTemplateGenerator @Autowired constructor(
     ): PTemplateResourceOnlyVersion {
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId, templateId = templateId
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
         val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = projectId, templateId = templateId
         )

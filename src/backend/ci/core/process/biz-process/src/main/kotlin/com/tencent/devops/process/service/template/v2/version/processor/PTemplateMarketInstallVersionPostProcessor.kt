@@ -43,7 +43,9 @@ class PTemplateMarketInstallVersionPostProcessor(
             val latestReleasedResource = pipelineTemplateResourceService.getLatestReleasedResource(
                 projectId = projectId,
                 templateId = templateId
-            ) ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST
+            )
             val srcTemplateProjectId = latestReleasedResource.srcTemplateProjectId!!
             val srcTemplateId = latestReleasedResource.srcTemplateId!!
             val srcTemplateVersion = latestReleasedResource.srcTemplateVersion!!

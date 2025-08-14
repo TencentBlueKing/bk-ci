@@ -707,7 +707,7 @@ class PipelineTemplateMigrateService(
             projectId = latestTemplate.projectId,
             templateId = latestTemplate.id
         ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST
         )
         val instanceSize = templatePipelineDao.countByVersionFeat(
             dslContext = dslContext,
