@@ -84,7 +84,6 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     }
 
     private fun PipelineTemplateVersionDeleteContext.doHandle() {
-        pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
         when (versionAction) {
             PipelineVersionAction.DELETE_VERSION -> {
                 deleteVersion()
