@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -538,7 +537,7 @@ fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<St
                     buildFormProperties.add(buildFormProperty)
                     processedVarNames.add(po.varName)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 logger.warn("Failed to get variables from group $groupName", e)
                 throw e
             }
@@ -559,5 +558,37 @@ fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<St
         )
 
         return TransferMapper.getObjectMapper().writeValueAsString(parserVO)
+    }
+
+    fun convertYamlToGroup(userId: String, projectId: String, yaml: PublicVarGroupYamlStringVO): PublicVarGroupVO {
+        val parserVO = try {
+            TransferMapper.getObjectMapper().readValue(
+                yaml.yaml,
+                object : TypeReference<PublicVarGroupYamlParser>() {}
+            )
+        } catch (e: Throwable) {
+            logger.warn("Failed to parse YAML for public variable group", e)
+            throw e
+        }
+
+        // 将variables转换为List<BuildFormProperty>
+        val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
+        val publicVars = buildFormProperties.map { property ->
+            PublicVarVO(
+                varName = property.id,
+                alias = property.name ?: "",
+                type = if (property.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE,
+                valueType = property.type,
+                defaultValue = property.defaultValue,
+                desc = property.desc,
+                buildFormProperty = property
+            )
+        }
+
+        return PublicVarGroupVO(
+            groupName = parserVO.name,
+            desc = parserVO.desc,
+            publicVars = publicVars
+        )
     }
 }

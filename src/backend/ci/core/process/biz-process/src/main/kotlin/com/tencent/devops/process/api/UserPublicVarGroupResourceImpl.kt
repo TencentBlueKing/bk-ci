@@ -146,4 +146,16 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             publicVarGroup = publicVarGroup
         ))
     }
+
+    override fun convertYamlToGroup(
+        userId: String,
+        projectId: String,
+        yaml: PublicVarGroupYamlStringVO
+    ): Result<PublicVarGroupVO> {
+        return Result(publicVarGroupService.convertYamlToGroup(
+            userId = userId,
+            projectId = projectId,
+            yaml = yaml
+        ))
+    }
 }

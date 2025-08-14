@@ -183,9 +183,9 @@ interface UserPublicVarGroupResource {
         pageSize: Int
     ): Result<Page<PublicVarReleaseDO>>
 
-    @Operation(summary = "转换变量组的YAML内容")
+    @Operation(summary = "转换为变量组的YAML内容")
     @POST
-    @Path("/projects/{projectId}/{groupName}/yaml")
+    @Path("/projects/{projectId}/convert")
     fun convertGroupYaml(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -196,4 +196,18 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "公共变量组请求报文", required = true)
         publicVarGroup: PublicVarGroupVO
     ): Result<String>
+
+    @Operation(summary = "将YAML内容转换为变量组")
+    @POST
+    @Path("/projects/{projectId}/yaml/convert")
+    fun convertYamlToGroup(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "YAML内容", required = true)
+        yaml: PublicVarGroupYamlStringVO
+    ): Result<PublicVarGroupVO>
 }
