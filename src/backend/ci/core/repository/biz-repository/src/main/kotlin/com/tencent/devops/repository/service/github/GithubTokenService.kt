@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.service.github
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -36,7 +35,6 @@ import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
@@ -141,9 +139,9 @@ class GithubTokenService @Autowired constructor(
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(operator, buildBasicInfo.projectId)
+            logger.warn(
+                "Github OAuth account [$userId]'s operator [$operator] " +
+                        "is not a member of project [${buildBasicInfo.projectId}]"
             )
         }
         return accessToken
