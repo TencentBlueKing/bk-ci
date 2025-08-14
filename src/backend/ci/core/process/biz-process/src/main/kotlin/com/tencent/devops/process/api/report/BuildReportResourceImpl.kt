@@ -69,4 +69,25 @@ class BuildReportResourceImpl @Autowired constructor(
     override fun getRootUrl(projectId: String, buildId: String, taskId: String): Result<String> {
         return Result(reportService.getRootUrl(projectId, buildId, taskId))
     }
+
+    override fun createReportBindParentPipeline(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        indexFile: String,
+        name: String,
+        reportType: ReportTypeEnum
+    ): Result<Boolean> {
+        reportService.create(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            indexFile = indexFile,
+            name = name,
+            reportType = reportType,
+        )
+        return Result(true)
+    }
 }
