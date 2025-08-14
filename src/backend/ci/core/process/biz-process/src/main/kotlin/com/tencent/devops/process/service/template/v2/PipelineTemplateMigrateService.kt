@@ -119,11 +119,15 @@ class PipelineTemplateMigrateService(
     fun migrateTemplates(projectId: String) {
         logger.info("Start to migrate project templates for projectId: {}", projectId)
 
-        // 1. 前置检查：如果任务已在进行中，则直接返回
+        // 1. 前置检查：如果任务已在进行中或者不存在模板，则直接跳过
         val migrationRecord = pipelineTemplateMigrationDao.get(dslContext, projectId)
         if (migrationRecord?.status == MigrationStatus.IN_PROGRESS.name) {
             logger.warn("Migration for projectId {} is already in progress. Skipping.", projectId)
             return
+        }
+        val templateCount = templateDao.countTemplate(dslContext, projectId)
+        if (templateCount == 0) {
+            logger.warn("The template does not exist under project {}. Skipping.", projectId)
         }
 
         val startTime = LocalDateTime.now()
@@ -353,7 +357,14 @@ class PipelineTemplateMigrateService(
     ) {
         val currentProjectId = context.srcTemplateProjectId ?: context.projectId
         val currentTemplate = templateDao.getTemplate(dslContext, currentProjectId, versionInfo.version)
-            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
+            ?: if (context.isConstraint) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PARENTS_TEMPLATE_NOT_EXISTS,
+                    params = arrayOf(context.latestTemplate.srcTemplateId)
+                )
+            } else {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS)
+            }
 
         // 步骤 3.1: 计算新版本的 pipelineVersion 和 triggerVersion
         calculateNextVersions(context, currentTemplate, currentProjectId, versionSequence, counters)

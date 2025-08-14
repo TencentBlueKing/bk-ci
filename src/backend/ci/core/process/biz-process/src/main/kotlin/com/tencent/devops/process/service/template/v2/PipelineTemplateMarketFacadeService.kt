@@ -372,7 +372,7 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
             templateId = templateId,
             version = version
         )
-        // todo 二期，局部模板需要进行改造
+        // TODO pac模板 二期，局部模板需要进行改造
         if (template.type != PipelineTemplateType.PIPELINE)
             return Result(null)
         val templateModel = template.model as Model
