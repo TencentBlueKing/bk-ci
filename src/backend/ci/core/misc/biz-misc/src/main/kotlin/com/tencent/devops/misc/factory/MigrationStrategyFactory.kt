@@ -50,8 +50,9 @@ import com.tencent.devops.misc.strategy.impl.pipeline.TemplatePipelineMigrationS
 
 class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMigrateDao) {
 
-    fun getProjectMigrationStrategies(): List<MigrationStrategy> {
-        return listOf(
+    private val projectDataMigrationStrategies by lazy {
+        // 项目维度数据迁移策略集合
+        listOf(
             AuditResourceMigrationStrategy(processDataMigrateDao),
             PipelineGroupMigrationStrategy(processDataMigrateDao),
             PipelineJobMutexGroupMigrationStrategy(processDataMigrateDao),
@@ -70,38 +71,65 @@ class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMig
         )
     }
 
-    fun getPipelineMigrationStrategies(): List<MigrationStrategy> {
-        return listOf(
-            PipelineAuditResourceMigrationStrategy(processDataMigrateDao),
-            PipelineBuildContainerMigrationStrategy(processDataMigrateDao),
-            PipelineBuildLinkedDataMigrationStrategy(processDataMigrateDao),
-            PipelineBuildStageMigrationStrategy(processDataMigrateDao),
-            PipelineBuildSummaryMigrationStrategy(processDataMigrateDao),
-            PipelineBuildTaskMigrationStrategy(processDataMigrateDao),
-            PipelineBuildTemplateAcrossInfoMigrationStrategy(processDataMigrateDao),
-            PipelineCallbackMigrationStrategy(processDataMigrateDao),
-            PipelineFavorMigrationStrategy(processDataMigrateDao),
-            PipelineInfoMigrationStrategy(processDataMigrateDao),
-            PipelineLabelPipelineMigrationStrategy(processDataMigrateDao),
-            PipelineModelTaskMigrationStrategy(processDataMigrateDao),
-            PipelineOperationLogMigrationStrategy(processDataMigrateDao),
-            PipelineRecentUseMigrationStrategy(processDataMigrateDao),
-            PipelineRemoteAuthMigrationStrategy(processDataMigrateDao),
-            PipelineResourceMigrationStrategy(processDataMigrateDao),
-            PipelineResourceVersionMigrationStrategy(processDataMigrateDao),
-            PipelineSettingMigrationStrategy(processDataMigrateDao),
-            PipelineSettingVersionMigrationStrategy(processDataMigrateDao),
-            PipelineSubRefMigrationStrategy(processDataMigrateDao),
-            PipelineTimerBranchMigrationStrategy(processDataMigrateDao),
-            PipelineTriggerDetailMigrationStrategy(processDataMigrateDao),
-            PipelineViewGroupMigrationStrategy(processDataMigrateDao),
-            PipelineWebhookMigrationStrategy(processDataMigrateDao),
-            PipelineWebhookQueueMigrationStrategy(processDataMigrateDao),
-            PipelineWebhookVersionMigrationStrategy(processDataMigrateDao),
-            PipelineYamlInfoMigrationStrategy(processDataMigrateDao),
-            PipelineYamlVersionMigrationStrategy(processDataMigrateDao),
-            ReportMigrationStrategy(processDataMigrateDao),
-            TemplatePipelineMigrationStrategy(processDataMigrateDao)
-        )
+    private val commonPipelineDataStrategies = listOf(
+        PipelineBuildLinkedDataMigrationStrategy(processDataMigrateDao),
+        PipelineBuildSummaryMigrationStrategy(processDataMigrateDao),
+        PipelineFavorMigrationStrategy(processDataMigrateDao),
+        PipelineInfoMigrationStrategy(processDataMigrateDao),
+        PipelineLabelPipelineMigrationStrategy(processDataMigrateDao),
+        PipelineOperationLogMigrationStrategy(processDataMigrateDao),
+        PipelineResourceMigrationStrategy(processDataMigrateDao),
+        PipelineResourceVersionMigrationStrategy(processDataMigrateDao),
+        PipelineSettingMigrationStrategy(processDataMigrateDao),
+        PipelineSettingVersionMigrationStrategy(processDataMigrateDao),
+        PipelineViewGroupMigrationStrategy(processDataMigrateDao),
+        ReportMigrationStrategy(processDataMigrateDao),
+        TemplatePipelineMigrationStrategy(processDataMigrateDao)
+    )
+
+    private val nonArchivePipelineDataStrategies = listOf(
+        PipelineAuditResourceMigrationStrategy(processDataMigrateDao),
+        PipelineBuildContainerMigrationStrategy(processDataMigrateDao),
+        PipelineBuildStageMigrationStrategy(processDataMigrateDao),
+        PipelineBuildTaskMigrationStrategy(processDataMigrateDao),
+        PipelineBuildTemplateAcrossInfoMigrationStrategy(processDataMigrateDao),
+        PipelineCallbackMigrationStrategy(processDataMigrateDao),
+        PipelineModelTaskMigrationStrategy(processDataMigrateDao),
+        PipelineRecentUseMigrationStrategy(processDataMigrateDao),
+        PipelineRemoteAuthMigrationStrategy(processDataMigrateDao),
+        PipelineSubRefMigrationStrategy(processDataMigrateDao),
+        PipelineTimerBranchMigrationStrategy(processDataMigrateDao),
+        PipelineTriggerDetailMigrationStrategy(processDataMigrateDao),
+        PipelineWebhookMigrationStrategy(processDataMigrateDao),
+        PipelineWebhookQueueMigrationStrategy(processDataMigrateDao),
+        PipelineWebhookVersionMigrationStrategy(processDataMigrateDao),
+        PipelineYamlInfoMigrationStrategy(processDataMigrateDao),
+        PipelineYamlVersionMigrationStrategy(processDataMigrateDao)
+    )
+
+    /**
+     * 获取项目维度数据迁移策略集合
+     *
+     * @return 项目级迁移策略列表
+     */
+    fun getProjectDataMigrationStrategies(): List<MigrationStrategy> = projectDataMigrationStrategies
+
+    /**
+     * 获取流水线维度数据迁移策略集合
+     *
+     * @param archiveFlag 流水线归档标志：
+     *   - true： 仅返回通用策略（适用于归档流水线）
+     *   - false/null： 返回通用策略+非归档专属策略（适用于活跃流水线）
+     *
+     * @return 按条件组合的流水线迁移策略列表
+     */
+    fun getPipelineDataMigrationStrategies(archiveFlag: Boolean? = null): List<MigrationStrategy> {
+        return mutableListOf<MigrationStrategy>().apply {
+            addAll(commonPipelineDataStrategies)
+            if (archiveFlag != true) {
+                // 添加非归档场景专属策略
+                addAll(nonArchivePipelineDataStrategies)
+            }
+        }
     }
 }

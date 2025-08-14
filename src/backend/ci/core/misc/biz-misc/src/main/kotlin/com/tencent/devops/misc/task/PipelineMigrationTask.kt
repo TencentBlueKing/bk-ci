@@ -227,7 +227,7 @@ class PipelineMigrationTask constructor(
             archiveFlag = archiveFlag
         )
 
-        migrationStrategyFactory.getPipelineMigrationStrategies().forEach { strategy ->
+        migrationStrategyFactory.getPipelineDataMigrationStrategies(archiveFlag).forEach { strategy ->
             strategy.migrate(migrationContext)
         }
     }

@@ -95,7 +95,7 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
             migratingShardingDslContext = config.migratingShardingDslContext,
             projectId = config.projectId
         )
-        config.migrationStrategyFactory.getProjectMigrationStrategies().forEach { strategy ->
+        config.migrationStrategyFactory.getProjectDataMigrationStrategies().forEach { strategy ->
             strategy.migrate(migrationContext)
         }
     }
