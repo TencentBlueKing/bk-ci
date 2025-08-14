@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -45,6 +46,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
@@ -65,6 +67,7 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
+        logger.info("Template draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
             if (version == null) {
                 throw ErrorCodeException(
@@ -209,5 +212,9 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         pipelineYamlFacadeService.validateReleaseYamlFile(
             yamlFileReleaseReq = yamlFileReleaseReq
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftReleaseHandler::class.java)
     }
 }
