@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.`var`.vo
 
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量视图")
-data class  PublicVarVO(
+data class PublicVarVO(
     @get:Schema(title = "变量名称")
     val varName: String,
     @get:Schema(title = "别名")
@@ -41,7 +40,7 @@ data class  PublicVarVO(
     @get:Schema(title = "变量组件类型(常量/变量)")
     val type: PublicVarTypeEnum,
     @get:Schema(title = "变量值类型", required = true)
-    var valueType: BuildFormPropertyType,
+    var valueType: String,
     @get:Schema(title = "默认值")
     val defaultValue: Any? = null,
     @get:Schema(title = "变量组描述")

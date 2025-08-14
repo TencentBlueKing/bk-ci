@@ -170,7 +170,7 @@ class PublicVarGroupService @Autowired constructor(
                 varName = po.varName,
                 alias = po.alias,
                 type = po.type,
-                valueType = po.valueType,
+                valueType = po.valueType.name,
                 defaultValue = po.defaultValue,
                 desc = po.desc,
                 buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
@@ -239,7 +239,7 @@ class PublicVarGroupService @Autowired constructor(
                 varName = property.id,
                 alias = property.name ?: "",
                 type = if (property.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE,
-                valueType = property.type,
+                valueType = property.type.name,
                 defaultValue = property.defaultValue,
                 desc = property.desc,
                 buildFormProperty = property
@@ -578,7 +578,7 @@ fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<St
                 varName = property.id,
                 alias = property.name ?: "",
                 type = if (property.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE,
-                valueType = property.type,
+                valueType = property.type.name,
                 defaultValue = property.defaultValue,
                 desc = property.desc,
                 buildFormProperty = property
