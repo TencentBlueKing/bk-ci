@@ -490,7 +490,7 @@ class PipelineTemplateGenerator @Autowired constructor(
                 templateModel = newTemplateModel,
                 templateSetting = newTemplateSetting,
                 yamlWithVersion = transferResult.yamlWithVersion,
-                // todo 需要改造，由code转化接口中获取。
+                // TODO pac模板 需要改造，由code转化接口中获取。
                 params = (newTemplateModel as Model).getTriggerContainer().params
             )
         } else {
@@ -580,7 +580,7 @@ class PipelineTemplateGenerator @Autowired constructor(
                 templateModel = newTemplateModel,
                 yamlWithVersion = result.yamlWithVersion,
                 templateSetting = newTemplateSetting,
-                // todo 局部模板时，需要优化
+                // TODO pac模板 局部模板时，需要优化
                 params = takeIf { templateType == PipelineTemplateType.PIPELINE }?.let {
                     (newTemplateModel as Model).getTriggerContainer().params
                 } ?: emptyList(),

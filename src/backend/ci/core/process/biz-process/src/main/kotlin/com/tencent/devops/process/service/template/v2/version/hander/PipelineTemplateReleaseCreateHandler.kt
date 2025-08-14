@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -39,6 +40,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -58,6 +60,7 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
+        logger.info("create template released version with context={}", JsonUtil.toJson(context, false))
         with(context) {
             if (pTemplateResourceWithoutVersion.status != VersionStatus.RELEASED) {
                 throw ErrorCodeException(
@@ -119,5 +122,9 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
             resourceOnlyVersion = resourceOnlyVersion
         )
         return resourceOnlyVersion
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftReleaseHandler::class.java)
     }
 }

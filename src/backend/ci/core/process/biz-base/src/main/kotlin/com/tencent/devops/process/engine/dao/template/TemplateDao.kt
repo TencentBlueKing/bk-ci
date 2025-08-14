@@ -432,11 +432,11 @@ class TemplateDao {
 
     fun countTemplate(
         dslContext: DSLContext,
-        projectId: String?,
-        includePublicFlag: Boolean?,
-        templateType: TemplateType?,
-        templateName: String?,
-        storeFlag: Boolean?
+        projectId: String? = null,
+        includePublicFlag: Boolean? = null,
+        templateType: TemplateType? = null,
+        templateName: String? = null,
+        storeFlag: Boolean? = null
     ): Int {
         with(TTemplate.T_TEMPLATE) {
             val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)

@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -12,6 +13,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -31,6 +33,7 @@ class PipelineTemplateBranchCreateHandler @Autowired constructor(
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
         with(context) {
+            logger.info("create template branch version with context={}", JsonUtil.toJson(context, false))
             if (!enablePac) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -103,5 +106,9 @@ class PipelineTemplateBranchCreateHandler @Autowired constructor(
             versionName = resourceOnlyVersion.versionName,
             versionAction = versionAction
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateBranchCreateHandler::class.java)
     }
 }
