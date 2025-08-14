@@ -246,7 +246,7 @@ class PipelineCheckRunService @Autowired constructor(
         }
         val scmConfig = getScmConfig(repo.scmCode)!!
         val providerCode = ScmProviderCodes.valueOf(scmConfig.providerCode)
-        if (!supportRepo(providerCode)) {
+        if (!supportRepoProvider(providerCode)) {
             logger.warn("skip resolve check run|process instance($buildId) not support write $providerCode check run")
             return
         }
@@ -260,7 +260,10 @@ class PipelineCheckRunService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 buildNum = buildHistoryVar.buildNum,
-                buildStatus = buildStatus,
+                buildStatus = when (buildStatus) {
+                    BuildStatus.RUNNING, BuildStatus.SUCCEED -> buildStatus
+                    else -> BuildStatus.FAILED
+                },
                 repoHashId = repo.repoHashId!!,
                 extRef = extRef,
                 ref = commitId,
@@ -557,7 +560,7 @@ class PipelineCheckRunService @Autowired constructor(
     /**
      * 支持的仓库
      */
-    private fun supportRepo(scmProviderCodes: ScmProviderCodes) = listOf(
+    private fun supportRepoProvider(scmProviderCodes: ScmProviderCodes) = listOf(
         ScmProviderCodes.GITEE
     ).contains(scmProviderCodes)
 

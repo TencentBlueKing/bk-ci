@@ -67,6 +67,10 @@ import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
@@ -304,6 +308,17 @@ class CodeWebhookService @Autowired constructor(
             val repositoryConfig = when (repositoryType) {
                 RepositoryType.ID -> RepositoryConfig(repositoryId, null, repositoryType)
                 RepositoryType.NAME -> RepositoryConfig(null, repositoryId, repositoryType)
+            }
+            val repo = scmCheckService.getRepo(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                variables = variables
+            )
+            if (!supportRepo(repo)) {
+                logger.info(
+                    "Process instance($buildId) not support write repo(${repo::class.simpleName}) check run"
+                )
+                return
             }
 
             val webhookTypeStr = variables[PIPELINE_WEBHOOK_TYPE]
@@ -749,5 +764,13 @@ class CodeWebhookService @Autowired constructor(
         }
     } else {
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
+    /**
+     * 支持的仓库类型
+     */
+    private fun supportRepo(repository: Repository) = when (repository) {
+        is CodeGitRepository, is CodeTGitRepository, is GithubRepository -> true
+        else -> false
     }
 }
