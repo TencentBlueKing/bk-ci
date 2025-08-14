@@ -4,6 +4,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildCheckRun
 import com.tencent.devops.model.process.tables.records.TPipelineBuildCheckRunRecord
 import com.tencent.devops.process.pojo.PipelineBuildCheckRun
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -91,21 +92,51 @@ class PipelineBuildCheckRunDao {
         }
     }
 
-    fun updateCheckRunId(
+    fun update(
         dslContext: DSLContext,
-        buildCheckRun: PipelineBuildCheckRun
+        repoHashId: String,
+        context: String,
+        ref: String,
+        extRef: String,
+        checkRunId: Long?,
+        checkRunStatus: String?
     ) {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            val conditions = listOf(
-                REPO_HASH_ID.eq(buildCheckRun.repoHashId),
-                CONTEXT.eq(buildCheckRun.context),
-                REF.eq(buildCheckRun.ref),
-                EXT_REF.eq(buildCheckRun.extRef)
-            )
             dslContext.update(this)
-                    .set(CHECK_RUN_ID, buildCheckRun.checkRunId)
-                    .where(conditions)
+                    .let {
+                        if (checkRunId != null) {
+                            it.set(CHECK_RUN_ID, checkRunId)
+                        }
+                        if (!checkRunStatus.isNullOrBlank()) {
+                            it.set(CHECK_RUN_STATUS, checkRunStatus)
+                        }
+                        it.set(REPO_HASH_ID, repoHashId)
+                    }
+                    .where(
+                        listOf(
+                            REPO_HASH_ID.eq(repoHashId),
+                            CONTEXT.eq(context),
+                            REF.eq(ref),
+                            EXT_REF.eq(extRef)
+                        )
+                    )
                     .execute()
+        }
+    }
+
+    fun getCheckRun(
+        dslContext: DSLContext,
+        checkRunStatus: String,
+        buildStatus: Set<String>
+    ): Result<TPipelineBuildCheckRunRecord> {
+        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
+            val conditions = listOf(
+                CHECK_RUN_STATUS.eq(checkRunStatus),
+                BUILD_STATUS.`in`(buildStatus)
+            )
+            return dslContext.selectFrom(this)
+                    .where(conditions)
+                    .fetch()
         }
     }
 }

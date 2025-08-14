@@ -299,12 +299,12 @@ class ScmRepositoryApiService @Autowired constructor(
     fun createCheckRun(
         projectId: String,
         repositoryType: RepositoryType,
-        repoId:String,
+        repoId: String,
         checkRunInput: CheckRunInput
     ): CheckRun {
         val repo = getRepo(projectId, repositoryType, repoId)
         return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
-            ScmProviderCodes.TGIT.name,ScmProviderCodes.GITEE.name -> {
+            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
                 invokeApi(
                     projectId = projectId,
                     authRepository = AuthRepository(repo)
@@ -353,7 +353,7 @@ class ScmRepositoryApiService @Autowired constructor(
     ): CheckRun {
         val repo = getRepo(projectId, repositoryType, repoId)
         return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
-            ScmProviderCodes.TGIT.name,ScmProviderCodes.GITEE.name -> {
+            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
                 invokeApi(
                     projectId = projectId,
                     authRepository = AuthRepository(repo)

@@ -39,6 +39,6 @@ data class PipelineBuildCheckRun(
     val repositoryConfig: RepositoryConfig,
     // 流水线回写checkRun 同步锁
     val lockKey: String,
-    val userId: String,
+    val externalId: String,
     val repoProvider: ScmProviderCodes
 )

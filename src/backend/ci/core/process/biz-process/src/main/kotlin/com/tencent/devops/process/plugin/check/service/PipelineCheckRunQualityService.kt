@@ -33,8 +33,8 @@ class PipelineCheckRunQualityService @Autowired constructor(
         channelCode: ChannelCode,
         pipelineName: String,
         detailUrl: String,
-        variables: Map<String,String>
-    ) :String {
+        variables: Map<String, String>
+    ): String {
         val qualityGitMrResult = getQualityGitMrResult(
             projectId,
             pipelineId,
@@ -74,7 +74,7 @@ class PipelineCheckRunQualityService @Autowired constructor(
         channelCode: ChannelCode,
         pipelineName: String,
         detailUrl: String,
-        variables: Map<String,String>
+        variables: Map<String, String>
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         // github 不需要插入链接, 仅在插件名处插入链接，链接地址用codecc插件输出变量
         val titleData = mutableListOf(
@@ -121,6 +121,7 @@ class PipelineCheckRunQualityService @Autowired constructor(
                                 channelCode = channelCode,
                                 variables = variables
                             )
+
                             else -> interceptItem.actualValue ?: "null"
                         }
                         resultList.add(

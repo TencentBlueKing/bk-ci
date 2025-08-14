@@ -15,6 +15,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
@@ -31,6 +32,7 @@ import com.tencent.devops.process.plugin.check.dao.PipelineBuildCheckRunDao
 import com.tencent.devops.process.pojo.PipelineBuildCheckRun
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.repository.api.ServiceRepositoryConfigResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
@@ -48,12 +50,14 @@ import com.tencent.devops.scm.api.pojo.CommentInput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
 @Service
+@SuppressWarnings("ALL")
 class PipelineCheckRunService @Autowired constructor(
     val pipelineBuildCheckRunDao: PipelineBuildCheckRunDao,
     val pipelineBuildFacadeService: PipelineBuildFacadeService,
@@ -62,15 +66,81 @@ class PipelineCheckRunService @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext
 ) {
+    @Scheduled(initialDelay = 20_000, fixedDelay = 120_000)
+    fun reHandleCheckRun() {
+        val checkRunRecords = pipelineBuildCheckRunDao.getCheckRun(
+            dslContext = dslContext,
+            checkRunStatus = CheckRunStatus.IN_PROGRESS.name,
+            buildStatus = setOf(BuildStatus.FAILED.name, BuildStatus.SUCCEED.name)
+        )
+        checkRunRecords.forEach {
+            resolveCheckRun(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                buildId = it.buildId,
+                triggerType = StartType.WEB_HOOK.name,
+                buildStatus = BuildStatus.valueOf(it.buildStatus)
+            ) { checkRun ->
+                logger.info("trying to fix abnormal (${checkRun.key()})check-run for build(${checkRun.buildKey()})")
+                val lockKey = "code_fix_check_run_${checkRun.buildId}"
+                val redisLock = RedisLock(redisOperation, lockKey, 60)
+                if (redisLock.tryLock()) {
+                    RetryUtils.execute(
+                        object : RetryUtils.Action<Unit> {
+                            override fun fail(e: Throwable) {
+                                logger.warn("BKSystemMonitor|fix check-run fail| e=${e.message}", e)
+                                // 多次操作失败，记录失败
+                                pipelineBuildCheckRunDao.update(
+                                    dslContext = dslContext,
+                                    repoHashId = checkRun.repoHashId,
+                                    ref = checkRun.ref,
+                                    extRef = checkRun.extRef,
+                                    context = checkRun.context,
+                                    checkRunId = null,
+                                    checkRunStatus = CHECK_RUN_FIX_FAILED
+                                )
+                            }
+
+                            override fun execute() {
+                                createCheckRun(
+                                    projectId = checkRun.projectId,
+                                    repositoryConfig = checkRun.repositoryConfig,
+                                    checkRunInput = checkRun.convert()
+                                )
+                                logger.info(
+                                    "fixed the abnormal (${checkRun.key()})check-run successfully " +
+                                            "for build(${checkRun.buildKey()})"
+                                )
+                                pipelineBuildCheckRunDao.update(
+                                    dslContext = dslContext,
+                                    repoHashId = checkRun.repoHashId,
+                                    ref = checkRun.ref,
+                                    extRef = checkRun.extRef,
+                                    context = checkRun.context,
+                                    checkRunId = null,
+                                    checkRunStatus = checkRun.checkRunStatus?.name
+                                )
+                            }
+                        },
+                        3,
+                        SLEEP_SECOND_FOR_RETRY_10 * 1000
+                    )
+                } else {
+                    logger.info(
+                        "[$lockKey]|PIPELINE_FIX_CHECK_RUN|lock fail, skip!"
+                    )
+                }
+            }
+        }
+    }
+
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) = with(event) {
         resolveCheckRun(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             triggerType = triggerType,
-            userId = userId,
-            buildStatus = BuildStatus.RUNNING,
-            startTime = 0L
+            buildStatus = BuildStatus.RUNNING
         ) { handleCheckRun(it) }
     }
 
@@ -81,9 +151,7 @@ class PipelineCheckRunService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             triggerType = triggerType,
-            userId = userId,
-            buildStatus = BuildStatus.valueOf(status),
-            startTime = 0L
+            buildStatus = BuildStatus.valueOf(status)
         ) { handleCheckRun(it) }
     }
 
@@ -94,10 +162,8 @@ class PipelineCheckRunService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        userId: String,
         triggerType: String,
         buildStatus: BuildStatus,
-        startTime: Long,
         action: (PipelineBuildCheckRun) -> Unit
     ) {
         if (triggerType != StartType.WEB_HOOK.name) {
@@ -109,7 +175,7 @@ class PipelineCheckRunService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            userId = userId,
+            userId = "",
             checkPermission = false
         ).data ?: run {
             logger.warn("skip resolve check run|process instance($buildId) not exist")
@@ -187,6 +253,7 @@ class PipelineCheckRunService @Autowired constructor(
         val extRef = getExtRef(variables, finalEventType, providerCode)
         val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
         val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
+        val userId = variables[PIPELINE_START_USER_ID]
         action(
             PipelineBuildCheckRun(
                 projectId = projectId,
@@ -210,7 +277,7 @@ class PipelineCheckRunService @Autowired constructor(
                 channelCode = channelCode!!,
                 repositoryConfig = repositoryConfig,
                 lockKey = getLockKey(repo, pipelineId),
-                userId = userId,
+                externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                 startTime = if (buildHistoryVar.startTime <= 0) {
                     LocalDateTime.now().timestamp()
                 } else {
@@ -242,8 +309,7 @@ class PipelineCheckRunService @Autowired constructor(
                     when {
                         checkRunRecord == null -> {
                             logger.info(
-                                "[$buildId]attempting to add $scmCode check-run to repo($repoHashId)|ref($ref)|" +
-                                        "extRef($extRef)|context($context)"
+                                "[$buildId]attempting to add $scmCode check-run(${key()})"
                             )
                             // 结束状态且未创建record，则说明数据在plugin模块处理
                             if (buildStatus != BuildStatus.RUNNING) {
@@ -264,17 +330,20 @@ class PipelineCheckRunService @Autowired constructor(
                                 repositoryConfig = repositoryConfig,
                                 checkRunInput = convert()
                             )?.let {
-                                pipelineBuildCheckRunDao.updateCheckRunId(
+                                pipelineBuildCheckRunDao.update(
                                     dslContext = dslContext,
-                                    buildCheckRun = this.copy(
-                                        checkRunId = it.id,
-                                        checkRunStatus = CheckRunStatus.IN_PROGRESS
-                                    )
+                                    repoHashId = repoHashId,
+                                    ref = ref,
+                                    extRef = extRef,
+                                    context = context,
+                                    checkRunId = it.id,
+                                    checkRunStatus = CheckRunStatus.IN_PROGRESS.name
                                 )
                             }
                         }
 
                         buildNum >= checkRunRecord.buildNum -> {
+                            // 重试场景
                             val checkRunInfo = if (buildStatus == BuildStatus.RUNNING) {
                                 logger.info("overwriting existing check-run task with updated information")
                                 addCheckRun(
@@ -345,11 +414,11 @@ class PipelineCheckRunService @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildCheckRun.convert() :CheckRunInput {
+    private fun PipelineBuildCheckRun.convert(): CheckRunInput {
         val (checkRunState, checkRunConclusion) = getCheckRunState(buildStatus)
         val buildUrl = getBuildUrl(projectId, pipelineId, buildId, channelCode, buildVariables)
         // 执行结束后尝试获取报表
-        val quality = if (buildStatus!= BuildStatus.RUNNING && supportQuality(eventType)) {
+        val quality = if (buildStatus != BuildStatus.RUNNING && supportQuality(eventType)) {
             pipelineCheckRunQualityService.getQuality(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -387,7 +456,7 @@ class PipelineCheckRunService @Autowired constructor(
                 null
             },
             detailsUrl = buildUrl,
-            externalId = "${userId}_${projectId}_${pipelineId}_$buildId"
+            externalId = externalId
         )
     }
 
@@ -545,17 +614,27 @@ class PipelineCheckRunService @Autowired constructor(
         checkRunInput: CheckRunInput
     ): CheckRun? {
         return try {
-            client.get(ServiceScmRepositoryApiResource::class).createCheckRun(
-                projectId,
-                repoType = repositoryConfig.repositoryType,
-                repoId = repositoryConfig.getRepositoryId(),
+            createCheckRun(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
                 checkRunInput = checkRunInput
-            ).data
+            )
         } catch (ignored: Exception) {
             logger.warn("failed to add check-run", ignored)
             null
         }
     }
+
+    fun createCheckRun(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        checkRunInput: CheckRunInput
+    ) = client.get(ServiceScmRepositoryApiResource::class).createCheckRun(
+        projectId,
+        repoType = repositoryConfig.repositoryType,
+        repoId = repositoryConfig.getRepositoryId(),
+        checkRunInput = checkRunInput
+    ).data
 
     private fun updateCheckRun(
         projectId: String,
@@ -594,10 +673,15 @@ class PipelineCheckRunService @Autowired constructor(
         }
     }
 
+    private fun PipelineBuildCheckRun.key() = "repo($repoHashId)|ref($ref)|extRef($extRef)|context($context)"
+    private fun PipelineBuildCheckRun.buildKey() = "projectId($projectId)|pipelineId($pipelineId)|buildId($buildId)"
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineCheckRunService::class.java)
         private const val TGIT_PUSH_EVENT_CHECK_RUN_EXT_REF = "~NONE"
         private const val DEFAULT_PUSH_EVENT_CHECK_RUN_EXT_REF = "DEFAULT_PUSH_EXT_REF"
         private const val DEFAULT_MR_EVENT_CHECK_RUN_EXT_REF = "DEFAULT_MR_EXT_REF"
+        private const val CHECK_RUN_FIX_FAILED = "CHECK_RUN_FIX_FAILED"
+        private const val SLEEP_SECOND_FOR_RETRY_10: Long = 10
     }
 }
