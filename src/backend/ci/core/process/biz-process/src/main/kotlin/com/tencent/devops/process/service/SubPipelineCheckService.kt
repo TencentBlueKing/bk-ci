@@ -95,7 +95,8 @@ class SubPipelineCheckService @Autowired constructor(
             val subPipeline = SubPipelineIdAndName(
                 projectId = subPipelineTaskParam.projectId,
                 pipelineId = subPipelineTaskParam.pipelineId,
-                pipelineName = subPipelineTaskParam.pipelineName
+                pipelineName = subPipelineTaskParam.pipelineName,
+                branch = subPipelineTaskParam.branch
             )
             subPipelineElementMap.getOrPut(subPipeline) { mutableListOf() }.add(holder)
         }
@@ -175,9 +176,25 @@ class SubPipelineCheckService @Autowired constructor(
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
         val rootPipelineKey = "$projectId|$pipelineId"
-        subPipelineElementMap.forEach { (subPipeline, elements) ->
+        subPipelineElementMap.filter {
+            it.key.branch.isNullOrBlank()
+        }.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
+            val existsLink = subPipelineRefService.exists(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                subProjectId = subProjectId,
+                subPipelineId = subPipelineId
+            )
+            // 已经归档过的链路，无需重复校验，直接跳过
+            if (existsLink) {
+                logger.info(
+                    "pipeline link already verified|" +
+                            "[$projectId|$pipelineId]->[$subProjectId|$subPipelineId]"
+                )
+                return@forEach
+            }
             val subPipelineRef = SubPipelineRef(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -288,6 +305,40 @@ class SubPipelineCheckService @Autowired constructor(
         }
     }
 
+    fun batchCheckBranchVersion(
+        projectId: String,
+        pipelineId: String,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
+    ): Set<String> {
+        val errorDetails = mutableSetOf<String>()
+        subPipelineElementMap.filter {
+            !it.key.branch.isNullOrBlank()
+        }.forEach { (subPipeline, _) ->
+            val subProjectId = subPipeline.projectId
+            val subPipelineId = subPipeline.pipelineId
+            val subPipelineBranch = subPipeline.branch!!
+            val subPipelineName = subPipeline.pipelineName
+            val branchVersionResource = checkBranchVersion(
+                projectId = subProjectId,
+                pipelineId = subPipelineId,
+                branch = subPipelineBranch
+            )
+            if (branchVersionResource == null) {
+                errorDetails.add(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                        params = arrayOf(
+                            "/console/pipeline/$subProjectId/$subPipelineId",
+                            subPipelineName,
+                            subPipelineBranch
+                        )
+                    )
+                )
+            }
+        }
+        return errorDetails
+    }
+
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "/console/pipeline/$projectId/$pipelineId/edit"
 
@@ -348,6 +399,16 @@ class SubPipelineCheckService @Autowired constructor(
         }
         return stringBuilder.toString()
     }
+
+    private fun checkBranchVersion(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ) = subPipelineTaskService.getBranchVersionResource(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branchName = branch
+    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.utils.StoreUtils
 import java.io.File
@@ -39,7 +39,7 @@ class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
     override fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String?): Result<String?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
+        val logoUrl = CommonServiceUtils.uploadFileToArtifactories(
             userId = userId,
             serviceUrlPrefix = serviceUrlPrefix,
             file = file,

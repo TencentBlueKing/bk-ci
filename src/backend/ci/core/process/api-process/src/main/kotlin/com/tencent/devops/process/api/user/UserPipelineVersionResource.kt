@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -77,7 +77,10 @@ interface UserPipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineDetail>
 
     @Operation(summary = "草稿发布为正式版本的信息预览")
@@ -156,7 +159,10 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")
@@ -249,7 +255,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "5")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Page<PipelineVersionSimple>>
 
     @Operation(summary = "获取指定版本号的流水线编排版本信息")
@@ -267,7 +276,10 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "跳转定位的版本号", required = false)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineVersionSimple>
 
     @Operation(summary = "获取流水线操作日志列表（分页）")
@@ -291,7 +303,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Page<PipelineOperationDetail>>
 
     @Operation(summary = "获取流水线操作人列表（分页）")

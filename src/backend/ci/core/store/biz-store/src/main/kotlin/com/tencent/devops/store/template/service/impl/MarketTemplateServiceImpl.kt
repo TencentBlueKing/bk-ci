@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -58,39 +58,12 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.template.dao.MarketTemplateDao
-import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
-import com.tencent.devops.store.template.dao.TemplateLabelRelDao
-import com.tencent.devops.store.pojo.common.MarketMainItemLabel
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.common.visible.DeptInfo
-import com.tencent.devops.store.pojo.common.HOTTEST
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
-import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
-import com.tencent.devops.store.pojo.common.LATEST
-import com.tencent.devops.store.pojo.common.MarketItem
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.pojo.template.InstallProjectTemplateDTO
-import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import com.tencent.devops.store.pojo.template.InstallTemplateResp
-import com.tencent.devops.store.pojo.template.MarketTemplateMain
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.pojo.template.MyTemplateItem
-import com.tencent.devops.store.pojo.template.TemplateDetail
-import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
-import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
-import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -102,7 +75,34 @@ import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.LATEST
+import com.tencent.devops.store.pojo.common.MarketItem
+import com.tencent.devops.store.pojo.common.MarketMainItemLabel
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.pojo.template.InstallProjectTemplateDTO
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import com.tencent.devops.store.pojo.template.InstallTemplateResp
+import com.tencent.devops.store.pojo.template.MarketTemplateMain
+import com.tencent.devops.store.pojo.template.MarketTemplateResp
+import com.tencent.devops.store.pojo.template.MyTemplateItem
+import com.tencent.devops.store.pojo.template.TemplateDetail
+import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import com.tencent.devops.store.template.dao.MarketTemplateDao
+import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
+import com.tencent.devops.store.template.dao.TemplateLabelRelDao
 import com.tencent.devops.store.template.service.MarketTemplateService
 import com.tencent.devops.store.template.service.TemplateCategoryService
 import com.tencent.devops.store.template.service.TemplateLabelService
@@ -297,7 +297,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeType = storeType.type.toByte(),
                 storeCodeList = templateCodeList
             )
-            val templateHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, templateCodeList)
+            val templateHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
+                storeType = storeType,
+                storeCodes = templateCodeList,
+                userId = userId
+            )
             val templateIndexInfosMap =
                 storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, templateCodeList)
             // 获取成员

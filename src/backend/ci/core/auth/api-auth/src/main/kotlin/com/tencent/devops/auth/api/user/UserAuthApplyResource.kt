@@ -10,6 +10,7 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.IgnoreUserApiPermission
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -54,6 +55,7 @@ interface UserAuthApplyResource {
 
     @POST
     @Path("{projectId}/listGroups/")
+    @IgnoreUserApiPermission
     @Operation(summary = "展示用户组列表")
     fun listGroups(
         @Parameter(description = "用户名", required = true)
@@ -92,6 +94,7 @@ interface UserAuthApplyResource {
 
     @GET
     @Path("getRedirectInformation")
+    @IgnoreUserApiPermission
     @Operation(summary = "获取权限申请重定向信息")
     fun getRedirectInformation(
         @Parameter(description = "用户名", required = true)

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -78,7 +78,8 @@ class PipelineSettingVersionDao {
                 FAILURE_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
                 VERSION,
-                MAX_CON_RUNNING_QUEUE_SIZE
+                MAX_CON_RUNNING_QUEUE_SIZE,
+                FAIL_IF_VARIABLE_INVALID
             ).values(
                 id,
                 setting.projectId,
@@ -101,7 +102,8 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 },
                 version,
-                setting.maxConRunningQueueSize ?: -1
+                setting.maxConRunningQueueSize ?: -1,
+                setting.failIfVariableInvalid
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -118,6 +120,7 @@ class PipelineSettingVersionDao {
                 .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { self ->
                     JsonUtil.toJson(self, false)
                 })
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .execute()
         }
     }
@@ -249,7 +252,8 @@ class PipelineSettingVersionDao {
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-                    }
+                    },
+                    failIfVariableInvalid = t.failIfVariableInvalid
                 )
             }
         }

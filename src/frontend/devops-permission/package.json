@@ -22,8 +22,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "0.28.0",
-    "bkui-vue": "2.0.1-beta.42",
+    "axios": "0.30.0",
+    "bkui-vue": "2.0.2-beta.45",
     "dayjs": "^1.11.2",
     "lodash": "^4.17.21",
     "pinia": "^2.0.23",

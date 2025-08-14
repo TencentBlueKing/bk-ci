@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,7 +35,7 @@ const TemplateListEntry = () => import(/* webpackChunkName: "pipelinesNewList" *
 const TemplateList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/List/')
 const TemplateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
 const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
-const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
+const TemplateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEdit.vue')
 const InstanceEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/Instance/InstanceEntry.vue')
 
 // 流水线公共变量
@@ -153,7 +153,7 @@ const routes = [
                     {
                         path: 'edit',
                         name: 'templateEdit',
-                        component: templateEdit
+                        component: TemplateEdit
                     },
                     {
                         path: ':type?',
@@ -230,7 +230,8 @@ const routes = [
                                     name: to.name,
                                     params: Object.assign(to.params, {
                                         type: 'history'
-                                    })
+                                    }),
+                                    query: to.query
                                 })
                             } else {
                                 next(true)
@@ -249,7 +250,8 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'PipelineManageList'
+                            to: 'PipelineManageList',
+                            edit: true
                         }
                     },
                     {

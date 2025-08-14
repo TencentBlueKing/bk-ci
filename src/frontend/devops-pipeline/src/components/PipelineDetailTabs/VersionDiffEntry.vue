@@ -117,7 +117,8 @@
                 default: false
             },
             type: String,
-            pipelineId: String
+            pipelineId: String,
+            archiveFlag: Boolean
         },
         data () {
             return {
@@ -148,7 +149,8 @@
                     const fn = this.isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
                     const res = await fn({
                         ...this.$route.params,
-                        version
+                        version,
+                        archiveFlag: this.archiveFlag
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml

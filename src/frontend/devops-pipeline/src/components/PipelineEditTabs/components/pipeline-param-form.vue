@@ -61,6 +61,7 @@
                 :disabled="disabled"
                 :value-required="paramType === 'constant'"
                 :handle-change="handleUpdateParam"
+                :init-param-item="initParamItem"
             >
             </param-value-option>
 
@@ -123,17 +124,37 @@
                     />
                 </div>
             </template>
+            <Accordion
+                show-content
+                show-checkbox
+            >
+                <header slot="header">
+                    {{ $t('editPage.controlOption') }}
+                </header>
+                <article slot="content">
+                    <SubParameter
+                        :title="$t('editPage.displayCondition')"
+                        name="displayCondition"
+                        :disabled="disabled"
+                        :param="displayConditionList"
+                        v-bind="displayConditionSetting"
+                        :handle-change="handleUpdateDisplayCondition"
+                    />
+                </article>
+            </Accordion>
         </bk-form>
     </section>
 </template>
 
 <script>
     import SelectInput from '@/components/AtomFormComponent/SelectInput/'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
+    import SubParameter from '@/components/AtomFormComponent/SubParameter'
+    import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
     import { deepCopy } from '@/utils/util'
     import ParamValueOption from './children/param-value-option'
@@ -153,7 +174,9 @@
             AtomCheckbox,
             Selector,
             VuexTextarea,
-            SelectInput
+            SelectInput,
+            Accordion,
+            SubParameter
         },
         mixins: [validMixins],
         props: {
@@ -224,7 +247,7 @@
                 }
                 const ids = new Set()
                 return this.globalParams.reduce((uniqueItems, item) => {
-                    if (!ids.has(item.category)) {
+                    if (!ids.has(item.category) && item.category) {
                         ids.add(item.category)
                         uniqueItems.push({
                             id: item.category,
@@ -233,6 +256,26 @@
                     }
                     return uniqueItems
                 }, [])
+            },
+            displayConditionList () {
+                return {
+                    paramType: 'list',
+                    list: this.globalParams.filter(item => item.id !== this.param.id).map(item => ({
+                        ...item,
+                        key: item.id
+                    }))
+                    
+                }
+            },
+            displayConditionSetting () {
+                return {
+                    atomValue: {
+                        displayCondition: Object.keys(this.param.displayCondition ?? {}).map(key => ({
+                            key,
+                            value: this.param.displayCondition[key]
+                        }))
+                    }
+                }
             }
         },
         created () {
@@ -267,6 +310,13 @@
             },
             isParamChanged () {
                 return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)
+            },
+            handleUpdateDisplayCondition (key, value) {
+                const displayCondition = JSON.parse(value).reduce((acc, cur) => {
+                    acc[cur.key] = cur.value
+                    return acc
+                }, {})
+                this.handleUpdateParam(key, displayCondition)
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,30 +27,25 @@
 
 package com.tencent.devops.common.service.utils
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.PROFILE_DEFAULT
 import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
 import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
+import java.net.Inet4Address
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.SocketException
+import java.util.Enumeration
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.io.File
-import java.net.Inet4Address
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.net.SocketException
-import java.util.Enumeration
 
 object CommonUtils {
 
@@ -138,35 +133,6 @@ object CommonUtils {
         }
     }
 
-    fun serviceUploadFile(
-        userId: String,
-        serviceUrlPrefix: String,
-        file: File,
-        fileChannelType: String,
-        staticFlag: Boolean = false,
-        language: String,
-        fileRepoPath: String? = null
-    ): Result<String?> {
-        var serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
-            "?userId=$userId&fileChannelType=$fileChannelType&staticFlag=$staticFlag"
-        fileRepoPath?.let {
-            serviceUrl += "&filePath=$fileRepoPath"
-        }
-        logger.info("serviceUploadFile serviceUrl is:$serviceUrl")
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-            val responseContent = response.body!!.string()
-            logger.error("uploadFile responseContent is: $responseContent")
-            if (!response.isSuccessful) {
-                val message = MessageUtil.getMessageByLocale(
-                    messageCode = CommonMessageCode.SYSTEM_ERROR,
-                    language = language
-                )
-                Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
-            }
-            return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
-        }
-    }
-
     /**
      * 获取语言信息
      * @return local语言信息
@@ -229,15 +195,19 @@ object CommonUtils {
             profile.isDev() -> {
                 PROFILE_DEVELOPMENT
             }
+
             profile.isTest() -> {
                 PROFILE_TEST
             }
+
             profile.isProd() -> {
                 getProdDbClusterName(profile)
             }
+
             profile.isLocal() -> {
                 PROFILE_DEFAULT
             }
+
             else -> {
                 PROFILE_PRODUCTION
             }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,12 +37,17 @@ interface PermissionResourceGroupPermissionService {
         authorizationScopesStr: String,
         projectCode: String,
         projectName: String,
+        /*用户组所属的资源类型*/
         resourceType: String,
         groupCode: String,
         iamResourceCode: String,
         resourceName: String,
         iamGroupId: Int,
-        registerMonitorPermission: Boolean = true
+        registerMonitorPermission: Boolean = true,
+        // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
+        filterResourceTypes: List<String> = emptyList(),
+        // 若filterActions不为空，则本次新增的组权限，只和该操作有关
+        filterActions: List<String> = emptyList()
     ): Boolean
 
     /**
@@ -83,6 +88,10 @@ interface PermissionResourceGroupPermissionService {
         action: String? = null
     ): List<Int>
 
+    /**
+     *   校验项目级权限，参数 relatedResourceType:project、relatedResourceCode:projectCode
+     *   校验具体资源级权限，如校验是否有某条流水线权限，参数  relatedResourceType:pipeline、relatedResourceCode:p-1
+     * */
     fun isGroupsHasPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,
@@ -101,7 +110,7 @@ interface PermissionResourceGroupPermissionService {
     ): Boolean
 
     /**
-     * 获取用户组有权限的资源
+     * 获取用户组有权限的资源--按照资源类型区分
      * */
     fun listGroupResourcesWithPermission(
         projectCode: String,
@@ -109,6 +118,16 @@ interface PermissionResourceGroupPermissionService {
         relatedResourceType: String,
         action: String
     ): Map<String/*resourceType*/, List<String>/*resourceCodes*/>
+
+    /**
+     * 获取用户组有权限的资源
+     * */
+    fun listResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): List<String>
 
     fun getGroupPermissionDetail(
         iamGroupId: Int
@@ -137,4 +156,22 @@ interface PermissionResourceGroupPermissionService {
         resourceType: String,
         resourceCode: String
     ): Boolean
+
+    fun syncProjectLevelPermissions(
+        projectCode: String
+    ): Boolean
+
+    fun syncProjectLevelPermissions(
+        projectCode: String,
+        iamGroupId: Int
+    ): Boolean
+
+    fun syncProjectLevelPermissionsByCondition(
+        projectConditionDTO: ProjectConditionDTO
+    ): Boolean
+
+    fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String>
 }

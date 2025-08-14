@@ -25,6 +25,7 @@ import bsWebSocket from '@/utils/bsWebSocket.js'
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
+import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import './assets/scss/icon/iconcool'
@@ -71,6 +72,7 @@ Vue.use(VeeValidate, {
     i18n,
     fieldsBagName: 'veeFields',
     dictionary: {
+        'ja-JP': validationJAMessages,
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }

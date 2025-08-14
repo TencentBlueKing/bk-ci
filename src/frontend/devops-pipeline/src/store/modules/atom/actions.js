@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -86,6 +86,7 @@ import {
     UPDATE_CONTAINER,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
+    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -164,8 +165,12 @@ export default {
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
     },
-    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+    requestPipelineSummary ({ commit }, { projectId, pipelineId, archiveFlag }) {
+        let url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
 
         return request.get(url).then(response => {
             commit(SET_PIPELINE_INFO, response.data)
@@ -200,16 +205,19 @@ export default {
             return response.data
         })
     },
-    handleCheckAtom: ({ commit }, { projectId, pipelineId, buildId, elementId, postData }) => {
+    handleCheckAtom: (_, { projectId, pipelineId, buildId, elementId, postData }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/review/`, postData).then(response => {
             return response.data
         })
     },
-    requestTemplate: async ({ commit, dispatch, getters, state }, { projectId, templateId, version }) => {
+    requestTemplate: async ({ dispatch }, { projectId, templateId, version, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
             dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
-                params: version ? { version } : {}
+                params: {
+                    ...query,
+                    ...(version ? { version } : {})
+                }
             })
         ])
 
@@ -227,17 +235,25 @@ export default {
             atomPropRes
         ]
     },
-    requestPipeline: async ({ commit, dispatch, getters, state }, { version, ...params }) => {
+    requestPipeline: async ({ commit, dispatch, getters, state }, { version, archiveFlag, ...params }) => {
         try {
             const isTemplate = state.pipelineInfo?.isTemplate ?? false
             let pipelineRes, atomPropRes
+            const query = {}
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                query.archiveFlag = encodeURIComponent(archiveFlag)
+            }
             if (isTemplate) {
-                [pipelineRes, atomPropRes] = await dispatch('requestTemplate', { version, ...params })
+                [pipelineRes, atomPropRes] = await dispatch('requestTemplate', { version, query, ...params })
             } else {
+                
                 [pipelineRes, atomPropRes] = await Promise.all([
-                    dispatch('fetchPipelineByVersion', { version, ...params }),
+                    dispatch('fetchPipelineByVersion', { version, archiveFlag, ...params }),
                     request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${params.projectId}/pipelines/${params.pipelineId}/atom/prop/list`, {
-                        params: version ? { version } : {}
+                        params: {
+                            ...query,
+                            ...(version ? { version } : {})
+                        }
                     })
                 ])
             }
@@ -249,8 +265,15 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
+        const query = {}
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            query.archiveFlag = encodeURIComponent(archiveFlag)
+        }
+        const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
+        return request.get(url, {
+            params: query
+        }).then(res => {
             return res.data
         })
     },
@@ -411,9 +434,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
+    requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId, archiveFlag }) => {
         try {
-            const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
+            let url = `/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+            }
+            const { data } = await request.get(url)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -425,6 +452,7 @@ export default {
     setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
+    updatePipelineConstraintGroup: PipelineEditActionCreator(UPDATE_TEMPLATE_CONSTRAINT),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
@@ -743,9 +771,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version }) => {
+    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`, {
+            let url = `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`
+            if (archiveFlag !== undefined && archiveFlag !== null) {
+                url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+            }
+            return request.get(url, {
                 params: {
                     version
                 }
@@ -1041,8 +1073,12 @@ export default {
     setSwitchingPipelineVersion ({ commit }, isSwitching) {
         commit(SWITCHING_PIPELINE_VERSION, isSwitching)
     },
-    getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version }) {
-        return request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
+    getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
+        let url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return request.get(url)
     },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)
@@ -1057,6 +1093,10 @@ export default {
     },
     setTemplateStrategy (_, { projectId, templateId, ...strategy }) {
         return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`, strategy)
+    },
+    async revertPipelineConstraint (_, { projectId, pipelineId, version }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version}/related/details`)
+        return res.data
     }
 
 }

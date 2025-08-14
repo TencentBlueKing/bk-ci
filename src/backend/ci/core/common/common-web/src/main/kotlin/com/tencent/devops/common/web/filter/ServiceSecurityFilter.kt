@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,73 +30,114 @@ package com.tencent.devops.common.web.filter
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.security.jwt.JwtManager
-import com.tencent.devops.common.security.util.EnvironmentUtil
-import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.common.web.utils.I18nUtil
+import jakarta.servlet.Filter
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import java.net.InetAddress
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.ws.rs.container.ContainerRequestContext
-import jakarta.ws.rs.container.ContainerRequestFilter
-import jakarta.ws.rs.container.PreMatching
-import jakarta.ws.rs.ext.Provider
+import org.springframework.stereotype.Component
 
-@Provider
-@PreMatching
-@RequestFilter
+@Component
 @DependsOn("environmentUtil")
 class ServiceSecurityFilter(
     private val jwtManager: JwtManager,
     private val servletRequest: HttpServletRequest
-) : ContainerRequestFilter {
+) : Filter {
 
     companion object {
-        private val excludeVeritfyPath = listOf("/api/swagger.json", "/api/external/service/versionInfo")
+        private val excludeVerifyPath = listOf(
+            "/api/swagger.json",
+            "/api/external/service/versionInfo",
+            "/management/health/livenessState",
+            "/management/health/readinessState",
+            "/management/prometheus",
+            "/management/userPrometheus"
+        )
         private val logger = LoggerFactory.getLogger((ServiceSecurityFilter::class.java))
+        private val jwtNullError = ErrorCodeException(
+            statusCode = 401,
+            errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
+            defaultMessage = "Unauthorized:devops api jwt it empty."
+        )
+        private val jwtCheckFailError = ErrorCodeException(
+            statusCode = 401,
+            errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
+            defaultMessage = "Unauthorized:devops api jwt it invalid or expired."
+        )
     }
 
-    override fun filter(requestContext: ContainerRequestContext?) {
-        val uri = requestContext!!.uriInfo.requestUri.path
-        if (shouldFilter(uri)) {
-
-            val clientIp = servletRequest?.remoteAddr
-
-            val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
-            if (jwt.isNullOrBlank()) {
-                logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
-                throw ErrorCodeException(
-                    statusCode = 401,
-                    errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
-                    defaultMessage = "Unauthorized:devops api jwt it empty."
-                )
-            }
-            val checkResult: Boolean = jwtManager.verifyJwt(jwt)
-            if (!checkResult) {
-                logger.warn("Invalid request, jwt is invalid or expired!Client ip:$clientIp,uri:$uri")
-                throw ErrorCodeException(
-                    statusCode = 401,
-                    errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
-                    defaultMessage = "Unauthorized:devops api jwt it invalid or expired."
-                )
-            }
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        if (request == null || chain == null) {
+            return
         }
+        val httpServletRequest = request as HttpServletRequest
+        val uri = httpServletRequest.requestURI
+        val clientIp = servletRequest.remoteAddr
+
+        val jwt = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_JWT_TOKEN)
+        val flag = shouldFilter(uri, clientIp)
+        var error: ErrorCodeException? = null
+        if (flag && jwtManager.isSendEnable()) {
+            error = check(jwt, clientIp, uri)
+        }
+        if (error != null && jwtManager.isAuthEnable()) {
+            response as HttpServletResponse
+            val errorResult = I18nUtil.generateResponseDataObject(
+                messageCode = error.errorCode,
+                params = error.params,
+                data = null,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = error.defaultMessage
+            )
+            response.status = error.statusCode
+            response.contentType = "application/json;charset=UTF-8"
+            response.writer.print(JsonUtil.toJson(errorResult, false))
+            response.writer.flush()
+            return
+        }
+        chain.doFilter(request, response)
     }
 
-    private fun shouldFilter(uri: String): Boolean {
-        if (!jwtManager.isAuthEnable() || !EnvironmentUtil.isProdProfileActive()) {
+    private fun check(
+        jwt: String?,
+        clientIp: String?,
+        uri: String?
+    ): ErrorCodeException? {
+        if (jwt.isNullOrBlank()) {
+            logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
+            return jwtNullError
+        }
+        val checkResult: Boolean = jwtManager.verifyJwt(jwt)
+        if (!checkResult) {
+            logger.warn("Invalid request, jwt is invalid or expired!Client ip:$clientIp,uri:$uri")
+            return jwtCheckFailError
+        }
+        return null
+    }
+
+    private fun shouldFilter(uri: String, clientIp: String): Boolean {
+        val localhost = kotlin.runCatching {
+            InetAddress.getByName(clientIp).isLoopbackAddress
+        }.getOrNull() ?: false
+        // 不拦截本机请求
+        if (localhost) {
             return false
         }
+
         // 不拦截的接口
-        excludeVeritfyPath.forEach {
+        excludeVerifyPath.forEach {
             if (uri.startsWith(it)) {
                 return false
             }
         }
-        // 拦截api接口
-        if (uri.startsWith("/api/")) {
-            return true
-        }
-        // 默认不拦截
-        return false
+        // 其余接口进行拦截
+        return true
     }
 }

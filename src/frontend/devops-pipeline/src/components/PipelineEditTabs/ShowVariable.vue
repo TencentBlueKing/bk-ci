@@ -21,6 +21,7 @@
                     <div
                         v-for="(panel, index) in panels"
                         class="tab-item"
+                        v-bk-overflow-tips
                         :key="index"
                         :class="{ actived: active === panel.name }"
                         @click="selectTab(panel.name)"
@@ -33,6 +34,7 @@
                 <pipeline-param
                     v-if="active === 'pipeline'"
                     :editable="editable"
+                    :can-edit-param="canEditParam"
                     :params="params"
                     :update-container-params="handleContainerChange"
                 />
@@ -80,6 +82,10 @@
                 required: true
             },
             editable: {
+                type: Boolean,
+                default: true
+            },
+            canEditParam: {
                 type: Boolean,
                 default: true
             },

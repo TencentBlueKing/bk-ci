@@ -103,6 +103,7 @@
                         creator: this.filterCreator,
                         page,
                         pageSize: limit,
+                        archiveFlag: this.$route.query.archiveFlag,
                         ...(this.isTemplate ? { templateId } : { pipelineId })
                     }
                 
@@ -127,6 +128,7 @@
                 const { projectId, pipelineId, templateId } = this.$route.params
                 const params = {
                     projectId,
+                    archiveFlag: this.$route.query.archiveFlag,
                     ...(this.isTemplate ? { templateId } : { pipelineId })
                 }
                 try {

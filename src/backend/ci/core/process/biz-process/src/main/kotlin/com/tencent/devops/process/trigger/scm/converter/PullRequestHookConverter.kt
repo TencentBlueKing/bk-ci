@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -41,6 +41,7 @@ import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.PullRequestHook
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PullRequestHookConverter @Autowired constructor(
@@ -122,7 +123,7 @@ class PullRequestHookConverter @Autowired constructor(
 
         val sourceBranch = pullRequest.sourceRef.name
         val targetBranch = pullRequest.targetRef.name
-        val defaultBranch = serverRepo.defaultBranch
+        val defaultBranch = serverRepo.defaultBranch!!
         val fork = sourceRepo.id != targetRepo.id
 
         val targetFilePaths = targetFileTrees.map { it.path }
@@ -151,8 +152,8 @@ class PullRequestHookConverter @Autowired constructor(
                 commit = FileCommit(
                     commitId = hook.commit.sha,
                     commitMsg = hook.commit.message,
-                    commitTime = hook.commit.commitTime,
-                    committer = hook.commit.committer.name
+                    commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                    committer = hook.commit.committer?.name ?: ""
                 ),
                 blobId = sourceTree.blobId,
                 fork = fork,
@@ -201,7 +202,7 @@ class PullRequestHookConverter @Autowired constructor(
                         projectId = repository.projectId!!,
                         eventId = eventId,
                         repository = repository,
-                        defaultBranch = serverRepo.defaultBranch,
+                        defaultBranch = defaultBranch,
                         ref = GitActionCommon.getSourceRef(
                             fork = fork,
                             sourceFullName = sourceRepo.fullName,
@@ -229,7 +230,7 @@ class PullRequestHookConverter @Autowired constructor(
                         projectId = repository.projectId!!,
                         eventId = eventId,
                         repository = repository,
-                        defaultBranch = serverRepo.defaultBranch,
+                        defaultBranch = defaultBranch,
                         ref = pullRequest.targetRef.name,
                         filePath = targetPath,
                         actionType = YamlFileActionType.TRIGGER,
@@ -246,7 +247,7 @@ class PullRequestHookConverter @Autowired constructor(
                         projectId = repository.projectId!!,
                         eventId = eventId,
                         repository = repository,
-                        defaultBranch = serverRepo.defaultBranch,
+                        defaultBranch = defaultBranch,
                         ref = pullRequest.targetRef.name,
                         filePath = targetPath,
                         actionType = YamlFileActionType.TRIGGER,
@@ -299,7 +300,7 @@ class PullRequestHookConverter @Autowired constructor(
 
         val sourceBranch = pullRequest.sourceRef.name
         val targetBranch = pullRequest.targetRef.name
-        val defaultBranch = serverRepo.defaultBranch
+        val defaultBranch = serverRepo.defaultBranch!!
         val fork = sourceRepo.id != targetRepo.id
 
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
@@ -323,8 +324,8 @@ class PullRequestHookConverter @Autowired constructor(
                 commit = FileCommit(
                     commitId = hook.commit.sha,
                     commitMsg = hook.commit.message,
-                    commitTime = hook.commit.commitTime,
-                    committer = hook.commit.committer.name
+                    commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                    committer = hook.commit.committer?.name ?: ""
                 ),
                 fork = fork,
                 merged = true,
@@ -364,7 +365,7 @@ class PullRequestHookConverter @Autowired constructor(
                 projectId = repository.projectId!!,
                 eventId = eventId,
                 repository = repository,
-                defaultBranch = serverRepo.defaultBranch,
+                defaultBranch = defaultBranch,
                 ref = targetBranch,
                 filePath = filePath,
                 actionType = YamlFileActionType.DELETE,

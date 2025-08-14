@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.ScmApiManager
 import com.tencent.devops.scm.api.pojo.HookRequest
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import com.tencent.devops.scm.spring.manager.ScmProviderManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,7 +45,8 @@ class ScmWebhookApiService @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val providerRepositoryFactory: ScmProviderRepositoryFactory,
     private val repositoryScmConfigService: RepositoryScmConfigService,
-    private val scmApiManager: ScmApiManager
+    private val scmApiManager: ScmApiManager,
+    private val scmProviderManager: ScmProviderManager
 ) : AbstractScmApiService(
     repositoryService = repositoryService,
     providerRepositoryFactory = providerRepositoryFactory,
@@ -52,13 +54,14 @@ class ScmWebhookApiService @Autowired constructor(
 ) {
     fun webhookParse(scmCode: String, request: HookRequest): Webhook {
         val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
-        return scmApiManager.webhookParse(providerProperties = properties, request = request)
+        return scmProviderManager.webhookParser(properties).parse(request) ?: throw UnsupportedOperationException(
+            "Unsupported webhook request $scmCode [$request]"
+        )
     }
 
-    fun webhookEnrich(projectId: String, webhook: Webhook, authRepository: AuthRepository): Webhook {
+    fun webhookEnrich(webhook: Webhook, authRepo: AuthRepository): Webhook {
         return invokeApi(
-            projectId = projectId,
-            authRepository = authRepository
+            authRepository = authRepo
         ) { properties, providerRepository ->
             scmApiManager.webhookEnrich(
                 providerProperties = properties,

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -89,7 +89,9 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildResult = true,
                 dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                 routeKeySuffix = dispatchTypeBuilder.getDispatchType(task, param).routeKeySuffix?.routeKeySuffix,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                jobId = task.jobId,
+                containerHashId = task.containerHashId
             )
         )
         containerBuildRecordService.updateContainerRecord(
@@ -144,7 +146,9 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,
-                        executeCount = task.executeCount
+                        executeCount = task.executeCount,
+                        jobId = task.jobId,
+                        containerHashId = task.containerHashId
                     )
                 )
                 defaultFailAtomResponse

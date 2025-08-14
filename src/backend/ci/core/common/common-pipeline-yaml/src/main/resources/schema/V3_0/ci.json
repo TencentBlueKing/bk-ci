@@ -1472,7 +1472,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                   },
                   "options" : {
                     "type" : "array",
@@ -1536,6 +1536,9 @@
                   "description" : {
                     "type" : "string"
                   },
+                  "group" : {
+                    "type" : "string"
+                  },
                   "multiple" : {
                     "type" : "boolean"
                   },
@@ -1543,6 +1546,9 @@
                     "type" : "boolean"
                   },
                   "repo-id" : {
+                    "type" : "string"
+                  },
+                  "relative-path" : {
                     "type" : "string"
                   },
                   "scm-type" : {
@@ -1562,6 +1568,9 @@
                   },
                   "filter-rule" : {
                     "type" : "string"
+                  },
+                  "version-control" : {
+                    "type" : "boolean"
                   },
                   "metadata" : {
                     "type" : "object"
@@ -1647,7 +1656,7 @@
                   "type" : "string"
                 },
                 "type" : {
-                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                 },
                 "options" : {
                   "type" : "array",
@@ -1711,6 +1720,9 @@
                 "description" : {
                   "type" : "string"
                 },
+                "group" : {
+                  "type" : "string"
+                },
                 "multiple" : {
                   "type" : "boolean"
                 },
@@ -1718,6 +1730,9 @@
                   "type" : "boolean"
                 },
                 "repo-id" : {
+                  "type" : "string"
+                },
+                "relative-path" : {
                   "type" : "string"
                 },
                 "scm-type" : {
@@ -1737,6 +1752,9 @@
                 },
                 "filter-rule" : {
                   "type" : "string"
+                },
+                "version-control" : {
+                  "type" : "boolean"
                 },
                 "metadata" : {
                   "type" : "object"
@@ -2185,6 +2203,9 @@
       }
     },
     "disable-pipeline" : {
+      "type" : "boolean"
+    },
+    "fail-if-variable-invalid" : {
       "type" : "boolean"
     },
     "recommended-version" : {

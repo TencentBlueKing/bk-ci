@@ -271,8 +271,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         logger.info("putAndGetMonitorGroupConfigCache|opsActions:$opsActions")
         // 4、遍历action组。获取该action的关联类型。
         actionList.forEach foreach@{ action ->
-            // 监控平台测试环境有些动作，已经被废除，但并没有删除，正确的动作都包含”v2“标识
-            if (!action.id.contains("v2"))
+            if (action.name.contains("已废弃"))
                 return@foreach
             // 过滤掉监控平台全局动作
             if (action.relatedResourceTypes.isEmpty())

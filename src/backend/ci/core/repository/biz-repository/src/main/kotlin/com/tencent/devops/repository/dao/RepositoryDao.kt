@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -137,7 +137,8 @@ class RepositoryDao {
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
         repositoryIds: Set<Long>?,
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        scmCode: String? = null
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -153,6 +154,9 @@ class RepositoryDao {
             }
             if (enablePac != null) {
                 step.and(ENABLE_PAC.eq(enablePac))
+            }
+            if (scmCode != null) {
+                step.and(SCM_CODE.eq(scmCode))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -351,7 +355,8 @@ class RepositoryDao {
         limit: Int,
         sortBy: String? = null,
         sortType: String? = null,
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        scmCode: String? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -366,7 +371,9 @@ class RepositoryDao {
             if (enablePac != null) {
                 step.and(ENABLE_PAC.eq(enablePac))
             }
-
+            if (scmCode != null) {
+                step.and(SCM_CODE.eq(scmCode))
+            }
             when (repositoryTypes) {
                 null -> {
                 }
@@ -687,27 +694,46 @@ class RepositoryDao {
     fun list(
         dslContext: DSLContext,
         projectId: String?,
-        repositoryTypes: List<String>,
+        repositoryTypes: List<String>?,
         repoHashId: String?,
+        nullScmCode: Boolean? = null,
         limit: Int,
         offset: Int
     ): List<TRepositoryRecord> {
         return with(TRepository.T_REPOSITORY) {
             val conditions = mutableListOf(
-                IS_DELETED.eq(false),
-                TYPE.`in`(repositoryTypes)
+                IS_DELETED.eq(false)
             )
+            if (!repositoryTypes.isNullOrEmpty()) {
+                conditions.add(TYPE.`in`(repositoryTypes))
+            }
             if (!projectId.isNullOrBlank()) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
             if (!repoHashId.isNullOrBlank()) {
                 conditions.add(REPOSITORY_HASH_ID.eq(repoHashId))
             }
+            if (nullScmCode == true) {
+                conditions.add(SCM_CODE.isNull())
+            }
             dslContext.selectFrom(this)
                     .where(conditions)
                     .orderBy(PROJECT_ID, REPOSITORY_ID)
                     .limit(limit).offset(offset)
                     .fetch()
+        }
+    }
+
+    fun updateScmCode(
+        dslContext: DSLContext,
+        repositoryId: Set<Long>
+    ) {
+        if (repositoryId.isEmpty()) return
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(SCM_CODE, field(TYPE))
+                .where(REPOSITORY_ID.`in`(repositoryId))
+                .execute()
         }
     }
 }

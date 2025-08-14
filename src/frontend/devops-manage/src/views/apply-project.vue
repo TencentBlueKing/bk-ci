@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import ManageHeader from '@/components/manage-header.vue';
+import ProjectForm from '@/components/project-form.vue';
+import http from '@/http/api';
+import { Message } from 'bkui-vue';
 import {
   ref,
 } from 'vue';
-import http from '@/http/api';
-import { Message, InfoBox } from 'bkui-vue';
-import ManageHeader from '@/components/manage-header.vue';
-import ProjectForm from '@/components/project-form.vue';
+import { useI18n } from 'vue-i18n';
 import {
   useRouter,
 } from 'vue-router';
@@ -35,27 +35,6 @@ const projectData = ref({
 });
 const projectForm = ref(null);
 const btnLoading = ref(false);
-const handleConfirm = () => {
-  projectForm.value?.validate().then(async () => {
-    btnLoading.value = true;
-    const result = await http.requestCreateProject({
-      projectData: projectData.value,
-    })
-      .catch(() => false)
-      .finally(() => {
-        btnLoading.value = false;
-      });
-    if (result) {
-      Message({
-        theme: 'success',
-        message: t('提交成功'),
-      });
-      router.push({
-        path: `${projectData.value.englishName}/show`,
-      });
-    }
-  })
-};
 const initProjectForm = (value) => {
   projectForm.value = value;
 };
@@ -63,6 +42,32 @@ const initProjectForm = (value) => {
 const handleCancel = () => {
   router.back();
 };
+
+
+async function handleConfirm () {
+  try {
+    await projectForm.value?.validate();
+    btnLoading.value = true;
+    const { status, projectId } = await http.requestCreateProject({
+      projectData: projectData.value,
+    })
+    if (status) {
+      Message({
+        theme: 'success',
+        message: t('提交成功'),
+      });
+      router.push({
+        path: `${projectId}/show`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    btnLoading.value = false;
+  }
+};
+
+
 </script>
 
 <template>
@@ -113,10 +118,8 @@ const handleCancel = () => {
     height: 100%;
   }
   .apply-project-content {
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    height: 100%;
+    padding: 24px 24px 16px;
+    height: calc(100% - 108px);
     overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -130,13 +133,20 @@ const handleCancel = () => {
       height: 8px !important;
     }
     .create-project-form {
-      width: 1000px;
+      width: 1200px;
       flex: 1;
       margin: 0 auto;
     }
     .btn-group {
-      display: flex;
-      margin: 24px 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      padding-left: 24px;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      background: #FAFBFD;
+      box-shadow: 0 -1px 0 0 #DCDEE5;
     }
     .mr10 {
       margin-right: 10px;

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,13 +29,22 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.GOLANG
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.LABEL
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.constant.PYTHON
+import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.api.constant.STRING
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -79,6 +88,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.IS_EXPANDED
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT
@@ -87,16 +97,19 @@ import com.tencent.devops.store.pojo.common.KEY_DEMANDS
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_FINISH_KILL_FLAG
 import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_MINIMUM_VERSION
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
 import com.tencent.devops.store.pojo.common.KEY_TARGET
+import com.tencent.devops.store.pojo.common.KEY_TYPE
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import jakarta.ws.rs.core.Response
+import kotlin.reflect.KClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -381,6 +394,29 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as? Map<String, Any>
+        val keyInputGroupMapList = taskDataMap[KEY_INPUT_GROUPS] as? List<Map<String, Any>>
+        if (!keyInputGroupMapList.isNullOrEmpty()) {
+            keyInputGroupMapList.forEach { inputGroupMap ->
+                validateTaskJsonField(
+                    dataMap = inputGroupMap,
+                    fieldName = NAME,
+                    promptName = "$KEY_INPUT_GROUPS.$NAME",
+                    expectedType = String::class
+                )
+                validateTaskJsonField(
+                    dataMap = inputGroupMap,
+                    fieldName = LABEL,
+                    promptName = "$KEY_INPUT_GROUPS.$LABEL",
+                    expectedType = String::class
+                )
+                validateTaskJsonField(
+                    dataMap = inputGroupMap,
+                    fieldName = IS_EXPANDED,
+                    promptName = "$KEY_INPUT_GROUPS.$IS_EXPANDED",
+                    expectedType = Boolean::class
+                )
+            }
+        }
         var atomPostInfo: AtomPostInfo? = null
         if (executionInfoMap == null) {
             // 抛出错误提示
@@ -389,14 +425,15 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(KEY_EXECUTION)
             )
         }
-        val language = executionInfoMap[KEY_LANGUAGE] as? String
-        if (language.isNullOrBlank()) {
-            // 抛出错误提示
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                params = arrayOf(KEY_LANGUAGE)
-            )
-        }
+        // pref:完善研发商店组件配置文件参数校验 #11269
+        validateTaskJsonField(
+            dataMap = executionInfoMap,
+            fieldName = KEY_LANGUAGE,
+            expectedType = String::class,
+            promptName = "$KEY_EXECUTION.$KEY_LANGUAGE",
+            supportedFieldTypes = setOf(JAVA, PYTHON, GOLANG, NODEJS)
+        )
+        val language = executionInfoMap[KEY_LANGUAGE].toString()
         val config = taskDataMap[KEY_CONFIG] as? Map<String, Any>
         config?.let { validateConfigMap(config) }
         val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
@@ -435,20 +472,23 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         } else {
             runtimeVersion
         }
-        if (null != osList) {
+        if (!osList.isNullOrEmpty()) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
-                val osName = osExecutionInfoMap[KEY_OS_NAME] as? String
-                if (osName.isNullOrBlank()) {
-                    // 执行入口为空则校验失败
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(KEY_OS_NAME)
-                    )
-                }
-                val target = osExecutionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
+                validateTaskJsonField(
+                    dataMap = osExecutionInfoMap,
+                    fieldName = KEY_OS_NAME,
+                    promptName = "$KEY_OS.$KEY_OS_NAME",
+                    expectedType = String::class
                 )
+                val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
+                validateTaskJsonField(
+                    dataMap = osExecutionInfoMap,
+                    fieldName = KEY_TARGET,
+                    promptName = "$KEY_OS.$KEY_TARGET",
+                    expectedType = String::class
+                )
+                val target = osExecutionInfoMap[KEY_TARGET].toString()
                 val osArch = osExecutionInfoMap[KEY_OS_ARCH] as? String
                 val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
                 // 统计每种操作系统默认环境配置数量
@@ -487,9 +527,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            val target = executionInfoMap[KEY_TARGET] as? String ?: throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, params = arrayOf(KEY_TARGET)
-            )
+            val target = executionInfoMap[KEY_TARGET] as? String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
@@ -508,7 +546,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomEnvRequests.add(atomEnvRequest)
         }
 
-        // 校验参数输入参数和输出参数是否超过最大值
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
         if (inputDataMap != null && inputDataMap.size > maxInputNum) {
             throw ErrorCodeException(
@@ -523,7 +560,55 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(maxOutputNum.toString())
             )
         }
+        outputDataMap?.let { dataMap ->
+            for (entry in dataMap) {
+                val key = entry.key as? String
+                val value = entry.value as? Map<String, Any>
+                if (key != null && value != null) {
+                    validateTaskJsonField(
+                        dataMap = value,
+                        fieldName = KEY_TYPE,
+                        promptName = "$KEY_OUTPUT.$key.$KEY_TYPE",
+                        expectedType = String::class,
+                        supportedFieldTypes = setOf(STRING, ARTIFACT, REPORT)
+                    )
+                }
+            }
+        }
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
+    }
+
+    private fun <T : Any> validateTaskJsonField(
+        dataMap: Map<String, Any>,
+        fieldName: String,
+        promptName: String,
+        expectedType: KClass<T>,
+        required: Boolean = true,
+        supportedFieldTypes: Set<String>? = null
+    ) {
+        val fieldValue = dataMap[fieldName]
+        if (required) {
+            if (fieldValue == null || (fieldValue is String && fieldValue.isBlank())) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                    params = arrayOf(promptName)
+                )
+            }
+        }
+        if (!expectedType.isInstance(fieldValue)) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf(promptName)
+            )
+        }
+        if (supportedFieldTypes != null) {
+            if (fieldValue !in supportedFieldTypes) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
+                    params = arrayOf(promptName, supportedFieldTypes.joinToString(separator = ","))
+                )
+            }
+        }
     }
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
