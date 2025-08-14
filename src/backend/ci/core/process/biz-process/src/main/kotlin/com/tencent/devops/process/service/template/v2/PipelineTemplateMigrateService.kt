@@ -128,6 +128,7 @@ class PipelineTemplateMigrateService(
         val templateCount = templateDao.countTemplate(dslContext, projectId)
         if (templateCount == 0) {
             logger.warn("The template does not exist under project {}. Skipping.", projectId)
+            return
         }
 
         val startTime = LocalDateTime.now()
@@ -618,10 +619,17 @@ class PipelineTemplateMigrateService(
 
     fun getTemplateVersions(latestTemplate: TTemplateRecord): List<TemplateVersion> {
         return if (latestTemplate.type == TemplateType.CONSTRAINT.name) {
-            val srcLatestTemplate = templateDao.getLatestTemplate(
-                dslContext = dslContext,
-                templateId = latestTemplate.srcTemplateId
-            )
+            val srcLatestTemplate = try {
+                templateDao.getLatestTemplate(
+                    dslContext = dslContext,
+                    templateId = latestTemplate.srcTemplateId
+                )
+            } catch (ex: ErrorCodeException) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PARENTS_TEMPLATE_NOT_EXISTS,
+                    params = arrayOf(latestTemplate.srcTemplateId)
+                )
+            }
             templateFacadeService.listTemplateAllVersions(
                 projectId = srcLatestTemplate.projectId,
                 templateId = srcLatestTemplate.id,
