@@ -260,10 +260,7 @@ class PipelineCheckRunService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 buildNum = buildHistoryVar.buildNum,
-                buildStatus = when (buildStatus) {
-                    BuildStatus.RUNNING, BuildStatus.SUCCEED -> buildStatus
-                    else -> BuildStatus.FAILED
-                },
+                buildStatus = transferBuildStatus(buildStatus),
                 repoHashId = repo.repoHashId!!,
                 extRef = extRef,
                 ref = commitId,
@@ -308,7 +305,7 @@ class PipelineCheckRunService @Autowired constructor(
                         extRef = extRef,
                         context = context
                     )
-
+                    var checkRunInput = convert()
                     when {
                         checkRunRecord == null -> {
                             logger.info(
@@ -331,7 +328,7 @@ class PipelineCheckRunService @Autowired constructor(
                             addCheckRun(
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,
-                                checkRunInput = convert()
+                                checkRunInput = checkRunInput
                             )?.let {
                                 pipelineBuildCheckRunDao.update(
                                     dslContext = dslContext,
@@ -352,7 +349,7 @@ class PipelineCheckRunService @Autowired constructor(
                                 addCheckRun(
                                     projectId = projectId,
                                     repositoryConfig = repositoryConfig,
-                                    checkRunInput = convert()
+                                    checkRunInput = checkRunInput
                                 )
                             } else {
                                 val checkRunId = checkRunRecord.checkRunId ?: run {
@@ -362,7 +359,6 @@ class PipelineCheckRunService @Autowired constructor(
                                     )
                                     null
                                 }
-                                var checkRunInput = convert()
                                 val mrNumber = buildVariables[BK_REPO_GIT_WEBHOOK_MR_NUMBER]
                                 // TGIT 的报表信息不写入check-run，以评论的方式上报
                                 if (repoProvider == ScmProviderCodes.TGIT &&
@@ -392,9 +388,6 @@ class PipelineCheckRunService @Autowired constructor(
                             logger.info(
                                 "[$buildId]attempting to update $scmCode check-run(${checkRunInfo?.id}) to " +
                                         "repo($repoHashId)|ref($ref)|extRef($extRef)|context($context)"
-                            )
-                            val checkRunInput = convert().copy(
-                                id = checkRunInfo?.id
                             )
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
@@ -681,6 +674,11 @@ class PipelineCheckRunService @Autowired constructor(
 
     private fun PipelineBuildCheckRun.key() = "repo($repoHashId)|ref($ref)|extRef($extRef)|context($context)"
     private fun PipelineBuildCheckRun.buildKey() = "projectId($projectId)|pipelineId($pipelineId)|buildId($buildId)"
+
+    private fun transferBuildStatus(buildStatus: BuildStatus) = when (buildStatus) {
+        BuildStatus.RUNNING, BuildStatus.SUCCEED -> buildStatus
+        else -> BuildStatus.FAILED
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineCheckRunService::class.java)
