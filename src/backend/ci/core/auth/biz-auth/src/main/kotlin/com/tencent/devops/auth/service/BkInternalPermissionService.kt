@@ -1,10 +1,10 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.AuthResourceDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.function.Supplier
 
 /**
@@ -24,7 +25,7 @@ class BkInternalPermissionService(
     private val dslContext: DSLContext,
     private val userManageService: UserManageService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val authResourceGroupDao: AuthResourceGroupDao,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val superManagerService: SuperManagerService,
     private val authResourceService: AuthResourceDao,
@@ -296,10 +297,29 @@ class BkInternalPermissionService(
             projectCode, userId,
             enableTemplateInvalidationOnUserExpiry
         ) {
-            permissionResourceGroupService.listMemberGroupIdsInProject(
+            // 获取用户的所属组织
+            val memberDeptInfos = userManageService.getUserDepartmentPath(userId)
+            // 查询项目下包含该成员及所属组织的用户组列表
+            val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                memberIds = memberDeptInfos + userId,
+                minExpiredTime = if (enableTemplateInvalidationOnUserExpiry == true) LocalDateTime.now() else null
+            ).map { it.iamGroupId.toString() }
+            // 通过项目组ID获取人员模板ID
+            val iamTemplateIds = authResourceGroupDao.listByRelationId(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = projectGroupIds
+            ).filter { it.iamTemplateId != null }
+                .map { it.iamTemplateId.toString() }
+            authResourceGroupMemberDao.listMemberGroupIdsInProject(
+                dslContext = dslContext,
                 projectCode = projectCode,
                 memberId = userId,
-                enableTemplateInvalidationOnUserExpiry = enableTemplateInvalidationOnUserExpiry
+                iamTemplateIds = iamTemplateIds,
+                memberDeptInfos = memberDeptInfos
             )
         }
     }
