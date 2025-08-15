@@ -113,13 +113,13 @@ interface UserPublicVarGroupResource {
 
     @Operation(summary = "导出公共变量组(YAML格式)")
     @GET
-    @Path("/projects/{projectId}/{groupName}/export")
+    @Path("/projects/{projectId}/groups/{groupName}/export")
     fun exportGroup(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
