@@ -131,18 +131,6 @@ interface PermissionResourceGroupService {
     // 查询用户加入的用户组模板
     fun listProjectMemberGroupTemplateIds(
         projectCode: String,
-        memberId: String,
-        // 用户全部权限过期是否导致模板权限失效
-        enableTemplateInvalidationOnUserExpiry: Boolean? = false
+        memberId: String
     ): List<String>
-
-    /**
-     * 获取用户在该项目加入的组
-     * */
-    fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String,
-        // 用户全部权限过期是否导致模板权限失效
-        enableTemplateInvalidationOnUserExpiry: Boolean? = false
-    ): List<Int>
 }
