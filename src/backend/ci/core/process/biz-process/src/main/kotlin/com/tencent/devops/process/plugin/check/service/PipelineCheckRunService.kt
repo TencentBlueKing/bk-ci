@@ -356,8 +356,11 @@ class PipelineCheckRunService @Autowired constructor(
                                 )
                             } else {
                                 val checkRunId = checkRunRecord.checkRunId ?: run {
-                                    logger.warn("skip resolve check run|process instance($buildId) checkRunId is empty")
-                                    return
+                                    logger.warn(
+                                        "process instance($buildId) checkRunId is empty, " +
+                                                "write failure possible"
+                                    )
+                                    null
                                 }
                                 var checkRunInput = convert()
                                 val mrNumber = buildVariables[BK_REPO_GIT_WEBHOOK_MR_NUMBER]
@@ -378,13 +381,13 @@ class PipelineCheckRunService @Autowired constructor(
                                     )
                                     checkRunInput = checkRunInput.copy(output = checkRunOutput)
                                 }
-                                updateCheckRun(
-                                    projectId = projectId,
-                                    repositoryConfig = repositoryConfig,
-                                    checkRunInput = checkRunInput.copy(
-                                        id = checkRunId
+                                checkRunId?.let {
+                                    updateCheckRun(
+                                        projectId = projectId,
+                                        repositoryConfig = repositoryConfig,
+                                        checkRunInput = checkRunInput.copy(id = it)
                                     )
-                                )
+                                }
                             }
                             logger.info(
                                 "[$buildId]attempting to update $scmCode check-run(${checkRunInfo?.id}) to " +
