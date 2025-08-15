@@ -70,6 +70,7 @@ class BkInternalPermissionComparator(
         resourceType: String,
         resourceCode: String,
         action: String,
+        enableSuperManagerCheck: Boolean,
         expectedResult: Boolean
     ) {
         postProcess {
@@ -78,7 +79,8 @@ class BkInternalPermissionComparator(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                action = action
+                action = action,
+                enableSuperManagerCheck = enableSuperManagerCheck
             )
             val isConsistent = (localCheckResult == expectedResult)
             consistencyCounter(::validateUserResourcePermission.name, isConsistent).increment()
@@ -106,7 +108,8 @@ class BkInternalPermissionComparator(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 action = action,
-                expectedResult = verify
+                expectedResult = verify,
+                enableSuperManagerCheck = false
             )
         }
     }
@@ -194,7 +197,8 @@ class BkInternalPermissionComparator(
                 val hasNoActiveMembership by lazy {
                     bkInternalPermissionService.listMemberGroupIdsInProjectWithCache(
                         projectCode = projectCode,
-                        userId = userId
+                        userId = userId,
+                        enableTemplateInvalidationOnUserExpiry = true
                     ).isEmpty()
                 }
                 !isEnabled || hasNoActiveMembership

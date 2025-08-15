@@ -106,7 +106,7 @@ class UserManageService @Autowired constructor(
         }
     }
 
-    fun syncUserInfoData() {
+    fun syncAllUserInfoData() {
         Executors.newFixedThreadPool(1).execute {
             val startEpoch = System.currentTimeMillis()
             var page = 1
@@ -201,6 +201,31 @@ class UserManageService @Autowired constructor(
                 taskType = AuthSyncDataType.USER_SYNC_TASK_TYPE.type
             )
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync user info data")
+        }
+    }
+
+    fun syncUserInfoData(userIds: List<String>) {
+        userIds.forEach {
+            val bkUserInfo = deptService.getUserInfo(it)!!
+            try {
+                val deptInfoDTO = extractDeptInfo(it)
+                userInfoDao.create(
+                    dslContext = dslContext,
+                    userInfo = UserInfo(
+                        userId = it,
+                        userName = bkUserInfo.displayName,
+                        enabled = true,
+                        departmentName = deptInfoDTO?.departmentName,
+                        departmentId = deptInfoDTO?.departmentId,
+                        departments = deptInfoDTO?.departments,
+                        path = deptInfoDTO?.path,
+                        departed = false
+                    ),
+                    taskId = UUIDUtil.generate()
+                )
+            } catch (ex: Exception) {
+                logger.warn("sync user info data failed $bkUserInfo|$ex")
+            }
         }
     }
 
