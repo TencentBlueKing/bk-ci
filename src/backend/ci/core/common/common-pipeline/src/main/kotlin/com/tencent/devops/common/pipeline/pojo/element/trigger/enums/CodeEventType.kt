@@ -132,5 +132,7 @@ enum class CodeEventType {
             ScmType.CODE_P4 -> CODE_P4_EVENTS
             else -> values().toList()
         }
+
+        fun convert(eventType: String?) = values().find { it.name == eventType }
     }
 }
