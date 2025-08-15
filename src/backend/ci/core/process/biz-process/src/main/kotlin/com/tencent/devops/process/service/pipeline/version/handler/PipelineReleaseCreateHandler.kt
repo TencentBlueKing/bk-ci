@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -37,6 +38,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -54,6 +56,7 @@ class PipelineReleaseCreateHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
+        logger.info("create released version with context={}", JsonUtil.toJson(context, false))
         with(context) {
             if (pipelineResourceWithoutVersion.status != VersionStatus.RELEASED) {
                 throw ErrorCodeException(
@@ -99,5 +102,9 @@ class PipelineReleaseCreateHandler @Autowired constructor(
             versionNum = resourceOnlyVersion.versionNum,
             versionName = resourceOnlyVersion.versionName
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineReleaseCreateHandler::class.java)
     }
 }
