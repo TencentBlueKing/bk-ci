@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -38,6 +39,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -55,6 +57,7 @@ class PipelineBranchCreateHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
+        logger.info("create branch version with context={}", JsonUtil.toJson(context, false))
         with(context) {
             if (!enablePac) {
                 throw ErrorCodeException(
@@ -119,5 +122,9 @@ class PipelineBranchCreateHandler @Autowired constructor(
             versionNum = resourceOnlyVersion.versionNum,
             versionName = resourceOnlyVersion.versionName
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBranchCreateHandler::class.java)
     }
 }
