@@ -50,6 +50,7 @@ import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.UserProjectPermission
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
@@ -777,7 +778,7 @@ class RbacPermissionResourceGroupPermissionService(
             projectCode = projectCode,
             iamGroupId = iamGroupId,
             minExpiredTime = LocalDateTime.now()
-        )
+        ).filterNot { it.memberType == MemberType.TEMPLATE.type }
 
         return members.flatMap { member ->
             actions.map { action ->
