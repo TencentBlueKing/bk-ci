@@ -28,7 +28,6 @@
 package com.tencent.devops.misc.pojo.process
 
 import com.tencent.devops.misc.dao.process.ProcessDao
-import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.factory.MigrationStrategyFactory
 import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.DSLContext

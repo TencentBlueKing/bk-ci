@@ -11,7 +11,7 @@ class AuditResourceMigrationStrategy(private val processDataMigrateDao: ProcessD
         // 迁移T_AUDIT_RESOURCE表数据
         PageMigrationUtil.migrateByPage(
             pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,
-            fetch = { offset, limit -> 
+            fetch = { offset, limit ->
                 processDataMigrateDao.getAuditResourceRecords(
                     dslContext = context.dslContext,
                     projectId = context.projectId,

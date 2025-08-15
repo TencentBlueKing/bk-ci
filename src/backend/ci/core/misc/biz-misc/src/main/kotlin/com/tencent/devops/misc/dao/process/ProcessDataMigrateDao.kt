@@ -58,7 +58,6 @@ import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.TPipelineSubRef
-import com.tencent.devops.model.process.tables.TPipelineTimer
 import com.tencent.devops.model.process.tables.TPipelineTimerBranch
 import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
 import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
@@ -114,7 +113,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSubRefRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTimerBranchRecord
-import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerReviewRecord

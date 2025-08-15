@@ -144,7 +144,7 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
      * 4. 添加超时机制防止永久阻塞
      */
     private fun migratePipelineData() {
-        val projectId= config.projectId
+        val projectId = config.projectId
         // 获取项目下流水线总数
         val pipelineNum = config.processDao.getPipelineNumByProjectId(config.dslContext, projectId)
         // 无流水线则终止流程
@@ -331,7 +331,6 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
      */
     private fun confirmCacheUpdated(serviceName: String, cacheKey: String, retryNum: Int): Boolean {
         if (retryNum <= 0) return false
-        
         val finalServiceName = BkServiceUtil.findServiceName(serviceName = serviceName)
         val serviceHostKey = BkServiceUtil.getServiceHostKey(finalServiceName)
         val redisOperation = config.redisOperation
@@ -525,7 +524,7 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
         val preMigrationResult = config.preMigrationResult
         val routingRule = preMigrationResult.routingRuleMap.keys.firstOrNull()
             ?: throw IllegalStateException("No routing rule found")
-        return preMigrationResult.routingRuleMap[routingRule] 
+        return preMigrationResult.routingRuleMap[routingRule]
             ?: throw IllegalStateException("No data source mapped to routing rule")
     }
 }

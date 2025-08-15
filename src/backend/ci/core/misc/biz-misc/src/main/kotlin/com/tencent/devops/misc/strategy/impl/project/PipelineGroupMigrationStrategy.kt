@@ -11,7 +11,7 @@ class PipelineGroupMigrationStrategy(private val processDataMigrateDao: ProcessD
         // 迁移T_PIPELINE_GROUP表数据
         PageMigrationUtil.migrateByPage(
             pageSize = PageMigrationUtil.LONG_PAGE_SIZE,
-            fetch = { offset, limit -> 
+            fetch = { offset, limit ->
                 processDataMigrateDao.getPipelineGroupRecords(
                     dslContext = context.dslContext,
                     projectId = context.projectId,
