@@ -28,6 +28,7 @@ package com.tencent.devops.common.security.jwt
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.security.autoconfig.ServiceSecurityAutoConfiguration
 import com.tencent.devops.common.security.pojo.SecurityJwtInfo
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
@@ -38,20 +39,18 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
-import java.time.Duration
 import java.time.Instant
 import java.util.Base64
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.SchedulingConfigurer
-import org.springframework.scheduling.config.ScheduledTaskRegistrar
+import org.springframework.scheduling.annotation.Scheduled
 
 class JwtManager(
     private val privateKeyString: String?,
     private val publicKeyString: String?,
     private val enable: Boolean
-) : SchedulingConfigurer {
+) {
     private var token: String? = null
     private val publicKey: PublicKey?
     private val privateKey: PrivateKey?
@@ -125,15 +124,7 @@ class JwtManager(
         return true
     }
 
-    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
-        if (isSendEnable()) {
-            taskRegistrar.addFixedDelayTask(
-                this@JwtManager::refreshToken,
-                Duration.ofMinutes(5L)
-            )
-        }
-    }
-
+    @Scheduled(cron = "0 0/4 * * * ?", scheduler = ServiceSecurityAutoConfiguration.JWT_MANAGER_SCHEDULER)
     fun refreshToken() {
         logger.info("Refresh service jwt token")
         generateToken()
