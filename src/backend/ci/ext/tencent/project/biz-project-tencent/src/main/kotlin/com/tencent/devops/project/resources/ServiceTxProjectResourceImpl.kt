@@ -446,6 +446,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectService.getOperationalProductsByBgName(bgName))
     }
 
+    override fun getProductByProductId(productId: Int): Result<OperationalProductVO?> {
+        return Result(projectService.getProductByProductId(productId))
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }
