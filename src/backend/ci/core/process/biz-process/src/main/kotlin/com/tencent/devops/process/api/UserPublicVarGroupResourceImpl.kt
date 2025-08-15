@@ -47,13 +47,19 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     val publicVarGroupService: PublicVarGroupService
 ) : UserPublicVarGroupResource {
 
-    override fun addGroup(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<Boolean> {
+    override fun addGroup(
+        userId: String,
+        projectId: String,
+        operateType: OperateTypeEnum,
+        publicVarGroup: PublicVarGroupVO
+    ): Result<Boolean> {
         return Result(
             publicVarGroupService.addGroup(
                 PublicVarGroupDTO(
                     projectId = projectId,
                     userId = userId,
-                    publicVarGroup = publicVarGroup
+                    publicVarGroup = publicVarGroup,
+                    operateType = operateType
                 )
             )
         )
