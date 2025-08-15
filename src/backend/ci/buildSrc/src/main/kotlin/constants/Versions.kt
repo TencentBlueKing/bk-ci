@@ -3,7 +3,7 @@ object Versions {
     const val CommonExec = "1.4.0"
     const val CommonIo = "2.16.1"
     const val CommonText = "1.10.0"
-    const val BouncyCastle = "1.70"
+    const val BouncyCastle = "1.78"
     const val Dom4j = "2.1.4"
     const val Compress = "1.26.2"
     const val MyBatis = "3.5.6"
