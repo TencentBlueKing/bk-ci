@@ -30,7 +30,6 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
@@ -67,7 +66,7 @@ class PublicVarService @Autowired constructor(
                 varName = it.varName,
                 alias = it.alias,
                 type = it.type,
-                valueType = BuildFormPropertyType.valueOf(it.valueType),
+                valueType = it.valueType,
                 defaultValue = it.defaultValue,
                 desc = it.desc,
                 referCount = 0,
