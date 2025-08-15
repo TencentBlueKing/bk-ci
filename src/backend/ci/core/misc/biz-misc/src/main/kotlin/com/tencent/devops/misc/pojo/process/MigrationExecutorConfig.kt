@@ -6,8 +6,10 @@ import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.factory.MigrationStrategyFactory
 import com.tencent.devops.misc.service.process.ProcessDataDeleteService
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
+import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.DSLContext
 
+@Schema(title = "迁移执行器配置")
 data class MigrationExecutorConfig(
     val migratingShardingDslContext: DSLContext,
     val userId: String,

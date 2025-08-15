@@ -1,19 +1,20 @@
-package com.tencent.devops.misc.strategy.impl
+package com.tencent.devops.misc.strategy.impl.project
 
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigrationContext
 import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.utils.PageMigrationUtil
 
-class PipelineViewMigrationStrategy(
+class ProjectPipelineCallbackMigrationStrategy(
     private val processDataMigrateDao: ProcessDataMigrateDao
 ) : MigrationStrategy {
 
     override fun migrate(context: MigrationContext) {
+        // 迁移T_PROJECT_PIPELINE_CALLBACK表数据
         PageMigrationUtil.migrateByPage(
-            pageSize = PageMigrationUtil.LONG_PAGE_SIZE,
+            pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,
             fetch = { offset, limit ->
-                processDataMigrateDao.getPipelineViewRecords(
+                processDataMigrateDao.getProjectPipelineCallbackRecords(
                     dslContext = context.dslContext,
                     projectId = context.projectId,
                     limit = limit,
@@ -21,9 +22,9 @@ class PipelineViewMigrationStrategy(
                 )
             },
             migrate = { records ->
-                processDataMigrateDao.migratePipelineViewData(
+                processDataMigrateDao.migrateProjectPipelineCallbackData(
                     migratingShardingDslContext = context.migratingShardingDslContext,
-                    pipelineViewRecords = records
+                    projectPipelineCallbackRecords = records
                 )
             }
         )

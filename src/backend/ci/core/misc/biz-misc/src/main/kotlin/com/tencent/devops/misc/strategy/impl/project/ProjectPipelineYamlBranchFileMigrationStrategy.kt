@@ -1,17 +1,20 @@
-package com.tencent.devops.misc.strategy.impl
+package com.tencent.devops.misc.strategy.impl.project
 
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigrationContext
 import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.utils.PageMigrationUtil
 
-class AuditResourceMigrationStrategy(private val processDataMigrateDao: ProcessDataMigrateDao) : MigrationStrategy {
+class ProjectPipelineYamlBranchFileMigrationStrategy(
+    private val processDataMigrateDao: ProcessDataMigrateDao
+) : MigrationStrategy {
 
     override fun migrate(context: MigrationContext) {
+        // 迁移T_PIPELINE_YAML_BRANCH_FILE表数据
         PageMigrationUtil.migrateByPage(
             pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,
-            fetch = { offset, limit -> 
-                processDataMigrateDao.getAuditResourceRecords(
+            fetch = { offset, limit ->
+                processDataMigrateDao.getProjectPipelineYamlBranchFileRecords(
                     dslContext = context.dslContext,
                     projectId = context.projectId,
                     limit = limit,
@@ -19,9 +22,9 @@ class AuditResourceMigrationStrategy(private val processDataMigrateDao: ProcessD
                 )
             },
             migrate = { records ->
-                processDataMigrateDao.migrateAuditResourceData(
+                processDataMigrateDao.migrateProjectPipelineYamlBranchFileData(
                     migratingShardingDslContext = context.migratingShardingDslContext,
-                    auditResourceRecords = records
+                    pipelineYamlBranchFileRecords = records
                 )
             }
         )

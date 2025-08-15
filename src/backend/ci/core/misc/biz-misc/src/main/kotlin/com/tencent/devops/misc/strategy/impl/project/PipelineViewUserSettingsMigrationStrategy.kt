@@ -1,19 +1,20 @@
-package com.tencent.devops.misc.strategy.impl
+package com.tencent.devops.misc.strategy.impl.project
 
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigrationContext
 import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.utils.PageMigrationUtil
 
-class ProjectPipelineYamlSyncMigrationStrategy(
+class PipelineViewUserSettingsMigrationStrategy(
     private val processDataMigrateDao: ProcessDataMigrateDao
 ) : MigrationStrategy {
 
     override fun migrate(context: MigrationContext) {
+        // 迁移T_PIPELINE_VIEW_USER_SETTINGS表数据
         PageMigrationUtil.migrateByPage(
-            pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,
+            pageSize = PageMigrationUtil.LONG_PAGE_SIZE,
             fetch = { offset, limit ->
-                processDataMigrateDao.getProjectPipelineYamlSyncRecords(
+                processDataMigrateDao.getPipelineViewUserSettingsRecords(
                     dslContext = context.dslContext,
                     projectId = context.projectId,
                     limit = limit,
@@ -21,9 +22,9 @@ class ProjectPipelineYamlSyncMigrationStrategy(
                 )
             },
             migrate = { records ->
-                processDataMigrateDao.migrateProjectPipelineYamlSyncData(
+                processDataMigrateDao.migratePipelineViewUserSettingsData(
                     migratingShardingDslContext = context.migratingShardingDslContext,
-                    pipelineYamlSyncRecords = records
+                    pipelineViewUserSettingsRecords = records
                 )
             }
         )

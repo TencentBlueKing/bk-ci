@@ -2,21 +2,21 @@ package com.tencent.devops.misc.factory
 
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.strategy.MigrationStrategy
-import com.tencent.devops.misc.strategy.impl.AuditResourceMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineGroupMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineJobMutexGroupMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineLabelMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineViewMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineViewTopMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineViewUserLastViewMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.PipelineViewUserSettingsMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.ProjectPipelineCallbackHistoryMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.ProjectPipelineCallbackMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.ProjectPipelineTriggerEventMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.ProjectPipelineYamlBranchFileMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.ProjectPipelineYamlSyncMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.ProjectPipelineYamlViewMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.TemplateMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.AuditResourceMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineGroupMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineJobMutexGroupMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineLabelMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineViewMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineViewTopMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineViewUserLastViewMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.PipelineViewUserSettingsMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineCallbackHistoryMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineCallbackMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineTriggerEventMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineYamlBranchFileMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineYamlSyncMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineYamlViewMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.TemplateMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineAuditResourceMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildContainerMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildLinkedDataMigrationStrategy
@@ -50,26 +50,23 @@ import com.tencent.devops.misc.strategy.impl.pipeline.TemplatePipelineMigrationS
 
 class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMigrateDao) {
 
-    private val projectDataMigrationStrategies by lazy {
-        // 项目维度数据迁移策略集合
-        listOf(
-            AuditResourceMigrationStrategy(processDataMigrateDao),
-            PipelineGroupMigrationStrategy(processDataMigrateDao),
-            PipelineJobMutexGroupMigrationStrategy(processDataMigrateDao),
-            PipelineLabelMigrationStrategy(processDataMigrateDao),
-            PipelineViewMigrationStrategy(processDataMigrateDao),
-            PipelineViewTopMigrationStrategy(processDataMigrateDao),
-            PipelineViewUserLastViewMigrationStrategy(processDataMigrateDao),
-            PipelineViewUserSettingsMigrationStrategy(processDataMigrateDao),
-            ProjectPipelineCallbackHistoryMigrationStrategy(processDataMigrateDao),
-            ProjectPipelineCallbackMigrationStrategy(processDataMigrateDao),
-            ProjectPipelineTriggerEventMigrationStrategy(processDataMigrateDao),
-            ProjectPipelineYamlBranchFileMigrationStrategy(processDataMigrateDao),
-            ProjectPipelineYamlSyncMigrationStrategy(processDataMigrateDao),
-            ProjectPipelineYamlViewMigrationStrategy(processDataMigrateDao),
-            TemplateMigrationStrategy(processDataMigrateDao)
-        )
-    }
+    private val projectDataMigrationStrategies = listOf(
+        AuditResourceMigrationStrategy(processDataMigrateDao),
+        PipelineGroupMigrationStrategy(processDataMigrateDao),
+        PipelineJobMutexGroupMigrationStrategy(processDataMigrateDao),
+        PipelineLabelMigrationStrategy(processDataMigrateDao),
+        PipelineViewMigrationStrategy(processDataMigrateDao),
+        PipelineViewTopMigrationStrategy(processDataMigrateDao),
+        PipelineViewUserLastViewMigrationStrategy(processDataMigrateDao),
+        PipelineViewUserSettingsMigrationStrategy(processDataMigrateDao),
+        ProjectPipelineCallbackHistoryMigrationStrategy(processDataMigrateDao),
+        ProjectPipelineCallbackMigrationStrategy(processDataMigrateDao),
+        ProjectPipelineTriggerEventMigrationStrategy(processDataMigrateDao),
+        ProjectPipelineYamlBranchFileMigrationStrategy(processDataMigrateDao),
+        ProjectPipelineYamlSyncMigrationStrategy(processDataMigrateDao),
+        ProjectPipelineYamlViewMigrationStrategy(processDataMigrateDao),
+        TemplateMigrationStrategy(processDataMigrateDao)
+    )
 
     private val commonPipelineDataStrategies = listOf(
         PipelineBuildLinkedDataMigrationStrategy(processDataMigrateDao),

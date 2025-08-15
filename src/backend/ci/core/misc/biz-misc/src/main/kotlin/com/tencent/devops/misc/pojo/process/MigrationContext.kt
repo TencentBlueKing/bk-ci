@@ -9,5 +9,6 @@ data class MigrationContext(
     val migratingShardingDslContext: DSLContext,
     val projectId: String,
     val pipelineId: String? = null,
-    val archiveFlag: Boolean? = null
+    val archiveFlag: Boolean? = null,
+    val sourceId: String? = null
 )

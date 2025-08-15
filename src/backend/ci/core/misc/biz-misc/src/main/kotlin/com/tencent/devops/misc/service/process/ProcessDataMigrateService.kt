@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit
 class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao,
-    private val processDataMigrateDao: ProcessDataMigrateDao,
+    processDataMigrateDao: ProcessDataMigrateDao,
     private val processDataDeleteService: ProcessDataDeleteService,
     private val dataSourceService: DataSourceService,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
@@ -108,12 +108,21 @@ class ProcessDataMigrateService @Autowired constructor(
         )
     }
 
+    /**
+     * 迁移项目数据的主入口方法
+     * @param userId 执行迁移的用户ID
+     * @param projectId 要迁移的项目ID
+     * @param cancelFlag 是否取消正在构建的流水线标志
+     * @param dataTag 数据标签（用于迁移数据至特定数据源）
+     * @return Boolean 是否成功启动迁移
+     */
     fun migrateProjectData(
         userId: String,
         projectId: String,
         cancelFlag: Boolean = false,
         dataTag: String? = null
     ): Boolean {
+        // 获取迁移专用的JOOQ DSL上下文
         val migratingShardingDslContext = try {
             SpringContextUtil.getBean(DSLContext::class.java, MIGRATING_SHARDING_DSL_CONTEXT)
         } catch (ignored: Throwable) {
@@ -124,8 +133,11 @@ class ProcessDataMigrateService @Autowired constructor(
             )
         }
 
+        // 获取项目当前的数据源名称
         val sourceDataSourceName = getSourceDataSourceName(projectId)
+        // 执行迁移前的准备工作
         val preMigrationResult = doPreMigration(projectId, sourceDataSourceName, dataTag)
+        // 异步执行迁移任务
         val executor = Executors.newFixedThreadPool(1)
 
         executor.submit {
@@ -150,16 +162,23 @@ class ProcessDataMigrateService @Autowired constructor(
                     migrationTimeout = migrationTimeout,
                     migrationProcessDbMicroServices = migrationProcessDbMicroServices
                 )
+                // 执行迁移任务
                 MigrationExecutor(config).execute()
             } catch (ignored: Throwable) {
                 logger.error("Migration failed for project $projectId", ignored)
             } finally {
+                // 确保关闭线程池
                 executor.shutdown()
             }
         }
         return true
     }
 
+    /**
+     * 获取项目当前的数据源名称
+     * @param projectId 项目ID
+     * @return String 数据源名称
+     */
     private fun getSourceDataSourceName(projectId: String): String {
         return client.get(ServiceShardingRoutingRuleResource::class)
             .getShardingRoutingRuleByName(
@@ -172,19 +191,36 @@ class ProcessDataMigrateService @Autowired constructor(
         )
     }
 
+    /**
+     * 执行迁移前的准备工作
+     * 1. 验证迁移状态
+     * 2. 锁定项目
+     * 3. 分配分片路由规则
+     * 4. 更新迁移计数器
+     * @return PreMigrationResult 预迁移结果
+     */
     private fun doPreMigration(
         projectId: String,
         sourceDataSourceName: String,
         dataTag: String? = null
     ): PreMigrationResult {
+        // 验证项目是否可迁移
         validateMigrationState(projectId)
+        // 锁定项目防止产生新的数据
         lockProject(projectId)
+        // 分配路由规则
         val routingRuleMap = assignShardingRoutingRule(projectId, sourceDataSourceName, dataTag)
+        // 更新迁移计数器
         updateMigrationCounters(projectId)
         return PreMigrationResult(routingRuleMap)
     }
 
+    /**
+     * 验证项目迁移状态
+     * 检查项目是否正在迁移、是否超过最大并发迁移数、是否超过重试次数
+     */
     private fun validateMigrationState(projectId: String) {
+        // 检查项目是否已在迁移中
         if (redisOperation.isMember(
                 key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
                 item = projectId
@@ -195,7 +231,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 params = arrayOf(projectId)
             )
         }
-
+        // 检查当前迁移项目数是否超过最大值
         val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY)?.toInt() ?: 0
         if (migrationProjectCount >= migrationMaxProjectCount) {
             throw ErrorCodeException(
@@ -203,7 +239,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 params = arrayOf(migrationMaxProjectCount.toString())
             )
         }
-
+        // 检查项目迁移重试次数是否超过限制
         val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
         val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
         if (projectExecuteCount >= RETRY_NUM) {
@@ -214,11 +250,21 @@ class ProcessDataMigrateService @Autowired constructor(
         }
     }
 
+    /**
+     * 锁定项目
+     * 将项目添加到API访问限制列表，防止在迁移过程中被操作
+     */
     private fun lockProject(projectId: String) {
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
     }
 
+    /**
+     * 更新迁移计数器
+     * 1. 增加全局迁移项目计数
+     * 2. 增加项目迁移尝试次数计数
+     */
     private fun updateMigrationCounters(projectId: String) {
+        // 更新全局迁移项目计数
         val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY)?.toInt() ?: 0
         if (migrationProjectCount < 1) {
             redisOperation.set(
@@ -229,7 +275,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } else {
             redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, 1)
         }
-
+        // 更新项目迁移尝试次数
         val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
         val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
         if (projectExecuteCount < 1) {
@@ -243,10 +289,20 @@ class ProcessDataMigrateService @Autowired constructor(
         }
     }
 
+    /**
+     * 获取项目迁移尝试次数的Redis key
+     */
     fun getMigrateProjectExecuteCountKey(projectId: String): String {
         return "MIGRATE_PROJECT_PROCESS_DATA_EXECUTE_COUNT:$projectId"
     }
 
+    /**
+     * 为项目分配分片路由规则
+     * 1. 获取可用数据源列表
+     * 2. 随机选择一个目标数据源
+     * 3. 在Redis中设置迁移路由规则
+     * @return Map<String, String> 路由规则映射（路由规则->数据源名称）
+     */
     private fun assignShardingRoutingRule(
         projectId: String,
         sourceDataSourceName: String,
@@ -254,6 +310,7 @@ class ProcessDataMigrateService @Autowired constructor(
     ): Map<String, String> {
         val clusterName = CommonUtils.getDbClusterName()
         val moduleCode = SystemModuleEnum.PROCESS
+        // 获取可用数据源（排除当前数据源）
         val dataSourceNames = dataSourceService.listByModule(
             clusterName = clusterName,
             moduleCode = moduleCode,
@@ -261,20 +318,20 @@ class ProcessDataMigrateService @Autowired constructor(
             dataTag = dataTag
         )?.map { it.dataSourceName }?.filter { it != sourceDataSourceName }
             ?: throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NO_VALID_DB_ASSIGN)
-
+        // 检查是否有可用数据源
         if (dataSourceNames.isEmpty()) {
             throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NO_VALID_DB_ASSIGN)
         }
-
+        // 随机选择一个目标数据源
         val randomIndex = dataSourceNames.indices.random()
         val routingRule = "${MIGRATING_DATA_SOURCE_NAME_PREFIX}$randomIndex"
+        // 在Redis中设置迁移路由规则
         val key = ShardingUtil.getMigratingShardingRoutingRuleKey(
             clusterName = clusterName,
             moduleCode = SystemModuleEnum.PROCESS.name,
             ruleType = ShardingRuleTypeEnum.DB.name,
             routingName = projectId
         )
-
         redisOperation.set(key, routingRule)
         return mapOf(routingRule to dataSourceNames[randomIndex])
     }

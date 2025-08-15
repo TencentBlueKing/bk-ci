@@ -12,6 +12,11 @@ class PipelineAuditResourceMigrationStrategy(
 
     override fun migrate(context: MigrationContext) {
         val pipelineId = context.pipelineId ?: return
+        val sourceId = context.sourceId
+        if (sourceId != pipelineId) {
+            // 不是单独迁移一条流水线的数据时，不处理
+            return
+        }
         // 迁移T_AUDIT_RESOURCE表数据
         PageMigrationUtil.migrateByPage(
             pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,

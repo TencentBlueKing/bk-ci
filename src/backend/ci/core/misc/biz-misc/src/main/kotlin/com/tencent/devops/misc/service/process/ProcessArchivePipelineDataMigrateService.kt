@@ -80,7 +80,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     @Qualifier(ARCHIVE_SHARDING_DSL_CONTEXT)
     private var archiveShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
-    private val processDataMigrateDao: ProcessDataMigrateDao,
+    processDataMigrateDao: ProcessDataMigrateDao,
     private val processDataDeleteService: ProcessDataDeleteService,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
