@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,6 +45,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersis
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
@@ -67,6 +69,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
+        logger.info("draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
             if (enablePac) {
                 if (targetAction == null) {
@@ -179,5 +182,9 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             targetUrl = yamlFileReleaseResult?.pullRequestUrl,
             updateBuildNo = updateBuildNo
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineDraftReleaseHandler::class.java)
     }
 }

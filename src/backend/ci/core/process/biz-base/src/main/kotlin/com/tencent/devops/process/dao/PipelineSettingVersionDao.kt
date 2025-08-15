@@ -148,6 +148,7 @@ class PipelineSettingVersionDao {
                 .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { self ->
                     JsonUtil.toJson(self, false)
                 })
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
                 .and(VERSION.eq(setting.version))

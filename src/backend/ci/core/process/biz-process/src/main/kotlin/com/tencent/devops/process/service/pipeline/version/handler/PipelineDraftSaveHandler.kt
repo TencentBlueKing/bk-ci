@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -39,6 +40,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -54,6 +56,7 @@ class PipelineDraftSaveHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
+        logger.info("save draft version with context={}", JsonUtil.toJson(context, false))
         with(context) {
             if (pipelineResourceWithoutVersion.status != VersionStatus.COMMITTING) {
                 throw ErrorCodeException(
@@ -112,5 +115,9 @@ class PipelineDraftSaveHandler @Autowired constructor(
             versionNum = resourceOnlyVersion.versionNum,
             versionName = resourceOnlyVersion.versionName
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineDraftSaveHandler::class.java)
     }
 }
