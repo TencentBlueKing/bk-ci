@@ -126,6 +126,14 @@ class PublicVarGroupService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
+                if (version != 0) {
+                    publicVarGroupDao.updateLatestFlag(
+                        dslContext = context,
+                        projectId = projectId,
+                        groupName = groupName,
+                        latestFlag = false
+                    )
+                }
                 publicVarGroupDao.save(context, publicVarGroupPO)
                 publicVarService.addGroupPublicVar(
                     context = context,

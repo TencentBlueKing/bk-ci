@@ -69,6 +69,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "操作类型", required = true)
+        @QueryParam("operateType")
+        operateType: OperateTypeEnum,
         @Parameter(description = "公共变量组请求报文", required = true)
         publicVarGroup: PublicVarGroupVO
     ): Result<Boolean>

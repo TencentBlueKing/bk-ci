@@ -178,7 +178,7 @@ class PublicVarGroupDao {
         }
     }
 
-fun updateReferCount(
+    fun updateReferCount(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
@@ -192,6 +192,23 @@ fun updateReferCount(
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
                 .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
+    fun updateLatestFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        latestFlag: Boolean
+    ) {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            dslContext.update(this)
+                .set(LATEST_FLAG, latestFlag)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(LATEST_FLAG.eq(true))
                 .execute()
         }
     }

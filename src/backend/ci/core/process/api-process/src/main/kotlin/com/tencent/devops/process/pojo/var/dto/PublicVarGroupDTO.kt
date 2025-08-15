@@ -40,5 +40,5 @@ data class PublicVarGroupDTO(
     @get:Schema(title = "公共变量组对象")
     val publicVarGroup: PublicVarGroupVO,
     @get:Schema(title = "操作类型")
-    val operateType: OperateTypeEnum? = null
+    val operateType: OperateTypeEnum
 )
