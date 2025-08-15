@@ -94,7 +94,7 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
 
         // 2. 处理新增的变量
         val addedVars = newVarPOs.filter { newVar ->
-            oldVarPOs.none { it.varName == newVar.varName }
+            newVar.varName !in oldVarPOs.map { it.varName }
         }
         addedVars.forEach {
             val typeDesc = PublicVarTypeEnum.getTypeDescription(it.type)
