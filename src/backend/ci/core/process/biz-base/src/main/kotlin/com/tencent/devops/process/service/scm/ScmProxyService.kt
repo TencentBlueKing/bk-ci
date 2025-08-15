@@ -174,6 +174,42 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 }
             }
+            is CodeTGitRepository -> {
+                val isOauth = repo.authType == RepoAuthType.OAUTH
+                return if (isOauth) {
+                    val credInfo = getAccessToken(repo.userName)
+                    client.get(ServiceScmOauthResource::class).getLatestRevision(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        branchName = branchName,
+                        additionalPath = additionalPath,
+                        privateKey = null,
+                        passPhrase = null,
+                        token = credInfo.first,
+                        region = null,
+                        userName = repo.userName
+                    )
+                } else {
+                    val credInfo = getCredential(
+                        projectId = projectId,
+                        repository = repo,
+                        getSession = true
+                    )
+                    client.get(ServiceScmResource::class).getLatestRevision(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        branchName = branchName,
+                        additionalPath = additionalPath,
+                        privateKey = null,
+                        passPhrase = null,
+                        token = credInfo.privateKey,
+                        region = null,
+                        userName = credInfo.username
+                    )
+                }
+            }
             is CodeGitlabRepository -> {
                 val credInfo = getCredential(projectId, repo)
                 return client.get(ServiceScmResource::class).getLatestRevision(
