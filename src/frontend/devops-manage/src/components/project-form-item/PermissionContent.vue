@@ -39,10 +39,10 @@
 </template>
 
 <script setup name="PermissionContent">
-import { useI18n } from 'vue-i18n';
-import { EditLine } from 'bkui-vue/lib/icon';
 import IAMIframe from '@/components/IAM-Iframe';
-import { ref, getCurrentInstance, onMounted, onBeforeUnmount } from 'vue';
+import { EditLine } from 'bkui-vue/lib/icon';
+import { getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const props = defineProps({
@@ -64,8 +64,23 @@ const vm = getCurrentInstance();
 function showMemberDialog (){
   showDialog.value = true;
 }
+function getIAMOrigin () {
+  try {
+    return new URL(window.BK_IAM_URL_PREFIX).origin;
+  } catch (error) {
+    return window.BK_IAM_URL_PREFIX;
+  }
+}
 function handleMessage (event) {
-  const { data } = event;
+  const trustedOrigins = [
+    getIAMOrigin(),
+    location.origin,
+  ];
+  const { data, origin } = event;
+  if (!trustedOrigins.includes(origin)) {
+    console.warn('Received message from untrusted origin:', origin);
+    return;
+  }
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
