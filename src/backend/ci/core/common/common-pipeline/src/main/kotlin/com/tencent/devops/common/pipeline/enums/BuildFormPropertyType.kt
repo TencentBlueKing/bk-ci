@@ -46,5 +46,13 @@ enum class BuildFormPropertyType(val value: String) {
     PASSWORD("password"),
     TEMPORARY("do not storage in database");
 
+    companion object {
+        fun fromValue(value: String): BuildFormPropertyType {
+            return values().find {
+                it.value == value
+            } ?: throw IllegalArgumentException("Unknown property type: $value")
+        }
+    }
+
     override fun toString() = value
 }

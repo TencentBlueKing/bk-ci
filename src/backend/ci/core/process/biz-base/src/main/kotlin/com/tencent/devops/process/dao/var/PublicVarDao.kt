@@ -108,7 +108,7 @@ class PublicVarDao {
                     varName = it.varName,
                     alias = it.alias,
                     type = PublicVarTypeEnum.valueOf(it.type),
-                    valueType = BuildFormPropertyType.valueOf(it.valueType),
+                    valueType = BuildFormPropertyType.fromValue(it.valueType),
                     defaultValue = it.defaultValue,
                     desc = it.desc,
                     referCount = it.referCount,
