@@ -54,7 +54,7 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.service.UserManageService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -75,7 +75,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
@@ -89,7 +88,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val authResourceDao: AuthResourceDao,
     private val resourceGroupSyncService: PermissionResourceGroupSyncService,
     private val redisOperation: RedisOperation,
-    private val userManageService: UserManageService
+    private val deptService: DeptService
 ) : PermissionResourceGroupService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
@@ -606,19 +605,22 @@ class RbacPermissionResourceGroupService @Autowired constructor(
 
     override fun listProjectMemberGroupTemplateIds(
         projectCode: String,
-        memberId: String,
-        // 用户组权限过期是否导致模板权限失效
-        enableTemplateInvalidationOnUserExpiry: Boolean?
+        memberId: String
     ): List<String> {
         // 获取用户的所属组织
-        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
+        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+            if (it.isNotEmpty()) {
+                deptService.getUserDeptInfo(memberId).toList()
+            } else {
+                emptyList()
+            }
+        } ?: emptyList()
         // 查询项目下包含该成员及所属组织的用户组列表
         val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
-            memberIds = memberDeptInfos + memberId,
-            minExpiredTime = if (enableTemplateInvalidationOnUserExpiry == true) LocalDateTime.now() else null
+            memberIds = memberDeptInfos + memberId
         ).map { it.iamGroupId.toString() }
         // 通过项目组ID获取人员模板ID
         return authResourceGroupDao.listByRelationId(
@@ -627,29 +629,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             iamGroupIds = projectGroupIds
         ).filter { it.iamTemplateId != null }
             .map { it.iamTemplateId.toString() }
-    }
-
-    override fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String,
-        // 用户组权限过期是否导致模板权限失效
-        enableTemplateInvalidationOnUserExpiry: Boolean?
-    ): List<Int> {
-        // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = listProjectMemberGroupTemplateIds(
-            projectCode = projectCode,
-            memberId = memberId,
-            enableTemplateInvalidationOnUserExpiry = enableTemplateInvalidationOnUserExpiry
-        )
-        // 获取用户的所属组织
-        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
-        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            memberId = memberId,
-            iamTemplateIds = iamTemplateIds,
-            memberDeptInfos = memberDeptInfos
-        )
     }
 
     override fun syncManagerGroup(

@@ -109,19 +109,8 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
 
     override fun listProjectMemberGroupTemplateIds(
         projectCode: String,
-        memberId: String,
-        // 用户组权限过期是否导致模板权限失效
-        enableTemplateInvalidationOnUserExpiry: Boolean?
+        memberId: String
     ): List<String> {
-        return emptyList()
-    }
-
-    override fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String,
-        // 用户组权限过期是否导致模板权限失效
-        enableTemplateInvalidationOnUserExpiry: Boolean?
-    ): List<Int> {
         return emptyList()
     }
 
