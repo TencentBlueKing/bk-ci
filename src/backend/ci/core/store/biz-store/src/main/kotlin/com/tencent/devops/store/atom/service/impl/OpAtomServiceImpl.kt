@@ -634,7 +634,11 @@ class OpAtomServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
+    override fun updateAtomConfigCache(
+        userId: String,
+        kProperty: String,
+        atomCode: String?
+    ): Result<Boolean> {
         executorService.submit {
             logger.info("begin updateAtomSensitiveCacheConfig!!")
             val statusList = listOf(
@@ -644,9 +648,9 @@ class OpAtomServiceImpl @Autowired constructor(
             )
             try {
                 if (atomCode.isNullOrBlank()) {
-                    batchUpdateAtomSensitiveCacheConfig(null, statusList)
+                    batchUpdateAtomConfigCache(null, kProperty, statusList)
                 } else {
-                    batchUpdateAtomSensitiveCacheConfig(atomCode, statusList)
+                    batchUpdateAtomConfigCache(atomCode, kProperty, statusList)
                 }
             } catch (ignored: Exception) {
                 logger.warn("updateAtomSensitiveCacheConfig failed", ignored)
@@ -656,8 +660,9 @@ class OpAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    private fun batchUpdateAtomSensitiveCacheConfig(
+    private fun batchUpdateAtomConfigCache(
         atomCode: String? = null,
+        kProperty: String,
         statusList: List<Byte>
     ) {
         val limit = 100
@@ -673,15 +678,17 @@ class OpAtomServiceImpl @Autowired constructor(
             val tAtom = TAtom.T_ATOM
             result.forEach {
                 val latestFlag = it[tAtom.LATEST_FLAG]
-                marketAtomService.updateAtomSensitiveCacheConfig(
+                marketAtomService.updateAtomConfigCache(
                     atomCode = it[tAtom.ATOM_CODE],
                     atomVersion = it[tAtom.VERSION],
+                    kProperty = kProperty,
                     props = it[tAtom.PROPS]
                 )
                 if (latestFlag == true) {
-                    marketAtomService.updateAtomSensitiveCacheConfig(
+                    marketAtomService.updateAtomConfigCache(
                         atomCode = it[tAtom.ATOM_CODE],
                         atomVersion = VersionUtils.convertLatestVersion(it[tAtom.VERSION]),
+                        kProperty = kProperty,
                         props = it[tAtom.PROPS]
                     )
                 }

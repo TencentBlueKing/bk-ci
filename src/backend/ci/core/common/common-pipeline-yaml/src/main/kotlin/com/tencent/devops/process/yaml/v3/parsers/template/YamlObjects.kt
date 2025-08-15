@@ -83,7 +83,8 @@ object YamlObjects {
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
-            props = props
+            props = props,
+            ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable)
         )
 
         // 只有列表需要判断
@@ -213,6 +214,11 @@ object YamlObjects {
             timeoutMinutes = getNullValue("timeout-minutes", step),
             continueOnError = getNullValue("continue-on-error", step),
             retryTimes = getNullValue("retry-times", step)?.toInt(),
+            canPauseBeforeRun = getNullValue("can-pause-before-run", step)?.toBooleanStrictOrNull(),
+            pauseNoticeReceivers = if (step["pause-notice-receivers"] is List<*>) {
+                val receivers = step["pause-notice-receivers"] as List<*>
+                receivers.map { it.toString() }.toList()
+            } else null,
             env = if (step["env"] == null) {
                 null
             } else {

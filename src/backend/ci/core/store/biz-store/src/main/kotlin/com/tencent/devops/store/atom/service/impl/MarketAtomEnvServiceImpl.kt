@@ -249,7 +249,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
-            sensitiveParams = sensitiveParams?.joinToString(",")
+            sensitiveParams = sensitiveParams?.joinToString(","),
+            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存
