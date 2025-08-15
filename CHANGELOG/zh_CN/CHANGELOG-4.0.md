@@ -31,13 +31,24 @@
 # v4.0.0
 ## 2025-08-15
 ### Changelog since v3.2.0
+### 变更概述
+当前版本主要变更特性如下:
+- 升级JDK17
+- 支持代码源管理，方便协同者接入新的代码源
+- 无需执行但需保留以供审计的流水线支持归档
+- 流水线变量支持分组、条件展示、字段联动
+- 构建小结支持展示制品质量
+- 第三方构建机支持标签管理
+- 权限：支持用户主动退出项目、批量交接权限；支持管理员批量移出用户
+- 国际化支持日语版
+
+### 变更详情
 #### 新增
 
 ##### 流水线
 - [新增] feat: 注册回调限制高危端口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11967)
 - [新增] feat：支持展示制品自动化测试结果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11462)
 - [新增] feat: 调整子流水线接口参数名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11979)
-- [新增] feat:流水线公共变量管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12010)
 - [新增] feat: GIT触发区分MR合并前后的检查 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11966)
 - [新增] feat: 新增流水线监控事件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11874)
 - [新增] 插件输出时，支持 isSensitive 属性 [链接](http://github.com/TencentBlueKing/bk-ci/issues/5534)
@@ -335,7 +346,6 @@
 ##### 流水线
 - [新增] feat：支持展示制品自动化测试结果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11462)
 - [新增] feat: 调整子流水线接口参数名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11979)
-- [新增] feat:流水线公共变量管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12010)
 - [新增] feat: GIT触发区分MR合并前后的检查 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11966)
 
 ##### 代码库
