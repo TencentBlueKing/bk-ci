@@ -59,7 +59,7 @@
             background: #FFFFFF;
             margin: 0 48px;
             background: #FFFFFF;
-            padding: 48px 40px;
+            padding: 20px 20px;
             box-shadow: 0 6px 16px 0 rgba(218, 222, 235, 0.40);
         }
 
@@ -185,7 +185,7 @@
             }
 
             .main .content {
-                width: 700px;
+                width: 580px;
                 margin-top: 64px;
             }
 
@@ -683,13 +683,31 @@
                 <span id="titleName">你正在尝试访问云研发站点</span></div>
             <div class="content">
                 <div class="title"><span class="sign-icon"></span>
-                    <span id="domainName">本站点仅限合作用户访问，内部用户请直接登录内部woa</span>
+                    <span id="domainName" style="font-size: 20px;">本站点仅限合作用户访问，内部用户请直接登录内部woa</span>
+                </div>
+                <div style="text-align: center; margin-top: 24px;">
+                    <button id="logoutBtn" style="
+                        margin-top: 16px;
+                        padding: 8px 16px;
+                        background-color: #025DD9;
+                        color: #fff;
+                        border: none;
+                        border-radius: 4px;
+                        font-size: 16px;
+                        cursor: pointer;
+                    ">返回登录</button>
                 </div>
             </div>
-            <div id="bottom">如有任何疑问，请企业微信联系您的项目管理员</div>
+            <div id="bottom">
+                如有任何疑问，请企业微信联系您的项目管理员
+            </div>
         </div>
     </div>
     <script>
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            window.location.href = 'https://login.devx.tencent.com/login/?c_url=https%3A%2F%2Fdev.devx.tencent.com%2Fconsole%2F&is_from_logout=1';
+        });
+
         fnResize();
         window.onresize = function () {
             fnResize();
