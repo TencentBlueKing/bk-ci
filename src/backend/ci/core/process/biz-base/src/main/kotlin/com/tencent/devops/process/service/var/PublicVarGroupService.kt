@@ -457,7 +457,7 @@ class PublicVarGroupService @Autowired constructor(
                         dslContext = context,
                         PipelinePublicVarGroupReferPO(
                             id = client.get(ServiceAllocIdResource::class)
-                                .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
+                                .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO").data ?: 0,
                             projectId = projectId,
                             groupName = groupName,
                             version = groupRecord.version,
