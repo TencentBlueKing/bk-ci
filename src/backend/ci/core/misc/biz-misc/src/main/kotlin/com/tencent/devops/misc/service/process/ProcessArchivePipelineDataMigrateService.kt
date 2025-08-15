@@ -50,6 +50,7 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
+import com.tencent.devops.misc.factory.MigrationStrategyFactory
 import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.DeleteDataParam
@@ -57,7 +58,7 @@ import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
-import com.tencent.devops.misc.task.MigratePipelineDataTask
+import com.tencent.devops.misc.task.PipelineMigrationTask
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -79,7 +80,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     @Qualifier(ARCHIVE_SHARDING_DSL_CONTEXT)
     private var archiveShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
-    private val processDataMigrateDao: ProcessDataMigrateDao,
+    processDataMigrateDao: ProcessDataMigrateDao,
     private val processDataDeleteService: ProcessDataDeleteService,
     private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -94,6 +95,9 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         private const val MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
     }
+
+    // 策略工厂
+    private val migrationStrategyFactory = MigrationStrategyFactory(processDataMigrateDao)
 
     /**
      * 迁移process数据库数据
@@ -124,7 +128,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             dslContext = dslContext,
             migratingShardingDslContext = archiveShardingDslContext,
             processDao = processDao,
-            processDataMigrateDao = processDataMigrateDao,
+            migrationStrategyFactory = migrationStrategyFactory,
             archiveFlag = true
         )
         // 执行迁移前的逻辑
@@ -151,7 +155,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         }
         try {
             // 迁移流水线数据
-            MigratePipelineDataTask(migratePipelineDataParam).run()
+            PipelineMigrationTask(migratePipelineDataParam).run()
             // 执行迁移完成后的逻辑
             doAfterMigrationBus(
                 projectId = projectId,
