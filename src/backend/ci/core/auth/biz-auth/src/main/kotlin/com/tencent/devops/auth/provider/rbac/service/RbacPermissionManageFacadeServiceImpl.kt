@@ -2149,18 +2149,12 @@ class RbacPermissionManageFacadeServiceImpl(
         projectCode: String,
         userId: String
     ): Boolean {
-        // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = permissionResourceGroupService.listProjectMemberGroupTemplateIds(
-            projectCode = projectCode,
-            memberId = userId
-        )
         val memberDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! }
-
         return authResourceGroupMemberDao.isMemberInProject(
             dslContext = dslContext,
             projectCode = projectCode,
             userId = userId,
-            iamTemplateIds = iamTemplateIds,
+            iamTemplateIds = emptyList(),
             memberDeptInfos = memberDeptInfos
         ) || permissionService.validateUserProjectPermission(
             userId = userId,
