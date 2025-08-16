@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.trigger.scm.converter
 
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
-import com.tencent.devops.process.yaml.mq.FileCommit
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
@@ -44,9 +44,9 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class PullRequestHookConverter @Autowired constructor(
+class PullRequestHookYamlDiffConverter @Autowired constructor(
     private val pipelineYamlFileService: PipelineYamlFileService
-) : WebhookConverter {
+) : WebhookYamlDiffConverter {
     override fun support(webhook: Webhook): Boolean {
         return webhook is PullRequestHook
     }
@@ -55,20 +55,20 @@ class PullRequestHookConverter @Autowired constructor(
         eventId: Long,
         repository: Repository,
         webhook: Webhook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
         webhook as PullRequestHook
         return if (webhook.action == EventAction.MERGE) {
-            getMergedYamlFileEvent(eventId = eventId, repository = repository, hook = webhook)
+            getMergedYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
         } else {
-            getNotMergeYamlFileEvent(eventId = eventId, repository = repository, hook = webhook)
+            getNotMergeYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
         }
     }
 
-    private fun getNotMergeYamlFileEvent(
+    private fun getNotMergeYamlDiffs(
         eventId: Long,
         repository: Repository,
         hook: PullRequestHook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
         val projectId = repository.projectId!!
         val pullRequest = hook.pullRequest
 
@@ -96,7 +96,7 @@ class PullRequestHookConverter @Autowired constructor(
                 AuthRepository(repository)
             }
         )
-        return computeNotMergeYamlFileEvent(
+        return computeNotMergeYamlDiffs(
             eventId = eventId,
             repository = repository,
             hook = hook,
@@ -109,13 +109,15 @@ class PullRequestHookConverter @Autowired constructor(
      * 对比源分支和目标分支的文件,确定使用哪个分支的文件触发
      */
     @Suppress("CyclomaticComplexMethod", "LongMethod")
-    private fun computeNotMergeYamlFileEvent(
+    private fun computeNotMergeYamlDiffs(
         eventId: Long,
         repository: Repository,
         hook: PullRequestHook,
         targetFileTrees: List<Tree>,
         sourceFileTrees: List<Tree>
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
+        val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
         val pullRequest = hook.pullRequest
         val serverRepo = hook.repo
         val sourceRepo = pullRequest.sourceRepo
@@ -131,36 +133,35 @@ class PullRequestHookConverter @Autowired constructor(
 
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
 
-        val yamlFileEvents = mutableListOf<PipelineYamlFileEvent>()
+        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         sourceFileTrees.forEach { sourceTree ->
             val sourcePath = GitActionCommon.getCiFilePath(sourceTree.path)
-            val baseYamlFileEvent = PipelineYamlFileEvent(
-                userId = hook.sender.name,
-                authUser = repository.userName,
-                projectId = repository.projectId!!,
+            val baseYamlDiff = PipelineYamlDiff(
+                projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = hook.eventType,
+                repoHashId = repoHashId,
                 actionType = YamlFileActionType.CREATE,
                 defaultBranch = defaultBranch,
                 filePath = sourcePath,
+                fileType = YamlFileType.getFileType(sourcePath),
+                triggerUser = hook.userName,
                 ref = GitActionCommon.getSourceRef(
                     fork = fork,
                     sourceFullName = sourceRepo.fullName,
                     sourceBranch = sourceBranch
                 ),
-                authRepository = AuthRepository(repository),
-                commit = FileCommit(
-                    commitId = hook.commit.sha,
-                    commitMsg = hook.commit.message,
-                    commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
-                    committer = hook.commit.committer?.name ?: ""
-                ),
+                commitId = hook.commit.sha,
+                commitMsg = hook.commit.message,
+                commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                committer = hook.commit.committer?.name ?: "",
                 blobId = sourceTree.blobId,
                 fork = fork,
+                useForkToken = true,
                 pullRequestId = pullRequest.id,
                 sourceBranch = sourceBranch,
                 targetBranch = targetBranch,
-                sourceUrl = sourceRepo.httpUrl,
+                sourceRepoUrl = sourceRepo.httpUrl,
                 sourceFullName = sourceRepo.fullName
             )
             when {
@@ -168,16 +169,16 @@ class PullRequestHookConverter @Autowired constructor(
                 // mr获取的对比文件,源分支是新增,但是在mr变更这里可能是更新
                 sourcePath !in targetFilePaths &&
                         (sourcePath in changeFiles.addedFiles || sourcePath in changeFiles.updatedFiles) -> {
-                    val yamlFileEvent = baseYamlFileEvent.copy(actionType = YamlFileActionType.CREATE)
-                    yamlFileEvents.add(yamlFileEvent)
+                    val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.CREATE)
+                    yamlDiffs.add(yamlDiff)
                 }
                 // 源分支有，目标分支没有，重命名列表有，说明源分支重命名,以源分支为主
                 sourcePath !in targetFilePaths && sourcePath in changeFiles.renamedFiles -> {
-                    val yamlFileEvent = baseYamlFileEvent.copy(
+                    val yamlDiff = baseYamlDiff.copy(
                         actionType = YamlFileActionType.RENAME,
                         oldFilePath = changeFiles.renamedFiles[sourcePath]
                     )
-                    yamlFileEvents.add(yamlFileEvent)
+                    yamlDiffs.add(yamlDiff)
                 }
                 // 源分支有，目标分支没有，变更列表没有，说明目标分支被删除,不触发
                 sourcePath !in targetFilePaths && sourcePath !in changeFiles.allFiles -> {
@@ -191,18 +192,17 @@ class PullRequestHookConverter @Autowired constructor(
         }
         targetFileTrees.forEach { targetTree ->
             val targetPath = GitActionCommon.getCiFilePath(targetTree.path)
-            if (targetPath in yamlFileEvents.map { it.filePath }.toSet()) {
+            if (targetPath in yamlDiffs.map { it.filePath }.toSet()) {
                 return@forEach
             }
             when {
                 // 源分支没有，目标分支有，删除列表有，说明是删除,需要删除
                 targetPath !in sourceFilePaths && targetPath in changeFiles.deletedFiles -> {
-                    val yamlFileEvent = PipelineYamlFileEvent(
-                        userId = hook.sender.name,
-                        authUser = repository.userName,
+                    val yamlDiff = PipelineYamlDiff(
                         projectId = repository.projectId!!,
                         eventId = eventId,
-                        repository = repository,
+                        eventType = hook.eventType,
+                        repoHashId = repoHashId,
                         defaultBranch = defaultBranch,
                         ref = GitActionCommon.getSourceRef(
                             fork = fork,
@@ -210,15 +210,17 @@ class PullRequestHookConverter @Autowired constructor(
                             sourceBranch = sourceBranch
                         ),
                         filePath = targetPath,
+                        fileType = YamlFileType.getFileType(targetPath),
+                        triggerUser = hook.userName,
                         actionType = YamlFileActionType.DELETE,
                         fork = fork,
                         pullRequestId = pullRequest.id,
                         sourceBranch = pullRequest.sourceRef.name,
                         targetBranch = pullRequest.targetRef.name,
-                        sourceUrl = sourceRepo.httpUrl,
+                        sourceRepoUrl = sourceRepo.httpUrl,
                         sourceFullName = sourceRepo.fullName
                     )
-                    yamlFileEvents.add(yamlFileEvent)
+                    yamlDiffs.add(yamlDiff)
                 }
                 // 源分支没有，目标分支有，重命名列表有，说明是重命名,重命名在源分支那已处理,不需要再处理
                 targetPath !in sourceFilePaths && targetPath in changeFiles.renamedOldFiles -> {
@@ -226,50 +228,52 @@ class PullRequestHookConverter @Autowired constructor(
                 }
                 // 源分支没有，目标分支有，删除列表没有，说明是目标分支新增的,需要触发
                 targetPath !in sourceFilePaths && targetPath !in changeFiles.deletedFiles -> {
-                    val yamlFileEvent = PipelineYamlFileEvent(
-                        userId = hook.sender.name,
-                        authUser = repository.userName,
+                    val yamlDiff = PipelineYamlDiff(
                         projectId = repository.projectId!!,
                         eventId = eventId,
-                        repository = repository,
+                        eventType = hook.eventType,
+                        repoHashId = repoHashId,
                         defaultBranch = defaultBranch,
                         ref = pullRequest.targetRef.name,
                         filePath = targetPath,
+                        fileType = YamlFileType.getFileType(targetPath),
+                        triggerUser = hook.userName,
                         actionType = YamlFileActionType.TRIGGER,
                         blobId = targetTree.blobId,
-                        fork = false,
+                        fork = fork,
                         pullRequestId = pullRequest.id
                     )
-                    yamlFileEvents.add(yamlFileEvent)
+                    yamlDiffs.add(yamlDiff)
                 }
                 // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
                 targetPath in sourceFilePaths && targetPath !in changeFiles.allFiles -> {
-                    val yamlFileEvent = PipelineYamlFileEvent(
-                        userId = hook.sender.name,
-                        authUser = repository.userName,
+                    val yamlDiff = PipelineYamlDiff(
                         projectId = repository.projectId!!,
                         eventId = eventId,
-                        repository = repository,
+                        eventType = hook.eventType,
+                        repoHashId = repoHashId,
                         defaultBranch = defaultBranch,
                         ref = pullRequest.targetRef.name,
                         filePath = targetPath,
+                        fileType = YamlFileType.getFileType(targetPath),
+                        triggerUser = hook.userName,
                         actionType = YamlFileActionType.TRIGGER,
                         blobId = targetTree.blobId,
-                        fork = false,
+                        fork = fork,
                         pullRequestId = pullRequest.id,
                     )
-                    yamlFileEvents.add(yamlFileEvent)
+                    yamlDiffs.add(yamlDiff)
                 }
             }
         }
-        return yamlFileEvents
+        return yamlDiffs
     }
 
-    private fun getMergedYamlFileEvent(
+    private fun getMergedYamlDiffs(
         eventId: Long,
         repository: Repository,
         hook: PullRequestHook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
         val projectId = repository.projectId!!
         val pullRequest = hook.pullRequest
 
@@ -279,7 +283,7 @@ class PullRequestHookConverter @Autowired constructor(
             authRepository = AuthRepository(repository)
         )
 
-        return computeMergedYamlFileEvent(
+        return computeMergedYamlDiffs(
             eventId = eventId,
             repository = repository,
             hook = hook,
@@ -290,12 +294,14 @@ class PullRequestHookConverter @Autowired constructor(
     /**
      * 计算获取已经合入的yaml文件事件
      */
-    private fun computeMergedYamlFileEvent(
+    private fun computeMergedYamlDiffs(
         eventId: Long,
         repository: Repository,
         hook: PullRequestHook,
         targetFileTrees: List<Tree>
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
+        val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
         val pullRequest = hook.pullRequest
 
         val serverRepo = hook.repo
@@ -309,81 +315,80 @@ class PullRequestHookConverter @Autowired constructor(
 
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
 
-        val yamlFileEvents = mutableListOf<PipelineYamlFileEvent>()
+        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         // 目标文件变更事件
         targetFileTrees.forEach { targetTree ->
             val targetPath = GitActionCommon.getCiFilePath(targetTree.path)
-            val baseYamlFileEvent = PipelineYamlFileEvent(
-                userId = hook.sender.name,
-                authUser = repository.userName,
-                projectId = repository.projectId!!,
+            val baseYamlDiff = PipelineYamlDiff(
+                projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = hook.eventType,
+                repoHashId = repoHashId,
                 defaultBranch = defaultBranch,
                 filePath = targetPath,
+                fileType = YamlFileType.getFileType(targetPath),
                 actionType = YamlFileActionType.TRIGGER,
+                triggerUser = hook.userName,
                 ref = targetBranch,
                 blobId = targetTree.blobId,
-                authRepository = AuthRepository(repository),
-                commit = FileCommit(
-                    commitId = hook.commit.sha,
-                    commitMsg = hook.commit.message,
-                    commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
-                    committer = hook.commit.committer?.name ?: ""
-                ),
+                commitId = hook.commit.sha,
+                commitMsg = hook.commit.message,
+                commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                committer = hook.commit.committer?.name ?: "",
                 fork = fork,
                 pullRequestId = pullRequest.id,
                 merged = true,
                 sourceBranch = sourceBranch,
                 targetBranch = targetBranch,
-                sourceUrl = sourceRepo.httpUrl,
+                sourceRepoUrl = sourceRepo.httpUrl,
                 sourceFullName = sourceRepo.fullName
             )
             when (targetPath) {
                 in changeFiles.addedFiles -> {
-                    val yamlFileEvent = baseYamlFileEvent.copy(actionType = YamlFileActionType.CREATE)
-                    yamlFileEvents.add(yamlFileEvent)
+                    val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.CREATE)
+                    yamlDiffs.add(yamlDiff)
                 }
 
                 in changeFiles.updatedFiles -> {
-                    val yamlFileEvent = baseYamlFileEvent.copy(actionType = YamlFileActionType.UPDATE)
-                    yamlFileEvents.add(yamlFileEvent)
+                    val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.UPDATE)
+                    yamlDiffs.add(yamlDiff)
                 }
 
                 in changeFiles.renamedFiles -> {
-                    val yamlFileEvent = baseYamlFileEvent.copy(
+                    val yamlDiff = baseYamlDiff.copy(
                         actionType = YamlFileActionType.RENAME,
                         oldFilePath = changeFiles.renamedFiles[targetPath]
                     )
-                    yamlFileEvents.add(yamlFileEvent)
+                    yamlDiffs.add(yamlDiff)
                 }
 
                 else ->
-                    yamlFileEvents.add(baseYamlFileEvent)
+                    yamlDiffs.add(baseYamlDiff)
             }
         }
         // 目标文件删除事件
         changeFiles.deletedFiles.filter { GitActionCommon.isCiFile(it) }.forEach { filePath ->
-            val yamlFileEvent = PipelineYamlFileEvent(
-                userId = hook.sender.name,
-                authUser = repository.userName,
-                projectId = repository.projectId!!,
+            val yamlDiff = PipelineYamlDiff(
+                projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = hook.eventType,
+                repoHashId = repoHashId,
                 defaultBranch = defaultBranch,
                 ref = targetBranch,
                 filePath = filePath,
+                fileType = YamlFileType.getFileType(filePath),
                 actionType = YamlFileActionType.DELETE,
+                triggerUser = hook.userName,
                 fork = fork,
                 pullRequestId = pullRequest.id,
                 merged = true,
                 sourceBranch = sourceBranch,
                 targetBranch = targetBranch,
-                sourceUrl = sourceRepo.httpUrl,
+                sourceRepoUrl = sourceRepo.httpUrl,
                 sourceFullName = sourceRepo.fullName
             )
-            yamlFileEvents.add(yamlFileEvent)
+            yamlDiffs.add(yamlDiff)
         }
-        return yamlFileEvents
+        return yamlDiffs
     }
 }

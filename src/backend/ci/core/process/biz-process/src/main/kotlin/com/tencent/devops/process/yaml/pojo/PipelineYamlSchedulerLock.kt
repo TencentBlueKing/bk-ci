@@ -25,22 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.trigger.scm.converter
+package com.tencent.devops.process.yaml.pojo
 
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-/**
- * webhook对象转换成List<YamlFileEvent>对象
- */
-interface WebhookConverter {
-
-    fun support(webhook: Webhook): Boolean
-
-    fun convert(
-        eventId: Long,
-        repository: Repository,
-        webhook: Webhook
-    ): List<PipelineYamlFileEvent>
-}
+class PipelineYamlSchedulerLock(
+    redisOperation: RedisOperation,
+    projectId: String,
+    eventId: Long,
+    expiredTimeInSeconds: Long = 60
+) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "pipeline:yaml:file:scheduler:$projectId:$eventId",
+        expiredTimeInSeconds = expiredTimeInSeconds
+    )

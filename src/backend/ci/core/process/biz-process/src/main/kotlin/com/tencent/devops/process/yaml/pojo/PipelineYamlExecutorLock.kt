@@ -27,33 +27,18 @@
 
 package com.tencent.devops.process.yaml.pojo
 
-/**
- * yaml文件操作类型
- */
-enum class YamlFileActionType {
-    // 开启pac时同步
-    SYNC,
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-    CREATE,
-
-    // 更新
-    UPDATE,
-
-    // 删除
-    DELETE,
-
-    // 重命名
-    RENAME,
-
-    // 触发
-    TRIGGER,
-
-    // 更新并触发
-    UPDATE_AND_TRIGGER,
-
-    // 已合并
-    MERGED,
-
-    // 校验有问题，改流水线不触发
-    NO_TRIGGER
-}
+class PipelineYamlExecutorLock(
+    redisOperation: RedisOperation,
+    projectId: String,
+    eventId: Long,
+    filePath: String,
+    expiredTimeInSeconds: Long = 60
+) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "pipeline:yaml:file:executor:$projectId:$eventId:$filePath",
+        expiredTimeInSeconds = expiredTimeInSeconds
+    )

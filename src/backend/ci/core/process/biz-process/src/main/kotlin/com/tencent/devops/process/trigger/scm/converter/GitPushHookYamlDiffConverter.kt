@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.trigger.scm.converter
 
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
-import com.tencent.devops.process.yaml.mq.FileCommit
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.enums.EventAction
@@ -42,9 +42,9 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class GitPushHookConverter @Autowired constructor(
+class GitPushHookYamlDiffConverter @Autowired constructor(
     private val pipelineYamlFileService: PipelineYamlFileService
-) : WebhookConverter {
+) : WebhookYamlDiffConverter {
     override fun support(webhook: Webhook): Boolean {
         return webhook is GitPushHook
     }
@@ -53,16 +53,16 @@ class GitPushHookConverter @Autowired constructor(
         eventId: Long,
         repository: Repository,
         webhook: Webhook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
         webhook as GitPushHook
         return if (webhook.action == EventAction.DELETE) {
-            getDeleteYamlFileEvent(
+            getBranchDeleteYamlDiffs(
                 eventId = eventId,
                 repository = repository,
                 webhook = webhook
             )
         } else {
-            getNotDeleteYamlFileEvent(
+            getNotBranchDeleteYamlDiffs(
                 eventId = eventId,
                 repository = repository,
                 webhook = webhook
@@ -70,12 +70,13 @@ class GitPushHookConverter @Autowired constructor(
         }
     }
 
-    private fun getNotDeleteYamlFileEvent(
+    private fun getNotBranchDeleteYamlDiffs(
         eventId: Long,
         repository: Repository,
         webhook: GitPushHook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
         val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
         val ref = webhook.ref
         val fileTrees = pipelineYamlFileService.listFileTree(
             projectId = projectId,
@@ -85,59 +86,58 @@ class GitPushHookConverter @Autowired constructor(
 
         val serverRepo = webhook.repo
         val changeFiles = WebhookConverterUtils.getChangeFiles(webhook.changes)
-        val yamlFileEvents = mutableListOf<PipelineYamlFileEvent>()
+        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         val defaultBranch = serverRepo.defaultBranch!!
         fileTrees.forEach { tree ->
             val filePath = GitActionCommon.getCiFilePath(tree.path)
             val actionType = WebhookConverterUtils.getYamlActionType(filePath = filePath, changeFiles = changeFiles)
             val oldFilePath = changeFiles.renamedFiles[filePath]
-            val yamlFileEvent = PipelineYamlFileEvent(
-                userId = webhook.sender.name,
-                authUser = repository.userName,
+            val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = webhook.eventType,
+                repoHashId = repoHashId,
                 defaultBranch = defaultBranch,
-                actionType = actionType,
                 filePath = filePath,
+                fileType = YamlFileType.getFileType(filePath),
+                actionType = actionType,
+                triggerUser = webhook.userName,
                 oldFilePath = oldFilePath,
                 ref = ref,
                 blobId = tree.blobId,
-                authRepository = AuthRepository(repository),
-                commit = FileCommit(
-                    commitId = webhook.commit?.sha ?: "",
-                    commitMsg = webhook.commit?.message ?: "",
-                    commitTime = webhook.commit?.commitTime ?: LocalDateTime.now(),
-                    committer = webhook.commit?.committer?.name ?: ""
-                )
+                commitId = webhook.commit?.sha ?: "",
+                commitMsg = webhook.commit?.message ?: "",
+                commitTime = webhook.commit?.commitTime ?: LocalDateTime.now(),
+                committer = webhook.commit?.committer?.name ?: ""
             )
-            yamlFileEvents.add(yamlFileEvent)
+            yamlDiffs.add(yamlDiff)
         }
         // yaml文件删除
         changeFiles.deletedFiles.filter { GitActionCommon.isCiFile(it) }.forEach { filePath ->
-            val yamlFileEvent = PipelineYamlFileEvent(
-                userId = webhook.sender.name,
-                authUser = repository.userName,
+            val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = webhook.eventType,
+                repoHashId = repoHashId,
                 defaultBranch = defaultBranch,
-                ref = ref,
                 filePath = filePath,
+                fileType = YamlFileType.getFileType(filePath),
                 actionType = YamlFileActionType.DELETE,
-                fork = false
+                triggerUser = webhook.userName,
+                ref = ref
             )
-            yamlFileEvents.add(yamlFileEvent)
+            yamlDiffs.add(yamlDiff)
         }
-        return yamlFileEvents
+        return yamlDiffs
     }
 
-    private fun getDeleteYamlFileEvent(
+    private fun getBranchDeleteYamlDiffs(
         eventId: Long,
         repository: Repository,
         webhook: GitPushHook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
         val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
         val ref = webhook.ref
         val serverRepo = webhook.repo
         val filePaths = pipelineYamlFileService.getAllBranchFilePath(
@@ -145,22 +145,22 @@ class GitPushHookConverter @Autowired constructor(
             repoHashId = repository.repoHashId!!,
             branch = ref
         )
-        val yamlFileEvents = mutableListOf<PipelineYamlFileEvent>()
+        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         filePaths.forEach { filePath ->
-            val yamlFileEvent = PipelineYamlFileEvent(
-                userId = webhook.sender.name,
-                authUser = repository.userName,
+            val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = webhook.eventType,
+                repoHashId = repoHashId,
                 defaultBranch = serverRepo.defaultBranch!!,
                 ref = ref,
                 filePath = filePath,
+                fileType = YamlFileType.getFileType(filePath),
                 actionType = YamlFileActionType.DELETE,
-                fork = false
+                triggerUser = webhook.userName,
             )
-            yamlFileEvents.add(yamlFileEvent)
+            yamlDiffs.add(yamlDiff)
         }
-        return yamlFileEvents
+        return yamlDiffs
     }
 }

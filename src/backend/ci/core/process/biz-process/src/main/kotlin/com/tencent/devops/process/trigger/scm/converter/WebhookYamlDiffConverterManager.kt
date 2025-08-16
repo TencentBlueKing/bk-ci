@@ -27,22 +27,22 @@
 
 package com.tencent.devops.process.trigger.scm.converter
 
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class WebhookConverterManager @Autowired constructor(
-    private val webhookConverters: List<WebhookConverter>
+class WebhookYamlDiffConverterManager @Autowired constructor(
+    private val webhookYamlDiffConverters: List<WebhookYamlDiffConverter>
 ) {
     fun convert(
         eventId: Long,
         repository: Repository,
         webhook: Webhook
-    ): List<PipelineYamlFileEvent> {
-        return webhookConverters.find { it.support(webhook) }?.convert(
+    ): List<PipelineYamlDiff> {
+        return webhookYamlDiffConverters.find { it.support(webhook) }?.convert(
             eventId = eventId,
             repository = repository,
             webhook = webhook
