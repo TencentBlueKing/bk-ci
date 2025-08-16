@@ -88,8 +88,9 @@ data class VMBuildContainer(
     val dispatchType: DispatchType? = null,
     @get:Schema(title = "是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
-    @get:Schema(title =
-        "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
+    @get:Schema(
+        title =
+            "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
         readOnly = true
     )
@@ -125,10 +126,7 @@ data class VMBuildContainer(
     @get:Schema(title = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
     var matrixContext: Map<String, String>? = null,
     @get:Schema(title = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
-    var groupContainers: MutableList<VMBuildContainer>? = null,
-    override var template: String? = null,
-    override var ref: String? = null,
-    override var variables: Map<String, String>? = null
+    var groupContainers: MutableList<VMBuildContainer>? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"
@@ -180,5 +178,9 @@ data class VMBuildContainer(
             mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
         }
         super.transformCompatibility()
+    }
+
+    override fun copyElements(elements: List<Element>): Container {
+        return this.copy(elements = elements)
     }
 }

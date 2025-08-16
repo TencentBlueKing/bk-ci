@@ -40,7 +40,7 @@ import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.pojo.CheckType
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -206,7 +206,10 @@ class PipelineYamlTriggerListener @Autowired constructor(
 
             YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
                 pipelineYamlFileManager.createOrUpdateYamlFile(this)
-                webhookTriggerBuildService.yamlTrigger(this)
+                // 只有流水线才需要触发
+                if (!isTemplate) {
+                    webhookTriggerBuildService.yamlTrigger(this)
+                }
             }
 
             YamlFileActionType.DELETE -> {
@@ -215,7 +218,10 @@ class PipelineYamlTriggerListener @Autowired constructor(
 
             YamlFileActionType.RENAME -> {
                 pipelineYamlFileManager.renameYamlFile(event = this)
-                webhookTriggerBuildService.yamlTrigger(this)
+                // 只有流水线才需要触发
+                if (!isTemplate) {
+                    webhookTriggerBuildService.yamlTrigger(this)
+                }
             }
 
             YamlFileActionType.TRIGGER -> {
