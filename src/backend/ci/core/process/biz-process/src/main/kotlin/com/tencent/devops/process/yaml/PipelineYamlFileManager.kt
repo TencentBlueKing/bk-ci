@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.redis.RedisOperation
@@ -47,12 +46,15 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.view.PipelineViewGroupService
@@ -60,11 +62,10 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.listener.PipelineYamlChangeContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.actions.GitActionCommon
-import com.tencent.devops.process.yaml.mq.FileCommit
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.process.yaml.pojo.YamlPipelineActionType
+import com.tencent.devops.process.yaml.resource.PipelineYamlResourceManager
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmFileApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmPullRequestApiResource
@@ -94,8 +95,8 @@ class PipelineYamlFileManager @Autowired constructor(
     private val webhookTriggerManager: WebhookTriggerManager,
     private val pipelineYamlFileService: PipelineYamlFileService,
     private val pipelineYamlResourceManager: PipelineYamlResourceManager,
-    private val eventDispatcher: SampleEventDispatcher,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineYamlDiffService: PipelineYamlDiffService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
@@ -108,7 +109,7 @@ class PipelineYamlFileManager @Autowired constructor(
     ) {
         val repoHashId = yamlFileSyncReq.repository.repoHashId!!
         try {
-            val yamlFileEvents = mutableListOf<PipelineYamlFileEvent>()
+            val yamlDiffs = mutableListOf<PipelineYamlDiff>()
             with(yamlFileSyncReq) {
                 val requestId = MDC.get(TraceTag.BIZID)
                 val eventId = pipelineTriggerEventService.getEventId()
@@ -135,30 +136,28 @@ class PipelineYamlFileManager @Autowired constructor(
                 }.forEach { tree ->
                     val filePath = GitActionCommon.getCiFilePath(tree.path)
                     val oldFilePath = null
-                    val yamlFileEvent = PipelineYamlFileEvent(
-                        userId = userId,
-                        authUser = repository.userName,
+                    val yamlFileEvent = PipelineYamlDiff(
                         projectId = projectId,
                         eventId = eventId,
-                        repository = repository,
+                        eventType = "SYNC",
+                        repoHashId = repoHashId,
                         defaultBranch = defaultBranch,
-                        actionType = YamlFileActionType.SYNC,
                         filePath = filePath,
+                        fileType = YamlFileType.getFileType(filePath),
+                        actionType = YamlFileActionType.SYNC,
+                        triggerUser = userId,
                         oldFilePath = oldFilePath,
                         ref = defaultBranch,
                         blobId = tree.blobId,
-                        authRepository = AuthRepository(repository),
-                        commit = FileCommit(
-                            commitId = commit.sha,
-                            commitMsg = commit.message,
-                            commitTime = commit.commitTime ?: LocalDateTime.now(),
-                            committer = commit.committer?.name ?: ""
-                        )
+                        commitId = commit.sha,
+                        commitMsg = commit.message,
+                        commitTime = commit.commitTime ?: LocalDateTime.now(),
+                        committer = commit.committer?.name ?: ""
                     )
-                    yamlFileEvents.add(yamlFileEvent)
+                    yamlDiffs.add(yamlFileEvent)
                 }
 
-                val directories = yamlFileEvents.map { GitActionCommon.getCiDirectory(it.filePath) }.toSet()
+                val directories = yamlDiffs.map { GitActionCommon.getCiDirectory(it.filePath) }.toSet()
                 // 创建yaml流水线组
                 pipelineYamlViewService.createYamlViewIfAbsent(
                     userId = userId,
@@ -168,9 +167,12 @@ class PipelineYamlFileManager @Autowired constructor(
                     directoryList = directories
                 )
 
-                yamlFileEvents.forEach {
-                    eventDispatcher.dispatch(it)
-                }
+                pipelineYamlDiffService.saveAndSend(
+                    projectId = projectId,
+                    repository = repository,
+                    eventId = eventId,
+                    yamlDiffs = yamlDiffs
+                )
             }
         } catch (exception: Exception) {
             logger.error("Failed to sync pipeline yaml file|projectId:$projectId|repoHashId:$repoHashId", exception)

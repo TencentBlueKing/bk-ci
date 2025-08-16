@@ -234,4 +234,9 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
     const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
+
+    // yaml文件调度事件
+    const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
+    // yaml文件执行事件
+    const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
 }
