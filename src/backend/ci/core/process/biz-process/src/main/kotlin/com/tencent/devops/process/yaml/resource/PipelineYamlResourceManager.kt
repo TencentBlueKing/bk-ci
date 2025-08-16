@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml
+package com.tencent.devops.process.yaml.resource
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult

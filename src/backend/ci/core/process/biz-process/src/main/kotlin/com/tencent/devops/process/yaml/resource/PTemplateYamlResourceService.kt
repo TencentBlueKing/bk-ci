@@ -25,27 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml
+package com.tencent.devops.process.yaml.resource
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
-import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
-import com.tencent.devops.process.service.PipelineInfoFacadeService
-import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
+/**
+ * yaml文件对应的模版操作服务类
+ */
 @Service
-class PipelineYamlResourceService @Autowired constructor(
-    @Lazy private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineVersionManager: PipelineVersionManager
+class PTemplateYamlResourceService(
+    private val pipelineTemplateFacadeService: PipelineTemplateFacadeService,
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService
 ) : IPipelineYamlResourceService {
     override fun createYamlPipeline(
         userId: String,
@@ -57,20 +56,28 @@ class PipelineYamlResourceService @Autowired constructor(
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = GitActionCommon.getCiFileName(filePath)
-            val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
+            val deployTemplateResult = pipelineTemplateFacadeService.createYamlTemplate(
+                userId = userId,
+                projectId = projectId,
                 yaml = yaml,
                 yamlFileName = yamlFileName,
                 branchName = ref,
                 isDefaultBranch = isDefaultBranch,
                 description = commit!!.commitMsg,
-                yamlFileInfo = yamlFileInfo,
-                pullRequestUrl = pullRequestUrl
+                yamlFileInfo = yamlFileInfo
             )
-            return pipelineVersionManager.deployPipeline(
-                userId = userId,
-                projectId = projectId,
-                request = pipelineYamlWebhookReq
-            )
+            return with(deployTemplateResult) {
+                DeployPipelineResult(
+                    pipelineId = templateId,
+                    pipelineName = templateName,
+                    // TODO 这里需要修改
+                    version = version.toInt(),
+                    versionNum = versionNum,
+                    versionName = versionName,
+                    targetUrl = targetUrl,
+                    yamlInfo = yamlInfo
+                )
+            }
         }
     }
 
@@ -85,21 +92,29 @@ class PipelineYamlResourceService @Autowired constructor(
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = GitActionCommon.getCiFileName(filePath)
-            val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
+            val deployTemplateResult = pipelineTemplateFacadeService.updateYamlTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateId = pipelineId,
                 yaml = yaml,
                 yamlFileName = yamlFileName,
                 branchName = ref,
                 isDefaultBranch = isDefaultBranch,
                 description = commit!!.commitMsg,
-                yamlFileInfo = yamlFileInfo,
-                pullRequestUrl = pullRequestUrl
+                yamlFileInfo = yamlFileInfo
             )
-            return pipelineVersionManager.deployPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                request = pipelineYamlWebhookReq
-            )
+            return with(deployTemplateResult) {
+                DeployPipelineResult(
+                    pipelineId = templateId,
+                    pipelineName = templateName,
+                    // TODO 这里需要修改
+                    version = version.toInt(),
+                    versionNum = versionNum,
+                    versionName = versionName,
+                    targetUrl = targetUrl,
+                    yamlInfo = yamlInfo
+                )
+            }
         }
     }
 
@@ -112,35 +127,33 @@ class PipelineYamlResourceService @Autowired constructor(
         releaseBranch: Boolean?,
         pullRequestId: Long?
     ) {
-        pipelineInfoFacadeService.updateBranchVersion(
+        pipelineTemplateFacadeService.inactiveBranch(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
-            branchName = branchName,
-            releaseBranch = releaseBranch,
-            branchVersionAction = branchVersionAction
+            templateId = pipelineId,
+            branch = branchName
         )
     }
 
     override fun deletePipeline(userId: String, projectId: String, pipelineId: String) {
-        pipelineInfoFacadeService.deletePipeline(
+        pipelineTemplateFacadeService.deleteTemplate(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            templateId = pipelineId
         )
     }
 
     override fun getPipelineName(projectId: String, pipelineId: String): String? {
-        return pipelineRepositoryService.getPipelineInfo(
+        return pipelineTemplateInfoService.getOrNull(
             projectId = projectId,
-            pipelineId = pipelineId
-        )?.pipelineName
+            templateId = pipelineId
+        )?.name
     }
 
     override fun existsReleaseVersion(projectId: String, pipelineId: String): Boolean {
-        return pipelineRepositoryService.getReleaseVersionRecord(
-            projectId = projectId, pipelineId = pipelineId
+        return pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = pipelineId
         ) != null
     }
 }
