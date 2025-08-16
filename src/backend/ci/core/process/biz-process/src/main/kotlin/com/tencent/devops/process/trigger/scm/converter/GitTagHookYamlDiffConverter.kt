@@ -1,55 +1,60 @@
 package com.tencent.devops.process.trigger.scm.converter
 
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
-import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import com.tencent.devops.scm.api.enums.EventAction
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
-import com.tencent.devops.scm.api.pojo.webhook.git.AbstractCommentHook
-import com.tencent.devops.scm.api.pojo.webhook.git.IssueHook
-import com.tencent.devops.scm.api.pojo.webhook.git.PullRequestReviewHook
+import com.tencent.devops.scm.api.pojo.webhook.git.GitTagHook
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class DefaultGitHookConverter @Autowired constructor(
+class GitTagHookYamlDiffConverter @Autowired constructor(
     private val pipelineYamlFileService: PipelineYamlFileService
-) : WebhookConverter {
+) : WebhookYamlDiffConverter {
     override fun support(webhook: Webhook): Boolean {
-        return webhook is IssueHook || webhook is AbstractCommentHook || webhook is PullRequestReviewHook
+        return webhook is GitTagHook
     }
 
     override fun convert(
         eventId: Long,
         repository: Repository,
         webhook: Webhook
-    ): List<PipelineYamlFileEvent> {
+    ): List<PipelineYamlDiff> {
+        webhook as GitTagHook
+        // 删除TAG暂不处理
+        if (webhook.action == EventAction.DELETE) {
+            return listOf()
+        }
         val projectId = repository.projectId!!
-        val serverRepo = webhook.repository() as GitScmServerRepository
-        val defaultBranch = serverRepo.defaultBranch!!
+        val repoHashId = repository.repoHashId!!
+        val tag = webhook.ref.name
         val fileTrees = pipelineYamlFileService.listFileTree(
             projectId = projectId,
-            ref = defaultBranch,
+            ref = tag,
             authRepository = AuthRepository(repository)
         )
+        val serverRepo = webhook.repo
+        val defaultBranch = serverRepo.defaultBranch!!
         return fileTrees.map { tree ->
             val filePath = GitActionCommon.getCiFilePath(tree.path)
-            PipelineYamlFileEvent(
-                userId = webhook.userName,
-                authUser = repository.userName,
+            PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
-                repository = repository,
+                eventType = webhook.eventType,
+                repoHashId = repoHashId,
                 defaultBranch = defaultBranch,
-                actionType = YamlFileActionType.TRIGGER,
                 filePath = filePath,
-                ref = defaultBranch,
-                blobId = tree.blobId,
-                authRepository = AuthRepository(repository),
-                fork = false
+                fileType = YamlFileType.getFileType(filePath),
+                actionType = YamlFileActionType.TRIGGER,
+                triggerUser = webhook.sender.name,
+                ref = tag,
+                blobId = tree.blobId
             )
         }
     }
