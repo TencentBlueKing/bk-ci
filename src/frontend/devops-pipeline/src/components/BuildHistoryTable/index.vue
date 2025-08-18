@@ -886,7 +886,6 @@
             }
         },
         mounted () {
-            this.requestHasPermission()
             webSocketMessage.installWsMessage(this.requestHistory)
             window.addEventListener('resize', this.updateTableHeight)
         },
@@ -902,9 +901,6 @@
                 'requestPipelinesHistory',
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
-            ]),
-            ...mapActions('common', [
-                'requestExecPipPermission'
             ]),
             getSlicedData (row) {
                 const keys = Object.keys(row.artifactQuality)
@@ -1139,25 +1135,6 @@
             showErrorInfoPopup (index = -1) {
                 this.visibleIndex = index
                 this.showErorrInfoDialog = true
-            },
-            async requestHasPermission () {
-                try {
-                    const res = await this.requestExecPipPermission({
-                        ...this.$route.params,
-                        permission: 'DOWNLOAD'
-                    })
-
-                    this.hasDownloadPermission = res
-                    return res
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$showTips({
-                        message,
-                        theme
-                    })
-                }
             },
             async downloadFile ({ artifactoryType, path, name }, key = 'download') {
                 try {
