@@ -38,7 +38,7 @@ data class PipelineTemplateInstancesRequest(
     @get:Schema(title = "路径引用时,模版引用版本", required = true)
     val templateRef: String?,
     @get:Schema(title = "是否使用模版设置", required = true)
-    val useTemplateSetting: Boolean,
+    val useTemplateSettings: Boolean,
     @get:Schema(title = "是否本次开启PAC", required = true)
     val enablePac: Boolean,
     @get:Schema(title = "版本描述", required = false)
