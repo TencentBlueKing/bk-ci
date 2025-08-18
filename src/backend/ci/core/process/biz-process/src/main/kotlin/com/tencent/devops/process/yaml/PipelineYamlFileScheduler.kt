@@ -34,7 +34,9 @@ class PipelineYamlFileScheduler @Autowired constructor(
             )
             try {
                 if (!lock.tryLock()) {
-                    logger.info("[PAC_PIPELINE] executor|$projectId|$eventId|$filePath|YamlExecutorLock try lock fail")
+                    logger.info(
+                        "[PAC_PIPELINE] scheduler|$projectId|$eventId|$filePath|YamlSchedulerLock try lock fail"
+                    )
                     retry()
                     return
                 }
@@ -46,7 +48,7 @@ class PipelineYamlFileScheduler @Autowired constructor(
     }
 
     private fun PipelineYamlFileSchedulerEvent.retry() {
-        logger.info("pipeline yaml executor|$projectId|$eventId|$filePath|RETRY_TO_EXECUTOR_LOCK")
+        logger.info("[PAC_PIPELINE] scheduler|$projectId|$eventId|$filePath|RETRY_TO_EXECUTOR_LOCK")
         this.delayMills = DEFAULT_DELAY
         sampleEventDispatcher.dispatch(this)
     }
@@ -59,6 +61,8 @@ class PipelineYamlFileScheduler @Autowired constructor(
         val dependencyTypeStatusMap = yamlDiffs.groupBy { it.fileType }.mapValues { (_, events) ->
             events.all { it.status.isFinish() }
         }
+
+        logger.info("[PAC_PIPELINE] scheduler| dependency type status map: $dependencyTypeStatusMap")
 
         yamlDiffs.filter {
             // 1. 不是回调回来的事件,触发所有的文件

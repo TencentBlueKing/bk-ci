@@ -1448,4 +1448,57 @@ CREATE TABLE `T_PIPELINE_TEMPLATE_MIGRATION` (
     `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模板迁移记录表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DIFF`
+(
+    `PROJECT_ID`        varchar(64)                         not null comment '项目ID',
+    `EVENT_ID`          bigint(20)                          not null comment '事件ID',
+    `EVENT_TYPE`        varchar(32)                         not null comment '事件类型',
+    `REPO_HASH_ID`      varchar(64)                         not null comment '代码库HASH ID',
+    `DEFAULT_BRANCH`    varchar(512)                        null comment '默认分支',
+    `FILE_PATH`         varchar(512)                        not null comment '文件路径',
+    `FILE_TYPE`         varchar(32)                         not null comment '文件类型',
+    `ACTION_TYPE`       varchar(32)                         not null comment '操作类型',
+    `STATUS`            varchar(32)                         not null comment '文件处理状态',
+    `TRIGGER_USER`      varchar(64)                         not null comment '触发用户',
+    `REF`               varchar(512)                        null comment '文件来源ref,分支/tag',
+    `BLOB_ID`           varchar(64)                         null comment '文件blob_id',
+    `COMMIT_ID`         varchar(64)                         null comment '文件commitId',
+    `COMMIT_TIME`       timestamp                           null comment '提交时间',
+    `COMMIT_MSG`        text                                null comment '提交信息',
+    `COMMITTER`         varchar(64)                         null comment '提交人',
+    `FORK`              bit       default 0 comment '是否是fork库',
+    `USE_FORK_TOKEN`    bit       default 0 comment '是否使用fork仓库token',
+    `MERGED`            bit       default 0 comment '是否已经合并',
+    `PULL_REQUEST_ID`   bigint                              null comment '合并请求ID',
+    `PULL_REQUEST_URL`  text                                null comment '合并请求URL',
+    `SOURCE_BRANCH`     varchar(512)                        null comment '源分支',
+    `TARGET_BRANCH`     varchar(512)                        null comment '目标分支',
+    `SOURCE_REPO_URL`   text                                null comment '源仓库URL',
+    `SOURCE_FULL_NAME`  varchar(512)                        null comment '源仓库URL',
+    `TARGET_REPO_URL`   text                                null comment '目标仓库URL',
+    `TARGET_FULL_NAME`  varchar(512)                        null comment '目标仓库URL',
+    `OLD_FILE_PATH`     varchar(512)                        null comment '旧的文件路径,重命名时才有值',
+    `CREATE_TIME`       timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`       timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
+    PRIMARY KEY (`PROJECT_ID`, `EVENT_ID`, `FILE_PATH`, `CREATE_TIME`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件变更表,分区表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DEPENDENCY`
+(
+    `PROJECT_ID`           varchar(64)                           not null comment '项目ID',
+    `REPO_HASH_ID`         varchar(64)                           not null comment '代码库HASH ID',
+    `FILE_PATH`            varchar(512)                          not null comment '文件路径',
+    `FILE_PATH_MD5`        varchar(64) default ''                not null comment '文件路径MD5',
+    `FILE_TYPE`            varchar(32)                           not null comment '文件类型',
+    `BLOB_ID`              varchar(64)                           not null comment '文件blob_id',
+    `DEPEND_FILE_PATH`     varchar(512)                          not null comment '依赖的文件路径',
+    `DEPEND_FILE_PATH_MD5` varchar(64) default ''                not null comment '依赖的文件路径MD5',
+    `DEPEND_FILE_TYPE`     varchar(32)                           not null comment '依赖的文件类型',
+    `DEPEND_REF`           varchar(32)                           not null comment '依赖的引用',
+    `CREATE_TIME`          timestamp   default CURRENT_TIMESTAMP not null comment '创建时间',
+    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH_MD5`, `BLOB_ID`, `DEPEND_FILE_PATH_MD5`),
+    KEY `IDX_PROJECT_FILE_PATH_BLOB_ID`(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`, `BLOB_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件依赖关系表';
+
 SET FOREIGN_KEY_CHECKS = 1;
