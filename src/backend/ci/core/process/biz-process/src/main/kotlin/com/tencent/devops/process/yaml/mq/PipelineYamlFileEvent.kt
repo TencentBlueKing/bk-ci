@@ -147,6 +147,14 @@ data class PipelineYamlFileEvent(
         } else {
             AuthRepository(repository)
         },
+        commit = yamlDiff.commitId?.let {
+            FileCommit(
+                commitId = yamlDiff.commitId!!,
+                commitMsg = yamlDiff.commitMsg!!,
+                commitTime = yamlDiff.commitTime!!,
+                committer = yamlDiff.committer!!,
+            )
+        },
         commitId = yamlDiff.commitId,
         commitMsg = yamlDiff.commitMsg,
         commitTime = yamlDiff.commitTime,
