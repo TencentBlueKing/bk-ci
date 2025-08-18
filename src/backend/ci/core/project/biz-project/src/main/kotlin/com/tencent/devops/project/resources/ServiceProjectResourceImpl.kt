@@ -189,9 +189,19 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
     }
 
-    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+    override fun updateProjectName(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        tenantId: String?
+    ): Result<Boolean> {
         return Result(
-            projectService.updateProjectName(userId = userId, projectId = projectCode, projectName = projectName)
+            projectService.updateProjectName(
+                userId = userId,
+                projectId = projectCode,
+                projectName = projectName,
+                tenantId = tenantId
+            )
         )
     }
 
@@ -208,8 +218,13 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getProjectByName(projectName, tenantId))
     }
 
-    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
+    override fun validate(
+        validateType: ProjectValidateType,
+        name: String,
+        projectId: String?,
+        tenantId: String?
+    ): Result<Boolean> {
+        projectService.validate(validateType, name, projectId, tenantId)
         return Result(true)
     }
 

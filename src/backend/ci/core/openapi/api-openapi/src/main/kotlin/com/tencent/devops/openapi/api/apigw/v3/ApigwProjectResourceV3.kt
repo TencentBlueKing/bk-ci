@@ -162,6 +162,9 @@ interface ApigwProjectResourceV3 {
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "校验的是项目名称或者项目英文名")
         @PathParam("validateType")
         validateType: ProjectValidateType,

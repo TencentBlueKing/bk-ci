@@ -245,7 +245,10 @@ interface ServiceProjectResource {
         projectCode: String,
         @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
-        projectName: String
+        projectName: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<Boolean>
 
     @PUT
@@ -284,7 +287,10 @@ interface ServiceProjectResource {
         name: String,
         @Parameter(description = "项目ID")
         @QueryParam("english_name")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<Boolean>
 
     @POST

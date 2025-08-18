@@ -219,11 +219,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun validate(
         userId: String,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
     ): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
+        projectService.validate(validateType, name, projectId, tenantId)
         return Result(true)
     }
 

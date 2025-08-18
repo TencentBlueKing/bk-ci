@@ -77,12 +77,20 @@ class ProjectDao {
         }
     }
 
-    fun existByProjectName(dslContext: DSLContext, projectName: String, projectId: String?): Boolean {
+    fun existByProjectName(
+        dslContext: DSLContext,
+        projectName: String,
+        projectId: String?,
+        tenantId: String?
+    ): Boolean {
         with(TProject.T_PROJECT) {
             val step = dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
             if (!projectId.isNullOrBlank()) {
                 step.and(ENGLISH_NAME.ne(projectId))
+            }
+            if (!tenantId.isNullOrBlank()) {
+                step.and(TENANT_ID.eq(tenantId))
             }
             return step.fetchOne() != null
         }

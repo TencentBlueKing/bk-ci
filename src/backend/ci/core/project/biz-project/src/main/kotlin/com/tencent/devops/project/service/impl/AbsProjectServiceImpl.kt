@@ -149,7 +149,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
 
-    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
+    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?, tenantId: String?) {
         if (name.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_EMPTY,
@@ -164,7 +164,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         defaultMessage = "The length of the project name cannot exceed 64 characters!"
                     )
                 }
-                if (projectDao.existByProjectName(dslContext, name, projectId)) {
+                if (projectDao.existByProjectName(dslContext, name, projectId, tenantId)) {
                     throw ErrorCodeException(
                         errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
                         defaultMessage = "The name of the project already exists!"
@@ -341,8 +341,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ) {
         with(projectCreateInfo) {
             if (needValidate) {
-                validate(ProjectValidateType.project_name, projectName)
-                validate(ProjectValidateType.english_name, englishName)
+                validate(
+                    validateType = ProjectValidateType.project_name,
+                    name = projectName,
+                    tenantId = projectCreateInfo.tenantId
+                )
+                validate(
+                    validateType = ProjectValidateType.english_name,
+                    name = englishName,
+                    tenantId = projectCreateInfo.tenantId
+                )
             }
             validateProjectRelateProduct(
                 ProjectProductValidateDTO(
@@ -686,7 +694,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(
                 validateType = ProjectValidateType.project_name,
                 name = projectUpdateInfo.projectName,
-                projectId = projectUpdateInfo.englishName
+                projectId = projectUpdateInfo.englishName,
+                tenantId = projectUpdateInfo.tenantId
             )
             validateProjectRelateProduct(
                 ProjectProductValidateDTO(
@@ -1267,13 +1276,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateProjectName(userId: String, projectId: String, projectName: String): Boolean {
+    override fun updateProjectName(userId: String, projectId: String, projectName: String, tenantId: String?): Boolean {
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
             )
         }
-        if (projectDao.existByProjectName(dslContext, projectName, projectId)) {
+        if (projectDao.existByProjectName(dslContext, projectName, projectId, tenantId)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
             )

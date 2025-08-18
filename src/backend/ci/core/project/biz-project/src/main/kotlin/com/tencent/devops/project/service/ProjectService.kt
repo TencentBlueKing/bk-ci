@@ -61,7 +61,7 @@ interface ProjectService {
     /**
      * 校验项目名称/英文名称是否合法
      */
-    fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null)
+    fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null, tenantId: String?)
 
     /**
      * 创建项目信息
@@ -153,7 +153,12 @@ interface ProjectService {
         accessToken: String?
     ): Result<String>
 
-    fun updateProjectName(userId: String, projectId: String/* projectId is englishName */, projectName: String): Boolean
+    fun updateProjectName(
+        userId: String,
+        projectId: String/* projectId is englishName */,
+        projectName: String,
+        tenantId: String?
+    ): Boolean
 
     /**
      * 获取所有项目信息

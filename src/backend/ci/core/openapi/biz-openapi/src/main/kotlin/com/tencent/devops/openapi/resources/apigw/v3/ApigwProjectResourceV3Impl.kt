@@ -133,6 +133,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String?,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
@@ -141,7 +142,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         return client.get(ServiceProjectResource::class).validate(
             validateType = validateType,
             name = name,
-            projectId = projectId
+            projectId = projectId,
+            tenantId = tenantId
         )
     }
 
