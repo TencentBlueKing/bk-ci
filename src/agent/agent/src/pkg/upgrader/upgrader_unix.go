@@ -290,7 +290,7 @@ func updatePrivateTmp(serviceName string) {
 
 	// 步骤 2: 根据状态决定是否需要修改
 	if !isEnabled {
-		logs.Info("PrivateTmp is already disabled for %s. No action needed.", serviceName)
+		logs.Infof("PrivateTmp is already disabled for %s. No action needed.", serviceName)
 		return
 	}
 
