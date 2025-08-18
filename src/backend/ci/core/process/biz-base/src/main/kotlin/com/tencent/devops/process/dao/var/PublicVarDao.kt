@@ -83,6 +83,34 @@ class PublicVarDao {
         }
     }
 
+    fun listGroupNamesByVarName(
+        dslContext: DSLContext,
+        projectId: String,
+        keyword: String
+    ): List<String> {
+        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+            return dslContext.selectDistinct(GROUP_NAME)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VAR_NAME.like("%$keyword%"))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun listGroupNamesByVarType(
+        dslContext: DSLContext,
+        projectId: String,
+        type: String
+    ): List<String> {
+        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+            return dslContext.selectDistinct(GROUP_NAME)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TYPE.eq(keyword))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun listVarBygroupName(
         dslContext: DSLContext,
         projectId: String,

@@ -29,9 +29,11 @@ package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
 import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupRecord
+import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -104,12 +106,31 @@ class PublicVarGroupDao {
         dslContext: DSLContext,
         projectId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        keyword: String? = null,
+        filterType: VarGroupFilterTypeEnum? = null,
+        groupNames: List<String>? = null
     ): List<PublicVarGroupPO> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+            val condition = DSL.noCondition()
+                .and(PROJECT_ID.eq(projectId))
                 .and(LATEST_FLAG.eq(true))
+
+            // 添加筛选条件
+            when (filterType) {
+                VarGroupFilterTypeEnum.GROUP_NAME -> keyword?.let {
+                    condition.and(GROUP_NAME.like("%$it%"))
+                }
+                VarGroupFilterTypeEnum.GROUP_DESC -> keyword?.let {
+                    condition.and(DESC.like("%$it%"))
+                }
+                else -> groupNames?.let {
+                    condition.and(GROUP_NAME.`in`(it))
+                }
+            }
+
+            return dslContext.selectFrom(this)
+                .where(condition)
                 .orderBy(UPDATE_TIME.desc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
@@ -134,13 +155,32 @@ class PublicVarGroupDao {
 
     fun countGroupsByProjectId(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        keyword: String? = null,
+        filterType: VarGroupFilterTypeEnum? = null,
+        groupNames: List<String>? = null
     ): Long {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            val condition = DSL.noCondition()
+                .and(PROJECT_ID.eq(projectId))
+                .and(LATEST_FLAG.eq(true))
+
+            // 添加筛选条件
+            when (filterType) {
+                VarGroupFilterTypeEnum.GROUP_NAME -> keyword?.let {
+                    condition.and(GROUP_NAME.like("%$it%"))
+                }
+                VarGroupFilterTypeEnum.GROUP_DESC -> keyword?.let {
+                    condition.and(DESC.like("%$it%"))
+                }
+                else -> groupNames?.let {
+                    condition.and(GROUP_NAME.`in`(it))
+                }
+            }
+
             return dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(LATEST_FLAG.eq(true))
+                .where(condition)
                 .fetchOne(0, Long::class.java) ?: 0
         }
     }

@@ -52,11 +52,14 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
+import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.PUBLIC_VER_GROUP_ADD_LOCK_KEY
+import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.expiredTimeInSeconds
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.VariableTransfer
 import com.tencent.devops.process.yaml.transfer.pojo.PublicVarGroupYamlParser
@@ -68,6 +71,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.FilterType
 import org.springframework.stereotype.Service
 
 @Service
@@ -196,14 +200,34 @@ class PublicVarGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        keyword: String? = null,
+        filterType: VarGroupFilterTypeEnum? = null
     ): Page<PublicVarGroupDO> {
-        val totalCount = publicVarGroupDao.countGroupsByProjectId(dslContext, projectId)
+        // 根据filterType处理keyword
+        val groupNames = when (filterType) {
+            VarGroupFilterTypeEnum.VAR_NAME, VarGroupFilterTypeEnum.VAR_TYPE -> {
+                publicVarService.listGroupNamesByVarFilter(projectId, keyword, filterType)
+            }
+            else -> null
+        }
+
+        val totalCount = publicVarGroupDao.countGroupsByProjectId(
+            dslContext = dslContext,
+            projectId = projectId,
+            keyword = keyword,
+            filterType = filterType,
+            groupNames = groupNames
+        )
+
         val records = publicVarGroupDao.listGroupsByProjectIdPage(
             dslContext = dslContext,
             projectId = projectId,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            keyword = keyword,
+            filterType = filterType,
+            groupNames = groupNames
         ).map { po ->
             PublicVarGroupDO(
                 groupName = po.groupName,
