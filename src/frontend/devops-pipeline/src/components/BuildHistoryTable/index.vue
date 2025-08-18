@@ -886,6 +886,7 @@
             }
         },
         mounted () {
+            this.requestHasPermission()
             webSocketMessage.installWsMessage(this.requestHistory)
             window.addEventListener('resize', this.updateTableHeight)
         },
