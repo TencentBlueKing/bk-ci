@@ -133,6 +133,7 @@ class PipelineTemplateRelatedDao {
                     instanceTypeEnum = instanceTypeEnum
                 )
             )
+            .orderBy(templatePipelineTable.UPDATED_TIME.desc())
             .limit(limit)
             .offset(offset)
             .fetch().map {

@@ -53,6 +53,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_FOUND
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
@@ -266,6 +267,22 @@ class PipelineTemplateGenerator @Autowired constructor(
                 customVersionName = customVersionName
             )
             Pair(VersionStatus.RELEASED, resourceOnlyVersion)
+        }.also {
+            val versionStatus = it.first
+            if (versionStatus == VersionStatus.RELEASED) {
+                val versionName = it.second.versionName!!
+                pipelineTemplateResourceService.getLatestResource(
+                    projectId = projectId,
+                    templateId = templateId,
+                    status = VersionStatus.RELEASED,
+                    versionName = it.second.versionName!!
+                )?.let {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_DUPLICATION,
+                        params = arrayOf(versionName)
+                    )
+                }
+            }
         }
     }
 
@@ -400,7 +417,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             PTemplateResourceOnlyVersion(
                 version = version,
                 number = number,
-                versionName = versionName,
+                versionName = customVersionName?.takeIf { it.isNotBlank() } ?: versionName,
                 versionNum = versionNum,
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
@@ -442,7 +459,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             PTemplateResourceOnlyVersion(
                 version = version,
                 number = number,
-                versionName = customVersionName?.takeIf { it.isNotEmpty() } ?: versionName,
+                versionName = customVersionName?.takeIf { it.isNotBlank() } ?: versionName,
                 versionNum = versionNum,
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
