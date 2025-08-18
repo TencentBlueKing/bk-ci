@@ -394,7 +394,6 @@ interface ApigwEnvironmentResourceV4 {
         envName: String?
     ): Result<List<NodeWithPermission>>
 
-
     @Operation(
         summary = "获取项目节点列表",
         tags = ["v4_user_env_nodes", "v4_app_env_nodes"]
