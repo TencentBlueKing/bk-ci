@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -41,9 +42,12 @@ import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
+import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -61,7 +65,8 @@ class WebhookRequestService(
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val grayService: WebhookGrayService,
     private val simpleDispatcher: SampleEventDispatcher,
-    private val webhookGrayCompareService: WebhookGrayCompareService
+    private val webhookGrayCompareService: WebhookGrayCompareService,
+    private val webhookManager: WebhookManager
 ) {
 
     companion object {
@@ -171,21 +176,39 @@ class WebhookRequestService(
                 logger.info("replay webhook request not found|$replayRequestId")
                 return
             }
-            val webhookRequest = WebhookRequest(
-                headers = repoWebhookRequest.requestHeader,
-                body = repoWebhookRequest.requestBody
-            )
-            val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
-                logger.warn("Failed to parse webhook event")
-                return
-            }
-            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
+            val repository = triggerEvent.eventSource?.let {
+                getRepository(
+                    projectId = projectId,
+                    repoHashId = it
+                )
+            } ?: return
+            // 新代码源灰度流量控制
+            if (supportScmWebhook(repository) && triggerEvent.eventBody != null) {
+                logger.info("The current replay event will execute the new trigger logic")
+                webhookManager.fireEvent(
+                    eventId = triggerEvent.eventId!!,
+                    repository = repository,
+                    webhook = triggerEvent.eventBody!!,
+                    replayPipelineId = pipelineId,
+                    sourceWebhook = repoWebhookRequest.requestBody
+                )
+            } else {
+                val webhookRequest = WebhookRequest(
+                    headers = repoWebhookRequest.requestHeader,
+                    body = repoWebhookRequest.requestBody
+                )
+                val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
+                    logger.warn("Failed to parse webhook event")
+                    return
+                }
+                val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
 
-            webhookTriggerService.replay(
-                replayEvent = replayEvent,
-                triggerEvent = triggerEvent,
-                matcher = matcher
-            )
+                webhookTriggerService.replay(
+                    replayEvent = replayEvent,
+                    triggerEvent = triggerEvent,
+                    matcher = matcher
+                )
+            }
         }
     }
 
@@ -236,5 +259,28 @@ class WebhookRequestService(
                 )
             )
         )
+    }
+
+    private fun getRepository(projectId: String, repoHashId: String): Repository? {
+        return try {
+            client.get(ServiceRepositoryResource::class).get(
+                projectId = projectId,
+                repositoryId = repoHashId,
+                repositoryType = RepositoryType.ID
+            ).data
+        } catch (ignored: Exception) {
+            logger.warn("fail to get repository|projectId=$projectId|repoHashId=$repoHashId", ignored)
+            null
+        }
+    }
+
+    /**
+     * 新接入的代码源直接走新的触发逻辑
+     */
+    fun supportScmWebhook(repository: Repository) :Boolean {
+        val supportRepo = listOf(ScmType.SCM_GIT, ScmType.SCM_SVN)
+                .contains(repository.getScmType())
+        val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
+        return supportRepo && grayRepo
     }
 }
