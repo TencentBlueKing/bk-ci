@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
@@ -68,12 +69,16 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun getGroups(
         userId: String,
         projectId: String,
+        keyword: String?,
+        filterType: VarGroupFilterTypeEnum?,
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
         return Result(publicVarGroupService.getGroups(
             userId = userId,
             projectId = projectId,
+            keyword = keyword,
+            filterType = filterType,
             page = page,
             pageSize = pageSize
         ))
