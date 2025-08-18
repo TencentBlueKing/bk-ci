@@ -1006,9 +1006,11 @@ class PipelineBuildFacadeService(
                     runLockType = setting.runLockType,
                     waitQueueTimeMinute = setting.waitQueueTimeMinute,
                     maxQueueSize = setting.maxQueueSize,
-                    concurrencyGroup = setting.concurrencyGroup,
+                    concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    // stage审核时暂不执行流水线并发组取消逻辑
+                    cancelAllowed = false
                 )
             )
 

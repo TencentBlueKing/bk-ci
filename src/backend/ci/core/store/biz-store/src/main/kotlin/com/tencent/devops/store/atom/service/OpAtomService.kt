@@ -100,7 +100,11 @@ interface OpAtomService {
     fun setDefault(userId: String, atomCode: String): Boolean
 
     /**
-     * 更新插件敏感参数配置
+     * 刷新插件配置缓存
      */
-    fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean>
+    fun updateAtomConfigCache(
+        userId: String,
+        kProperty: String,
+        atomCode: String?
+    ): Result<Boolean>
 }
