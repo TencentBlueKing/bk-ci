@@ -135,6 +135,7 @@
                             this.setVisible(false)
                             this.$bkMessage({
                                 theme: 'success',
+                                extCls: 'apk-sign',
                                 message: this.$t('apkSignSuccess', [this.name])
                             })
 
@@ -143,7 +144,7 @@
                         this.signingMap.delete(this.path)
                     }
                 } catch (err) {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    this.$bkMessage({ theme: 'error', message: err.message || err, extCls: 'apk-sign' })
                 } finally {
                     this.isLoading = false
                 }
@@ -226,5 +227,8 @@
         padding: 0;
         color: #979ba5;
         font-size: 12px;
+    }
+    .apk-sign {
+        z-index: 6666 !important;
     }
 </style>
