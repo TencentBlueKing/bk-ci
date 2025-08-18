@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
@@ -44,6 +43,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.dao.RepositoryScmProviderDao
 import com.tencent.devops.repository.pojo.RepoCredentialTypeVo
+import com.tencent.devops.repository.pojo.RepositoryConfigDept
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfig
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
@@ -80,7 +80,7 @@ class RepositoryScmConfigService @Autowired constructor(
     private val repositoryScmProviderDao: RepositoryScmProviderDao,
     private val repositoryDao: RepositoryDao,
     private val uploadFileService: RepositoryUploadFileService,
-    private val authPlatformApi: AuthPlatformApi
+    private val repositoryConfigPermissionService: RepositoryConfigPermissionService
 ) {
     @Value("\${aes.scm.props:#{null}}")
     private val aesKey: String = ""
@@ -188,7 +188,11 @@ class RepositoryScmConfigService @Autowired constructor(
         }
     }
 
-    fun listConfigBaseInfo(userId: String, scmType: ScmType?): List<ScmConfigBaseInfo> {
+    fun listConfigBaseInfo(
+        userId: String,
+        scmType: ScmType?,
+        projectId: String
+    ): List<ScmConfigBaseInfo> {
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(PageUtil.DEFAULT_PAGE, PageUtil.MAX_PAGE_SIZE)
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val scmConfigs = repositoryScmConfigDao.list(
@@ -198,8 +202,11 @@ class RepositoryScmConfigService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )
-
-        return scmConfigs.map {
+        val scmCodes = scmConfigs.map { it.scmCode }
+        val finalScmCodes = validateUserPermission(userId, scmCodes)
+        return scmConfigs.filter {
+            finalScmCodes.contains(it.scmCode)
+        }.map {
             ScmConfigBaseInfo(
                 scmCode = it.scmCode,
                 name = it.name,
@@ -470,6 +477,49 @@ class RepositoryScmConfigService @Autowired constructor(
         } ?: listOf()
     }
 
+    fun listDept(
+        scmCode: String,
+        userId: String,
+        limit: Int,
+        offset: Int
+    ): List<RepositoryConfigDept> {
+        validateUserPlatformPermission(userId)
+        return repositoryConfigPermissionService.list(
+            scmCode = scmCode,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    fun addDept(
+        scmCode: String,
+        userId: String,
+        depts: List<RepositoryConfigDept>
+    ) {
+        validateUserPlatformPermission(userId)
+        if (depts.isNotEmpty()) {
+            repositoryConfigPermissionService.create(
+                scmCode = scmCode,
+                userId = userId,
+                deptList = depts
+            )
+        }
+    }
+
+    fun deleteDept(
+        scmCode: String,
+        userId: String,
+        depts: List<RepositoryConfigDept>
+    ) {
+        validateUserPlatformPermission(userId)
+        if (depts.isNotEmpty()) {
+            repositoryConfigPermissionService.delete(
+                scmCode = scmCode,
+                deptList = depts.map { it.deptId }.toSet()
+            )
+        }
+    }
+
     private fun getProviderConfig(scmCode: String): RepositoryScmProvider? {
         val scmConfig = repositoryScmConfigDao.get(dslContext, scmCode) ?: throw ErrorCodeException(
             errorCode = RepositoryMessageCode.ERROR_SCM_CONFIG_NOT_FOUND,
@@ -638,14 +688,16 @@ class RepositoryScmConfigService @Autowired constructor(
      * 校验平台管理权限
      */
     private fun validateUserPlatformPermission(userId: String) {
-        if (!authPlatformApi.validateUserPlatformPermission(userId)) {
-            throw OperationException(
-                message = I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.ERROR_USER_NO_PLATFORM_ADMIN_PERMISSION
-                )
-            )
-        }
+        repositoryConfigPermissionService.validateAdminPerm(userId)
     }
+
+    private fun validateUserPermission(
+        userId: String,
+        scmCodes: List<String>
+    ) = repositoryConfigPermissionService.listScmCode(
+        userId = userId,
+        scmCodes = scmCodes
+    )
 
     /**
      * 根据平台编码和事件类型获取事件描述

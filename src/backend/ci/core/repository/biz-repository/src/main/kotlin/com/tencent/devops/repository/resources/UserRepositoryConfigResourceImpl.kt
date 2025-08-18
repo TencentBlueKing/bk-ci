@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryConfigResource
+import com.tencent.devops.repository.pojo.RepositoryConfigDept
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
 import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
@@ -50,9 +51,17 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     private val repositoryScmConfigService: RepositoryScmConfigService
 ) : UserRepositoryConfigResource {
 
-    override fun list(userId: String, scmType: ScmType?): Result<List<ScmConfigBaseInfo>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        scmType: ScmType?
+    ): Result<List<ScmConfigBaseInfo>> {
         return Result(
-            repositoryScmConfigService.listConfigBaseInfo(userId, scmType)
+            repositoryScmConfigService.listConfigBaseInfo(
+                userId = userId,
+                scmType = scmType,
+                projectId = projectId
+            )
         )
     }
 
@@ -155,5 +164,54 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
                 eventType = eventType
             )
         )
+    }
+
+    override fun supportDept(
+        userId: String,
+        scmCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<RepositoryConfigDept>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repositoryScmConfigService.listDept(
+                userId = userId,
+                scmCode = scmCode,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+        )
+    }
+
+    override fun addDept(
+        userId: String,
+        scmCode: String,
+        list: List<RepositoryConfigDept>?
+    ): Result<Boolean> {
+        list?.let {
+            repositoryScmConfigService.addDept(
+                userId = userId,
+                scmCode = scmCode,
+                depts = it
+            )
+        }
+        return Result(true)
+    }
+
+    override fun deleteDept(
+        userId: String,
+        scmCode: String,
+        list: List<RepositoryConfigDept>?
+    ): Result<Boolean> {
+        list?.let {
+            repositoryScmConfigService.deleteDept(
+                userId = userId,
+                scmCode = scmCode,
+                depts = it
+            )
+        }
+        return Result(true)
     }
 }
