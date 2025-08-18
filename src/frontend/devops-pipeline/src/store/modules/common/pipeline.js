@@ -307,8 +307,8 @@ export const actions = {
             return response.data
         })
     },
-    getMetadataLabel: async ({ commit }, { projectId, pipelineId }) => {
-        return request.get(`/${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/quality/metadata/${projectId}/pipeline/${pipelineId}`).then(response => {
+    getMetadataLabel: async ({ commit }, { projectId, pipelineId, debug }) => {
+        return request.get(`/${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/quality/metadata/${projectId}/pipeline/${pipelineId}?debug=${debug}`).then(response => {
             return response.data
         })
     },

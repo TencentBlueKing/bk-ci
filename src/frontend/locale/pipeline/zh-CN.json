@@ -332,7 +332,7 @@
     },
     "disableSetting": "禁用设置",
     "stopWhenNewCome": "取消正在运行的构建",
-    "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持的上下文变量：${{ci.pipeline_id}} | ${{ci.branch}}",
+    "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持在启动阶段能确定值的变量，比如 ${{ci.pipeline_id}}、${{ci.branch}}、${{variables.a}} (前提是a在启动时值已明确)等",
     "notify": "通知",
     "auth": "权限",
     "authManage": "权限管理",
@@ -1744,6 +1744,7 @@
     "下次：": "下次：",
     "小时": "小时"
   },
+  "validVariableFormat": "请输入有效的变量格式",
   "enterRepoAlias": "请输入代码库别名",
   "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
   "addParam": "添加参数",

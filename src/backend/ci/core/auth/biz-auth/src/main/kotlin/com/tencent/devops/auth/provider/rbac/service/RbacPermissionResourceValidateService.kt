@@ -123,7 +123,7 @@ class RbacPermissionResourceValidateService(
         resourceCode: String
     ): Boolean {
         checkProjectApprovalStatus(resourceType, resourceCode)
-        val checkProjectManage = rbacCommonService.checkProjectManager(
+        val checkProjectManage = permissionService.checkProjectManager(
             userId = userId,
             projectCode = projectId
         )

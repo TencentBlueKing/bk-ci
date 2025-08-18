@@ -1,12 +1,20 @@
-Thank you for installing {{ .Chart.Name }}.
+感谢您安装 {{ .Chart.Name }}。
 
-Your release is named {{ .Release.Name }}.
+您的版本名称为 {{ .Release.Name }}。
 
-验证步骤:
+### 验证步骤
 
-1. 配置{{ .Values.config.bkCiHost }}域名解析(如果域名可以被DNS正确解析，您可以跳过此步骤)
+1. **配置域名解析**（如果域名已正确解析，可跳过此步骤）：
+   确保域名 `{{ .Values.config.bkCiHost }}` 已在您的 DNS 中正确配置。
 
-2. 访问http://{{ .Values.config.bkCiHost }} 验证服务能否正常访问
-    **TIP** 如果使用NodePort或port-forward方式访问，请注意添加端口
+2. **访问服务**：
+   在浏览器中打开 `http://{{ .Values.config.bkCiHost }}`，验证服务是否可正常访问。
+   **注意**：如果使用 NodePort 或 port-forward 方式访问，请记得添加端口号。
 
-3. 更多说明请参考页面操作指引以及API文档
+3. **更多说明**：
+   请参考 [docs] 获取更多详细信息。
+
+4. **安全提示**：
+   对于生产环境，强烈建议：
+   - 启用 JWT 校验（参考 [JWT 配置指南](https://github.com/TencentBlueKing/bk-ci/blob/master/docs/install/jwt.md)）。
+   - 独立部署 `kubernetes-manager`（参考 [Kubernetes Manager 指南](https://github.com/TencentBlueKing/bk-ci/blob/master/docs/install/kubernetes-manager.md)）。

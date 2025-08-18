@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.service.code.handler.svn
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
@@ -148,7 +147,7 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                             relativeSubPath = path
                         )
                     },
-                    includedPaths = getIncludePaths(projectRelativePath),
+                    includedPaths = WebhookUtils.getSvnIncludePaths(webHookParams, projectRelativePath),
                     includedFailedReason = I18Variable(
                         code = WebhookI18nConstants.PATH_NOT_MATCH,
                         params = listOf()
@@ -162,34 +161,6 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
     }
-
-    private fun WebHookParams.getIncludePaths(projectRelativePath: String) =
-        // 如果没有配置包含路径，则需要跟代码库url做对比
-        if (relativePath.isNullOrBlank()) {
-            // 模糊匹配需要包含整个路径
-            if (pathFilterType == PathFilterType.NamePrefixFilter) {
-                listOf(
-                    WebhookUtils.getFullPath(
-                        projectRelativePath = projectRelativePath,
-                        relativeSubPath = ""
-                    )
-                )
-            } else {
-                listOf(
-                    WebhookUtils.getFullPath(
-                        projectRelativePath = projectRelativePath,
-                        relativeSubPath = "**"
-                    )
-                )
-            }
-        } else {
-            WebhookUtils.convert(relativePath).map { path ->
-                WebhookUtils.getFullPath(
-                    projectRelativePath = projectRelativePath,
-                    relativeSubPath = path
-                )
-            }
-        }
 
     override fun retrieveParams(
         event: SvnCommitEvent,

@@ -76,7 +76,7 @@ class GitPushHookRule @Autowired constructor (
                 action = action.value,
                 branch = ref,
                 changes = WebhookRuleUtils.getChangeFiles(changes),
-                lastCommitMsg = commit.message
+                lastCommitMsg = commit?.message ?: ""
             )
         }
         val context = WebhookConditionContext(

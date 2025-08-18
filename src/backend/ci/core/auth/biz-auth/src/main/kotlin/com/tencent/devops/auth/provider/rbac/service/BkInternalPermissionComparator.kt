@@ -70,6 +70,7 @@ class BkInternalPermissionComparator(
         resourceType: String,
         resourceCode: String,
         action: String,
+        enableSuperManagerCheck: Boolean,
         expectedResult: Boolean
     ) {
         postProcess {
@@ -78,7 +79,8 @@ class BkInternalPermissionComparator(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                action = action
+                action = action,
+                enableSuperManagerCheck = enableSuperManagerCheck
             )
             val isConsistent = (localCheckResult == expectedResult)
             consistencyCounter(::validateUserResourcePermission.name, isConsistent).increment()
@@ -106,7 +108,8 @@ class BkInternalPermissionComparator(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 action = action,
-                expectedResult = verify
+                expectedResult = verify,
+                enableSuperManagerCheck = false
             )
         }
     }
@@ -194,7 +197,8 @@ class BkInternalPermissionComparator(
                 val hasNoActiveMembership by lazy {
                     bkInternalPermissionService.listMemberGroupIdsInProjectWithCache(
                         projectCode = projectCode,
-                        userId = userId
+                        userId = userId,
+                        enableTemplateInvalidationOnUserExpiry = true
                     ).isEmpty()
                 }
                 !isEnabled || hasNoActiveMembership
@@ -231,7 +235,7 @@ class BkInternalPermissionComparator(
 
             // 整体比较可能复杂，可以比较每个permission的结果
             expectedResult.forEach { (permission, resources) ->
-                val localResources = localResult[permission]?.toSet()
+                val localResources = localResult[permission]?.toSet() ?: emptySet()
                 val externalApiResources = resources.toSet()
 
                 val isConsistent = localResources == externalApiResources
@@ -239,10 +243,21 @@ class BkInternalPermissionComparator(
                 consistencyCounter(::filterUserResourcesByActions.name, isConsistent).increment()
 
                 if (!isConsistent) {
+                    // 计算差异项
+                    val externalOnly = externalApiResources - localResources  // external有但local无的项
+                    val localOnly = localResources - externalApiResources     // local有但external无的项
+
                     logger.warn(
-                        "filter user resources by actions results are inconsistent for permission:" +
-                            "$permission|$userId|$projectCode|$resourceType" +
-                            "|external=$externalApiResources|local=$localResources"
+                        """
+                        filter user resources by actions are inconsistent: 
+                        userId=$userId|projectCode=$projectCode|resourceType=$resourceType|action=$permission
+                        ===== 差异项详情 =====
+                        external独有项: ${externalOnly.joinToString()}
+                        local独有项: ${localOnly.joinToString()}
+                        ===== 完整数据 =====
+                        external=$expectedResult
+                        local=$localResult
+                        """.trimIndent()
                     )
                 }
             }

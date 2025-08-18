@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -226,6 +227,28 @@ interface ApigwEnvironmentAgentResourceV4 {
         data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
 
+    @Operation(
+        summary = "修改Agent信息",
+        tags = ["v4_user_node_third_part_agent_update_agent_info", "v4_app_node_third_part_agent_update_agent_info"]
+    )
+    @POST
+    @Path("/update_agent_info")
+    fun updateAgentInfo(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "修改数据", required = true)
+        data: UpdateAgentInfo
+    ): Result<Boolean>
 
     @Operation(summary = "查询项目标签和对应节点数",
         tags = ["v4_user_node_third_part_agent_tags", "v4_app_node_third_part_agent_tags"])

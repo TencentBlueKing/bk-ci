@@ -54,6 +54,7 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -64,6 +65,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.enums.GroupType
@@ -85,7 +87,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val authResourceDao: AuthResourceDao,
     private val resourceGroupSyncService: PermissionResourceGroupSyncService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val deptService: DeptService
 ) : PermissionResourceGroupService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
@@ -137,15 +140,14 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 val resourceGroup = resourceGroupMap[it.id]
                 val defaultGroup = resourceGroup?.defaultGroup ?: false
                 // 默认组名需要支持国际化
-                val groupName = if (defaultGroup) {
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = "${resourceGroup!!.resourceType}.${resourceGroup.groupCode}" +
-                            AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
-                        defaultMessage = resourceGroup.groupName
-                    )
-                } else {
-                    it.name
-                }
+                val groupName =
+                    if ((resourceType == ResourceTypeId.PROJECT && defaultGroup) ||
+                        resourceType != ResourceTypeId.PROJECT
+                    ) {
+                        getI18nGroupName(resourceGroup!!)
+                    } else {
+                        it.name
+                    }
                 IamGroupInfoVo(
                     managerId = resourceInfo.relationId.toInt(),
                     defaultGroup = defaultGroup,
@@ -166,6 +168,14 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 records = iamGroupInfoVoList
             )
         }
+    }
+
+    private fun getI18nGroupName(resourceGroup: AuthResourceGroup): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
+                AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+            defaultMessage = resourceGroup.groupName
+        )
     }
 
     private fun MutableList<IamGroupInfoVo>.plusAllProjectMemberGroup(
@@ -591,6 +601,34 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceCode = resourceCode,
             groupCode = groupCode.value
         )
+    }
+
+    override fun listProjectMemberGroupTemplateIds(
+        projectCode: String,
+        memberId: String
+    ): List<String> {
+        // 获取用户的所属组织
+        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+            if (it.isNotEmpty()) {
+                deptService.getUserDeptInfo(memberId).toList()
+            } else {
+                emptyList()
+            }
+        } ?: emptyList()
+        // 查询项目下包含该成员及所属组织的用户组列表
+        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            memberIds = memberDeptInfos + memberId
+        ).map { it.iamGroupId.toString() }
+        // 通过项目组ID获取人员模板ID
+        return authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = projectGroupIds
+        ).filter { it.iamTemplateId != null }
+            .map { it.iamTemplateId.toString() }
     }
 
     override fun syncManagerGroup(

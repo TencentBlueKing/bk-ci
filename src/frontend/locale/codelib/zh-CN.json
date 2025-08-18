@@ -216,5 +216,6 @@
   "触发器不匹配": "触发器不匹配",
   "触发结果": "触发结果",
   "codelibUndeployTitle": "{0}连接服务尚未部署完成",
-  "githubUndeployDesc": "如需使用此功能，请联系平台管理员注册 GitHub APP"
+  "githubUndeployDesc": "如需使用此功能，请联系平台管理员注册 GitHub APP",
+  "authorizeAccount": "授权账号"
 }

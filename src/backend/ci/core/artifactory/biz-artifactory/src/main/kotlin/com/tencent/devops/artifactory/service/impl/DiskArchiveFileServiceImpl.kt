@@ -678,7 +678,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -693,7 +692,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
