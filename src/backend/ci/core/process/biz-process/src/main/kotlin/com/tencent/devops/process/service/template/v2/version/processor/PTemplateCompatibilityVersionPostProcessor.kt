@@ -58,25 +58,30 @@ class PTemplateCompatibilityVersionPostProcessor(
             val v2VersionName = v2TemplateResource.versionName!!
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                val existingCount = v1TemplateDao.countTemplateVersions(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    templateId = templateId,
-                    versionName = v1VersionName
-                )
-                if (existingCount == 1) {
-                    v2TemplateResourceService.update(
-                        transactionContext = transactionContext,
-                        PipelineTemplateResourceUpdateInfo(
-                            versionName = "$v1VersionName-1"
-                        ),
-                        PipelineTemplateResourceCommonCondition(
-                            projectId = projectId,
-                            templateId = templateId,
-                            versionName = v1VersionName
-                        )
+                // 假设新表一开始已经有v1名称版本了，此时老接口，旧逻辑再创建一个同名称v1，
+                // 那么此时应该将之前新表中的v1版本改为v1-1，并且新版本为v1-2.
+                if (!v1VersionName.isNullOrBlank()) {
+                    val existingCount = v1TemplateDao.countTemplateVersions(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        templateId = templateId,
+                        versionName = v1VersionName
                     )
+                    if (existingCount == 1) {
+                        v2TemplateResourceService.update(
+                            transactionContext = transactionContext,
+                            PipelineTemplateResourceUpdateInfo(
+                                versionName = "$v1VersionName-1"
+                            ),
+                            PipelineTemplateResourceCommonCondition(
+                                projectId = projectId,
+                                templateId = templateId,
+                                versionName = v1VersionName
+                            )
+                        )
+                    }
                 }
+
                 v1TemplateDao.createTemplate(
                     dslContext = transactionContext,
                     projectId = projectId,

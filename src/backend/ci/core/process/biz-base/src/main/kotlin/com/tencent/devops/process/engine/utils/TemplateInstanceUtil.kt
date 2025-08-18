@@ -36,7 +36,7 @@ object TemplateInstanceUtil {
         defaultStageTagId: String?,
         staticViews: List<String> = emptyList(),
         templateVariables: List<TemplateVariable>? = null,
-        triggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
+        overrideTriggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
         recommendedVersion: TemplateInstanceRecommendedVersion? = null,
         overrideTemplateField: TemplateInstanceField? = null
     ): Model {
@@ -49,7 +49,7 @@ object TemplateInstanceUtil {
         val templateTrigger = templateModel.getTriggerContainer()
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateTrigger.elements,
-            triggerConfigs = triggerConfigs
+            overrideTriggerConfigs = overrideTriggerConfigs
         )
         val pipelineParam = mergeParams(
             templateParams = templateTrigger.params,
@@ -115,6 +115,9 @@ object TemplateInstanceUtil {
         // 历史数据,直接使用流水线设置
         if (overrideTemplateField == null) return setting
         val instanceSetting = setting.copy()
+        // 覆盖逻辑，覆盖的是模板的配置
+        // 1.若覆盖，则覆盖掉模板配置，使用流水线自身的配置
+        // 2.否则使用模板的配置
         mergeBuildNumRule(
             setting = instanceSetting,
             templateSetting = templateSetting,
@@ -167,7 +170,7 @@ object TemplateInstanceUtil {
     ): TriggerContainer {
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateModel.getTriggerContainer().elements,
-            triggerConfigs = model.triggerConfigs
+            overrideTriggerConfigs = model.triggerConfigs
         )
         val pipelineParams = mergeParams(
             templateParams = templateModel.getTriggerContainer().params,
@@ -190,11 +193,11 @@ object TemplateInstanceUtil {
      */
     private fun mergeTriggerElements(
         templateTriggerElements: List<Element>,
-        triggerConfigs: List<TemplateInstanceTriggerConfig>?
+        overrideTriggerConfigs: List<TemplateInstanceTriggerConfig>?
     ): List<Element> {
-        if (triggerConfigs == null) return templateTriggerElements
+        if (overrideTriggerConfigs == null) return templateTriggerElements
 
-        val triggerConfigMap = triggerConfigs.filter { it.stepId != null }.associateBy { it.stepId }
+        val triggerConfigMap = overrideTriggerConfigs.filter { it.stepId != null }.associateBy { it.stepId }
         return templateTriggerElements.map { templateTriggerElement ->
             if (templateTriggerElement.stepId.isNullOrEmpty()) {
                 templateTriggerElement
@@ -240,9 +243,9 @@ object TemplateInstanceUtil {
     ): Boolean {
         // 覆盖的key存在且变量值类型与模板参数类型一致,则流水线的变量覆盖模版的
         return overrideParamIds != null &&
-                overrideParamIds.contains(templateParam.id) &&
-                templateVariable != null &&
-                templateVariable.value.javaClass == templateParam.defaultValue.javaClass
+            overrideParamIds.contains(templateParam.id) &&
+            templateVariable != null &&
+            templateVariable.value.javaClass == templateParam.defaultValue.javaClass
     }
 
     private fun overrideTrigger(
@@ -251,9 +254,9 @@ object TemplateInstanceUtil {
         triggerConfig: TemplateInstanceTriggerConfig?
     ): Boolean {
         return !templateTriggerElement.stepId.isNullOrEmpty() &&
-                overrideTriggerStepIds != null &&
-                overrideTriggerStepIds.contains(templateTriggerElement.stepId) &&
-                triggerConfig != null
+            overrideTriggerStepIds != null &&
+            overrideTriggerStepIds.contains(templateTriggerElement.stepId) &&
+            triggerConfig != null
     }
 
     private fun copyTriggerElement(
