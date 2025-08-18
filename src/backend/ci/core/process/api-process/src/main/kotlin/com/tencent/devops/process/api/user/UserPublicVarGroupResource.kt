@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import io.swagger.v3.oas.annotations.Operation
@@ -86,6 +87,12 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String? = null,
+        @Parameter(description = "过滤类型", required = false)
+        @QueryParam("filterType")
+        filterType: VarGroupFilterTypeEnum? = null,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int,
