@@ -150,13 +150,13 @@ class WebhookManager @Autowired constructor(
                         eventBody = webhook
                     )
                     pipelineTriggerEventService.updateTriggerEvent(triggerEvent = triggerEvent)
-                    fireEvent(
-                        eventId = eventId,
-                        repository = repository,
-                        webhook = webhook,
-                        sourceWebhook = sourceWebhook
-                    )
                 }
+                fireEvent(
+                    eventId = eventId,
+                    repository = repository,
+                    webhook = webhook,
+                    sourceWebhook = sourceWebhook
+                )
             }
         }
     }
@@ -178,7 +178,7 @@ class WebhookManager @Autowired constructor(
     ) {
         // 保存原始webhook数据，用于第三方触发器回调
         fillSourceWebhook(webhook = webhook, sourceWebhook = sourceWebhook)
-        fireEvent(eventId = eventId, repository = repository, webhook = webhook)
+        fireEvent(eventId = eventId, repository = repository, webhook = webhook, replayPipelineId = replayPipelineId)
     }
 
     /**
