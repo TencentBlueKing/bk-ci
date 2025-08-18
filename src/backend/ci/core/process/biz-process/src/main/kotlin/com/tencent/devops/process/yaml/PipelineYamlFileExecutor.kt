@@ -106,12 +106,6 @@ class PipelineYamlFileExecutor @Autowired constructor(
 
                 else -> Unit
             }
-            pipelineYamlDiffService.updateStatus(
-                projectId = projectId,
-                eventId = eventId,
-                filePath = filePath,
-                status = YamDiffFileStatus.SUCCESS
-            )
         } catch (ignored: Exception) {
             logger.error(
                 "[PAC_PIPELINE]|Failed to handle yaml file event|$eventId|" +
@@ -119,12 +113,6 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 ignored
             )
             webhookTriggerManager.fireError(context = context, exception = ignored)
-            pipelineYamlDiffService.updateStatus(
-                projectId = projectId,
-                eventId = eventId,
-                filePath = filePath,
-                status = YamDiffFileStatus.FAILED
-            )
         }
     }
 
@@ -136,6 +124,12 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath
             )
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.SUCCESS
+            )
         } catch (ignored: Exception) {
             val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
             pipelineYamlSyncService.syncFailed(
@@ -145,13 +139,43 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 reason = reason,
                 reasonDetail = reasonDetail
             )
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.FAILED
+            )
+        }
+        if (fileType.needNotifyScheduler()) {
+            sendSchedulerEvent()
         }
     }
 
     private fun PipelineYamlFileEvent.createOrUpdateYamlFile() {
-        pipelineYamlFileManager.createOrUpdateYamlFile(this)
-        if (fileType.canExecute()) {
-            webhookTriggerBuildService.yamlTrigger(this)
+        try {
+            pipelineYamlFileManager.createOrUpdateYamlFile(this)
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.SUCCESS
+            )
+            if (fileType.canExecute()) {
+                webhookTriggerBuildService.yamlTrigger(this)
+            }
+        } catch (ignored: Exception) {
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.FAILED
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to create or update yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|" +
+                        "commitId:$commitId|blobId:$blobId",
+                ignored
+            )
         }
         if (fileType.needNotifyScheduler()) {
             sendSchedulerEvent()
@@ -159,16 +183,50 @@ class PipelineYamlFileExecutor @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.deleteYamlFile() {
-        pipelineYamlFileManager.deleteYamlFile(event = this)
+        try {
+            pipelineYamlFileManager.deleteYamlFile(event = this)
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.SUCCESS
+            )
+        } catch (ignored: Exception) {
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.FAILED
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to delete yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                ignored
+            )
+        }
         if (fileType.needNotifyScheduler()) {
             sendSchedulerEvent()
         }
     }
 
     private fun PipelineYamlFileEvent.renameYamlFile() {
-        pipelineYamlFileManager.renameYamlFile(event = this)
-        if (fileType.canExecute()) {
-            webhookTriggerBuildService.yamlTrigger(this)
+        try {
+            pipelineYamlFileManager.renameYamlFile(event = this)
+            if (fileType.canExecute()) {
+                webhookTriggerBuildService.yamlTrigger(this)
+            }
+        } catch (ignored: Exception) {
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.FAILED
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to rename yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                ignored
+            )
         }
         if (fileType.needNotifyScheduler()) {
             sendSchedulerEvent()
