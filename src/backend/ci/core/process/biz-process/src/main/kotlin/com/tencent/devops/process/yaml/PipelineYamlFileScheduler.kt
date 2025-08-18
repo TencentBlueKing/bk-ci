@@ -2,15 +2,12 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.PipelineYamlDependencyDao
-import com.tencent.devops.process.dao.PipelineYamlDiffDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependency
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
+import com.tencent.devops.process.yaml.mq.PipelineYamlFileExecutorEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileSchedulerEvent
 import com.tencent.devops.process.yaml.pojo.PipelineYamlSchedulerLock
-import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileExecutorEvent
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -20,9 +17,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PipelineYamlFileScheduler @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val pipelineYamlDiffDao: PipelineYamlDiffDao,
-    private val pipelineYamlDependencyDao: PipelineYamlDependencyDao,
+    private val pipelineYamlDiffService: PipelineYamlDiffService,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val redisOperation: RedisOperation
 ) {
@@ -57,15 +52,13 @@ class PipelineYamlFileScheduler @Autowired constructor(
     }
 
     private fun PipelineYamlFileSchedulerEvent.doHandle() {
-        val yamlDiffs = pipelineYamlDiffDao.listYamlDiffs(
-            dslContext = dslContext,
+        val yamlDiffs = pipelineYamlDiffService.listYamlDiffs(
             projectId = projectId,
             eventId = eventId
         )
         val dependencyTypeStatusMap = yamlDiffs.groupBy { it.fileType }.mapValues { (_, events) ->
             events.all { it.status.isFinish() }
         }
-        val dependencyFileStatusMap = yamlDiffs.associateBy({ it.filePath }, { it.status.isFinish() })
 
         yamlDiffs.filter {
             // 1. 不是回调回来的事件,触发所有的文件
@@ -76,25 +69,12 @@ class PipelineYamlFileScheduler @Autowired constructor(
                 return@forEach
             }
             val canDispatch = when (yamlDiff.actionType) {
-                YamlFileActionType.TRIGGER -> {
-                    // 触发,说明文件没有变更,则需要判断是否有依赖,如果有依赖,则需要判断依赖的文件是否有更新
-                    val dependencyFiles = pipelineYamlDependencyDao.listDependencies(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        filePath = yamlDiff.filePath,
-                        blobId = yamlDiff.blobId!!,
-                        dependencyRef = yamlDiff.ref
-                    )
-                    isDependencyFileFinished(
-                        dependencyFiles = dependencyFiles,
-                        dependencyFileStatusMap = dependencyFileStatusMap
-                    )
-                }
-                // 删除不需要判断是否有依赖
-                YamlFileActionType.DELETE -> {
+                // 触发和删除不需要判断是否有依赖
+                YamlFileActionType.TRIGGER, YamlFileActionType.DELETE -> {
                     true
                 }
 
+                // 当新增和修改时,这里还无法判断依赖了哪些文件,所以需要等待所有依赖的文件类型都执行完成后,才执行
                 else -> {
                     isDependencyTypeFinished(
                         fileType = yamlDiff.fileType,
