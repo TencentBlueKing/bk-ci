@@ -79,22 +79,23 @@ func DoUpgradeAgent() error {
 	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
 
 	// 使用 systemd 的使用 systemd 重启
-	if isRunningUnderSystemd() {
+	serviceName := fmt.Sprintf("devops_agent_%s.service", config.GAgentConfig.AgentId)
+	if os.Geteuid() == 0 && (isRunningUnderSystemd() || serviceUnitExists(serviceName)) {
 		logs.Info("start upgrade agent by systemd")
-		if agentChange {
-			err = replaceAgentFile(config.GetClienAgentFile())
-			if err != nil {
-				logs.WithError(err).Error("replace agent file failed")
-			}
-		}
 		if daemonChange {
 			err = replaceAgentFile(config.GetClientDaemonFile())
 			if err != nil {
 				logs.WithError(err).Error("replace daemon file failed")
 			}
+			tryKillAgentProcess(daemonProcess)
 		}
-
-		serviceName := fmt.Sprintf("devops_agent_%s.service", config.GAgentConfig.AgentId)
+		if agentChange {
+			err = replaceAgentFile(config.GetClienAgentFile())
+			if err != nil {
+				logs.WithError(err).Error("replace agent file failed")
+			}
+			tryKillAgentProcess(agentProcess)
+		}
 		updatePrivateTmp(serviceName)
 		err := restartServiceViaSystemctl(serviceName)
 		if err != nil {
@@ -446,4 +447,19 @@ func modifyScriptPrivateTmp(filePath string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func serviceUnitExists(serviceName string) bool {
+	// 使用 'systemctl cat'，它的退出码可以明确告诉我们服务单元是否存在。
+	// 我们不需要输出，所以将其重定向到 /dev/null。
+	cmd := exec.Command("systemctl", "cat", serviceName)
+	// 在 Go 1.15+ 中，可以设置 cmd.Stdout = io.Discard 和 cmd.Stderr = io.Discard
+	// 为了兼容性，这里使用 os.DevNull
+	devNull, _ := os.Open(os.DevNull)
+	defer devNull.Close()
+	cmd.Stdout = devNull
+	cmd.Stderr = devNull
+
+	err := cmd.Run()
+	return err == nil // 如果退出码为 0 (nil error)，则文件存在。
 }
