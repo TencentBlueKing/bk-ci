@@ -512,15 +512,6 @@
                         </span>
                     </p>
                     <div class="build-artifactory-operation">
-                        <!-- <bk-button
-                            v-if="artifactory.artifactoryType !== 'IMAGE'"
-                            text
-                            size="small"
-                            theme="primary"
-                            @click.stop="downloadFile(artifactory)"
-                        >
-                            {{ $t('download') }}
-                        </bk-button> -->
                         <artifact-download-button
                             class="artifact-downLoad-button"
                             v-if="artifactory.artifactoryType !== 'IMAGE'"
