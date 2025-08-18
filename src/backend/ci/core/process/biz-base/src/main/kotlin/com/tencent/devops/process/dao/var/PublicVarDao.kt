@@ -106,7 +106,7 @@ class PublicVarDao {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(TYPE.eq(keyword))
+                .and(TYPE.eq(type))
                 .fetchInto(String::class.java)
         }
     }
