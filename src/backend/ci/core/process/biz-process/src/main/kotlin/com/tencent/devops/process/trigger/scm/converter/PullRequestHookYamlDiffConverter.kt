@@ -228,6 +228,10 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 }
                 // 源分支没有，目标分支有，删除列表没有，说明是目标分支新增的,需要触发
                 targetPath !in sourceFilePaths && targetPath !in changeFiles.deletedFiles -> {
+                    // 如果文件类型不能执行,那么没有变更时,直接跳过,比如模版文件,只需要变更,不需要执行
+                    if (!YamlFileType.getFileType(targetPath).canExecute()) {
+                        return@forEach
+                    }
                     val yamlDiff = PipelineYamlDiff(
                         projectId = repository.projectId!!,
                         eventId = eventId,
@@ -247,6 +251,10 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 }
                 // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
                 targetPath in sourceFilePaths && targetPath !in changeFiles.allFiles -> {
+                    // 如果文件类型不能执行,那么没有变更时,直接跳过,比如模版文件,只需要变更,不需要执行
+                    if (!YamlFileType.getFileType(targetPath).canExecute()) {
+                        return@forEach
+                    }
                     val yamlDiff = PipelineYamlDiff(
                         projectId = repository.projectId!!,
                         eventId = eventId,
@@ -362,8 +370,13 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                     yamlDiffs.add(yamlDiff)
                 }
 
-                else ->
+                else -> {
+                    // 如果文件类型不能执行,那么没有变更时,直接跳过,比如模版文件,只需要变更,不需要执行
+                    if (!YamlFileType.getFileType(targetPath).canExecute()) {
+                        return@forEach
+                    }
                     yamlDiffs.add(baseYamlDiff)
+                }
             }
         }
         // 目标文件删除事件

@@ -91,6 +91,10 @@ class GitPushHookYamlDiffConverter @Autowired constructor(
         fileTrees.forEach { tree ->
             val filePath = GitActionCommon.getCiFilePath(tree.path)
             val actionType = WebhookConverterUtils.getYamlActionType(filePath = filePath, changeFiles = changeFiles)
+            // 如果文件类型不能执行,那么没有变更时,直接跳过,比如模版文件,只需要变更,不需要执行
+            if (actionType == YamlFileActionType.TRIGGER && !YamlFileType.getFileType(filePath).canExecute()) {
+                return@forEach
+            }
             val oldFilePath = changeFiles.renamedFiles[filePath]
             val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
