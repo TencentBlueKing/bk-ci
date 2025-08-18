@@ -183,15 +183,23 @@ class WebhookRequestService(
                 )
             } ?: return
             // 新代码源灰度流量控制
-            if (supportScmWebhook(repository) && triggerEvent.eventBody != null) {
+            if (supportScmWebhook(repository)) {
                 logger.info("The current replay event will execute the new trigger logic")
-                webhookManager.fireEvent(
-                    eventId = triggerEvent.eventId!!,
-                    repository = repository,
-                    webhook = triggerEvent.eventBody!!,
-                    replayPipelineId = pipelineId,
-                    sourceWebhook = repoWebhookRequest.requestBody
-                )
+                // 读取当前回放操作依赖的trigger event
+                pipelineTriggerEventDao.getEventByRequestId(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    requestId = replayRequestId,
+                    eventSource = repository.repoHashId!!
+                )?.let {
+                    webhookManager.fireEvent(
+                        eventId = triggerEvent.eventId!!,
+                        repository = repository,
+                        webhook = it.eventBody!!,
+                        replayPipelineId = pipelineId,
+                        sourceWebhook = repoWebhookRequest.requestBody
+                    )
+                }
             } else {
                 val webhookRequest = WebhookRequest(
                     headers = repoWebhookRequest.requestHeader,
