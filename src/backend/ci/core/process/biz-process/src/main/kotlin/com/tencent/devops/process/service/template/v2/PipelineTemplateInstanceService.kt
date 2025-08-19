@@ -540,7 +540,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
             params = arrayOf(baseId)
         )
-        val templateInstanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
+        val failedTemplateInstances = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
             dslContext = dslContext,
             projectId = projectId,
             baseIds = listOf(baseId),
@@ -548,14 +548,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
             page = 1,
             pageSize = PageUtil.MAX_PAGE_SIZE
         )
-        val pipelineId2Name = pipelineRepositoryService.listPipelineNameByIds(
-            projectId = projectId,
-            pipelineIds = templateInstanceItems.map { it.pipelineId }.toSet()
-        )
-        val errorMessages = templateInstanceItems.associateBy(
-            { pipelineId2Name[it.pipelineId] ?: "" },
-            { it.errorMessage ?: "" }
-        )
+        val errorMessages = failedTemplateInstances.associate {
+            it.pipelineName to (it.errorMessage ?: "")
+        }
         return PipelineTemplateInstancesTaskResult(
             baseId = baseId,
             projectId = projectId,
