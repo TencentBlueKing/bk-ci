@@ -4,19 +4,24 @@ import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigrationContext
 import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.utils.PageMigrationUtil
+import org.slf4j.LoggerFactory
 
 class ProjectPipelineCallbackHistoryMigrationStrategy(
     private val processDataMigrateDao: ProcessDataMigrateDao
 ) : MigrationStrategy {
 
+    private val logger = LoggerFactory.getLogger(ProjectPipelineCallbackHistoryMigrationStrategy::class.java)
+
     override fun migrate(context: MigrationContext) {
         // 迁移T_PROJECT_PIPELINE_CALLBACK_HISTORY表数据
+        val projectId = context.projectId
+        logger.info("Start migrating T_PROJECT_PIPELINE_CALLBACK_HISTORY data for projectId: $projectId")
         PageMigrationUtil.migrateByPage(
             pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,
             fetch = { offset, limit ->
                 processDataMigrateDao.getProjectPipelineCallbackHistoryRecords(
                     dslContext = context.dslContext,
-                    projectId = context.projectId,
+                    projectId = projectId,
                     limit = limit,
                     offset = offset
                 )
@@ -28,5 +33,6 @@ class ProjectPipelineCallbackHistoryMigrationStrategy(
                 )
             }
         )
+        logger.info("Finish migrating T_PROJECT_PIPELINE_CALLBACK_HISTORY data for projectId: $projectId")
     }
 }

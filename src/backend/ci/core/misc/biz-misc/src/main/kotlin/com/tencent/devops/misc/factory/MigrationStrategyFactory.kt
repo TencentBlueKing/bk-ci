@@ -121,7 +121,7 @@ class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMig
      * @return 按条件组合的流水线迁移策略列表
      */
     fun getPipelineDataMigrationStrategies(archiveFlag: Boolean? = null): List<MigrationStrategy> {
-        return mutableListOf<MigrationStrategy>().apply {
+        return buildList {
             addAll(commonPipelineDataStrategies)
             if (archiveFlag != true) {
                 // 添加非归档场景专属策略

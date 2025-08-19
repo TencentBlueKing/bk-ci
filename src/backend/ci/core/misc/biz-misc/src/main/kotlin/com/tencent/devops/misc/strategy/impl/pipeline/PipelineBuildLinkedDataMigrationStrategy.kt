@@ -21,7 +21,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
     private val processDataMigrateDao: ProcessDataMigrateDao
 ) : MigrationStrategy {
 
-    private val log = LoggerFactory.getLogger(PipelineBuildLinkedDataMigrationStrategy::class.java)
+    private val logger = LoggerFactory.getLogger(PipelineBuildLinkedDataMigrationStrategy::class.java)
 
     // 定义泛型记录处理器接口
     private interface RecordHandler<T> {
@@ -107,9 +107,13 @@ class PipelineBuildLinkedDataMigrationStrategy(
     )
 
     override fun migrate(context: MigrationContext) {
-        val pipelineId = context.pipelineId ?: return
+        val pipelineId = context.pipelineId ?: run {
+            logger.warn("Skipping build data migration: pipelineId is null")
+            return
+        }
         with(context) {
             // 迁移构建历史记录
+            logger.info("Start migrating build history data for pipeline[$pipelineId]")
             migrateBuildHistoryType(
                 context = this,
                 fetchRecords = { offset, limit ->
@@ -129,8 +133,10 @@ class PipelineBuildLinkedDataMigrationStrategy(
                 },
                 extractBuildId = { it.buildId }
             )
+            logger.info("Finished migrating build history data for pipeline[$pipelineId]")
 
             // 迁移构建历史调试记录
+            logger.info("Start migrating build history debug data for pipeline[$pipelineId]")
             migrateBuildHistoryType(
                 context = this,
                 fetchRecords = { offset, limit ->
@@ -150,6 +156,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
                 },
                 extractBuildId = { it.buildId }
             )
+            logger.info("Finished migrating build history debug data for pipeline[$pipelineId]")
         }
     }
 
@@ -229,7 +236,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
                     handler.migrateUnsafe(migratingDslContext, records)
                 }
             } catch (e: Exception) {
-                log.error("Failed to migrate linked data for handler", e)
+                logger.error("Failed to migrate linked data for handler", e)
                 throw e
             }
         }
