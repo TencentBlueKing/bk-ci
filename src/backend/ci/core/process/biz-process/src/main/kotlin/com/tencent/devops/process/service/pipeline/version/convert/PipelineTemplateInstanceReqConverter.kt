@@ -190,7 +190,7 @@ class PipelineTemplateInstanceReqConverter(
 
             // 前端会把所有的触发器都传过来,这里只需要保留流水线自定义的触发器,ui方式实例化,触发器默认继承模版
             // 以下触发器配置为流水线自定义的触发器，不跟随模板，会对流水线模板的触发器配置进行覆盖
-            val overrideTriggerConfigs = triggerConfigs?.filter {
+            val overrideTemplateTriggerConfigs = triggerConfigs?.filter {
                 it.stepId != null && overrideTemplateField?.overrideTrigger(it.stepId!!) ?: false
             }
 
@@ -210,7 +210,7 @@ class PipelineTemplateInstanceReqConverter(
                 templatePath = templatePath,
                 templateRef = templateRef,
                 templateVariables = templateVariables,
-                triggerConfigs = overrideTriggerConfigs,
+                triggerConfigs = overrideTemplateTriggerConfigs,
                 recommendedVersion = recommendedVersion,
                 overrideTemplateField = overrideTemplateField
             )
@@ -241,7 +241,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineName = pipelineName,
                 defaultStageTagId = defaultStageTagId,
                 templateVariables = templateVariables,
-                overrideTriggerConfigs = overrideTriggerConfigs,
+                overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
                 recommendedVersion = recommendedVersion,
                 overrideTemplateField = overrideTemplateField
             )
