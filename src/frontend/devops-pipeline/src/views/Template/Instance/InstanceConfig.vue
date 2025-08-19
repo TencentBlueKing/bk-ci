@@ -439,6 +439,7 @@
         return paramsList.value.length
     })
     const templateTriggerConfigs = computed(() => {
+        const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
             stepId: i.stepId ?? '',
@@ -447,7 +448,7 @@
             variables: i.startParams,
             name: i.name,
             version: i.version,
-            isFollowTemplate: true
+            isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
         }))
     })
     watch(() => activeIndex.value, () => {
@@ -710,6 +711,8 @@
                 break
 
             case 'trigger':
+                // const temTriggerValue = templateTriggerConfigs.value?.find(trigger => trigger.stepId === id).disabled
+                // console.log(temTriggerValue, 'templateTriggerConfigs.value')
                 const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
                 index = triggerStepIds.indexOf(target)
                 index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
@@ -725,6 +728,7 @@
                         triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
                             return {
                                 ...trigger,
+                                // disabled: trigger.stepId === id ? temTriggerValue : trigger.disabled,
                                 isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
                             }
                         })
@@ -732,6 +736,7 @@
                 })
                 break
             case 'param':
+                const temDefaultValue =  curTemplateDetail.value.params?.find(t => t.id === id)?.defaultValue
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
                 proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
@@ -744,6 +749,7 @@
                         },
                         param: curInstance.value?.param.map(p => ({
                             ...p,
+                            defaultValue: p.id === id && !p.isFollowTemplate ? temDefaultValue : p.defaultValue,
                             isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate
                         }))
                     }

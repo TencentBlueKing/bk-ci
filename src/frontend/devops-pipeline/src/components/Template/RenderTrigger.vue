@@ -14,12 +14,14 @@
                     >
                         <bk-radio
                             :value="true"
+                            :disabled="trigger.isFollowTemplate"
                             class="mr20"
                         >
                             {{ $t('template.enable') }}
                         </bk-radio>
                         <bk-radio
                             :value="false"
+                            :disabled="trigger.isFollowTemplate"
                         >
                             {{ $t('template.close') }}
                         </bk-radio>

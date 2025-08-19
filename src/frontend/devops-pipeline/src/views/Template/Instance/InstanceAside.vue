@@ -136,7 +136,7 @@
             variables: i.startParams,
             name: i.name,
             version: i.version,
-            isFollowTemplate: false
+            isFollowTemplate: true
         }))
     })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)

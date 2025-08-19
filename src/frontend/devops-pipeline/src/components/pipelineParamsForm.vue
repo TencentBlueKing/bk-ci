@@ -16,7 +16,7 @@
                             <render-param
                                 v-bind="param"
                                 :param="param"
-                                :disabled="disabled"
+                                :disabled="disabled || param.isFollowTemplate"
                                 :show-operate-btn="showOperateBtn"
                                 :handle-set-parma-required="handleSetParmaRequired"
                                 :handle-use-default-value="handleUseDefaultValue"
@@ -36,7 +36,7 @@
                     <render-param
                         v-bind="param"
                         :param="param"
-                        :disabled="disabled"
+                        :disabled="disabled || param.isFollowTemplate"
                         :show-operate-btn="showOperateBtn"
                         :handle-set-parma-required="handleSetParmaRequired"
                         :handle-use-default-value="handleUseDefaultValue"
