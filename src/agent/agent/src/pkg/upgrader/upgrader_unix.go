@@ -77,59 +77,9 @@ func DoUpgradeAgent() error {
 
 	daemonChange, _ := checkUpgradeFileChange(config.GetClientDaemonFile())
 	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
-
-	// 使用 systemd 的使用 systemd 重启
-	serviceName := fmt.Sprintf("devops_agent_%s.service", config.GAgentConfig.AgentId)
-	if os.Geteuid() == 0 && (isRunningUnderSystemd() || serviceUnitExists(serviceName)) {
-		logs.Info("start upgrade agent by systemd")
-		if daemonChange {
-			err = replaceAgentFile(config.GetClientDaemonFile())
-			if err != nil {
-				logs.WithError(err).Error("replace daemon file failed")
-			}
-			tryKillAgentProcess(daemonProcess)
-		}
-		if agentChange {
-			err = replaceAgentFile(config.GetClienAgentFile())
-			if err != nil {
-				logs.WithError(err).Error("replace agent file failed")
-			}
-			tryKillAgentProcess(agentProcess)
-		}
-		updatePrivateTmp(serviceName)
-		err := restartServiceViaSystemctl(serviceName)
-		if err != nil {
-			logs.WithError(err).Error("restart service failed")
-		}
-		logs.Info("agent upgrade done, upgrade process exiting")
-		return nil
-	}
-
-	/*
-		#4686
-		 1、kill devopsDaemon进程的行为在 macos 下， 如果当前是由 launchd 启动的（比如mac重启之后，devopsDaemon会由launchd接管启动）
-			当upgrader进程触发kill devopsDaemon时，会导致当前upgrader进程也被系统一并停掉，所以要排除macos的进程停止操作，否则会导致升级中断
-	*/
-	if daemonChange {
-		tryKillAgentProcess(daemonProcess) // macos 在升级后只能使用手动重启
-	}
-	if agentChange {
-		tryKillAgentProcess(agentProcess)
-	}
-
 	if !agentChange && !daemonChange {
 		logs.Info("upgrade nothing, exit")
 		return nil
-	}
-
-	logs.Info("wait 2 seconds for agent to stop")
-	time.Sleep(2 * time.Second)
-
-	if agentChange {
-		err = replaceAgentFile(config.GetClienAgentFile())
-		if err != nil {
-			logs.WithError(err).Error("replace agent file failed")
-		}
 	}
 
 	if daemonChange {
@@ -137,7 +87,38 @@ func DoUpgradeAgent() error {
 		if err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
-		if systemutil.IsLinux() { // #4686 如上，上面仅停止Linux的devopsDaemon进程，则也只重启动Linux的
+		tryKillAgentProcess(daemonProcess)
+	}
+
+	if agentChange {
+		err = replaceAgentFile(config.GetClienAgentFile())
+		if err != nil {
+			logs.WithError(err).Error("replace agent file failed")
+		}
+		tryKillAgentProcess(agentProcess)
+	}
+
+	logs.Info("wait 2 seconds for agent to stop")
+	time.Sleep(2 * time.Second)
+
+	if daemonChange {
+		// 使用 systemd 的使用 systemd 重启
+		serviceName := fmt.Sprintf("devops_agent_%s.service", config.GAgentConfig.AgentId)
+		if os.Geteuid() == 0 && serviceUnitExists(serviceName) {
+			logs.Info("start upgrade agent by systemd")
+			// 帮助老的使用私有 tmp 的替换下
+			updatePrivateTmp(serviceName)
+			err := restartServiceViaSystemctl(serviceName)
+			// 启动失败则主动拉起 daemon 兜底
+			if err != nil {
+				logs.WithError(err).Error("restart service failed")
+				if startErr := StartDaemon(); startErr != nil {
+					logs.WithError(startErr).Error("start daemon failed")
+					return startErr
+				}
+				logs.Info("agent start done")
+			}
+		} else {
 			if startErr := StartDaemon(); startErr != nil {
 				logs.WithError(startErr).Error("start daemon failed")
 				return startErr
@@ -258,14 +239,6 @@ func replaceAgentFile(fileName string) error {
 		return errors.Wrapf(err, "replaceAgentFile AtomicWriteFile %s error", dst)
 	}
 	return nil
-}
-
-func isRunningUnderSystemd() bool {
-	// systemd sets a few environment variables, INVOCATION_ID is a reliable one.
-	if os.Getenv("INVOCATION_ID") != "" {
-		return true
-	}
-	return false
 }
 
 func restartServiceViaSystemctl(serviceName string) error {
