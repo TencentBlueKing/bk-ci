@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version.convert
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
@@ -63,7 +65,8 @@ class PipelineDraftSaveReqConvert(
     private val pipelineVersionCommonConvert: PipelineVersionCommonConvert,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val client: Client
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineDraftSaveReq
@@ -87,6 +90,7 @@ class PipelineDraftSaveReqConvert(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     yaml = yaml!!,
+                    aspects = AtomUtils.checkElementCanPauseBeforeRun(client, projectId)
                 )
             } else {
                 if (modelAndSetting == null) {
@@ -102,7 +106,7 @@ class PipelineDraftSaveReqConvert(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     modelAndSetting = newModelAndSetting,
-                    oldYaml =  pipelineId?.let {
+                    oldYaml = pipelineId?.let {
                         pipelineRepositoryService.getPipelineResourceVersion(
                             projectId = projectId,
                             pipelineId = it,

@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
@@ -55,10 +54,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.atom.AtomUtils
-import com.tencent.devops.process.engine.control.lock.PipelineReleaseLock
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
@@ -86,10 +81,6 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineVersionFacadeService @Autowired constructor(
-    private val client: Client,
-    private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
-    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
