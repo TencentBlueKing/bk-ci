@@ -36,7 +36,7 @@ object TemplateInstanceUtil {
         defaultStageTagId: String?,
         staticViews: List<String> = emptyList(),
         templateVariables: List<TemplateVariable>? = null,
-        overrideTriggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
+        overrideTemplateTriggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
         recommendedVersion: TemplateInstanceRecommendedVersion? = null,
         overrideTemplateField: TemplateInstanceField? = null
     ): Model {
@@ -49,7 +49,7 @@ object TemplateInstanceUtil {
         val templateTrigger = templateModel.getTriggerContainer()
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateTrigger.elements,
-            overrideTriggerConfigs = overrideTriggerConfigs
+            overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs
         )
         val pipelineParam = mergeParams(
             templateParams = templateTrigger.params,
@@ -112,32 +112,18 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField? = null
     ): PipelineSetting {
-        // 历史数据,直接使用流水线设置
-        if (overrideTemplateField == null) return setting
+        // 历史数据或模板未实例化，直接使用流水线自身的设置
+        if (overrideTemplateField == null) {
+            return setting
+        }
+        // 创建一个新的设置对象副本，避免修改原始 setting
         val instanceSetting = setting.copy()
-        // 覆盖逻辑，覆盖的是模板的配置
-        // 1.若覆盖，则覆盖掉模板配置，使用流水线自身的配置
-        // 2.否则使用模板的配置
-        mergeBuildNumRule(
-            setting = instanceSetting,
-            templateSetting = templateSetting,
-            overrideTemplateField = overrideTemplateField
-        )
-        mergeLabel(
-            setting = instanceSetting,
-            templateSetting = templateSetting,
-            overrideTemplateField = overrideTemplateField
-        )
-        mergeNotices(
-            setting = instanceSetting,
-            templateSetting = templateSetting,
-            overrideTemplateField = overrideTemplateField
-        )
-        mergeConcurrency(
-            setting = instanceSetting,
-            templateSetting = templateSetting,
-            overrideTemplateField = overrideTemplateField
-        )
+        // 逐个合并配置项
+        mergeBuildNumRule(instanceSetting, templateSetting, overrideTemplateField)
+        mergeLabel(instanceSetting, templateSetting, overrideTemplateField)
+        mergeNotices(instanceSetting, templateSetting, overrideTemplateField)
+        mergeConcurrency(instanceSetting, templateSetting, overrideTemplateField)
+        mergeFailIfVariableInvalid(instanceSetting, templateSetting, overrideTemplateField)
         return instanceSetting
     }
 
@@ -170,7 +156,7 @@ object TemplateInstanceUtil {
     ): TriggerContainer {
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateModel.getTriggerContainer().elements,
-            overrideTriggerConfigs = model.triggerConfigs
+            overrideTemplateTriggerConfigs = model.triggerConfigs
         )
         val pipelineParams = mergeParams(
             templateParams = templateModel.getTriggerContainer().params,
@@ -193,11 +179,11 @@ object TemplateInstanceUtil {
      */
     private fun mergeTriggerElements(
         templateTriggerElements: List<Element>,
-        overrideTriggerConfigs: List<TemplateInstanceTriggerConfig>?
+        overrideTemplateTriggerConfigs: List<TemplateInstanceTriggerConfig>?
     ): List<Element> {
-        if (overrideTriggerConfigs == null) return templateTriggerElements
+        if (overrideTemplateTriggerConfigs == null) return templateTriggerElements
 
-        val triggerConfigMap = overrideTriggerConfigs.filter { it.stepId != null }.associateBy { it.stepId }
+        val triggerConfigMap = overrideTemplateTriggerConfigs.filter { it.stepId != null }.associateBy { it.stepId }
         return templateTriggerElements.map { templateTriggerElement ->
             if (templateTriggerElement.stepId.isNullOrEmpty()) {
                 templateTriggerElement
@@ -225,6 +211,7 @@ object TemplateInstanceUtil {
         return templateParams.map { templateParam ->
             val templateVariable = templateVariableMap[templateParam.id]
             val pipelineParams = if (templateVariable != null) {
+                // templateVariable 会覆盖模板的默认值
                 templateParam.copy(
                     defaultValue = templateVariable.value,
                     required = templateVariable.allowModifyAtStartup ?: templateParam.required
@@ -284,8 +271,10 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        if (overrideTemplateField.overrideSetting(PipelineSettingGroupType.CUSTOM_BUILD_NUM)) return
-        setting.buildNumRule = templateSetting.buildNumRule
+        // 如果“自定义构建号”这个设置项不被实例覆盖，则使用模板的设置
+        if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.CUSTOM_BUILD_NUM)) {
+            setting.buildNumRule = templateSetting.buildNumRule
+        }
     }
 
     private fun mergeLabel(
@@ -293,9 +282,11 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        if (overrideTemplateField.overrideSetting(PipelineSettingGroupType.LABEL)) return
-        setting.labels = templateSetting.labels
-        setting.labelNames = templateSetting.labelNames
+        // 如果“标签”这个设置项不被实例覆盖，则使用模板的设置
+        if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.LABEL)) {
+            setting.labels = templateSetting.labels
+            setting.labelNames = templateSetting.labelNames
+        }
     }
 
     private fun mergeNotices(
@@ -303,11 +294,13 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        if (overrideTemplateField.overrideSetting(PipelineSettingGroupType.NOTICES)) return
-        setting.successSubscription = templateSetting.successSubscription
-        setting.failSubscription = templateSetting.failSubscription
-        setting.successSubscriptionList = templateSetting.successSubscriptionList
-        setting.failSubscriptionList = templateSetting.failSubscriptionList
+        // 如果“通知”这个设置项不被实例覆盖，则使用模板的设置
+        if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.NOTICES)) {
+            setting.successSubscription = templateSetting.successSubscription
+            setting.failSubscription = templateSetting.failSubscription
+            setting.successSubscriptionList = templateSetting.successSubscriptionList
+            setting.failSubscriptionList = templateSetting.failSubscriptionList
+        }
     }
 
     private fun mergeConcurrency(
@@ -315,13 +308,26 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        if (overrideTemplateField.overrideSetting(PipelineSettingGroupType.CONCURRENCY)) return
-        setting.runLockType = templateSetting.runLockType
-        setting.waitQueueTimeMinute = templateSetting.waitQueueTimeMinute
-        setting.maxQueueSize = templateSetting.maxQueueSize
-        setting.concurrencyGroup = templateSetting.concurrencyGroup
-        setting.concurrencyCancelInProgress = templateSetting.concurrencyCancelInProgress
-        setting.maxConRunningQueueSize = templateSetting.maxConRunningQueueSize
+        // 如果“并发”这个设置项不被实例覆盖，则使用模板的设置
+        if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.CONCURRENCY)) {
+            setting.runLockType = templateSetting.runLockType
+            setting.waitQueueTimeMinute = templateSetting.waitQueueTimeMinute
+            setting.maxQueueSize = templateSetting.maxQueueSize
+            setting.concurrencyGroup = templateSetting.concurrencyGroup
+            setting.concurrencyCancelInProgress = templateSetting.concurrencyCancelInProgress
+            setting.maxConRunningQueueSize = templateSetting.maxConRunningQueueSize
+        }
+    }
+
+    private fun mergeFailIfVariableInvalid(
+        setting: PipelineSetting,
+        templateSetting: PipelineSetting,
+        overrideTemplateField: TemplateInstanceField
+    ) {
+        // 如果“变量检查”这个设置项不被实例覆盖，则使用模板的设置
+        if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.FAIL_IF_VARIABLE_INVALID)) {
+            setting.failIfVariableInvalid = templateSetting.failIfVariableInvalid
+        }
     }
 
     private fun mergeRecommendedVersion(
