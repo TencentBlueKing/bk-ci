@@ -192,7 +192,7 @@
                     >
                         <bk-input
                             class="meta-prompt-input"
-                            v-model="createForm.prompt"
+                            v-model="createForm.logPrompt"
                             type="textarea"
                             :row="3"
                             :maxlength="256"
@@ -278,7 +278,7 @@
                     dataType: '',
                     threshold: '',
                     elementType: '',
-                    prompt: '',
+                    logPrompt: '',
                     operation: []
                 },
                 metaNameRule: {
@@ -473,7 +473,7 @@
                             name: this.createForm.name,
                             cnName: this.createForm.cnName,
                             desc: this.createForm.desc,
-                            prompt: this.createForm.prompt,
+                            logPrompt: this.createForm.logPrompt,
                             dataType: this.createForm.dataType,
                             operation: this.createForm.operation,
                             threshold: this.createForm.threshold,
