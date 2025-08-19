@@ -191,7 +191,7 @@
                         property="prompt"
                     >
                         <bk-input
-                            class="meta-name-input"
+                            class="meta-prompt-input"
                             v-model="createForm.prompt"
                             type="textarea"
                             :row="3"
@@ -571,7 +571,7 @@
         .create-meta-form {
             padding-top: 20px;
             .bk-form-input,
-            .bk-textarea-wrapper {
+            .meta-prompt-input {
                 width: 646px;
             }
             .default-threshlod-item .bk-form-input {
