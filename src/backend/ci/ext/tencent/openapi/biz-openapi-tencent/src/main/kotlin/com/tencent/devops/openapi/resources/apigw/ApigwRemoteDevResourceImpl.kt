@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -725,5 +726,26 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<IWhiteList>> {
         logger.info("whitelistGet |$userId|$type|$body")
         return client.get(ServiceRemoteDevResource::class).whitelistGet(userId, type, body)
+    }
+
+    override fun tgitGetUserOauth(userId: String): Result<Boolean> {
+        logger.info("tgitGetUserOauth |$userId")
+        return client.get(ServiceRemoteDevResource::class).tgitGetUserOauth(userId)
+    }
+
+    override fun tgitGetProjectList(
+        userId: String,
+        tGitId: Long
+    ): Result<List<String>> {
+        logger.info("tgitGetProjectList |$userId|$tGitId")
+        return client.get(ServiceRemoteDevResource::class).tgitGetProjectList(userId, tGitId)
+    }
+
+    override fun tgitBindRemotedevProject(
+        userId: String,
+        data: TGitBindRemotedevData
+    ): Result<Map<String, Boolean>> {
+        logger.info("tgitBindRemotedevProject |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
 }

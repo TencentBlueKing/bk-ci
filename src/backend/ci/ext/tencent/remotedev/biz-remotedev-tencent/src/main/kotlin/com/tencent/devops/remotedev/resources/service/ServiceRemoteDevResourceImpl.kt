@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -79,6 +80,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.gitproxy.TGitService
 import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
@@ -127,7 +129,8 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceHookService: WorkspaceHookService,
     private val remotedevProjectService: RemotedevProjectService,
     private val bkItsmService: BKItsmService,
-    private val projectStrategyService: ProjectStrategyService
+    private val projectStrategyService: ProjectStrategyService,
+    private val tGitBindService: TGitService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -872,5 +875,23 @@ class ServiceRemoteDevResourceImpl(
         body: Map<String, String>
     ): Result<List<IWhiteList>> {
         return Result(whiteListService.apiGetWhiteList(userId, type, body))
+    }
+
+    override fun tgitGetUserOauth(userId: String): Result<Boolean> {
+        return Result(tGitBindService.checkUserOauthToken(userId))
+    }
+
+    override fun tgitGetProjectList(
+        userId: String,
+        tGitId: Long
+    ): Result<List<String>> {
+        return Result(tGitBindService.fetchProject(tGitId))
+    }
+
+    override fun tgitBindRemotedevProject(
+        userId: String,
+        data: TGitBindRemotedevData
+    ): Result<Map<String, Boolean>> {
+        return Result(tGitBindService.bindTGitProject(data.tGitId, data.projectIds))
     }
 }

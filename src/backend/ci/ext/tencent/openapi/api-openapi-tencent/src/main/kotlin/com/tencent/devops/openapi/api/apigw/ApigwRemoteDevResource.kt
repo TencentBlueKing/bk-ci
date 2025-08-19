@@ -30,6 +30,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -1053,4 +1054,35 @@ interface ApigwRemoteDevResource {
         type: WhiteListType,
         body: Map<String, String>
     ): Result<List<IWhiteList>>
+
+    @Operation(summary = "工蜂获取用户是否有OAUTH", tags = ["v4_app_remotedev_tgit_get_user_oauth"])
+    @GET
+    @Path("/tgit_get_user_oauth")
+    fun tgitGetUserOauth(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "工蜂获取绑定的项目列表", tags = ["v4_app_remotedev_tgit_get_project_list"])
+    @GET
+    @Path("/tgit_get_project_list")
+    fun tgitGetProjectList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工蜂项目ID", required = false)
+        @QueryParam("tGitId")
+        tGitId: Long
+    ): Result<List<String>>
+
+    @Operation(summary = "工蜂仓库绑定蓝盾云研发", tags = ["v4_app_remotedev_tgit_bind_remotedev_project"])
+    @POST
+    @Path("tgit_bind_remotedev_project")
+    fun tgitBindRemotedevProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: TGitBindRemotedevData
+    ): Result<Map<String, Boolean>>
 }
