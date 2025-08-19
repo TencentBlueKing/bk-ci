@@ -19,6 +19,7 @@
                 <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
             </template>
             <template v-else-if="showPartOfMrPage">
+                <!-- 合并请求：部分成功 -->
                 <template v-if="isPartialSuccess">
                     <span class="part-of-mr" />
                     <i18n
@@ -33,6 +34,7 @@
                         {{ $t('template.partOfMr.partialSuccessTip1') }}
                     </span>
                 </template>
+                <!-- 合并请求：全部成功 -->
                 <template v-else>
                     <span class="part-of-mr" />
                     <p class="release-status-title">
@@ -51,6 +53,7 @@
                     </p>
                 </template>
             </template>
+            <!-- 全部成功 -->
             <template v-else-if="showSuccessPage">
                 <i class="bk-icon bk-dialog-mark icon-check-1 release-status-icon success-icon" />
                 <i18n
@@ -64,6 +67,7 @@
                     {{ $t('template.releaseSuc.tips') }}
                 </p>
             </template>
+            <!-- 全部失败 -->
             <template v-else-if="showFailedPage">
                 <i class="bk-icon bk-dialog-mark icon-close release-status-icon failed-icon" />
                 <i18n
@@ -150,12 +154,12 @@
                 <p class="sub-message pending mt20">
                     ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes.failItemNum]) }}
                 </p>
-                <release-failed-message
-                    class="mt20"
-                    v-if="Object.keys(releaseRes.errorMessages).length"
-                    :data="releaseRes.errorMessages"
-                />
             </template>
+            <release-failed-message
+                class="mt20"
+                v-if="Object.keys(releaseRes.errorMessages).length"
+                :data="releaseRes.errorMessages"
+            />
         </section>
     </div>
 </template>
