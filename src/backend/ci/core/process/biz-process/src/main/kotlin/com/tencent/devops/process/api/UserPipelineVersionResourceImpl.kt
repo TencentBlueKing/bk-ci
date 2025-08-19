@@ -406,15 +406,24 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun operatorList(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean?
     ): Result<List<String>> {
-        return Result(operatorListForTenant(userId, projectId, pipelineId).data?.map { it.userId } ?: emptyList())
+        return Result(
+            operatorListForTenant(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            ).data?.map { it.userId } ?: emptyList()
+        )
     }
 
     override fun operatorListForTenant(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean?
     ): Result<List<PipelineOperator>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -436,7 +445,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         )
         val memberIds = pipelineOperationLogService.getOperatorInPage(
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            archiveFlag = archiveFlag
         )
         val result = if (TenantUtils.isMultiTenantMode()) {
             client.get(ServiceDeptResource::class).listUserInfos(

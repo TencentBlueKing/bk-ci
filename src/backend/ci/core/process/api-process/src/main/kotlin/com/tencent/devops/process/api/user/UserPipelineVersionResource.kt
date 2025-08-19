@@ -322,7 +322,10 @@ interface UserPipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<List<String>>
 
     @Operation(summary = "多租户下获取流水线操作人列表（分页）")
@@ -337,7 +340,10 @@ interface UserPipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<List<PipelineOperator>>
 
     @Operation(summary = "回滚到指定的历史版本并覆盖草稿")
