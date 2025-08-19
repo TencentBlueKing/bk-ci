@@ -107,7 +107,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 }
                 // 对前端的YAML信息进行校验
                 val filePath = yamlInfo!!.filePath
-                if (!filePath.endsWith(".yaml") || !filePath.endsWith(".yml")) {
+                if (!filePath.endsWith(".yaml") && !filePath.endsWith(".yml")) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_YAML_FILENAME,
                         params = arrayOf(filePath)
