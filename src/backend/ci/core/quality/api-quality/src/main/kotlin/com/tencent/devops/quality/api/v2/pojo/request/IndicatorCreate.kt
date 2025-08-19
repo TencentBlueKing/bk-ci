@@ -40,5 +40,5 @@ data class IndicatorCreate(
     val operation: List<QualityOperation>,
     val threshold: String,
     val elementType: String,
-    val prompt: String? = ""
+    val logPrompt: String? = ""
 )

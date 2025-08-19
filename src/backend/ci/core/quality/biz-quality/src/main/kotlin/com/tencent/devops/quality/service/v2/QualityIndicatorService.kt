@@ -800,7 +800,7 @@ class QualityIndicatorService @Autowired constructor(
             tag = "",
             enable = true,
             type = IndicatorType.CUSTOM,
-            logPrompt = indicatorCreate.prompt ?: ""
+            logPrompt = indicatorCreate.logPrompt ?: ""
         )
     }
 
