@@ -168,7 +168,7 @@
             },
             async checkApkSigned (url) {
                 try {
-                    await request.get(url)
+                    await request.get(url, { headers: { 'Range': 'bytes=0-1' } })
                     this.signingDurationTips = ''
                     return true
                 } catch (err) {
