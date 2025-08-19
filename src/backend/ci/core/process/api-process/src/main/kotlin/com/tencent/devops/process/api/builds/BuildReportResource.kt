@@ -120,10 +120,10 @@ interface BuildReportResource {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "构建机名称", required = true)
+        @Parameter(description = "任务id", required = true)
         @PathParam("taskId")
         taskId: String,
-        @Parameter(description = "构建机名称", required = true)
+        @Parameter(description = "入口文件", required = true)
         @QueryParam("indexFile")
         indexFile: String,
         @Parameter(description = "报告名称", required = true)
