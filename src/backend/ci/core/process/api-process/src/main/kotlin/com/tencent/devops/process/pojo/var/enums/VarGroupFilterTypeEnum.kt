@@ -27,10 +27,8 @@
 
 package com.tencent.devops.process.pojo.`var`.enums
 
-import com.tencent.devops.common.api.util.MessageUtil
-
 /**
- * 操作类型枚举
+ * 筛选类型枚举
  */
 enum class VarGroupFilterTypeEnum {
     GROUP_NAME,    // 按变量组名称筛选

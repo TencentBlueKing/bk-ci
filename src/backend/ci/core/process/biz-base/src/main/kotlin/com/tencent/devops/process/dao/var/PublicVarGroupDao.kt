@@ -31,6 +31,7 @@ import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
 import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -111,25 +112,25 @@ class PublicVarGroupDao {
         groupNames: List<String>? = null
     ): List<PublicVarGroupPO> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            val condition = DSL.noCondition()
-                .and(PROJECT_ID.eq(projectId))
-                .and(LATEST_FLAG.eq(true))
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(LATEST_FLAG.eq(true))
 
             // 添加筛选条件
             when (filterType) {
                 VarGroupFilterTypeEnum.GROUP_NAME -> keyword?.let {
-                    condition.and(GROUP_NAME.like("%$it%"))
+                    conditions.add(GROUP_NAME.like("%$it%"))
                 }
                 VarGroupFilterTypeEnum.GROUP_DESC -> keyword?.let {
-                    condition.and(DESC.like("%$it%"))
+                    conditions.add(DESC.like("%$it%"))
                 }
                 else -> groupNames?.let {
-                    condition.and(GROUP_NAME.`in`(it))
+                    conditions.add(GROUP_NAME.`in`(it))
                 }
             }
 
             return dslContext.selectFrom(this)
-                .where(condition)
+                .where(conditions)
                 .orderBy(UPDATE_TIME.desc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
