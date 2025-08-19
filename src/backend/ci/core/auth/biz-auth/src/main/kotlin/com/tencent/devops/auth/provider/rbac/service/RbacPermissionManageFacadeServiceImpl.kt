@@ -2203,12 +2203,14 @@ class RbacPermissionManageFacadeServiceImpl(
         projectCode: String,
         userId: String
     ): Boolean {
+        // 获取租户ID
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         // 获取用户加入的项目级用户组模板ID
         val iamTemplateIds = listProjectMemberGroupTemplateIds(
             projectCode = projectCode,
             memberId = userId
         )
-        val memberDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! }
+        val memberDeptInfos = deptService.getUserInfo(userId, tenantId)?.deptInfo?.map { it.name!! }
 
         return authResourceGroupMemberDao.isMemberInProject(
             dslContext = dslContext,
