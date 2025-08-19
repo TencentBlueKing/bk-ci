@@ -110,7 +110,7 @@ func DoUpgradeAgent() error {
 		 1、kill devopsDaemon进程的行为在 macos 下， 如果当前是由 launchd 启动的（比如mac重启之后，devopsDaemon会由launchd接管启动）
 			当upgrader进程触发kill devopsDaemon时，会导致当前upgrader进程也被系统一并停掉，所以要排除macos的进程停止操作，否则会导致升级中断
 	*/
-	if daemonChange && systemutil.IsLinux() {
+	if daemonChange {
 		tryKillAgentProcess(daemonProcess) // macos 在升级后只能使用手动重启
 	}
 	if agentChange {
