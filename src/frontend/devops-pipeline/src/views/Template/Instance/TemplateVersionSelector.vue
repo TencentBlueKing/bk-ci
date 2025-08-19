@@ -240,6 +240,10 @@
                 stages: res.resource.model.stages
             }
         } catch (e) {
+            proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
+                templateVersion: '',
+                templateDetail: {}
+            })
             console.error(e)
         }
     }

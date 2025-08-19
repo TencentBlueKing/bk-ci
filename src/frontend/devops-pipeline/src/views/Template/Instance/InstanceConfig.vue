@@ -32,7 +32,7 @@
                 </div>
                 <div
                     class="right"
-                    v-if="!isInstanceCreateType && (!!curTemplateVersion || !!templateRef)"
+                    v-if="showCompareParamsNum"
                 >
                     <ul class="params-compare-content">
                         <bk-checkbox
@@ -225,7 +225,7 @@
                     </section>
                 </template>
 
-                <template>
+                <template v-if="triggerConfigs.length">
                     <section class="params-content-item">
                         <header
                             :class="['params-collapse-trigger', {
@@ -322,6 +322,13 @@
     // templateVersion 选中的模板版本号
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
+    const showCompareParamsNum = computed(() => {
+        if (props.isInstanceCreateType) return false
+        if (templateRefTypeById.value) {
+            return Object.keys(curTemplateDetail.value)?.length
+        }
+        return Object.keys(curTemplateDetail.value)?.length && !!templateRef.value
+    })
     const curInstance = computed(() => {
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         if (instance?.param) {
@@ -341,7 +348,7 @@
             if (curTemplateDetail.value?.buildNo) {
                 instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
-            if (templateTriggerConfigs.value.length) {
+            if (templateTriggerConfigs.value?.length) {
                 const triggerConfigs = instance.triggerElements?.map(i => ({
                     atomCode: i.atomCode,
                     stepId: i.stepId ?? '',
