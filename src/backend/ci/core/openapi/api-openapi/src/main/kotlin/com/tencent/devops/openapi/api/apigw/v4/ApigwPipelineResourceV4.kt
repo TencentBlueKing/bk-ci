@@ -624,7 +624,10 @@ interface ApigwPipelineResourceV4 {
         pageSize: Int? = null
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
-    @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
+    @Operation(
+        summary = "启用/禁用流水线（修改流水线的并发设置）",
+        tags = ["v4_app_pipeline_lock", "v4_user_pipeline_lock"]
+    )
     @POST
     @Path("/pipeline_lock")
     fun lockPipeline(
