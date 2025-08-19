@@ -3,12 +3,11 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
-import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
+import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionReconciler
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.util.CacheHelper
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
@@ -31,18 +30,6 @@ class BkInternalPermissionService(
     private val authResourceService: AuthResourceDao,
     private val meterRegistry: MeterRegistry
 ) {
-    // 1. 单条权限校验结果
-    private val permissionCache = CacheHelper.createCache<String, Boolean>(100000)
-
-    // 2. 用户在项目下加入的用户组
-    private val projectUserGroupCache = CacheHelper.createCache<String, List<Int>>()
-
-    // 3. 用户按操作获取资源的缓存
-    private val userResourceCache = CacheHelper.createCache<String, List<String>>()
-
-    // 4. 用户按操作获取项目的缓存
-    private val userProjectsCache = CacheHelper.createCache<String, List<String>>()
-
     private fun createTimer(methodName: String): Timer {
         return Timer.builder("rbac.internal.service.duration") // 指标名称
             .description("Duration of BkInternalPermissionService methods")
@@ -67,14 +54,19 @@ class BkInternalPermissionService(
         enableSuperManagerCheck: Boolean = true
     ): Boolean {
         return createTimer(::validateUserResourcePermission.name).record(Supplier {
-            val (fixResourceType, fixResourceCode) =
-                if (resourceType == ResourceTypeId.PROJECT || resourceCode == "*") {
-                    Pair(ResourceTypeId.PROJECT, projectCode)
-                } else {
-                    Pair(resourceType, resourceCode)
-                }
-            // 缓存键直接使用传入的资源信息
-            CacheHelper.getOrLoad(permissionCache, userId, projectCode, fixResourceType, fixResourceCode, action) {
+            val (fixResourceType, fixResourceCode) = buildFixResourceTypeAndCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            // 调用BkInternalPermissionCache处理缓存
+            BkInternalPermissionCache.getOrLoadPermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = fixResourceType,
+                resourceCode = fixResourceCode,
+                action = action
+            ) {
                 val isProjectOrSuperManager = checkProjectOrSuperManager(
                     userId = userId,
                     projectCode = projectCode,
@@ -95,6 +87,18 @@ class BkInternalPermissionService(
                 }
             }
         }) ?: false
+    }
+
+    fun buildFixResourceTypeAndCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Pair<String, String> {
+        return if (resourceType == ResourceTypeId.PROJECT || resourceCode == "*") {
+            Pair(ResourceTypeId.PROJECT, projectCode)
+        } else {
+            Pair(resourceType, resourceCode)
+        }
     }
 
     private fun checkProjectOrSuperManager(
@@ -182,10 +186,11 @@ class BkInternalPermissionService(
                 )
             } else {
                 // 1. 首先获取基于权限的资源列表（会走缓存）。
-                val permissionBasedResources = CacheHelper.getOrLoad(
-                    userResourceCache,
-                    userId, projectCode,
-                    resourceType, action
+                val permissionBasedResources = BkInternalPermissionCache.getOrLoadUserResources(
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    action = action
                 ) {
                     val groupIds = listMemberGroupIdsInProjectWithCache(projectCode, userId)
                     permissionResourceGroupPermissionService.listResourcesWithPermission(
@@ -230,7 +235,7 @@ class BkInternalPermissionService(
         action: String
     ): List<String> {
         return (createTimer(::getUserProjectsByAction.name).record(Supplier {
-            CacheHelper.getOrLoad(userProjectsCache, userId, action) {
+            BkInternalPermissionCache.getOrLoadUserProjects(userId, action) {
                 val memberDeptInfos = userManageService.getUserDepartmentPath(userId)
                 permissionResourceGroupPermissionService.listProjectsWithPermission(
                     memberIds = memberDeptInfos.toMutableList().plus(userId),
@@ -292,9 +297,10 @@ class BkInternalPermissionService(
         userId: String,
         enableTemplateInvalidationOnUserExpiry: Boolean? = null
     ): List<Int> {
-        return CacheHelper.getOrLoad(
-            projectUserGroupCache,
-            projectCode, userId,
+        // 调用BkInternalPermissionCache处理缓存
+        return BkInternalPermissionCache.getOrLoadProjectUserGroups(
+            projectCode = projectCode,
+            userId = userId,
             enableTemplateInvalidationOnUserExpiry
         ) {
             // 获取用户的所属组织
@@ -324,8 +330,7 @@ class BkInternalPermissionService(
         }
     }
 
-
     companion object {
-        private val logger = LoggerFactory.getLogger(BkInternalPermissionComparator::class.java)
+        private val logger = LoggerFactory.getLogger(BkInternalPermissionReconciler::class.java)
     }
 }
