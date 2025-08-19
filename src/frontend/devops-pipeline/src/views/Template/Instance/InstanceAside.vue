@@ -47,13 +47,21 @@
                 @click="handleInstanceClick(instanceIndex)"
             >
                 <template v-if="instanceIndex === editingIndex">
-                    <bk-input
-                        ref="nameInputRef"
-                        v-model="instanceName"
-                        @blur="(value) => handleEnterChangeName(value, instanceIndex)"
-                        @enter="(value) => handleEnterChangeName(value, instanceIndex)"
-                    >
-                    </bk-input>
+                    <div class="edit-input-main">
+                        <bk-input
+                            ref="nameInputRef"
+                            v-model="instanceName"
+                            @change="checkPipelineName"
+                            @blur="(value) => handleEnterChangeName(value, instanceIndex)"
+                            @enter="(value) => handleEnterChangeName(value, instanceIndex)"
+                        >
+                        </bk-input>
+                        <i
+                            v-if="isErrorName"
+                            class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                            v-bk-tooltips="$t('template.nameExists')"
+                        />
+                    </div>
                 </template>
                 <template v-else>
                     <div
@@ -117,6 +125,7 @@
     const editingIndex = ref(null)
     const nameInputRef = ref(null)
     const newIndex = ref(1)
+    const isErrorName = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
@@ -125,7 +134,7 @@
         return instanceList.value
     })
     const instanceName = computed(() => {
-        return renderInstanceList.value[editingIndex.value].pipelineName
+        return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
     const templateTriggerConfigs = computed(() => {
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
@@ -140,8 +149,19 @@
         }))
     })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    async function checkPipelineName (val) {
+        try {
+            isErrorName.value = await proxy.$store.dispatch('pipelines/checkPipelineName', {
+                projectId: projectId.value,
+                pipelineName: val.trim()
+            })
+        } catch(e) {
+            console.error(e)
+            isErrorName.value = false
+        }
+    }
     function handleInstanceClick (index) {
-        if (editingIndex.value) return
+        if (editingIndex.value !== null) return
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
@@ -150,6 +170,7 @@
         })
     }
     function handleEnterChangeName (value, index) {
+        if (isErrorName.value) return
         if (props.isInstanceCreateType && !value) {
             instanceList.value.splice(index, 1)
             editingIndex.value = null
@@ -314,6 +335,7 @@
             &.editing {
                 padding: 0;
                 font-weight: 400 !important;
+                border: none;
             }
             &.active,
             &:hover {
@@ -326,6 +348,21 @@
                     visibility: visible;
                 }
             }
+        }
+        .edit-input-main {
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            width: 100%;
+             .tooltips-icon {
+                position: absolute;
+                z-index: 10;
+                right: 8px;
+                top: 8px;
+                color: #ea3636;
+                cursor: pointer;
+                font-size: 16px;
+             }
         }
         .pipeline-name {
             max-width: 55%;

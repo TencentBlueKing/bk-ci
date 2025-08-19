@@ -13,14 +13,14 @@
                         @change="(val) => handleChangeTrigger('disabled', index, val)"
                     >
                         <bk-radio
-                            :value="true"
+                            :value="false"
                             :disabled="trigger.isFollowTemplate"
                             class="mr20"
                         >
                             {{ $t('template.enable') }}
                         </bk-radio>
                         <bk-radio
-                            :value="false"
+                            :value="true"
                             :disabled="trigger.isFollowTemplate"
                         >
                             {{ $t('template.close') }}
