@@ -184,11 +184,11 @@
 </template>
 
 <script>
-import ScrollLoadList from '../../widget-components/scroll-load-list';
-import ajax from '../../../ajax/index';
-import { Message } from 'bkui-vue';
 import http from '@/http/api';
+import { Message } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
+import ajax from '../../../ajax/index';
+import ScrollLoadList from '../../widget-components/scroll-load-list';
 export default {
   components: {
     ScrollLoadList,
@@ -290,7 +290,7 @@ export default {
     handleGetData(pageSize) {
       this.fetchGroupLoading = true
       return ajax
-        .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.curProjectCode}/${this.resourceType}/${this.curProjectCode}/listGroup?page=${this.page}&pageSize=${pageSize}`)
+        .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.curProjectCode)}/listGroup?page=${encodeURIComponent(this.page)}&pageSize=${encodeURIComponent(pageSize)}`)
         .then(({ data }) => {
           this.hasLoadEnd = !data.hasNext;
           this.groupList = [...this.groupList, ...data.records];
@@ -340,7 +340,7 @@ export default {
     handleDeleteGroup() {
       this.deleteObj.isLoading = true;
       return ajax
-        .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.curProjectCode}/${this.resourceType}/${this.deleteObj.group.groupId}`)
+        .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.deleteObj.group.groupId)}`)
         .then(() => {
           this.refreshList();
           this.syncGroupAndMemberIAM();
@@ -389,7 +389,7 @@ export default {
     handleCloseManage() {
       this.isClosing = true;
       return ajax
-        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.curProjectCode}/${this.resourceType}/${this.curProjectCode}/disable`)
+        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.curProjectCode)}/disable`)
         .then(() => {
           this.$emit('close-manage');
         })
@@ -514,7 +514,7 @@ export default {
         return
       }
       return ajax
-        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${this.curProjectCode}/${this.resourceType}/${this.renameGroupId}/rename`, {
+        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.renameGroupId)}/rename`, {
           groupName: this.displayGroupName,
         })
         .then(() => {

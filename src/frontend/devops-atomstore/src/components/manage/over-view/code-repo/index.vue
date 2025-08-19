@@ -69,6 +69,11 @@
                     service: this.getServiceData
                 }
 
+                if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+
                 const currentMethod = methodGenerator[this.type]
                 currentMethod()
             },

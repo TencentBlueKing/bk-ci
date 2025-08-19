@@ -99,13 +99,13 @@
 </template>
 
 <script>
-    import { navConfirm, deepCopy } from '@/utils/util'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import ParamGroup from './children/param-group'
-    import PipelineParamForm from './pipeline-param-form'
     import {
         getParamsGroupByLabel
     } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy, navConfirm } from '@/utils/util'
+    import ParamGroup from './children/param-group'
+    import PipelineParamForm from './pipeline-param-form'
 
     export default {
         components: {
@@ -268,11 +268,12 @@
                 // 单选、复选类型， 需要先校验options
                 const optionValid = await this.validParamOptions()
                 this.$validator.validate('pipelineParam.*').then((result) => {
+                    const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
                         if (this.editIndex > -1) {
-                            this.globalParams[this.editIndex] = this.sliderEditItem
+                            this.globalParams[this.editIndex] = param
                         } else {
-                            this.globalParams.push(this.sliderEditItem)
+                            this.globalParams.push(param)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
