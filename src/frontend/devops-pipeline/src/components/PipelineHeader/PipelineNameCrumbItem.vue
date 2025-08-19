@@ -13,12 +13,47 @@
                 slot="trigger"
             >
                 <span @click="goHistory">{{ pipelineName }}</span>
-                <span
-                    class="template-instance-tag"
+                
+                <bk-popover
                     v-if="instanceFromTemplate"
+                    class="template-instance-tag"
+                    theme="light"
                 >
-                    {{ $t('constraint') }}
-                </span>
+                    <span>
+                        {{ $t('constraint') }}
+                    </span>
+                    <section
+                        slot="content"
+                    >
+                        <p>{{ $t('template.constraintMode') }}</p>
+                        <div class="constraint-info-area">
+                            <p>
+                                <label>{{ $t('template.name') }}</label>
+                                <a
+                                    class="text-link"
+                                    target="_blank"
+                                    href="qq.com"
+                                >
+                                    {{ pipelineInfo?.templateName }}
+                                </a>
+                            </p>
+                            <p>
+                                <label>{{ $t('template.templateVersion') }}</label>
+                                <span>
+                                    {{ pipelineInfo?.releaseVersion }}
+                                </span>
+                                <router-link
+                                    class="text-link"
+                                    :to="{ name: 'TemplateManageList', params: {
+                                        templateViewId: 'ALL'
+                                    } }"
+                                >
+                                    {{ $t('template.goUpgrade') }}
+                                </router-link>
+                            </p>
+                        </div>
+                    </section>
+                </bk-popover>
                 <div
                     class="pipeline-pac-indicator"
                     @click.stop.prevent=""
@@ -182,6 +217,22 @@
         border: 1px solid #DCDEE5;
         border-radius: 2px;
         padding: 0 8px;
+    }
+    .constraint-info-area {
+        background: #F5F7FA;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        padding: 4px 16px;
+        gap: 6px;
+        min-width: 280px;
+        margin-top: 8px;
+        > p {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            grid-gap: 20px;
+        }
     }
     .pipeline-name-crumb {
         display: inline-flex;
