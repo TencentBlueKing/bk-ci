@@ -324,10 +324,12 @@
                     ref="publisher"
                     error-display-type="normal"
                 >
-                    <bk-input
+                    <BkUserSelector
                         v-model="form.publisher"
+                        :api-base-url="$tenantApiBaseUrl"
+                        :tenant-id="$tenantId"
                         :placeholder="$t('store.请输入发布者')"
-                    ></bk-input>
+                    />
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('store.版本日志')"
@@ -376,17 +378,20 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { toolbars } from '@/utils/editor-options'
-    import selectLogo from '@/components/common/selectLogo'
-    import codeSection from '@/components/common/detailTab/codeSection'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import codeSection from '@/components/common/detailTab/codeSection'
+    import selectLogo from '@/components/common/selectLogo'
+    import { toolbars } from '@/utils/editor-options'
+    import BkUserSelector from '@blueking/bk-user-selector/vue2'
+    import '@blueking/bk-user-selector/vue2/vue2.css'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
             selectLogo,
             codeSection,
-            breadCrumbs
+            breadCrumbs,
+            BkUserSelector
         },
 
         data () {

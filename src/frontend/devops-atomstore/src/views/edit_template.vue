@@ -193,19 +193,12 @@
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content template-item-content">
                         <div style="width: 40%;">
-                            <input
-                                type="text"
-                                class="bk-form-input template-name-input"
-                                :placeholder="$t('store.请输入')"
-                                name="publisher"
+                            <BkUserSelector
                                 v-model="templateForm.publisher"
-                                v-validate="{
-                                    required: true,
-                                    max: 20
-                                }"
-                                :class="{ 'is-danger': errors.has('publisher') }"
-                            >
-                            <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
+                                :api-base-url="$tenantApiBaseUrl"
+                                :tenant-id="$tenantId"
+                                :placeholder="$t('store.请输入发布者')"
+                            />
                         </div>
                     </div>
                 </div>
@@ -249,14 +242,18 @@
 </template>
 
 <script>
-    import selectLogo from '@/components/common/selectLogo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
+    import BkUserSelector from '@blueking/bk-user-selector/vue2'
+    import '@blueking/bk-user-selector/vue2/vue2.css'
+    
 
     export default {
         components: {
             selectLogo,
-            breadCrumbs
+            breadCrumbs,
+            BkUserSelector
         },
         data () {
             return {

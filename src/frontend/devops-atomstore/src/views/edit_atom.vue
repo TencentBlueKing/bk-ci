@@ -273,6 +273,7 @@
                             v-model="atomForm.publisher"
                             :api-base-url="$tenantApiBaseUrl"
                             :tenant-id="$tenantId"
+                            :placeholder="$t('store.请输入发布者')"
                         />
                     </div>
                 </div>
