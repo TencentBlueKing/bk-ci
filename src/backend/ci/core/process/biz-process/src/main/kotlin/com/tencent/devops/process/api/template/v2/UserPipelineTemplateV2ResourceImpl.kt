@@ -28,14 +28,18 @@
 package com.tencent.devops.process.api.template.v2
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
@@ -66,6 +70,7 @@ import org.slf4j.LoggerFactory
 @RestResource
 class UserPipelineTemplateV2ResourceImpl(
     private val permissionService: PipelineTemplatePermissionService,
+    private val pipelinePermissionService: PipelinePermissionService,
     private val templateFacadeService: PipelineTemplateFacadeService,
     private val templateInfoService: PipelineTemplateInfoService,
     private val pipelineOperationLogService: PipelineOperationLogService
@@ -267,6 +272,23 @@ class UserPipelineTemplateV2ResourceImpl(
         pipelineId: String,
         version: Int
     ): Result<PipelineTemplateDetailsResponse> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
         return Result(
             templateFacadeService.getPipelineRelatedTemplateDetails(
                 userId = userId,
@@ -453,6 +475,7 @@ class UserPipelineTemplateV2ResourceImpl(
             )
         )
     }
+
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun rollbackDraftFromVersion(
         userId: String,
@@ -531,6 +554,7 @@ class UserPipelineTemplateV2ResourceImpl(
             )
         )
     }
+
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun exportTemplate(
         userId: String,

@@ -35,7 +35,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineTemplateInstancesRequest(
     @get:Schema(title = "实例化引用类型", required = true)
     val templateRefType: TemplateRefType? = TemplateRefType.ID,
-    @get:Schema(title = "路径引用时,模版引用版本", required = true)
+    @get:Schema(title = "路径引用时,模板引用方式，可能tag/分支/commitId", required = false)
     val templateRef: String?,
     @get:Schema(title = "是否使用模版设置", required = true)
     val useTemplateSettings: Boolean,
@@ -43,11 +43,11 @@ data class PipelineTemplateInstancesRequest(
     val enablePac: Boolean,
     @get:Schema(title = "版本描述", required = false)
     val description: String?,
-    @get:Schema(title = "模板版本号（为空时默认最新）", required = false)
+    @get:Schema(title = "提交动作", required = false)
     val targetAction: CodeTargetAction?,
     @get:Schema(title = "代码库hashId", required = true)
     val repoHashId: String?,
-    @get:Schema(title = "目标分支", required = true)
+    @get:Schema(title = "指定分支", required = true)
     val targetBranch: String?,
     @get:Schema(title = "模板实例发布实体", required = true)
     val instanceReleaseInfos: List<PipelineTemplateInstanceReleaseInfo>
