@@ -20,14 +20,13 @@ data class PipelineBuildCheckRun(
     val checkRunStatus: CheckRunStatus? = null,
     val checkRunId: Long? = null,
     // checkRun对应的版本
-    val ref: String,
-    // 扩展标识符（避免一个checkRun写入多个mr中）
-    val extRef: String = "",
+    val commitId: String,
+    // 扩展标识符
+    val extensionData: CheckRunExtension? = null,
     // 是否锁定（TGIT专用）
     val block: Boolean? = false,
-    // 目标分支（TGIT专用）
-    val targetBranch: List<String>? = listOf(),
-    val pullRequestId: Long? = null,
+    val pullRequestId: Long,
+    val pullRequestBizId: String = "",
     val scmCode: String,
     val buildVariables: Map<String, String> = mapOf(),
     val repoType: CodeType,
@@ -41,4 +40,13 @@ data class PipelineBuildCheckRun(
     val lockKey: String,
     val externalId: String,
     val repoProvider: ScmProviderCodes
+)
+
+/**
+ * check-run扩展字段
+ */
+data class CheckRunExtension(
+    val sourceBranch: String?,
+    // PUSH 事件时，此字段为[~NONE]
+    val targetBranch: String?
 )

@@ -1330,24 +1330,25 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SUB_REF` (
 
 
 -- devops_process.T_PIPELINE_BUILD_CHECK_RUN definition
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_CHECK_RUN`
-(
-    `REPO_HASH_ID`     VARCHAR(32)  DEFAULT '' NOT NULL COMMENT '代码库HASH_ID',
-    `CONTEXT`          VARCHAR(255) DEFAULT '' NOT NULL COMMENT '检查项名称',
-    `REF`              VARCHAR(64)  DEFAULT '' NOT NULL COMMENT '检查项关联版本',
-    `EXT_REF`          VARCHAR(64)  DEFAULT '' NOT NULL COMMENT '扩展标识符',
-    `PROJECT_ID`       VARCHAR(64)  DEFAULT '' NOT NULL COMMENT '蓝盾项目ID',
-    `PIPELINE_ID`      VARCHAR(64)  DEFAULT '' NOT NULL COMMENT '流水线ID',
-    `BUILD_ID`         VARCHAR(64)  DEFAULT '' NOT NULL COMMENT '构建任务ID',
-    `BUILD_NUM`        INT                     NULL COMMENT '构建编号',
-    `BUILD_STATUS`     VARCHAR(32)             NULL COMMENT '构建状态',
-    `CHECK_RUN_STATUS` VARCHAR(32)             NULL COMMENT '检查项状态',
-    `CHECK_RUN_ID`     BIGINT                  NULL COMMENT '检查项ID',
-    `REPO_SCM_CODE`    VARCHAR(64)             NULL COMMENT '代码库标识',
-    `CREATE_TIME`      DATETIME                NULL COMMENT '创建时间',
-    `UPDATE_TIME`      DATETIME                NULL COMMENT '更新时间',
-    PRIMARY KEY (`REPO_HASH_ID`, `CONTEXT`, `REF`, `EXT_REF`),
-    INDEX IDX_PIPELINE_BUILD(`PROJECT_ID`, `PIPELINE_ID` , `BUILD_ID`)
-) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4 COMMENT='构建任务关联检查项信息表';
+CREATE TABLE `T_PIPELINE_BUILD_CHECK_RUN` (
+    `PROJECT_ID`       varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `PIPELINE_ID`      varchar(64)  NOT NULL COMMENT '流水线ID',
+    `BUILD_ID`         varchar(64)  NOT NULL DEFAULT '' COMMENT '构建任务ID',
+    `BUILD_NUM`        int(11)      DEFAULT NULL COMMENT '构建编号',
+    `BUILD_STATUS`     varchar(32)  DEFAULT NULL COMMENT '构建状态',
+    `REPO_HASH_ID`     varchar(32)  NOT NULL COMMENT '代码库HASH_ID',
+    `CONTEXT`          varchar(255) NOT NULL DEFAULT '' COMMENT '检查项名称',
+    `COMMIT_ID`        varchar(64)  NOT NULL DEFAULT '' COMMENT '检查项关联版本',
+    `PULL_REQUEST_ID`  varchar(64)  NOT NULL DEFAULT '' COMMENT '扩展标识符',
+    `CHECK_RUN_STATUS` varchar(32)  DEFAULT NULL COMMENT '检查项状态',
+    `CHECK_RUN_ID`     bigint(20)   DEFAULT NULL COMMENT '检查项ID',
+    `REPO_SCM_CODE`    varchar(64)  DEFAULT NULL COMMENT '代码库标识',
+    `CREATE_TIME`      datetime     NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME`      datetime     DEFAULT NULL COMMENT '更新时间',
+    `EXTENSION_DATA`   text COMMENT '扩展数据JSON',
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `BUILD_ID`, `CREATE_TIME`),
+    UNIQUE KEY `IDX_PIPELINE_CONTEXT` (`PROJECT_ID`,`PIPELINE_ID`,`REPO_HASH_ID`,`COMMIT_ID`,`PULL_REQUEST_ID`),
+    KEY                `IDX_PIPELINE_BUILD` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`)
+) ENT='构建任务关联检查项信息表';
 
 SET FOREIGN_KEY_CHECKS = 1;

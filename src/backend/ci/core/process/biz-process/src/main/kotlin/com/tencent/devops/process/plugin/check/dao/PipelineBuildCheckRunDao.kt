@@ -1,5 +1,6 @@
 package com.tencent.devops.process.plugin.check.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildCheckRun
 import com.tencent.devops.model.process.tables.records.TPipelineBuildCheckRunRecord
 import com.tencent.devops.process.pojo.PipelineBuildCheckRun
@@ -19,33 +20,35 @@ class PipelineBuildCheckRunDao {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
             dslContext.insertInto(
                 this,
-                REPO_HASH_ID,
-                CONTEXT,
-                REF,
-                EXT_REF,
                 PROJECT_ID,
                 PIPELINE_ID,
                 BUILD_ID,
                 BUILD_NUM,
                 BUILD_STATUS,
+                REPO_HASH_ID,
+                CONTEXT,
+                COMMIT_ID,
+                PULL_REQUEST_ID,
                 CHECK_RUN_ID,
                 CHECK_RUN_STATUS,
                 REPO_SCM_CODE,
+                EXTENSION_DATA,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
-                buildCheckRun.repoHashId,
-                buildCheckRun.context,
-                buildCheckRun.ref,
-                buildCheckRun.extRef,
                 buildCheckRun.projectId,
                 buildCheckRun.pipelineId,
                 buildCheckRun.buildId,
                 buildCheckRun.buildNum,
                 buildCheckRun.buildStatus.name,
+                buildCheckRun.repoHashId,
+                buildCheckRun.context,
+                buildCheckRun.commitId,
+                buildCheckRun.pullRequestBizId,
                 buildCheckRun.checkRunId,
                 buildCheckRun.checkRunStatus?.name,
                 buildCheckRun.scmCode,
+                buildCheckRun.extensionData?.let { JsonUtil.toJson(it, false) },
                 now,
                 now
             ).onDuplicateKeyUpdate()
@@ -56,24 +59,6 @@ class PipelineBuildCheckRunDao {
         }
     }
 
-    fun get(
-        dslContext: DSLContext,
-        repoHashId: String,
-        context: String,
-        ref: String,
-        extRef: String
-    ) = with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-        val conditions = listOf(
-            REPO_HASH_ID.eq(repoHashId),
-            CONTEXT.eq(context),
-            REF.eq(ref),
-            EXT_REF.eq(extRef)
-        )
-        dslContext.selectFrom(this)
-                .where(conditions)
-                .fetchAny()
-    }
-
     fun update(
         dslContext: DSLContext,
         record: TPipelineBuildCheckRunRecord
@@ -82,8 +67,8 @@ class PipelineBuildCheckRunDao {
             val conditions = listOf(
                 REPO_HASH_ID.eq(record.repoHashId),
                 CONTEXT.eq(record.context),
-                REF.eq(record.ref),
-                EXT_REF.eq(record.extRef)
+                COMMIT_ID.eq(record.commitId),
+                PULL_REQUEST_ID.eq(record.pullRequestId)
             )
             dslContext.update(this)
                     .set(record)
@@ -94,10 +79,9 @@ class PipelineBuildCheckRunDao {
 
     fun update(
         dslContext: DSLContext,
-        repoHashId: String,
-        context: String,
-        ref: String,
-        extRef: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
         checkRunId: Long?,
         checkRunStatus: String?
     ) {
@@ -110,14 +94,13 @@ class PipelineBuildCheckRunDao {
                         if (!checkRunStatus.isNullOrBlank()) {
                             it.set(CHECK_RUN_STATUS, checkRunStatus)
                         }
-                        it.set(REPO_HASH_ID, repoHashId)
+                        it.set(BUILD_ID, buildId)
                     }
                     .where(
                         listOf(
-                            REPO_HASH_ID.eq(repoHashId),
-                            CONTEXT.eq(context),
-                            REF.eq(ref),
-                            EXT_REF.eq(extRef)
+                            PROJECT_ID.eq(projectId),
+                            PIPELINE_ID.eq(pipelineId),
+                            BUILD_ID.eq(buildId)
                         )
                     )
                     .execute()
@@ -136,6 +119,29 @@ class PipelineBuildCheckRunDao {
             )
             return dslContext.selectFrom(this)
                     .where(conditions)
+                    .fetch()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        repoHashId: String,
+        commitId: String,
+        pullRequestId: String
+    ) : Result<TPipelineBuildCheckRunRecord> {
+        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
+            val conditions = listOf(
+                PROJECT_ID.eq(projectId),
+                PIPELINE_ID.eq(pipelineId),
+                REPO_HASH_ID.eq(repoHashId),
+                COMMIT_ID.eq(commitId),
+                PULL_REQUEST_ID.eq(pullRequestId)
+            )
+            return dslContext.selectFrom(this)
+                    .where(conditions)
+                    .orderBy(BUILD_NUM.desc())
                     .fetch()
         }
     }

@@ -65,6 +65,8 @@ enum class CodeEventType {
     // 子流水线
     PARENT_PIPELINE;
 
+    fun isMergeRequest() = this == MERGE_REQUEST || this == MERGE_REQUEST_ACCEPT
+
     companion object {
         const val MESSAGE_CODE_PREFIX = "EVENT_TYPE"
 

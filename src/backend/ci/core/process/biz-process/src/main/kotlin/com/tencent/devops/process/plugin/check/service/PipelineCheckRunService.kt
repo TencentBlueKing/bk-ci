@@ -17,18 +17,22 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.model.process.tables.records.TPipelineBuildCheckRunRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.plugin.check.dao.PipelineBuildCheckRunDao
+import com.tencent.devops.process.pojo.CheckRunExtension
 import com.tencent.devops.process.pojo.PipelineBuildCheckRun
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -92,10 +96,9 @@ class PipelineCheckRunService @Autowired constructor(
                                 // 多次操作失败，记录失败
                                 pipelineBuildCheckRunDao.update(
                                     dslContext = dslContext,
-                                    repoHashId = checkRun.repoHashId,
-                                    ref = checkRun.ref,
-                                    extRef = checkRun.extRef,
-                                    context = checkRun.context,
+                                    projectId = checkRun.projectId,
+                                    pipelineId = checkRun.pipelineId,
+                                    buildId = checkRun.buildId,
                                     checkRunId = null,
                                     checkRunStatus = CHECK_RUN_FIX_FAILED
                                 )
@@ -113,10 +116,9 @@ class PipelineCheckRunService @Autowired constructor(
                                 )
                                 pipelineBuildCheckRunDao.update(
                                     dslContext = dslContext,
-                                    repoHashId = checkRun.repoHashId,
-                                    ref = checkRun.ref,
-                                    extRef = checkRun.extRef,
-                                    context = checkRun.context,
+                                    projectId = checkRun.projectId,
+                                    pipelineId = checkRun.pipelineId,
+                                    buildId = checkRun.buildId,
                                     checkRunId = null,
                                     checkRunStatus = checkRun.checkRunStatus?.name
                                 )
@@ -229,7 +231,7 @@ class PipelineCheckRunService @Autowired constructor(
         // 核心参数校验
         if (commitId.isNullOrEmpty() || repositoryId.isNullOrEmpty()) {
             logger.warn(
-                "skip resolve check run|commitId($commitId) repoHashId($repositoryId) " +
+                "skip resolve check run|process instance($buildId) commitId($commitId) repoHashId($repositoryId) " +
                         "repositoryType($repositoryType) is empty"
             )
             return
@@ -250,9 +252,15 @@ class PipelineCheckRunService @Autowired constructor(
             logger.warn("skip resolve check run|process instance($buildId) not support write $providerCode check run")
             return
         }
-        val extRef = getExtRef(variables, finalEventType, providerCode)
+        val extensionData = getExtensionData(variables, finalEventType)
         val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
-        val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
+        val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong() ?: run {
+            if (finalEventType.isMergeRequest()) {
+                logger.warn("skip resolve check run|process instance($buildId) mrId is empty")
+                return
+            }
+            0L
+        }
         val userId = variables[PIPELINE_START_USER_ID]
         action(
             PipelineBuildCheckRun(
@@ -262,11 +270,10 @@ class PipelineCheckRunService @Autowired constructor(
                 buildNum = buildHistoryVar.buildNum,
                 buildStatus = transferBuildStatus(buildStatus),
                 repoHashId = repo.repoHashId!!,
-                extRef = extRef,
-                ref = commitId,
+                extensionData = extensionData,
+                commitId = commitId,
                 context = context,
                 block = block,
-                targetBranch = getTargetBranch(variables, finalEventType),
                 pullRequestId = mrId,
                 scmCode = repo.scmCode,
                 buildVariables = variables,
@@ -298,14 +305,24 @@ class PipelineCheckRunService @Autowired constructor(
                         Thread.sleep(100)
                         return@use
                     }
-                    val checkRunRecord = pipelineBuildCheckRunDao.get(
+                    // 业务PrId
+                    val pullRequestBizId = getPullRequestBizId()
+                    // 满足当前版本的构建记录
+                    val checkRunRecords = pipelineBuildCheckRunDao.list(
                         dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
                         repoHashId = repoHashId,
-                        ref = ref,
-                        extRef = extRef,
-                        context = context
+                        commitId = commitId,
+                        pullRequestId = pullRequestBizId
                     )
+                    // 最新的构建任务
+                    val checkRunRecord = checkRunRecords.firstOrNull()
                     var checkRunInput = convert()
+                    // 需要跳过的记录
+                    var skipRecords = mutableListOf<TPipelineBuildCheckRunRecord>().apply {
+                        addAll(checkRunRecords)
+                    }
                     when {
                         checkRunRecord == null -> {
                             logger.info(
@@ -322,7 +339,8 @@ class PipelineCheckRunService @Autowired constructor(
                             pipelineBuildCheckRunDao.create(
                                 dslContext = dslContext,
                                 buildCheckRun = this.copy(
-                                    checkRunStatus = CheckRunStatus.IN_PROGRESS
+                                    checkRunStatus = CheckRunStatus.IN_PROGRESS,
+                                    pullRequestBizId = pullRequestBizId
                                 )
                             )
                             addCheckRun(
@@ -332,10 +350,9 @@ class PipelineCheckRunService @Autowired constructor(
                             )?.let {
                                 pipelineBuildCheckRunDao.update(
                                     dslContext = dslContext,
-                                    repoHashId = repoHashId,
-                                    ref = ref,
-                                    extRef = extRef,
-                                    context = context,
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
                                     checkRunId = it.id,
                                     checkRunStatus = CheckRunStatus.IN_PROGRESS.name
                                 )
@@ -387,7 +404,7 @@ class PipelineCheckRunService @Autowired constructor(
                             }
                             logger.info(
                                 "[$buildId]attempting to update $scmCode check-run(${checkRunInfo?.id}) to " +
-                                        "repo($repoHashId)|ref($ref)|extRef($extRef)|context($context)"
+                                        "repo($repoHashId)|ref($commitId)|extRef($extensionData)|context($context)"
                             )
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
@@ -400,6 +417,9 @@ class PipelineCheckRunService @Autowired constructor(
                                 dslContext = dslContext,
                                 record = checkRunRecord
                             )
+                            if (checkRunRecords.size > 1) {
+                                skipRecords = checkRunRecords.subList(1, checkRunRecords.size)
+                            }
                         }
 
                         else -> {
@@ -407,9 +427,27 @@ class PipelineCheckRunService @Autowired constructor(
                             return
                         }
                     }
+                    skipCheckRunRecord(skipRecords)
                     return
                 }
             }
+        }
+    }
+
+    /**
+     * 修改无效数据的构建状态
+     */
+    fun skipCheckRunRecord(checkRunRecords: List<TPipelineBuildCheckRunRecord>) {
+        if (checkRunRecords.isEmpty()) {
+            return
+        }
+        logger.info("Invalid data exists; try to modify the build status")
+        checkRunRecords.forEach {
+            it.checkRunStatus = CHECK_RUN_SKIP_FLAG
+            pipelineBuildCheckRunDao.update(
+                dslContext = dslContext,
+                record = it
+            )
         }
     }
 
@@ -435,15 +473,15 @@ class PipelineCheckRunService @Autowired constructor(
         }
         return CheckRunInput(
             name = context,
-            ref = ref,
+            ref = commitId,
             status = checkRunState,
             conclusion = checkRunConclusion,
-            pullRequestId = buildVariables[PIPELINE_WEBHOOK_MR_ID]?.toLong(),
-            targetBranches = getTargetBranch(buildVariables, eventType),
+            pullRequestId = pullRequestId,
+            targetBranches = extensionData?.let { listOf(it.targetBranch ?: "") } ?: listOf(),
             startedAt = startTime?.let {
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
             } ?: LocalDateTime.now(),
-            block = buildVariables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false,
+            block = block,
             output = CheckRunOutput(
                 title = pipelineName,
                 summary = getSummary(pipelineName, buildStatus),
@@ -487,40 +525,27 @@ class PipelineCheckRunService @Autowired constructor(
     }
 
     /**
-     * 获取扩展标识位，仅靠ref无法准确定位到check-run对应的MR或者commit
+     * 通过构建变量获取check-run扩展信息
      */
-    private fun getExtRef(
+    private fun getExtensionData(
         variables: Map<String, String>,
-        eventType: CodeEventType,
-        scmProvider: ScmProviderCodes
-    ) = when (eventType) {
-        CodeEventType.PUSH -> {
-            if (scmProvider == ScmProviderCodes.TGIT) {
-                TGIT_PUSH_EVENT_CHECK_RUN_EXT_REF
-            } else {
-                DEFAULT_PUSH_EVENT_CHECK_RUN_EXT_REF
-            }
+        eventType: CodeEventType
+    ) = when {
+        eventType == CodeEventType.PUSH -> {
+            CheckRunExtension(
+                sourceBranch = variables[BK_REPO_GIT_WEBHOOK_BRANCH],
+                targetBranch = PUSH_EVENT_CHECK_RUN_FLAG
+            )
         }
 
-        CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-            // 工蜂check-run为确保能准确写入MR，需指定目标分支
-            if (scmProvider == ScmProviderCodes.TGIT) {
-                variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] ?: run {
-                    // 缺少目标分支信息，check-run 可能添加失败
-                    logger.warn("TGIT miss target branch, check-run addition may fail")
-                    DEFAULT_MR_EVENT_CHECK_RUN_EXT_REF
-                }
-            } else if (scmProvider == ScmProviderCodes.GITEE) {
-                variables[PIPELINE_WEBHOOK_MR_ID] ?: run {
-                    logger.warn("GITEE miss merge request id, check-run addition may fail")
-                    DEFAULT_MR_EVENT_CHECK_RUN_EXT_REF
-                }
-            } else {
-                DEFAULT_MR_EVENT_CHECK_RUN_EXT_REF
-            }
+        eventType.isMergeRequest() -> {
+            CheckRunExtension(
+                sourceBranch = variables[PIPELINE_WEBHOOK_SOURCE_BRANCH],
+                targetBranch = variables[PIPELINE_WEBHOOK_TARGET_BRANCH]
+            )
         }
 
-        else -> ""
+        else -> throw IllegalArgumentException("unsupported event type: $eventType")
     }
 
     /**
@@ -584,14 +609,16 @@ class PipelineCheckRunService @Autowired constructor(
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
-    private fun getTargetBranch(variables: Map<String, String>, webhookEventType: CodeEventType) =
-        if (webhookEventType == CodeEventType.PUSH) {
-            listOf(TGIT_PUSH_EVENT_CHECK_RUN_EXT_REF)
-        } else {
-            variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]?.let {
-                listOf(it)
-            } ?: listOf()
-        }
+    /**
+     * 获取业务PrId
+     * PUSH -> ~NONE
+     * MR -> MR_ID
+     */
+    private fun PipelineBuildCheckRun.getPullRequestBizId() = when {
+        eventType == CodeEventType.PUSH -> PUSH_EVENT_CHECK_RUN_FLAG
+        eventType.isMergeRequest() -> pullRequestId.toString()
+        else -> ""
+    }
 
     private fun getLockKey(repository: Repository, pipelineId: String) = when (repository) {
         is CodeGitRepository, is CodeTGitRepository -> {
@@ -603,7 +630,7 @@ class PipelineCheckRunService @Autowired constructor(
         }
 
         else -> {
-            "code_${repository.scmCode}_check_run_lock_$pipelineId"
+            "lock:pipeline:$pipelineId:build:check:run"
         }
     }
 
@@ -672,8 +699,11 @@ class PipelineCheckRunService @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildCheckRun.key() = "repo($repoHashId)|ref($ref)|extRef($extRef)|context($context)"
-    private fun PipelineBuildCheckRun.buildKey() = "projectId($projectId)|pipelineId($pipelineId)|buildId($buildId)"
+    private fun PipelineBuildCheckRun.key() =
+        "repo($repoHashId)|ref($commitId)|extRef($extensionData)|context($context)"
+
+    private fun PipelineBuildCheckRun.buildKey() =
+        "projectId($projectId)|pipelineId($pipelineId)|buildId($buildId)"
 
     private fun transferBuildStatus(buildStatus: BuildStatus) = when (buildStatus) {
         BuildStatus.RUNNING, BuildStatus.SUCCEED -> buildStatus
@@ -682,10 +712,9 @@ class PipelineCheckRunService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineCheckRunService::class.java)
-        private const val TGIT_PUSH_EVENT_CHECK_RUN_EXT_REF = "~NONE"
-        private const val DEFAULT_PUSH_EVENT_CHECK_RUN_EXT_REF = "DEFAULT_PUSH_EXT_REF"
-        private const val DEFAULT_MR_EVENT_CHECK_RUN_EXT_REF = "DEFAULT_MR_EXT_REF"
+        private const val PUSH_EVENT_CHECK_RUN_FLAG = "~NONE"
         private const val CHECK_RUN_FIX_FAILED = "CHECK_RUN_FIX_FAILED"
+        private const val CHECK_RUN_SKIP_FLAG = "SKIP"
         private const val SLEEP_SECOND_FOR_RETRY_10: Long = 10
     }
 }
