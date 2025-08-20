@@ -522,7 +522,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         }
     }
 
-    private fun checkPushParam(
+    fun checkPushParam(
         projectId: String,
         pipelineId: String,
         content: String,
@@ -547,7 +547,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         }
         if (
             (targetAction != CodeTargetAction.COMMIT_TO_MASTER &&
-                    targetAction != CodeTargetAction.COMMIT_TO_BRANCH) &&
+                targetAction != CodeTargetAction.COMMIT_TO_BRANCH) &&
             versionName.isNullOrBlank()
         ) {
             throw ErrorCodeException(
