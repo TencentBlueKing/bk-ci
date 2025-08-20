@@ -199,7 +199,7 @@
                         required: i.isRequiredParam
                     })),
                     timerTrigger: item.timerTrigger,
-                    filePath: item.filePath ? `.ci/${item.filePath}` : undefined,
+                    filePath: item.filePath,
                     overrideTemplateField: item.overrideTemplateField,
                     triggerConfigs: item.triggerConfigs
                 }

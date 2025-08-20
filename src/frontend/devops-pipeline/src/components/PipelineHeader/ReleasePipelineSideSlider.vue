@@ -248,13 +248,20 @@
                                                     <td>
                                                         <div class="input-cell">
                                                             <span class="instance-name">{{ filePathDir }}</span>
-                                                            <bk-input
-                                                                v-model="item.filePath"
-                                                                :disabled="disabledYamlCodeLib"
-                                                                id="yamlFilePath"
-                                                                placeholder="请输入"
-                                                                @change="(value) => handleChangeFilePath(value, index)"
-                                                            />
+                                                            <div class="file-path-input">
+                                                                <bk-input
+                                                                    v-model="item.filePath"
+                                                                    :disabled="disabledYamlCodeLib"
+                                                                    id="yamlFilePath"
+                                                                    placeholder="请输入"
+                                                                    @change="(value) => handleChangeFilePath(value, index)"
+                                                                />
+                                                                <i
+                                                                    v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
+                                                                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                                                                    v-bk-tooltips="$t('yamlFilePathErrorTip')"
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -832,6 +839,7 @@
                             ...params
                         })
                         this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
+                        this.releaseParams.customVersionName = this.newReleaseVersionName
                     }
                 } catch (error) {
                     this.errorHandler(error)
@@ -907,6 +915,7 @@
                 if (this.isTemplateInstanceMode) {
                     try {
                         await this.$refs?.releaseForm?.validate?.()
+                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
                         console.error(e)
@@ -1658,6 +1667,21 @@
                 }
             }
         }
+    }
+    .file-path-input {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        width: 100%;
+            .tooltips-icon {
+                position: absolute;
+                z-index: 10;
+                right: 8px;
+                top: 8px;
+                color: #ea3636;
+                cursor: pointer;
+                font-size: 16px;
+            }
     }
 }
 </style>
