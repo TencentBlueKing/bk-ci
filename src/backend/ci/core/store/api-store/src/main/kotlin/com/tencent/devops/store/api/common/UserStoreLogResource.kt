@@ -129,6 +129,7 @@ interface UserStoreLogResource {
     @Operation(summary = "获取某行后的日志")
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/after")
+    @IgnoreUserApiPermission
     fun getAfterLogs(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
