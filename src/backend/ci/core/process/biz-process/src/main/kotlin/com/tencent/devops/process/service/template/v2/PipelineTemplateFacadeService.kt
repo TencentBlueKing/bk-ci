@@ -746,23 +746,6 @@ class PipelineTemplateFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): PipelineTemplateDetailsResponse {
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
-        )
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,

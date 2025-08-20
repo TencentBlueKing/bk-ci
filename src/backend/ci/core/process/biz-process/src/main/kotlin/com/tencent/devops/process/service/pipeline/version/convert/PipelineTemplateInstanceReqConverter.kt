@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -114,6 +115,12 @@ class PipelineTemplateInstanceReqConverter(
                         params = arrayOf("filePath")
                     )
                 }
+                if (targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == null) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("targetBranch")
+                    )
+                }
             }
             if (templateRefType == TemplateRefType.PATH) {
                 if (!enablePac) {
@@ -143,7 +150,7 @@ class PipelineTemplateInstanceReqConverter(
             )
 
             // 获取版本状态
-            val versionStatus = pipelineVersionGenerator.getInstanceStatusAndBranchName(
+            val (versionStatus, branchName) = pipelineVersionGenerator.getInstanceStatusAndBranchName(
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 templateId = templateId,
@@ -152,7 +159,7 @@ class PipelineTemplateInstanceReqConverter(
                 repoHashId = repoHashId,
                 targetAction = targetAction,
                 targetBranch = targetBranch
-            ).first
+            )
 
             val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
             if (templateInfo.type != PipelineTemplateType.PIPELINE) {
@@ -307,7 +314,8 @@ class PipelineTemplateInstanceReqConverter(
                     )
                 },
                 targetAction = targetAction,
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                branchName = branchName
             )
         }
     }
