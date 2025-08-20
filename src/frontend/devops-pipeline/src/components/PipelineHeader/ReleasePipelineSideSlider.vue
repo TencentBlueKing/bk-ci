@@ -45,7 +45,11 @@
                         />
                     </label>
                     <bk-switcher
-                        :disabled="pacEnabled || isTemplatePipeline"
+                        v-bk-tooltips="{
+                            content: $t('unSupportPACTips'),
+                            disabled: !(!hasPacSupportScmTypeList || pacEnabled || isTemplatePipeline)
+                        }"
+                        :disabled="!hasPacSupportScmTypeList || pacEnabled || isTemplatePipeline"
                         theme="primary"
                         name="enablePac"
                         :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
@@ -566,12 +570,7 @@
                     this.isLoading = true
                     const { enablePac } = this.releaseParams
                     await Promise.all([
-                        ...(enablePac
-                            ? [
-                                this.getSupportPacScmTypeList()
-                            ]
-                            : []
-                        ),
+                        this.getSupportPacScmTypeList(),
                         this.prefetchReleaseVersion(this.prefetchParams)
                     ])
 

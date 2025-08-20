@@ -38,7 +38,7 @@
                         <span
                             class="atom-name"
                             :title="props.row.templateName"
-                            @click="routerAtoms(props.row.templateCode)"
+                            @click="routerTemplate(props.row.templateCode)"
                         >{{ props.row.templateName }}</span>
                     </template>
                 </bk-table-column>
@@ -660,9 +660,9 @@
                 this.templateErrors.tplError = false
             },
 
-            routerAtoms (code) {
+            routerTemplate (code) {
                 this.$router.push({
-                    name: 'setting',
+                    name: 'building',
                     params: {
                         code,
                         type: 'template'
