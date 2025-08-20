@@ -4,6 +4,7 @@
             <bk-button
                 v-if="isInstanceCreateType"
                 icon="plus"
+                :disabled="!curTemplateVersion"
                 @click="handleAddInstance"
             >
                 {{ $t('new') }}
@@ -130,6 +131,7 @@
     const templateId = computed(() => proxy.$route.params?.templateId)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const currentVersionId = computed(() => proxy?.$route.params?.version)
+    const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
     const renderInstanceList = computed(() => {
         return instanceList.value
     })
@@ -140,7 +142,7 @@
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
             stepId: i.stepId ?? '',
-            disabled: i.additionalOptions?.enable ?? true,
+            disabled: !i.additionalOptions?.enable ?? false,
             cron: i.advanceExpression,
             variables: i.startParams,
             name: i.name,

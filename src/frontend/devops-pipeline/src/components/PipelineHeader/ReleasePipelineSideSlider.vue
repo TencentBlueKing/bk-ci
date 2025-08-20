@@ -514,7 +514,7 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'isTemplate']),
             ...mapState('common', ['pacSupportScmTypeList']),
-            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail']),
+            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail', 'templateRefType']),
             filePathDir () {
                 return `.ci/${this.isTemplateInstanceMode ? '' : this.isTemplate ? 'templates/' : ''}`
             },
@@ -732,6 +732,14 @@
                         this.releaseParams.targetAction = this.instanceTaskDetail.targetAction ?? ''
                     }
                 }
+            },
+            templateRefType: {
+                handler: function (val) {
+                    if (this.isTemplateInstanceMode && val === 'PATH') {
+                        this.releaseParams.enablePac = true
+                    }
+                },
+                immediate: true
             }
         },
         mounted () {
