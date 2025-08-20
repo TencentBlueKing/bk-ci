@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -46,7 +47,8 @@ import org.springframework.stereotype.Service
 class PipelineTemplateInstanceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
-    private val pipelineVersionPersistenceService: PipelineVersionPersistenceService
+    private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext) =
         context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE
@@ -92,16 +94,12 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
 
     private fun PipelineVersionCreateContext.doHandle(): DeployPipelineResult {
         val resourceOnlyVersion = if (pipelineInfo == null) {
-            val resourceOnlyVersion = pipelineVersionGenerator.getDefaultVersion(
+            pipelineVersionGenerator.getDefaultVersion(
                 versionStatus = pipelineResourceWithoutVersion.status,
                 branchName = branchName
             )
-            pipelineVersionPersistenceService.initializeTemplate(
-                context = this, resourceOnlyVersion = resourceOnlyVersion
-            )
-            resourceOnlyVersion
         } else {
-            val resourceOnlyVersion = pipelineVersionGenerator.generateInstanceVersion(
+            pipelineVersionGenerator.generateInstanceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 newModel = pipelineResourceWithoutVersion.model,
@@ -112,16 +110,43 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
                 templateId = templateInstanceBasicInfo!!.templateId,
                 templateVersion = templateInstanceBasicInfo.templateVersion
             )
-            if (pipelineResourceWithoutVersion.status == VersionStatus.RELEASED) {
-                pipelineVersionPersistenceService.createReleaseVersion(
-                    context = this, resourceOnlyVersion = resourceOnlyVersion
-                )
-            } else {
-                pipelineVersionPersistenceService.createBranchVersion(
-                    context = this, resourceOnlyVersion = resourceOnlyVersion
+        }
+
+        // 检查推送参数
+        enablePac.takeIf { it }?.let {
+            pipelineYamlFacadeService.checkPushParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                content = pipelineResourceWithoutVersion.yaml!!,
+                repoHashId = yamlFileInfo!!.repoHashId,
+                filePath = yamlFileInfo.filePath,
+                targetAction = targetAction!!,
+                versionName = resourceOnlyVersion.versionName,
+                targetBranch = targetBranch
+            )
+        }
+
+        when {
+            pipelineInfo == null -> {
+                pipelineVersionPersistenceService.initializeTemplate(
+                    context = this,
+                    resourceOnlyVersion = resourceOnlyVersion
                 )
             }
-            resourceOnlyVersion
+
+            pipelineResourceWithoutVersion.status == VersionStatus.RELEASED -> {
+                pipelineVersionPersistenceService.createReleaseVersion(
+                    context = this,
+                    resourceOnlyVersion = resourceOnlyVersion
+                )
+            }
+
+            else -> {
+                pipelineVersionPersistenceService.createBranchVersion(
+                    context = this,
+                    resourceOnlyVersion = resourceOnlyVersion
+                )
+            }
         }
 
         // 推送文件

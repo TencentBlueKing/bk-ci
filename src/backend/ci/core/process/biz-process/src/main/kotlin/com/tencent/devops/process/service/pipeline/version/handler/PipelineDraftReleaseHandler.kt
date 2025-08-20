@@ -146,7 +146,19 @@ class PipelineDraftReleaseHandler @Autowired constructor(
                 updateBuildNo = true
             }
         }
-
+        // 检查推送参数
+        enablePac.takeIf { it }?.let {
+            pipelineYamlFacadeService.checkPushParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                content = pipelineResourceWithoutVersion.yaml!!,
+                repoHashId = yamlFileInfo!!.repoHashId,
+                filePath = yamlFileInfo.filePath,
+                targetAction = targetAction!!,
+                versionName = resourceOnlyVersion.versionName,
+                targetBranch = targetBranch
+            )
+        }
         if (pipelineResourceWithoutVersion.status == VersionStatus.RELEASED) {
             pipelineVersionPersistenceService.releaseDraft2ReleaseVersion(
                 context = this,
