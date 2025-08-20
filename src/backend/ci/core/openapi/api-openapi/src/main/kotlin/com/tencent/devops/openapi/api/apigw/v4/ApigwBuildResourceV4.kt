@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -67,6 +68,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwBuildResourceV4 {
 
     @Operation(summary = "启动构建", tags = ["v4_app_build_start", "v4_user_build_start"])

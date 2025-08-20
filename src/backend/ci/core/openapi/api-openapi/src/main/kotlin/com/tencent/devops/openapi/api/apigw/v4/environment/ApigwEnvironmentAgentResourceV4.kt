@@ -44,6 +44,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
+import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -62,6 +63,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwEnvironmentAgentResourceV4 {
 
     @Operation(summary = "获取项目下第三方构建机列表", tags = ["v4_app_node_list", "v4_user_node_list"])
