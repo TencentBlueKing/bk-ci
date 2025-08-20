@@ -42,8 +42,17 @@ class UserPublicVarResourceImpl @Autowired constructor(
     val publicVarService: PublicVarService
 ) : UserPublicVarResource {
 
-    override fun listGroupPublicVar(userId: String, groupName: String, version: Int?): Result<PublicVarGroupVO> {
-        return Result(publicVarGroupService.getPipelineGroupsVar(userId, groupName, version))
+    override fun listGroupPublicVar(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): Result<PublicVarGroupVO> {
+        return Result(publicVarGroupService.getPipelineGroupsVar(
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        ))
     }
 
     override fun getVariables(

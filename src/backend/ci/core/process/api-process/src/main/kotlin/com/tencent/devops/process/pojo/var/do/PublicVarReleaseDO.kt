@@ -32,6 +32,10 @@ import java.time.LocalDateTime
 
 @Schema(title = "公共变量组发布记录")
 data class PublicVarReleaseDO(
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "版本号")
+    val version: Int,
     @get:Schema(title = "发布时间")
     val pubTime: LocalDateTime,
     @get:Schema(title = "发布人")

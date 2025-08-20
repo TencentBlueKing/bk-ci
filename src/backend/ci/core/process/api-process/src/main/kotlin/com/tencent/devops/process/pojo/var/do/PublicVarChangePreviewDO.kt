@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.enums
+package com.tencent.devops.process.pojo.`var`.`do`
 
-/**
- * 筛选类型枚举
- */
-enum class VarGroupFilterTypeEnum {
-    GROUP_NAME,    // 按变量组名称筛选
-    GROUP_DESC,    // 按变量组描述筛选
-    VAR_NAME,      // 按变量名称筛选
-    VAR_TYPE,      // 按变量类型筛选
-    PUBLISHER,     // 按发布者筛选
-    ALIAS          // 按别名筛选
-}
+import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
+
+@Schema(title = "公共变量组变更预览")
+data class PublicVarChangePreviewDO(
+    @get:Schema(title = "发布时间")
+    val pubTime: LocalDateTime,
+    @get:Schema(title = "发布人")
+    val publisher: String,
+    @get:Schema(title = "变更内容")
+    val content: String,
+    @get:Schema(title = "变更描述")
+    val desc: String? = null
+)
+

@@ -58,6 +58,9 @@ interface UserPublicVarResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,

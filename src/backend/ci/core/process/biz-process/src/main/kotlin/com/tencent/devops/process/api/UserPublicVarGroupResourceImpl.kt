@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarChangePreviewDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
@@ -76,11 +78,13 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     ): Result<Page<PublicVarGroupDO>> {
         return Result(publicVarGroupService.getGroups(
             userId = userId,
-            projectId = projectId,
-            keyword = keyword,
-            filterType = filterType,
-            page = page,
-            pageSize = pageSize
+            queryReq = PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                keyword = keyword,
+                filterType = filterType,
+                page = page,
+                pageSize = pageSize
+            )
         ))
     }
 
@@ -128,11 +132,31 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<Page<PublicVarVariableReferenceDO>> {
         return Result(publicVarGroupService.listVarGroupReferInfo(
-            projectId = projectId,
-            groupName = groupName,
-            version = version,
-            page = page,
-            pageSize = pageSize
+            PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                groupName = groupName,
+                version = version,
+                page = page,
+                pageSize = pageSize
+            )
+        ))
+    }
+
+    override fun getChangePreview(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarChangePreviewDO>> {
+        return Result(publicVarGroupService.getChangePreview(
+            userId = userId,
+            queryReq = PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                groupName = groupName,
+                page = page,
+                pageSize = pageSize
+            )
         ))
     }
 
@@ -145,10 +169,12 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     ): Result<Page<PublicVarReleaseDO>> {
         return Result(publicVarGroupService.getReleaseHistory(
             userId = userId,
-            projectId = projectId,
-            groupName = groupName,
-            page = page,
-            pageSize = pageSize
+            queryReq = PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                groupName = groupName,
+                page = page,
+                pageSize = pageSize
+            )
         ))
     }
 

@@ -44,12 +44,14 @@ import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReleseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarChangePreviewDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.dto.PipelinePublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
@@ -59,7 +61,6 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
-import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.expiredTimeInSeconds
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.VariableTransfer
@@ -199,12 +200,13 @@ class PublicVarGroupService @Autowired constructor(
 
     fun getGroups(
         userId: String,
-        projectId: String,
-        page: Int,
-        pageSize: Int,
-        keyword: String? = null,
-        filterType: VarGroupFilterTypeEnum? = null
+        queryReq: PublicVarGroupInfoQueryReqDTO
     ): Page<PublicVarGroupDO> {
+        val projectId = queryReq.projectId
+        val page = queryReq.page
+        val pageSize = queryReq.pageSize
+        val keyword = queryReq.keyword
+        val filterType = queryReq.filterType
         // 根据filterType处理keyword
         val groupNames = when (filterType) {
             VarGroupFilterTypeEnum.VAR_NAME, VarGroupFilterTypeEnum.VAR_TYPE -> {
@@ -372,14 +374,12 @@ class PublicVarGroupService @Autowired constructor(
         }
     }
 
-    fun listVarGroupReferInfo(
-        projectId: String,
-        groupName: String,
-        version: Int?,
-        page: Int,
-        pageSize: Int
-    ): Page<PublicVarVariableReferenceDO> {
-
+    fun listVarGroupReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicVarVariableReferenceDO> {
+        val projectId = queryReq.projectId
+        val groupName = queryReq.groupName!!
+        val version = queryReq.version
+        val page = queryReq.page
+        val pageSize = queryReq.pageSize
         val pipelinePublicVarGroupInfo = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
             projectId = projectId,
@@ -432,14 +432,14 @@ class PublicVarGroupService @Autowired constructor(
         }
     }
 
-    fun getReleaseHistory(
+    fun getChangePreview(
         userId: String,
-        projectId: String,
-        groupName: String,
-        page: Int,
-        pageSize: Int
-    ): Page<PublicVarReleaseDO> {
-
+        queryReq: PublicVarGroupInfoQueryReqDTO
+    ): Page<PublicVarChangePreviewDO> {
+        val projectId = queryReq.projectId
+        val groupName = queryReq.groupName!!
+        val page = queryReq.page
+        val pageSize = queryReq.pageSize
         val count = pipelinePublicVarGroupReleseRecordDao.countByGroupName(dslContext, projectId, groupName)
         val publicVarGroupReleaseRecordPOS = pipelinePublicVarGroupReleseRecordDao.listByGroupNamePage(
             dslContext = dslContext,
@@ -453,13 +453,37 @@ class PublicVarGroupService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             records = publicVarGroupReleaseRecordPOS.map {
-                PublicVarReleaseDO(
+                PublicVarChangePreviewDO(
                     publisher = it.publisher,
                     pubTime = it.pubTime,
                     desc = it.desc,
                     content = it.content ?: ""
                 )
             }
+        )
+    }
+
+    fun getReleaseHistory(
+        userId: String,
+        queryReq: PublicVarGroupInfoQueryReqDTO
+    ): Page<PublicVarReleaseDO> {
+        val projectId = queryReq.projectId
+        val groupName = queryReq.groupName!!
+        val page = queryReq.page
+        val pageSize = queryReq.pageSize
+        val count = pipelinePublicVarGroupReleseRecordDao.countByGroupName(dslContext, projectId, groupName)
+        val publicVarReleaseDOS = pipelinePublicVarGroupReleseRecordDao.listGroupReleaseHistory(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        )
+        return Page(
+            count = count.toLong(),
+            page = page,
+            pageSize = pageSize,
+            records = publicVarReleaseDOS
         )
     }
 

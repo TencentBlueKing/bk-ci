@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.enums
+package com.tencent.devops.process.pojo.`var`.dto
 
-/**
- * 筛选类型枚举
- */
-enum class VarGroupFilterTypeEnum {
-    GROUP_NAME,    // 按变量组名称筛选
-    GROUP_DESC,    // 按变量组描述筛选
-    VAR_NAME,      // 按变量名称筛选
-    VAR_TYPE,      // 按变量类型筛选
-    PUBLISHER,     // 按发布者筛选
-    ALIAS          // 按别名筛选
-}
+import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "公共变量组信息分页查询请求传输对象")
+data class PublicVarGroupInfoQueryReqDTO (
+    @get:Schema(description = "项目ID")
+    val projectId: String,
+    @get:Schema(description = "变量组名称")
+    val groupName: String? = null,
+    @get:Schema(description = "版本号")
+    val version: Int? = null,
+    @get:Schema(description = "关键字")
+    val keyword: String? = null,
+    @get:Schema(description = "过滤类型")
+    val filterType: VarGroupFilterTypeEnum? = null,
+    @get:Schema(title = "第几页")
+    val page: Int,
+    @get:Schema(title = "每页大小")
+    val pageSize: Int
+)

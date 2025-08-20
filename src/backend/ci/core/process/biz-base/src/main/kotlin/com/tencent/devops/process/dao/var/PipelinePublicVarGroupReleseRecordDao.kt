@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.dao.`var`
 
+import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReleaseRecord
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReleaseRecordPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -119,6 +121,44 @@ class PipelinePublicVarGroupReleseRecordDao {
                         modifier = record.modifier,
                         createTime = record.createTime,
                         updateTime = record.updateTime
+                    )
+                }
+        }
+    }
+
+    fun listGroupReleaseHistory(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): List<PublicVarReleaseDO> {
+        with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+            val varGroup = TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP
+            val offset = (page - 1) * pageSize
+            return dslContext.select(
+                GROUP_NAME,
+                VERSION,
+                PUBLISHER,
+                PUB_TIME,
+                varGroup.DESC,
+                CONTENT
+            ).from(this)
+                .leftJoin(varGroup)
+                .on(GROUP_NAME.eq(varGroup.GROUP_NAME).and(VERSION.eq(varGroup.VERSION)))
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .orderBy(PUB_TIME.desc())
+                .offset(offset)
+                .limit(pageSize)
+                .fetch { record ->
+                    PublicVarReleaseDO(
+                        groupName = record.get(GROUP_NAME),
+                        version = record.get(VERSION),
+                        publisher = record.get(PUBLISHER),
+                        pubTime = record.get(PUB_TIME),
+                        desc = record.get(varGroup.DESC),
+                        content = record.get(CONTENT)
                     )
                 }
         }
