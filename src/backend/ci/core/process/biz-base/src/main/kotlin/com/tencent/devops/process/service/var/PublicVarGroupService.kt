@@ -108,7 +108,7 @@ class PublicVarGroupService @Autowired constructor(
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
             val version = publicVarGroupDao.getLatestVersionByGroupName(dslContext, projectId, groupName) ?: 0
             val operateType = publicVarGroupDTO.operateType
-            if (operateType == OperateTypeEnum.ADD && version > 0) {
+            if (operateType == OperateTypeEnum.CREATE && version > 0) {
                 throw ErrorCodeException(
                     errorCode = PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST,
                     params = arrayOf(groupName)
