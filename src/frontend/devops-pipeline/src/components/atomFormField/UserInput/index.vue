@@ -1,12 +1,12 @@
 <template>
     <BkUserSelector
-        :value="value"
+        :model-value="value"
         :api-base-url="apiBaseUrl"
         :tenant-id="tenantId"
         :placeholder="placeholder"
         :disabled="disabled"
         draggable
-        multiple
+        :multiple="isMultiple"
         @change="handleUserChange"
     />
 </template>
@@ -47,6 +47,9 @@
             },
             tenantId () {
                 return TenantSingleton.getInstance().tenantId
+            },
+            isMultiple () {
+                return Array.isArray(this.value)
             }
         },
         methods: {

@@ -8,7 +8,7 @@
                         @click="goPipeline(pipeline)"
                         v-bk-overflow-tips
                         v-perm="{
-                            hasPermission: pipeline.permissions.canView,
+                            hasPermission: pipeline.permissions?.canView,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId,
@@ -70,7 +70,7 @@
                     class="bk-pipeline-card-trigger-btn"
                     @click="goPipeline(pipeline)"
                     v-perm="{
-                        hasPermission: pipeline.permissions.canEdit,
+                        hasPermission: pipeline.permissions?.canEdit,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
@@ -85,7 +85,7 @@
                 <span
                     v-else
                     v-perm="{
-                        hasPermission: pipeline.permissions.canExecute,
+                        hasPermission: pipeline.permissions?.canExecute,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
@@ -219,7 +219,7 @@
             </bk-button>
         </div>
         <div
-            v-else-if="!pipeline.permissions.canView && !pipeline.delete"
+            v-else-if="!pipeline.permissions?.canView && !pipeline.delete"
             class="pipeline-card-apply-mask"
         >
             <bk-button

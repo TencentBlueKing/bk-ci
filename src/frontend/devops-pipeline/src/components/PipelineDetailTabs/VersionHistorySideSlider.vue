@@ -89,7 +89,14 @@
                                 </span> -->
                             </div>
                         </template>
+                        <template
+                            v-else-if="column.prop === 'creator' || column.prop === 'updater'"
+                            v-slot="{ row }"
+                        >
+                            <bk-user-display-name :user-id="row[column.prop]" />
+                        </template>
                     </bk-table-column>
+                    
                     <bk-table-column
                         :label="$t('operate')"
                         :width="320"
