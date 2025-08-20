@@ -2,7 +2,7 @@
 
 ### 1. 准备配置材料
 蓝鲸API网关配置文件： `./support-files/apigw/bk_apigw_resources_devops.yaml`
-接口配套文档需要运行下方脚本生成
+接口配套文档：`./support-files/apigw/bk_apigw_docs_devops.zip`
 ```bash
 zip -r bk_apigw_docs_devops.zip ./support-files/apigw/bk_apigw_docs_devops
 ```
