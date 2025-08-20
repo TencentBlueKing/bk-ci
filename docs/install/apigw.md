@@ -1,8 +1,7 @@
 ## 蓝鲸API网关配置指南
 
 ### 1. 准备配置材料
-从 [Releases](https://github.com/TencentBlueKing/bk-ci/releases) 下载配套版本的 `bk_apigw_resources_devops.yaml`和`bk_apigw_docs_devops.zip`
-
+从 [Releases](https://github.com/TencentBlueKing/bk-ci/releases) 下载配套版本的 `bkci-slim.tar.gz`
 或从项目中获取，存放路径如下：
 蓝鲸API网关配置文件： `./support-files/apigw/bk_apigw_resources_devops.yaml`
 接口配套文档：`./support-files/apigw/bk_apigw_docs_devops.zip`
