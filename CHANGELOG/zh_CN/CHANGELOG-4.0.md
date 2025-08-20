@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.0-doctest4](#v400-doctest4)
+   - [Changelog since v4.0.0](#changelog-since-v400)
+
 - [v4.0.0](#v400)
    - [Changelog since v3.2.0](#changelog-since-v320)
 
@@ -28,6 +31,35 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.0-doctest4
+## 2025-08-20
+### Changelog since v4.0.0
+#### 新增
+
+##### 流水线
+- [新增] 插件配置支持字段间联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11251)
+- [新增] feat: 忽略stage审核时并发组校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12121)
+
+##### 环境管理
+- [新增] feat: 新增构建机标签查询API [链接](http://github.com/TencentBlueKing/bk-ci/issues/12058)
+
+##### 其他
+- [新增] feat: 一键配置蓝鲸网关对接openapi服务 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12142)
+- [新增] sql doc 文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9974)
+- [新增] feat: 优化countGroupByBuildId方法 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12136)
+- [新增] feat：流水线参数值超长时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10665)
+- [新增] feat：变量条件展示支持 Code 定义 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12110)
+- [新增] feat：插件「执行前暂停」支持 Code 定义 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12113)
+- [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+
+#### 修复
+
+##### 代码库
+- [修复] bug: 调整build接口获取oauth信息检验逻辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12160)
+
+##### 其他
+- [修复] bugfix: Agent升级相关bug修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12157)
+
 # v4.0.0
 ## 2025-08-15
 ### Changelog since v3.2.0
