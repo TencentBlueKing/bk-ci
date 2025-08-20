@@ -177,6 +177,12 @@ const routes = [
                                 path: 'api',
                                 name: 'api',
                                 component: apiSetting
+                            },
+                            // 404
+                            {
+                                path: 'building',
+                                name: 'building',
+                                component: () => import(/* webpackChunkName: '404' */ '@/views/building.vue'),
                             }
                         ]
                     },
