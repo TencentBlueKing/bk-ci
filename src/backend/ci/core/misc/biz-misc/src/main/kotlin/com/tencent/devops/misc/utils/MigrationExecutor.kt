@@ -214,7 +214,7 @@ class MigrationExecutor(private val config: MigrationExecutorConfig) {
             }
         } finally {
             // 确保资源释放
-            executor.shutdownNow()
+            executor.shutdown()
             // 释放信号量资源
             releaseSemaphorePermits(semaphore, threadNum)
         }
