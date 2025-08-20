@@ -269,14 +269,12 @@
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-select v-model="atomForm.publisher">
-                            <bk-option
-                                v-for="publisher in publishersList"
-                                :key="publisher.id"
-                                :id="publisher.publisherCode"
-                                :name="publisher.publisherName"
-                            ></bk-option>
-                        </bk-select>
+                        <BkUserSelector
+                            v-model="atomForm.publisher"
+                            :api-base-url="$tenantApiBaseUrl"
+                            :tenant-id="$tenantId"
+                            :placeholder="$t('store.请输入发布者')"
+                        />
                     </div>
                 </div>
                 <div
@@ -455,17 +453,20 @@
 </template>
 
 <script>
+    import api from '@/api'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
+    import bkFileUpload from '@/components/common/file-upload'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import bkFileUpload from '@/components/common/file-upload'
-    import breadCrumbs from '@/components/bread-crumbs.vue'
-    import api from '@/api'
+    import BkUserSelector from '@blueking/bk-user-selector/vue2'
+    import '@blueking/bk-user-selector/vue2/vue2.css'
     
     export default {
         components: {
             selectLogo,
             bkFileUpload,
-            breadCrumbs
+            breadCrumbs,
+            BkUserSelector
         },
         data () {
             return {

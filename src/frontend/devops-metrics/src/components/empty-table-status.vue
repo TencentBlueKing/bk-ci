@@ -13,7 +13,11 @@
 </template>
 
 <script>
-    export default {
+    import { defineComponent } from 'vue';
+    import { useI18n } from 'vue-i18n';
+
+
+    export default defineComponent({
         name: 'EmptyTableStatus',
         props: {
             type: {
@@ -21,20 +25,19 @@
                 default: 'empty'
             }
         },
-        data () {
-            return {
-                typeMap: {
-                    empty: this.$t('noData'),
-                    'search-empty': this.$t('searchEmpty')
-                }
-            }
-        },
-        methods: {
-            handleClear () {
-                this.$emit('clear')
-            }
+        setup() {
+            const { t } = useI18n();
+            const typeMap = {
+                empty: t('noData'),
+                'search-empty': t('searchEmpty')
+            };
+            const handleClear = () => {
+                this.$emit('clear');
+            };
+            return { typeMap, handleClear };
         }
-    }
+    });
+    
 </script>
 
 <style lang="postcss">

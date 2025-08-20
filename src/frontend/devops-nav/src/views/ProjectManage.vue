@@ -105,7 +105,13 @@
                     <bk-table-column
                         :label="$t('projectCreator')"
                         prop="creator"
-                    />
+                    >
+                        <template v-slot="{ row }">
+                            <bk-user-display-name
+                                :user-id="row.creator"
+                            />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('projectStatus')"
                         prop="creator"
@@ -332,14 +338,14 @@
 </template>
 
 <script>
+    import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
+    import authInfo from '@/utils/auth'
     import {
         handleProjectNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-    import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
-    import authInfo from '@/utils/auth'
     
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
