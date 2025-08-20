@@ -26,7 +26,6 @@ data class APIGWResourcesV20(
         @JsonProperty("url")
         val url: String = "/"
     )
-
 }
 
 data class APIGWDefinitionV20(
