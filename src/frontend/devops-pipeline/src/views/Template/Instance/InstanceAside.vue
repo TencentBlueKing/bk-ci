@@ -212,9 +212,28 @@
                 templateId: templateId.value
             })
             const list = renderInstanceList.value.map(i => {
+                const triggerElements = res[i.pipelineId]?.triggerElements
+                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? []
                 return {
                     ...i,
-                    ...res[i.pipelineId]
+                    ...res[i.pipelineId],
+                    ...(
+                        triggerElements?.length ? {
+                            triggerConfigs: triggerElements.map(trigger => {
+                                return {
+                                    atomCode: trigger.atomCode,
+                                    stepId: trigger.stepId ?? '',
+                                    disabled: !trigger.additionalOptions?.enable,
+                                    cron: trigger.advanceExpression,
+                                    variables: trigger.startParams,
+                                    name: trigger.name,
+                                    version: trigger.version,
+                                    isFollowTemplate: !(overrideTemplateField?.triggerStepIds?.includes(trigger.stepId))
+                                }
+                            })
+                        }
+                        : undefined
+                    )
                 }
             })
             list.forEach(item => {

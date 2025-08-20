@@ -225,7 +225,7 @@
                     </section>
                 </template>
 
-                <template v-if="triggerConfigs.length">
+                <template v-if="curInstance?.triggerConfigs?.length">
                     <section class="params-content-item">
                         <header
                             :class="['params-collapse-trigger', {
@@ -245,7 +245,7 @@
                             class="params-collapse-content"
                         >
                             <renderSortCategoryParams
-                                v-for="(trigger, index) in triggerConfigs"
+                                v-for="(trigger, index) in curInstance?.triggerConfigs"
                                 :key="index"
                                 :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
                                 default-layout
@@ -302,7 +302,6 @@
     const isLoading = ref(true)
     const paramsList = ref([])
     const paramsValues = ref({})
-    const triggerConfigs = ref([])
     const otherParams = ref([])
     const otherValues = ref({})
     const constantParams = ref([])
@@ -349,17 +348,7 @@
                 instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
             if (templateTriggerConfigs.value?.length) {
-                const triggerConfigs = instance.triggerElements?.map(i => ({
-                    atomCode: i.atomCode,
-                    stepId: i.stepId ?? '',
-                    disabled: i.additionalOptions?.enable ?? true,
-                    cron: i.advanceExpression,
-                    variables: i.startParams,
-                    name: i.name,
-                    version: i.version,
-                    isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
-                }))
-                instanceTriggerConfigs = compareTriggerConfigs(triggerConfigs, templateTriggerConfigs.value)
+                instanceTriggerConfigs = compareTriggerConfigs(instance?.triggerConfigs, templateTriggerConfigs.value)
             }
         }
         if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
@@ -450,7 +439,7 @@
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
             stepId: i.stepId ?? '',
-            disabled: i.additionalOptions?.enable ?? true,
+            disabled: !i.additionalOptions?.enable,
             cron: i.advanceExpression,
             variables: i.startParams,
             name: i.name,
@@ -718,8 +707,7 @@
                 break
 
             case 'trigger':
-                // const temTriggerValue = templateTriggerConfigs.value?.find(trigger => trigger.stepId === id).disabled
-                // console.log(temTriggerValue, 'templateTriggerConfigs.value')
+                const temTriggerValue = templateTriggerConfigs.value?.find(trigger => trigger.stepId === id).disabled
                 const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
                 index = triggerStepIds.indexOf(target)
                 index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
@@ -735,7 +723,7 @@
                         triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
                             return {
                                 ...trigger,
-                                // disabled: trigger.stepId === id ? temTriggerValue : trigger.disabled,
+                                disabled: trigger.stepId === id ? temTriggerValue : trigger.disabled,
                                 isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
                             }
                         })
@@ -789,7 +777,6 @@
             ...curInstance.value?.buildNo,
             isRequiredParam: curInstance.value?.buildNo?.required ?? false
         } || {}
-        triggerConfigs.value = curInstance.value?.triggerConfigs || []
         getParamsValue()
         setTimeout(() => {
             isLoading.value = false

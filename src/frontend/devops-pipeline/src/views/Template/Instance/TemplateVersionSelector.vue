@@ -179,8 +179,8 @@
     }))
     function getRefByPullMode (value) {
         const refMap = {
-            tag: `refs/heads/${value}`,
-            branch: `refs/tags/${value}`,
+            branch: `refs/heads/${value}`,
+            tag: `refs/tags/${value}`,
             commit: value
         }
         return refMap[pullMode.value]
