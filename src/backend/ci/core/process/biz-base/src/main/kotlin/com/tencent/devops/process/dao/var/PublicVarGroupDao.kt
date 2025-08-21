@@ -177,8 +177,8 @@ class PublicVarGroupDao {
             filterByUpdater?.let {
                 condition.and(MODIFIER.like("%$it%"))
             }
-            groupNames?.let {
-                condition.and(GROUP_NAME.`in`(it))
+            if (!groupNames.isNullOrEmpty()) {
+                condition.and(GROUP_NAME.`in`(groupNames))
             }
 
             return dslContext.selectCount()
