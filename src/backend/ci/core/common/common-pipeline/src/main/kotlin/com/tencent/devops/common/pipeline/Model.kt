@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
@@ -279,7 +280,9 @@ data class Model(
                                                 userId
                                             )
                                         )
-                                    )
+                                    ).apply {
+                                        additionalOptions = ElementAdditionalOptions(enable = true)
+                                    },
                                 )
                             )
                         )
