@@ -101,7 +101,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 }
 
                 YamlFileActionType.TRIGGER -> {
-                    webhookTriggerBuildService.yamlTrigger(this)
+                    triggerBuild()
                 }
 
                 else -> Unit
@@ -212,6 +212,12 @@ class PipelineYamlFileExecutor @Autowired constructor(
     private fun PipelineYamlFileEvent.renameYamlFile() {
         try {
             pipelineYamlFileManager.renameYamlFile(event = this)
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.SUCCESS
+            )
             if (fileType.canExecute()) {
                 webhookTriggerBuildService.yamlTrigger(this)
             }
@@ -230,6 +236,30 @@ class PipelineYamlFileExecutor @Autowired constructor(
         }
         if (fileType.needNotifyScheduler()) {
             sendSchedulerEvent()
+        }
+    }
+
+    private fun PipelineYamlFileEvent.triggerBuild() {
+        try {
+            webhookTriggerBuildService.yamlTrigger(this)
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.SUCCESS
+            )
+        } catch (ignored: Exception) {
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.FAILED
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to trigger yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                ignored
+            )
         }
     }
 
