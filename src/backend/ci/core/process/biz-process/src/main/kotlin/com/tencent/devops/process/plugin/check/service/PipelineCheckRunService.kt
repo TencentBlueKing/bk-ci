@@ -2,6 +2,7 @@ package com.tencent.devops.process.plugin.check.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -17,7 +18,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
@@ -26,7 +26,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildCheckRunRecord
@@ -77,64 +76,78 @@ class PipelineCheckRunService @Autowired constructor(
             checkRunStatus = CheckRunStatus.IN_PROGRESS.name,
             buildStatus = setOf(BuildStatus.FAILED.name, BuildStatus.SUCCEED.name)
         )
-        checkRunRecords.forEach {
-            resolveCheckRun(
-                projectId = it.projectId,
-                pipelineId = it.pipelineId,
-                buildId = it.buildId,
-                triggerType = StartType.WEB_HOOK.name,
-                buildStatus = BuildStatus.valueOf(it.buildStatus)
-            ) { checkRun ->
-                logger.info("trying to fix abnormal (${checkRun.key()})check-run for build(${checkRun.buildKey()})")
-                val lockKey = "code_fix_check_run_${checkRun.buildId}"
-                val redisLock = RedisLock(redisOperation, lockKey, 60)
-                if (redisLock.tryLock()) {
-                    RetryUtils.execute(
-                        object : RetryUtils.Action<Unit> {
-                            override fun fail(e: Throwable) {
-                                logger.warn(
-                                    "BKSystemMonitor|fix check-run fail for build(${checkRun.buildKey()})| " +
-                                            "e=${e.message}", e
-                                )
-                                // 多次操作失败，记录失败
-                                pipelineBuildCheckRunDao.update(
-                                    dslContext = dslContext,
-                                    projectId = checkRun.projectId,
-                                    pipelineId = checkRun.pipelineId,
-                                    buildId = checkRun.buildId,
-                                    checkRunId = null,
-                                    checkRunStatus = CHECK_RUN_FIX_FAILED
-                                )
-                            }
+        checkRunRecords.forEach { checkRun ->
+            val buildId = checkRun.buildId
+            val lockKey = "code_fix_check_run_$buildId"
+            val checkRunKey = "${checkRun.repoHashId}|${checkRun.commitId}|" +
+                    "${checkRun.pullRequestId}|${checkRun.context}"
+            val redisLock = RedisLock(redisOperation, lockKey, 60)
+            logger.info("trying to fix abnormal check-run($checkRunKey) for build($buildId)")
+            if (redisLock.tryLock()) {
+                RetryUtils.execute(
+                    object : RetryUtils.Action<Unit> {
+                        override fun fail(e: Throwable) {
+                            logger.warn(
+                                "BKSystemMonitor|fix check-run fail for build($buildId)| " +
+                                        "e=${e.message}", e
+                            )
+                            // 多次操作失败，记录失败
+                            pipelineBuildCheckRunDao.update(
+                                dslContext = dslContext,
+                                projectId = checkRun.projectId,
+                                pipelineId = checkRun.pipelineId,
+                                buildId = buildId,
+                                checkRunId = null,
+                                checkRunStatus = CHECK_RUN_FIX_FAILED
+                            )
+                        }
 
-                            override fun execute() {
-                                createCheckRun(
-                                    projectId = checkRun.projectId,
-                                    repositoryConfig = checkRun.repositoryConfig,
-                                    checkRunInput = checkRun.convert()
-                                )
+                        override fun execute() {
+                            val extensionDataStr = checkRun.extensionData
+                            if (extensionDataStr.isNullOrBlank()) {
                                 logger.info(
-                                    "fixed the abnormal (${checkRun.key()})check-run successfully " +
-                                            "for build(${checkRun.buildKey()})"
+                                    "skip fix check run|process instance($buildId) extensionData is empty"
                                 )
-                                pipelineBuildCheckRunDao.update(
-                                    dslContext = dslContext,
-                                    projectId = checkRun.projectId,
-                                    pipelineId = checkRun.pipelineId,
-                                    buildId = checkRun.buildId,
-                                    checkRunId = null,
-                                    checkRunStatus = checkRun.checkRunStatus?.name
-                                )
+                                return
                             }
-                        },
-                        3,
-                        SLEEP_SECOND_FOR_RETRY_10 * 1000
-                    )
-                } else {
-                    logger.info(
-                        "[$lockKey]|PIPELINE_FIX_CHECK_RUN|lock fail, skip!"
-                    )
-                }
+                            val extensionData = try {
+                                JsonUtil.to(extensionDataStr, CheckRunExtension::class.java)
+                            } catch (e: Exception) {
+                                logger.warn(
+                                    "skip fix check run|failed to parse extension data[$extensionDataStr] for" +
+                                            "process instance($buildId)"
+                                )
+                                return
+                            }
+                            createCheckRun(
+                                projectId = checkRun.projectId,
+                                repositoryConfig = RepositoryConfig(
+                                    repositoryType = RepositoryType.ID,
+                                    repositoryName = null,
+                                    repositoryHashId = checkRun.repoHashId
+                                ),
+                                checkRunInput = extensionData.checkRunInput
+                            )
+                            logger.info(
+                                "fixed the abnormal check-run($checkRunKey) successfully for build($buildId)"
+                            )
+                            pipelineBuildCheckRunDao.update(
+                                dslContext = dslContext,
+                                projectId = checkRun.projectId,
+                                pipelineId = checkRun.pipelineId,
+                                buildId = buildId,
+                                checkRunId = null,
+                                checkRunStatus = checkRun.checkRunStatus
+                            )
+                        }
+                    },
+                    3,
+                    SLEEP_SECOND_FOR_RETRY_10 * 1000
+                )
+            } else {
+                logger.info(
+                    "[$lockKey]|PIPELINE_FIX_CHECK_RUN|lock fail, skip!"
+                )
             }
         }
     }
@@ -255,7 +268,6 @@ class PipelineCheckRunService @Autowired constructor(
             logger.warn("skip resolve check run|process instance($buildId) not support write $providerCode check run")
             return
         }
-        val extensionData = getExtensionData(variables, finalEventType)
         val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
         val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong() ?: run {
             if (finalEventType.isMergeRequest()) {
@@ -273,7 +285,7 @@ class PipelineCheckRunService @Autowired constructor(
                 buildNum = buildHistoryVar.buildNum,
                 buildStatus = transferBuildStatus(buildStatus),
                 repoHashId = repo.repoHashId!!,
-                extensionData = extensionData,
+                targetBranches = getTargetBranches(finalEventType, variables),
                 commitId = commitId,
                 context = context,
                 block = block,
@@ -331,20 +343,9 @@ class PipelineCheckRunService @Autowired constructor(
                             logger.info(
                                 "[$buildId]attempting to add $scmCode check-run(${key()})"
                             )
-                            // 结束状态且未创建record，则说明数据在plugin模块处理
-                            if (buildStatus != BuildStatus.RUNNING) {
-                                logger.warn(
-                                    "skip resolve check run|" +
-                                            "CheckRun info for current build ($buildId) processed in plugin module"
-                                )
-                                return
-                            }
                             pipelineBuildCheckRunDao.create(
                                 dslContext = dslContext,
-                                buildCheckRun = this.copy(
-                                    checkRunStatus = CheckRunStatus.IN_PROGRESS,
-                                    pullRequestBizId = pullRequestBizId
-                                )
+                                buildCheckRun = this.copy(pullRequestBizId = pullRequestBizId)
                             )
                             addCheckRun(
                                 projectId = projectId,
@@ -356,8 +357,7 @@ class PipelineCheckRunService @Autowired constructor(
                                     projectId = projectId,
                                     pipelineId = pipelineId,
                                     buildId = buildId,
-                                    checkRunId = it.id,
-                                    checkRunStatus = CheckRunStatus.IN_PROGRESS.name
+                                    checkRunId = it.id
                                 )
                             }
                         }
@@ -410,7 +410,7 @@ class PipelineCheckRunService @Autowired constructor(
                             }
                             logger.info(
                                 "[$buildId]attempting to update $scmCode check-run(${checkRunInfo?.id}) to " +
-                                        "repo($repoHashId)|ref($commitId)|extRef($extensionData)|context($context)"
+                                        "repo($repoHashId)|ref($commitId)|extRef($pullRequestBizId)|context($context)"
                             )
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
@@ -419,6 +419,10 @@ class PipelineCheckRunService @Autowired constructor(
                             checkRunRecord.setBuildNum(buildNum)
                             checkRunRecord.setUpdateTime(now)
                             checkRunRecord.setBuildStatus(buildStatus.name)
+                            // 保存扩展信息，后续修复异常数据时，直接使用
+                            checkRunRecord.setExtensionData(
+                                JsonUtil.toJson(CheckRunExtension(checkRunInput = checkRunInput), false)
+                            )
                             pipelineBuildCheckRunDao.update(
                                 dslContext = dslContext,
                                 record = checkRunRecord
@@ -484,7 +488,7 @@ class PipelineCheckRunService @Autowired constructor(
             status = checkRunState,
             conclusion = checkRunConclusion,
             pullRequestId = pullRequestId,
-            targetBranches = extensionData?.let { listOf(it.targetBranch ?: "") } ?: listOf(),
+            targetBranches = targetBranches,
             startedAt = startTime?.let {
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
             } ?: LocalDateTime.now(),
@@ -529,30 +533,6 @@ class PipelineCheckRunService @Autowired constructor(
         BuildStatus.RUNNING -> CheckRunStatus.IN_PROGRESS to null
         BuildStatus.SUCCEED -> CheckRunStatus.COMPLETED to CheckRunConclusion.SUCCESS
         else -> CheckRunStatus.COMPLETED to CheckRunConclusion.FAILURE
-    }
-
-    /**
-     * 通过构建变量获取check-run扩展信息
-     */
-    private fun getExtensionData(
-        variables: Map<String, String>,
-        eventType: CodeEventType
-    ) = when {
-        eventType == CodeEventType.PUSH -> {
-            CheckRunExtension(
-                sourceBranch = variables[BK_REPO_GIT_WEBHOOK_BRANCH],
-                targetBranch = PUSH_EVENT_CHECK_RUN_FLAG
-            )
-        }
-
-        eventType.isMergeRequest() -> {
-            CheckRunExtension(
-                sourceBranch = variables[PIPELINE_WEBHOOK_SOURCE_BRANCH],
-                targetBranch = variables[PIPELINE_WEBHOOK_TARGET_BRANCH]
-            )
-        }
-
-        else -> throw IllegalArgumentException("unsupported event type: $eventType")
     }
 
     /**
@@ -625,6 +605,17 @@ class PipelineCheckRunService @Autowired constructor(
         eventType == CodeEventType.PUSH -> PUSH_EVENT_CHECK_RUN_FLAG
         eventType.isMergeRequest() -> pullRequestId.toString()
         else -> ""
+    }
+
+    /**
+     * 获取目标分支
+     * PUSH -> ~NONE
+     * MR -> 目标分支
+     */
+    private fun getTargetBranches(eventType: CodeEventType, variables: Map<String, String>) = when {
+        eventType == CodeEventType.PUSH -> listOf(PUSH_EVENT_CHECK_RUN_FLAG)
+        eventType.isMergeRequest() -> listOf(variables[PIPELINE_WEBHOOK_TARGET_BRANCH] ?: "")
+        else -> listOf()
     }
 
     private fun getLockKey(repository: Repository, pipelineId: String) = when (repository) {

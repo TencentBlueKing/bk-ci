@@ -83,7 +83,7 @@ class PipelineBuildCheckRunDao {
         pipelineId: String,
         buildId: String,
         checkRunId: Long?,
-        checkRunStatus: String?
+        checkRunStatus: String? = null
     ) {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
             dslContext.update(this)

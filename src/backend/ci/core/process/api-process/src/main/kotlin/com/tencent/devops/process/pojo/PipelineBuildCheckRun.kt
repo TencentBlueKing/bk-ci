@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.scm.api.enums.CheckRunStatus
 import com.tencent.devops.scm.api.enums.ScmProviderCodes
+import com.tencent.devops.scm.api.pojo.CheckRunInput
 
 data class PipelineBuildCheckRun(
     // 构建任务参数
@@ -21,7 +22,7 @@ data class PipelineBuildCheckRun(
     val checkRunId: Long? = null,
     // checkRun对应的版本
     val commitId: String,
-    // 扩展标识符
+    // 扩展信息（存表）
     val extensionData: CheckRunExtension? = null,
     // 是否锁定（TGIT专用）
     val block: Boolean? = false,
@@ -39,14 +40,13 @@ data class PipelineBuildCheckRun(
     // 流水线回写checkRun 同步锁
     val lockKey: String,
     val externalId: String,
-    val repoProvider: ScmProviderCodes
+    val repoProvider: ScmProviderCodes,
+    val targetBranches: List<String> = listOf()
 )
 
 /**
  * check-run扩展字段
  */
 data class CheckRunExtension(
-    val sourceBranch: String?,
-    // PUSH 事件时，此字段为[~NONE]
-    val targetBranch: String?
+    var checkRunInput: CheckRunInput
 )
