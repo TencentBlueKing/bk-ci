@@ -33,6 +33,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.jooq.DSLContext
@@ -113,6 +114,16 @@ class AuthResourceService @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
+            )
+            val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            ).map { it.memberId }.distinct()
+            BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                projectCode = projectCode,
+                userIds = memberIds
             )
             authResourceGroupMemberDao.deleteByResource(
                 dslContext = transactionContext,
