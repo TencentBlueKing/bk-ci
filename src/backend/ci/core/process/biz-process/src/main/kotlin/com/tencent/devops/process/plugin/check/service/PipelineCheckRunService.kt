@@ -324,6 +324,7 @@ class PipelineCheckRunService @Autowired constructor(
                     var checkRunInput = convert()
                     // 需要跳过的记录
                     var skipRecords = mutableListOf<TPipelineBuildCheckRunRecord>()
+                    val now = LocalDateTime.now()
                     when {
                         checkRunRecord == null -> {
                             logger.info(
@@ -364,6 +365,8 @@ class PipelineCheckRunService @Autowired constructor(
                             // 重试场景
                             val checkRunInfo = if (buildStatus == BuildStatus.RUNNING) {
                                 logger.info("overwriting existing check-run task with updated information")
+                                // 更新开始时间
+                                checkRunRecord.setCreateTime(now)
                                 addCheckRun(
                                     projectId = projectId,
                                     repositoryConfig = repositoryConfig,
@@ -410,11 +413,9 @@ class PipelineCheckRunService @Autowired constructor(
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
                             }
-                            val now = LocalDateTime.now()
                             checkRunRecord.setCheckRunId(checkRunInfo?.id ?: 0L)
                             checkRunRecord.setBuildNum(buildNum)
                             checkRunRecord.setUpdateTime(now)
-                            checkRunRecord.setCreateTime(now)
                             checkRunRecord.setBuildStatus(buildStatus.name)
                             pipelineBuildCheckRunDao.update(
                                 dslContext = dslContext,
