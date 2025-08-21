@@ -1082,11 +1082,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         latestUpgradeTime = pubTime
                     )
                 )
-                var newestVersionFlag = false
-                val latestRecord = atomDao.getLatestAtomByCode(dslContext, atomCode)
-                latestRecord?.let {
-                    newestVersionFlag = StoreUtils.isGreaterVersion(atomReleaseRequest.version, it.version)
-                }
+                val newestVersionFlag = atomDao.getLatestAtomByCode(context, atomCode)?.let {
+                    StoreUtils.isGreaterVersion(atomReleaseRequest.version, it.version)
+                } ?: true
                 val releaseType = atomReleaseRequest.releaseType
                 val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestVersionFlag) {
                     // 历史大版本下的小版本更新不把latestFlag置为true（利用这种发布方式发布最新版本除外）

@@ -448,7 +448,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             ) ?: 0
 
             requestBusNum > latestRecord.busNum
-        } ?: false
+        } ?: true
     }
 
     override fun offlineComponent(
