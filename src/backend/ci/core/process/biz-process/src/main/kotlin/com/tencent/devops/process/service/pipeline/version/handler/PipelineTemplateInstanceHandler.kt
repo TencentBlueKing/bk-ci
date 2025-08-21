@@ -39,6 +39,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreate
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import groovy.lang.Lazy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,6 +49,7 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
+    @Lazy
     private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext) =
