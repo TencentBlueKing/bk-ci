@@ -58,11 +58,10 @@ class PipelineTemplateAtomService @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        if (templateInfo.releasedVersion == null) return Result(null)
         val templateResource = pipelineTemplateResourceService.get(
             projectId = projectId,
             templateId = templateId,
-            version = version ?: templateInfo.releasedVersion!!
+            version = version ?: templateInfo.releasedVersion
         )
 
         val model = templateResource.model ?: return Result(null)

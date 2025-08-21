@@ -70,6 +70,8 @@ data class PipelineTemplateSettingUpdateInfo(
     val concurrencyCancelInProgress: Boolean? = null,
     @get:Schema(title = "并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
+    @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
+    var failIfVariableInvalid: Boolean? = false,
 
     /* 平台系统控制相关配置 —— 不作为生成版本的配置 */
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
@@ -95,6 +97,7 @@ data class PipelineTemplateSettingUpdateInfo(
         concurrencyGroup = pipelineSetting.concurrencyGroup,
         concurrencyCancelInProgress = pipelineSetting.concurrencyCancelInProgress,
         maxConRunningQueueSize = pipelineSetting.maxConRunningQueueSize,
+        failIfVariableInvalid = pipelineSetting.failIfVariableInvalid,
         maxPipelineResNum = pipelineSetting.maxPipelineResNum,
         pipelineAsCodeSettings = pipelineSetting.pipelineAsCodeSettings,
         updater = userId
