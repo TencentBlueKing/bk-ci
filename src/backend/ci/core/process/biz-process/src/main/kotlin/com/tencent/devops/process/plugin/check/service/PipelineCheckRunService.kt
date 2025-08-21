@@ -92,7 +92,10 @@ class PipelineCheckRunService @Autowired constructor(
                     RetryUtils.execute(
                         object : RetryUtils.Action<Unit> {
                             override fun fail(e: Throwable) {
-                                logger.warn("BKSystemMonitor|fix check-run fail| e=${e.message}", e)
+                                logger.warn(
+                                    "BKSystemMonitor|fix check-run fail for build(${checkRun.buildKey()})| " +
+                                            "e=${e.message}", e
+                                )
                                 // 多次操作失败，记录失败
                                 pipelineBuildCheckRunDao.update(
                                     dslContext = dslContext,
