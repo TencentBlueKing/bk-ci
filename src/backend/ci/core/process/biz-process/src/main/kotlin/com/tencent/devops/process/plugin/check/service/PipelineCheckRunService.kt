@@ -326,7 +326,8 @@ class PipelineCheckRunService @Autowired constructor(
                     var skipRecords = mutableListOf<TPipelineBuildCheckRunRecord>()
                     val now = LocalDateTime.now()
                     when {
-                        checkRunRecord == null -> {
+                        // [源分支推送更新] 或 [事件回放触发新的构建任务]
+                        checkRunRecord == null || buildNum > checkRunRecord.buildNum -> {
                             logger.info(
                                 "[$buildId]attempting to add $scmCode check-run(${key()})"
                             )
@@ -361,7 +362,7 @@ class PipelineCheckRunService @Autowired constructor(
                             }
                         }
 
-                        buildNum >= checkRunRecord.buildNum -> {
+                        buildNum == checkRunRecord.buildNum -> {
                             // 重试场景
                             val checkRunInfo = if (buildStatus == BuildStatus.RUNNING) {
                                 logger.info("overwriting existing check-run task with updated information")
