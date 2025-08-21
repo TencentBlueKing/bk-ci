@@ -618,7 +618,7 @@
                 return this.container.dispatchType.xcodeVersion
             },
             systemVersion () {
-                return this.container.dispatchType.systemVersion
+                return this.container?.dispatchType?.systemVersion
             },
             buildResource () {
                 return this.container.dispatchType.value
