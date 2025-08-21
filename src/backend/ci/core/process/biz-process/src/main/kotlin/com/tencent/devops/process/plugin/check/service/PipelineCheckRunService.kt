@@ -410,9 +410,11 @@ class PipelineCheckRunService @Autowired constructor(
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
                             }
+                            val now = LocalDateTime.now()
                             checkRunRecord.setCheckRunId(checkRunInfo?.id ?: 0L)
                             checkRunRecord.setBuildNum(buildNum)
-                            checkRunRecord.setUpdateTime(LocalDateTime.now())
+                            checkRunRecord.setUpdateTime(now)
+                            checkRunRecord.setCreateTime(now)
                             checkRunRecord.setBuildStatus(buildStatus.name)
                             pipelineBuildCheckRunDao.update(
                                 dslContext = dslContext,
