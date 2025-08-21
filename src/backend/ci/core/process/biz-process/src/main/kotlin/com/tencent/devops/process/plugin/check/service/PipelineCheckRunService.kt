@@ -320,9 +320,7 @@ class PipelineCheckRunService @Autowired constructor(
                     val checkRunRecord = checkRunRecords.firstOrNull()
                     var checkRunInput = convert()
                     // 需要跳过的记录
-                    var skipRecords = mutableListOf<TPipelineBuildCheckRunRecord>().apply {
-                        addAll(checkRunRecords)
-                    }
+                    var skipRecords = mutableListOf<TPipelineBuildCheckRunRecord>()
                     when {
                         checkRunRecord == null -> {
                             logger.info(
@@ -424,6 +422,7 @@ class PipelineCheckRunService @Autowired constructor(
 
                         else -> {
                             logger.info("skip resolve check run|process instance($buildId)")
+                            skipRecords.addAll(checkRunRecords)
                             return
                         }
                     }
