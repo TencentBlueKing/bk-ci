@@ -36,6 +36,7 @@
         },
         data (){
             return {
+                currentAsideWidth: 240,
                 isCollapsible: false
             }
         },
@@ -44,10 +45,11 @@
                 return Number(localStorage.getItem(NODE_LIST_ASIDE_WIDTH_CACHE)) || 240
             },
             mainWidth () {
-                return this.isCollapsible ? this.containerWidth : this.containerWidth - this.initialDivide
+                return this.isCollapsible ? this.containerWidth : this.containerWidth - this.currentAsideWidth
             }
         },
         mounted () {
+            this.currentAsideWidth = this.initialDivide
             if (localStorage.getItem(NODE_LIST_ASIDE_PANEL_TOGGLE) === 'true') {
                 this.$refs.resizeLayout.setCollapse(true)
             }
@@ -61,6 +63,7 @@
                 localStorage.setItem(NODE_LIST_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
             },
             afterResize (width) {
+                this.currentAsideWidth = width
                 localStorage.setItem(NODE_LIST_ASIDE_WIDTH_CACHE, JSON.stringify(width))
             }
         }

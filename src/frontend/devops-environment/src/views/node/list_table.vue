@@ -23,7 +23,7 @@
                 sortable="custom"
                 prop="displayName"
                 fixed="left"
-                min-width="160"
+                min-width="200"
             >
                 <template slot-scope="props">
                     <div
@@ -1012,7 +1012,6 @@
           top: 6px;
           display: flex;
           width: 90%;
-          min-width: 280px;
           margin-right: 12px;
           z-index: 2;
           .edit-content {
@@ -1022,7 +1021,7 @@
           .bk-form-input {
               height: 30px;
               font-size: 12px;
-              min-width: 280px;
+              width: 100%;
               padding-right: 74px;
           }
           .error-tips {
