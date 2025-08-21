@@ -204,6 +204,7 @@ class TemplateModelTransfer @Autowired constructor(
             baseYaml.concurrency = modelTransfer.makeConcurrency(setting)
             baseYaml.customBuildNum = setting.buildNumRule
             baseYaml.disablePipeline = (setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
+            baseYaml.failIfVariableInvalid = setting.failIfVariableInvalid.nullIfDefault(false)
             modelInput.aspectWrapper.setYaml4Yaml(baseYaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         }
         return baseYaml
