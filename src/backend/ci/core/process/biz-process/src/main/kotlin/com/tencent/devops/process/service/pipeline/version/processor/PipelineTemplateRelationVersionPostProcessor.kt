@@ -72,7 +72,7 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
     }
 
     /**
-     * 创建/更新更新模板关联
+     * 创建/更新模板关联
      */
     private fun PipelineVersionCreateContext.createOrUpdateRelation(
         transactionContext: DSLContext
