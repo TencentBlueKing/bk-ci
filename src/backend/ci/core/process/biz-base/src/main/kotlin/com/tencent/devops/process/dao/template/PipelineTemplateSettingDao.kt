@@ -113,6 +113,7 @@ class PipelineTemplateSettingDao {
                     record.pipelineAsCodeSettings?.let { set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(it)) }
                     record.runLockType?.let { set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(record.runLockType)) }
                     record.maxConRunningQueueSize?.let { set(MAX_CON_RUNNING_QUEUE_SIZE, it) }
+                    record.failIfVariableInvalid?.let { set(FAIL_IF_VARIABLE_INVALID, it) }
                     if (!record.successSubscriptionList.isNullOrEmpty()) {
                         set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(record.successSubscriptionList!!, false))
                     }
