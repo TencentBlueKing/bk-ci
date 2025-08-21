@@ -4,8 +4,6 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.util.CacheHelper
