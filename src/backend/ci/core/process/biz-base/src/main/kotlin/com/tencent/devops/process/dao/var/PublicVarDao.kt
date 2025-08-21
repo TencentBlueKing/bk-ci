@@ -97,6 +97,20 @@ class PublicVarDao {
         }
     }
 
+    fun listGroupNamesByVarAlias(
+        dslContext: DSLContext,
+        projectId: String,
+        keyword: String
+    ): List<String> {
+        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+            return dslContext.selectDistinct(GROUP_NAME)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ALIAS.like("%$keyword%"))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun listGroupNamesByVarType(
         dslContext: DSLContext,
         projectId: String,

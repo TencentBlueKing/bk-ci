@@ -37,7 +37,6 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import io.swagger.v3.oas.annotations.Operation
@@ -76,7 +75,7 @@ interface UserPublicVarGroupResource {
         operateType: OperateTypeEnum,
         @Parameter(description = "公共变量组请求报文", required = true)
         publicVarGroup: PublicVarGroupVO
-    ): Result<Boolean>
+    ): Result<String>
 
     @Operation(summary = "查询公共变量组列表")
     @GET
@@ -91,9 +90,21 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "关键字", required = false)
         @QueryParam("keyword")
         keyword: String? = null,
-        @Parameter(description = "过滤类型", required = false)
-        @QueryParam("filterType")
-        filterType: VarGroupFilterTypeEnum? = null,
+        @Parameter(description = "按变量组名称过滤", required = false)
+        @QueryParam("filterByGroupName")
+        filterByGroupName: String?,
+        @Parameter(description = "按变量组描述过滤", required = false)
+        @QueryParam("filterByCreator")
+        filterByGrouoDesc: String?,
+        @Parameter(description = "按更新人过滤", required = false)
+        @QueryParam("filterByUpdater")
+        filterByUpdater: String?,
+        @Parameter(description = "按变量名称过滤", required = false)
+        @QueryParam("filterByVarName")
+        filterByVarName: String? = null,
+        @Parameter(description = "按变量别名过滤", required = false)
+        @QueryParam("filterByVarAlias")
+        filterByVarAlias: String? = null,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int,
@@ -117,7 +128,7 @@ interface UserPublicVarGroupResource {
         operateType: OperateTypeEnum,
         @Parameter(description = "YAML文件", required = true)
         yaml: PublicVarGroupYamlStringVO
-    ): Result<Boolean>
+    ): Result<String>
 
     @Operation(summary = "导出公共变量组(YAML格式)")
     @GET

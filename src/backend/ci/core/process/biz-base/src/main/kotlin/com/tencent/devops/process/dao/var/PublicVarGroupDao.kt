@@ -28,7 +28,6 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
-import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -107,8 +106,9 @@ class PublicVarGroupDao {
         projectId: String,
         page: Int,
         pageSize: Int,
-        keyword: String? = null,
-        filterType: VarGroupFilterTypeEnum? = null,
+        filterByGroupName: String? = null,
+        filterByGroupDesc: String? = null,
+        filterByUpdater: String? = null,
         groupNames: List<String>? = null
     ): List<PublicVarGroupPO> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
@@ -116,17 +116,18 @@ class PublicVarGroupDao {
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(LATEST_FLAG.eq(true))
 
-            // 添加筛选条件
-            when (filterType) {
-                VarGroupFilterTypeEnum.GROUP_NAME -> keyword?.let {
-                    conditions.add(GROUP_NAME.like("%$it%"))
-                }
-                VarGroupFilterTypeEnum.GROUP_DESC -> keyword?.let {
-                    conditions.add(DESC.like("%$it%"))
-                }
-                else -> groupNames?.let {
-                    conditions.add(GROUP_NAME.`in`(it))
-                }
+            // 添加新的筛选条件
+            filterByGroupName?.let {
+                conditions.add(GROUP_NAME.like("%$it%"))
+            }
+            filterByGroupDesc?.let {
+                conditions.add(DESC.like("%$it%"))
+            }
+            filterByUpdater?.let {
+                conditions.add(MODIFIER.like("%$it%"))
+            }
+            groupNames?.let {
+                conditions.add(GROUP_NAME.`in`(it))
             }
 
             return dslContext.selectFrom(this)
@@ -156,8 +157,9 @@ class PublicVarGroupDao {
     fun countGroupsByProjectId(
         dslContext: DSLContext,
         projectId: String,
-        keyword: String? = null,
-        filterType: VarGroupFilterTypeEnum? = null,
+        filterByGroupName: String? = null,
+        filterByGroupDesc: String? = null,
+        filterByUpdater: String? = null,
         groupNames: List<String>? = null
     ): Long {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
@@ -165,17 +167,18 @@ class PublicVarGroupDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(LATEST_FLAG.eq(true))
 
-            // 添加筛选条件
-            when (filterType) {
-                VarGroupFilterTypeEnum.GROUP_NAME -> keyword?.let {
-                    condition.and(GROUP_NAME.like("%$it%"))
-                }
-                VarGroupFilterTypeEnum.GROUP_DESC -> keyword?.let {
-                    condition.and(DESC.like("%$it%"))
-                }
-                else -> groupNames?.let {
-                    condition.and(GROUP_NAME.`in`(it))
-                }
+            // 添加新的筛选条件
+            filterByGroupName?.let {
+                condition.and(GROUP_NAME.like("%$it%"))
+            }
+            filterByGroupDesc?.let {
+                condition.and(DESC.like("%$it%"))
+            }
+            filterByUpdater?.let {
+                condition.and(MODIFIER.like("%$it%"))
+            }
+            groupNames?.let {
+                condition.and(GROUP_NAME.`in`(it))
             }
 
             return dslContext.selectCount()

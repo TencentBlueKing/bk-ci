@@ -38,7 +38,6 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
@@ -55,7 +54,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         projectId: String,
         operateType: OperateTypeEnum,
         publicVarGroup: PublicVarGroupVO
-    ): Result<Boolean> {
+    ): Result<String> {
         return Result(
             publicVarGroupService.addGroup(
                 PublicVarGroupDTO(
@@ -72,7 +71,11 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         keyword: String?,
-        filterType: VarGroupFilterTypeEnum?,
+        filterByGroupName: String?,
+        filterByGrouoDesc: String?,
+        filterByUpdater: String?,
+        filterByVarName: String?,
+        filterByVarAlias: String?,
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
@@ -81,7 +84,11 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             queryReq = PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
                 keyword = keyword,
-                filterType = filterType,
+                filterByGroupName = filterByGroupName,
+                filterByGrouoDesc = filterByGrouoDesc,
+                filterByUpdater = filterByUpdater,
+                filterByVarName = filterByVarName,
+                filterByVarAlias = filterByVarAlias,
                 page = page,
                 pageSize = pageSize
             )
@@ -93,7 +100,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         projectId: String,
         operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
-    ): Result<Boolean> {
+    ): Result<String> {
         return Result(publicVarGroupService.importGroup(
             userId = userId,
             projectId = projectId,

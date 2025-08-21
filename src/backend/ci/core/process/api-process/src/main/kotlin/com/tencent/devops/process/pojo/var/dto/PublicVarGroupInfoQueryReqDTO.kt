@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
-import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量组信息分页查询请求传输对象")
@@ -38,10 +37,16 @@ data class PublicVarGroupInfoQueryReqDTO (
     val groupName: String? = null,
     @get:Schema(description = "版本号")
     val version: Int? = null,
-    @get:Schema(description = "关键字")
-    val keyword: String? = null,
-    @get:Schema(description = "过滤类型")
-    val filterType: VarGroupFilterTypeEnum? = null,
+    @get:Schema(description = "按变量组名称过滤")
+    val filterByGroupName: String? = null,
+    @get:Schema(description = "按变量组描述过滤")
+    val filterByGrouoDesc: String? = null,
+    @get:Schema(description = "按更新人过滤")
+    val filterByUpdater: String? = null,
+    @get:Schema(description = "按变量名称过滤")
+    val filterByVarName: String? = null,
+    @get:Schema(description = "按变量别名过滤")
+    val filterByVarAlias: String? = null,
     @get:Schema(title = "第几页")
     val page: Int,
     @get:Schema(title = "每页大小")

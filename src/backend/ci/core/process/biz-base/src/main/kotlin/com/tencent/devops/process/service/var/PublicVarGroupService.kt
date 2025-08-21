@@ -55,7 +55,6 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
@@ -95,7 +94,7 @@ class PublicVarGroupService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
     }
 
-    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): Boolean {
+    fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
@@ -158,7 +157,7 @@ class PublicVarGroupService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
-        return true
+        return publicVarGroupDTO.publicVarGroup.groupName
     }
 
     fun getPipelineGroupsVar(projectId: String, groupName: String, version: Int? = null): PublicVarGroupVO {
@@ -205,21 +204,19 @@ class PublicVarGroupService @Autowired constructor(
         val projectId = queryReq.projectId
         val page = queryReq.page
         val pageSize = queryReq.pageSize
-        val keyword = queryReq.keyword
-        val filterType = queryReq.filterType
-        // 根据filterType处理keyword
-        val groupNames = when (filterType) {
-            VarGroupFilterTypeEnum.VAR_NAME, VarGroupFilterTypeEnum.VAR_TYPE -> {
-                publicVarService.listGroupNamesByVarFilter(projectId, keyword, filterType)
-            }
-            else -> null
-        }
+
+        val groupNames = publicVarService.listGroupNamesByVarFilter(
+            projectId = projectId,
+            filterByVarName = queryReq.filterByVarName,
+            filterByVarAlias = queryReq.filterByVarAlias
+        )
 
         val totalCount = publicVarGroupDao.countGroupsByProjectId(
             dslContext = dslContext,
             projectId = projectId,
-            keyword = keyword,
-            filterType = filterType,
+            filterByGroupName = queryReq.filterByGroupName,
+            filterByGroupDesc = queryReq.filterByGrouoDesc,
+            filterByUpdater = queryReq.filterByUpdater,
             groupNames = groupNames
         )
 
@@ -228,8 +225,9 @@ class PublicVarGroupService @Autowired constructor(
             projectId = projectId,
             page = page,
             pageSize = pageSize,
-            keyword = keyword,
-            filterType = filterType,
+            filterByGroupName = queryReq.filterByGroupName,
+            filterByGroupDesc = queryReq.filterByGrouoDesc,
+            filterByUpdater = queryReq.filterByUpdater,
             groupNames = groupNames
         ).map { po ->
             PublicVarGroupDO(
@@ -256,7 +254,7 @@ class PublicVarGroupService @Autowired constructor(
         projectId: String,
         operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
-    ): Boolean {
+    ): String {
         val parserVO = try {
             TransferMapper.getObjectMapper().readValue(
                 yaml.yaml,
@@ -362,7 +360,6 @@ class PublicVarGroupService @Autowired constructor(
                 val context = DSL.using(configuration)
                 publicVarGroupDao.deleteByGroupName(context, projectId, groupName)
                 pipelinePublicVarGroupReleseRecordDao.deleteByGroupName(context, projectId, groupName)
-                pipelinePublicVarGroupReferInfoDao.deleteByGroupName(context, projectId, groupName)
                 publicVarDao.deleteByGroupName(context, projectId, groupName)
             }
             return true

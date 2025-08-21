@@ -37,7 +37,6 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleseDTO
-import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -111,20 +110,20 @@ class PublicVarService @Autowired constructor(
 
     fun listGroupNamesByVarFilter(
         projectId: String,
-        keyword: String?,
-        filterType: VarGroupFilterTypeEnum?
+        filterByVarName: String?,
+        filterByVarAlias: String?
     ): List<String> {
-        if (keyword.isNullOrBlank() || filterType == null) return emptyList()
+        if (filterByVarName.isNullOrBlank() && filterByVarAlias.isNullOrBlank()) return emptyList()
 
-        return when (filterType) {
-            VarGroupFilterTypeEnum.VAR_NAME ->
-                publicVarDao.listGroupNamesByVarName(dslContext, projectId, keyword)
+        val groupNamesByVarName = filterByVarName?.let {
+            publicVarDao.listGroupNamesByVarName(dslContext, projectId, it)
+        } ?: emptyList()
 
-            VarGroupFilterTypeEnum.VAR_TYPE ->
-                publicVarDao.listGroupNamesByVarType(dslContext, projectId, keyword)
+        val groupNamesByVarAlias = filterByVarAlias?.let {
+            publicVarDao.listGroupNamesByVarAlias(dslContext, projectId, it)
+        } ?: emptyList()
 
-            else -> emptyList()
-        }
+        return (groupNamesByVarName + groupNamesByVarAlias).distinct()
     }
 
     fun getGroupPublicVar(projectId: String, groupName: String, version: Int): List<PublicVarPO> {
