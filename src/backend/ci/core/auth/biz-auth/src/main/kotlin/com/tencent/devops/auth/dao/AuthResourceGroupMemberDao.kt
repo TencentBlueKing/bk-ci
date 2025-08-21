@@ -329,6 +329,7 @@ class AuthResourceGroupMemberDao {
         memberName: String? = null,
         memberType: String? = null,
         iamGroupId: Int? = null,
+        iamGroupIds: List<Int>? = null,
         maxExpiredTime: LocalDateTime? = null,
         minExpiredTime: LocalDateTime? = null,
         groupCode: String? = null,
@@ -343,6 +344,9 @@ class AuthResourceGroupMemberDao {
             memberId?.let { select.and(MEMBER_ID.eq(memberId)) }
             if (!memberIds.isNullOrEmpty()) {
                 select.and(MEMBER_ID.`in`(memberIds))
+            }
+            if (!iamGroupIds.isNullOrEmpty()) {
+                select.and(IAM_GROUP_ID.`in`(iamGroupIds))
             }
             memberName?.let { select.and(MEMBER_NAME.eq(memberName)) }
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }

@@ -54,6 +54,7 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -317,6 +318,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 authResourceGroupDao.deleteByIds(
                     dslContext = context,
                     ids = listOf(authResourceGroup.id)
+                )
+                val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                    dslContext = dslContext,
+                    projectCode = projectId,
+                    iamGroupId = groupId
+                ).map { it.memberId }
+                BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                    projectCode = projectId,
+                    userIds = memberIds
                 )
                 authResourceGroupMemberDao.deleteByIamGroupId(
                     dslContext = context,
@@ -723,6 +733,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             authResourceGroupDao.deleteByIds(
                 dslContext = transactionContext,
                 ids = records.map { it.id!! }
+            )
+            val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = records.map { it.relationId }
+            ).map { it.memberId }.distinct()
+            BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                projectCode = projectCode,
+                userIds = memberIds
             )
             authResourceGroupMemberDao.deleteByIamGroupIds(
                 dslContext = dslContext,
