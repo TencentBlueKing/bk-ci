@@ -165,7 +165,7 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
                         mapOf("oldValue" to newBuildFormProperty.required, "newValue" to newBuildFormProperty.required)
                 }
                 if (oldBuildFormProperty.readOnly != newBuildFormProperty.readOnly) {
-                    changes["required"] =
+                    changes["readOnly"] =
                         mapOf("oldValue" to newBuildFormProperty.readOnly, "newValue" to newBuildFormProperty.readOnly)
                 }
                 if (oldBuildFormProperty.valueNotEmpty != newBuildFormProperty.valueNotEmpty) {
