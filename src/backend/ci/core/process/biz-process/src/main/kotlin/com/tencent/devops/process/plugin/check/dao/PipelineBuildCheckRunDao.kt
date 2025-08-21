@@ -65,10 +65,10 @@ class PipelineBuildCheckRunDao {
     ) {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
             val conditions = listOf(
-                REPO_HASH_ID.eq(record.repoHashId),
-                CONTEXT.eq(record.context),
-                COMMIT_ID.eq(record.commitId),
-                PULL_REQUEST_ID.eq(record.pullRequestId)
+                PROJECT_ID.eq(record.projectId),
+                PIPELINE_ID.eq(record.pipelineId),
+                BUILD_ID.eq(record.buildId),
+                CREATE_TIME.eq(record.createTime)
             )
             dslContext.update(this)
                     .set(record)
