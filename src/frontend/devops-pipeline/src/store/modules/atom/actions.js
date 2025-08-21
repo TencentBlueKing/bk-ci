@@ -302,18 +302,22 @@ export default {
             }
         }
     },
-    async transfer ({ getters, state }, { projectId, pipelineId, actionType, ...params }) {
+    async transfer ({ getters, state }, { projectId, actionType, ...params }) {
+        const { isTemplate } = getters
+        const atomPropUrl = isTemplate ? `/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${params.templateId}/atom/prop/list` : `/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${params.pipelineId}/atom/prop/list`
+        const idKey = isTemplate ? 'templateId' : 'pipelineId'
+
         const apis = [
             request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
                 params: {
-                    pipelineId,
+                    [idKey]: params[idKey],
                     actionType
                 }
             })
         ]
         if (actionType === 'FULL_YAML2MODEL' && !state.editfromImport) {
             apis.push(
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                request.get(atomPropUrl, {
                     params: params.version ? { version: params.version } : {}
                 })
             )
