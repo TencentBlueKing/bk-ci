@@ -87,9 +87,6 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "关键字", required = false)
-        @QueryParam("keyword")
-        keyword: String? = null,
         @Parameter(description = "按变量组名称过滤", required = false)
         @QueryParam("filterByGroupName")
         filterByGroupName: String?,

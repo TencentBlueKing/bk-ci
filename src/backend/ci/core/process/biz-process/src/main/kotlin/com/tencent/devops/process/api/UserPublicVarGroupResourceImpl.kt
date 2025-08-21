@@ -70,7 +70,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun getGroups(
         userId: String,
         projectId: String,
-        keyword: String?,
         filterByGroupName: String?,
         filterByGrouoDesc: String?,
         filterByUpdater: String?,
@@ -83,7 +82,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             userId = userId,
             queryReq = PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
-                keyword = keyword,
                 filterByGroupName = filterByGroupName,
                 filterByGrouoDesc = filterByGrouoDesc,
                 filterByUpdater = filterByUpdater,
