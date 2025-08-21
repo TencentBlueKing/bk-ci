@@ -82,7 +82,8 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
                             "varName" to it.varName,
                             "alias" to it.alias,
                             "defaultValue" to it.defaultValue,
-                            "desc" to it.desc
+                            "desc" to it.desc,
+                            "type" to it.type.name
                         )
                     ),
                     creator = userId,
@@ -117,7 +118,8 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
                             "varName" to it.varName,
                             "alias" to it.alias,
                             "defaultValue" to it.defaultValue,
-                            "desc" to it.desc
+                            "desc" to it.desc,
+                            "type" to it.type.name
                         )
                     ),
                     creator = userId,
@@ -190,7 +192,9 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
                             mapOf(
                                 "operate" to OperateTypeEnum.UPDATE,
                                 "varName" to newVar.varName,
-                                "changes" to changes
+                                "changes" to changes,
+                                "desc" to newVar.desc,
+                                "type" to newVar.type.name
                             )
                         ),
                         creator = userId,
