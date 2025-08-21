@@ -437,7 +437,6 @@ class PipelineCheckRunService @Autowired constructor(
                         else -> {
                             logger.info("skip resolve check run|process instance($buildId)")
                             skipRecords.addAll(checkRunRecords)
-                            return
                         }
                     }
                     skipCheckRunRecord(skipRecords)
@@ -701,9 +700,6 @@ class PipelineCheckRunService @Autowired constructor(
 
     private fun PipelineBuildCheckRun.key() =
         "repo($repoHashId)|ref($commitId)|extRef($extensionData)|context($context)"
-
-    private fun PipelineBuildCheckRun.buildKey() =
-        "projectId($projectId)|pipelineId($pipelineId)|buildId($buildId)"
 
     private fun transferBuildStatus(buildStatus: BuildStatus) = when (buildStatus) {
         BuildStatus.RUNNING, BuildStatus.SUCCEED -> buildStatus
