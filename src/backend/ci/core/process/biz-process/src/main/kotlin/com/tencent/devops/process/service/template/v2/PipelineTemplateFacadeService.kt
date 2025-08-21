@@ -753,7 +753,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        if (resource.model.fromTemplate != true) {
+        if (resource.model.fromTemplate != true && resource.model.instanceFromTemplate != true) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_RELATED_TEMPLATE
             )
