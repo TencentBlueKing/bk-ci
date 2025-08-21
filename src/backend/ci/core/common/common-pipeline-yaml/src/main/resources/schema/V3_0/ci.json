@@ -1607,6 +1607,9 @@
               },
               "name" : {
                 "type" : "string"
+              },
+              "if" : {
+                "type" : "object"
               }
             }
           } ]
@@ -1791,6 +1794,9 @@
             },
             "name" : {
               "type" : "string"
+            },
+            "if" : {
+              "type" : "object"
             }
           }
         }
@@ -2793,6 +2799,15 @@
             },
             "shell" : {
               "type" : "string"
+            },
+            "can-pause-before-run" : {
+              "type" : "boolean"
+            },
+            "pause-notice-receivers" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
             },
             "can-manually-retry" : {
               "type" : "boolean"

@@ -262,10 +262,19 @@ class GitOauthService @Autowired constructor(
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(operator, buildBasicInfo.projectId)
-            )
+            // operator和目标账户不相同时仅记录日志
+            if (operator != userId) {
+                logger.warn(
+                    "Git OAuth account [$userId]'s operator [$operator] " +
+                            "is not a member of project [${buildBasicInfo.projectId}]"
+                )
+            } else {
+                // operator和目标账户相同, 且不为项目成员则拦截
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                    params = arrayOf(operator, buildBasicInfo.projectId)
+                )
+            }
         }
         return accessToken
     }

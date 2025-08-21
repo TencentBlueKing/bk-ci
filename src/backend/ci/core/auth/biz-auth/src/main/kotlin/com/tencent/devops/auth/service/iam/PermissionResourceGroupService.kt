@@ -133,12 +133,4 @@ interface PermissionResourceGroupService {
         projectCode: String,
         memberId: String
     ): List<String>
-
-    /**
-     * 获取用户在该项目加入的组
-     * */
-    fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int>
 }
