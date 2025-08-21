@@ -2873,7 +2873,7 @@ class PipelineBuildFacadeService(
             }
         } else {
             subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, null
+                projectId, pipelineId, version
             ).second.model
         }
         val triggerContainer = model.getTriggerContainer()

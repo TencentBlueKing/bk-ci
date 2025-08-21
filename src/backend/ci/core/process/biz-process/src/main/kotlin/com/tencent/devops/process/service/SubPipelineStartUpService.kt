@@ -421,7 +421,7 @@ class SubPipelineStartUpService @Autowired constructor(
             projectId, pipelineId, pipeline.version
         )?.model ?: return
         // 子流水线的启动参数
-        val triggerParams = pipelineRepositoryService.getTriggerParams(existModel)
+        val triggerParams = pipelineRepositoryService.getTriggerParams(existModel.getTriggerContainer())
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->
             if (index == 0) {
