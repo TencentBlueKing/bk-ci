@@ -277,13 +277,14 @@ class PipelineCheckRunService @Autowired constructor(
             0L
         }
         val userId = variables[PIPELINE_START_USER_ID]
+        val finalBuildStatus = transferBuildStatus(buildStatus)
         action(
             PipelineBuildCheckRun(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 buildNum = buildHistoryVar.buildNum,
-                buildStatus = transferBuildStatus(buildStatus),
+                buildStatus = finalBuildStatus,
                 repoHashId = repo.repoHashId!!,
                 targetBranches = getTargetBranches(finalEventType, variables),
                 commitId = commitId,
@@ -305,7 +306,8 @@ class PipelineCheckRunService @Autowired constructor(
                 } else {
                     buildHistoryVar.startTime
                 },
-                repoProvider = providerCode
+                repoProvider = providerCode,
+                checkRunStatus = getCheckRunState(finalBuildStatus).first
             )
         )
     }
