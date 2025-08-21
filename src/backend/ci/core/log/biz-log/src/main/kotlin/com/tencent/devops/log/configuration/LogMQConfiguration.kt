@@ -29,7 +29,6 @@ package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -57,12 +56,12 @@ class LogMQConfiguration {
         @Autowired logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
-    @EventConsumer(defaultConcurrency = 10, type = RabbitQueueType.CLASSIC)
+    @EventConsumer(defaultConcurrency = 10)
     fun logOriginEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogOriginEvent> { listenerService.handleEvent(it) }
 
-    @EventConsumer(defaultConcurrency = 10, type = RabbitQueueType.CLASSIC)
+    @EventConsumer(defaultConcurrency = 10)
     fun logStorageEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStorageEvent> { listenerService.handleEvent(it) }
