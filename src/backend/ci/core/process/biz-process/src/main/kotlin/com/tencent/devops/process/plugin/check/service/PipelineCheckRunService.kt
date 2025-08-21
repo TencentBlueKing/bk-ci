@@ -365,8 +365,9 @@ class PipelineCheckRunService @Autowired constructor(
                             // 重试场景
                             val checkRunInfo = if (buildStatus == BuildStatus.RUNNING) {
                                 logger.info("overwriting existing check-run task with updated information")
-                                // 更新开始时间
+                                // 更新开始时间/check-run状态
                                 checkRunRecord.setCreateTime(now)
+                                checkRunRecord.setCheckRunStatus(CheckRunStatus.IN_PROGRESS.name)
                                 addCheckRun(
                                     projectId = projectId,
                                     repositoryConfig = repositoryConfig,
