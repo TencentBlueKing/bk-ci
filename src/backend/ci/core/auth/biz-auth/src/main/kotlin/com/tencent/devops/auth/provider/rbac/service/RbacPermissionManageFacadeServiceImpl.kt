@@ -54,6 +54,7 @@ import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.UserManageService
@@ -992,6 +993,7 @@ class RbacPermissionManageFacadeServiceImpl(
             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt),
             memberId = targetMember.id
         )
+        BkInternalPermissionCache.invalidateProjectUserGroups(projectCode, targetMember.id)
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
                 projectCode = projectCode,
@@ -1572,6 +1574,10 @@ class RbacPermissionManageFacadeServiceImpl(
             handoverTo = handoverMemberDTO.handoverTo,
             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt)
         )
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = listOf(handoverMemberDTO.targetMember.id, handoverMemberDTO.handoverTo.id)
+        )
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
                 projectCode = projectCode,
@@ -1598,6 +1604,10 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             iamGroupId = groupId,
             memberIds = listOf(removeMemberDTO.targetMember.id)
+        )
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = listOf(removeMemberDTO.targetMember.id)
         )
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(

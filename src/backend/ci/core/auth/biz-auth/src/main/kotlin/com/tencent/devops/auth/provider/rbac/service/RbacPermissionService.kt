@@ -67,7 +67,7 @@ class RbacPermissionService(
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
-    private val bkInternalPermissionComparator: BkInternalPermissionComparator,
+    private val bkInternalPermissionReconciler: BkInternalPermissionReconciler,
     private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
@@ -125,7 +125,7 @@ class RbacPermissionService(
                     operate = action
                 )
             }
-            bkInternalPermissionComparator.validateUserResourcePermission(
+            bkInternalPermissionReconciler.validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = ResourceTypeId.PROJECT,
@@ -285,7 +285,7 @@ class RbacPermissionService(
                     operate = useAction
                 )
             }
-            bkInternalPermissionComparator.validateUserResourcePermission(
+            bkInternalPermissionReconciler.validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resource.resourceType,
@@ -385,7 +385,7 @@ class RbacPermissionService(
                     operate = action
                 )
             }
-            bkInternalPermissionComparator.batchValidateUserResourcePermission(
+            bkInternalPermissionReconciler.batchValidateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resource.resourceType,
@@ -485,7 +485,7 @@ class RbacPermissionService(
                     "$userId|$action|$projectCode|$resourceType"
             )
         }
-        bkInternalPermissionComparator.getUserResourceByAction(
+        bkInternalPermissionReconciler.getUserResourceByAction(
             userId = userId,
             projectCode = projectCode,
             action = useAction,
@@ -631,7 +631,7 @@ class RbacPermissionService(
                     "$userId|$actions|$projectCode|$resourceType"
             )
         }
-        bkInternalPermissionComparator.filterUserResourcesByActions(
+        bkInternalPermissionReconciler.filterUserResourcesByActions(
             userId = userId,
             actions = actions,
             projectCode = projectCode,
