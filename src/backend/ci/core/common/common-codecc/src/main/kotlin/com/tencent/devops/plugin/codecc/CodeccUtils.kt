@@ -44,7 +44,7 @@ object CodeccUtils {
     }
 
     private fun isCodeccNewAtom(atomName: String?): Boolean {
-        return isCodeccV2Atom(atomName) || isCodeccV3Atom(atomName)
+        return isCodeccV2Atom(atomName) || isCodeccV3Atom(atomName) || isCodeccCommunityAtom(atomName)
     }
 
     private fun isCodeccV2Atom(atomName: String?): Boolean {

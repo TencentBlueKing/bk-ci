@@ -494,7 +494,7 @@ class QualityRuleCheckService @Autowired constructor(
         interceptTaskId: String?
     ): Triple<Boolean, MutableList<QualityRuleInterceptRecord>, Set<String>> {
         var allCheckResult = true
-        var metadataMutableList = metadataList
+        var metadataMutableList = mutableListOf<QualityHisMetadata>()
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
         var ruleTaskStepsCopy = ruleTaskSteps?.toMutableList()
         // 借助临时list,把红线指标添加的控制点前缀塞进要判断的指标taskName
@@ -507,8 +507,37 @@ class QualityRuleCheckService @Autowired constructor(
         }
 
         // 如果是蓝盾拦截在某个插件上，则只检查该插件输出的指标值
+        // 以及非当前控制点插件的最后输出红线指标值（因为红线可以任意设置控制点，可能指标并不是在当前控制点输出）
         interceptTaskId?.let {
-            metadataMutableList = metadataList.filter { metadata -> metadata.taskId == it }
+            indicators.forEach { indicator ->
+                val bCodeccElement = CodeccUtils.isCodeccAtom(indicator.elementType)
+                val metadata = if (bCodeccElement) {
+                    metadataList.filter { m ->
+                        m.taskId == it &&
+                        m.elementType in ElementUtils.QUALITY_CODECC_METATYPE &&
+                        indicator.metadataList.any { i -> i.enName == m.enName } }
+                } else {
+                    metadataList.filter { m -> m.enName == indicator.enName && m.taskId == it }
+                }
+
+                // 如果指标不是拦截的控制点上输出的，以最后输出的为准
+                if (metadata.isEmpty()) {
+                    if (bCodeccElement) {
+                        metadataList.filter { m ->
+                            m.elementType in ElementUtils.QUALITY_CODECC_METATYPE &&
+                            indicator.metadataList.any { i -> i.enName == m.enName }
+                        }.maxByOrNull { m -> m.createTime ?: 0L }?.let { m -> metadataMutableList.add(m) }
+                    } else {
+                        metadataList.filter { m ->
+                            m.enName == indicator.enName && m.elementType == indicator.elementType
+                        }.maxByOrNull { m -> m.createTime ?: 0L }?.let { m -> metadataMutableList.add(m) }
+                    }
+                } else {
+                    metadataMutableList.addAll(metadata)
+                }
+            }
+        } ?: run {
+            metadataMutableList = metadataList.toMutableList()
         }
 
         logger.info("QUALITY|metadataList is: $metadataMutableList, indicators is:$indicators")
