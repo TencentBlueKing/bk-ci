@@ -30,13 +30,11 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -44,7 +42,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
-import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -108,8 +105,7 @@ class PipelineBuildService(
     private val pipelineUrlBean: PipelineUrlBean,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
-    private val pipelineAsCodeService: PipelineAsCodeService,
-    private val client: Client
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -305,7 +301,7 @@ class PipelineBuildService(
         pipelineDialectType: String,
         failIfVariableInvalid: Boolean? = false
     ) {
-        var userName = when (startType) {
+        val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
             StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value
             StartType.SERVICE -> pipelineParamMap[PIPELINE_START_SERVICE_USER_ID]?.value
@@ -313,15 +309,6 @@ class PipelineBuildService(
             StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
             StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID)
         } ?: userId
-        // 多租户处理
-        if (TenantUtils.isMultiTenantMode()) {
-            val tenantId = TenantUtils.getTenantIdByEnglishName(pipeline.projectId)
-            userName = client.get(ServiceDeptResource::class).listUserInfos(
-                memberIds = listOf(userId),
-                tenantId = tenantId
-            ).data?.get(0)?.displayName ?: userName
-        }
-
         // 维持原样，保证可修改
         pipelineParamMap[PIPELINE_START_USER_ID] = BuildParameters(key = PIPELINE_START_USER_ID, value = userId)
         pipelineParamMap[PIPELINE_START_USER_NAME] = BuildParameters(key = PIPELINE_START_USER_NAME, value = userName)
