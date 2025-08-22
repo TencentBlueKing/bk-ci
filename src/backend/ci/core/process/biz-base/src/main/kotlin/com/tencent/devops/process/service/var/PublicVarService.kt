@@ -43,7 +43,6 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -90,24 +89,16 @@ class PublicVarService @Autowired constructor(
             varNameList = publicVarDTO.publicVars.map { it.varName }
         )
         publicVarDao.batchSave(dslContext, publicVarPOs)
-
-        val syncExecutorService = Executors.newFixedThreadPool(1)
-        try {
-            syncExecutorService.submit {
-                pipelinePublicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
-                    PublicVarGroupReleaseDTO(
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = publicVarDTO.version,
-                        userId = userId,
-                        newVarPOs = publicVarPOs,
-                        oldVarPOs = oldVarPOs
-                    )
-                )
-            }
-        } finally {
-            syncExecutorService.shutdown()
-        }
+        pipelinePublicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
+            PublicVarGroupReleaseDTO(
+                projectId = projectId,
+                groupName = groupName,
+                version = publicVarDTO.version,
+                userId = userId,
+                newVarPOs = publicVarPOs,
+                oldVarPOs = oldVarPOs
+            )
+        )
         return true
     }
 
