@@ -38,8 +38,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import groovy.lang.Lazy
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -49,8 +48,7 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
-    @Lazy
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlCommonService: PipelineYamlCommonService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext) =
         context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE
@@ -116,7 +114,7 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
 
         // 检查推送参数
         enablePac.takeIf { it }?.let {
-            pipelineYamlFacadeService.checkPushParam(
+            pipelineYamlCommonService.checkPushParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 content = pipelineResourceWithoutVersion.yaml!!,
