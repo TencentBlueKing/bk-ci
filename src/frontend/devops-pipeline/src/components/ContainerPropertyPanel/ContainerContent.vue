@@ -961,8 +961,8 @@
                     })
                     .finally(() => (this.isLoadingMac = false))
             },
-            async toggleXcode () {
-                const res = await this.getMacXcodeVersion(this.systemVersion)
+            async toggleXcode (version) {
+                const res = await this.getMacXcodeVersion(version)
                 this.xcodeVersionList = res.data?.versionList.map(i => ({
                     id: i,
                     name: i
