@@ -52,7 +52,6 @@ import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.TPipelineOperationLog
 import com.tencent.devops.model.process.tables.TPipelinePauseValue
 import com.tencent.devops.model.process.tables.TPipelineRecentUse
-import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -67,7 +66,6 @@ import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
-import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookQueue
 import com.tencent.devops.model.process.tables.TPipelineWebhookVersion
@@ -106,7 +104,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineOperationLogRecord
 import com.tencent.devops.model.process.tables.records.TPipelinePauseValueRecord
 import com.tencent.devops.model.process.tables.records.TPipelineRecentUseRecord
-import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
@@ -123,7 +120,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.records.TPipelineViewUserSettingsRecord
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookBuildParameterRecord
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookQueueRecord
-import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import com.tencent.devops.model.process.tables.records.TPipelineYamlInfoRecord
@@ -555,28 +551,6 @@ class ProcessDataMigrateDao {
         }
     }
 
-    fun getPipelineRemoteAuthRecord(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): TPipelineRemoteAuthRecord? {
-        with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne()
-        }
-    }
-
-    fun migratePipelineRemoteAuthData(
-        migratingShardingDslContext: DSLContext,
-        pipelineRemoteAuthRecord: TPipelineRemoteAuthRecord
-    ) {
-        with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
-            val insertRecord = migratingShardingDslContext.newRecord(this, pipelineRemoteAuthRecord)
-            migratingShardingDslContext.executeInsert(insertRecord)
-        }
-    }
-
     fun getPipelineResourceRecord(
         dslContext: DSLContext,
         projectId: String,
@@ -908,31 +882,6 @@ class ProcessDataMigrateDao {
     ) {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
             val insertRecords = buildTemplateAcrossInfoRecords.map { migratingShardingDslContext.newRecord(this, it) }
-            migratingShardingDslContext.batchInsert(insertRecords).execute()
-        }
-    }
-
-    fun getPipelineWebhookRecords(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        limit: Int,
-        offset: Int
-    ): List<TPipelineWebhookRecord> {
-        with(TPipelineWebhook.T_PIPELINE_WEBHOOK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(ID.asc())
-                .limit(limit).offset(offset).fetchInto(TPipelineWebhookRecord::class.java)
-        }
-    }
-
-    fun migratePipelineWebhookData(
-        migratingShardingDslContext: DSLContext,
-        pipelineWebhookRecords: List<TPipelineWebhookRecord>
-    ) {
-        with(TPipelineWebhook.T_PIPELINE_WEBHOOK) {
-            val insertRecords = pipelineWebhookRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
         }
     }
