@@ -34,6 +34,7 @@ enum class PublicVarTypeEnum {
     VARIABLE; // 变量
 
     companion object {
-        fun getTypeDescription(type: PublicVarTypeEnum) = I18nUtil.getCodeLanMessage("publicVarType.$type")
+        fun getTypeDescription(type: PublicVarTypeEnum)
+        = I18nUtil.getCodeLanMessage("PUBLIC_VAR_TYPE_$type")
     }
 }

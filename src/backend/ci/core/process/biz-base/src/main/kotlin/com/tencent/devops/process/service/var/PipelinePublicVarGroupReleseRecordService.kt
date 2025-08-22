@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReleaseRec
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -98,7 +99,7 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
         }
         addedVars.forEach {
             val typeDesc = PublicVarTypeEnum.getTypeDescription(it.type)
-            val desc = "${OperateTypeEnum.ADD.getI18n(I18nUtil.getLanguage())}$typeDesc ${it.varName}"
+            val desc = "${OperateTypeEnum.CREATE.getI18n(I18nUtil.getLanguage())}$typeDesc ${it.varName}"
 
             records.add(
                 PipelinePublicVarGroupReleaseRecordPO(
@@ -112,7 +113,7 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
                     desc = desc,
                     content = jacksonObjectMapper().writeValueAsString(
                         mapOf(
-                            "operate" to OperateTypeEnum.ADD,
+                            "operate" to OperateTypeEnum.CREATE,
                             "varName" to it.varName,
                             "alias" to it.alias,
                             "defaultValue" to it.defaultValue,
@@ -136,6 +137,7 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
                                 oldVar.defaultValue != newVar.defaultValue)
             }
         }
+        logger.info("modifiedVars: $modifiedVars")
         modifiedVars.forEach { newVar ->
             val oldVar = oldVarPOs.first { it.varName == newVar.varName }
             val typeDesc = PublicVarTypeEnum.getTypeDescription(newVar.type)
@@ -202,5 +204,9 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
         if (records.isNotEmpty()) {
             pipelinePublicVarGroupReleseRecordDao.batchInsert(dslContext, records)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelinePublicVarGroupReleseRecordService::class.java)
     }
 }
