@@ -31,7 +31,7 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量组发布信息传输对象")
-data class PublicVarGroupReleseDTO(
+data class PublicVarGroupReleaseDTO(
     @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "userId")

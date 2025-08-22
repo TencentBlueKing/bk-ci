@@ -38,7 +38,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
-import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleseDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -95,7 +95,7 @@ class PublicVarService @Autowired constructor(
         try {
             syncExecutorService.submit {
                 pipelinePublicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
-                    PublicVarGroupReleseDTO(
+                    PublicVarGroupReleaseDTO(
                         projectId = projectId,
                         groupName = groupName,
                         version = publicVarDTO.version,
