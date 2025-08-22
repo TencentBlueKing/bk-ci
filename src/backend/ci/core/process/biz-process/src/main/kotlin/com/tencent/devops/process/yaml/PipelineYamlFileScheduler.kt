@@ -2,7 +2,6 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependency
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileExecutorEvent
@@ -112,17 +111,6 @@ class PipelineYamlFileScheduler @Autowired constructor(
         } else {
             // 如果有依赖,需要判断依赖的文件是否全部执行完成,如果全部执行完成,则可以触发
             dependencyFileType.all { dependencyTypeStatusMap[it] ?: true }
-        }
-    }
-
-    private fun isDependencyFileFinished(
-        dependencyFiles: List<PipelineYamlDependency>,
-        dependencyFileStatusMap: Map<String, Boolean>
-    ): Boolean {
-        return if (dependencyFiles.isEmpty()) {
-            return true
-        } else {
-            dependencyFiles.all { dependencyFileStatusMap[it.dependFilePath] ?: true }
         }
     }
 
