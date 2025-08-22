@@ -5,6 +5,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.plugin.check.service.PipelineCheckRunService
+import com.tencent.devops.process.pojo.PipelineBuildCheckRunFixEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
@@ -26,5 +27,12 @@ class BuildCheckRunListenerConfiguration {
         @Autowired pipelineCheckRunService: PipelineCheckRunService
     ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> {
         pipelineCheckRunService.onBuildQueue(it)
+    }
+
+    @EventConsumer
+    fun checkRunFixConsumer(
+        @Autowired pipelineCheckRunService: PipelineCheckRunService
+    ) = ScsConsumerBuilder.build<PipelineBuildCheckRunFixEvent> {
+        pipelineCheckRunService.onBuildFix(it)
     }
 }

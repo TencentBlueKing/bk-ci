@@ -143,4 +143,17 @@ class PipelineBuildCheckRunDao {
                     .fetch()
         }
     }
+
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): TPipelineBuildCheckRunRecord? {
+        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
+            return dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId), PIPELINE_ID.eq(pipelineId), BUILD_ID.eq(buildId))
+                    .fetchOne()
+        }
+    }
 }

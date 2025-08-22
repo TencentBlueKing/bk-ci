@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -32,6 +33,7 @@ import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.plugin.check.dao.PipelineBuildCheckRunDao
 import com.tencent.devops.process.pojo.CheckRunExtension
 import com.tencent.devops.process.pojo.PipelineBuildCheckRun
+import com.tencent.devops.process.pojo.PipelineBuildCheckRunFixEvent
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -65,7 +67,8 @@ class PipelineCheckRunService @Autowired constructor(
     val pipelineCheckRunQualityService: PipelineCheckRunQualityService,
     val redisOperation: RedisOperation,
     val client: Client,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
     @Scheduled(initialDelay = 20_000, fixedDelay = 120_000)
     fun reHandleCheckRun() {
@@ -75,76 +78,23 @@ class PipelineCheckRunService @Autowired constructor(
             buildStatus = setOf(BuildStatus.FAILED.name, BuildStatus.SUCCEED.name)
         )
         checkRunRecords.forEach { checkRun ->
-            val buildId = checkRun.buildId
-            val lockKey = "code_fix_check_run_$buildId"
-            val checkRunKey = "${checkRun.repoHashId}|${checkRun.commitId}|" +
-                    "${checkRun.pullRequestId}|${checkRun.context}"
-            val redisLock = RedisLock(redisOperation, lockKey, 60)
-            logger.info("trying to fix abnormal check-run($checkRunKey) for build($buildId)")
-            if (redisLock.tryLock()) {
-                RetryUtils.execute(
-                    object : RetryUtils.Action<Unit> {
-                        override fun fail(e: Throwable) {
-                            logger.warn(
-                                "BKSystemMonitor|fix check-run fail for build($buildId)|e=${e.message}", e
-                            )
-                            // 多次操作失败，记录失败
-                            pipelineBuildCheckRunDao.update(
-                                dslContext = dslContext,
-                                projectId = checkRun.projectId,
-                                pipelineId = checkRun.pipelineId,
-                                buildId = buildId,
-                                checkRunId = null,
-                                checkRunStatus = CHECK_RUN_FIX_FAILED
-                            )
-                        }
-
-                        override fun execute() {
-                            val extensionData = parseExtensionData(
-                                extensionDataStr = checkRun.extensionData,
-                                buildId = buildId
-                            ) ?: run {
-                                pipelineBuildCheckRunDao.update(
-                                    dslContext = dslContext,
-                                    projectId = checkRun.projectId,
-                                    pipelineId = checkRun.pipelineId,
-                                    buildId = buildId,
-                                    checkRunId = null,
-                                    checkRunStatus = CHECK_RUN_SKIP_FLAG
-                                )
-                                return
-                            }
-                            createCheckRun(
-                                projectId = checkRun.projectId,
-                                repositoryConfig = RepositoryConfig(
-                                    repositoryType = RepositoryType.ID,
-                                    repositoryName = null,
-                                    repositoryHashId = checkRun.repoHashId
-                                ),
-                                checkRunInput = extensionData.checkRunInput
-                            )
-                            logger.info(
-                                "fixed the abnormal check-run($checkRunKey) successfully for build($buildId)"
-                            )
-                            pipelineBuildCheckRunDao.update(
-                                dslContext = dslContext,
-                                projectId = checkRun.projectId,
-                                pipelineId = checkRun.pipelineId,
-                                buildId = buildId,
-                                checkRunId = null,
-                                checkRunStatus = extensionData.checkRunInput.status.name
-                            )
-                        }
-                    },
-                    3,
-                    SLEEP_SECOND_FOR_RETRY_10 * 1000
-                )
-            } else {
-                logger.info(
-                    "[$lockKey]|PIPELINE_FIX_CHECK_RUN|lock fail, skip!"
+            with(checkRun) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildCheckRunFixEvent(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        source = "pipeline_build_check_run_fix",
+                        userId = ""
+                    )
                 )
             }
         }
+    }
+
+    fun onBuildFix(event: PipelineBuildCheckRunFixEvent) {
+        logger.info("Receive PipelineBuildCheckRunFixEvent from MQ[$event]")
+        fixCheckRun(event)
     }
 
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) = with(event) {
@@ -305,6 +255,9 @@ class PipelineCheckRunService @Autowired constructor(
         )
     }
 
+    /**
+     * 处理check-run
+     */
     private fun handleCheckRun(checkRun: PipelineBuildCheckRun) {
         with(checkRun) {
             while (true) {
@@ -428,9 +381,96 @@ class PipelineCheckRunService @Autowired constructor(
     }
 
     /**
+     * 修复异常check-run
+     */
+    private fun fixCheckRun(event: PipelineBuildCheckRunFixEvent) {
+        with(event) {
+            val lockKey = "code_fix_check_run_$buildId"
+            val redisLock = RedisLock(redisOperation, lockKey, 60)
+            if (redisLock.tryLock()) {
+                val checkRun = pipelineBuildCheckRunDao.get(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                ) ?: return
+                // 检查状态不是IN_PROGRESS，代表已经被处理过
+                if (checkRun.checkRunStatus != CheckRunStatus.IN_PROGRESS.name) {
+                    logger.info("skip fix check run|process instance($buildId) attempted fix")
+                    return
+                }
+                val checkRunKey = "${checkRun.repoHashId}|${checkRun.commitId}|" +
+                        "${checkRun.pullRequestId}|${checkRun.context}"
+                logger.info("trying to fix abnormal check-run($checkRunKey) for build($buildId)")
+                RetryUtils.execute(
+                    object : RetryUtils.Action<Unit> {
+                        override fun fail(e: Throwable) {
+                            logger.warn(
+                                "BKSystemMonitor|fix check-run fail for build($buildId)|e=${e.message}", e
+                            )
+                            // 多次操作失败，记录失败
+                            pipelineBuildCheckRunDao.update(
+                                dslContext = dslContext,
+                                projectId = checkRun.projectId,
+                                pipelineId = checkRun.pipelineId,
+                                buildId = buildId,
+                                checkRunId = null,
+                                checkRunStatus = CHECK_RUN_FIX_FAILED
+                            )
+                        }
+
+                        override fun execute() {
+                            val extensionData = parseExtensionData(
+                                extensionDataStr = checkRun.extensionData,
+                                buildId = buildId
+                            ) ?: run {
+                                pipelineBuildCheckRunDao.update(
+                                    dslContext = dslContext,
+                                    projectId = checkRun.projectId,
+                                    pipelineId = checkRun.pipelineId,
+                                    buildId = buildId,
+                                    checkRunId = null,
+                                    checkRunStatus = CHECK_RUN_SKIP_FLAG
+                                )
+                                return
+                            }
+                            val createCheckRun = createCheckRun(
+                                projectId = checkRun.projectId,
+                                repositoryConfig = RepositoryConfig(
+                                    repositoryType = RepositoryType.ID,
+                                    repositoryName = null,
+                                    repositoryHashId = checkRun.repoHashId
+                                ),
+                                checkRunInput = extensionData.checkRunInput
+                            )
+                            logger.info(
+                                "fixed the abnormal check-run($checkRunKey) successfully for build($buildId)"
+                            )
+                            pipelineBuildCheckRunDao.update(
+                                dslContext = dslContext,
+                                projectId = checkRun.projectId,
+                                pipelineId = checkRun.pipelineId,
+                                buildId = buildId,
+                                checkRunId = createCheckRun?.id ?: 0L,
+                                checkRunStatus = extensionData.checkRunInput.status.name
+                            )
+                        }
+                    },
+                    3,
+                    SLEEP_SECOND_FOR_RETRY_10 * 1000
+                )
+            } else {
+                logger.info(
+                    "[$lockKey]|PIPELINE_FIX_CHECK_RUN|lock fail, skip!"
+                )
+            }
+        }
+    }
+
+    /**
      * 修改无效数据的构建状态
      */
-    fun skipCheckRunRecord(checkRunRecords: List<TPipelineBuildCheckRunRecord>) {
+    private fun skipCheckRunRecord(checkRunRecords: List<TPipelineBuildCheckRunRecord>) {
         if (checkRunRecords.isEmpty()) {
             return
         }
@@ -679,7 +719,7 @@ class PipelineCheckRunService @Autowired constructor(
                 JsonUtil.to(extensionDataStr, CheckRunExtension::class.java)
             } catch (e: Exception) {
                 logger.warn(
-                    "skip fix check run|failed to parse extension data[$extensionDataStr] for" +
+                    "skip fix check run|failed to parse extension data[$extensionDataStr] for " +
                             "process instance($buildId)"
                 )
                 null
