@@ -182,7 +182,7 @@ class PipelineCheckRunService @Autowired constructor(
         action: (PipelineBuildCheckRun) -> Unit
     ) {
         if (triggerType != StartType.WEB_HOOK.name) {
-            logger.info("skip resolve check run|Process instance($buildId) is not web hook triggered")
+            logger.info("skip resolve check run|process instance($buildId) is not web hook triggered")
             return
         }
         // 构建信息
@@ -414,7 +414,11 @@ class PipelineCheckRunService @Autowired constructor(
                         }
 
                         else -> {
-                            logger.info("skip resolve check run|process instance($buildId)")
+                            logger.info(
+                                "skip resolve check run|process instance($buildId) is not the latest one; " +
+                                        "the latest build instance is (${checkRunRecord.buildId}#" +
+                                        "${checkRunRecord.buildNum})"
+                            )
                             skipRecords.addAll(checkRunRecords)
                         }
                     }
