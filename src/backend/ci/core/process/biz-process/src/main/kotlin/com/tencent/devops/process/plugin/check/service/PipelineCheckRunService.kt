@@ -100,19 +100,17 @@ class PipelineCheckRunService @Autowired constructor(
                         }
 
                         override fun execute() {
-                            val extensionDataStr = checkRun.extensionData
-                            if (extensionDataStr.isNullOrBlank()) {
-                                logger.info(
-                                    "skip fix check run|process instance($buildId) extensionData is empty"
-                                )
-                                return
-                            }
-                            val extensionData = try {
-                                JsonUtil.to(extensionDataStr, CheckRunExtension::class.java)
-                            } catch (e: Exception) {
-                                logger.warn(
-                                    "skip fix check run|failed to parse extension data[$extensionDataStr] for" +
-                                            "process instance($buildId)"
+                            val extensionData = parseExtensionData(
+                                extensionDataStr = checkRun.extensionData,
+                                buildId = buildId
+                            ) ?: run {
+                                pipelineBuildCheckRunDao.update(
+                                    dslContext = dslContext,
+                                    projectId = checkRun.projectId,
+                                    pipelineId = checkRun.pipelineId,
+                                    buildId = buildId,
+                                    checkRunId = null,
+                                    checkRunStatus = CHECK_RUN_SKIP_FLAG
                                 )
                                 return
                             }
@@ -134,7 +132,7 @@ class PipelineCheckRunService @Autowired constructor(
                                 pipelineId = checkRun.pipelineId,
                                 buildId = buildId,
                                 checkRunId = null,
-                                checkRunStatus = checkRun.checkRunStatus
+                                checkRunStatus = extensionData.checkRunInput.status.name
                             )
                         }
                     },
@@ -668,6 +666,25 @@ class PipelineCheckRunService @Autowired constructor(
     private fun transferBuildStatus(buildStatus: BuildStatus) = when (buildStatus) {
         BuildStatus.RUNNING, BuildStatus.SUCCEED -> buildStatus
         else -> BuildStatus.FAILED
+    }
+
+    private fun parseExtensionData(extensionDataStr: String?, buildId: String): CheckRunExtension? {
+        return if (extensionDataStr.isNullOrBlank()) {
+            logger.info(
+                "skip fix check run|process instance($buildId) extensionData is empty"
+            )
+            null
+        } else {
+            try {
+                JsonUtil.to(extensionDataStr, CheckRunExtension::class.java)
+            } catch (e: Exception) {
+                logger.warn(
+                    "skip fix check run|failed to parse extension data[$extensionDataStr] for" +
+                            "process instance($buildId)"
+                )
+                null
+            }
+        }
     }
 
     companion object {
