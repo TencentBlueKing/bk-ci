@@ -51,7 +51,7 @@ class PublicVarService @Autowired constructor(
     private val dslContext: DSLContext,
     private val publicVarDao: PublicVarDao,
     private val client: Client,
-    private val pipelinePublicVarGroupReleseRecordService: PipelinePublicVarGroupReleseRecordService
+    private val pipelinePublicVarGroupReleaseRecordService: PipelinePublicVarGroupReleaseRecordService
 ) {
 
     fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
@@ -91,7 +91,7 @@ class PublicVarService @Autowired constructor(
         val syncExecutorService = Executors.newFixedThreadPool(1)
         try {
             syncExecutorService.submit {
-                pipelinePublicVarGroupReleseRecordService.batchAddPublicVarGroupReleseRecord(
+                pipelinePublicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
                     PublicVarGroupReleseDTO(
                         projectId = projectId,
                         groupName = groupName,

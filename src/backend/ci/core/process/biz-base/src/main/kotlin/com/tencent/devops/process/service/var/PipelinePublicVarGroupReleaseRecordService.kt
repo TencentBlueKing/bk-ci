@@ -45,13 +45,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
+class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelinePublicVarGroupReleseRecordDao: PipelinePublicVarGroupReleseRecordDao,
+    private val pipelinePublicVarGroupReleaseRecordDao: PipelinePublicVarGroupReleseRecordDao,
     private val client: Client
 ) {
 
-    fun batchAddPublicVarGroupReleseRecord(publicVarGroupReleseDTO: PublicVarGroupReleseDTO) {
+    fun batchAddPublicVarGroupReleaseRecord(publicVarGroupReleseDTO: PublicVarGroupReleseDTO) {
         val userId = publicVarGroupReleseDTO.userId
         val oldVarPOs = publicVarGroupReleseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleseDTO.newVarPOs
@@ -206,11 +206,11 @@ class PipelinePublicVarGroupReleseRecordService @Autowired constructor(
             }
         }
         if (records.isNotEmpty()) {
-            pipelinePublicVarGroupReleseRecordDao.batchInsert(dslContext, records)
+            pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelinePublicVarGroupReleseRecordService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelinePublicVarGroupReleaseRecordService::class.java)
     }
 }

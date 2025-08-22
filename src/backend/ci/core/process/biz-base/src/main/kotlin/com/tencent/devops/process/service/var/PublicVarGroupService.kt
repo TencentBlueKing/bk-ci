@@ -83,7 +83,7 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarService: PublicVarService,
     private val variableTransfer: VariableTransfer,
     private val publicVarDao: PublicVarDao,
-    private val pipelinePublicVarGroupReleseRecordDao: PipelinePublicVarGroupReleseRecordDao,
+    private val pipelinePublicVarGroupReleaseRecordDao: PipelinePublicVarGroupReleseRecordDao,
     private val pipelinePublicVarGroupReferInfoDao: PipelinePublicVarGroupReferInfoDao,
     private val templateService: TemplateService
 ) {
@@ -359,7 +359,7 @@ class PublicVarGroupService @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 publicVarGroupDao.deleteByGroupName(context, projectId, groupName)
-                pipelinePublicVarGroupReleseRecordDao.deleteByGroupName(context, projectId, groupName)
+                pipelinePublicVarGroupReleaseRecordDao.deleteByGroupName(context, projectId, groupName)
                 publicVarDao.deleteByGroupName(context, projectId, groupName)
             }
             return true
@@ -437,8 +437,8 @@ class PublicVarGroupService @Autowired constructor(
         val groupName = queryReq.groupName!!
         val page = queryReq.page
         val pageSize = queryReq.pageSize
-        val count = pipelinePublicVarGroupReleseRecordDao.countByGroupName(dslContext, projectId, groupName)
-        val publicVarGroupReleaseRecordPOS = pipelinePublicVarGroupReleseRecordDao.listByGroupNamePage(
+        val count = pipelinePublicVarGroupReleaseRecordDao.countByGroupName(dslContext, projectId, groupName)
+        val publicVarGroupReleaseRecordPOS = pipelinePublicVarGroupReleaseRecordDao.listByGroupNamePage(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
@@ -468,8 +468,8 @@ class PublicVarGroupService @Autowired constructor(
         val groupName = queryReq.groupName!!
         val page = queryReq.page
         val pageSize = queryReq.pageSize
-        val count = pipelinePublicVarGroupReleseRecordDao.countByGroupName(dslContext, projectId, groupName)
-        val publicVarReleaseDOS = pipelinePublicVarGroupReleseRecordDao.listGroupReleaseHistory(
+        val count = pipelinePublicVarGroupReleaseRecordDao.countByGroupName(dslContext, projectId, groupName)
+        val publicVarReleaseDOS = pipelinePublicVarGroupReleaseRecordDao.listGroupReleaseHistory(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
@@ -500,7 +500,7 @@ class PublicVarGroupService @Autowired constructor(
 
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_${referId}_${referType.value}",
+            lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_${referId}_${referType.name}",
             expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
         )
 
