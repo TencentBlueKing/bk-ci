@@ -559,7 +559,7 @@ class TxProjectServiceImpl @Autowired constructor(
             .toSet()
         val isProductInvalid = !productIdsInBg.contains(productId)
         if (isProductInvalid) {
-            val isValidationEnabled = redisOperation.get(VALIDATION_ENABLED)?.toBooleanStrictOrNull() ?: true
+            val isValidationEnabled = redisOperation.get(VALIDATION_ENABLED)?.toBooleanStrictOrNull() ?: false
             if (isValidationEnabled) {
                 val productIdentifier = productName ?: productId?.toString() ?: ""
                 throw ErrorCodeException(
