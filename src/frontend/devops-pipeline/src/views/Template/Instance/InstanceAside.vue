@@ -4,7 +4,7 @@
             <bk-button
                 v-if="isInstanceCreateType"
                 icon="plus"
-                :disabled="!curTemplateVersion"
+                :disabled="!curTemplateVersion || editingIndex > -1"
                 @click="handleAddInstance"
             >
                 {{ $t('new') }}
@@ -51,6 +51,9 @@
                     <div class="edit-input-main">
                         <bk-input
                             ref="nameInputRef"
+                            :class="{
+                                'instance-empty-input': isEmptyName
+                            }"
                             v-model="instanceName"
                             @change="checkPipelineName"
                             @blur="(value) => handleEnterChangeName(value, instanceIndex)"
@@ -123,9 +126,10 @@
     })
     const { proxy } = UseInstance()
     const instanceActiveIndex = ref(0)
-    const editingIndex = ref(null)
+    const editingIndex = ref(-1)
     const nameInputRef = ref(null)
     const newIndex = ref(1)
+    const isEmptyName = ref(false)
     const isErrorName = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
@@ -142,7 +146,7 @@
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
             stepId: i.stepId ?? '',
-            disabled: !i.additionalOptions?.enable ?? false,
+            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
             variables: i.startParams,
             name: i.name,
@@ -163,7 +167,7 @@
         }
     }
     function handleInstanceClick (index) {
-        if (editingIndex.value !== null) return
+        if (editingIndex.value !== -1) return
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
@@ -172,10 +176,14 @@
         })
     }
     function handleEnterChangeName (value, index) {
+        if (!value) {
+            isEmptyName.value = true
+            return
+        }
         if (isErrorName.value) return
         if (props.isInstanceCreateType && !value) {
             instanceList.value.splice(index, 1)
-            editingIndex.value = null
+            editingIndex.value = -1
             const newIndex = instanceList.value.length - 1
             handleInstanceClick(newIndex)
             instanceActiveIndex.value = newIndex
@@ -185,7 +193,8 @@
         if (!props.isInstanceCreateType && !value) return
         proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
-        editingIndex.value = null
+        editingIndex.value = -1
+        isEmptyName.value = false
     }
     function handleEditName (index) {
         editingIndex.value = index
@@ -225,7 +234,7 @@
                                 return {
                                     atomCode: trigger.atomCode,
                                     stepId: trigger.stepId ?? '',
-                                    disabled: !trigger.additionalOptions?.enable,
+                                    disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
                                     cron: trigger.advanceExpression,
                                     variables: trigger.startParams,
                                     name: trigger.name,
@@ -301,6 +310,7 @@
         }
     }
     function handleBatchEdit () {
+        if (editingIndex.value > -1) return
         proxy.$emit('batchEdit')
     }
     onMounted(() => {
@@ -375,7 +385,7 @@
             display: inline-block;
             vertical-align: middle;
             width: 100%;
-             .tooltips-icon {
+            .tooltips-icon {
                 position: absolute;
                 z-index: 10;
                 right: 8px;
@@ -383,7 +393,7 @@
                 color: #ea3636;
                 cursor: pointer;
                 font-size: 16px;
-             }
+            }
         }
         .pipeline-name {
             max-width: 55%;
@@ -411,6 +421,14 @@
                     color: #3A84FF;
                 }
             }
+        }
+    }
+</style>
+
+<style lang="scss">
+    .instance-empty-input {
+        .bk-form-input {
+            border-color: red;
         }
     }
 </style>

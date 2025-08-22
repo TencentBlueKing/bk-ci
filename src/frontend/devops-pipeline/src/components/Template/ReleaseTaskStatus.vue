@@ -27,8 +27,8 @@
                         tag="p"
                         path="template.partOfMr.partialSuccessTitle"
                     >
-                        <span class="success bold">{{ releaseRes.successItemNum }}</span>
-                        <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                        <span class="success bold">{{ releaseRes?.successItemNum }}</span>
+                        <span class="failed bold">{{ releaseRes?.failItemNum }}</span>
                     </i18n>
                     <span class="sub-message">
                         {{ $t('template.partOfMr.partialSuccessTip1') }}
@@ -61,7 +61,7 @@
                     tag="p"
                     path="template.releaseSuc.title"
                 >
-                    <span class="success bold">{{ releaseRes.successItemNum }}</span>
+                    <span class="success bold">{{ releaseRes?.successItemNum }}</span>
                 </i18n>
                 <p class="sub-message">
                     {{ $t('template.releaseSuc.tips') }}
@@ -75,7 +75,7 @@
                     tag="p"
                     path="template.releaseFail.title"
                 >
-                    <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                    <span class="failed bold">{{ releaseRes?.failItemNum }}</span>
                 </i18n>
                 <p class="sub-message">
                     {{ $t('template.releaseFail.tips') }}
@@ -88,8 +88,8 @@
                     tag="p"
                     path="template.releasePartialSuccess.title"
                 >
-                    <span class="success bold">{{ releaseRes.successItemNum }}</span>
-                    <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                    <span class="success bold">{{ releaseRes?.successItemNum }}</span>
+                    <span class="failed bold">{{ releaseRes?.failItemNum }}</span>
                 </i18n>
                 <p class="sub-message">
                     {{ $t('template.releasePartialSuccess.tip1') }}
@@ -152,13 +152,13 @@
                     {{ $t('template.partOfMr.tips3') }}
                 </p>
                 <p class="sub-message pending mt20">
-                    ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes.failItemNum]) }}
+                    ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes?.failItemNum]) }}
                 </p>
             </template>
             <release-failed-message
                 class="mt20"
-                v-if="Object.keys(releaseRes.errorMessages).length"
-                :data="releaseRes.errorMessages"
+                v-if="Object.keys(releaseRes?.errorMessages)?.length"
+                :data="releaseRes?.errorMessages"
             />
         </section>
     </div>
@@ -256,6 +256,7 @@
     }
     onUnmounted(() => {
         proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
+        proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
         clearTimeout(timer.value)
     })
 </script>

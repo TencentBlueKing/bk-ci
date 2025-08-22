@@ -5,14 +5,32 @@
                 <div class="search-group">
                     <bk-button
                         :theme="'primary'"
-                        :disabled="!hasCreatePermission"
+                        v-perm="{
+                            hasPermission: hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline_template',
+                                resourceCode: projectId,
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
                         @click="handleShowCreateTemplateDialog"
                     >
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
                         class="ml10"
-                        :disabled="!hasCreatePermission"
+                        v-perm="{
+                            hasPermission: hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline_template',
+                                resourceCode: projectId,
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
                         @click="handleShowInstallTemplateDialog"
                     >
                         {{ $t('template.installOrImportTemplate') }}
@@ -52,6 +70,7 @@
                 :type="templateViewId"
                 :data="tableData"
                 :pagination="pagination"
+                :has-create-permission="hasCreatePermission"
                 :is-loading="isTableLoading"
                 @limit-change="handlePageLimitChange"
                 @page-change="handlePageChange"
@@ -339,7 +358,7 @@
                         handler: () => toRelativeStore(item, item.storeStatus),
                         hasPermission: item.canEdit,
                         disablePermissionApi: true,
-                        disable: item.storeFlag && !item.publishFlag,
+                        disable: (item.storeFlag && !item.publishFlag) || item.latestVersionStatus === 'COMMITTING',
                         isShow: item.mode === 'CUSTOMIZE',
                         permissionData: {
                             projectId: projectId.value,
@@ -375,7 +394,7 @@
                         }
                     },
                     {
-                        text: t('delete'),
+                        text: item.srcTemplateId ? t('uninstall') : t('delete'),
                         handler: () => deleteTemplate(item, fetchTableData),
                         hasPermission: item.canDelete,
                         disablePermissionApi: true,

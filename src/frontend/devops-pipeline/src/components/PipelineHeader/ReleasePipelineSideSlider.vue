@@ -25,10 +25,10 @@
                         v-bk-overflow-tips
                         class="release-pipeline-new-version"
                     >
-                        {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
+                        {{ $t("releasePipelineVersion",[!isCommitToMaster ? newReleaseVersionName : releaseParams.customVersionName]) }}
                     </span>
                     <span v-bk-overflow-tips>
-                        {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
+                        {{ $t("releasePipelineBaseVersion", [!isCommitToMaster ? newReleaseVersionName : releaseParams.customVersionName]) }}
                     </span>
                 </template>
                 <template v-else>
@@ -126,6 +126,7 @@
                         >
                             <bk-input
                                 v-model="releaseParams.customVersionName"
+                                :disabled="!isCommitToMaster"
                                 :maxlength="50"
                             >
                             </bk-input>
@@ -254,7 +255,7 @@
                                                                     :disabled="disabledYamlCodeLib"
                                                                     id="yamlFilePath"
                                                                     placeholder="请输入"
-                                                                    @change="(value) => handleChangeFilePath(value, index)"
+                                                                    @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
                                                                 />
                                                                 <i
                                                                     v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
@@ -509,7 +510,8 @@
                     repoHashId: '',
                     customVersionName: ''
                 },
-                newReleaseVersionNameList: []
+                newReleaseVersionNameList: [],
+                TARGET_ACTION_ENUM
             }
         },
         computed: {
@@ -634,7 +636,7 @@
                     targetAction,
                     repoHashId,
                     enablePac,
-                    customVersionName
+                    customVersionName: customVersionName.trim()
                 }
             },
             templateInstanceEnablePac () {
@@ -654,6 +656,9 @@
                     ...i,
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
+            },
+            isCommitToMaster () {
+                return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
             }
         },
         watch: {
@@ -739,14 +744,6 @@
                         this.releaseParams.targetAction = this.instanceTaskDetail.targetAction ?? ''
                     }
                 }
-            },
-            templateRefType: {
-                handler: function (val) {
-                    if (this.isTemplateInstanceMode && val === 'PATH') {
-                        this.releaseParams.enablePac = true
-                    }
-                },
-                immediate: true
             }
         },
         mounted () {
@@ -784,7 +781,12 @@
                 try {
                     this.isLoading = true
                     const enablePac = this.releaseParams.enablePac
-
+                    if (this.isTemplateInstanceMode && enablePac) {
+                        this.releaseParams.repoHashId = this.instanceList[0]?.repoHashId ?? ''
+                    }
+                    if (this.isTemplateInstanceMode && this.templateRefType === 'PATH') {
+                        this.releaseParams.enablePac = true
+                    }
                     await Promise.all([
                         ...(enablePac
                             ? [
@@ -812,6 +814,7 @@
             },
 
             async prefetchReleaseVersion (params) {
+                if (!this.releaseParams.repoHashId || !this.releaseParams.targetAction) return
                 try {
                     const lackTargetAction = params.enablePac && !params.targetAction
                     const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
@@ -839,7 +842,9 @@
                             ...params
                         })
                         this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
-                        this.releaseParams.customVersionName = this.newReleaseVersionName
+                        if (!this.isCommitToMaster) {
+                            this.releaseParams.customVersionName = this.newReleaseVersionName
+                        }
                     }
                 } catch (error) {
                     this.errorHandler(error)
@@ -945,7 +950,7 @@
                             version: this.version,
                             params: {
                                 ...rest,
-                                customVersionName,
+                                customVersionName: customVersionName.trim(),
                                 ...(rest.enablePac
                                     ? {
                                         targetAction

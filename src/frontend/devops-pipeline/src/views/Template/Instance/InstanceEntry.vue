@@ -200,7 +200,7 @@
                         required: i.isRequiredParam
                     })),
                     timerTrigger: item.timerTrigger,
-                    filePath: type === 'create' ? `.ci/${item.filePath}` : item.filePath,
+                    filePath: item.filePath,
                     overrideTemplateField: item.overrideTemplateField,
                     triggerConfigs: item.triggerConfigs
                 }

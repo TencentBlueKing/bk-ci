@@ -439,7 +439,7 @@
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
             stepId: i.stepId ?? '',
-            disabled: !i.additionalOptions?.enable,
+            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
             variables: i.startParams,
             name: i.name,
