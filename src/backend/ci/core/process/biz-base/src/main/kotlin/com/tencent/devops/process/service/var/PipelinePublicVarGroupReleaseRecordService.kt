@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReleseRecordDao
-import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleseDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReleaseRecordPO
@@ -51,10 +51,10 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
     private val client: Client
 ) {
 
-    fun batchAddPublicVarGroupReleaseRecord(publicVarGroupReleseDTO: PublicVarGroupReleseDTO) {
-        val userId = publicVarGroupReleseDTO.userId
-        val oldVarPOs = publicVarGroupReleseDTO.oldVarPOs
-        val newVarPOs = publicVarGroupReleseDTO.newVarPOs
+    fun batchAddPublicVarGroupReleaseRecord(publicVarGroupReleaseDTO: PublicVarGroupReleaseDTO) {
+        val userId = publicVarGroupReleaseDTO.userId
+        val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
+        val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
 
         val records = mutableListOf<PipelinePublicVarGroupReleaseRecordPO>()
 
@@ -72,7 +72,7 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
                         .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
                     projectId = it.projectId,
                     groupName = it.groupName,
-                    version = publicVarGroupReleseDTO.version,
+                    version = publicVarGroupReleaseDTO.version,
                     publisher = userId,
                     pubTime = LocalDateTime.now(),
                     desc = desc,
@@ -108,7 +108,7 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
                         .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
                     projectId = it.projectId,
                     groupName = it.groupName,
-                    version = publicVarGroupReleseDTO.version,
+                    version = publicVarGroupReleaseDTO.version,
                     publisher = userId,
                     pubTime = LocalDateTime.now(),
                     desc = desc,
@@ -184,7 +184,7 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
                             .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
                         projectId = newVar.projectId,
                         groupName = newVar.groupName,
-                        version = publicVarGroupReleseDTO.version,
+                        version = publicVarGroupReleaseDTO.version,
                         publisher = userId,
                         pubTime = LocalDateTime.now(),
                         desc = desc,
