@@ -107,7 +107,6 @@ class PipelineCheckRunService @Autowired constructor(
         ) { handleCheckRun(it) }
     }
 
-
     fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) = with(event) {
         resolveCheckRun(
             projectId = projectId,

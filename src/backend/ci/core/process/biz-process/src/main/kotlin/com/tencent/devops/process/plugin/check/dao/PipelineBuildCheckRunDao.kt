@@ -128,7 +128,7 @@ class PipelineBuildCheckRunDao {
         repoHashId: String,
         commitId: String,
         pullRequestId: String
-    ) : Result<TPipelineBuildCheckRunRecord> {
+    ): Result<TPipelineBuildCheckRunRecord> {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
             val conditions = listOf(
                 PROJECT_ID.eq(projectId),
