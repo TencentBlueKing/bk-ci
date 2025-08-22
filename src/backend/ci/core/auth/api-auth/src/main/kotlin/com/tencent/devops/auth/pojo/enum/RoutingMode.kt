@@ -1,0 +1,21 @@
+package com.tencent.devops.auth.pojo.enum
+
+/**
+ * 权限校验的路由模式
+ */
+enum class RoutingMode {
+    /**
+     * 正常模式: 直接调用外部第三方权限服务 (IAM)，并由其内部触发异步对账。
+     */
+    NORMAL,
+
+    /**
+     * 验证模式 (灰度): 根据项目路由，比对本地和第三方接口
+     */
+    VALIDATION,
+
+    /**
+     * 熔断模式: 使用断路器包装对外部服务的调用，在故障时自动降级到内部缓存服务。
+     */
+    CIRCUIT_BREAKER
+}

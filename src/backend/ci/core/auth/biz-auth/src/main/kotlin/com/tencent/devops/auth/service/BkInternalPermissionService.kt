@@ -219,14 +219,16 @@ class BkInternalPermissionService(
         actions: List<String>,
         projectCode: String,
         resourceType: String
-    ): Map<String, List<String>> {
-        return actions.associateWith {
-            getUserResourceByAction(
+    ): Map<AuthPermission, List<String>> {
+        return actions.associate {
+            val actionResourceList = getUserResourceByAction(
                 userId = userId,
                 action = it,
                 projectCode = projectCode,
                 resourceType = resourceType
             )
+            val authPermission = it.substringAfterLast("_")
+            AuthPermission.get(authPermission) to actionResourceList
         }
     }
 
