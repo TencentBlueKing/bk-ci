@@ -27,13 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.enums
 
-enum class PublicVerGroupReferenceTypeEnum(val value: String) {
-    PIPELINE("PIPELINE"), // 流水线
-    TEMPLATE("TEMPLATE"); // 模板
-
-    companion object {
-        fun fromValue(value: String): PublicVerGroupReferenceTypeEnum {
-            return values().first { it.value == value }
-        }
-    }
+enum class PublicVerGroupReferenceTypeEnum {
+    PIPELINE, // 流水线
+    TEMPLATE; // 模板
 }

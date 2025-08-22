@@ -58,7 +58,7 @@ class PipelinePublicVarGroupReferInfoDao {
                         version = it.version,
                         referId = it.referId,
                         referName= it.referName,
-                        referType = PublicVerGroupReferenceTypeEnum.fromValue(it.referType),
+                        referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
                         createTime = it.createTime,
                         updateTime = it.updateTime,
                         creator = it.creator,
@@ -92,7 +92,7 @@ class PipelinePublicVarGroupReferInfoDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.value))
+                .and(REFER_TYPE.eq(referType.name))
                 .and(GROUP_NAME.eq(groupName))
                 .and(VERSION.eq(version))
                 .fetchOne(0, Int::class.java) ?: 0
@@ -132,7 +132,7 @@ fun save(
                 pipelinePublicVarGroupReferPO.groupName,
                 pipelinePublicVarGroupReferPO.version,
                 pipelinePublicVarGroupReferPO.referId,
-                pipelinePublicVarGroupReferPO.referType.value,
+                pipelinePublicVarGroupReferPO.referType.name,
                 pipelinePublicVarGroupReferPO.referName,
                 pipelinePublicVarGroupReferPO.creator,
                 pipelinePublicVarGroupReferPO.modifier,

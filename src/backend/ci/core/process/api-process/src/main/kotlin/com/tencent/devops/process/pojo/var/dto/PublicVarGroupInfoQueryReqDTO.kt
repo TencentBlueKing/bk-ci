@@ -40,7 +40,7 @@ data class PublicVarGroupInfoQueryReqDTO (
     @get:Schema(description = "按变量组名称过滤")
     val filterByGroupName: String? = null,
     @get:Schema(description = "按变量组描述过滤")
-    val filterByGrouoDesc: String? = null,
+    val filterByGroupDesc: String? = null,
     @get:Schema(description = "按更新人过滤")
     val filterByUpdater: String? = null,
     @get:Schema(description = "按变量名称过滤")

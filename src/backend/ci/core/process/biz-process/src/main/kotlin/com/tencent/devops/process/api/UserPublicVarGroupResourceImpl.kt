@@ -83,7 +83,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             queryReq = PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
                 filterByGroupName = filterByGroupName,
-                filterByGrouoDesc = filterByGrouoDesc,
+                filterByGroupDesc = filterByGrouoDesc,
                 filterByUpdater = filterByUpdater,
                 filterByVarName = filterByVarName,
                 filterByVarAlias = filterByVarAlias,

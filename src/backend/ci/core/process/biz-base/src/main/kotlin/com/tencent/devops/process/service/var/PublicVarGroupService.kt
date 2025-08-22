@@ -215,7 +215,7 @@ class PublicVarGroupService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             filterByGroupName = queryReq.filterByGroupName,
-            filterByGroupDesc = queryReq.filterByGrouoDesc,
+            filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
             groupNames = groupNames
         )
@@ -226,7 +226,7 @@ class PublicVarGroupService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             filterByGroupName = queryReq.filterByGroupName,
-            filterByGroupDesc = queryReq.filterByGrouoDesc,
+            filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
             groupNames = groupNames
         ).map { po ->
