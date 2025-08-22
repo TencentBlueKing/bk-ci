@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.`var`
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -34,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
 import com.tencent.devops.process.dao.`var`.PublicVarDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleseDTO
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Service
 class PublicVarService @Autowired constructor(
     private val dslContext: DSLContext,
     private val publicVarDao: PublicVarDao,
+    private val publicVarGroupDao: PublicVarGroupDao,
     private val client: Client,
     private val pipelinePublicVarGroupReleaseRecordService: PipelinePublicVarGroupReleaseRecordService
 ) {
@@ -139,19 +142,29 @@ class PublicVarService @Autowired constructor(
         userId: String,
         projectId: String,
         groupName: String,
-        version: Int
+        version: Int?
     ): List<PublicVarDO> {
-        val publicVarPOS = getGroupPublicVar(projectId, groupName, version)
-        return publicVarPOS.map {
+        val targetVersion = version ?: publicVarGroupDao.getLatestVersionByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName
+        ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+
+            return publicVarDao.listVarBygroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            version = targetVersion
+        ).map { publicVarPO ->
             PublicVarDO(
-                varName = it.varName,
-                alias = it.alias,
-                type = it.type,
-                valueType = it.valueType,
-                defaultValue = it.defaultValue,
-                desc = it.desc,
-                referCount = it.referCount,
-                buildFormProperty = JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java)
+                varName = publicVarPO.varName,
+                alias = publicVarPO.alias,
+                type = publicVarPO.type,
+                valueType = publicVarPO.valueType,
+                defaultValue = publicVarPO.defaultValue,
+                desc = publicVarPO.desc,
+                referCount = publicVarPO.referCount,
+                buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
             )
         }
     }
