@@ -69,12 +69,4 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
     override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
         return atomReleaseService.offlineAtom(userId, atomCode, atomOfflineReq)
     }
-
-    override fun getAtomGitRecentCommitMessage(
-        userId: String,
-        branch: String?,
-        codeSrc: String
-    ): Result<String> {
-        return atomReleaseService.getAtomGitRecentCommitMessage(userId, branch, codeSrc)
-    }
 }

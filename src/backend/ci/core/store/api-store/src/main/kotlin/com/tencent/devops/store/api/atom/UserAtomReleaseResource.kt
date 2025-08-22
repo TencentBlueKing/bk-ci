@@ -131,19 +131,4 @@ interface UserAtomReleaseResource {
         @Parameter(description = "下架请求报文")
         atomOfflineReq: AtomOfflineReq
     ): Result<Boolean>
-
-    @Operation(summary = "根据插件分支获取插件代码库最新提交信息")
-    @GET
-    @Path("/desk/atom/release/commitMessage/get")
-    fun getAtomGitRecentCommitMessage(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "分支", required = true)
-        @QueryParam("branch")
-        branch: String?,
-        @Parameter(description = "代码库链接", required = true)
-        @QueryParam("codeSrc")
-        codeSrc: String,
-    ): Result<String>
 }

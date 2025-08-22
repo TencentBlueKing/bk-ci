@@ -1517,22 +1517,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
 
-    override fun getAtomGitRecentCommitMessage(userId: String, branch: String?, codeSrc: String): Result<String> {
-        val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
-        if (accessToken.isNullOrBlank()) {
-            logger.warn("User [$userId] has not performed OAUTH authorization. Please authorize first.")
-            return Result("")
-        }
-        val commitMessage = client.get(ServiceGitResource::class)
-            .getRepoRecentCommitInfo(
-                repoName = GitUtils.getProjectName(codeSrc),
-                sha = branch ?: MASTER,
-                token = accessToken,
-                tokenType = TokenTypeEnum.OAUTH
-            ).data?.message ?: ""
-        return Result(commitMessage)
-    }
-
     private fun sendPendingReview(userId: String, atomName: String, version: String, atomId: String) {
         val atomReleaseStatusUrl = "${config.devopsHostGateway}/console/store/releaseProgress/upgrade/%s"
         val bodyParams = mapOf(

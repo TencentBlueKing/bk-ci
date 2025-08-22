@@ -32,6 +32,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_OS
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -49,6 +50,11 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
@@ -100,9 +106,12 @@ import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -189,6 +198,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
+        private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
     }
 
     private val storeBusNumCache = Caffeine.newBuilder()
@@ -1251,5 +1261,55 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             }
             else -> str
         }
+    }
+
+    override fun getStoreGitRecentCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String,
+        gitProjectId: Long?,
+        commitNumber: Int
+    ): String {
+        val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
+        if (accessToken.isNullOrBlank()) {
+            logger.warn("User [$userId] has not performed OAUTH authorization. Please authorize first.")
+            return ""
+        }
+        val projectId = gitProjectId
+            ?: client.get(ServiceGitResource::class).getProjectInfo(
+                token = accessToken,
+                gitProjectId = GitUtils.getProjectName(codeSrc),
+                tokenType = TokenTypeEnum.OAUTH
+            ).data?.id
+
+        if (projectId == null) {
+            return ""
+        }
+        return client.get(ServiceGitResource::class).getCommits(
+            gitProjectId = projectId,
+            branch = branch ?: MASTER,
+            token = accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+            page = 1,
+            perPage = commitNumber,
+            since = null,
+            until = null,
+            filePath = null
+        ).data?.let { commits ->
+            processCommits(commits)
+        } ?: ""
+    }
+
+    fun processCommits(commits: List<Commit>): String {
+        // 最早的排最前面
+        val sortedCommits = commits.sortedWith(compareBy { commit ->
+            commit.committedDate?.let {
+                OffsetDateTime.parse(it, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            }
+        })
+
+        return sortedCommits.mapIndexed { index, commit ->
+            "${index + 1}. ${commit.message ?: ""}"
+        }.joinToString("\n")
     }
 }
