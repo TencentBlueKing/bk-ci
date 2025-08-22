@@ -90,7 +90,7 @@ class PublicVarGroupService @Autowired constructor(
 
     companion object {
         const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
-        const val expiredTimeInSeconds = 5L
+        const val EXPIRED_TIME_IN_SECONDS = 5L
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
     }
 
@@ -101,7 +101,7 @@ class PublicVarGroupService @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = expiredTimeInSeconds
+            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -335,7 +335,7 @@ class PublicVarGroupService @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_DELETE_${projectId}_$groupName",
-            expiredTimeInSeconds = expiredTimeInSeconds
+            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -501,7 +501,7 @@ class PublicVarGroupService @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_${referId}_${referType.value}",
-            expiredTimeInSeconds = expiredTimeInSeconds
+            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
         )
 
         redisLock.lock()

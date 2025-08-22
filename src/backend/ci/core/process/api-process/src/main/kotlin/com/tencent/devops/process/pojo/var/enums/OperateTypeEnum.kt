@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.MessageUtil
  */
 enum class OperateTypeEnum {
     DELETE,
-    ADD,
+    CREATE,
     UPDATE;
 
     fun getI18n(language: String): String {
