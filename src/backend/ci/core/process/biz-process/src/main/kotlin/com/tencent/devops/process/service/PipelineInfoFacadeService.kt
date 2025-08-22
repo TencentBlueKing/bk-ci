@@ -533,7 +533,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId
                 )
                 val varGroupNames =
-                    triggerContainer.params.filter { it.varGroupName.isNullOrBlank() }.map { it.varGroupName!! }
+                    triggerContainer.params.filter { !it.varGroupName.isNullOrBlank() }.map { it.varGroupName!! }
                 if (!varGroupNames.isNullOrEmpty()) {
                     publicVarGroupService.addPipelineGroupRefer(
                         userId = userId,
