@@ -116,7 +116,7 @@
                                         {{ $t('template.UpgradeFailed') }}
                                         <logo
                                             v-bk-tooltips="{
-                                                content: row.instanceErrorInfo
+                                                content: JSON.parse(row.instanceErrorInfo).message ?? '--'
                                             }"
                                             class="status-failed-icon"
                                             name="circle-alert-filled"

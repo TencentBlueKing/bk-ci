@@ -177,12 +177,13 @@
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
     async function handleReleaseInstance (value) {
+        const type = proxy.$route.params?.type
         const fnMap = {
             create: 'templates/releaseInstance',
             copy: 'templates/releaseInstance',
             upgrade: 'templates/updateInstance'
         }
-        const fn = fnMap[proxy.$route.params?.type]
+        const fn = fnMap[type]
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
@@ -199,7 +200,7 @@
                         required: i.isRequiredParam
                     })),
                     timerTrigger: item.timerTrigger,
-                    filePath: item.filePath ? `.ci/${item.filePath}` : undefined,
+                    filePath: item.filePath,
                     overrideTemplateField: item.overrideTemplateField,
                     triggerConfigs: item.triggerConfigs
                 }

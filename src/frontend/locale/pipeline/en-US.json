@@ -646,7 +646,9 @@
     "enable": "Enable",
     "close": "Disable",
     "timeCron": "Schedule Rule",
-    "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID."
+    "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID.",
+    "constraintMode": "The pipeline uses a constraint mode template",
+    "notTemplate": "Template does not exist"
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",

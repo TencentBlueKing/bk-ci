@@ -87,14 +87,24 @@
                     v-else-if="col.id === 'operate'"
                     class="template-operate"
                 >
-                    <span
+                    <bk-button
+                        v-if="row.type === 'PIPELINE'"
+                        text
+                        :disabled="row.latestVersionStatus === 'COMMITTING'"
                         @click="goInstanceEntry(row)"
-                        :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
+                        v-perm="{
+                            hasPermission: hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: projectId,
+                                action: RESOURCE_ACTION.CREATE
+                            }
+                        }"
                     >
-                        <span v-if="row.type === 'PIPELINE'">
-                            {{ $t('template.instantiate') }}
-                        </span>
-                    </span>
+                        {{ $t('template.instantiate') }}
+                    </bk-button>
                     <ext-menu
                         type="template"
                         :data="row"
@@ -133,7 +143,9 @@
     } from '@/store/modules/templates/constants'
     import { defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
-
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     const { proxy, t } = UseInstance()
     const {
         goTemplateOverview
@@ -154,6 +166,10 @@
                 count: 6,
                 limit: 20
             })
+        },
+        hasCreatePermission: {
+            type: Boolean,
+            default: false
         }
     })
     const emit = defineEmits(['limit-change', 'page-change', 'clear'])
@@ -317,25 +333,11 @@
     display: flex;
     align-items: center;
     height: 40px;
-    .action {
-        display: inline-block;
-        text-align: center;
-        min-width: 62px;
-        color: $primaryColor;
-    }
 }
 
 .select-text {
     color: $primaryColor;
     cursor: pointer;
-}
-
-.create-permission {
-    cursor: pointer;
-}
-
-.not-create-permission {
-    cursor: not-allowed;
 }
 
 </style>

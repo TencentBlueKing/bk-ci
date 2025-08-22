@@ -5,7 +5,7 @@
             :class="['content', { 'line-clamp': isExpanded }]"
             @click="toggle"
         >
-            {{ name }}: {{ content }}
+            {{ name }}: {{ JSON.parse(content).message }}
         </div>
         <bk-button
             v-if="showExpandBtn"

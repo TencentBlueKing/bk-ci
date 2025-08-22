@@ -648,7 +648,9 @@
     "enable": "启用",
     "close": "不启用",
     "timeCron": "定时规则",
-    "notStepIdTips": "触发器[{0}]缺少 Step ID ，请修改模版补全 Step ID"
+    "notStepIdTips": "触发器[{0}]缺少 Step ID ，请修改模版补全 Step ID",
+    "constraintMode": "流水线使用了约束模式的模板",
+    "notTemplate": "模板不存在"
   },
   "newlist": {
     "exportYamlTip": "PreCI 是蓝盾 DevOps 为开发者在 CI 之前的研发活动所提供的一套解决方案，能在提交代码之前尽早发现问题，提升代码质量。包括 IDE 插件和命令行工具。",

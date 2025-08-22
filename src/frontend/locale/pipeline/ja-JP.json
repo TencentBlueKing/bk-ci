@@ -639,7 +639,9 @@
         "enable": "有効化",
         "close": "無効化",
         "timeCron": "スケジュールルール（Cron）",
-        "notStepIdTips": "トリガー[{0}] に Step ID が指定されていません。テンプレートを修正して Step ID を補完してください"
+        "notStepIdTips": "トリガー[{0}] に Step ID が指定されていません。テンプレートを修正して Step ID を補完してください",
+        "constraintMode": "パイプラインは制約モードテンプレートを使用します",
+        "notTemplate": "テンプレートが存在しません"
     },
     "newlist": {
         "exportYamlTip": "PreCI は BlueKing DevOps が開発者向けに提供する CI 前的開発活動向けソリューションで、コード提出前に早期に問題を発見し、コード品質を向上させます。IDE プラグインとコマンドラインツールが含まれます。",
