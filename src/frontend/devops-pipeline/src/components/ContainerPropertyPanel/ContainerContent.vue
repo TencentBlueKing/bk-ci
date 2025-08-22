@@ -731,6 +731,7 @@
                 }
             },
             systemVersion () {
+                if (this.isTriggerContainer(this.container)) return
                 this.toggleXcode()
             }
         },
