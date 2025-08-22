@@ -48,12 +48,18 @@
                     :name="option.label"
                 />
             </bk-select>
-            <bk-input
-                v-model="templateRef"
-                :placeholder="templateRefPlaceholderMap[pullMode]"
-                class="ref-input"
-                @change="handelChangeTemplateRef"
-            />
+            <div class="ref-input">
+                <bk-input
+                    v-model="templateRef"
+                    :placeholder="templateRefPlaceholderMap[pullMode]"
+                    @change="handelChangeTemplateRef"
+                />
+                <i
+                    v-if="errorRefMsg"
+                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                    v-bk-tooltips="errorRefMsg"
+                />
+            </div>
         </template>
         <bk-button
             :class="{
@@ -119,7 +125,7 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed } from 'vue'
+    import { ref, defineProps, computed, watch } from 'vue'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
@@ -135,6 +141,7 @@
     })
     const isShowPreview = ref(false)
     const templatePipeline = ref({})
+    const errorRefMsg = ref('')
     const pullMode = ref('tag')
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -172,6 +179,10 @@
             label: proxy.$t('template.commit')
         }
     ]))
+    watch(() => pullMode.value, () => {
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
+        errorRefMsg.value = ''
+    })
     const templateRefPlaceholderMap = computed(() => ({
         tag: `${proxy.$t('template.Example')} tag1`,
         branch: `${proxy.$t('template.Example')} dev`,
@@ -179,8 +190,8 @@
     }))
     function getRefByPullMode (value) {
         const refMap = {
-            tag: `refs/heads/${value}`,
-            branch: `refs/tags/${value}`,
+            branch: `refs/heads/${value}`,
+            tag: `refs/tags/${value}`,
             commit: value
         }
         return refMap[pullMode.value]
@@ -216,6 +227,7 @@
     }
 
     function handleChangeTemplateRefType (value) {
+        errorRefMsg.value = ''
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, value)
         proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
@@ -239,7 +251,13 @@
                 projectId: res.resource.projectId,
                 stages: res.resource.model.stages
             }
+            errorRefMsg.value = ''
         } catch (e) {
+            errorRefMsg.value = e.message || proxy.$t('template.notTemplate')
+            proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
+                templateVersion: '',
+                templateDetail: {}
+            })
             console.error(e)
         }
     }
@@ -260,6 +278,18 @@
         .ref-input {
             width: 200px;
             margin-right: 20px;
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+             .tooltips-icon {
+                position: absolute;
+                z-index: 10;
+                right: 8px;
+                top: 8px;
+                color: #ea3636;
+                cursor: pointer;
+                font-size: 16px;
+             }
         }
         .selector-prepend {
             display: inline-block;

@@ -32,7 +32,7 @@
                 </div>
                 <div
                     class="right"
-                    v-if="!isInstanceCreateType && (!!curTemplateVersion || !!templateRef)"
+                    v-if="showCompareParamsNum"
                 >
                     <ul class="params-compare-content">
                         <bk-checkbox
@@ -225,7 +225,7 @@
                     </section>
                 </template>
 
-                <template>
+                <template v-if="curInstance?.triggerConfigs?.length">
                     <section class="params-content-item">
                         <header
                             :class="['params-collapse-trigger', {
@@ -245,7 +245,7 @@
                             class="params-collapse-content"
                         >
                             <renderSortCategoryParams
-                                v-for="(trigger, index) in triggerConfigs"
+                                v-for="(trigger, index) in curInstance?.triggerConfigs"
                                 :key="index"
                                 :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
                                 default-layout
@@ -302,7 +302,6 @@
     const isLoading = ref(true)
     const paramsList = ref([])
     const paramsValues = ref({})
-    const triggerConfigs = ref([])
     const otherParams = ref([])
     const otherValues = ref({})
     const constantParams = ref([])
@@ -322,6 +321,13 @@
     // templateVersion 选中的模板版本号
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
+    const showCompareParamsNum = computed(() => {
+        if (props.isInstanceCreateType) return false
+        if (templateRefTypeById.value) {
+            return Object.keys(curTemplateDetail.value)?.length
+        }
+        return Object.keys(curTemplateDetail.value)?.length && !!templateRef.value
+    })
     const curInstance = computed(() => {
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         if (instance?.param) {
@@ -341,18 +347,8 @@
             if (curTemplateDetail.value?.buildNo) {
                 instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
-            if (templateTriggerConfigs.value.length) {
-                const triggerConfigs = instance.triggerElements?.map(i => ({
-                    atomCode: i.atomCode,
-                    stepId: i.stepId ?? '',
-                    disabled: i.additionalOptions?.enable ?? true,
-                    cron: i.advanceExpression,
-                    variables: i.startParams,
-                    name: i.name,
-                    version: i.version,
-                    isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
-                }))
-                instanceTriggerConfigs = compareTriggerConfigs(triggerConfigs, templateTriggerConfigs.value)
+            if (templateTriggerConfigs.value?.length) {
+                instanceTriggerConfigs = compareTriggerConfigs(instance?.triggerConfigs, templateTriggerConfigs.value)
             }
         }
         if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
@@ -439,15 +435,16 @@
         return paramsList.value.length
     })
     const templateTriggerConfigs = computed(() => {
+        const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
             stepId: i.stepId ?? '',
-            disabled: i.additionalOptions?.enable ?? true,
+            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
             variables: i.startParams,
             name: i.name,
             version: i.version,
-            isFollowTemplate: true
+            isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
         }))
     })
     watch(() => activeIndex.value, () => {
@@ -710,6 +707,7 @@
                 break
 
             case 'trigger':
+                const temTriggerValue = templateTriggerConfigs.value?.find(trigger => trigger.stepId === id).disabled
                 const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
                 index = triggerStepIds.indexOf(target)
                 index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
@@ -725,6 +723,7 @@
                         triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
                             return {
                                 ...trigger,
+                                disabled: trigger.stepId === id ? temTriggerValue : trigger.disabled,
                                 isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
                             }
                         })
@@ -732,6 +731,7 @@
                 })
                 break
             case 'param':
+                const temDefaultValue =  curTemplateDetail.value.params?.find(t => t.id === id)?.defaultValue
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
                 proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
@@ -744,6 +744,7 @@
                         },
                         param: curInstance.value?.param.map(p => ({
                             ...p,
+                            defaultValue: p.id === id && !p.isFollowTemplate ? temDefaultValue : p.defaultValue,
                             isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate
                         }))
                     }
@@ -776,7 +777,6 @@
             ...curInstance.value?.buildNo,
             isRequiredParam: curInstance.value?.buildNo?.required ?? false
         } || {}
-        triggerConfigs.value = curInstance.value?.triggerConfigs || []
         getParamsValue()
         setTimeout(() => {
             isLoading.value = false

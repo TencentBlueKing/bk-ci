@@ -57,6 +57,8 @@
 
         .title {
             margin-bottom: 8px;
+            color: #4D4F56;
+            font-weight: 700;
         }
         .list-item {
             width: 100%;

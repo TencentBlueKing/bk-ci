@@ -644,7 +644,8 @@
     "close": "Disable",
     "timeCron": "Schedule Rule",
     "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID.",
-    "constraintMode": "The pipeline uses a constraint mode template"
+    "constraintMode": "The pipeline uses a constraint mode template",
+    "notTemplate": "Template does not exist"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

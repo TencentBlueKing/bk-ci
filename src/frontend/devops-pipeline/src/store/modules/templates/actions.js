@@ -130,7 +130,7 @@ const actions = {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/ref/details?ref=${ref}`).then(res => {
             commit(SET_TEMPLATE_DETAIL, {
                 templateDetail: res.data,
-                templateVersion: ''
+                templateVersion: res.data.resource.version
             })
             return res.data
         })

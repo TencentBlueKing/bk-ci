@@ -25,10 +25,10 @@
                         v-bk-overflow-tips
                         class="release-pipeline-new-version"
                     >
-                        {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
+                        {{ $t("releasePipelineVersion",[!isCommitToMaster ? newReleaseVersionName : releaseParams.customVersionName]) }}
                     </span>
                     <span v-bk-overflow-tips>
-                        {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
+                        {{ $t("releasePipelineBaseVersion", [!isCommitToMaster ? newReleaseVersionName : releaseParams.customVersionName]) }}
                     </span>
                 </template>
                 <template v-else>
@@ -125,6 +125,7 @@
                         >
                             <bk-input
                                 v-model="releaseParams.customVersionName"
+                                :disabled="!isCommitToMaster"
                                 :maxlength="50"
                             >
                             </bk-input>
@@ -247,13 +248,20 @@
                                                     <td>
                                                         <div class="input-cell">
                                                             <span class="instance-name">{{ filePathDir }}</span>
-                                                            <bk-input
-                                                                v-model="item.filePath"
-                                                                :disabled="disabledYamlCodeLib"
-                                                                id="yamlFilePath"
-                                                                placeholder="请输入"
-                                                                @change="(value) => handleChangeFilePath(value, index)"
-                                                            />
+                                                            <div class="file-path-input">
+                                                                <bk-input
+                                                                    v-model="item.filePath"
+                                                                    :disabled="disabledYamlCodeLib"
+                                                                    id="yamlFilePath"
+                                                                    placeholder="请输入"
+                                                                    @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
+                                                                />
+                                                                <i
+                                                                    v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
+                                                                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                                                                    v-bk-tooltips="$t('yamlFilePathErrorTip')"
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -501,7 +509,8 @@
                     repoHashId: '',
                     customVersionName: ''
                 },
-                newReleaseVersionNameList: []
+                newReleaseVersionNameList: [],
+                TARGET_ACTION_ENUM
             }
         },
         computed: {
@@ -513,7 +522,7 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'isTemplate']),
             ...mapState('common', ['pacSupportScmTypeList']),
-            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail']),
+            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail', 'templateRefType']),
             filePathDir () {
                 return `.ci/${this.isTemplateInstanceMode ? '' : this.isTemplate ? 'templates/' : ''}`
             },
@@ -623,7 +632,7 @@
                     targetAction,
                     repoHashId,
                     enablePac,
-                    customVersionName
+                    customVersionName: customVersionName.trim()
                 }
             },
             templateInstanceEnablePac () {
@@ -643,6 +652,9 @@
                     ...i,
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
+            },
+            isCommitToMaster () {
+                return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
             }
         },
         watch: {
@@ -765,7 +777,12 @@
                 try {
                     this.isLoading = true
                     const enablePac = this.releaseParams.enablePac
-
+                    if (this.isTemplateInstanceMode && enablePac) {
+                        this.releaseParams.repoHashId = this.instanceList[0]?.repoHashId ?? ''
+                    }
+                    if (this.isTemplateInstanceMode && this.templateRefType === 'PATH') {
+                        this.releaseParams.enablePac = true
+                    }
                     await Promise.all([
                         ...(enablePac
                             ? [
@@ -793,6 +810,7 @@
             },
 
             async prefetchReleaseVersion (params) {
+                if (!this.releaseParams.repoHashId || !this.releaseParams.targetAction) return
                 try {
                     const lackTargetAction = params.enablePac && !params.targetAction
                     const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
@@ -820,6 +838,9 @@
                             ...params
                         })
                         this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
+                        if (!this.isCommitToMaster) {
+                            this.releaseParams.customVersionName = this.newReleaseVersionName
+                        }
                     }
                 } catch (error) {
                     this.errorHandler(error)
@@ -895,6 +916,7 @@
                 if (this.isTemplateInstanceMode) {
                     try {
                         await this.$refs?.releaseForm?.validate?.()
+                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
                         console.error(e)
@@ -924,7 +946,7 @@
                             version: this.version,
                             params: {
                                 ...rest,
-                                customVersionName,
+                                customVersionName: customVersionName.trim(),
                                 ...(rest.enablePac
                                     ? {
                                         targetAction
@@ -1646,6 +1668,21 @@
                 }
             }
         }
+    }
+    .file-path-input {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        width: 100%;
+            .tooltips-icon {
+                position: absolute;
+                z-index: 10;
+                right: 8px;
+                top: 8px;
+                color: #ea3636;
+                cursor: pointer;
+                font-size: 16px;
+            }
     }
 }
 </style>
