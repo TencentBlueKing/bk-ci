@@ -254,7 +254,8 @@ class PipelineTemplateGenerator @Autowired constructor(
                 newSetting = draftSetting,
                 repoHashId = repoHashId!!,
                 targetAction = targetAction,
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                customVersionName = customVersionName
             )
         } else {
             val resourceOnlyVersion = generateReleaseVersion(
@@ -293,7 +294,8 @@ class PipelineTemplateGenerator @Autowired constructor(
         newSetting: PipelineSetting,
         repoHashId: String,
         targetAction: CodeTargetAction?,
-        targetBranch: String? = null
+        targetBranch: String? = null,
+        customVersionName: String? = null
     ): Pair<VersionStatus, PTemplateResourceOnlyVersion> {
         return when (targetAction) {
             CodeTargetAction.COMMIT_TO_MASTER -> {
@@ -302,7 +304,8 @@ class PipelineTemplateGenerator @Autowired constructor(
                     templateId = templateId,
                     draftResource = draftResource,
                     newResource = newResource,
-                    newSetting = newSetting
+                    newSetting = newSetting,
+                    customVersionName = customVersionName
                 )
                 Pair(VersionStatus.RELEASED, resourceOnlyVersion)
             }
@@ -350,7 +353,8 @@ class PipelineTemplateGenerator @Autowired constructor(
                         templateId = templateId,
                         draftResource = draftResource,
                         newResource = newResource,
-                        newSetting = newSetting
+                        newSetting = newSetting,
+                        customVersionName = customVersionName
                     )
                     Pair(VersionStatus.RELEASED, resourceOnlyVersion)
                 } else {
