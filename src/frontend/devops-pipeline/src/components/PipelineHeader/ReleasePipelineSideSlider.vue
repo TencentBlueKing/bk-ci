@@ -126,11 +126,12 @@
                         >
                             <bk-input
                                 v-model="releaseParams.customVersionName"
-                                :disabled="!isCommitToMaster"
+                                :disabled="!isCommitToMaster && releaseParams.enablePac"
                                 :maxlength="50"
                             >
                             </bk-input>
                         </bk-form-item>
+
                         <div v-if="releaseParams.enablePac && hasOauth">
                             <header
                                 @click="togglePacCodelibSettingForm"
@@ -814,7 +815,7 @@
             },
 
             async prefetchReleaseVersion (params) {
-                if (!this.releaseParams.repoHashId || !this.releaseParams.targetAction) return
+                if (this.releaseParams.enable && (!this.releaseParams.repoHashId || !this.releaseParams.targetAction)) return
                 try {
                     const lackTargetAction = params.enablePac && !params.targetAction
                     const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
