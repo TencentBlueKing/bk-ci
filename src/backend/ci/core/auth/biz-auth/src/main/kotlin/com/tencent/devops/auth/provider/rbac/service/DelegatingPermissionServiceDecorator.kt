@@ -340,7 +340,7 @@ class DelegatingPermissionServiceDecorator(
         val mode = routingStrategy.getModeForProject(projectCode)
         return when (mode) {
             RoutingMode.NORMAL -> externalCall()
-
+            RoutingMode.INTERNAl -> internalCall()
             RoutingMode.VALIDATION -> {
                 val externalResult = externalCall()
                 threadPoolExecutor.submit {
