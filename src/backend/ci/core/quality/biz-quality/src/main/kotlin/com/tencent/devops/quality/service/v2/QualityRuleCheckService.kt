@@ -513,8 +513,9 @@ class QualityRuleCheckService @Autowired constructor(
                 val bCodeccElement = CodeccUtils.isCodeccAtom(indicator.elementType)
                 val metadata = if (bCodeccElement) {
                     metadataList.filter { m ->
-                        m.taskId == it && m.elementType in ElementUtils.QUALITY_CODECC_METATYPE
-                        && indicator.metadataList.any { i -> i.enName == m.enName } }
+                        m.taskId == it &&
+                        m.elementType in ElementUtils.QUALITY_CODECC_METATYPE &&
+                        indicator.metadataList.any { i -> i.enName == m.enName } }
                 } else {
                     metadataList.filter { m -> m.enName == indicator.enName && m.taskId == it }
                 }
@@ -523,8 +524,8 @@ class QualityRuleCheckService @Autowired constructor(
                 if (metadata.isEmpty()) {
                     if (bCodeccElement) {
                         metadataList.filter { m ->
-                            m.elementType in ElementUtils.QUALITY_CODECC_METATYPE
-                            && indicator.metadataList.any { i -> i.enName == m.enName }
+                            m.elementType in ElementUtils.QUALITY_CODECC_METATYPE &&
+                            indicator.metadataList.any { i -> i.enName == m.enName }
                         }.maxByOrNull { m -> m.createTime ?: 0L }?.let { m -> metadataMutableList.add(m) }
                     } else {
                         metadataList.filter { m ->
