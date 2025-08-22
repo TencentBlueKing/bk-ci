@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.0-rc.7](#v400-rc7)
+   - [Changelog since v4.0.0-rc.6](#changelog-since-v400-rc6)
+
 - [v4.0.0-rc.6](#v400-rc6)
    - [Changelog since v4.0.0-rc.5](#changelog-since-v400-rc5)
 
@@ -22,6 +25,60 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.0-rc.7
+## 2025-08-15
+### Changelog since v4.0.0-rc.6
+#### 新增
+
+##### 流水线
+- [新增] feat: 注册回调限制高危端口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11967)
+- [新增] feat：支持展示制品自动化测试结果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11462)
+
+##### 代码库
+- [新增] feat：关联代码库时，若授权方式为 OAUTH，支持按照授权账号过滤代码库 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11483)
+- [新增] feat: 新增代码源通用webhook触发器 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11611)
+
+##### 环境管理
+- [新增] feat：第三方构建机标签支持批量编辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11902)
+- [新增] feat: 支持获取和修改第三方构建机信息 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12072)
+- [新增] feat：导入第三方构建机时支持自动切换启动用户 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11945)
+- [新增] feat：环境管理支持搜索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11844)
+
+##### 权限中心
+- [新增] feat：权限系统熔断设计 数据准确性校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11964)
+
+##### 其他
+- [新增] feat: Maven仓库发布从oss迁移到central [链接](http://github.com/TencentBlueKing/bk-ci/issues/11817)
+- [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [新增] feat: 升级turbo版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+
+#### 优化
+
+##### 研发商店
+- [优化] pref:优化研发商店指标关联已发布组件查询 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12099)
+
+##### 其他
+- [优化] docs: third party notices update [链接](http://github.com/TencentBlueKing/bk-ci/issues/12122)
+- [优化] pref：超管获取资源逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12103)
+- [优化] pref:process数据库迁移数据清理逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12064)
+- [优化] pref：制品质量展示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12096)
+
+#### 修复
+
+##### 流水线
+- [修复] bug：模板实例更新时，展示条件字段未赋值 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12087)
+
+##### 代码库
+- [修复] bug: 开启PAC时仓库成员校验失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12085)
+
+##### 权限中心
+- [修复] bug: 修复用户态接口鉴权时偶现卡顿 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12111)
+
+##### 其他
+- [修复] 配置无默认值artifactory服务启动失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12097)
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
 # v4.0.0-rc.6
 ## 2025-08-01
 ### Changelog since v4.0.0-rc.5

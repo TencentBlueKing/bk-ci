@@ -114,13 +114,6 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return emptyList()
     }
 
-    override fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int> {
-        return emptyList()
-    }
-
     override fun syncManagerGroup(
         projectCode: String,
         managerId: Int,

@@ -29,7 +29,6 @@ package com.tencent.devops.auth.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.common.Constants
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.DepartmentDao
 import com.tencent.devops.auth.dao.DepartmentRelationDao
@@ -40,7 +39,6 @@ import com.tencent.devops.auth.pojo.DepartmentInfo
 import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.UserInfo
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -89,24 +87,20 @@ class UserManageService @Autowired constructor(
         )
     }
 
-    fun getUserInfo(userId: String): UserInfo {
+    fun getUserInfo(userId: String): UserInfo? {
         return userInfoDao.get(
             dslContext = dslContext,
             userId = userId
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.USER_NOT_EXIST,
-            params = arrayOf(userId),
-            defaultMessage = "user $userId not exist"
         )
     }
 
     fun getUserDepartmentPath(userId: String): List<String> {
         return user2DepartmentPath.get(userId) {
-            getUserInfo(userId).path?.map { it.toString() } ?: emptyList()
+            getUserInfo(userId)?.path?.map { it.toString() } ?: emptyList()
         }
     }
 
-    fun syncUserInfoData() {
+    fun syncAllUserInfoData() {
         Executors.newFixedThreadPool(1).execute {
             val startEpoch = System.currentTimeMillis()
             var page = 1
@@ -201,6 +195,31 @@ class UserManageService @Autowired constructor(
                 taskType = AuthSyncDataType.USER_SYNC_TASK_TYPE.type
             )
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync user info data")
+        }
+    }
+
+    fun syncUserInfoData(userIds: List<String>) {
+        userIds.forEach {
+            val bkUserInfo = deptService.getUserInfo(it)!!
+            try {
+                val deptInfoDTO = extractDeptInfo(it)
+                userInfoDao.create(
+                    dslContext = dslContext,
+                    userInfo = UserInfo(
+                        userId = it,
+                        userName = bkUserInfo.displayName,
+                        enabled = true,
+                        departmentName = deptInfoDTO?.departmentName,
+                        departmentId = deptInfoDTO?.departmentId,
+                        departments = deptInfoDTO?.departments,
+                        path = deptInfoDTO?.path,
+                        departed = false
+                    ),
+                    taskId = UUIDUtil.generate()
+                )
+            } catch (ex: Exception) {
+                logger.warn("sync user info data failed $bkUserInfo|$ex")
+            }
         }
     }
 

@@ -1,10 +1,10 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.AuthResourceDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.function.Supplier
 
 /**
@@ -24,14 +25,14 @@ class BkInternalPermissionService(
     private val dslContext: DSLContext,
     private val userManageService: UserManageService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val authResourceGroupDao: AuthResourceGroupDao,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val superManagerService: SuperManagerService,
     private val authResourceService: AuthResourceDao,
     private val meterRegistry: MeterRegistry
 ) {
     // 1. 单条权限校验结果
-    private val permissionCache = CacheHelper.createCache<String, Boolean>()
+    private val permissionCache = CacheHelper.createCache<String, Boolean>(100000)
 
     // 2. 用户在项目下加入的用户组
     private val projectUserGroupCache = CacheHelper.createCache<String, List<Int>>()
@@ -62,7 +63,8 @@ class BkInternalPermissionService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        action: String
+        action: String,
+        enableSuperManagerCheck: Boolean = true
     ): Boolean {
         return createTimer(::validateUserResourcePermission.name).record(Supplier {
             val (fixResourceType, fixResourceCode) =
@@ -76,7 +78,8 @@ class BkInternalPermissionService(
                 val isProjectOrSuperManager = checkProjectOrSuperManager(
                     userId = userId,
                     projectCode = projectCode,
-                    action = action
+                    action = action,
+                    enableSuperManagerCheck = enableSuperManagerCheck
                 )
                 if (isProjectOrSuperManager) {
                     true
@@ -97,14 +100,24 @@ class BkInternalPermissionService(
     private fun checkProjectOrSuperManager(
         userId: String,
         projectCode: String,
-        action: String
+        action: String,
+        enableSuperManagerCheck: Boolean
     ): Boolean {
-        return superManagerService.projectManagerCheck(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = action.substringBeforeLast("_"),
-            action = action
-        ) || checkProjectManager(
+        // 首先检查最高权限（超级管理员）
+        if (enableSuperManagerCheck) {
+            val isSuperManager = superManagerService.projectManagerCheck(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = action.substringBeforeLast("_"),
+                action = action
+            )
+            if (isSuperManager) {
+                return true // 如果是超级管理员，立即返回 true
+            }
+        }
+
+        // 如果不是超级管理员，再检查是否为项目管理员
+        return checkProjectManager(
             projectCode = projectCode,
             userId = userId
         )
@@ -136,7 +149,8 @@ class BkInternalPermissionService(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                action = action
+                action = action,
+                enableSuperManagerCheck = false
             )
         }
     }
@@ -275,10 +289,38 @@ class BkInternalPermissionService(
 
     fun listMemberGroupIdsInProjectWithCache(
         projectCode: String,
-        userId: String
+        userId: String,
+        enableTemplateInvalidationOnUserExpiry: Boolean? = null
     ): List<Int> {
-        return CacheHelper.getOrLoad(projectUserGroupCache, projectCode, userId) {
-            permissionResourceGroupService.listMemberGroupIdsInProject(projectCode, userId)
+        return CacheHelper.getOrLoad(
+            projectUserGroupCache,
+            projectCode, userId,
+            enableTemplateInvalidationOnUserExpiry
+        ) {
+            // 获取用户的所属组织
+            val memberDeptInfos = userManageService.getUserDepartmentPath(userId)
+            // 查询项目下包含该成员及所属组织的用户组列表
+            val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                memberIds = memberDeptInfos + userId,
+                minExpiredTime = if (enableTemplateInvalidationOnUserExpiry == true) LocalDateTime.now() else null
+            ).map { it.iamGroupId.toString() }
+            // 通过项目组ID获取人员模板ID
+            val iamTemplateIds = authResourceGroupDao.listByRelationId(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = projectGroupIds
+            ).filter { it.iamTemplateId != null }
+                .map { it.iamTemplateId.toString() }
+            authResourceGroupMemberDao.listMemberGroupIdsInProject(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                memberId = userId,
+                iamTemplateIds = iamTemplateIds,
+                memberDeptInfos = memberDeptInfos
+            )
         }
     }
 
