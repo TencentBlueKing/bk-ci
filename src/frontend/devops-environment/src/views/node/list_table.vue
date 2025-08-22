@@ -1272,7 +1272,6 @@
         top: 6px;
         display: flex;
         width: 90%;
-        min-width: 280px;
         margin-right: 12px;
         z-index: 2;
         .edit-content {
