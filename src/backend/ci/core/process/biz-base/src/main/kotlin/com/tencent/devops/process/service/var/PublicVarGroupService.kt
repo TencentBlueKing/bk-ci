@@ -52,14 +52,15 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
-import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.PUBLIC_VER_GROUP_ADD_LOCK_KEY
 import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.expiredTimeInSeconds
+import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.VariableTransfer
 import com.tencent.devops.process.yaml.transfer.pojo.PublicVarGroupYamlParser
@@ -71,7 +72,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.FilterType
 import org.springframework.stereotype.Service
 
 @Service
@@ -84,7 +84,8 @@ class PublicVarGroupService @Autowired constructor(
     private val variableTransfer: VariableTransfer,
     private val publicVarDao: PublicVarDao,
     private val pipelinePublicVarGroupReleseRecordDao: PipelinePublicVarGroupReleseRecordDao,
-    private val pipelinePublicVarGroupReferInfoDao: PipelinePublicVarGroupReferInfoDao
+    private val pipelinePublicVarGroupReferInfoDao: PipelinePublicVarGroupReferInfoDao,
+    private val templateService: TemplateService
 ) {
 
     companion object {
@@ -295,7 +296,6 @@ class PublicVarGroupService @Autowired constructor(
     }
 
     fun getGroupYaml(groupName: String, version: Int, projectId: String): String {
-
         val groupInfo = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
             projectId = projectId,
@@ -375,9 +375,22 @@ class PublicVarGroupService @Autowired constructor(
     fun listVarGroupReferInfo(
         projectId: String,
         groupName: String,
+        version: Int?,
         page: Int,
         pageSize: Int
     ): Page<PublicVarVariableReferenceDO> {
+
+        val pipelinePublicVarGroupInfo = publicVarGroupDao.getRecordByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        ) ?: return Page(
+            count = 0,
+            page = page,
+            pageSize = pageSize,
+            records = emptyList()
+        )
 
         val totalCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(dslContext, projectId, groupName)
         val varGroupReferInfo = pipelinePublicVarGroupReferInfoDao.listVarGroupReferInfo(
@@ -396,11 +409,27 @@ class PublicVarGroupService @Autowired constructor(
                     referId = it.referId,
                     referType = it.referType,
                     referName = it.referName,
+                    referCount = pipelinePublicVarGroupInfo.referCount,
+                    referUrl = getVarGroupReferUrl(projectId, it.referType, it.referId),
                     modifier = it.modifier,
                     updateTime = it.updateTime
                 )
             }
         )
+    }
+
+    private fun getVarGroupReferUrl(
+        projectId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referId: String
+    ): String {
+        return when (referType) {
+            PublicVerGroupReferenceTypeEnum.PIPELINE -> "/console/pipeline/$projectId/$referId/history/pipeline"
+            PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
+                val version = templateService.getTemplateLatestVersion(referId) ?: return ""
+                "/console/pipeline/$projectId/template/$referId/$version/pipeline"
+            }
+        }
     }
 
     fun getReleaseHistory(

@@ -78,7 +78,7 @@ interface UserPublicVarGroupResource {
     ): Result<Boolean>
 
     @Operation(summary = "查询公共变量组列表")
-    @POST
+    @GET
     @Path("/projects/{projectId}/list")
     fun getGroups(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -164,6 +164,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
+        @Parameter(description = "版本号", required = false)
+        @QueryParam("version")
+        version: Int ?= null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,

@@ -123,12 +123,14 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         groupName: String,
+        version: Int?,
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarVariableReferenceDO>> {
         return Result(publicVarGroupService.listVarGroupReferInfo(
             projectId = projectId,
             groupName = groupName,
+            version = version,
             page = page,
             pageSize = pageSize
         ))

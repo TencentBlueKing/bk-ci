@@ -37,6 +37,10 @@ data class PublicVarVariableReferenceDO(
     val referId: String,
     @get:Schema(title = "流水线/模板名称")
     val referName: String,
+    @get:Schema(title = "流水线/模板引用数量")
+    val referCount: Int,
+    @get:Schema(title = "流水线/模板链接")
+    val referUrl: String,
     @get:Schema(title = "流水线/模板类型")
     val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "修改人")

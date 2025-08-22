@@ -28,7 +28,6 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
-import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupRecord
 import com.tencent.devops.process.pojo.`var`.enums.VarGroupFilterTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
@@ -190,7 +189,7 @@ class PublicVarGroupDao {
         projectId: String,
         groupName: String,
         version: Int? = null
-    ): TPipelinePublicVarGroupRecord? {
+    ): PublicVarGroupPO? {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             val condition = if (version == null) {
                 LATEST_FLAG.eq(true)
@@ -201,7 +200,22 @@ class PublicVarGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
                 .and(condition)
-                .fetchOne()
+                .fetchOne()?.let { record ->
+                    PublicVarGroupPO(
+                        id = record.id,
+                        projectId = record.projectId,
+                        groupName = record.groupName,
+                        version = record.version,
+                        latestFlag = record.latestFlag,
+                        desc = record.desc,
+                        referCount = record.referCount,
+                        varCount = record.varCount,
+                        creator = record.creator,
+                        modifier = record.modifier,
+                        createTime = record.createTime,
+                        updateTime = record.updateTime
+                    )
+                }
         }
     }
 
