@@ -31,7 +31,6 @@ class PipelineBuildCheckRunDao {
                 PULL_REQUEST_ID,
                 CHECK_RUN_ID,
                 CHECK_RUN_STATUS,
-                REPO_SCM_CODE,
                 EXTENSION_DATA,
                 CREATE_TIME,
                 UPDATE_TIME
@@ -47,7 +46,6 @@ class PipelineBuildCheckRunDao {
                 buildCheckRun.pullRequestBizId,
                 buildCheckRun.checkRunId,
                 buildCheckRun.checkRunStatus?.name,
-                buildCheckRun.scmCode,
                 buildCheckRun.extensionData?.let { JsonUtil.toJson(it, false) },
                 now,
                 now

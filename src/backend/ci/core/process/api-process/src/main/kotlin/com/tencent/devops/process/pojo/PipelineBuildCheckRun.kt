@@ -6,7 +6,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.scm.api.enums.CheckRunStatus
-import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.api.pojo.CheckRunInput
 
 data class PipelineBuildCheckRun(
@@ -28,7 +27,6 @@ data class PipelineBuildCheckRun(
     val block: Boolean? = false,
     val pullRequestId: Long,
     val pullRequestBizId: String = "",
-    val scmCode: String,
     val buildVariables: Map<String, String> = mapOf(),
     val repoType: CodeType,
     val eventType: CodeEventType,
@@ -40,7 +38,6 @@ data class PipelineBuildCheckRun(
     // 流水线回写checkRun 同步锁
     val lockKey: String,
     val externalId: String,
-    val repoProvider: ScmProviderCodes,
     val targetBranches: List<String> = listOf()
 )
 

@@ -19,7 +19,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
@@ -49,7 +48,6 @@ import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.api.pojo.CheckRun
 import com.tencent.devops.scm.api.pojo.CheckRunInput
 import com.tencent.devops.scm.api.pojo.CheckRunOutput
-import com.tencent.devops.scm.api.pojo.CommentInput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,8 +86,7 @@ class PipelineCheckRunService @Autowired constructor(
                     object : RetryUtils.Action<Unit> {
                         override fun fail(e: Throwable) {
                             logger.warn(
-                                "BKSystemMonitor|fix check-run fail for build($buildId)| " +
-                                        "e=${e.message}", e
+                                "BKSystemMonitor|fix check-run fail for build($buildId)|e=${e.message}", e
                             )
                             // 多次操作失败，记录失败
                             pipelineBuildCheckRunDao.update(
@@ -176,7 +173,7 @@ class PipelineCheckRunService @Autowired constructor(
     /**
      * 提取check-run相关核心信息
      */
-    fun resolveCheckRun(
+    private fun resolveCheckRun(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -291,7 +288,6 @@ class PipelineCheckRunService @Autowired constructor(
                 context = context,
                 block = block,
                 pullRequestId = mrId,
-                scmCode = repo.scmCode,
                 buildVariables = variables,
                 eventType = finalEventType,
                 pipelineName = pipelineName,
@@ -306,7 +302,6 @@ class PipelineCheckRunService @Autowired constructor(
                 } else {
                     buildHistoryVar.startTime
                 },
-                repoProvider = providerCode,
                 checkRunStatus = getCheckRunState(finalBuildStatus).first
             )
         )
@@ -335,7 +330,7 @@ class PipelineCheckRunService @Autowired constructor(
                     )
                     // 最新的构建任务
                     val checkRunRecord = checkRunRecords.firstOrNull()
-                    var checkRunInput = convert()
+                    val checkRunInput = convert()
                     // 需要跳过的记录
                     var skipRecords = mutableListOf<TPipelineBuildCheckRunRecord>()
                     val now = LocalDateTime.now()
@@ -343,7 +338,7 @@ class PipelineCheckRunService @Autowired constructor(
                         // [源分支推送更新] 或 [事件回放触发新的构建任务]
                         checkRunRecord == null || buildNum > checkRunRecord.buildNum -> {
                             logger.info(
-                                "[$buildId]attempting to add $scmCode check-run(${key()})"
+                                "[$buildId]attempting to add check-run(${key()})"
                             )
                             pipelineBuildCheckRunDao.create(
                                 dslContext = dslContext,
@@ -369,8 +364,7 @@ class PipelineCheckRunService @Autowired constructor(
                             val checkRunInfo = if (buildStatus == BuildStatus.RUNNING) {
                                 logger.info("overwriting existing check-run task with updated information")
                                 // 更新开始时间/check-run状态
-                                checkRunRecord.setCreateTime(now)
-                                checkRunRecord.setCheckRunStatus(CheckRunStatus.IN_PROGRESS.name)
+                                checkRunRecord.setCreateTime(now).setCheckRunStatus(CheckRunStatus.IN_PROGRESS.name)
                                 addCheckRun(
                                     projectId = projectId,
                                     repositoryConfig = repositoryConfig,
@@ -379,28 +373,9 @@ class PipelineCheckRunService @Autowired constructor(
                             } else {
                                 val checkRunId = checkRunRecord.checkRunId ?: run {
                                     logger.warn(
-                                        "process instance($buildId) checkRunId is empty, " +
-                                                "write failure possible"
+                                        "process instance($buildId) checkRunId is empty, write failure possible"
                                     )
                                     null
-                                }
-                                val mrNumber = buildVariables[BK_REPO_GIT_WEBHOOK_MR_NUMBER]
-                                // TGIT 的报表信息不写入check-run，以评论的方式上报
-                                if (repoProvider == ScmProviderCodes.TGIT &&
-                                        mrNumber != null && !(checkRunInput.output?.text).isNullOrBlank()
-                                ) {
-                                    logger.info("trying to add TGIT mr($mrNumber) comment")
-                                    addComment(
-                                        projectId = projectId,
-                                        repositoryConfig = repositoryConfig,
-                                        mrNumber = mrNumber.toInt(),
-                                        input = CommentInput(checkRunInput.output?.text ?: "")
-                                    )
-                                    // 移除多余参数
-                                    val checkRunOutput = checkRunInput.output?.copy(
-                                        text = null
-                                    )
-                                    checkRunInput = checkRunInput.copy(output = checkRunOutput)
                                 }
                                 checkRunId?.let {
                                     updateCheckRun(
@@ -411,23 +386,27 @@ class PipelineCheckRunService @Autowired constructor(
                                 }
                             }
                             logger.info(
-                                "[$buildId]attempting to update $scmCode check-run(${checkRunInfo?.id}) to " +
+                                "[$buildId]attempting to update check-run(${checkRunInfo?.id}) to " +
                                         "repo($repoHashId)|ref($commitId)|extRef($pullRequestBizId)|context($context)"
                             )
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
                             }
-                            checkRunRecord.setCheckRunId(checkRunInfo?.id ?: 0L)
-                            checkRunRecord.setBuildNum(buildNum)
-                            checkRunRecord.setUpdateTime(now)
-                            checkRunRecord.setBuildStatus(buildStatus.name)
-                            // 保存扩展信息，后续修复异常数据时，直接使用
-                            checkRunRecord.setExtensionData(
-                                JsonUtil.toJson(CheckRunExtension(checkRunInput = checkRunInput), false)
-                            )
                             pipelineBuildCheckRunDao.update(
                                 dslContext = dslContext,
-                                record = checkRunRecord
+                                record = checkRunRecord.setCheckRunId(checkRunInfo?.id ?: 0L)
+                                        .setBuildNum(buildNum)
+                                        .setUpdateTime(now)
+                                        .setBuildStatus(buildStatus.name)
+                                        .setExtensionData(
+                                            // 保存扩展信息，后续修复异常数据时，直接使用
+                                            JsonUtil.toJson(
+                                                CheckRunExtension(
+                                                    checkRunInput = checkRunInput
+                                                ),
+                                                false
+                                            )
+                                        )
                             )
                             if (checkRunRecords.size > 1) {
                                 skipRecords = checkRunRecords.subList(1, checkRunRecords.size)
@@ -567,7 +546,7 @@ class PipelineCheckRunService @Autowired constructor(
     ).contains(eventType)
 
     /**
-     * 支持的仓库
+     * 支持的仓库，目前仅开放GITEE
      */
     private fun supportRepoProvider(scmProviderCodes: ScmProviderCodes) = listOf(
         ScmProviderCodes.GITEE
@@ -676,25 +655,6 @@ class PipelineCheckRunService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.warn("failed to update check-run", ignored)
             null
-        }
-    }
-
-    private fun addComment(
-        projectId: String,
-        repositoryConfig: RepositoryConfig,
-        mrNumber: Int,
-        input: CommentInput
-    ) {
-        try {
-            client.get(ServiceScmRepositoryApiResource::class).addComment(
-                projectId,
-                repoType = repositoryConfig.repositoryType,
-                repoId = repositoryConfig.getRepositoryId(),
-                number = mrNumber,
-                input = input
-            ).data
-        } catch (ignored: Exception) {
-            logger.warn("failed to add mr comment", ignored)
         }
     }
 

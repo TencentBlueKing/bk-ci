@@ -1342,7 +1342,6 @@ CREATE TABLE `T_PIPELINE_BUILD_CHECK_RUN` (
     `PULL_REQUEST_ID`  varchar(64)  NOT NULL DEFAULT '' COMMENT '扩展标识符',
     `CHECK_RUN_STATUS` varchar(32)  DEFAULT NULL COMMENT '检查项状态',
     `CHECK_RUN_ID`     bigint(20)   DEFAULT NULL COMMENT '检查项ID',
-    `REPO_SCM_CODE`    varchar(64)  DEFAULT NULL COMMENT '代码库标识',
     `CREATE_TIME`      datetime     NOT NULL COMMENT '创建时间',
     `UPDATE_TIME`      datetime     DEFAULT NULL COMMENT '更新时间',
     `EXTENSION_DATA`   text COMMENT '扩展数据JSON',
