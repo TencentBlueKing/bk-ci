@@ -233,6 +233,7 @@
                         :loading="isLoadingMac"
                         name="systemVersion"
                         v-validate.initial="'required'"
+                        @change="toggleXcode"
                     >
                         <bk-option
                             v-for="item in systemVersionList"
@@ -729,10 +730,6 @@
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
-            },
-            systemVersion () {
-                if (this.isTriggerContainer(this.container)) return
-                this.toggleXcode()
             }
         },
         created () {
