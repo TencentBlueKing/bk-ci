@@ -545,6 +545,7 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun ProjectProductValidateDTO.validateProduct() {
+        // 检查运营产品是否存在
         val productInfo = getProductByProductId(productId!!) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
             defaultMessage = MessageUtil.getMessageByLocale(
@@ -552,6 +553,27 @@ class TxProjectServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        //  检查产品是否属于该BG
+        val productIdsInBg = getOperationalProductsByBgName(bgName = bgName)
+            .map { it.productId }
+            .toSet()
+        val isProductInvalid = !productIdsInBg.contains(productId)
+        if (isProductInvalid) {
+            val isValidationEnabled = redisOperation.get(VALIDATION_ENABLED)?.toBooleanStrictOrNull() ?: false
+            if (isValidationEnabled) {
+                val productIdentifier = productName ?: productId?.toString() ?: ""
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_BELONG_TO_BG,
+                    params = arrayOf(productIdentifier, bgName)
+                )
+            } else {
+                logger.warn(
+                    "Product not belong to BG (validation disabled). project_id={}, bg={}, product_id={}",
+                    englishName, bgName, productId
+                )
+            }
+        }
+        //  检查产品是否关联KPI，并开启PMC
         if (bgId == IEG_BG_ID && (productInfo.iCosProductCode.isNullOrBlank() || productInfo.crosCheck != true)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
@@ -570,5 +592,6 @@ class TxProjectServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
         private const val IEG_BG_ID = 956L
+        private const val VALIDATION_ENABLED = "validate:product:bg:enable"
     }
 }

@@ -2,6 +2,7 @@ package com.tencent.devops.auth.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -16,6 +17,7 @@ class TxAuthConfiguration {
     @Primary
     fun deptService(
         redisOperation: RedisOperation,
-        objectMapper: ObjectMapper
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+        objectMapper: ObjectMapper,
+        userManageService: UserManageService
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper, userManageService)
 }
