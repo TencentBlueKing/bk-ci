@@ -242,4 +242,22 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getStoreGitRecentCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String,
+        gitProjectId: Long?,
+        commitNumber: Int
+    ): Result<String> {
+        return Result(
+            storeComponentQueryService.getStoreGitRecentCommitMessages(
+                userId = userId,
+                branch = branch,
+                codeSrc = codeSrc,
+                gitProjectId = gitProjectId,
+                commitNumber = commitNumber
+            )
+        )
+    }
 }
