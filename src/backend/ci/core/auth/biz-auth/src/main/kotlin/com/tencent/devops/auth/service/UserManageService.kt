@@ -29,7 +29,6 @@ package com.tencent.devops.auth.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.common.Constants
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.DepartmentDao
 import com.tencent.devops.auth.dao.DepartmentRelationDao
@@ -40,11 +39,11 @@ import com.tencent.devops.auth.pojo.DepartmentInfo
 import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.UserInfo
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import org.springframework.context.annotation.Lazy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,6 +58,7 @@ class UserManageService @Autowired constructor(
     val userInfoDao: UserInfoDao,
     val departmentDao: DepartmentDao,
     val departmentRelationDao: DepartmentRelationDao,
+    @Lazy
     val deptService: DeptService,
     val client: Client,
     val syncDataTaskDao: AuthSyncDataTaskDao
@@ -89,20 +89,16 @@ class UserManageService @Autowired constructor(
         )
     }
 
-    fun getUserInfo(userId: String): UserInfo {
+    fun getUserInfo(userId: String): UserInfo? {
         return userInfoDao.get(
             dslContext = dslContext,
             userId = userId
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.USER_NOT_EXIST,
-            params = arrayOf(userId),
-            defaultMessage = "user $userId not exist"
         )
     }
 
     fun getUserDepartmentPath(userId: String): List<String> {
         return user2DepartmentPath.get(userId) {
-            getUserInfo(userId).path?.map { it.toString() } ?: emptyList()
+            getUserInfo(userId)?.path?.map { it.toString() } ?: emptyList()
         }
     }
 

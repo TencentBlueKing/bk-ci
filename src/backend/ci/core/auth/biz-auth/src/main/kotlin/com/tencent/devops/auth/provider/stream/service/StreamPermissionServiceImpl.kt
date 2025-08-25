@@ -197,6 +197,14 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         }
     }
 
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        return emptyList()
+    }
+
     override fun getUserResourceAndParentByPermission(
         userId: String,
         action: String,
