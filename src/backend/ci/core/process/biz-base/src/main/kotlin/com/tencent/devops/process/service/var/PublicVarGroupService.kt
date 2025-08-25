@@ -147,6 +147,7 @@ class PublicVarGroupService @Autowired constructor(
                         userId = userId,
                         groupName = groupName,
                         version = publicVarGroupPO.version,
+                        versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
                 )

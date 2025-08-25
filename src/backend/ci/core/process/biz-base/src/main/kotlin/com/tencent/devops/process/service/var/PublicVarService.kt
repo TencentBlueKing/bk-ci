@@ -94,6 +94,7 @@ class PublicVarService @Autowired constructor(
                 projectId = projectId,
                 groupName = groupName,
                 version = publicVarDTO.version,
+                versionDesc = publicVarDTO.versionDesc,
                 userId = userId,
                 newVarPOs = publicVarPOs,
                 oldVarPOs = oldVarPOs

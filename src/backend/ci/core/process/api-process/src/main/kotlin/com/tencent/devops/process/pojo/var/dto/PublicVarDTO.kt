@@ -38,6 +38,8 @@ data class PublicVarDTO(
     val userId: String,
     @get:Schema(title = "变量组名称")
     val groupName: String,
+    @get:Schema(title = "版本描述")
+    val versionDesc: String,
     @get:Schema(title = "变量组版本")
     val version: Int,
     @get:Schema(title = "变量列表")

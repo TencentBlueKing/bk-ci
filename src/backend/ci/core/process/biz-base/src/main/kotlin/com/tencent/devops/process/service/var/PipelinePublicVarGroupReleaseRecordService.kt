@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReleseRecordDao
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
@@ -64,7 +63,6 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
         }
         deletedVars.forEach {
             val typeDesc = PublicVarTypeEnum.getTypeDescription(it.type)
-            val desc = "${OperateTypeEnum.DELETE.getI18n(I18nUtil.getLanguage())}$typeDesc ${it.varName}"
 
             records.add(
                 PipelinePublicVarGroupReleaseRecordPO(
@@ -75,7 +73,7 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
                     version = publicVarGroupReleaseDTO.version,
                     publisher = userId,
                     pubTime = LocalDateTime.now(),
-                    desc = desc,
+                    desc = publicVarGroupReleaseDTO.versionDesc,
                     content = jacksonObjectMapper().writeValueAsString(
                         mapOf(
                             "operate" to "delete",
@@ -100,7 +98,6 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
         }
         addedVars.forEach {
             val typeDesc = PublicVarTypeEnum.getTypeDescription(it.type)
-            val desc = "${OperateTypeEnum.CREATE.getI18n(I18nUtil.getLanguage())}$typeDesc ${it.varName}"
 
             records.add(
                 PipelinePublicVarGroupReleaseRecordPO(
@@ -111,7 +108,7 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
                     version = publicVarGroupReleaseDTO.version,
                     publisher = userId,
                     pubTime = LocalDateTime.now(),
-                    desc = desc,
+                    desc = publicVarGroupReleaseDTO.versionDesc,
                     content = jacksonObjectMapper().writeValueAsString(
                         mapOf(
                             "operate" to OperateTypeEnum.CREATE,
@@ -177,7 +174,6 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
             }
 
             if (changes.isNotEmpty()) {
-                val desc = "${OperateTypeEnum.UPDATE.getI18n(I18nUtil.getLanguage())}$typeDesc ${newVar.varName}"
                 records.add(
                     PipelinePublicVarGroupReleaseRecordPO(
                         id = client.get(ServiceAllocIdResource::class)
@@ -187,7 +183,7 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
                         version = publicVarGroupReleaseDTO.version,
                         publisher = userId,
                         pubTime = LocalDateTime.now(),
-                        desc = desc,
+                        desc = publicVarGroupReleaseDTO.versionDesc,
                         content = jacksonObjectMapper().writeValueAsString(
                             mapOf(
                                 "operate" to OperateTypeEnum.UPDATE,

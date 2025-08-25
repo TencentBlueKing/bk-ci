@@ -40,6 +40,8 @@ data class PublicVarGroupReleaseDTO(
     val groupName: String,
     @get:Schema(title = "变量组版本")
     val version: Int,
+    @get:Schema(title = "版本描述")
+    val versionDesc: String,
     @get:Schema(title = "历史变量列表")
     val oldVarPOs: List<PublicVarPO>,
     @get:Schema(title = "当前变量列表")
