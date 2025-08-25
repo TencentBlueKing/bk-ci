@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -48,12 +49,17 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.template.PipelineTemplateMigrationDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
+import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.service.template.TemplateFacadeService
@@ -85,7 +91,10 @@ class PipelineTemplateMigrateService(
     val templatePipelineDao: TemplatePipelineDao,
     val redisOperation: RedisOperation,
     val client: Client,
-    val pipelineTemplateMigrationDao: PipelineTemplateMigrationDao
+    val pipelineTemplateMigrationDao: PipelineTemplateMigrationDao,
+    val pipelineResourceDao: PipelineResourceDao,
+    val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService,
+    val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) {
     fun migrateTemplatesByCondition(projectConditionDTO: ProjectConditionDTO) {
         logger.info("start to migrate Templates by condition|$projectConditionDTO")
@@ -287,15 +296,52 @@ class PipelineTemplateMigrateService(
 
             // 步骤 1: 准备所有需要的数据，并创建上下文对象
             val context = setupMigrationContext(projectId, templateId)
-
             // 步骤 2: 遍历所有旧版本，并逐一迁移
             migrateAllTemplateVersions(context)
-
-            // 步骤 3: 迁移完成后，创建最终的 info 记录并清理可能存在的脏数据
+            // 步骤 3: 迁移模板和流水线的版本关联关系
+            createTemplatePipelineVersion(context)
+            // 步骤 4: 迁移完成后，创建最终的 info 记录并清理可能存在的脏数据
             finalizeMigration(context)
             logger.info("Migrate template finished successfully, projectId={}, templateId={}", projectId, templateId)
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun createTemplatePipelineVersion(context: MigrationContext) {
+        with(context) {
+            relatedPipelines.forEach { relatedPipelineInfo ->
+                val pipelineResource = pipelineResourceDao.getReleaseVersionResource(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = relatedPipelineInfo.pipelineId
+                ) ?: return@forEach
+                val triggerContainer = pipelineResource.model.getTriggerContainer()
+
+                pipelineTemplatePipelineVersionService.createOrUpdate(
+                    record = PTemplatePipelineVersion(
+                        projectId = projectId,
+                        pipelineId = relatedPipelineInfo.pipelineId,
+                        pipelineVersion = pipelineResource.version,
+                        pipelineVersionName = pipelineResource.versionName ?: "",
+                        instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
+                        buildNo = triggerContainer.buildNo,
+                        params = triggerContainer.params,
+                        refType = TemplateRefType.ID,
+                        inputTemplateId = templateId,
+                        inputTemplateVersionName = relatedPipelineInfo.versionName,
+                        inputTemplateFilePath = null,
+                        inputTemplateRef = null,
+                        templateId = templateId,
+                        templateVersion = relatedPipelineInfo.version,
+                        templateVersionName = relatedPipelineInfo.versionName,
+                        pullRequestUrl = null,
+                        instanceErrorInfo = null,
+                        creator = relatedPipelineInfo.creator,
+                        updater = relatedPipelineInfo.updater
+                    )
+                )
+            }
         }
     }
 
@@ -317,6 +363,15 @@ class PipelineTemplateMigrateService(
             (marketTemplateStatus == TemplateStatusEnum.RELEASED ||
                 marketTemplateStatus == TemplateStatusEnum.UNDERCARRIAGED)
 
+        val relatedPipelines = pipelineTemplateRelatedService.list(
+            condition = PipelineTemplateRelatedCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
+                deleted = false
+            )
+        )
+
         logger.info(
             "Migration context setup complete for templateId={}: isConstraint={}, marketTemplateStatus={}, " +
                 "hasBeenPublished={}, versionsToMigrate={}", templateId, isConstraint, marketTemplateStatus,
@@ -332,7 +387,8 @@ class PipelineTemplateMigrateService(
             srcTemplateProjectId = srcTemplateProjectId,
             marketTemplateStatus = marketTemplateStatus,
             hasBeenPublished = hasBeenPublished,
-            isConstraint = isConstraint
+            isConstraint = isConstraint,
+            relatedPipelines = relatedPipelines
         )
     }
 
@@ -779,7 +835,8 @@ class PipelineTemplateMigrateService(
         val srcTemplateProjectId: String?,
         val marketTemplateStatus: TemplateStatusEnum,
         val hasBeenPublished: Boolean,
-        val isConstraint: Boolean
+        val isConstraint: Boolean,
+        val relatedPipelines: List<PipelineTemplateRelated>
     )
 
     // 数据类 2: 用于在循环中跟踪和更新版本号
@@ -815,7 +872,6 @@ class PipelineTemplateMigrateService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMigrateService::class.java)
-        private val migrateTemplateExecutorService = Executors.newFixedThreadPool(5)
         private val migrateProjectTemplateExecutorService = Executors.newFixedThreadPool(5)
     }
 }

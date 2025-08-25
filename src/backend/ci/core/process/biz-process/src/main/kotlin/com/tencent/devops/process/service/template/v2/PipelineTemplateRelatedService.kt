@@ -187,7 +187,7 @@ class PipelineTemplateRelatedService @Autowired constructor(
         fixTemplateVersion: Long? = null,
         status: TemplatePipelineStatus? = TemplatePipelineStatus.UPDATED,
         pullRequestUrl: String? = null
-    ): Boolean {
+    ): Pair<Long, String> {
         logger.info(
             "Start creating relation between template and pipeline: userId=$userId, " +
                 "templateId=$templateId, pipelineId=$pipelineId, instanceType=$instanceType"
@@ -249,7 +249,7 @@ class PipelineTemplateRelatedService @Autowired constructor(
             "Successfully created relation: templateId=$templateId, pipelineId=$pipelineId, " +
                 "version=$templateVersion"
         )
-        return true
+        return Pair(templateVersion, versionName)
     }
 
     companion object {
