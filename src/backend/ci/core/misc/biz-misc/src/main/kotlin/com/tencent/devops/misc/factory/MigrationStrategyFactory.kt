@@ -31,7 +31,6 @@ import com.tencent.devops.misc.strategy.impl.pipeline.PipelineLabelPipelineMigra
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineModelTaskMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineOperationLogMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineRecentUseMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.pipeline.PipelineRemoteAuthMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineResourceMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineResourceVersionMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineSettingMigrationStrategy
@@ -40,7 +39,6 @@ import com.tencent.devops.misc.strategy.impl.pipeline.PipelineSubRefMigrationStr
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineTimerBranchMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineTriggerDetailMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineViewGroupMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.pipeline.PipelineWebhookMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineWebhookQueueMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineWebhookVersionMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineYamlInfoMigrationStrategy
@@ -93,11 +91,9 @@ class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMig
         PipelineCallbackMigrationStrategy(processDataMigrateDao),
         PipelineModelTaskMigrationStrategy(processDataMigrateDao),
         PipelineRecentUseMigrationStrategy(processDataMigrateDao),
-        PipelineRemoteAuthMigrationStrategy(processDataMigrateDao),
         PipelineSubRefMigrationStrategy(processDataMigrateDao),
         PipelineTimerBranchMigrationStrategy(processDataMigrateDao),
         PipelineTriggerDetailMigrationStrategy(processDataMigrateDao),
-        PipelineWebhookMigrationStrategy(processDataMigrateDao),
         PipelineWebhookQueueMigrationStrategy(processDataMigrateDao),
         PipelineWebhookVersionMigrationStrategy(processDataMigrateDao),
         PipelineYamlInfoMigrationStrategy(processDataMigrateDao),
