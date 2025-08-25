@@ -561,6 +561,46 @@ class RbacPermissionService(
         }
     }
 
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        logger.info("[rbac] get user projects by permission|$userId|$action")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val finalResourceType = if (resourceType == null) {
+                AuthResourceType.PROJECT
+            } else {
+                AuthResourceType.get(resourceType)
+            }
+            val useAction = RbacAuthUtils.buildAction(
+                AuthPermission.get(action), finalResourceType
+            )
+            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
+            val result = if (instanceMap.contains("*")) {
+                logger.info("super manager has all project|$userId")
+                authResourceService.getAllResourceCode(
+                    resourceType = AuthResourceType.PROJECT.value
+                )
+            } else {
+                val projectList = instanceMap[AuthResourceType.PROJECT.value] ?: emptyList()
+                logger.info("get user projects:$projectList")
+                projectList
+            }
+            bkInternalPermissionReconciler.getUserProjectsByAction(
+                userId = userId,
+                action = useAction,
+                expectedResult = result
+            )
+            return result
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects by permission"
+            )
+        }
+    }
+
     override fun filterUserResourcesByActions(
         userId: String,
         actions: List<String>,

@@ -365,19 +365,14 @@ class RbacAuthConfiguration {
     @Bean
     @Primary
     fun rbacPermissionProjectService(
-        authHelper: AuthHelper,
-        authResourceService: AuthResourceService,
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
         permissionService: RbacPermissionService,
         resourceGroupMemberService: RbacPermissionResourceMemberService,
         client: Client,
         resourceMemberService: PermissionResourceMemberService,
-        permissionManageFacadeService: PermissionManageFacadeService,
-        bkInternalPermissionReconciler: BkInternalPermissionReconciler
+        permissionManageFacadeService: PermissionManageFacadeService
     ) = RbacPermissionProjectService(
-        authHelper = authHelper,
-        authResourceService = authResourceService,
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
         permissionService = permissionService,
@@ -385,7 +380,6 @@ class RbacAuthConfiguration {
         client = client,
         resourceMemberService = resourceMemberService,
         permissionManageFacadeService = permissionManageFacadeService,
-        bkInternalPermissionReconciler = bkInternalPermissionReconciler
     )
 
     @Bean

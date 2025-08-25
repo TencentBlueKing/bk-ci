@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -104,13 +103,11 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
-        val visitProjectPermission =
-            permissionService.validateUserResourcePermission(
-                userId = userId,
-                action = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT),
-                projectCode = projectId,
-                resourceType = AuthResourceType.PROJECT.value
-            )
+        val visitProjectPermission = permissionService.validateUserProjectPermission(
+            userId = userId,
+            projectCode = projectId,
+            permission = AuthPermission.VISIT
+        )
 
         val iamResourceCode = searchGroupInfo.iamResourceCode
         val resourceType = searchGroupInfo.resourceType

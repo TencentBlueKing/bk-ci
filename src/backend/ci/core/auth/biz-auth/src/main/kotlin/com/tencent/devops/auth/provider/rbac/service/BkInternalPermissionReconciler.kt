@@ -3,7 +3,9 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.BkInternalPermissionService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.util.CacheHelper
@@ -20,17 +22,14 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 /**
- * 权限协调器，协调实际状态与期望状态，用于熔断前置准备
+ * 权限协调器，协调实际状态与期望状态。
  *
  * 核心职责：
- * 1. **权限一致性检查**：比对本地缓存与外部权限服务（如IAM）的权限校验结果
- * 2. **自动修复机制**：检测到不一致时自动清除缓存触发重建
- * 3. **监控指标上报**：通过Micrometer上报一致性校验结果指标
- *
- * 关键特性：
- * - 异步处理：通过线程池隔离校验任务，避免阻塞主流程
- * - 缓存优化：采用多级缓存策略减少外部调用
- * - 差异分析：记录不一致的详细差异信息
+ * 1. **权限一致性检查**：异步比对本地与外部权限服务的校验结果。
+ * 2. **双层修复机制**：
+ *    - **即时修复**：检测到单点不一致时，立即清除相关缓存，强制下次请求重新计算。
+ *    - **累积自愈**：当项目不一致报告累积达到阈值时，自动触发全量同步，修复深层数据问题。
+ * 3. **监控指标上报**：通过Micrometer上报一致性校验结果指标。
  **/
 @Service
 class BkInternalPermissionReconciler(
@@ -39,13 +38,18 @@ class BkInternalPermissionReconciler(
     val client: Client,
     val redisOperation: RedisOperation,
     val authResourceService: AuthResourceDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val permissionResourceGroupService: PermissionResourceGroupSyncService
 ) {
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
 
     @Value("\${permission.comparator.pool.size:#{null}}")
     private val corePoolSize: Int? = null
+
+    // 不一致性阈值，
+    @Value("\${permission.comparator.inconsistency.threshold:100}")
+    private val inconsistencyThreshold: Long = 100L
 
     private fun consistencyCounter(method: String, isConsistent: Boolean): Counter {
         return Counter.builder("rbac.permission.consistency.check")
@@ -78,6 +82,46 @@ class BkInternalPermissionReconciler(
         }
     }
 
+    /**
+     * [核心] 统一处理不一致情况的核心方法 (累积自愈逻辑)
+     */
+    private fun handleInconsistency(
+        projectCode: String,
+        isConsistent: Boolean,
+        methodName: String,
+        reportIndicators: Boolean = true,
+        details: () -> String
+    ) {
+        if (reportIndicators) {
+            consistencyCounter(methodName, isConsistent).increment()
+        }
+
+        if (isConsistent) {
+            return
+        }
+
+        logger.warn(details())
+
+        val inconsistencyCountKey = "$INCONSISTENCY_COUNT_KEY_PREFIX$projectCode"
+        val currentCount = redisOperation.increment(inconsistencyCountKey, 1)
+
+        if (currentCount != null && currentCount >= inconsistencyThreshold) {
+            logger.warn(
+                "Project $projectCode inconsistency count reached threshold($inconsistencyThreshold). " +
+                    "Triggering project permission sync."
+            )
+            try {
+                permissionResourceGroupService.syncByCondition(
+                    projectConditionDTO = ProjectConditionDTO(projectCodes = listOf(projectCode))
+                )
+                redisOperation.delete(inconsistencyCountKey)
+                logger.info("Successfully synced project $projectCode and reset inconsistency count.")
+            } catch (e: Exception) {
+                logger.warn("Failed to sync project permissions for $projectCode after threshold reached", e)
+            }
+        }
+    }
+
     fun validateUserResourcePermission(
         userId: String,
         projectCode: String,
@@ -97,14 +141,14 @@ class BkInternalPermissionReconciler(
                 enableSuperManagerCheck = enableSuperManagerCheck
             )
             val isConsistent = (localCheckResult == expectedResult)
-            consistencyCounter(::validateUserResourcePermission.name, isConsistent).increment()
+
             if (!isConsistent) {
+                // 步骤1: 立即清理缓存 (即时修复)
                 val (fixResourceType, fixResourceCode) = bkInternalPermissionService.buildFixResourceTypeAndCode(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 )
-                // 缓存不一致，进行销毁
                 BkInternalPermissionCache.invalidatePermission(
                     projectCode = projectCode,
                     resourceType = fixResourceType,
@@ -112,10 +156,16 @@ class BkInternalPermissionReconciler(
                     userId = userId,
                     action = action
                 )
-                logger.warn(
-                    "Verification results are inconsistent: $userId|$projectCode|$resourceType" +
-                        "|$resourceCode|$action|external=$expectedResult|local=$localCheckResult"
-                )
+            }
+
+            // 步骤2: 调用统一处理器记录不一致，并累积计数 (累积自愈)
+            handleInconsistency(
+                projectCode = projectCode,
+                isConsistent = isConsistent,
+                methodName = ::validateUserResourcePermission.name
+            ) {
+                "Verification results are inconsistent: $userId|$projectCode|$resourceType" +
+                    "|$resourceCode|$action|external=$expectedResult|local=$localCheckResult"
             }
         }
     }
@@ -169,29 +219,32 @@ class BkInternalPermissionReconciler(
             ).map { it.resourceCode }.toSet()
 
             val isConsistent = (expectedSet == localSet)
-            consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
+
             if (!isConsistent) {
-                // 计算差异项
-                val externalOnly = expectedSet - localSet  // external有但local无的项
-                val localOnly = localSet - expectedSet     // local有但external无的项
+                // 步骤1: 立即清理缓存
                 BkInternalPermissionCache.invalidateUserResources(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resourceType,
                     action = action
                 )
-                logger.warn(
-                    """
-                get user resource by action results are inconsistent: 
+            }
+
+            // 步骤2: 调用统一处理器
+            handleInconsistency(
+                projectCode = projectCode,
+                isConsistent = isConsistent,
+                methodName = ::getUserResourceByAction.name
+            ) {
+                val externalOnly = expectedSet - localSet
+                val localOnly = localSet - expectedSet
+                """
+                Get user resource by action results are inconsistent:
                 userId=$userId|projectCode=$projectCode|resourceType=$resourceType|action=$action
                 ===== 差异项详情 =====
                 external独有项: ${externalOnly.joinToString()}
                 local独有项: ${localOnly.joinToString()}
-                ===== 完整数据 =====
-                external=$expectedResult
-                local=$localResult
                 """.trimIndent()
-                )
             }
         }
     }
@@ -202,53 +255,52 @@ class BkInternalPermissionReconciler(
         expectedResult: List<String>
     ) {
         postProcess {
-            val localResult = bkInternalPermissionService.getUserProjectsByAction(
-                userId = userId,
-                action = action
-            )
-            val method = ::getUserProjectsByAction.name
+            val localResult = bkInternalPermissionService.getUserProjectsByAction(userId, action)
+            val localSet = localResult.toSet()
+            val expectedSet = expectedResult.toSet()
 
-            val localResultSet = localResult.toSet()
-            val expectedResultSet = expectedResult.toSet()
-
-            if (expectedResultSet == localResultSet) {
-                consistencyCounter(method, true).increment()
-                return@postProcess // 提前返回，后续代码无需执行
-            }
-
-            val diffProjects = expectedResult.filterNot { localResultSet.contains(it) }
-            if (diffProjects.isEmpty()) {
-                consistencyCounter(method, true).increment()
+            if (expectedSet == localSet) {
+                consistencyCounter(::getUserProjectsByAction.name, true).increment()
                 return@postProcess
             }
 
-            val inconsistentProjectCodes = diffProjects.filterNot { projectCode ->
+            val diffProjects = expectedSet - localSet
+            if (diffProjects.isEmpty()) {
+                consistencyCounter(::getUserProjectsByAction.name, true).increment()
+                return@postProcess
+            }
+
+            val trulyInconsistentProjects = diffProjects.filterNot { projectCode ->
                 val isEnabled = CacheHelper.getOrLoad(project2StatusCache, projectCode) {
                     client.get(ServiceProjectResource::class).get(projectCode).data?.enabled ?: false
                 }
-                val hasNoActiveMembership by lazy {
-                    bkInternalPermissionService.listMemberGroupIdsInProjectWithCache(
-                        projectCode = projectCode,
-                        userId = userId,
-                        enableTemplateInvalidationOnUserExpiry = true
-                    ).isEmpty()
-                }
-                !isEnabled || hasNoActiveMembership
+                !isEnabled || bkInternalPermissionService.listMemberGroupIdsInProjectWithCache(
+                    projectCode = projectCode,
+                    userId = userId,
+                    enableTemplateInvalidationOnUserExpiry = true
+                ).isEmpty()
             }
 
-            val isConsistent = inconsistentProjectCodes.isEmpty()
-            if (!isConsistent) {
-                BkInternalPermissionCache.invalidateUserProjects(
-                    userId = userId,
-                    action = action
-                )
-                logger.warn(
-                    "get user projects by action results are inconsistent: " +
-                        "userId=$userId, action=$action, initialDiff=$diffProjects, " +
-                        "finalInconsistent=$inconsistentProjectCodes"
-                )
+            val isOverallConsistent = trulyInconsistentProjects.isEmpty()
+            consistencyCounter(::getUserProjectsByAction.name, isOverallConsistent).increment()
+
+            if (!isOverallConsistent) {
+                // 步骤1: 立即清理用户项目列表缓存
+                BkInternalPermissionCache.invalidateUserProjects(userId = userId, action = action)
+
+                // 步骤2: 对每个不一致的项目累积计数
+                trulyInconsistentProjects.forEach { inconsistentProjectCode ->
+                    handleInconsistency(
+                        projectCode = inconsistentProjectCode,
+                        isConsistent = false,
+                        methodName = ::getUserProjectsByAction.name,
+                        reportIndicators = false
+                    ) {
+                        "Project '$inconsistentProjectCode' identified as inconsistent in getUserProjectsByAction " +
+                            "for user $userId. Initial diff: $diffProjects"
+                    }
+                }
             }
-            consistencyCounter(method, isConsistent).increment()
         }
     }
 
@@ -269,19 +321,18 @@ class BkInternalPermissionReconciler(
                 actions = actions
             )
 
-            // 整体比较可能复杂，可以比较每个permission的结果
+            var isOverallConsistent = true
+            val inconsistentDetails = StringBuilder()
+
             expectedResult.forEach { (permission, resources) ->
                 val localResources = localResult[permission]?.toSet() ?: emptySet()
                 val externalApiResources = resources.toSet()
+                val isPermissionConsistent = localResources == externalApiResources
+                consistencyCounter(::filterUserResourcesByActions.name, isPermissionConsistent).increment()
 
-                val isConsistent = localResources == externalApiResources
-                // 可以在标签中加入更详细的维度，比如 permission
-                consistencyCounter(::filterUserResourcesByActions.name, isConsistent).increment()
-
-                if (!isConsistent) {
-                    // 计算差异项
-                    val externalOnly = externalApiResources - localResources  // external有但local无的项
-                    val localOnly = localResources - externalApiResources     // local有但external无的项
+                if (!isPermissionConsistent) {
+                    isOverallConsistent = false
+                    // 步骤1: 对每个不一致的permission/action清理缓存
                     val action = "${resourceType}_${permission.value}"
                     BkInternalPermissionCache.invalidateUserResources(
                         userId = userId,
@@ -289,19 +340,33 @@ class BkInternalPermissionReconciler(
                         resourceType = resourceType,
                         action = action
                     )
-                    logger.warn(
+
+                    val externalOnly = externalApiResources - localResources
+                    val localOnly = localResources - externalApiResources
+                    inconsistentDetails.append(
                         """
-                        filter user resources by actions are inconsistent: 
-                        userId=$userId|projectCode=$projectCode|resourceType=$resourceType|action=$permission
-                        ===== 差异项详情 =====
-                        external独有项: ${externalOnly.joinToString()}
-                        local独有项: ${localOnly.joinToString()}
-                        ===== 完整数据 =====
-                        external=$expectedResult
-                        local=$localResult
-                        """.trimIndent()
+                        |
+                        |Permission '$permission' is inconsistent:
+                        |  external独有项: ${externalOnly.joinToString()}
+                        |  local独有项: ${localOnly.joinToString()}
+                        """.trimMargin()
                     )
                 }
+            }
+
+            // 步骤2: 对整个项目的对比结果进行一次统一处理
+            handleInconsistency(
+                projectCode = projectCode,
+                isConsistent = isOverallConsistent,
+                reportIndicators = false,
+                methodName = ::filterUserResourcesByActions.name
+            ) {
+                """
+                Filter user resources by actions are inconsistent:
+                userId=$userId|projectCode=$projectCode|resourceType=$resourceType
+                ===== 差异项详情 =====
+                $inconsistentDetails
+                """.trimIndent()
             }
         }
     }
@@ -309,5 +374,6 @@ class BkInternalPermissionReconciler(
     companion object {
         private val logger = LoggerFactory.getLogger(BkInternalPermissionReconciler::class.java)
         private const val PERMISSION_POST_PROCESSOR_CONTROL = "permission:post:processor:control"
+        private const val INCONSISTENCY_COUNT_KEY_PREFIX = "auth:permission:inconsistent:count:"
     }
 }
