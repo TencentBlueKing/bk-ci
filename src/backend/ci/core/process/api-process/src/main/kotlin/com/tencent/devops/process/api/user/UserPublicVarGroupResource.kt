@@ -140,9 +140,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
-        version: Int
+        version: Int? = null
     ): Response
 
     @Operation(summary = "删除变量组")
