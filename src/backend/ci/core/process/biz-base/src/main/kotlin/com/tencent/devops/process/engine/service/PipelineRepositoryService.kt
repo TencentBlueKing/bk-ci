@@ -2397,9 +2397,9 @@ class PipelineRepositoryService constructor(
     /**
      * 根据model获取触发参数，兼容级联参数
      */
-    fun getTriggerParams(model: Model): Map<String, String> {
+    fun getTriggerParams(triggerContainer: TriggerContainer): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
-        model.getTriggerContainer().params.forEach { param ->
+        triggerContainer.params.forEach { param ->
             val paramKey = param.id
             val paramDefaultValue = param.defaultValue
             val paramType = param.type

@@ -1207,7 +1207,8 @@
         "allNodeConcurrency": "全ノード上の総同時実行",
         "allNodeConcurrencyPlaceholder": "未入力の場合、総同時実行理論値=单一ノード最大同時実行*ビルドノード数",
         "minutes": "分",
-        "customConditionExpPlaceholder": "例：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+        "customConditionExpPlaceholder": "例：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'",
+        "paramLengthLimitTips": "パイプライン変数［{0}］の長さ［{1}］が制限［{2}］を超えています"
     },
     "主版本": "メジャーバージョン",
     "特性版本": "フィーチャーバージョン",

@@ -16,5 +16,10 @@ src/assets/static/main.*.dll.js
 src/assets/static/main.dll.js
 src/assets/static/manifest.json
 
+
+
+*.csv
+codeql.sh
+*.sarif
 .nx/cache
 .nx/workspace-data

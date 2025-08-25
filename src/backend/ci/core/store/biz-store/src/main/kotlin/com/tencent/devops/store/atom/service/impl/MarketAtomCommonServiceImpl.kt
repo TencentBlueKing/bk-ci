@@ -178,7 +178,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val atomStatus = atomRecord.atomStatus
         // 判断插件首个版本对应的请求是否合法
         if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            atomStatus != AtomStatusEnum.INIT.status.toByte()) {
+            atomStatus != AtomStatusEnum.INIT.status.toByte()
+        ) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
         }
         val dbOsList = if (!atomRecord.os.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
@@ -627,7 +628,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
         if (defaultFailPolicy !in listOf(
                 AtomFailPolicyEnum.AUTO_CONTINUE.name,
-                AtomFailPolicyEnum.MANUALLY_CONTINUE.name, null)
+                AtomFailPolicyEnum.MANUALLY_CONTINUE.name, null
+            )
         ) {
             message = I18nUtil.getCodeLanMessage(
                 messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
@@ -666,7 +668,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 )
             }
             if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.name &&
-                AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy) {
+                AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy
+            ) {
                 message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
@@ -675,7 +678,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
             val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: minAtomRetryTimes
             if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy &&
-                retryTimes !in minAtomRetryTimes..maxAtomRetryTimes) {
+                retryTimes !in minAtomRetryTimes..maxAtomRetryTimes
+            ) {
                 message = I18nUtil.getCodeLanMessage(
                     messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
                     params = arrayOf("retryTimes", "$minAtomRetryTimes~$maxAtomRetryTimes")
@@ -752,7 +756,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
             atomStatus = atom.atomStatus,
-            sensitiveParams = params?.joinToString(",")
+            sensitiveParams = params?.joinToString(","),
+            canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props)
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -807,6 +812,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
             val params = getAtomSensitiveParams(props ?: atomRecord.props)
             atomRunInfo.sensitiveParams = params?.joinToString(",")
+            atomRunInfo.canPauseBeforeRun = getAtomCanPauseBeforeRun(atomRecord.props)
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,
@@ -925,6 +931,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
     }
 
+    override fun getAtomCanPauseBeforeRun(props: String): Boolean {
+        return try {
+            val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
+            propsMap["config"]?.let { config ->
+                config as Map<*, *>
+                config["canPauseBeforeRun"]?.toString()?.toBooleanStrictOrNull()
+            }
+        } catch (e: Exception) {
+            logger.warn("Parse atom props failed, props: $props", e)
+            false
+        } ?: false
+    }
+
     override fun getAtomSensitiveParams(props: String): List<String>? {
         return try {
             val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
@@ -933,6 +952,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     when {
                         value is Map<*, *> && value["isSensitive"] as? Boolean == true ->
                             listOf(key.toString())
+
                         else -> emptyList()
                     }
                 }

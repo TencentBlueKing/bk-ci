@@ -59,7 +59,7 @@ class RbacPermissionProjectService(
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
     private val permissionManageFacadeService: PermissionManageFacadeService,
-    private val bkInternalPermissionComparator: BkInternalPermissionComparator
+    private val bkInternalPermissionReconciler: BkInternalPermissionReconciler
 ) : PermissionProjectService {
 
     companion object {
@@ -122,7 +122,7 @@ class RbacPermissionProjectService(
                 logger.info("get user projects:$projectList")
                 projectList
             }
-            bkInternalPermissionComparator.getUserProjectsByAction(
+            bkInternalPermissionReconciler.getUserProjectsByAction(
                 userId = userId,
                 action = useAction,
                 expectedResult = result

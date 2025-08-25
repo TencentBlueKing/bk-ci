@@ -395,6 +395,8 @@ class ElementTransfer @Autowired(required = false) constructor(
             retryWhenFailed = step.retryTimes != null && step.retryTimes > 0,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             runCondition = runCondition,
+            pauseBeforeExec = step.canPauseBeforeRun,
+            subscriptionPauseUser = step.pauseNoticeReceivers?.joinToString(","),
             customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
                 step.ifField?.expression
             } else {
@@ -407,8 +409,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             } else {
                 null
             },
-            manualRetry = step.manualRetry ?: false,
-            subscriptionPauseUser = userId
+            manualRetry = step.manualRetry ?: false
         )
 
         // bash
@@ -624,6 +625,12 @@ class ElementTransfer @Autowired(required = false) constructor(
                 element.additionalOptions?.retryCount
             } else null
             this.manualRetry = element.additionalOptions?.manualRetry?.nullIfDefault(false)
+            this.canPauseBeforeRun = element.additionalOptions?.pauseBeforeExec?.nullIfDefault(false)
+            this.pauseNoticeReceivers = if (this.canPauseBeforeRun == true) {
+                element.additionalOptions?.subscriptionPauseUser?.split(",")?.ifEmpty { null }
+            } else {
+                null
+            }
             this.env = element.customEnv?.associateBy({ it.key ?: "" }) {
                 it.value
             }?.ifEmpty { null }

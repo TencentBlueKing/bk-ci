@@ -50,7 +50,8 @@
                                 v-for="(param) in listMap[key]"
                                 :key="param.id"
                                 :class="['variable-item', {
-                                    'variable-item-editable': editable
+                                    'variable-item-editable': editable,
+                                    'variable-item-invalid': param.isInvalid
                                 }]"
                                 @click="handleEdit(param.id)"
                             >
@@ -133,8 +134,8 @@
 </template>
 
 <script>
-    import vueDraggable from 'vuedraggable'
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import vueDraggable from 'vuedraggable'
     export default {
         components: {
             vueDraggable
@@ -219,6 +220,7 @@
 
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
+    @import "@/scss/conf.scss";
     .delete-param-popconfrim {
         .tippy-tooltip {
             padding: 6px;
@@ -332,6 +334,9 @@
                             display: block;
                         }
                     }
+                }
+                &.variable-item-invalid {
+                   border-color: $dangerColor;
                 }
                 &:hover {
                     .drag-area {
