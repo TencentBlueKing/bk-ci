@@ -65,17 +65,6 @@ class PipelineWebSocketListener @Autowired constructor(
             )
         }
 
-        if (event.refreshTypes and RefreshType.DETAIL.binary == RefreshType.DETAIL.binary) {
-            webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildDetailMessage(
-                    buildId = event.buildId,
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId
-                )
-            )
-        }
-
         if (event.refreshTypes and RefreshType.STATUS.binary == RefreshType.STATUS.binary) {
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildStatusMessage(
@@ -88,25 +77,27 @@ class PipelineWebSocketListener @Autowired constructor(
         }
 
         if (event.refreshTypes and RefreshType.RECORD.binary == RefreshType.RECORD.binary) {
-            event.executeCount?.let { executeCount ->
-                webSocketDispatcher.dispatch(
-                    // #8955 增加对没有执行次数的默认页面的重复推送
+            // #8955 增加对没有执行次数的默认页面的重复推送
+            val events = listOfNotNull(
+                event.executeCount?.let {
                     pipelineWebsocketService.buildRecordMessage(
                         buildId = event.buildId,
                         projectId = event.projectId,
                         pipelineId = event.pipelineId,
                         userId = event.userId,
-                        executeCount = executeCount
-                    ),
-                    pipelineWebsocketService.buildRecordMessage(
-                        buildId = event.buildId,
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        userId = event.userId,
-                        executeCount = null
+                        executeCount = it
                     )
+                },
+                // 始终推送 executeCount = null 的消息（兼容默认进入的没带executeCount参数的页面）
+                pipelineWebsocketService.buildRecordMessage(
+                    buildId = event.buildId,
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    userId = event.userId,
+                    executeCount = null
                 )
-            }
+            ).toTypedArray()
+            webSocketDispatcher.dispatch(*events)
         }
     }
 }

@@ -117,6 +117,7 @@ data class BuildRecordContainer(
                     containerId = container.id!!,
                     containerType = container.getClassType(),
                     executeCount = context.executeCount,
+                    containPostTaskFlag = container.containPostTaskFlag,
                     matrixGroupFlag = container.matrixGroupFlag,
                     status = buildStatus?.name,
                     containerVar = containerVar,
