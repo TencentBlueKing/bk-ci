@@ -115,8 +115,12 @@ class PipelineBuildWebhookService @Autowired constructor(
         triggerEvent: PipelineTriggerEvent,
         triggerPipelines: List<WebhookTriggerPipeline>
     ): Boolean {
+        val startTime = System.currentTimeMillis()
         try {
-            logger.info("dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})")
+            logger.info(
+                "dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})|" +
+                        "eventType(${matcher.getCodeType()})"
+            )
             EventCacheUtil.initEventCache()
             if (triggerPipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
@@ -166,6 +170,10 @@ class PipelineBuildWebhookService @Autowired constructor(
                 )
             }
             EventCacheUtil.remove()
+            logger.info(
+                "dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})|" +
+                        "eventType(${matcher.getCodeType()})|cost: ${System.currentTimeMillis() - startTime} ms"
+            )
         }
     }
 
