@@ -172,6 +172,7 @@ class PipelineWebhookDao {
                 .where(PROJECT_NAME.`in`(projectNames))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
+                .and(EVENT_TYPE.eq(eventType))
                 .let {
                     if (yamlPipelineIds.isNullOrEmpty()) {
                         it
