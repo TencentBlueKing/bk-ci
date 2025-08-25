@@ -45,6 +45,7 @@ import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.ServiceRepositoryConfigResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
@@ -54,6 +55,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.RepositoryScmConfigSummary
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -253,7 +255,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         }
     }
 
-    private fun getRepo(
+    fun getRepo(
         projectId: String,
         repositoryConfig: RepositoryConfig,
         variables: Map<String, String>? = null

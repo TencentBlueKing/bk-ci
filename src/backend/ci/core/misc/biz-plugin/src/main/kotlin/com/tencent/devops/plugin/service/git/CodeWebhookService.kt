@@ -60,12 +60,17 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.plugin.api.pojo.GithubCheckRun
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
@@ -303,6 +308,17 @@ class CodeWebhookService @Autowired constructor(
             val repositoryConfig = when (repositoryType) {
                 RepositoryType.ID -> RepositoryConfig(repositoryId, null, repositoryType)
                 RepositoryType.NAME -> RepositoryConfig(null, repositoryId, repositoryType)
+            }
+            val repo = scmCheckService.getRepo(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                variables = variables
+            )
+            if (!supportRepo(repo)) {
+                logger.info(
+                    "Process instance($buildId) not support write repo(${repo::class.simpleName}) check run"
+                )
+                return
             }
 
             val webhookTypeStr = variables[PIPELINE_WEBHOOK_TYPE]
@@ -634,7 +650,14 @@ class CodeWebhookService @Autowired constructor(
         val name = "$pipelineName@$webhookEventType"
 
         val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
-        val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        // 构建任务链接
+        val detailUrl = getBuildUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode,
+            variables = variables
+        )
 
         while (true) {
             val lockKey = "code_github_check_run_lock_$pipelineId"
@@ -723,5 +746,31 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
         }
+    }
+
+    private fun getBuildUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        variables: Map<String, String>
+    ) = if (channelCode == ChannelCode.CODECC) {
+        val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
+        val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
+        if (codeccTaskId != null) {
+            "$codeccPrefix/$codeccTaskId/detail"
+        } else {
+            "codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
+        }
+    } else {
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
+    /**
+     * 支持的仓库类型
+     */
+    private fun supportRepo(repository: Repository) = when (repository) {
+        is CodeGitRepository, is CodeTGitRepository, is GithubRepository -> true
+        else -> false
     }
 }
