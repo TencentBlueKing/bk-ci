@@ -40,6 +40,7 @@ const InstanceEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'.
 
 // 流水线公共变量
 const PublicVarList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PublicVariable/')
+const VariableReleaseEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../components/PublicVariable/VariableReleaseEntry')
 
 // const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
 // const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
@@ -112,9 +113,10 @@ const routes = [
                         ]
                     },
                     {
-                        path: 'publicVar',
+                        path: 'publicVariable',
                         name: 'PublicVarList',
-                        component: PublicVarList
+                        component: PublicVarList,
+                        
                     },
                     {
                         path: 'listAuth/:id/:groupName',
@@ -284,6 +286,11 @@ const routes = [
                         }
                     }
                 ]
+            },
+            {
+                path: 'publicVariable/release',
+                name: 'VariableRelease',
+                component: VariableReleaseEntry
             }
         ]
     }

@@ -13,7 +13,10 @@
             >
                 <label
                     v-if="label"
-                    class="constraint-title-text"
+                    :class="{
+                        'constraint-title-text': true,
+                        'is-required': required
+                    }"
                 >
                     {{ label }}
                 </label>
@@ -103,6 +106,10 @@
             field: {
                 type: String,
                 default: ''
+            },
+            required: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
@@ -183,8 +190,8 @@
         width: 100%;
         .template-constraint-title {
             display: flex;
-            
             align-items: center;
+            position: relative;
             font-size: 14px;
             color: #606266;
             padding: 4px 0;
@@ -194,6 +201,21 @@
             }
             .constraint-title-text {
                 font-size: 12px;
+                &.is-required {
+                    &::after {
+                        height: 8px;
+                        line-height: 1;
+                        content: "*";
+                        color: #ea3636;
+                        font-size: 12px;
+                        position: absolute;
+                        display: inline-block;
+                        vertical-align: middle;
+                        top: 50%;
+                        -webkit-transform: translate(3px, -50%);
+                        transform: translate(3px, -50%);
+                    }
+                }
             }
             .template-constraint-mode-icon {
                 display: flex;

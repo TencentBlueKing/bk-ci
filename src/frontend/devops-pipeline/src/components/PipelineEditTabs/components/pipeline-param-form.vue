@@ -13,7 +13,7 @@
                 :error-msg="errors.first(`pipelineParam.id`)"
             >
                 <vuex-input
-                    :disabled="disabled"
+                    :disabled="disabled || param.published"
                     :handle-change="(name, value) => handleUpdateParam(name, value)"
                     :data-vv-scope="'pipelineParam'"
                     v-validate="idValidRule"
@@ -47,7 +47,7 @@
             >
                 <selector
                     :popover-min-width="246"
-                    :disabled="disabled"
+                    :disabled="disabled || param.published"
                     name="type"
                     :clearable="false"
                     :list="paramsList"
@@ -55,7 +55,6 @@
                     :value="param.type"
                 />
             </form-field>
-
             <param-value-option
                 :param="param"
                 :disabled="disabled"
@@ -79,6 +78,7 @@
             </form-field>
 
             <form-field
+                v-if="!isPublicVar"
                 :hide-colon="true"
                 :label="$t('groupLabel')"
                 :desc="$t('groupLabelTips')"
@@ -125,6 +125,7 @@
                 </div>
             </template>
             <Accordion
+                v-if="!isPublicVar"
                 show-content
                 show-checkbox
             >
@@ -180,6 +181,10 @@
         },
         mixins: [validMixins],
         props: {
+            isPublicVar: {
+                type: Boolean,
+                default: false
+            },
             editIndex: {
                 type: Number,
                 default: -1
@@ -285,6 +290,10 @@
                     Object.assign(this.param, { constant: true, required: false })
                 }
                 this.resetEditItem(this.param)
+            } else if(this.editIndex === -2) {
+                console.log(this.editItem)
+                this.param = deepCopy(this.editItem)
+                this.resetEditItem(this.param)
             } else {
                 this.param = deepCopy(this.editItem)
             }
@@ -306,6 +315,9 @@
             },
             getUniqueArgs (field) {
                 // 新增跟编辑时，list不一样
+                if (this.isPublicVar) {
+                    return this.globalParams.map(p => p?.buildFormProperty[field]).filter(item => item !== this.initParamItem[field]).join(',')
+                }
                 return this.globalParams.map(p => p[field]).filter(item => item !== this.initParamItem[field]).join(',')
             },
             isParamChanged () {

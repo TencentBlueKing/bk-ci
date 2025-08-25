@@ -292,6 +292,7 @@
     .bk-form-inline-item {
         .bk-label {
             position: relative;
+            font-weight: 400;
         }
     }
     .bk-form-vertical {

@@ -30,15 +30,41 @@
     // import { ref, computed, onMounted, watch } from 'vue'
     import UseInstance from '@/hook/useInstance'
     const { proxy } = UseInstance()
-    defineProps({
+    const props = defineProps({
         isShow: Boolean,
         title: String,
-        handleImportSuccess: Function
+        successFn: Function
     })
-    function handleSelect () {
-
+    function handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
+        const reader = new FileReader()
+        reader.readAsText(fileObj.origin)
+        reader.addEventListener('loadend', async e => {
+            try {
+                const yaml = e.target.result
+                const isValid = !!yaml
+                const code = isValid ? 0 : 1
+        
+                onSuccess({
+                    code,
+                    result: yaml
+                }, fileObj)
+        
+                if (isValid) {
+                    props.successFn(yaml)
+                }
+           
+            } catch (e) {
+                onSuccess({
+                    code: 1,
+                    result: ''
+                }, fileObj)
+            } finally {
+                onDone(fileObj)
+            }
+        })
+        reader.addEventListener('progress', onProgress)
     }
-    
+  
     function handleCancel () {
         proxy.$emit('update:isShow', false)
     }

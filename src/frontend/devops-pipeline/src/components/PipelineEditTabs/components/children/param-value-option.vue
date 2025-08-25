@@ -116,6 +116,7 @@
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
+            :required="valueRequired"
             @toggleConstraint="handleToggleConstraint"
         >
             <template #constraint-area="{ props: { isOverride } }">
@@ -228,6 +229,17 @@
                         :search-url="param.searchUrl"
                     >
                     </request-selector>
+                    <p
+                        v-if="param.published"
+                        class="public-var-published-tips"
+                    >
+                        <logo
+                            size="12"
+                            class="warning-icon"
+                            name="warning-circle"
+                        />
+                        {{ $t('publicVar.publishedTips') }}
+                    </p>
                 </form-field>
             </template>
         </constraint-wraper>
@@ -287,6 +299,7 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import EnumInput from '@/components/atomFormField/EnumInput'
@@ -336,6 +349,7 @@
 
     export default {
         components: {
+            Logo,
             SelectTypeParam,
             FormField,
             VuexInput,
@@ -556,6 +570,7 @@
                 })
             },
             handleToggleConstraint (isOverride) {
+                if (!this.pipeline) return
                 if (!isOverride) {
                     const param = this.pipeline.stages[0].containers[0].params.find(item => item.id === this.param.id)
                     this.handleChange('defaultValue', param.defaultValue)
@@ -567,3 +582,16 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .public-var-published-tips {
+        font-size: 12px;
+        color: #979BA5;
+        .warning-icon {
+            display: inline-block;
+            vertical-align: -1px;
+            color: #f6b026;
+            font-size: 0;
+        }
+    }
+</style>

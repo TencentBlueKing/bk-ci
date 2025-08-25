@@ -1,125 +1,180 @@
 <template>
-    <bk-sideslider
-        :is-show.sync="isShow"
-        :width="sidesliderWidth"
-        :show-mask="false"
-        :transfer="false"
-        ext-cls="param-group-sideslider"
-        @hidden="handleHidden"
-        :before-close="handleBeforeClose"
-    >
-        <template v-if="title">
-            <div slot="header">
-                {{ title }}
-                <span
-                    v-if="groupData.groupId"
-                    class="group-name"
+    <section>
+        <bk-sideslider
+            :is-show.sync="isShow"
+            :width="sidesliderWidth"
+            :show-mask="false"
+            :transfer="false"
+            :ext-cls="{
+                'param-group-sideslider': true,
+                'not-tips': !showTips
+            }"
+            @hidden="handleHidden"
+            :before-close="handleBeforeClose"
+        >
+            <template v-if="readOnly">
+                <div slot="header">
+                    <bk-tab
+                        :active.sync="viewTab"
+                        ext-cls="view-variable-tabs"
+                        type="unborder-card"
+                    >
+                        <bk-tab-panel
+                            v-for="(panel, index) in panels"
+                            v-bind="panel"
+                            :key="index"
+                        >
+                        </bk-tab-panel>
+                    </bk-tab>
+                </div>
+                <div
+                    class="sideslider-content"
+                    slot="content"
                 >
-                    | {{ groupData.groupId }}
-                </span>
-            </div>
-            <div
-                class="sideslider-content"
-                slot="content"
-            >
-                <div class="header-wrapper">
-                    <mode-switch
-                        class="mode-switch"
-                        read-only
+                    <component
+                        :is="tabComponent"
+                        :group-data="groupData"
+                        :read-only="readOnly"
                     />
                 </div>
-                <div class="content-wrapper">
-                    <section class="left-box">
-                        <p class="basic-info-title">
-                            {{ $t('publicVar.basicInfo') }}
-                        </p>
-                        <bk-form
-                            :label-width="200"
-                            form-type="vertical"
-                        >
-                            <bk-form-item
-                                :label="$t('publicVar.paramGroupId')"
-                                :required="true"
-                            >
-                                <bk-input
-                                    v-model="groupData.groupId"
-                                />
-                            </bk-form-item>
-                            <bk-form-item
-                                :label="$t('publicVar.paramGroupDesc')"
-                            >
-                                <bk-input
-                                    type="textarea"
-                                    v-model="groupData.desc"
-                                />
-                            </bk-form-item>
-                        </bk-form>
-                    </section>
-                    <section class="right-box">
-                        <div class="right-aside-header-wrapper">
-                            <bk-button
-                                icon="plus"
-                                class="mr10"
-                            >
-                                {{ $t('publicVar.addParamGroup') }}
-                            </bk-button>
-                            <bk-button
-                                icon="plus"
-                                class="mr10"
-                            >
-                                {{ $t('publicVar.addParamGroup') }}
-                            </bk-button>
-                        </div>
-                        <div>
-                            todo
-                        </div>
-                    </section>
-                </div>
-            </div>
-            <div
-                class="sideslider-footer"
-                slot="footer"
-            >
-                <bk-button
-                    :disabled="releaseDisabled"
-                    theme="primary"
+                <div
+                    v-if="showFooter"
+                    class="sideslider-footer"
+                    slot="footer"
                 >
-                    {{ $t('publicVar.release') }}
+                    <bk-button
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: isManage,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'project',
+                                resourceCode: projectId,
+                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                            }
+                        }"
+                        @click="handleEditGroup(groupData)"
+                    >
+                        {{ $t('publicVar.editParamGroup') }}
+                    </bk-button>
+                </div>
+            </template>
+            <template v-else>
+                <div slot="header">
+                    {{ title }}
+                    <span
+                        v-if="groupData.groupName"
+                        class="group-name"
+                    >
+                        | {{ groupData.groupName }}
+                    </span>
+                </div>
+                <div
+                    class="sideslider-content"
+                    slot="content"
+                >
+                    <basic-info
+                        :read-only="readOnly"
+                        :group-data="groupData"
+                        :show-type="showType"
+                        :new-param-id="newParamId"
+                        :handle-add-param="handleAddParam"
+                        :handle-edit-param="handleEditParam"
+                        :handle-delete-param="handleDeleteParam"
+                        :handle-copy-param="handleCopyParam"
+                    />
+                </div>
+                <div
+                    class="sideslider-footer"
+                    slot="footer"
+                >
+                    <bk-button
+                        :disabled="releaseDisabled"
+                        @click="handlePreview"
+                        :loading="releasing"
+                        theme="primary"
+                    >
+                        {{ $t('publicVar.release') }}
+                    </bk-button>
+                    <bk-button
+                        @click="handleHidden"
+                        :loading="releasing"
+                    >
+                        {{ $t('cancel') }}
+                    </bk-button>
+                </div>
+            </template>
+        </bk-sideslider>
+
+        <bk-sideslider
+            :is-show.sync="showAddParamSlider"
+            ext-cls="public-param-from-slider"
+            :width="640"
+            :title="paramTitle"
+            :transfer="false"
+            :before-close="hideAddParamSlider"
+        >
+            <div slot="content">
+                <pipeline-param-form
+                    ref="pipelineParamFormRef"
+                    is-public-var
+                    :edit-index="editIndex"
+                    :param-type="paramType"
+                    :global-params="publicVars"
+                    :edit-item="sliderEditItem"
+                    :update-param="updateEditParma"
+                    :reset-edit-item="resetEditParam"
+                />
+            </div>
+            <footer slot="footer">
+                <bk-button
+                    theme="primary"
+                    @click="handleSaveVar"
+                >
+                    {{ $t('confirm') }}
                 </bk-button>
-                <bk-button>
+                <bk-button
+                    @click="hideAddParamSlider"
+                >
                     {{ $t('cancel') }}
                 </bk-button>
-            </div>
-        </template>
-        <template v-else>
-            <div slot="header">
-                <bk-tab
-                    :active.sync="viewTab"
-                    ext-cls="view-variable-tabs"
-                    type="unborder-card"
-                >
-                    <bk-tab-panel
-                        v-for="(panel, index) in panels"
-                        v-bind="panel"
-                        :key="index"
-                    >
-                    </bk-tab-panel>
-                </bk-tab>
-            </div>
-        </template>
-    </bk-sideslider>
+            </footer>
+        </bk-sideslider>
+        <VariableGroupPreviewDialog
+            :is-show.sync="showPreView"
+            :group-data="groupData"
+        />
+    </section>
 </template>
 
 <script setup>
     import { computed, watch, ref } from 'vue'
+    import {
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
+    import { deepClone } from '../../utils/util'
+    import {
+        VARIABLE,
+        OPERATE_TYPE
+    } from '@/store/modules/publicVar/constants'
+    import { navConfirm } from '@/utils/util'
     import UseInstance from '@/hook/useInstance'
-    import ModeSwitch from '@/components/ModeSwitch'
+    import BasicInfo from '@/components/PublicVariable/BasicInfo'
+    import ReferenceList from '@/components/PublicVariable/ReferenceList'
+    import ReleaseHistory from '@/components/PublicVariable/ReleaseHistory'
+    import PipelineParamForm from '@/components/PipelineEditTabs/components/pipeline-param-form'
+    import VariableGroupPreviewDialog from '@/components/PublicVariable/VariableGroupPreviewDialog'
 
     const { proxy } = UseInstance()
     const props = defineProps({
         isShow: Boolean,
         title: String,
-        groupData: Object
+        showType: String,
+        showTips: Boolean,
+        readOnly: Boolean,
+        handleEditGroup: Function,
+        saveSuccessFn: Function
     })
     const viewTab = ref('basicInfo')
     const panels = ref([
@@ -132,12 +187,36 @@
             label: proxy.$t('publicVar.referenceList')
         },
         {
-            name: 'releaseRecord',
-            label: proxy.$t('publicVar.releaseRecord')
+            name: 'releaseHistory',
+            label: proxy.$t('publicVar.releaseHistory')
         }
     ])
+    const published = ref(false)
+    const showPreView = ref(false)
+    const groupData = computed(() => proxy.$store.state.publicVar.groupData)
+    const isManage = computed(() => proxy.$store.state.pipelines.isManage)
+    const projectId = computed(() => proxy.$route.params?.projectId)
+    const showFooter = computed(() => viewTab.value === 'basicInfo')
+    const publicVars = computed(() => groupData.value?.publicVars ?? [])
+    const operateType = computed(() => proxy.$store.state.publicVar.operateType)
+    const tabComponent = computed(() => {
+        const comMap = {
+            'basicInfo': BasicInfo,
+            'referenceList': ReferenceList,
+            'releaseHistory': ReleaseHistory
+        }
+        return comMap[viewTab.value]
+    })
+    const showAddParamSlider = ref(false)
+    const releasing = ref(false)
+    const newParamId = ref('') // 用于记录新增的变量，新增变量后高亮table当前行
+    const editIndex = ref(-1)
+    const paramType = ref('var')
+    const publicVarType = ref(VARIABLE)
+    const paramTitle = ref('')
+    const sliderEditItem = ref({})
     const releaseDisabled = computed(() => {
-        return !props.groupData?.groupId
+        return !groupData.value?.groupName
     })
     const sidesliderWidth = computed(() => {
         // 250 表格第一列宽度
@@ -145,9 +224,12 @@
         // 20 padding样式
         return window.innerWidth - 250 - 120 - 20
     })
-
-    watch(() => props.groupData.groupId, () => {
-        console.log(1)
+    watch(() => props.isShow, (val) => {
+        if (!val) viewTab.value = 'basicInfo'
+    })
+    watch(() => groupData.value.groupName, (newVal, oldVal) => {
+        if (!oldVal) return
+        console.log('groupName')
     })
     function handleHidden () {
         proxy.$emit('update:isShow', false)
@@ -155,17 +237,181 @@
     function handleBeforeClose () {
         return true
     }
+    async function validParamOptions () {
+        let optionValid = true
+        if ((sliderEditItem.value?.type === 'ENUM' || sliderEditItem.value?.type === 'MULTIPLE') && sliderEditItem.value?.payload?.type !== 'remote') {
+            // value为空， 则默认等于key
+            sliderEditItem.value.options?.forEach(item => {
+                if (!item.value) {
+                    item.value = item.key
+                }
+            })
+            for (const index of sliderEditItem.value?.options?.keys()) {
+                optionValid = await proxy.$validator.validate(`option-${index}.*`)
+                if (!optionValid) return optionValid
+            }
+        }
+        return optionValid
+    }
+    async function handleSaveVar () {
+        // 单选、复选类型， 需要先校验options
+        const optionValid = await validParamOptions()
+        proxy.$validator.validate('pipelineParam.*').then((result) => {
+            if (result && optionValid) {
+                const newPublicVars = deepClone(publicVars.value)
+                const { id, name, type, defaultValue, desc } = sliderEditItem.value
+                const newVarData = {
+                    varName: id,
+                    alias: name,
+                    type: publicVarType.value,
+                    valueType: type,
+                    defaultValue,
+                    desc,
+                    buildFormProperty: {
+                        ...sliderEditItem.value,
+                        published: published.value
+                    }
+                }
+                if (editIndex.value > -1) {
+                    newPublicVars[editIndex.value] = newVarData
+                } else {
+                    newPublicVars.unshift(newVarData)
+                    newParamId.value = id
+                    setTimeout(() => {
+                        newParamId.value = ''
+                    }, 5000)
+                }
+                hideAddParamSlider(false)
+                proxy.$store.dispatch('publicVar/updateGroupData', {
+                    ...groupData.value,
+                    publicVars: newPublicVars
+                })
+            }
+        })
+    }
+    function hideAddParamSlider (needCheckChange = true) {
+        const hasChange = proxy.$refs.pipelineParamFormRef?.isParamChanged()
+
+        const close = () => {
+            showAddParamSlider.value = false
+            editIndex.value = -1
+            sliderEditItem.value = {}
+        }
+        if (needCheckChange && hasChange) {
+            navConfirm(
+                {
+                    content: proxy.$t('editPage.closeConfirmMsg'),
+                    type: 'warning',
+                    cancelText: proxy.$t('cancel')
+                }
+            ).then((leave) => {
+                leave && close()
+            })
+        } else {
+            close()
+        }
+    }
+    function handleAddParam (type = VARIABLE) {
+        editIndex.value = -1
+        showAddParamSlider.value = true
+        published.value = false
+        publicVarType.value = type
+        paramType.value = type === VARIABLE ? 'var' : 'constant'
+        sliderEditItem.value = {}
+        paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.addParam') : proxy.$t('publicVar.addConst')
+    }
+    function handleEditParam (type = VARIABLE, varName) {
+        showAddParamSlider.value = true
+        publicVarType.value = type
+        paramType.value = type === VARIABLE ? 'var' : 'constant'
+        editIndex.value = publicVars.value.findIndex(item => item.varName === varName)
+        sliderEditItem.value = deepClone(publicVars.value.find(item => item.varName === varName)?.buildFormProperty)
+        published.value = sliderEditItem.value.published
+        paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.editParam') : proxy.$t('publicVar.editConst')
+    }
+    function handleDeleteParam (varName) {
+        proxy.$store.dispatch('publicVar/updateGroupData', {
+            ...groupData.value,
+            publicVars: publicVars.value.filter(i => i.varName !== varName)
+        })
+    }
+    function handleCopyParam (type = VARIABLE, data) {
+        editIndex.value = -2
+        published.value = false
+        publicVarType.value = type
+        paramType.value = type === VARIABLE ? 'var' : 'constant'
+        sliderEditItem.value = {
+            ...data,
+            id: `${data.id}${data.constant ? '_COPY' : '_copy'}`
+        }
+        paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.addParam') : proxy.$t('publicVar.addConst')
+        showAddParamSlider.value = true
+    }
+    function updateEditParma (name, value) {
+        sliderEditItem.value[name] = value
+    }
+    function resetEditParam (param = {}) {
+        sliderEditItem.value = param
+    }
+    async function handleRelease () {
+        try {
+            releasing.value = true
+            const publicVars = groupData.value.publicVars?.map(i => {
+                    return {
+                        ...i,
+                        buildFormProperty: {
+                            ...i.buildFormProperty,
+                            varGroupName: i.varName
+                        }
+                    }
+                }) ?? []
+            const groupName = await proxy.$store.dispatch('publicVar/saveVariableGroup', {
+                projectId: projectId.value,
+                type: operateType.value,
+                params: {
+                    ...groupData.value,
+                    publicVars
+                }
+            })
+            props?.saveSuccessFn(groupName)
+            proxy.$bkMessage({
+                theme: 'success',
+                message: operateType.value === OPERATE_TYPE.UPDATE
+                    ? proxy.$t('publicVar.updateVarGroupSuccess')
+                    : proxy.$t('publicVar.newVarGroupSuccess')
+            })
+            proxy.$emit('update:isShow', false)
+        } catch (e) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: e.message || e
+            })
+        } finally {
+            releasing.value = false
+        }
+    }
+    async function handlePreview () {
+        if (releasing.value) return
+        if (operateType.value === OPERATE_TYPE.CREATE) {
+            handleRelease()
+        } else {
+            showPreView.value = true
+        }
+    }
 </script>
 
 <style lang="scss">
     .param-group-sideslider {
         top: 155px !important;
+        &.not-tips {
+            top: 120px !important;
+        }
         .bk-sideslider-content {
             max-height: none !important;
             height: calc(100% - 100px) !important;
         }
         .sideslider-content {
-            height: calc(100% - 65px);
+            height: calc(100% - 85px);
         }
         .sideslider-footer {
             padding: 0 20px;
@@ -173,48 +419,21 @@
         .group-name {
             color: #979BA5;
         }
-        .header-wrapper {
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            height: 65px;
-            background: #FAFBFD;
-            .mode-switch {
-                width: 160px;
-            }
-        }
-        .content-wrapper {
-            display: flex;
-            height: 100%;
-            padding: 8px 20px 20px;
-            background: #fff;
-            .left-box {
-                width: 260px;
-                height: 100%;
-                padding-right: 15px;
-                border-right: 1px solid #DCDEE5;
-            }
-            .right-box {
-                background: #fff;
-                flex: 1;
-                padding: 0 20px;
-            }
-            .right-aside-header-wrapper {
-                margin-bottom: 16px;
-            }
-        }
-        .basic-info-title {
-            font-weight: 700;
-            font-size: 14px;
-            color: #63656E;
-            margin-bottom: 10px;
-        }
     }
     .view-variable-tabs {
         height: 52px !important;
         .bk-tab-header {
             height: 52px !important;
             background-image: none !important;
+        }
+    }
+    .public-param-from-slider {
+        .bk-sideslider-content {
+            height: 100%;
+            padding: 20px 24px;
+        }
+        .bk-sideslider-footer {
+            padding: 0 24px;
         }
     }
 </style>
