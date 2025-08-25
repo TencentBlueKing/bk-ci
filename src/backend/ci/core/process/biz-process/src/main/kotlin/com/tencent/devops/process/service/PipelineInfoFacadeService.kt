@@ -99,10 +99,13 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -148,7 +151,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val operationLogService: PipelineOperationLogService,
     private val pipelineAuthorizationService: PipelineAuthorizationService,
     private val auditService: AuditService,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -457,7 +461,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 先进行模板关联操作
                 if (templateId != null) {
                     watcher.start("createTemplate")
-                    pipelineTemplateRelatedService.createRelation(
+                    val (templateVersion, templateVersionName) = pipelineTemplateRelatedService.createRelation(
                         userId = userId,
                         projectId = projectId,
                         templateId = templateId,
@@ -466,6 +470,29 @@ class PipelineInfoFacadeService @Autowired constructor(
                         buildNo = buildNo,
                         param = param,
                         fixTemplateVersion = fixTemplateVersion
+                    )
+                    pipelineTemplatePipelineVersionService.createOrUpdate(
+                        record = PTemplatePipelineVersion(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            pipelineVersion = result.version,
+                            pipelineVersionName = result.versionName ?: "",
+                            instanceType = PipelineInstanceTypeEnum.get(instanceType!!),
+                            buildNo = buildNo,
+                            params = param,
+                            refType = TemplateRefType.ID,
+                            inputTemplateId = templateId,
+                            inputTemplateVersionName = templateVersionName,
+                            inputTemplateFilePath = null,
+                            inputTemplateRef = null,
+                            templateId = templateId,
+                            templateVersion = templateVersion,
+                            templateVersionName = templateVersionName,
+                            pullRequestUrl = null,
+                            instanceErrorInfo = null,
+                            creator = userId,
+                            updater = userId
+                        )
                     )
                     watcher.stop()
                 }

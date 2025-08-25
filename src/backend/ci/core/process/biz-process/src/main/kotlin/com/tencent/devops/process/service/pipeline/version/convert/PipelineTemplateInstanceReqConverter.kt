@@ -292,7 +292,8 @@ class PipelineTemplateInstanceReqConverter(
                 templateVersionName = templateResource.versionName,
                 templateSettingVersion = templateResource.settingVersion,
                 instanceModel = instanceModel,
-                instanceType = PipelineInstanceTypeEnum.CONSTRAINT
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
+                refType = templateRefType
             )
 
             return PipelineVersionCreateContext(

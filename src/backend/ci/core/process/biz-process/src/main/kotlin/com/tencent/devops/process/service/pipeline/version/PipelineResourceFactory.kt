@@ -213,6 +213,9 @@ class PipelineResourceFactory @Autowired constructor(
             model = model,
             templateResource = templateResource
         )
+        val refType = takeIf {
+            !model.templatePath.isNullOrEmpty()
+        }?.let { TemplateRefType.PATH } ?: TemplateRefType.ID
         return PipelineTemplateInstanceBasicInfo(
             templateId = templateResource.templateId,
             templateName = templateInfo.name,
@@ -220,7 +223,8 @@ class PipelineResourceFactory @Autowired constructor(
             templateVersionName = templateResource.versionName,
             templateSettingVersion = templateResource.settingVersion,
             instanceModel = instanceModel,
-            instanceType = PipelineInstanceTypeEnum.CONSTRAINT
+            instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
+            refType = refType
         )
     }
 }

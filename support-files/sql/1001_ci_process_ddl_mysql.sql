@@ -1501,4 +1501,31 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DEPENDENCY`
     KEY `IDX_PROJECT_FILE_PATH_BLOB_ID`(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`, `BLOB_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件依赖关系表';
 
+CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE_VERSION`
+(
+    `PROJECT_ID`                  varchar(64)                           not null comment '项目ID',
+    `PIPELINE_ID`                 varchar(34)                           not null comment '流水线ID',
+    `PIPELINE_VERSION`            int(11)     default 1                 not null comment '流水线版本',
+    `PIPELINE_VERSION_NAME`       varchar(64)                           not null comment '流水线版本名称',
+    `INSTANCE_TYPE`               varchar(32) default 'CONSTRAINT'      not null comment '实例化类型：FREEDOM 自由模式  CONSTRAINT 约束模式',
+    `BUILD_NO`                    text                                  null comment '推荐版本号',
+    `PARAM`                       mediumtext                            null comment '全局参数',
+    `TEMPLATE_REF_TYPE`           varchar(10)                           not null comment '模版引用类型',
+    `INPUT_TEMPLATE_ID`           varchar(32)                           null comment '用户配置的模版ID',
+    `INPUT_TEMPLATE_VERSION_NAME` varchar(34)                           null comment '用户配置的模版名称',
+    `INPUT_TEMPLATE_FILE_PATH`    varchar(512)                          null comment '用户配置的模版文件路径',
+    `INPUT_TEMPLATE_REF`          varchar(32)                           null comment '用户配置的模版引用',
+    `TEMPLATE_ID`                 varchar(32)                           not null comment '模版ID',
+    `TEMPLATE_VERSION`            bigint                                not null comment '模版版本',
+    `TEMPLATE_VERSION_NAME`       varchar(64)                           not null comment '模版名称',
+    `INSTANCE_ERROR_INFO`         text                                  null comment '实例化错误信息',
+    `STATUS`                      varchar(32) default 'UPDATED'         not null comment '状态',
+    `PULL_REQUEST_URL`            varchar(512)                          null comment '合并请求链接',
+    `CREATE_TIME`                 timestamp   default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`                 timestamp   default CURRENT_TIMESTAMP not null comment '修改时间',
+    `CREATOR`                     varchar(64)                           not null COMMENT '创建者',
+    `UPDATER`                     varchar(64)                           default null COMMENT '修改人',
+    primary key (`PROJECT_ID`, `PIPELINE_ID`, `PIPELINE_VERSION`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='模版流水线关联版本表';
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
+import com.tencent.devops.process.pojo.template.TemplateRefType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线实例化基础信息")
@@ -49,5 +50,7 @@ data class PipelineTemplateInstanceBasicInfo(
     @get:Schema(title = "实例化类型")
     val instanceType: PipelineInstanceTypeEnum = PipelineInstanceTypeEnum.FREEDOM,
     @get:Schema(title = "模版实例化状态", required = false)
-    val status: TemplatePipelineStatus = TemplatePipelineStatus.UPDATED
+    val status: TemplatePipelineStatus = TemplatePipelineStatus.UPDATED,
+    @get:Schema(title = "模版引用方式", required = false)
+    val refType: TemplateRefType
 )
