@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.dao.AuthResourceDao
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -18,8 +19,21 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
+/**
+ * 权限协调器，协调实际状态与期望状态，用于熔断前置准备
+ *
+ * 核心职责：
+ * 1. **权限一致性检查**：比对本地缓存与外部权限服务（如IAM）的权限校验结果
+ * 2. **自动修复机制**：检测到不一致时自动清除缓存触发重建
+ * 3. **监控指标上报**：通过Micrometer上报一致性校验结果指标
+ *
+ * 关键特性：
+ * - 异步处理：通过线程池隔离校验任务，避免阻塞主流程
+ * - 缓存优化：采用多级缓存策略减少外部调用
+ * - 差异分析：记录不一致的详细差异信息
+ **/
 @Service
-class BkInternalPermissionComparator(
+class BkInternalPermissionReconciler(
     val bkInternalPermissionService: BkInternalPermissionService,
     val meterRegistry: MeterRegistry,
     val client: Client,
@@ -85,6 +99,19 @@ class BkInternalPermissionComparator(
             val isConsistent = (localCheckResult == expectedResult)
             consistencyCounter(::validateUserResourcePermission.name, isConsistent).increment()
             if (!isConsistent) {
+                val (fixResourceType, fixResourceCode) = bkInternalPermissionService.buildFixResourceTypeAndCode(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode
+                )
+                // 缓存不一致，进行销毁
+                BkInternalPermissionCache.invalidatePermission(
+                    projectCode = projectCode,
+                    resourceType = fixResourceType,
+                    resourceCode = fixResourceCode,
+                    userId = userId,
+                    action = action
+                )
                 logger.warn(
                     "Verification results are inconsistent: $userId|$projectCode|$resourceType" +
                         "|$resourceCode|$action|external=$expectedResult|local=$localCheckResult"
@@ -147,7 +174,12 @@ class BkInternalPermissionComparator(
                 // 计算差异项
                 val externalOnly = expectedSet - localSet  // external有但local无的项
                 val localOnly = localSet - expectedSet     // local有但external无的项
-
+                BkInternalPermissionCache.invalidateUserResources(
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    action = action
+                )
                 logger.warn(
                     """
                 get user resource by action results are inconsistent: 
@@ -206,6 +238,10 @@ class BkInternalPermissionComparator(
 
             val isConsistent = inconsistentProjectCodes.isEmpty()
             if (!isConsistent) {
+                BkInternalPermissionCache.invalidateUserProjects(
+                    userId = userId,
+                    action = action
+                )
                 logger.warn(
                     "get user projects by action results are inconsistent: " +
                         "userId=$userId, action=$action, initialDiff=$diffProjects, " +
@@ -246,7 +282,13 @@ class BkInternalPermissionComparator(
                     // 计算差异项
                     val externalOnly = externalApiResources - localResources  // external有但local无的项
                     val localOnly = localResources - externalApiResources     // local有但external无的项
-
+                    val action = "${resourceType}_${permission.value}"
+                    BkInternalPermissionCache.invalidateUserResources(
+                        userId = userId,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        action = action
+                    )
                     logger.warn(
                         """
                         filter user resources by actions are inconsistent: 
@@ -265,7 +307,7 @@ class BkInternalPermissionComparator(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BkInternalPermissionComparator::class.java)
+        private val logger = LoggerFactory.getLogger(BkInternalPermissionReconciler::class.java)
         private const val PERMISSION_POST_PROCESSOR_CONTROL = "permission:post:processor:control"
     }
 }

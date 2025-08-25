@@ -497,7 +497,8 @@ class PipelineBuildQualityService(
         runVariables: Map<String, String>,
         buildLogPrinter: BuildLogPrinter,
         position: String,
-        templateId: String?
+        templateId: String?,
+        interceptTaskId: String?
     ): RuleCheckResult {
         val pipelineId = task.pipelineId
         val projectId = task.projectId
@@ -525,7 +526,8 @@ class PipelineBuildQualityService(
             position = position,
             templateId = templateId,
             stageId = "",
-            runtimeVariable = runVariables
+            runtimeVariable = runVariables,
+            interceptTaskId = interceptTaskId
         )
         val result = if (position == ControlPointPosition.AFTER_POSITION &&
             QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)

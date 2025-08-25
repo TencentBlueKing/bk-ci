@@ -36,10 +36,14 @@ import java.time.LocalDateTime
 
 @Repository
 class GitTokenDao {
-    fun getAccessToken(dslContext: DSLContext, userId: String): TRepositoryGitTokenRecord? {
+    fun getAccessToken(
+        dslContext: DSLContext,
+        userId: String,
+        tokenType: String = DEFAULT_TOKEN_TYPE
+    ): TRepositoryGitTokenRecord? {
         with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId))
+                .where(USER_ID.eq(userId).and(TOKEN_TYPE.eq(tokenType)))
                 .fetchOne()
         }
     }
@@ -85,10 +89,14 @@ class GitTokenDao {
         }
     }
 
-    fun deleteToken(dslContext: DSLContext, userId: String): Int {
+    fun deleteToken(
+        dslContext: DSLContext,
+        userId: String,
+        tokenType: String = DEFAULT_TOKEN_TYPE
+    ): Int {
         with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.deleteFrom(this)
-                .where(USER_ID.eq(userId))
+                .where(USER_ID.eq(userId).and(TOKEN_TYPE.eq(tokenType)))
                 .execute()
         }
     }
@@ -119,5 +127,10 @@ class GitTokenDao {
                 .where(USER_ID.`in`(userIds))
                 .execute()
         }
+    }
+
+    companion object {
+        // oauth授权后的默认token类型
+        const val DEFAULT_TOKEN_TYPE = "bearer"
     }
 }
