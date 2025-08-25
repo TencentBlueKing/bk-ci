@@ -101,6 +101,18 @@ class PublicVarGroupDao {
         }
     }
 
+    fun listGroupsNameByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(GROUP_NAME).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LATEST_FLAG.eq(true))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun listGroupsByProjectIdPage(
         dslContext: DSLContext,
         projectId: String,

@@ -93,6 +93,10 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun getGroupNames(userId: String, projectId: String): Result<List<String>> {
+        return Result(publicVarGroupService.listGroupNames(projectId))
+    }
+
     override fun importGroup(
         userId: String,
         projectId: String,

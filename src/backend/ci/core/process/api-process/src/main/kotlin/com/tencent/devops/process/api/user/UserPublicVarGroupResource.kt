@@ -110,6 +110,18 @@ interface UserPublicVarGroupResource {
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>>
 
+    @Operation(summary = "获取项目下公共变量组名称列表")
+    @GET
+    @Path("/projects/{projectId}/names")
+    fun getGroupNames(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<String>>
+
     @Operation(summary = "导入公共变量组(YAML格式)")
     @POST
     @Path("/projects/{projectId}/import")

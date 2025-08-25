@@ -251,6 +251,10 @@ class PublicVarGroupService @Autowired constructor(
         )
     }
 
+    fun listGroupNames(projectId: String): List<String> {
+        return publicVarGroupDao.listGroupsNameByProjectId(dslContext, projectId)
+    }
+
     fun importGroup(
         userId: String,
         projectId: String,
