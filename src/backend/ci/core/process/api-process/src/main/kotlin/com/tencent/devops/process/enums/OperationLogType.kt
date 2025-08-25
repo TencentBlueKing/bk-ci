@@ -45,7 +45,8 @@ enum class OperationLogType(val description: String) {
     UPDATE_PIPELINE_SETTING("修改流水线设置：「修改配置新增版本 P2.T1.2」"),
     RESET_RECOMMENDED_VERSION_BUILD_NO("重置流水线推荐版本号：「重置流水线推荐版本号为 xxx」"),
     NORMAL_SAVE_OPERATION("普通保存操作"),
-    PIPELINE_ARCHIVE("流水线归档操作");
+    PIPELINE_ARCHIVE("流水线归档操作"),
+    DELETE_PIPELINE_VERSION("删除流水线版本：「P2.T1.2」");
 
     fun getI18n(language: String): String {
         return MessageUtil.getMessageByLocale(

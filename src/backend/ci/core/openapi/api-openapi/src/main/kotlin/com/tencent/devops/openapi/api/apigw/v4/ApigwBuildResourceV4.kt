@@ -232,7 +232,7 @@ interface ApigwBuildResourceV4 {
         @QueryParam("构建结束时间")
         endBeginTime: String? = null,
         @Parameter(description = "构建ID列表,最大不能超过100个", required = true)
-        buildIdSet: Set<String>,
+        buildIdSet: Set<String>
     ): Result<List<BuildHistory>>
 
     @Operation(summary = "获取流水线构建历史", tags = ["v4_user_build_list", "v4_app_build_list"])

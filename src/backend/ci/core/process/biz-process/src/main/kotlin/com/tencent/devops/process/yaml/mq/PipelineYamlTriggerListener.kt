@@ -29,6 +29,7 @@
 package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.event.listener.EventListener
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
@@ -40,7 +41,6 @@ import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.pojo.CheckType
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -183,46 +183,60 @@ class PipelineYamlTriggerListener @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.handle() {
-        when (actionType) {
-            YamlFileActionType.SYNC -> {
-                try {
-                    pipelineYamlFileManager.createOrUpdateYamlFile(this)
-                    pipelineYamlSyncService.syncSuccess(
-                        projectId = projectId,
-                        repoHashId = repoHashId,
-                        filePath = filePath
-                    )
-                } catch (ignored: Exception) {
-                    val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
-                    pipelineYamlSyncService.syncFailed(
-                        projectId = projectId,
-                        repoHashId = repoHashId,
-                        filePath = filePath,
-                        reason = reason,
-                        reasonDetail = reasonDetail
-                    )
+        try {
+            when (actionType) {
+                YamlFileActionType.SYNC -> {
+                    try {
+                        pipelineYamlFileManager.createOrUpdateYamlFile(this)
+                        pipelineYamlSyncService.syncSuccess(
+                            projectId = projectId,
+                            repoHashId = repoHashId,
+                            filePath = filePath
+                        )
+                    } catch (ignored: Exception) {
+                        val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
+                        pipelineYamlSyncService.syncFailed(
+                            projectId = projectId,
+                            repoHashId = repoHashId,
+                            filePath = filePath,
+                            reason = reason,
+                            reasonDetail = reasonDetail
+                        )
+                    }
                 }
-            }
 
-            YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
-                pipelineYamlFileManager.createOrUpdateYamlFile(this)
-                webhookTriggerBuildService.yamlTrigger(this)
-            }
+                YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
+                    pipelineYamlFileManager.createOrUpdateYamlFile(this)
+                    // 只有流水线才需要触发
+                    if (!isTemplate) {
+                        webhookTriggerBuildService.yamlTrigger(this)
+                    }
+                }
 
-            YamlFileActionType.DELETE -> {
-                pipelineYamlFileManager.deleteYamlFile(event = this)
-            }
+                YamlFileActionType.DELETE -> {
+                    pipelineYamlFileManager.deleteYamlFile(event = this)
+                }
 
-            YamlFileActionType.RENAME -> {
-                pipelineYamlFileManager.renameYamlFile(event = this)
-                webhookTriggerBuildService.yamlTrigger(this)
-            }
+                YamlFileActionType.RENAME -> {
+                    pipelineYamlFileManager.renameYamlFile(event = this)
+                    // 只有流水线才需要触发
+                    if (!isTemplate) {
+                        webhookTriggerBuildService.yamlTrigger(this)
+                    }
+                }
 
-            YamlFileActionType.TRIGGER -> {
-                webhookTriggerBuildService.yamlTrigger(this)
-            }
+                YamlFileActionType.TRIGGER -> {
+                    webhookTriggerBuildService.yamlTrigger(this)
+                }
 
-            else -> Unit
+                else -> Unit
+            }
+        } catch (ignored: Exception) {
+            logger.error(
+                "[PAC_PIPELINE]|Failed to handle yaml file event|$eventId|" +
+                        "$projectId|${repository.repoHashId}|$filePath|$ref|$commitId|$blobId|$actionType",
+                ignored
+            )
         }
     }
 

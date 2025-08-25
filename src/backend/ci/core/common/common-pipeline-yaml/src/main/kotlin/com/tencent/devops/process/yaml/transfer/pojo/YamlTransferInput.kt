@@ -1,7 +1,7 @@
 package com.tencent.devops.process.yaml.transfer.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -15,6 +15,6 @@ data class YamlTransferInput(
     val yaml: IPreTemplateScriptBuildYamlParser,
     val aspectWrapper: PipelineTransferAspectWrapper,
     val defaultScmType: ScmType = ScmType.CODE_GIT,
-    val asCodeSettings: PipelineAsCodeSettings? = null,
-    val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null
+    val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null,
+    val templateType: Class<out ITemplateModel>? = null
 )
