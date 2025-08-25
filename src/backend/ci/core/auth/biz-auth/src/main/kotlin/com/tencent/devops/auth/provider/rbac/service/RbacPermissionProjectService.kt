@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.provider.rbac.service
 
-import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
@@ -41,7 +40,6 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
@@ -50,16 +48,13 @@ import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionProjectService(
-    private val authHelper: AuthHelper,
-    private val authResourceService: AuthResourceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val permissionService: RbacPermissionService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
-    private val permissionManageFacadeService: PermissionManageFacadeService,
-    private val bkInternalPermissionReconciler: BkInternalPermissionReconciler
+    private val permissionManageFacadeService: PermissionManageFacadeService
 ) : PermissionProjectService {
 
     companion object {
@@ -100,39 +95,11 @@ class RbacPermissionProjectService(
         action: String,
         resourceType: String?
     ): List<String> {
-        logger.info("[rbac] get user projects by permission|$userId|$action")
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val finalResourceType = if (resourceType == null) {
-                AuthResourceType.PROJECT
-            } else {
-                AuthResourceType.get(resourceType)
-            }
-            val useAction = RbacAuthUtils.buildAction(
-                AuthPermission.get(action), finalResourceType
-            )
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            val result = if (instanceMap.contains("*")) {
-                logger.info("super manager has all project|$userId")
-                authResourceService.getAllResourceCode(
-                    resourceType = AuthResourceType.PROJECT.value
-                )
-            } else {
-                val projectList = instanceMap[AuthResourceType.PROJECT.value] ?: emptyList()
-                logger.info("get user projects:$projectList")
-                projectList
-            }
-            bkInternalPermissionReconciler.getUserProjectsByAction(
-                userId = userId,
-                action = useAction,
-                expectedResult = result
-            )
-            return result
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects by permission"
-            )
-        }
+        return permissionService.getUserProjectsByPermission(
+            userId = userId,
+            action = action,
+            resourceType = resourceType
+        )
     }
 
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {

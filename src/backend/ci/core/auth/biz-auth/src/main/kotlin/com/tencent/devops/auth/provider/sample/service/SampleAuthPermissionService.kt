@@ -129,6 +129,14 @@ class SampleAuthPermissionService : PermissionService {
         return emptyMap()
     }
 
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        return emptyList()
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(SampleAuthPermissionService::class.java)
     }

@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import org.springframework.context.annotation.Lazy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,6 +58,7 @@ class UserManageService @Autowired constructor(
     val userInfoDao: UserInfoDao,
     val departmentDao: DepartmentDao,
     val departmentRelationDao: DepartmentRelationDao,
+    @Lazy
     val deptService: DeptService,
     val client: Client,
     val syncDataTaskDao: AuthSyncDataTaskDao

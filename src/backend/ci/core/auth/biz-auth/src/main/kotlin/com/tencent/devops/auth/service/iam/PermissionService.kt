@@ -128,4 +128,10 @@ interface PermissionService {
         projectCode: String,
         resourceType: String
     ): Map<String /*resourceType*/, List<String> /*resources*/>
+
+    fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String? = null
+    ): List<String>
 }
