@@ -368,7 +368,7 @@ interface UserStoreComponentQueryResource {
         @Parameter(description = "gitProjectId", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long? = null,
-        @Parameter(description = "获取提交信息数量(默认根据配置文件读取最近5条)", required = false)
+        @Parameter(description = "获取提交信息数量(默认读取最近5条)", required = false)
         @QueryParam("commitNumber")
         @DefaultValue("5")
         commitNumber: Int
