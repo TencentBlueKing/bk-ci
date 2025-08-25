@@ -128,13 +128,11 @@ class TemplateInstanceBaseDao {
         dslContext: DSLContext,
         statusList: List<String>,
         descFlag: Boolean,
-        gray: Boolean,
         page: Int,
         pageSize: Int
     ): Result<TTemplateInstanceBaseRecord>? {
         with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
             val baseStep = dslContext.selectFrom(this).where(STATUS.`in`(statusList))
-            baseStep.and(GRAY.eq(gray))
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {

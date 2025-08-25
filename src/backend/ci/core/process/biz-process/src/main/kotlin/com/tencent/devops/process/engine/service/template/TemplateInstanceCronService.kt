@@ -110,7 +110,6 @@ class TemplateInstanceCronService @Autowired constructor(
                 dslContext = dslContext,
                 statusList = statusList,
                 descFlag = false,
-                gray = false,
                 page = 1,
                 pageSize = 10
             )
@@ -201,7 +200,7 @@ class TemplateInstanceCronService @Autowired constructor(
                         } catch (exception: ErrorCodeException) {
                             logger.info(
                                 "Fail to update the pipeline|$projectId|${templateInstanceItem.pipelineId}|" +
-                                    "$userId|${exception.message}"
+                                        "$userId|${exception.message}"
                             )
                             val message = I18nUtil.generateResponseDataObject(
                                 messageCode = exception.errorCode,
