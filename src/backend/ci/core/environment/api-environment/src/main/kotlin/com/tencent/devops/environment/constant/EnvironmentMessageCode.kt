@@ -113,6 +113,7 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_TAG_NO_EDIT_PERMISSSION = "2105063" // 环境管理：没有标签编辑权限
     const val ERROR_NODE_TAG_NOW_UPDATING = "2105064" // 环境管理：标签正在被修改或添加节点，请重试
     const val ERROR_NODE_TAG_INTERNAL_NOT_EDIT = "2105065" // 环境管理：系统内置标签不能被删除或修改
+    const val ERROR_NODES_NO_EDIT_PERMISSSION = "2105066" // 环境管理：没有节点[{0}]编辑权限
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

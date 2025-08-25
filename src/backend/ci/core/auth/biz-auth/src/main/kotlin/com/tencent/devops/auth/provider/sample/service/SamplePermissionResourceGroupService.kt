@@ -107,6 +107,13 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         groupCode: BkAuthGroup
     ): AuthResourceGroup? = null
 
+    override fun listProjectMemberGroupTemplateIds(
+        projectCode: String,
+        memberId: String
+    ): List<String> {
+        return emptyList()
+    }
+
     override fun syncManagerGroup(
         projectCode: String,
         managerId: Int,
