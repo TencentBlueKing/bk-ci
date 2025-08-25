@@ -1303,11 +1303,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     fun processCommits(commits: List<Commit>): String {
         // 最早的排最前面
         val sortedCommits = commits.sortedWith(compareBy { commit ->
-            commit.committedDate?.let {
-                OffsetDateTime.parse(it, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            commit.committedDate?.let { timeStr ->
+                DateTimeUtil.zoneDateToDate(timeStr)
             }
         })
-
         return sortedCommits.mapIndexed { index, commit ->
             "${index + 1}. ${commit.message ?: ""}"
         }.joinToString("\n")
