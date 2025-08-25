@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
+import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.service.StageTagService
@@ -61,6 +62,7 @@ class StageBuildRecordService(
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
+    private val stageBuildDetailService: StageBuildDetailService,
     pipelineBuildDao: PipelineBuildDao,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
@@ -131,6 +133,10 @@ class StageBuildRecordService(
                 buildStatus = buildStatus
             )
         }
+        stageBuildDetailService.updateStageStatus(
+            projectId = projectId, buildId = buildId, stageId = stageId,
+            buildStatus = buildStatus, executeCount = executeCount
+        )
         return getHistoryStageStatusList(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -189,6 +195,11 @@ class StageBuildRecordService(
                 stageVar = mutableMapOf()
             )
         }
+        stageBuildDetailService.stageSkip(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId
+        )
         return getHistoryStageStatusList(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -229,6 +240,14 @@ class StageBuildRecordService(
                 )
             )
         }
+        stageBuildDetailService.stagePause(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            controlOption = controlOption,
+            checkIn = checkIn,
+            checkOut = checkOut
+        )
         return getHistoryStageStatusList(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -274,6 +293,10 @@ class StageBuildRecordService(
                 )
             )
         }
+        stageBuildDetailService.stageCancel(
+            projectId = projectId, buildId = buildId, stageId = stageId, controlOption = controlOption,
+            checkIn = checkIn, checkOut = checkOut
+        )
     }
 
     fun stageCheckQuality(
@@ -327,6 +350,11 @@ class StageBuildRecordService(
             )
             pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
         }
+        stageBuildDetailService.stageCheckQuality(
+            projectId = projectId, buildId = buildId, stageId = stageId,
+            controlOption = controlOption,
+            checkIn = checkIn, checkOut = checkOut
+        )
         return getHistoryStageStatusList(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -347,6 +375,11 @@ class StageBuildRecordService(
         checkOut: StagePauseCheck?
     ) {
         logger.info("[$buildId]|stage_review|stageId=$stageId")
+        stageBuildDetailService.stageReview(
+            projectId = projectId, buildId = buildId, stageId = stageId,
+            controlOption = controlOption,
+            checkIn = checkIn, checkOut = checkOut
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
             cancelUser = null, operation = "stageReview#$stageId"
@@ -402,6 +435,10 @@ class StageBuildRecordService(
                 )
             )
         }
+        stageBuildDetailService.stageStart(
+            projectId = projectId, buildId = buildId, stageId = stageId,
+            controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
+        )
         return getHistoryStageStatusList(
             projectId = projectId,
             pipelineId = pipelineId,

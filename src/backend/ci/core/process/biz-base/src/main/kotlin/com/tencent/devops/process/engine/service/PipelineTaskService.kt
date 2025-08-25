@@ -666,6 +666,8 @@ class PipelineTaskService @Autowired constructor(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
+            stageId = task.stageId,
+            containerId = task.containerId,
             taskId = task.taskId,
             executeCount = task.executeCount ?: 1
         )

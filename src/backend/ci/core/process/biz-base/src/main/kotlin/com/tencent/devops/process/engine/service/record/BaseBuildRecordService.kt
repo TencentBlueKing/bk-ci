@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -160,18 +161,12 @@ open class BaseBuildRecordService(
         queryDslContext: DSLContext? = null,
         debug: Boolean? = false
     ): Model? {
-        val fixedExecuteCount = if (executeCount == null) {
-            val buildInfo = pipelineBuildDao.getBuildInfo(
-                dslContext = queryDslContext ?: dslContext, projectId = projectId, buildId = buildId
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf(buildId)
-            )
-            buildInfo.executeCount
-        } else {
-            executeCount
-        }
+        val fixedExecuteCount = fixedExecuteCount(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            queryDslContext = queryDslContext
+        )
         val buildRecordModel = buildRecordModelDao.getRecord(
             dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
@@ -187,12 +182,37 @@ open class BaseBuildRecordService(
                 buildId = buildId,
                 fixedExecuteCount = fixedExecuteCount,
                 buildRecordModel = buildRecordModel,
-                executeCount = executeCount,
                 queryDslContext = queryDslContext,
                 debug = debug
             )
         } else {
             null
+        }
+    }
+
+    fun fixedExecuteCount(
+        projectId: String,
+        buildId: String,
+        executeCount: Int?,
+        queryDslContext: DSLContext? = null,
+        buildInfo: BuildInfo? = null
+    ): Int {
+        return if (executeCount == null || executeCount < 1) {
+            val dbBuildInfo = buildInfo ?: pipelineBuildDao.getBuildInfo(
+                dslContext = queryDslContext ?: dslContext, projectId = projectId, buildId = buildId
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+            logger.warn(
+                "[$buildId]|getRecordModel|the parameter executeCount($executeCount) passed in is " +
+                        "invalid (null or <1). query the latest executeCount(${dbBuildInfo.executeCount}) from " +
+                        "the database for correction."
+            )
+            dbBuildInfo.executeCount
+        } else {
+            executeCount
         }
     }
 
@@ -203,7 +223,6 @@ open class BaseBuildRecordService(
         buildId: String,
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
-        executeCount: Int?,
         queryDslContext: DSLContext? = null,
         debug: Boolean? = false
     ): Model? {
@@ -256,7 +275,7 @@ open class BaseBuildRecordService(
             )
         } catch (ignore: Throwable) {
             logger.warn(
-                "RECORD|parse record with error|$projectId|$pipelineId|$buildId|$executeCount" +
+                "RECORD|parse record with error|$projectId|$pipelineId|$buildId|$fixedExecuteCount" +
                     "|recordMap: ${JsonUtil.toJson(recordMap ?: "")}",
                 ignore
             )

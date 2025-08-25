@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
@@ -116,6 +117,7 @@ class BuildStartControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRecordService: PipelineBuildRecordService,
     private val stageRecordService: StageBuildRecordService,
     private val containerRecordService: ContainerBuildRecordService,
@@ -641,6 +643,8 @@ class BuildStartControl @Autowired constructor(
                 Container::timeCost.name to BuildRecordTimeCost()
             )
         )
+
+        buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
         buildLogPrinter.addLine(
             message = I18nUtil.getCodeLanMessage(
                 messageCode = BK_TRIGGER_USER,
