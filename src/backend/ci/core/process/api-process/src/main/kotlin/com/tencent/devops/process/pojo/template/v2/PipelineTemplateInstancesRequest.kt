@@ -34,7 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "模板实例请求体")
 data class PipelineTemplateInstancesRequest(
     @get:Schema(title = "实例化引用类型", required = true)
-    val templateRefType: TemplateRefType? = TemplateRefType.ID,
+    val templateRefType: TemplateRefType = TemplateRefType.ID,
     @get:Schema(title = "路径引用时,模板引用方式，可能tag/分支/commitId", required = false)
     val templateRef: String?,
     @get:Schema(title = "是否使用模版设置", required = true)
