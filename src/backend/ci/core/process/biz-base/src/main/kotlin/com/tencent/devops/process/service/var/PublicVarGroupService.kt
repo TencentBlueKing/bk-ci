@@ -297,7 +297,7 @@ class PublicVarGroupService @Autowired constructor(
         )
     }
 
-    fun getGroupYaml(groupName: String, version: Int, projectId: String): String {
+    fun getGroupYaml(groupName: String, version: Int?, projectId: String): String {
         val groupInfo = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
             projectId = projectId,
@@ -315,7 +315,7 @@ class PublicVarGroupService @Autowired constructor(
         val varPOs = publicVarService.getGroupPublicVar(
             projectId = projectId,
             groupName = groupName,
-            version = version
+            version = groupInfo.version
         )
         val params = varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
         val variables = variableTransfer.makeVariableFromBuildParams(params, false)
@@ -328,7 +328,7 @@ class PublicVarGroupService @Autowired constructor(
         return TransferMapper.getObjectMapper().writeValueAsString(parserVO)
     }
 
-    fun exportGroup(groupName: String, version: Int, projectId: String): Response {
+    fun exportGroup(groupName: String, version: Int?, projectId: String): Response {
         val yaml = getGroupYaml(groupName, version, projectId)
         return YamlCommonUtils.exportToFile(yaml, groupName)
     }

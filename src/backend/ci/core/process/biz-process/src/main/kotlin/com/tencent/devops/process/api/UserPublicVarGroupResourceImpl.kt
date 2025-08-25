@@ -111,7 +111,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         groupName: String,
-        version: Int
+        version: Int?
     ): Response {
         return publicVarGroupService.exportGroup(
             projectId = projectId,
