@@ -392,7 +392,7 @@ object ScriptYmlUtils {
             val config =
                 YamlObjects.transValue<Map<String, Any?>>("Extends.template.trigger-conf", it.key, it.value)
             ExtendsTriggerConfig(
-                disabled = YamlObjects.getNullValue("path", config)?.toBooleanStrictOrNull(),
+                disabled = YamlObjects.getNullValue("disabled", config)?.toBooleanStrictOrNull(),
                 cron = YamlObjects.getNullValue("cron", config),
                 variables = YamlObjects.transValue<Map<String, Any>?>(
                     path = "Extends.template.trigger-conf.${it.key}",
