@@ -25,7 +25,7 @@ data class PTemplatePipelineVersion(
     val params: List<BuildFormProperty>?,
 
     @get:Schema(title = "模版引用方式", required = true)
-    val refType: TemplateRefType,
+    val refType: TemplateRefType? = TemplateRefType.ID,
     @get:Schema(title = "用户配置的模版ID", required = false)
     val inputTemplateId: String?,
     @get:Schema(title = "用户配置的模版名称", required = false)
