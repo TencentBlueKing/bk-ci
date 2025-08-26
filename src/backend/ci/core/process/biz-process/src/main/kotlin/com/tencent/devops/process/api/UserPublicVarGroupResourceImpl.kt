@@ -71,7 +71,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         filterByGroupName: String?,
-        filterByGrouoDesc: String?,
+        filterByGroupDesc: String?,
         filterByUpdater: String?,
         filterByVarName: String?,
         filterByVarAlias: String?,
@@ -83,7 +83,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             queryReq = PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
                 filterByGroupName = filterByGroupName,
-                filterByGroupDesc = filterByGrouoDesc,
+                filterByGroupDesc = filterByGroupDesc,
                 filterByUpdater = filterByUpdater,
                 filterByVarName = filterByVarName,
                 filterByVarAlias = filterByVarAlias,

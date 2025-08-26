@@ -92,7 +92,7 @@ interface UserPublicVarGroupResource {
         filterByGroupName: String?,
         @Parameter(description = "按变量组描述过滤", required = false)
         @QueryParam("filterByCreator")
-        filterByGrouoDesc: String?,
+        filterByGroupDesc: String?,
         @Parameter(description = "按更新人过滤", required = false)
         @QueryParam("filterByUpdater")
         filterByUpdater: String?,
