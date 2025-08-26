@@ -35,6 +35,8 @@ data class PublicVarGroupInfoQueryReqDTO (
     val projectId: String,
     @get:Schema(description = "变量组名称")
     val groupName: String? = null,
+    @get:Schema(description = "变量名称")
+    val varName: String? = null,
     @get:Schema(description = "版本号")
     val version: Int? = null,
     @get:Schema(description = "按变量组名称过滤")

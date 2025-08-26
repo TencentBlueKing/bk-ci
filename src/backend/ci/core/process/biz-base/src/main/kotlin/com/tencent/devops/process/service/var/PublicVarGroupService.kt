@@ -380,6 +380,7 @@ class PublicVarGroupService @Autowired constructor(
     fun listVarGroupReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicVarVariableReferenceDO> {
         val projectId = queryReq.projectId
         val groupName = queryReq.groupName!!
+        val varName = queryReq.varName!!
         val version = queryReq.version
         val page = queryReq.page
         val pageSize = queryReq.pageSize
@@ -395,11 +396,17 @@ class PublicVarGroupService @Autowired constructor(
             records = emptyList()
         )
 
-        val totalCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(dslContext, projectId, groupName)
+        val totalCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            varName = varName
+        )
         val varGroupReferInfo = pipelinePublicVarGroupReferInfoDao.listVarGroupReferInfo(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
+            varName = varName,
             page = page,
             pageSize = pageSize
         )
@@ -433,37 +440,6 @@ class PublicVarGroupService @Autowired constructor(
                 "/console/pipeline/$projectId/template/$referId/$version/pipeline"
             }
         }
-    }
-
-    fun getChangePreview(
-        userId: String,
-        queryReq: PublicVarGroupInfoQueryReqDTO
-    ): Page<PublicVarChangePreviewDO> {
-        val projectId = queryReq.projectId
-        val groupName = queryReq.groupName!!
-        val page = queryReq.page
-        val pageSize = queryReq.pageSize
-        val count = pipelinePublicVarGroupReleaseRecordDao.countByGroupName(dslContext, projectId, groupName)
-        val publicVarGroupReleaseRecordPOS = pipelinePublicVarGroupReleaseRecordDao.listByGroupNamePage(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            page = page,
-            pageSize = pageSize
-        )
-        return Page(
-            count = count.toLong(),
-            page = page,
-            pageSize = pageSize,
-            records = publicVarGroupReleaseRecordPOS.map {
-                PublicVarChangePreviewDO(
-                    publisher = it.publisher,
-                    pubTime = it.pubTime,
-                    desc = it.desc,
-                    content = it.content ?: ""
-                )
-            }
-        )
     }
 
     fun getReleaseHistory(
@@ -526,38 +502,51 @@ class PublicVarGroupService @Autowired constructor(
                         params = arrayOf(groupName)
                     )
 
-                    // 检查该流水线是否已与该变量组（groupName+version）建立引用
-                    val existingReferCount = pipelinePublicVarGroupReferInfoDao.countByReferId(
-                        dslContext = context,
+                    // 获取变量组下的所有变量信息
+                    val varPOs = publicVarService.getGroupPublicVar(
                         projectId = projectId,
-                        referId = referId,
-                        referType = referType,
                         groupName = groupName,
                         version = groupRecord.version
                     )
 
-                    if (existingReferCount > 0) {
-                        return@forEach
-                    }
-
-                    // 插入引用记录
-                    pipelinePublicVarGroupReferInfoDao.save(
-                        dslContext = context,
-                        PipelinePublicVarGroupReferPO(
-                            id = client.get(ServiceAllocIdResource::class)
-                                .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO").data ?: 0,
+                    // 为每个变量生成引用记录
+                    varPOs.forEach { varPO ->
+                        val varName = varPO.varName
+                        
+                        // 检查该变量是否已与该流水线建立引用
+                        val existingReferCount = pipelinePublicVarGroupReferInfoDao.countByReferId(
+                            dslContext = context,
                             projectId = projectId,
-                            groupName = groupName,
-                            version = groupRecord.version,
                             referId = referId,
-                            referName = referName,
                             referType = referType,
-                            modifier = userId,
-                            updateTime = LocalDateTime.now(),
-                            creator = userId,
-                            createTime = LocalDateTime.now()
+                            groupName = groupName,
+                            varName = varName
                         )
-                    )
+
+                        if (existingReferCount > 0) {
+                            return@forEach
+                        }
+
+                        // 插入引用记录
+                        pipelinePublicVarGroupReferInfoDao.save(
+                            dslContext = context,
+                            PipelinePublicVarGroupReferPO(
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO").data ?: 0,
+                                projectId = projectId,
+                                groupName = groupName,
+                                varName = varName,
+                                version = groupRecord.version,
+                                referId = referId,
+                                referName = referName,
+                                referType = referType,
+                                modifier = userId,
+                                updateTime = LocalDateTime.now(),
+                                creator = userId,
+                                createTime = LocalDateTime.now()
+                            )
+                        )
+                    }
 
                     val currentCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(
                         dslContext = context,

@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarChangePreviewDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
@@ -172,9 +171,9 @@ interface UserPublicVarGroupResource {
         groupName: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取引用变量组的流水线/模板列表")
+    @Operation(summary = "获取引用变量的流水线/模板列表")
     @GET
-    @Path("/{groupName}/references")
+    @Path("/{groupName}/vars/{varName}/references")
     fun getReferences(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -185,6 +184,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
+        @Parameter(description = "变量名称", required = true)
+        @PathParam("varName")
+        varName: String,
         @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: Int ?= null,
@@ -195,27 +197,6 @@ interface UserPublicVarGroupResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<PublicVarVariableReferenceDO>>
-
-    @Operation(summary = "获取变量组的变更预览")
-    @GET
-    @Path("/{groupName}/changePreview")
-    fun getChangePreview(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        page: Int,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<Page<PublicVarChangePreviewDO>>
 
     @Operation(summary = "获取变量组的发布记录")
     @GET

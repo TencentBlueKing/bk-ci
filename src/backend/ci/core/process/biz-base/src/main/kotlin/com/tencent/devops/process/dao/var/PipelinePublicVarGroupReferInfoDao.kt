@@ -30,6 +30,7 @@ package com.tencent.devops.process.dao.`var`
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -40,6 +41,7 @@ class PipelinePublicVarGroupReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
+        varName: String,
         page: Int,
         pageSize: Int
     ): List<PipelinePublicVarGroupReferPO> {
@@ -47,6 +49,7 @@ class PipelinePublicVarGroupReferInfoDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
+                .and(VAR_NAME.eq(varName))
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
                 .fetch()
@@ -55,6 +58,7 @@ class PipelinePublicVarGroupReferInfoDao {
                         id = it.id,
                         projectId = it.projectId,
                         groupName = it.groupName,
+                        varName = it.varName,
                         version = it.version,
                         referId = it.referId,
                         referName= it.referName,
@@ -69,11 +73,21 @@ class PipelinePublicVarGroupReferInfoDao {
         }
     }
 
-    fun countByGroupName(dslContext: DSLContext, projectId: String, groupName: String): Int {
+    fun countByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        varName: String ?= null
+    ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            if (varName != null) {
+                conditions.add(VAR_NAME.eq(varName))
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .and(GROUP_NAME.eq(groupName))
                 .fetchOne(0, Int::class.java) ?: 0
         }
@@ -85,7 +99,7 @@ class PipelinePublicVarGroupReferInfoDao {
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         groupName: String,
-        version: Int
+        varName: String
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             return dslContext.selectCount()
@@ -94,7 +108,7 @@ class PipelinePublicVarGroupReferInfoDao {
                 .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
                 .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
@@ -118,6 +132,7 @@ fun save(
                 ID,
                 PROJECT_ID,
                 GROUP_NAME,
+                VAR_NAME,
                 VERSION,
                 REFER_ID,
                 REFER_TYPE,
@@ -130,6 +145,7 @@ fun save(
                 pipelinePublicVarGroupReferPO.id,
                 pipelinePublicVarGroupReferPO.projectId,
                 pipelinePublicVarGroupReferPO.groupName,
+                pipelinePublicVarGroupReferPO.varName,
                 pipelinePublicVarGroupReferPO.version,
                 pipelinePublicVarGroupReferPO.referId,
                 pipelinePublicVarGroupReferPO.referType.name,

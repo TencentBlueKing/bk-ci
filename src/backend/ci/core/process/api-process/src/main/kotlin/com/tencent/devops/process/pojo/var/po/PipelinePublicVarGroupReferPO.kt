@@ -39,6 +39,8 @@ data class PipelinePublicVarGroupReferPO(
     val projectId: String,
     @get:Schema(title = "变量组名称")
     val groupName: String,
+    @get:Schema(title = "变量组名称")
+    val varName: String,
     @get:Schema(title = "版本号")
     val version: Int,
     @get:Schema(title = "关联ID")

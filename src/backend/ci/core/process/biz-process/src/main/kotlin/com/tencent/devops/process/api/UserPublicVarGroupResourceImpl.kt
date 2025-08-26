@@ -136,6 +136,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         groupName: String,
+        varName: String,
         version: Int?,
         page: Int,
         pageSize: Int
@@ -144,25 +145,8 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
                 groupName = groupName,
+                varName = varName,
                 version = version,
-                page = page,
-                pageSize = pageSize
-            )
-        ))
-    }
-
-    override fun getChangePreview(
-        userId: String,
-        projectId: String,
-        groupName: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PublicVarChangePreviewDO>> {
-        return Result(publicVarGroupService.getChangePreview(
-            userId = userId,
-            queryReq = PublicVarGroupInfoQueryReqDTO(
-                projectId = projectId,
-                groupName = groupName,
                 page = page,
                 pageSize = pageSize
             )
