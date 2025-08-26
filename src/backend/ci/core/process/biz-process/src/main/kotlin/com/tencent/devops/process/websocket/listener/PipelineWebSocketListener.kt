@@ -80,22 +80,26 @@ class PipelineWebSocketListener @Autowired constructor(
 
     private fun dispatchRecordMessage(event: PipelineBuildWebSocketPushEvent) {
         // #8955 增加对没有执行次数的默认页面的重复推送
+        val buildId = event.buildId
+        val projectId = event.projectId
+        val pipelineId = event.pipelineId
+        val userId = event.userId
         val events = listOfNotNull(
             event.executeCount?.let {
                 pipelineWebsocketService.buildRecordMessage(
-                    buildId = event.buildId,
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId,
+                    buildId = buildId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
                     executeCount = it
                 )
             },
             // 始终推送 executeCount = null 的消息（兼容默认进入的没带executeCount参数的页面）
             pipelineWebsocketService.buildRecordMessage(
-                buildId = event.buildId,
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                userId = event.userId,
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
                 executeCount = null
             )
         ).toTypedArray()
