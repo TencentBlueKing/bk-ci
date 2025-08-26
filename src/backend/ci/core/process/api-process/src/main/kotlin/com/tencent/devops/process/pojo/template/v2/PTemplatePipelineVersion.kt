@@ -31,9 +31,9 @@ data class PTemplatePipelineVersion(
     @get:Schema(title = "用户配置的模版名称", required = false)
     val inputTemplateVersionName: String?,
     @get:Schema(title = "用户配置的模版文件路径", required = false)
-    val inputTemplateFilePath: String?,
+    val inputTemplateFilePath: String? = null,
     @get:Schema(title = "用户配置的模版引用", required = false)
-    val inputTemplateRef: String?,
+    val inputTemplateRef: String? = null,
 
     @get:Schema(title = "模板Id", required = true)
     val templateId: String,
@@ -42,7 +42,7 @@ data class PTemplatePipelineVersion(
     @get:Schema(title = "模板版本名称", required = true)
     val templateVersionName: String,
     @get:Schema(title = "实例化错误信息", required = false)
-    val instanceErrorInfo: String?,
+    val instanceErrorInfo: String? = null,
     @get:Schema(title = "状态", required = true)
     val status: TemplatePipelineStatus = TemplatePipelineStatus.UPDATED,
     @get:Schema(title = "合并请求链接", required = true)

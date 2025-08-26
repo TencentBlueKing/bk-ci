@@ -250,7 +250,9 @@ class PipelineTemplateInstanceReqConverter(
                 templateVariables = templateVariables,
                 overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
                 recommendedVersion = recommendedVersion,
-                overrideTemplateField = overrideTemplateField
+                overrideTemplateField = overrideTemplateField,
+                templatePath = pipelineModel.templatePath,
+                templateRef = pipelineModel.templateRef
             )
 
             val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(

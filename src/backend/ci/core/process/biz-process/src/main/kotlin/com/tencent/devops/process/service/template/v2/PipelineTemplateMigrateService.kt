@@ -330,13 +330,9 @@ class PipelineTemplateMigrateService(
                         refType = TemplateRefType.ID,
                         inputTemplateId = templateId,
                         inputTemplateVersionName = relatedPipelineInfo.versionName,
-                        inputTemplateFilePath = null,
-                        inputTemplateRef = null,
                         templateId = templateId,
                         templateVersion = relatedPipelineInfo.version,
                         templateVersionName = relatedPipelineInfo.versionName,
-                        pullRequestUrl = null,
-                        instanceErrorInfo = null,
                         creator = relatedPipelineInfo.creator,
                         updater = relatedPipelineInfo.updater
                     )
