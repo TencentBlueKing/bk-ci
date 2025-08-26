@@ -167,7 +167,6 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 templateVersion = templateInstanceBasicInfo.templateVersion,
                 templateVersionName = templateInstanceBasicInfo.templateVersionName ?: "",
                 pullRequestUrl = pullRequestUrl,
-                instanceErrorInfo = null,
                 creator = userId,
                 updater = userId
             )

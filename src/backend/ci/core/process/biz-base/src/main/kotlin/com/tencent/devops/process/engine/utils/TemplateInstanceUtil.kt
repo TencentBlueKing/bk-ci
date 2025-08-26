@@ -20,6 +20,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *  模板实例工具类
@@ -38,7 +39,9 @@ object TemplateInstanceUtil {
         templateVariables: List<TemplateVariable>? = null,
         overrideTemplateTriggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
         recommendedVersion: TemplateInstanceRecommendedVersion? = null,
-        overrideTemplateField: TemplateInstanceField? = null
+        overrideTemplateField: TemplateInstanceField? = null,
+        templatePath: String? = null,
+        templateRef: String? = null
     ): Model {
         if (templateResource.model !is Model) {
             throw ErrorCodeException(
@@ -75,6 +78,8 @@ object TemplateInstanceUtil {
             fromTemplate = true,
             templateId = templateResource.templateId,
             templateVersionName = templateResource.versionName,
+            templatePath = templatePath,
+            templateRef = templateRef,
             staticViews = staticViews,
             overrideTemplateField = overrideTemplateField
         )
