@@ -65,7 +65,7 @@ class PipelineTemplatePipelineVersionDao {
                     record.instanceType.name,
                     buildNoJson, // 使用序列化后的字符串
                     paramsJson,  // 使用序列化后的字符串
-                    record.refType.name,
+                    record.refType!!.name,
                     record.inputTemplateId,
                     record.inputTemplateVersionName,
                     record.inputTemplateFilePath,
@@ -86,7 +86,7 @@ class PipelineTemplatePipelineVersionDao {
                     .set(INSTANCE_TYPE, record.instanceType.name)
                     .set(BUILD_NO, buildNoJson)
                     .set(PARAM, paramsJson)
-                    .set(TEMPLATE_REF_TYPE, record.refType.name)
+                    .set(TEMPLATE_REF_TYPE, record.refType!!.name)
                     .set(INPUT_TEMPLATE_ID, record.inputTemplateId)
                     .set(INPUT_TEMPLATE_VERSION_NAME, record.inputTemplateVersionName)
                     .set(INPUT_TEMPLATE_FILE_PATH, record.inputTemplateFilePath)
