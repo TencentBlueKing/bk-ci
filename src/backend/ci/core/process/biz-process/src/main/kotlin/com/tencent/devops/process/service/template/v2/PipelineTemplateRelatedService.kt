@@ -56,6 +56,13 @@ class PipelineTemplateRelatedService @Autowired constructor(
         )
     }
 
+    fun isPipelineInstanceFromTemplate(
+        projectId: String,
+        pipelineId: String
+    ): Boolean {
+        return get(projectId, pipelineId)?.let { it.instanceType == PipelineInstanceTypeEnum.CONSTRAINT } ?: false
+    }
+
     fun count(condition: PipelineTemplateRelatedCommonCondition): Int {
         return pipelineTemplateRelatedDao.count(
             dslContext = dslContext,

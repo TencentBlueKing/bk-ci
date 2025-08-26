@@ -1,6 +1,13 @@
 package com.tencent.devops.process.service.template.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.dao.template.PipelineTemplatePipelineVersionDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionCommonCondition
@@ -15,7 +22,9 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplatePipelineVersionService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineTemplatePipelineVersionDao: PipelineTemplatePipelineVersionDao
+    private val pipelineTemplatePipelineVersionDao: PipelineTemplatePipelineVersionDao,
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     /**
@@ -59,7 +68,35 @@ class PipelineTemplatePipelineVersionService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineVersion = pipelineVersion
             )
-        )
+        ) ?: templatePipelineDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { templatePipeline ->
+            val pipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = pipelineVersion
+            ) ?: return null
+            PTemplatePipelineVersion(
+                projectId = templatePipeline.projectId,
+                pipelineId = templatePipeline.pipelineId,
+                pipelineVersion = pipelineVersion,
+                pipelineVersionName = pipelineResource.versionName ?: "",
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
+                buildNo = templatePipeline.buildNo?.takeIf { it.isNotBlank() }?.let {
+                    JsonUtil.to(it, object : TypeReference<BuildNo>() {})
+                },
+                params = templatePipeline.param?.takeIf { it.isNotBlank() }?.let {
+                    JsonUtil.to(it, object : TypeReference<List<BuildFormProperty>>() {})
+                },
+                inputTemplateId = templatePipeline.templateId,
+                inputTemplateVersionName = templatePipeline.versionName,
+                templateId = templatePipeline.templateId,
+                templateVersion = templatePipeline.version,
+                templateVersionName = templatePipeline.versionName
+            )
+        }
     }
 
     /**

@@ -14,6 +14,7 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
+import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
 import com.tencent.devops.process.pojo.template.v2.PTemplateSource2Count
 import com.tencent.devops.process.pojo.template.v2.PTemplateTransferBody
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
@@ -222,6 +223,24 @@ interface UserPipelineTemplateV2Resource {
         @PathParam("version")
         version: Int
     ): Result<PipelineTemplateDetailsResponse>
+
+    @Operation(summary = "根据流水线版本查看关联的模版信息")
+    @GET
+    @Path("/pipelines/{pipelineId}/versions/{version}/related/info")
+    fun getPipelineRelatedTemplateInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<PTemplatePipelineRefInfo?>
 
     @Operation(summary = "查看模板基本信息")
     @GET
