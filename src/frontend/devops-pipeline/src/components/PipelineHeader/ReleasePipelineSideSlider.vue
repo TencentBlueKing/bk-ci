@@ -25,10 +25,10 @@
                         v-bk-overflow-tips
                         class="release-pipeline-new-version"
                     >
-                        {{ $t("releasePipelineVersion",[!isCommitToMaster ? newReleaseVersionName : releaseParams.customVersionName]) }}
+                        {{ $t("releasePipelineVersion",[customVersionName || newReleaseVersionName]) }}
                     </span>
                     <span v-bk-overflow-tips>
-                        {{ $t("releasePipelineBaseVersion", [!isCommitToMaster ? newReleaseVersionName : releaseParams.customVersionName]) }}
+                        {{ $t("releasePipelineBaseVersion", [customVersionName || newReleaseVersionName]) }}
                     </span>
                 </template>
                 <template v-else>
@@ -124,12 +124,14 @@
                             property="customVersionName"
                         >
                             <bk-input
-                                v-model="releaseParams.customVersionName"
-                                :disabled="!isCommitToMaster"
-                                :maxlength="50"
+                                v-model="customVersionName"
+                                @blur="handleBlurCustomVersionName"
+                                :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                :maxlength="30"
                             >
                             </bk-input>
                         </bk-form-item>
+
                         <div v-if="releaseParams.enablePac && hasOauth">
                             <header
                                 @click="togglePacCodelibSettingForm"
@@ -506,11 +508,11 @@
                     filePath: '',
                     scmType: '',
                     description: '',
-                    repoHashId: '',
-                    customVersionName: ''
+                    repoHashId: ''
                 },
                 newReleaseVersionNameList: [],
-                TARGET_ACTION_ENUM
+                TARGET_ACTION_ENUM,
+                customVersionName: ''
             }
         },
         computed: {
@@ -625,14 +627,12 @@
                     targetAction,
                     repoHashId,
                     enablePac,
-                    customVersionName
                 } = this.releaseParams
                 return {
                     targetBranch,
                     targetAction,
                     repoHashId,
-                    enablePac,
-                    customVersionName: customVersionName.trim()
+                    enablePac
                 }
             },
             templateInstanceEnablePac () {
@@ -695,6 +695,7 @@
                     if (val) {
                         this.init()
                     }
+                    this.customVersionName = ''
                 },
                 immediate: true
             },
@@ -739,6 +740,11 @@
                         this.releaseParams.targetBranch = this.instanceTaskDetail.targetBranch ?? ''
                         this.releaseParams.targetAction = this.instanceTaskDetail.targetAction ?? ''
                     }
+                }
+            },
+            'releaseParams.targetAction': {
+                handler: function () {
+                    this.customVersionName = ''
                 }
             }
         },
@@ -810,7 +816,7 @@
             },
 
             async prefetchReleaseVersion (params) {
-                if (!this.releaseParams.repoHashId || !this.releaseParams.targetAction) return
+                if (this.releaseParams.enable && (!this.releaseParams.repoHashId || !this.releaseParams.targetAction)) return
                 try {
                     const lackTargetAction = params.enablePac && !params.targetAction
                     const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
@@ -826,7 +832,8 @@
                             params: {
                                 ...this.releaseParams,
                                 useTemplateSettings: this.useTemplateSettings,
-                                instanceReleaseInfos: this.instanceList
+                                instanceReleaseInfos: this.instanceList,
+                                customVersionName: this.customVersionName
                             }
                         })
                         this.newReleaseVersionNameList = res.data
@@ -835,11 +842,12 @@
                         const newReleaseVersion = await prefetchFn({
                             ...this.$route.params,
                             version: this.version,
-                            ...params
+                            ...params,
+                            customVersionName: this.customVersionName
                         })
                         this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
-                        if (!this.isCommitToMaster) {
-                            this.releaseParams.customVersionName = this.newReleaseVersionName
+                        if (!this.customVersionName) {
+                            this.customVersionName = this.newReleaseVersionName
                         }
                     }
                 } catch (error) {
@@ -936,7 +944,6 @@
                             scmType,
                             filePath,
                             targetAction,
-                            customVersionName,
                             ...rest
                         } = this.releaseParams
                         const {
@@ -946,7 +953,7 @@
                             version: this.version,
                             params: {
                                 ...rest,
-                                customVersionName: customVersionName.trim(),
+                                customVersionName: this.customVersionName?.trim(),
                                 ...(rest.enablePac
                                     ? {
                                         targetAction
@@ -1241,6 +1248,11 @@
                 return filePath?.startsWith(this.filePathDir)
                     ? filePath?.replace(this.filePathDir, '')
                     : filePath
+            },
+            handleBlurCustomVersionName (val) {
+                if (!val) {
+                    this.customVersionName = this.newReleaseVersionName
+                }
             }
         }
     }
