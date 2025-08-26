@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
+import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
 import com.tencent.devops.process.pojo.template.v2.PTemplateSource2Count
 import com.tencent.devops.process.pojo.template.v2.PTemplateTransferBody
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
@@ -291,6 +292,39 @@ class UserPipelineTemplateV2ResourceImpl(
         )
         return Result(
             templateFacadeService.getPipelineRelatedTemplateDetails(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        )
+    }
+
+    override fun getPipelineRelatedTemplateInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<PTemplatePipelineRefInfo?> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            templateFacadeService.getPipelineRelatedTemplateInfo(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

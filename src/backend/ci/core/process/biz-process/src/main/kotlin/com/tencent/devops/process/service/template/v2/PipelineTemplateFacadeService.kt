@@ -22,6 +22,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST
@@ -39,8 +40,10 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
+import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
+import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
 import com.tencent.devops.process.pojo.template.v2.PTemplateTransferBody
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompareResponse
@@ -59,7 +62,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateYamlWebhookReq
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
-import com.tencent.devops.process.service.pipeline.PipelineModelParser
+import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineYamlRefResolver
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
 import com.tencent.devops.process.util.FileExportUtil
@@ -96,7 +99,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineTemplateMarketFacadeService: PipelineTemplateMarketFacadeService,
     private val pipelineTemplateVersionValidator: PipelineTemplateVersionValidator,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineModelParser: PipelineModelParser
+    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val config: CommonConfig,
+    private val pipelineVersionFacadeService: PipelineVersionFacadeService
 ) {
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
@@ -727,24 +733,13 @@ class PipelineTemplateFacadeService @Autowired constructor(
         )
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_TEMPLATE_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE_TEMPLATE,
-            instanceIds = "#templateId",
-            instanceNames = "#templateId"
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.PIPELINE_TEMPLATE_VIEW_CONTENT
-    )
     fun getPipelineRelatedTemplateDetails(
         userId: String,
         projectId: String,
         pipelineId: String,
         version: Int
     ): PipelineTemplateDetailsResponse {
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+        pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
@@ -753,25 +748,97 @@ class PipelineTemplateFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        if (resource.model.fromTemplate != true && resource.model.instanceFromTemplate != true) {
+
+        val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (!instanceFromTemplate) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_RELATED_TEMPLATE
             )
         }
-        val templateResource = pipelineModelParser.parseTemplateDescriptor(
+
+        val templatePipelineVersion = pipelineTemplatePipelineVersionService.get(
             projectId = projectId,
-            descriptor = resource.model
+            pipelineId = pipelineId,
+            pipelineVersion = version
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
         )
-        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.VIEW,
-            templateId = templateResource.templateId
-        )
+
         return getTemplateDetails(
             projectId = projectId,
-            templateId = templateResource.templateId,
-            version = templateResource.version
+            templateId = templatePipelineVersion.templateId,
+            version = templatePipelineVersion.templateVersion
+        )
+    }
+
+    fun getPipelineRelatedTemplateInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PTemplatePipelineRefInfo? {
+        pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
+
+        val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (!instanceFromTemplate) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_RELATED_TEMPLATE
+            )
+        }
+
+        val templatePipelineVersion = pipelineTemplatePipelineVersionService.get(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = version
+        ) ?: return null
+
+        val templateId = templatePipelineVersion.templateId
+        val templateVersion = templatePipelineVersion.templateVersion
+        val templateInfo = pipelineTemplateInfoService.get(templateId)
+        val templateRefType = templatePipelineVersion.refType
+
+        val templateDetailsUrl = if (templateRefType == TemplateRefType.ID) {
+            String.format(templateDetailRedirectUri, projectId, templateId, templateVersion)
+        } else {
+            pipelineYamlFacadeService.getPipelineYamlInfo(
+                projectId = projectId,
+                pipelineId = templateId,
+                version = templateVersion.toInt()
+            )?.fileUrl
+        }
+        val pipelineReleaseVersion = pipelineVersionFacadeService.getPipelineDetailIncludeDraft(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).releaseVersion
+        // 当前流水版本为最新版本，并且关联的模板版本不是最新版本，则需要升级
+        val upgradeFlag = pipelineReleaseVersion == version && templateInfo.releasedVersion != templateVersion
+        val upgradeUrl = takeIf { upgradeFlag }?.let {
+            String.format(templateDetailRedirectUri, projectId, templateId, templateInfo.releasedVersion)
+        }
+        return PTemplatePipelineRefInfo(
+            templateName = templateInfo.name,
+            templateId = templateInfo.id,
+            templateVersionName = templatePipelineVersion.templateVersionName,
+            templateVersion = templateVersion,
+            refType = templateRefType,
+            templateDetailsUrl = templateDetailsUrl,
+            upgradeFlag = upgradeFlag,
+            upgradeUrl = upgradeUrl
         )
     }
 
@@ -1243,6 +1310,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
         }
         return true
     }
+
+    private val templateDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateFacadeService::class.java)
