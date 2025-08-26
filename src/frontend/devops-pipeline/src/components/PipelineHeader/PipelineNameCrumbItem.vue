@@ -224,7 +224,7 @@
                     this.contraintApiSignal = new AbortController()
                     const { projectId, pipelineId, version } = this.$route.params
                     const res = await this.$ajax({
-                        url: `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version}/related/info`,
+                        url: `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version ?? this.pipelineInfo?.releaseVersion}/related/info`,
                         method: 'GET',
                         signal: this.contraintApiSignal?.signal
                     })
