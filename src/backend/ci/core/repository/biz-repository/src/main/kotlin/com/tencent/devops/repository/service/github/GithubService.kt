@@ -170,10 +170,7 @@ class GithubService @Autowired constructor(
             // 匹配不到以operator进行匹配（新数据：userId为服务端用户名，operator为rtx名，获取最新授权的token）
             githubTokenService.getAccessToken(userId) ?: githubTokenService.getAccessTokenByOperator(userId)
         } else {
-            githubTokenService.getAccessToken(oauthUserId) ?: throw ErrorCodeException(
-                errorCode = ERROR_AUTHORIZATION_USER_INFO_EXPIRED,
-                params = arrayOf(oauthUserId)
-            )
+            githubTokenService.getAccessToken(oauthUserId)
         }
         if (accessToken == null) {
             val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
