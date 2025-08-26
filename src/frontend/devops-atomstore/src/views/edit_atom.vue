@@ -627,13 +627,13 @@
         },
         methods: {
             branchBlur (value) {
-                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && this.initReleaseType === 'CANCEL_RE_RELEASE') {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && this.initReleaseType !== 'CANCEL_RE_RELEASE') {
                     this.getAtomLog(value)
                 }
             },
             releaseTypeChange (value) {
                 const branch = (value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch) ? this.atomForm.branch : null
-                if (this.initReleaseType === 'CANCEL_RE_RELEASE') {
+                if (this.initReleaseType !== 'CANCEL_RE_RELEASE') {
                     this.getAtomLog(branch)
                 }
             },
@@ -722,7 +722,7 @@
                                 this.initReleaseType = versionInfo.releaseType
                             }
                         })
-                        if (this.initReleaseType === 'CANCEL_RE_RELEASE') {
+                        if (this.initReleaseType !== 'CANCEL_RE_RELEASE') {
                             this.getAtomLog()
                         }
                     }
