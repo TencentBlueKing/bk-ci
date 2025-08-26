@@ -38,25 +38,9 @@ function _M:get_tag(ns_config)
         x_gateway_tag = ngx.var["arg_x-gateway-tag"]
     end
 
-    -- 定义需要强制路由到auto集群的项目ID前缀
-    local auto_cluster_prefixes = config.kubernetes.auto_prefix
-    
-    -- auto集群项目强制路由
-    if x_gateway_tag ~= nil and gateway_project ~= 'codecc' then
-        -- 将前缀字符串分割成表
-        local prefixes = {}
-        for prefix in string.gmatch(auto_cluster_prefixes, "([^,]+)") do
-            table.insert(prefixes, prefix)
-        end
-        
-        -- 检查项目ID是否匹配任一前缀
-        for _, prefix in ipairs(prefixes) do
-            if string.find(devops_project_id, "^" .. prefix) then
-                x_gateway_tag = "kubernetes-auto"
-                break
-            end
-        end
-    end
+
+    -- 特殊tag处理
+    x_gateway_tag = specialTagUtil:get_special_tag(gateway_project, devops_project_id, x_gateway_tag)
 
     if x_gateway_tag ~= nil then
         tag = x_gateway_tag
