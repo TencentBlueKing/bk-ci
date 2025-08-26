@@ -1,4 +1,4 @@
-package com.tencent.devops.process.plugin.check.service
+package com.tencent.devops.process.trigger.check
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -21,13 +21,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineCheckRunQualityService @Autowired constructor(
-    val client: Client
+    private val client: Client
 ) {
     fun getQuality(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        eventStatus: String,
+        buildStatus: String,
         startTime: Long,
         triggerType: String,
         channelCode: ChannelCode,
@@ -39,7 +39,7 @@ class PipelineCheckRunQualityService @Autowired constructor(
             projectId,
             pipelineId,
             buildId,
-            eventStatus,
+            buildStatus,
             startTime,
             triggerType,
             channelCode,

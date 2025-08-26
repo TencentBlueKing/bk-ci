@@ -154,6 +154,9 @@ object StreamBinding {
     // scm webhook请求回调
     const val SCM_HOOK_BUILD_REQUEST_EVENT = "engine.pipeline.hook.scm.event"
 
+    // 流水线构建check-run事件
+    const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"
+
     // webSocket消息
     const val WEBSOCKET_TMP_FANOUT = "websocket.fanout"
     const val WEBSOCKET_SESSION_CLEAR = "websocket.session.clear.fanout"
@@ -222,7 +225,4 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
     const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
-
-    // 流水线构建check-run 修复事件
-    const val PIPELINE_BUILD_CHECK_RUN_FIX = "engine.pipeline.build.check.fix"
 }

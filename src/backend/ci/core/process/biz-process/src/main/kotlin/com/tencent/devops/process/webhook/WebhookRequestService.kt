@@ -285,9 +285,9 @@ class WebhookRequestService(
     /**
      * 新接入的代码源直接走新的触发逻辑
      */
-    fun supportScmWebhook(repository: Repository) :Boolean {
+    fun supportScmWebhook(repository: Repository): Boolean {
         val supportRepo = listOf(ScmType.SCM_GIT, ScmType.SCM_SVN)
-                .contains(repository.getScmType())
+            .contains(repository.getScmType())
         val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
         return supportRepo && grayRepo
     }

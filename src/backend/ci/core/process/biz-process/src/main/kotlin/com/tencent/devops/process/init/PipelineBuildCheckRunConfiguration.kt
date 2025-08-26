@@ -1,11 +1,11 @@
-package com.tencent.devops.process.plugin.check.config
+package com.tencent.devops.process.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.process.plugin.check.service.PipelineCheckRunService
-import com.tencent.devops.process.pojo.PipelineBuildCheckRunFixEvent
+import com.tencent.devops.process.trigger.check.PipelineCheckRunService
+import com.tencent.devops.process.trigger.event.PipelineBuildCheckRunEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
@@ -13,8 +13,7 @@ import org.springframework.context.annotation.Configuration
  * 流水线检查监听器配置
  */
 @Configuration
-@Suppress("TooManyFunctions")
-class BuildCheckRunListenerConfiguration {
+class PipelineBuildCheckRunConfiguration {
     @EventConsumer(groupName = "pipeline-check-run-finish")
     fun checkRunFinishConsumer(
         @Autowired pipelineCheckRunService: PipelineCheckRunService
@@ -30,9 +29,9 @@ class BuildCheckRunListenerConfiguration {
     }
 
     @EventConsumer
-    fun checkRunFixConsumer(
+    fun checkRunSendConsumer(
         @Autowired pipelineCheckRunService: PipelineCheckRunService
-    ) = ScsConsumerBuilder.build<PipelineBuildCheckRunFixEvent> {
-        pipelineCheckRunService.onBuildFix(it)
+    ) = ScsConsumerBuilder.build<PipelineBuildCheckRunEvent> {
+        pipelineCheckRunService.onBuildCheckRun(it)
     }
 }
