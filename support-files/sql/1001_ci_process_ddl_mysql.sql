@@ -1335,7 +1335,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_CHECK_RUN`
     `PROJECT_ID`       varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
     `PIPELINE_ID`      varchar(64)  NOT NULL COMMENT '流水线ID',
     `BUILD_ID`         varchar(64)  NOT NULL DEFAULT '' COMMENT '构建任务ID',
-    `BUILD_NUM`        int(11)      NOT NULL COMMENT '构建编号',
+    `BUILD_NUM`        int     NOT NULL COMMENT '构建编号',
     `BUILD_STATUS`     varchar(32)  NOT NULL DEFAULT '' COMMENT '构建状态',
     `REPO_HASH_ID`     varchar(32)  NOT NULL COMMENT '代码库HASH_ID',
     `CONTEXT`          varchar(255) NOT NULL DEFAULT '' COMMENT '检查项名称',
