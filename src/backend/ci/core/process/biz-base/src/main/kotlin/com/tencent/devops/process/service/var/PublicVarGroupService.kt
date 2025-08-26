@@ -45,7 +45,6 @@ import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReleseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarChangePreviewDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
@@ -536,6 +535,7 @@ class PublicVarGroupService @Autowired constructor(
                                 projectId = projectId,
                                 groupName = groupName,
                                 varName = varName,
+                                varType = varPO.type,
                                 version = groupRecord.version,
                                 referId = referId,
                                 referName = referName,

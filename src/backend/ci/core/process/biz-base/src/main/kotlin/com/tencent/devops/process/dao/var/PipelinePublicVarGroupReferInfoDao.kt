@@ -28,9 +28,9 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -59,6 +59,7 @@ class PipelinePublicVarGroupReferInfoDao {
                         projectId = it.projectId,
                         groupName = it.groupName,
                         varName = it.varName,
+                        varType = PublicVarTypeEnum.valueOf(it.varType),
                         version = it.version,
                         referId = it.referId,
                         referName= it.referName,
@@ -133,6 +134,7 @@ fun save(
                 PROJECT_ID,
                 GROUP_NAME,
                 VAR_NAME,
+                VAR_TYPE,
                 VERSION,
                 REFER_ID,
                 REFER_TYPE,
@@ -146,6 +148,7 @@ fun save(
                 pipelinePublicVarGroupReferPO.projectId,
                 pipelinePublicVarGroupReferPO.groupName,
                 pipelinePublicVarGroupReferPO.varName,
+                pipelinePublicVarGroupReferPO.varType.name,
                 pipelinePublicVarGroupReferPO.version,
                 pipelinePublicVarGroupReferPO.referId,
                 pipelinePublicVarGroupReferPO.referType.name,
