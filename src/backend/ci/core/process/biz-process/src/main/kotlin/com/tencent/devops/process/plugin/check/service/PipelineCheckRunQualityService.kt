@@ -189,6 +189,9 @@ class PipelineCheckRunQualityService @Autowired constructor(
         titleData: List<String>,
         resultData: MutableMap<String, MutableList<List<String>>>
     ): String {
+        if (resultData.isEmpty()) {
+            return ""
+        }
         val triggerType = titleData[2]
         val pipelineName = titleData[3]
         val url = titleData[4]
