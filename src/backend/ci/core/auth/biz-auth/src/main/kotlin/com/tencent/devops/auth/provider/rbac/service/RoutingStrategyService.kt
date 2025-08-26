@@ -28,6 +28,21 @@ class RoutingStrategyService(private val redisOperation: RedisOperation) : Permi
         return projectModeCache.get(projectCode) { loadModeFromRedis(projectCode) }!!
     }
 
+    override fun getDefaultMode(): RoutingMode {
+        try {
+            val defaultModeName = redisOperation.get(DEFAULT_MODE_KEY)
+            if (!defaultModeName.isNullOrBlank()) {
+                logger.debug("get default mode from redis.", defaultModeName)
+                return parseMode(defaultModeName)
+            }
+            return RoutingMode.NORMAL
+        } catch (e: Exception) {
+            // 在Redis异常时提供安全保障
+            logger.error("Failed to load permission routing strategy from Redis. Falling back to NORMAL mode.", e)
+            return RoutingMode.NORMAL
+        }
+    }
+
     private fun loadModeFromRedis(projectCode: String): RoutingMode {
         try {
             // 优先级 1: 检查 HASH 中是否有为该项目指定的特定模式

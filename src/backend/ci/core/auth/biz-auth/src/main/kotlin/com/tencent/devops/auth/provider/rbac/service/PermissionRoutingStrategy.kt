@@ -14,4 +14,9 @@ interface PermissionRoutingStrategy {
      * @return 对应的路由模式 (RoutingMode)
      */
     fun getModeForProject(projectCode: String): RoutingMode
+
+    /**
+     * 获取默认模式
+     */
+    fun getDefaultMode(): RoutingMode
 }

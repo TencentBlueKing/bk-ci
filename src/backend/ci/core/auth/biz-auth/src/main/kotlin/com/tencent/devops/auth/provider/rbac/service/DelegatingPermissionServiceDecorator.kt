@@ -87,7 +87,6 @@ class DelegatingPermissionServiceDecorator(
         )
     }
 
-    // 优化点 4: 简化方法调用链，移除了 validateUserResourcePermissionByRelation
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -324,6 +323,35 @@ class DelegatingPermissionServiceDecorator(
         )
     }
 
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        return executeWithRouting(
+            context = this::getUserProjectsByPermission.name,
+            externalCall = {
+                rbacPermissionService.getUserProjectsByPermission(
+                    userId = userId,
+                    action = action,
+                    resourceType = resourceType
+                )
+            },
+            internalCall = {
+                val finalResourceType = if (resourceType == null) {
+                    AuthResourceType.PROJECT
+                } else {
+                    AuthResourceType.get(resourceType)
+                }
+                val useAction = resolveInternalAction(action = action, resourceType = finalResourceType.value)
+                bkInternalPermissionService.getUserProjectsByAction(
+                    userId = userId,
+                    action = useAction
+                )
+            }
+        )
+    }
+
     /**
      * 根据路由模式执行权限调用。
      * @param projectCode 项目ID，用于决定路由模式。
@@ -343,20 +371,26 @@ class DelegatingPermissionServiceDecorator(
             RoutingMode.INTERNAl -> internalCall()
             RoutingMode.VALIDATION -> {
                 val externalResult = externalCall()
-                threadPoolExecutor.submit {
-                    try {
-                        val internalResult = internalCall()
-                        // 比较基准（外部）结果与验证（内部）结果。
-                        compareAndLogDifference(projectCode, context, externalResult, internalResult)
-                    } catch (e: Exception) {
-                        logger.warn(
-                            "[AUTH_VALIDATION_ERROR] 后台验证内部调用失败。项目: '{}', 上下文: {}",
-                            projectCode,
-                            context,
-                            e
-                        )
-                    }
-                }
+                compareAndLogDifference(projectCode, context, externalResult, internalCall)
+                externalResult
+            }
+
+            RoutingMode.CIRCUIT_BREAKER -> doWithCircuitBreaker(externalCall, internalCall)
+        }
+    }
+
+    private fun <T> executeWithRouting(
+        context: String,
+        externalCall: () -> T,
+        internalCall: () -> T
+    ): T {
+        val mode = routingStrategy.getDefaultMode()
+        return when (mode) {
+            RoutingMode.NORMAL -> externalCall()
+            RoutingMode.INTERNAl -> internalCall()
+            RoutingMode.VALIDATION -> {
+                val externalResult = externalCall()
+                compareAndLogDifference(projectCode = null, context, externalResult, internalCall)
                 externalResult
             }
 
@@ -366,30 +400,43 @@ class DelegatingPermissionServiceDecorator(
 
     /**
      * 比较基准结果和验证结果，如果不一致则记录警告日志。
-     * @param benchmarkResult 基准结果（在验证模式下是 externalResult）。
-     * @param validationResult 用于验证的结果（在验证模式下是 internalResult）。
+     * @param expectResult 基准结果（在验证模式下是 externalResult）。
+     * @param internalCall 用于验证的结果（在验证模式下是 internalResult）。
      */
     private fun <T> compareAndLogDifference(
-        projectCode: String,
+        projectCode: String?,
         context: String,
-        benchmarkResult: T,
-        validationResult: T
+        expectResult: T,
+        internalCall: () -> T
     ) {
-        val isMismatch = when (benchmarkResult) {
-            is List<*> -> benchmarkResult.toSet() != (validationResult as? List<*>)?.toSet()
-            is Map<*, *>, is Boolean -> benchmarkResult != validationResult
-            else -> benchmarkResult.toString() != validationResult.toString() // 兜底比较
-        }
+        threadPoolExecutor.submit {
+            try {
+                val internalResult = internalCall()
+                // 比较基准（外部）结果与验证（内部）结果。
+                val isMismatch = when (expectResult) {
+                    is List<*> -> expectResult.toSet() != (internalResult as? List<*>)?.toSet()
+                    is Map<*, *>, is Boolean -> expectResult != internalResult
+                    else -> expectResult.toString() != internalResult.toString() // 兜底比较
+                }
 
-        if (isMismatch) {
-            logger.warn(
-                """
+                if (isMismatch) {
+                    logger.warn(
+                        """
                 [AUTH_VALIDATION_MISMATCH] 
                 Permission validation mismatch found for project:'$projectCode' in context: '$context'
-                - Benchmark Result (External): $benchmarkResult
-                - Validation Result (Internal): $validationResult
+                - Benchmark Result (External): $expectResult
+                - Validation Result (Internal): $internalResult
                 """.trimIndent()
-            )
+                    )
+                }
+            } catch (e: Exception) {
+                logger.warn(
+                    "[AUTH_VALIDATION_ERROR] 后台验证内部调用失败。项目: '{}', 上下文: {}",
+                    projectCode,
+                    context,
+                    e
+                )
+            }
         }
     }
 
