@@ -20,7 +20,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *  模板实例工具类
