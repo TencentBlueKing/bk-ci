@@ -407,7 +407,8 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
-        version: String?
+        version: String?,
+        versionContent: String?
     ): StoreShowVersionInfo {
         // 确定默认显示的发布类型
         val defaultShowReleaseType = when {
@@ -436,7 +437,8 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                     version = defaultShowVersion,
                     lastVersion = dbVersion,
                     releaseType = defaultShowReleaseType.name,
-                    defaultFlag = true
+                    defaultFlag = true,
+                    versionContent = versionContent
                 )
             )
 

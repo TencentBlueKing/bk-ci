@@ -37,6 +37,8 @@ data class StoreShowVersionItem(
     val lastVersion: String,
     @get:Schema(title = "发布类型", required = true)
     val releaseType: String,
+    @get:Schema(title = "版本内容", required = false)
+    val versionContent: String? = null,
     @get:Schema(title = "是否默认选中", required = true)
     val defaultFlag: Boolean = false
 )
