@@ -224,7 +224,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_PIPELINE_NOT_EXISTS,
+                    ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
                     I18nUtil.getDefaultLocaleLanguage(),
                     arrayOf(vmNames)
                 ),
