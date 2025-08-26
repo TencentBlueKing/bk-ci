@@ -237,7 +237,7 @@ class RbacAuthConfiguration {
         config: CommonConfig,
         userManageService: UserManageService,
         traceEventDispatcher: TraceEventDispatcher,
-        permissionService: RbacPermissionService
+        permissionService: PermissionService
     ) = RbacPermissionManageFacadeServiceImpl(
         permissionResourceGroupService = permissionResourceGroupService,
         groupPermissionService = groupPermissionService,
@@ -414,7 +414,7 @@ class RbacAuthConfiguration {
     fun rbacPermissionProjectService(
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
-        permissionService: RbacPermissionService,
+        permissionService: PermissionService,
         resourceGroupMemberService: RbacPermissionResourceMemberService,
         client: Client,
         resourceMemberService: PermissionResourceMemberService,

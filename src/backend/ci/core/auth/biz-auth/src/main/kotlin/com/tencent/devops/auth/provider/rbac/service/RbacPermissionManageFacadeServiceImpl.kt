@@ -64,6 +64,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionServ
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.lock.HandleHandoverApplicationLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -120,7 +121,7 @@ class RbacPermissionManageFacadeServiceImpl(
     private val config: CommonConfig,
     private val userManageService: UserManageService,
     private val traceEventDispatcher: TraceEventDispatcher,
-    private val permissionService: RbacPermissionService
+    private val permissionService: PermissionService
 ) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
