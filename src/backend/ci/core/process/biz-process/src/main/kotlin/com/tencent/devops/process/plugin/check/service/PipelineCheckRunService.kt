@@ -341,6 +341,7 @@ class PipelineCheckRunService @Autowired constructor(
                             )
                             checkRunInfo?.let {
                                 checkRunRecord.setCheckRunStatus(checkRunInput.status.name)
+                                        .setCheckRunId(it.id)
                             }
                             pipelineBuildCheckRunDao.update(
                                 dslContext = dslContext,
