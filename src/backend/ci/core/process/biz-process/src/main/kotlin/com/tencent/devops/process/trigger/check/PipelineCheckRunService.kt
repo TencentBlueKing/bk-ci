@@ -11,11 +11,13 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.process.tables.records.TPipelineBuildCheckRunRecord
 import com.tencent.devops.process.dao.PipelineBuildCheckRunDao
 import com.tencent.devops.process.trigger.event.PipelineBuildCheckRunEvent
 import com.tencent.devops.process.trigger.pojo.PipelineBuildCheckRun
 import com.tencent.devops.process.trigger.pojo.PipelineBuildCheckRunContext
 import com.tencent.devops.process.trigger.pojo.PipelineBuildCheckRunLock
+import com.tencent.devops.process.trigger.pojo.PipelineBuildCheckRunStatus
 import com.tencent.devops.process.trigger.pojo.PipelineCheckRunLock
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.scm.api.enums.CheckRunConclusion
@@ -45,98 +47,90 @@ class PipelineCheckRunService @Autowired constructor(
 ) {
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
         with(event) {
-            val checkRunContext = pipelineBuildCheckRunResolver.resolveVar(
+            handleBuildEvent(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 triggerType = triggerType,
                 buildStatus = BuildStatus.RUNNING
             )
-            if (checkRunContext == null) {
-                return
-            }
-            val lock = PipelineBuildCheckRunLock(redisOperation = redisOperation, buildId = buildId)
-            try {
-                lock.lock()
-                val pipelineBuildCheckRun = PipelineBuildCheckRun(
-                    checkRunContext = checkRunContext
-                )
-                pipelineBuildCheckRunDao.create(
-                    dslContext = dslContext,
-                    buildCheckRun = pipelineBuildCheckRun
-                )
-                sampleEventDispatcher.dispatch(
-                    PipelineBuildCheckRunEvent(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        buildStatus = BuildStatus.RUNNING
-                    )
-                )
-            } finally {
-                lock.unlock()
-            }
         }
     }
 
     fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
         with(event) {
             val buildStatus = BuildStatus.valueOf(status)
-            val checkRunContext = pipelineBuildCheckRunResolver.resolveVar(
+            handleBuildEvent(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 triggerType = triggerType,
                 buildStatus = buildStatus
             )
-            if (checkRunContext == null) {
-                return
-            }
-            val lock = PipelineBuildCheckRunLock(redisOperation, buildId)
-            try {
-                lock.lock()
-                val buildCheckRun = pipelineBuildCheckRunDao.get(
+        }
+    }
+
+    /**
+     * 处理构建事件,收到构建排队和结束时间,将数据插入到checkRun表中,checkRunStatus都为PENDING
+     */
+    private fun handleBuildEvent(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        triggerType: String,
+        buildStatus: BuildStatus
+    ) {
+        val checkRunContext = pipelineBuildCheckRunResolver.resolveVar(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            triggerType = triggerType,
+            buildStatus = buildStatus
+        )
+        if (checkRunContext == null) {
+            return
+        }
+        val lock = PipelineBuildCheckRunLock(redisOperation = redisOperation, buildId = buildId)
+        try {
+            lock.lock()
+            val pipelineBuildCheckRun = PipelineBuildCheckRun(
+                checkRunContext = checkRunContext
+            )
+            val buildCheckRun = pipelineBuildCheckRunDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+            if (buildCheckRun == null) {
+                pipelineBuildCheckRunDao.create(
                     dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
+                    buildCheckRun = pipelineBuildCheckRun
                 )
-                if (buildCheckRun == null) {
-                    logger.warn("")
-                    return
-                }
-                pipelineBuildCheckRunDao.updateBuildStatus(
+            } else {
+                pipelineBuildCheckRunDao.update(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    buildStatus = checkRunContext.buildStatus.name
+                    buildStatus = checkRunContext.buildStatus.name,
+                    checkRunStatus = PipelineBuildCheckRunStatus.PENDING.name
                 )
-                sampleEventDispatcher.dispatch(
-                    PipelineBuildCheckRunEvent(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        buildStatus = checkRunContext.buildStatus
-                    )
-                )
-            } finally {
-                lock.unlock()
             }
+            sampleEventDispatcher.dispatch(
+                PipelineBuildCheckRunEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildStatus = checkRunContext.buildStatus
+                )
+            )
+        } finally {
+            lock.unlock()
         }
     }
 
     fun onBuildCheckRun(event: PipelineBuildCheckRunEvent) {
-        with(event) {
-            if (buildStatus == BuildStatus.RUNNING) {
-                createBuildCheckRun(event = event)
-            } else {
-                updateBuildCheckRun(event = event)
-            }
-        }
-    }
-
-    private fun createBuildCheckRun(event: PipelineBuildCheckRunEvent) {
         with(event) {
             val lock = PipelineCheckRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
@@ -147,7 +141,12 @@ class PipelineCheckRunService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId
                 )
-                if (buildCheckRun == null || BuildStatus.valueOf(buildCheckRun.buildStatus).isFinish()) {
+                // 如果当前构建没有记录或者已经标记为跳过,则不处理
+                if (buildCheckRun == null || buildCheckRun.checkRunStatus == PipelineBuildCheckRunStatus.SKIP.name) {
+                    logger.info(
+                        "pipeline build check run not found|" +
+                                "$projectId|$pipelineId|$buildId|$buildStatus|${buildCheckRun?.checkRunStatus}"
+                    )
                     return
                 }
                 val checkRunContext = pipelineBuildCheckRunResolver.resolveVar(
@@ -160,10 +159,7 @@ class PipelineCheckRunService @Autowired constructor(
                 if (checkRunContext == null) {
                     return
                 }
-                val repositoryConfig = RepositoryConfigUtils.buildConfig(
-                    repositoryId = buildCheckRun.repoHashId,
-                    repositoryType = RepositoryType.ID
-                )
+                // 获取当前正在运行的检查
                 val runningCheckRunRecord = pipelineBuildCheckRunDao.get(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -171,56 +167,26 @@ class PipelineCheckRunService @Autowired constructor(
                     repoHashId = buildCheckRun.repoHashId,
                     commitId = buildCheckRun.commitId,
                     pullRequestId = buildCheckRun.pullRequestId,
-                    checkRunStatus = CheckRunStatus.IN_PROGRESS.name
+                    checkRunStatus = PipelineBuildCheckRunStatus.RUNNING.name
                 )
-
                 when {
-                    runningCheckRunRecord == null -> {
-                        val checkRunInput = checkRunContext.createCheckRunInput()
-                        val checkRun = addCheckRun(
-                            projectId = projectId,
-                            repositoryConfig = repositoryConfig,
-                            checkRunInput = checkRunInput
-                        )
-                        pipelineBuildCheckRunDao.update(
-                            dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            checkRunId = checkRun?.id,
-                            checkRunStatus = CheckRunStatus.IN_PROGRESS.name
+                    // 如果当前没有正在运行的检查,或者当前正在运行的检查是当前构建,则写入当前构建到检查
+                    runningCheckRunRecord == null || buildCheckRun.buildNum == runningCheckRunRecord.buildNum -> {
+                        writeCurrentBuild(
+                            buildCheckRun = buildCheckRun,
+                            checkRunContext = checkRunContext
                         )
                     }
 
+                    // 如果当前有正在运行的检查,且当前构建的构建号大于正在运行的检查的构建号,则需要更新
                     buildCheckRun.buildNum > runningCheckRunRecord.buildNum -> {
-                        val checkRunInput = checkRunContext.createCheckRunInput(id = runningCheckRunRecord.checkRunId)
-                        updateCheckRun(
-                            projectId = projectId,
-                            repositoryConfig = repositoryConfig,
-                            checkRunInput = checkRunInput.copy(id = runningCheckRunRecord.checkRunId)
+                        overrideRunningBuild(
+                            runningCheckRunRecord = runningCheckRunRecord,
+                            checkRunContext = checkRunContext
                         )
-                        dslContext.transaction { configuration ->
-                            val transactionContext = DSL.using(configuration)
-                            // 需要将历史的构建,重置为跳过
-                            pipelineBuildCheckRunDao.update(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = runningCheckRunRecord.buildId,
-                                checkRunId = null,
-                                checkRunStatus = CheckRunStatus.COMPLETED.name
-                            )
-                            pipelineBuildCheckRunDao.update(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                checkRunId = null,
-                                checkRunStatus = CheckRunStatus.IN_PROGRESS.name
-                            )
-                        }
                     }
 
+                    // 如果当前有正在运行的检查,且当前构建的构建号小于正在运行的检查的构建号,则需要跳过写入
                     else -> {
                         pipelineBuildCheckRunDao.update(
                             dslContext = dslContext,
@@ -228,7 +194,7 @@ class PipelineCheckRunService @Autowired constructor(
                             pipelineId = pipelineId,
                             buildId = buildId,
                             checkRunId = null,
-                            checkRunStatus = CheckRunStatus.COMPLETED.name
+                            checkRunStatus = PipelineBuildCheckRunStatus.SKIP.name
                         )
                     }
                 }
@@ -238,56 +204,122 @@ class PipelineCheckRunService @Autowired constructor(
         }
     }
 
-    private fun updateBuildCheckRun(event: PipelineBuildCheckRunEvent) {
-        with(event) {
-            val lock = PipelineCheckRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
-            try {
-                lock.lock()
-                val buildCheckRun = pipelineBuildCheckRunDao.get(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
-                )
-                if (buildCheckRun == null || BuildStatus.valueOf(buildCheckRun.buildStatus).isFinish()) {
-                    logger.info("")
-                    return
-                }
-                val checkRunContext = pipelineBuildCheckRunResolver.resolveVar(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    triggerType = StartType.WEB_HOOK.name,
-                    buildStatus = buildStatus
-                )
-                if (checkRunContext == null) {
-                    return
-                }
-                val checkRunInput = checkRunContext.createCheckRunInput()
-                val repositoryConfig = RepositoryConfigUtils.buildConfig(
-                    repositoryId = buildCheckRun.repoHashId,
-                    repositoryType = RepositoryType.ID
-                )
-                updateCheckRun(
-                    projectId = projectId,
-                    repositoryConfig = repositoryConfig,
-                    checkRunInput = checkRunInput
-                )
-                pipelineBuildCheckRunDao.update(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    checkRunId = null,
-                    checkRunStatus = CheckRunStatus.IN_PROGRESS.name
-                )
-            } finally {
-                lock.unlock()
-            }
+    /**
+     * 写入当前构建
+     */
+    private fun PipelineBuildCheckRunEvent.writeCurrentBuild(
+        buildCheckRun: TPipelineBuildCheckRunRecord,
+        checkRunContext: PipelineBuildCheckRunContext
+    ) {
+        val buildCheckRunStatus = if (buildStatus == BuildStatus.RUNNING) {
+            PipelineBuildCheckRunStatus.RUNNING
+        } else {
+            PipelineBuildCheckRunStatus.SUCCESS
+        }
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(
+            repositoryId = buildCheckRun.repoHashId,
+            repositoryType = RepositoryType.ID
+        )
+
+        val checkRun = if (buildCheckRun.checkRunId != null) {
+            val checkRunInput = checkRunContext.convertCheckRunInput(buildCheckRun.checkRunId)
+            updateCheckRun(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                checkRunInput = checkRunInput
+            )
+        } else {
+            val checkRunInput = checkRunContext.convertCheckRunInput()
+            addCheckRun(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                checkRunInput = checkRunInput
+            )
+        }
+        if (checkRun != null) {
+            pipelineBuildCheckRunDao.update(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                checkRunId = checkRun.id,
+                checkRunStatus = buildCheckRunStatus.name
+            )
+        } else {
+            pipelineBuildCheckRunDao.update(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                checkRunStatus = PipelineBuildCheckRunStatus.FAILED.name
+            )
         }
     }
 
-    private fun PipelineBuildCheckRunContext.createCheckRunInput(id: Long? = null): CheckRunInput {
+    /**
+     * 覆盖正在运行的检查
+     */
+    private fun PipelineBuildCheckRunEvent.overrideRunningBuild(
+        runningCheckRunRecord: TPipelineBuildCheckRunRecord,
+        checkRunContext: PipelineBuildCheckRunContext
+    ) {
+        val buildCheckRunStatus = if (buildStatus == BuildStatus.RUNNING) {
+            PipelineBuildCheckRunStatus.RUNNING
+        } else {
+            PipelineBuildCheckRunStatus.SUCCESS
+        }
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(
+            repositoryId = runningCheckRunRecord.repoHashId,
+            repositoryType = RepositoryType.ID
+        )
+
+        val checkRun = if (runningCheckRunRecord.checkRunId != null) {
+            val checkRunInput = checkRunContext.convertCheckRunInput(runningCheckRunRecord.checkRunId)
+            updateCheckRun(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                checkRunInput = checkRunInput
+            )
+        } else {
+            val checkRunInput = checkRunContext.convertCheckRunInput()
+            addCheckRun(
+                projectId = projectId,
+                repositoryConfig = repositoryConfig,
+                checkRunInput = checkRunInput
+            )
+        }
+        if (checkRun != null) {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                // 需要将历史的构建,重置为跳过
+                pipelineBuildCheckRunDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = runningCheckRunRecord.buildId,
+                    checkRunStatus = PipelineBuildCheckRunStatus.SKIP.name
+                )
+                pipelineBuildCheckRunDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    checkRunId = checkRun.id,
+                    checkRunStatus = buildCheckRunStatus.name
+                )
+            }
+        } else {
+            pipelineBuildCheckRunDao.update(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                checkRunStatus = PipelineBuildCheckRunStatus.FAILED.name
+            )
+        }
+    }
+
+    private fun PipelineBuildCheckRunContext.convertCheckRunInput(id: Long? = null): CheckRunInput {
         val (checkRunState, checkRunConclusion) = getCheckRunState(buildStatus)
         // 执行结束后尝试获取报表
         val quality = if (buildStatus != BuildStatus.RUNNING && supportQuality(eventType)) {

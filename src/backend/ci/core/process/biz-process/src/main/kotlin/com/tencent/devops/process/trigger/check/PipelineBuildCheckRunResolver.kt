@@ -26,9 +26,7 @@ import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.trigger.pojo.PipelineBuildCheckRunContext
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.repository.api.ServiceRepositoryConfigResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -129,12 +127,6 @@ class PipelineBuildCheckRunResolver @Autowired constructor(
             logger.warn("skip resolve check run|process instance($buildId) trigger repository not exist")
             return null
         }
-        val scmConfig = getScmConfig(repo.scmCode)!!
-        val providerCode = ScmProviderCodes.valueOf(scmConfig.providerCode)
-        if (!supportRepoProvider(providerCode)) {
-            logger.warn("skip resolve check run|process instance($buildId) not support write $providerCode check run")
-            return null
-        }
         val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
         val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong() ?: run {
             if (finalEventType.isMergeRequest()) {
@@ -198,17 +190,8 @@ class PipelineBuildCheckRunResolver @Autowired constructor(
      * 支持的仓库
      */
     private fun supportCodeType(codeType: CodeType?) = listOf(
-        CodeType.GIT,
-        CodeType.TGIT,
-        CodeType.GITHUB
+        CodeType.SCM_GIT
     ).contains(codeType)
-
-    /**
-     * 支持的仓库，目前仅开放GITEE
-     */
-    private fun supportRepoProvider(scmProviderCodes: ScmProviderCodes) = listOf(
-        ScmProviderCodes.GITEE
-    ).contains(scmProviderCodes)
 
     private fun getRepository(projectId: String, repositoryConfig: RepositoryConfig) = try {
         client.get(ServiceRepositoryResource::class).get(
@@ -218,13 +201,6 @@ class PipelineBuildCheckRunResolver @Autowired constructor(
         ).data
     } catch (ignored: Exception) {
         logger.warn("get $projectId repository($repositoryConfig) fail", ignored)
-        null
-    }
-
-    private fun getScmConfig(scmCode: String) = try {
-        client.get(ServiceRepositoryConfigResource::class).getSummary(scmCode).data
-    } catch (ignored: Exception) {
-        logger.warn("Failed to get SCM config for scmCode: {scmCode}", ignored)
         null
     }
 

@@ -33,7 +33,9 @@ enum class CodeType {
     GITLAB,
     GITHUB,
     TGIT,
-    P4;
+    P4,
+    // 通用git触发器
+    SCM_GIT;
 
     companion object {
         fun convert(codeType: String?) = values().find { it.name == codeType }

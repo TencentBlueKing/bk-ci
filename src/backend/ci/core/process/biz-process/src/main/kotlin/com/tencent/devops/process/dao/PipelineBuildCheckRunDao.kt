@@ -1,11 +1,9 @@
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildCheckRun
 import com.tencent.devops.model.process.tables.records.TPipelineBuildCheckRunRecord
 import com.tencent.devops.process.trigger.pojo.PipelineBuildCheckRun
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -29,9 +27,6 @@ class PipelineBuildCheckRunDao {
                 CONTEXT,
                 COMMIT_ID,
                 PULL_REQUEST_ID,
-                CHECK_RUN_ID,
-                CHECK_RUN_STATUS,
-                EXTENSION_DATA,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -44,50 +39,9 @@ class PipelineBuildCheckRunDao {
                 buildCheckRun.context,
                 buildCheckRun.commitId,
                 buildCheckRun.pullRequestId,
-                buildCheckRun.checkRunId,
-                buildCheckRun.checkRunStatus?.name,
-                buildCheckRun.extensionData?.let { JsonUtil.toJson(it, false) },
                 now,
                 now
-            ).onDuplicateKeyUpdate()
-                    .set(BUILD_NUM, buildCheckRun.buildNum)
-                    .set(UPDATE_TIME, now)
-                    .set(CHECK_RUN_STATUS, buildCheckRun.checkRunStatus?.name)
-                    .execute()
-        }
-    }
-
-    fun updateBuildStatus(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildStatus: String
-    ) {
-        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            dslContext.update(this)
-                .set(BUILD_STATUS, buildStatus)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun update(
-        dslContext: DSLContext,
-        record: TPipelineBuildCheckRunRecord
-    ) {
-        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            val conditions = listOf(
-                PROJECT_ID.eq(record.projectId),
-                PIPELINE_ID.eq(record.pipelineId),
-                BUILD_ID.eq(record.buildId)
-            )
-            dslContext.update(this)
-                    .set(record)
-                    .where(conditions)
-                    .execute()
+            ).execute()
         }
     }
 
@@ -96,67 +50,26 @@ class PipelineBuildCheckRunDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
+        buildStatus: String? = null,
         checkRunId: Long? = null,
         checkRunStatus: String? = null
     ) {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            dslContext.update(this)
-                    .let {
-                        if (checkRunId != null) {
-                            it.set(CHECK_RUN_ID, checkRunId)
-                        }
-                        if (!checkRunStatus.isNullOrBlank()) {
-                            it.set(CHECK_RUN_STATUS, checkRunStatus)
-                        }
-                        it.set(BUILD_ID, buildId)
-                    }
-                    .where(
-                        listOf(
-                            PROJECT_ID.eq(projectId),
-                            PIPELINE_ID.eq(pipelineId),
-                            BUILD_ID.eq(buildId)
-                        )
-                    )
-                    .execute()
-        }
-    }
-
-    fun getCheckRun(
-        dslContext: DSLContext,
-        checkRunStatus: String,
-        buildStatus: Set<String>
-    ): Result<TPipelineBuildCheckRunRecord> {
-        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            val conditions = listOf(
-                CHECK_RUN_STATUS.eq(checkRunStatus),
-                BUILD_STATUS.`in`(buildStatus)
-            )
-            return dslContext.selectFrom(this)
-                    .where(conditions)
-                    .fetch()
-        }
-    }
-
-    fun list(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        repoHashId: String,
-        commitId: String,
-        pullRequestId: String
-    ): Result<TPipelineBuildCheckRunRecord> {
-        with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            val conditions = listOf(
-                PROJECT_ID.eq(projectId),
-                PIPELINE_ID.eq(pipelineId),
-                REPO_HASH_ID.eq(repoHashId),
-                COMMIT_ID.eq(commitId),
-                PULL_REQUEST_ID.eq(pullRequestId)
-            )
-            return dslContext.selectFrom(this)
-                    .where(conditions)
-                    .orderBy(BUILD_NUM.desc())
-                    .fetch()
+            val update = dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+            if (checkRunId != null) {
+                update.set(CHECK_RUN_ID, checkRunId)
+            }
+            if (!checkRunStatus.isNullOrBlank()) {
+                update.set(CHECK_RUN_STATUS, checkRunStatus)
+            }
+            if (!buildStatus.isNullOrBlank()) {
+                update.set(BUILD_STATUS, buildStatus)
+            }
+            update.where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 
@@ -166,7 +79,7 @@ class PipelineBuildCheckRunDao {
         pipelineId: String,
         repoHashId: String,
         commitId: String,
-        pullRequestId: String,
+        pullRequestId: Long,
         checkRunStatus: String,
     ): TPipelineBuildCheckRunRecord? {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
@@ -194,10 +107,10 @@ class PipelineBuildCheckRunDao {
     ): TPipelineBuildCheckRunRecord? {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId), PIPELINE_ID.eq(pipelineId), BUILD_ID.eq(buildId))
-                    .fetchOne()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetchOne()
         }
     }
-
-
 }

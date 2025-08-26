@@ -27,6 +27,7 @@ data class PipelineBuildCheckRun(
         buildStatus = checkRunContext.buildStatus,
         repoHashId = checkRunContext.repoHashId,
         context = checkRunContext.context,
+        checkRunStatus = PipelineBuildCheckRunStatus.PENDING,
         commitId = checkRunContext.commitId,
         pullRequestId = checkRunContext.pullRequestId
     )
