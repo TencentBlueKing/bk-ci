@@ -97,7 +97,8 @@ config = {
             url = "https://127.0.0.1/api/v1/nodes",
             token = ""
         },
-        special_domain = {}
+        special_domain = {},
+        auto_prefix = ""
     }
 }
 

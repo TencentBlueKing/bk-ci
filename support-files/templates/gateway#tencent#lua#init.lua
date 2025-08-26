@@ -107,7 +107,8 @@ config = {
             url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
-        special_domain = {}
+        special_domain = {},
+        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__"
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
