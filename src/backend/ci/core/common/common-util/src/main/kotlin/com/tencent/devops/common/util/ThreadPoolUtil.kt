@@ -62,13 +62,14 @@ object ThreadPoolUtil {
     fun submitAction(
         executor: ThreadPoolExecutor = defaultExecutor,
         actionTitle: String,
+        bizIdPrefix: String = "",
         action: () -> Unit
     ) {
         val startTime = System.currentTimeMillis()
         val bizId = MDC.get(BIZID)
         executor.submit {
             try {
-                MDC.put(BIZID, bizId)
+                MDC.put(BIZID, "${bizIdPrefix}$bizId")
                 logger.info("start thread action [$actionTitle]")
                 action.invoke()
                 logger.info(

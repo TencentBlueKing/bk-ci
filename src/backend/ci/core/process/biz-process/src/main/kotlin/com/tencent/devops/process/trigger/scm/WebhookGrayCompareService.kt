@@ -93,6 +93,7 @@ class WebhookGrayCompareService @Autowired constructor(
     ) {
         ThreadPoolUtil.submitAction(
             executor = executor,
+            bizIdPrefix = "compare-",
             actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}",
             action = { compareWebhook(scmType, request, matcher) }
         )
