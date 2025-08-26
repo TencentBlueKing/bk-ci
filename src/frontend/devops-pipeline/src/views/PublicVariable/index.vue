@@ -173,7 +173,6 @@
                 :show-type="showType"
                 :read-only="readOnly"
                 :handle-edit-group="handleEditGroup"
-                :save-success-fn="handleSaveSuccess"
             />
             <importParamGroupPopup
                 :is-show.sync="showImportDialog"
@@ -227,23 +226,23 @@
         return [
             {
                 name: proxy.$t('publicVar.paramGroupId'),
-                id: 'groupName'
+                id: 'filterByGroupName'
             },
             {
                 name: proxy.$t('publicVar.paramGroupDesc'),
-                id: 'desc'
+                id: 'filterByGroupDesc'
             },
             {
                 name: proxy.$t('publicVar.lastModifiedBy'),
-                id: 'modifier'
+                id: 'filterByUpdater'
             },
             {
                 name: proxy.$t('publicVar.varId'),
-                id: 'varName'
+                id: 'filterByVarName'
             },
             {
                 name: proxy.$t('publicVar.varAlias'),
-                id: 'alias'
+                id: 'filterByVarAlias'
             }
         ]
     })
@@ -253,6 +252,7 @@
             return acc
         }, {})
     })
+    const flagName = computed(() => proxy.$route.query?.flagName)
     const filterTips = computed(() => searchList.value.map(item => item.name).join('/'))
     const exceptionType = computed(() => searchValue.value.length ? 'search-empty': 'empty')
     const renderTableData = computed(() => {
@@ -470,13 +470,16 @@
                 }
             }
         })
-
     }
-    async function handleSaveSuccess (groupName) {
+    async function setNewGroupStyle (groupName) {
         newNameFlag.value = groupName
-        await fetchVariableGroupList()
         setTimeout(() => {
             newNameFlag.value = ''
+            const urlQuery = { ...proxy.$route.query }
+            delete urlQuery['flagName']
+            proxy.$router.push({
+                query: urlQuery
+            })
         }, 5000)
     }
     async function handleImportSuccess (yaml, name) {
@@ -514,6 +517,9 @@
     onMounted(() => {
         fetchVariableGroupList()
         checkViewManageAuth()
+        if (flagName.value) {
+            setNewGroupStyle(flagName.value)
+        }
     })
 </script>
 <style lang="scss">

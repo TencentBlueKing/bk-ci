@@ -89,16 +89,16 @@
     async function handleRelease () {
         try {
             releasing.value = true
-            const publicVars = groupData.value.publicVars?.map(i => {
-                    return {
-                        ...i,
-                        buildFormProperty: {
-                            ...i.buildFormProperty,
-                            varGroupName: i.varName
-                        }
+            const publicVars = groupData.value?.publicVars || [].map(i => {
+                return {
+                    ...i,
+                    buildFormProperty: {
+                        ...i.buildFormProperty,
+                        varGroupName: i.varName
                     }
-                })
-            await proxy.$store.dispatch('publicVar/saveVariableGroup', {
+                }
+            })
+            const groupName =  await proxy.$store.dispatch('publicVar/saveVariableGroup', {
                 projectId: projectId.value,
                 type: operateType.value,
                 params: {
@@ -114,7 +114,10 @@
                     : proxy.$t('publicVar.newVarGroupSuccess')
             })
             proxy.$router.push({
-                name: 'PublicVarList'
+                name: 'PublicVarList',
+                query: {
+                    flagName: groupName
+                }
             })
         } catch (e) {
             proxy.$bkMessage({

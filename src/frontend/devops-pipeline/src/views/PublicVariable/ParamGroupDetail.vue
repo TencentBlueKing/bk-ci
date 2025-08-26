@@ -342,7 +342,8 @@
         paramType.value = type === VARIABLE ? 'var' : 'constant'
         sliderEditItem.value = {
             ...data,
-            id: `${data.id}${data.constant ? '_COPY' : '_copy'}`
+            id: `${data.id}${data.constant ? '_COPY' : '_copy'}`,
+            published: false
         }
         paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.addParam') : proxy.$t('publicVar.addConst')
         showAddParamSlider.value = true
@@ -353,47 +354,12 @@
     function resetEditParam (param = {}) {
         sliderEditItem.value = param
     }
-    async function handleRelease () {
-        try {
-            releasing.value = true
-            const publicVars = groupData.value.publicVars?.map(i => {
-                    return {
-                        ...i,
-                        buildFormProperty: {
-                            ...i.buildFormProperty,
-                            varGroupName: i.varName
-                        }
-                    }
-                }) ?? []
-            const groupName = await proxy.$store.dispatch('publicVar/saveVariableGroup', {
-                projectId: projectId.value,
-                type: operateType.value,
-                params: {
-                    ...groupData.value,
-                    publicVars
-                }
-            })
-            props?.saveSuccessFn(groupName)
-            proxy.$bkMessage({
-                theme: 'success',
-                message: operateType.value === OPERATE_TYPE.UPDATE
-                    ? proxy.$t('publicVar.updateVarGroupSuccess')
-                    : proxy.$t('publicVar.newVarGroupSuccess')
-            })
-            proxy.$emit('update:isShow', false)
-        } catch (e) {
-            proxy.$bkMessage({
-                theme: 'error',
-                message: e.message || e
-            })
-        } finally {
-            releasing.value = false
-        }
-    }
     async function handlePreview () {
         if (releasing.value) return
         if (operateType.value === OPERATE_TYPE.CREATE) {
-            handleRelease()
+            proxy?.$router?.push({
+                name: 'VariableRelease'
+            })
         } else {
             showPreView.value = true
         }
