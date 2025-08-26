@@ -198,7 +198,7 @@ class PipelineBuildRecordService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                params = arrayOf(buildId)
+                params = arrayOf(pipelineId)
             )
         }
         return getBuildRecord(

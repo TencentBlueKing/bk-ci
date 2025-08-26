@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
@@ -41,6 +42,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -162,11 +164,13 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             containerId = vmSeqId,
             executeCount = task.executeCount ?: 1
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
         )
         val container = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = buildRecordContainer?.resourceVersion ?: 1,
+            version = buildRecordContainer.resourceVersion,
             buildId = buildId,
             executeCount = task.executeCount ?: 1
         )?.getContainer(vmSeqId)

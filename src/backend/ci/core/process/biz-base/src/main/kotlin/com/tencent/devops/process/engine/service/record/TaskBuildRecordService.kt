@@ -554,14 +554,15 @@ class TaskBuildRecordService(
         endTaskSeq: Int,
         pipelineTaskStatusInfos: MutableList<PipelineTaskStatusInfo>
     ) {
-        if (endTaskSeq < startTaskSeq) {
-            return
-        }
+        if (endTaskSeq < startTaskSeq) return
+
         val projectId = taskBuildEndParam.projectId
         val containerId = taskBuildEndParam.containerId
         val buildId = taskBuildEndParam.buildId
         val executeCount = taskBuildEndParam.executeCount
-        // 把post任务和取消任务之间的任务置为UNEXEC状态
+        val pipelineId = taskBuildEndParam.pipelineId
+
+        // 获取范围内的任务
         val buildTasks = pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
@@ -571,39 +572,39 @@ class TaskBuildRecordService(
             startTaskSeq = startTaskSeq,
             endTaskSeq = endTaskSeq
         )
-        var unExecTaskIds: MutableSet<String>? = null
-        buildTasks.forEach { pipelineBuildTask ->
-            val additionalOptions = pipelineBuildTask.additionalOptions
-            if (!pipelineBuildTask.status.isFinish() && additionalOptions?.elementPostInfo == null) {
-                if (unExecTaskIds == null) {
-                    unExecTaskIds = mutableSetOf()
-                }
-                val unExecBuildStatus = BuildStatus.UNEXEC
-                val taskId = pipelineBuildTask.taskId
-                unExecTaskIds?.add(taskId)
-                pipelineTaskStatusInfos.add(
-                    PipelineTaskStatusInfo(
-                        taskId = taskId,
-                        containerHashId = containerId,
-                        buildStatus = unExecBuildStatus,
-                        executeCount = executeCount,
-                        message = "Do not meet the run conditions, ignored.",
-                        stepId = pipelineBuildTask.stepId
-                    )
-                )
-            }
+
+        // 筛选需要取消的任务
+        val tasksToCancel = buildTasks.filter { task ->
+            !task.status.isFinish() && task.additionalOptions?.elementPostInfo == null
         }
-        if (!unExecTaskIds.isNullOrEmpty()) {
-            recordTaskDao.updateRecordStatus(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = taskBuildEndParam.pipelineId,
-                buildId = buildId,
-                executeCount = executeCount,
+
+        if (tasksToCancel.isEmpty()) return
+
+        // 准备任务状态信息和ID集合
+        val (unExecTaskIds, statusInfos) = tasksToCancel.map { task ->
+            task.taskId to PipelineTaskStatusInfo(
+                taskId = task.taskId,
+                containerHashId = containerId,
                 buildStatus = BuildStatus.UNEXEC,
-                taskIds = unExecTaskIds
+                executeCount = executeCount,
+                message = "Do not meet the run conditions, ignored.",
+                stepId = task.stepId
             )
-        }
+        }.unzip()
+
+        // 添加状态信息到结果列表
+        pipelineTaskStatusInfos.addAll(statusInfos)
+
+        // 更新数据库记录
+        recordTaskDao.updateRecordStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount,
+            buildStatus = BuildStatus.UNEXEC,
+            taskIds = unExecTaskIds.toSet()
+        )
     }
 
     fun updateTaskRecord(

@@ -446,7 +446,10 @@ class BuildEndControl @Autowired constructor(
 
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
             val triggerRecordContainer = containerBuildRecordService.getRecord(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId, containerId = "0"
+                projectId = nextBuild.projectId,
+                pipelineId = nextBuild.pipelineId,
+                buildId = nextBuild.buildId,
+                containerId = "0"
             ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(nextBuild.buildId)
             )

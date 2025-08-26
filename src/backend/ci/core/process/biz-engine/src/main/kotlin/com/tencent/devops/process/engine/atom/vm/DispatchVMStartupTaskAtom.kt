@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
@@ -48,6 +49,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -200,19 +202,22 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskId = taskId
             )
         }
+        val executeCount = task.executeCount ?: 1
         val buildRecordContainer = containerBuildRecordService.getRecord(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = vmSeqId,
-            executeCount = task.executeCount ?: 1
+            executeCount = executeCount
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
         )
         val container = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = buildRecordContainer?.resourceVersion ?: 1,
+            version = buildRecordContainer.resourceVersion,
             buildId = buildId,
-            executeCount = task.executeCount ?: 1
+            executeCount = executeCount
         )?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container) {
             BuildTaskException(

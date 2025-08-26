@@ -37,7 +37,10 @@ class PipelineProgressRateService constructor(
         if (task2ProgressRate.isEmpty()) return
         val pipelineId = pipelineBuildDao.getBuildInfo(
             dslContext = dslContext, projectId = projectId, buildId = buildId
-        )?.pipelineId ?: return
+        )?.pipelineId ?: run {
+            logger.error("no build info found for $buildId")
+            return
+        }
         task2ProgressRate.forEach { (taskId, progressRate) ->
             taskBuildRecordService.updateTaskRecord(
                 projectId = projectId,
