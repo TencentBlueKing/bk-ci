@@ -30,7 +30,9 @@ package com.tencent.devops.metrics.service.builds
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -402,6 +404,22 @@ class MetricsEventService @Autowired constructor(
         return null
     }
 
+    private fun replaceVariable(command: String?, event: PipelineBuildStatusBroadCastEvent) = ReplacementUtils.replace(
+        command = command ?: "",
+        replacement = object : KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                return kotlin.runCatching {
+                    client.get(ServiceVarResource::class).getBuildVars(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        keys = setOf(key)
+                    ).data?.get(key)
+                }.getOrNull()
+            }
+        }
+    )
+
     private fun priority(status: String?) = when (status) {
         BuildStatus.FAILED.name, BuildStatus.CANCELED.name -> "Warning"
         else -> "Normal"
@@ -508,10 +526,10 @@ class MetricsEventService @Autowired constructor(
                 cache["${property.name}.${event.containerHashId}"]
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity ->
-                cache["${property.name}.${event.containerHashId}"]
+                replaceVariable(cache["${property.name}.${event.containerHashId}"], event)
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchName ->
-                cache["${property.name}.${event.containerHashId}"]
+                replaceVariable(cache["${property.name}.${event.containerHashId}"], event)
 
             else -> null
         } ?: ""
