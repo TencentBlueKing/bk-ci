@@ -65,8 +65,7 @@ class PipelineBuildCheckRunDao {
             val conditions = listOf(
                 PROJECT_ID.eq(record.projectId),
                 PIPELINE_ID.eq(record.pipelineId),
-                BUILD_ID.eq(record.buildId),
-                CREATE_TIME.eq(record.createTime)
+                BUILD_ID.eq(record.buildId)
             )
             dslContext.update(this)
                     .set(record)
