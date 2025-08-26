@@ -98,7 +98,7 @@ class PipelineTemplatePipelineVersionDao {
                     .set(STATUS, record.status.name)
                     .set(PULL_REQUEST_URL, record.pullRequestUrl)
                     .set(UPDATER, record.updater) // 更新操作者
-                    .set(UPDATE_TIME, now)      // 更新时间戳
+                    .set(UPDATE_TIME, now) // 更新时间戳
                     .execute()
             }
         }
