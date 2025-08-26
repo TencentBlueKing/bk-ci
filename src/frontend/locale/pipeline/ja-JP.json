@@ -1954,5 +1954,13 @@
   "constraintConfTips": "この設定はテンプレートに準じます。カスタマイズする必要がある場合は、",
   "unfollow": "テンプレート追随をキャンセル",
   "triggerStepIdNotSet": "トリガーにStep IDが不足しています。テンプレートを修正してStep IDを補完してください",
-  "pacTemplaneEnableTips": "パイプラインテンプレートはPACモードが有効になっており、コードリポジトリでパイプライン設定を管理できます。"
+  "pacTemplaneEnableTips": "パイプラインテンプレートはPACモードが有効になっており、コードリポジトリでパイプライン設定を管理できます。",
+  "pipelineVersionChnaged": "{0} - パイプラインが変更されました",
+  "templateVersionDiff": "パイプラインのバージョン変更",
+  "templateDiffs": "テンプレート内容の変更",
+  "refTemplateDiffTitle": "パイプラインがブランチバージョンまたはリポジトリrefで以下のテンプレートを参照する場合、参照は変わらないが、テンプレートの内容が変更されました",
+  "refTemplate": "参照テンプレート",
+  "preRef": "前のバージョン/前のコミット",
+  "currentRef": "現在のバージョン/現在のコミット"
+
 }

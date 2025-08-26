@@ -18,6 +18,8 @@
                     v-if="instanceFromTemplate"
                     class="template-instance-tag"
                     theme="light"
+                    :on-show="handleShowPopover"
+                    :on-hide="handleHidePopover"
                 >
                     <span>
                         {{ $t('constraint') }}
@@ -26,30 +28,33 @@
                         slot="content"
                     >
                         <p>{{ $t('template.constraintMode') }}</p>
-                        <div class="constraint-info-area">
+                        <div
+                            class="constraint-info-area"
+                            v-bkloading="constraintInfoFetching"
+                        >
                             <p>
                                 <label>{{ $t('template.name') }}</label>
                                 <a
                                     class="text-link"
                                     target="_blank"
-                                    href="qq.com"
+                                    :href="constraintInfo?.templateDetailsUrl"
                                 >
-                                    {{ pipelineInfo?.templateName }}
+                                    {{ constraintInfo?.templateName ?? '--' }}
                                 </a>
                             </p>
                             <p>
                                 <label>{{ $t('template.templateVersion') }}</label>
                                 <span>
-                                    {{ pipelineInfo?.releaseVersion }}
+                                    {{ constraintInfo?.templateVersionName ?? '--' }}
                                 </span>
-                                <router-link
+                                <a
+                                    v-if="constraintInfo?.upgradeFlag"
                                     class="text-link"
-                                    :to="{ name: 'TemplateManageList', params: {
-                                        templateViewId: 'ALL'
-                                    } }"
+                                    target="_blank"
+                                    :href="constraintInfo?.upgradeUrl"
                                 >
                                     {{ $t('template.goUpgrade') }}
-                                </router-link>
+                                </a>
                             </p>
                         </div>
                     </section>
@@ -84,6 +89,9 @@
     import { mapState, mapGetters, mapActions } from 'vuex'
     import PacTag from '@/components/PacTag'
     import { RESOURCE_ACTION } from '@/utils/permission'
+    import {
+        PROCESS_API_URL_PREFIX
+    } from '@/store/constants'
 
     export default {
         components: {
@@ -102,7 +110,10 @@
         data () {
             return {
                 pipelineList: [],
-                currentPipeline: null
+                currentPipeline: null,
+                contraintApiSignal: null,
+                constraintInfo: null,
+                constraintInfoFetching: { isLoading: false, size: 'small' }
             }
         },
         computed: {
@@ -203,6 +214,34 @@
                         ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
                     ]
                     : list
+            },
+            async handleShowPopover () {
+                try {
+                    this.constraintInfoFetching = {
+                        isLoading: true,
+                        size: 'small'
+                    }
+                    this.contraintApiSignal = new AbortController()
+                    const { projectId, pipelineId, version } = this.$route.params
+                    const res = await this.$ajax({
+                        url: `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version}/related/info`,
+                        method: 'GET',
+                        signal: this.contraintApiSignal?.signal
+                    })
+                    this.constraintInfo = res.data
+
+                } catch (error) {
+                    
+                } finally {
+                    this.constraintInfoFetching = {
+                        isLoading: false,
+                        size: 'small'
+                    }
+                }
+            },
+            handleHidePopover () {
+                this.constraintInfo = null
+                this.contraintApiSignal?.abort()
             }
         }
     }

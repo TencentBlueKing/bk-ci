@@ -1959,5 +1959,13 @@
   "noticeConf": "Notification configuration",
   "constraintConfTips": "This setting follows the template. If customization is needed, you can ",
   "unfollow": "Unfollow template",
-  "triggerStepIdNotSet": "The trigger step ID is not set, please set it in the plugin configuration"
+  "triggerStepIdNotSet": "The trigger step ID is not set, please set it in the plugin configuration",
+  "pipelineVersionChnaged": "{0} - Pipeline has changed",
+  "templateVersionDiff": "Pipeline version change",
+  "templateDiffs": "Template content changes",
+  "refTemplateDiffTitle": "When the pipeline references the following templates via branch version or repository ref, the reference remains unchanged but the template content has changed",
+  "refTemplate": "Referenced template",
+  "preRef": "Previous version/Previous Commit",
+  "currentRef": "Current version/Current Commit"
+
 }
