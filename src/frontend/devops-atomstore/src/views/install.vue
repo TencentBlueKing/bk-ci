@@ -233,7 +233,7 @@
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
-                return methods[this.type]()
+                return methods[this.type](this.code)
             },
 
             async fetchRelativeProject () {
