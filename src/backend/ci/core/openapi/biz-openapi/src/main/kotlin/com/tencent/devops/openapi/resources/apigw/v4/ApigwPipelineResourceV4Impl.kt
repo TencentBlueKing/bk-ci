@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwPipelineResourceV4
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
@@ -43,8 +45,6 @@ import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -311,6 +311,23 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             pipelineName = pipelineName,
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
+        )
+    }
+
+    override fun lockPipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("OPENAPI_PIPELINE_V4|$userId|lock|$projectId|$pipelineId")
+        return client.get(ServicePipelineResource::class).lockPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            enable = enable
         )
     }
 

@@ -144,4 +144,31 @@ interface ServiceOauthResource {
         @PathParam("scmCode")
         scmCode: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取accessToken信息[SCM_REPO]")
+    @GET
+    @Path("/{scmCode}/token/{oauthUserId}")
+    fun scmRepoOauthToken(
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "用户ID", required = true)
+        @PathParam("oauthUserId")
+        oauthUserId: String
+    ): Result<GitToken?>
+
+    @Operation(summary = "获取授权链接[SCM_REPO]")
+    @GET
+    @Path("/{scmCode}/oauthUrl")
+    fun scmRepoOauthUrl(
+        @Parameter(description = "蓝盾用户名", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = true)
+        @QueryParam("redirectUrl")
+        redirectUrl: String
+    ): Result<String>
 }

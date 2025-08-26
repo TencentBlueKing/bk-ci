@@ -43,6 +43,20 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         return false
     }
 
+    override fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        // stream场景下不会使用到此场景. 做默认实现
+        return false
+    }
+
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        // stream场景下不会使用到此场景. 做默认实现
+        return false
+    }
+
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -150,7 +164,7 @@ abstract class StreamPermissionServiceImpl : PermissionService {
                 action = action,
                 projectCode = projectCode,
                 resourceType = resourceType
-        )) {
+            )) {
             return arrayListOf("*")
         }
         return emptyList()
@@ -181,6 +195,14 @@ abstract class StreamPermissionServiceImpl : PermissionService {
             val authPermission = action.substringAfterLast("_")
             AuthPermission.get(authPermission) to resources.map { it.resourceCode }
         }
+    }
+
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        return emptyList()
     }
 
     override fun getUserResourceAndParentByPermission(

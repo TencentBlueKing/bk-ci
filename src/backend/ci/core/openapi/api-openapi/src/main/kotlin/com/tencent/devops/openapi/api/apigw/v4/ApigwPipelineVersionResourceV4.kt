@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -63,6 +64,7 @@ import jakarta.ws.rs.core.Response
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwPipelineVersionResourceV4 {
 
     @Operation(summary = "获取流水线信息（含草稿）", tags = ["v4_app_pipeline_detail", "v4_user_pipeline_detail"])
