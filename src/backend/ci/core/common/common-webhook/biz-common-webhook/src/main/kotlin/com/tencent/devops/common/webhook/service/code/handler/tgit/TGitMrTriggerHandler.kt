@@ -320,10 +320,11 @@ class TGitMrTriggerHandler(
                 failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
                 eventType = getEventType().name
             )
+            // 无需调接口的过滤优先处理
             return listOf(
                 wipFilter, userFilter, targetBranchFilter,
-                sourceBranchFilter, skipCiFilter, pathFilter,
-                commitMessageFilter, actionFilter, thirdFilter
+                sourceBranchFilter, skipCiFilter, commitMessageFilter,
+                actionFilter, pathFilter, thirdFilter
             )
         }
     }

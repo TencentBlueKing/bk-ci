@@ -119,7 +119,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         try {
             logger.info(
                 "dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})|" +
-                        "eventType(${matcher.getCodeType()})"
+                        "eventType(${matcher.getEventType()})"
             )
             EventCacheUtil.initEventCache()
             if (triggerPipelines.isEmpty()) {
@@ -172,7 +172,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             EventCacheUtil.remove()
             logger.info(
                 "dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})|" +
-                        "eventType(${matcher.getCodeType()})|cost: ${System.currentTimeMillis() - startTime} ms"
+                        "eventType(${matcher.getEventType()})|cost: ${System.currentTimeMillis() - startTime} ms"
             )
         }
     }
