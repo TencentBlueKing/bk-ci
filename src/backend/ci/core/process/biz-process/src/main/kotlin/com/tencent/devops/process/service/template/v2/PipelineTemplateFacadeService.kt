@@ -812,7 +812,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         val templateRefType = templatePipelineVersion.refType
 
         val templateDetailsUrl = if (templateRefType == TemplateRefType.ID) {
-            String.format(templateDetailRedirectUri, projectId, templateId, templateVersion)
+            String.format(templateDetailRedirectUri, projectId, templateId, templateVersion).plus("/pipeline")
         } else {
             pipelineYamlFacadeService.getPipelineYamlInfo(
                 projectId = projectId,
@@ -828,7 +828,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
         // 当前流水版本为最新版本，并且关联的模板版本不是最新版本，则需要升级
         val upgradeFlag = pipelineReleaseVersion == version && templateInfo.releasedVersion != templateVersion
         val upgradeUrl = takeIf { upgradeFlag }?.let {
-            String.format(templateDetailRedirectUri, projectId, templateId, templateInfo.releasedVersion)
+            String.format(
+                templateDetailRedirectUri,
+                projectId, templateId, templateInfo.releasedVersion
+            ).plus("/pipeline")
         }
         return PTemplatePipelineRefInfo(
             templateName = templateInfo.name,
