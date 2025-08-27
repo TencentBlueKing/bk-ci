@@ -16,11 +16,18 @@ class RoutingStrategyService(private val redisOperation: RedisOperation) : Permi
         // [新] 使用 STRING 结构进行全量默认模式控制
         private const val DEFAULT_MODE_KEY = "permission:delegation:default_mode"
 
-        // 本地缓存，避免高频查询Redis。缓存1分钟。
+        // 本地缓存，避免高频查询Redis。缓存5秒。
         private val projectModeCache = CacheHelper.createCache<String, RoutingMode>(
             maxSize = 5000,
-            duration = 1,
-            unit = TimeUnit.MINUTES
+            duration = 5,
+            unit = TimeUnit.SECONDS
+        )
+
+        // 用于缓存全量默认模式，避免高频查询Redis。缓存5秒。
+        private val defaultModeCache = CacheHelper.createCache<String, RoutingMode>(
+            maxSize = 1, // 默认模式只有一个，所以最大容量为1
+            duration = 5,
+            unit = TimeUnit.SECONDS
         )
     }
 
@@ -29,17 +36,26 @@ class RoutingStrategyService(private val redisOperation: RedisOperation) : Permi
     }
 
     override fun getDefaultMode(): RoutingMode {
-        try {
-            val defaultModeName = redisOperation.get(DEFAULT_MODE_KEY)
-            if (!defaultModeName.isNullOrBlank()) {
-                logger.debug("get default mode from redis.", defaultModeName)
-                return parseMode(defaultModeName)
+        // 先从本地缓存获取默认模式
+        return defaultModeCache.get(DEFAULT_MODE_KEY) {
+            // 如果缓存未命中或已过期，则从Redis加载
+            try {
+                val defaultModeName = redisOperation.get(DEFAULT_MODE_KEY)
+                if (!defaultModeName.isNullOrBlank()) {
+                    logger.debug("Get default mode '{}' from Redis.", defaultModeName)
+                    parseMode(defaultModeName)
+                } else {
+                    logger.warn("No default mode found in Redis. Falling back to NORMAL.")
+                    RoutingMode.NORMAL
+                }
+            } catch (e: Exception) {
+                // 在Redis异常时提供安全保障
+                logger.error(
+                    "Failed to load default permission routing strategy from Redis. " +
+                        "Falling back to NORMAL mode.", e
+                )
+                RoutingMode.NORMAL
             }
-            return RoutingMode.NORMAL
-        } catch (e: Exception) {
-            // 在Redis异常时提供安全保障
-            logger.error("Failed to load permission routing strategy from Redis. Falling back to NORMAL mode.", e)
-            return RoutingMode.NORMAL
         }
     }
 
@@ -53,20 +69,10 @@ class RoutingStrategyService(private val redisOperation: RedisOperation) : Permi
             }
 
             // 优先级 2: 如果没有特定模式，则获取全局默认模式
-            val defaultModeName = redisOperation.get(DEFAULT_MODE_KEY)
-            if (!defaultModeName.isNullOrBlank()) {
-                logger.debug("Project '{}' is using default mode '{}' from Redis STRING.", projectCode, defaultModeName)
-                return parseMode(defaultModeName)
-            }
-
-            // 安全默认值: 如果 Redis 中什么都没配置，则默认为 NORMAL
-            logger.warn(
-                "No specific or default mode found in Redis for project '{}'. " +
-                    "Falling back to NORMAL.", projectCode
-            )
-            return RoutingMode.NORMAL
+            val defaultMode = getDefaultMode()
+            logger.debug("Project '{}' is using default mode '{}' from getDefaultMode().", projectCode, defaultMode)
+            return defaultMode
         } catch (e: Exception) {
-            // 在Redis异常时提供安全保障
             logger.error("Failed to load permission routing strategy from Redis. Falling back to NORMAL mode.", e)
             return RoutingMode.NORMAL
         }

@@ -26,25 +26,6 @@ class DelegatingPermissionServiceDecorator(
     private val circuitBreakerRegistry: CircuitBreakerRegistry,
     private val rbacCommonService: RbacCommonService
 ) : PermissionService {
-    companion object {
-        private val logger = LoggerFactory.getLogger(DelegatingPermissionServiceDecorator::class.java)
-        private const val AUTH_CIRCUIT_BREAKER_NAME = "AUTH_CIRCUIT_BREAKER"
-        private val threadPoolExecutor = ThreadPoolExecutor(
-            5,
-            5,
-            0,
-            TimeUnit.SECONDS,
-            LinkedBlockingQueue(500),
-            Executors.defaultThreadFactory()
-        ) { r, executor ->
-            logger.warn(
-                "Auth validation task rejected. Task: {}. Pool status: {}",
-                r.toString(),
-                executor.toString()
-            )
-        }
-    }
-
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         // 此方法逻辑简单，保持不变
         return rbacPermissionService.validateUserActionPermission(userId = userId, action = action)
@@ -360,12 +341,12 @@ class DelegatingPermissionServiceDecorator(
      * @param internalCall 内部（旧系统，如IAM）的调用逻辑，用于后台验证。
      */
     private fun <T> executeWithRouting(
-        projectCode: String,
+        projectCode: String? = null,
         context: String,
         externalCall: () -> T,
         internalCall: () -> T
     ): T {
-        val mode = routingStrategy.getModeForProject(projectCode)
+        val mode = projectCode?.let { routingStrategy.getModeForProject(it) } ?: routingStrategy.getDefaultMode()
         return when (mode) {
             RoutingMode.NORMAL -> externalCall()
             RoutingMode.INTERNAl -> internalCall()
@@ -375,26 +356,7 @@ class DelegatingPermissionServiceDecorator(
                 externalResult
             }
 
-            RoutingMode.CIRCUIT_BREAKER -> doWithCircuitBreaker(externalCall, internalCall)
-        }
-    }
-
-    private fun <T> executeWithRouting(
-        context: String,
-        externalCall: () -> T,
-        internalCall: () -> T
-    ): T {
-        val mode = routingStrategy.getDefaultMode()
-        return when (mode) {
-            RoutingMode.NORMAL -> externalCall()
-            RoutingMode.INTERNAl -> internalCall()
-            RoutingMode.VALIDATION -> {
-                val externalResult = externalCall()
-                compareAndLogDifference(projectCode = null, context, externalResult, internalCall)
-                externalResult
-            }
-
-            RoutingMode.CIRCUIT_BREAKER -> doWithCircuitBreaker(externalCall, internalCall)
+            RoutingMode.CIRCUIT_BREAKER -> doWithCircuitBreaker(externalCall, internalCall, context)
         }
     }
 
@@ -415,24 +377,36 @@ class DelegatingPermissionServiceDecorator(
                 // 比较基准（外部）结果与验证（内部）结果。
                 val isMismatch = when (expectResult) {
                     is List<*> -> expectResult.toSet() != (internalResult as? List<*>)?.toSet()
-                    is Map<*, *>, is Boolean -> expectResult != internalResult
+                    is Map<*, *> -> expectResult != internalResult
+                    is Boolean -> expectResult != internalResult
                     else -> expectResult.toString() != internalResult.toString() // 兜底比较
                 }
 
                 if (isMismatch) {
                     logger.warn(
                         """
-                [AUTH_VALIDATION_MISMATCH] 
-                Permission validation mismatch found for project:'$projectCode' in context: '$context'
-                - Benchmark Result (External): $expectResult
-                - Validation Result (Internal): $internalResult
-                """.trimIndent()
+                        [AUTH_VALIDATION_MISMATCH] Permission validation mismatch.
+                        Project: '{}', Context: '{}'
+                        - External Result (Benchmark): {}
+                        - Internal Result (Validation): {}
+                        """.trimIndent(),
+                        projectCode ?: "N/A",
+                        context,
+                        expectResult,
+                        internalResult
+                    )
+                } else {
+                    logger.debug(
+                        "[AUTH_VALIDATION_MATCH] Permission validation match. Project: '{}', Context: '{}'",
+                        projectCode ?: "N/A",
+                        context
                     )
                 }
             } catch (e: Exception) {
                 logger.warn(
-                    "[AUTH_VALIDATION_ERROR] 后台验证内部调用失败。项目: '{}', 上下文: {}",
-                    projectCode,
+                    "[AUTH_VALIDATION_ERROR] Background internal call failed during validation." +
+                        " Project: '{}', Context: '{}'",
+                    projectCode ?: "N/A",
                     context,
                     e
                 )
@@ -450,16 +424,40 @@ class DelegatingPermissionServiceDecorator(
 
     private fun <T> doWithCircuitBreaker(
         externalCall: () -> T,
-        fallbackCall: () -> T
+        fallbackCall: () -> T,
+        context: String
     ): T {
         val circuitBreaker = circuitBreakerRegistry.circuitBreaker(AUTH_CIRCUIT_BREAKER_NAME)
         return try {
             circuitBreaker.executeCallable(externalCall)
         } catch (e: CallNotPermittedException) {
-            logger.warn(
-                "[AUTH]|AUTH_SERVER_ERROR|Circuit breaker '{}' is open. Falling back.", e.causingCircuitBreakerName
+            logger.error(
+                "[AUTH_CIRCUIT_BREAKER_OPEN] Circuit breaker '{}' for context '{}' is open." +
+                    " Falling back to internal call. Error: {}",
+                e.causingCircuitBreakerName,
+                context,
+                e.message
             )
             fallbackCall()
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DelegatingPermissionServiceDecorator::class.java)
+        private const val AUTH_CIRCUIT_BREAKER_NAME = "AUTH_CIRCUIT_BREAKER"
+        private val threadPoolExecutor = ThreadPoolExecutor(
+            5,
+            5,
+            0,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(500),
+            Executors.defaultThreadFactory()
+        ) { r, executor ->
+            logger.warn(
+                "Auth validation task rejected. Task: {}. Pool status: {}",
+                r.toString(),
+                executor.toString()
+            )
         }
     }
 }
