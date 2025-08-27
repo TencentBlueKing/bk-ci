@@ -228,6 +228,7 @@
             offline (row) {
                 this.offlineData.show = true
                 this.offlineData.form = {
+                    versionName: row.versionName,
                     templateCode: row.templateCode,
                     version: row.version,
                     reason: ''
