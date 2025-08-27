@@ -97,8 +97,12 @@ class UpgradeProps @Autowired constructor(
     fun getUserVersion(comp: ClientUpgradeComp, os: ClientOS) =
         loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_USER_VERSION), true)
 
-    fun setUserVersion(comp: ClientUpgradeComp, os: ClientOS, version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_USER_VERSION), version, opType, true)
+    fun setUserVersion(
+        comp: ClientUpgradeComp,
+        os: ClientOS,
+        version: Map<String, String>,
+        opType: ClientUpgradeOpType
+    ) = opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_USER_VERSION), version, opType, true)
 
     fun getWorkspaceNameVersion(comp: ClientUpgradeComp, os: ClientOS) =
         loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_WORKSPACE_NAME_VERSION), true)
@@ -118,8 +122,12 @@ class UpgradeProps @Autowired constructor(
     fun getProjectVersion(comp: ClientUpgradeComp, os: ClientOS) =
         loadHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_PROJECT_VERSION), true)
 
-    fun setProjectVersion(comp: ClientUpgradeComp, os: ClientOS, version: Map<String, String>, opType: ClientUpgradeOpType) =
-        opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_PROJECT_VERSION), version, opType, true)
+    fun setProjectVersion(
+        comp: ClientUpgradeComp,
+        os: ClientOS,
+        version: Map<String, String>,
+        opType: ClientUpgradeOpType
+    ) = opHashCache(genUpgradeRedisKey(comp, os, ClientUpgradeKind.CURRENT_PROJECT_VERSION), version, opType, true)
 
     private fun opHashCache(
         redisKey: String,
