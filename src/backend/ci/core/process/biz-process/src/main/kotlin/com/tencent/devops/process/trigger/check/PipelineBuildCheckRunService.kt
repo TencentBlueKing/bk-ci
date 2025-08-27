@@ -219,7 +219,7 @@ class PipelineBuildCheckRunService @Autowired constructor(
                 }
             } catch (ignored: Exception) {
                 logger.info(
-                    "Failed to handle build check run event|b$projectId|$pipelineId|$buildId|$buildStatus",
+                    "Failed to handle build check run event|$projectId|$pipelineId|$buildId|$buildStatus",
                     ignored
                 )
                 throw ignored
