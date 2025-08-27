@@ -20,6 +20,7 @@ class PipelineYamlDynamicDependencyDao {
         with(TPipelineYamlDynamicDependency.T_PIPELINE_YAML_DYNAMIC_DEPENDENCY) {
             dslContext.insertInto(
                 this,
+                ID,
                 PROJECT_ID,
                 REPO_HASH_ID,
                 FILE_PATH,
@@ -36,6 +37,7 @@ class PipelineYamlDynamicDependencyDao {
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
+                record.id,
                 record.projectId,
                 record.repoHashId,
                 record.filePath,
@@ -100,6 +102,7 @@ class PipelineYamlDynamicDependencyDao {
         override fun map(record: TPipelineYamlDynamicDependencyRecord?): PipelineYamlDynamicDependency? {
             return record?.let {
                 PipelineYamlDynamicDependency(
+                    id = it.id,
                     projectId = it.projectId,
                     repoHashId = it.repoHashId,
                     filePath = it.filePath,

@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 
 @Schema(title = "yaml文件动态依赖")
 data class PipelineYamlDynamicDependency(
+    val id: Long,
     @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "代码库ID")
