@@ -379,7 +379,13 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
 
-        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
+        val propertyMap = getArtifactoryPropertiesMap(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = experience.path,
+            platform = experience.platform
+        )
 
         val experienceId = createExperience(
             projectId = projectId,
@@ -422,13 +428,19 @@ class ExperienceService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
-        path: String
+        path: String,
+        platform: String? = null
     ): MutableMap<String, String> {
         val properties =
             client.get(ServiceArtifactoryResource::class).properties(userId, projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
+        }
+        if (platform?.uppercase() == PlatformEnum.WIN.name) {
+            propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] = ""
+            propertyMap[ARCHIVE_PROPS_APP_VERSION] = "1.0.0"
+            propertyMap[ARCHIVE_PROPS_APP_ICON] = ""
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
@@ -899,7 +911,13 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
+        val propertyMap = getArtifactoryPropertiesMap(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            platform = experience.platform
+        )
 
         if (!experience.scheme.isNullOrBlank()) {
             propertyMap[ARCHIVE_PROPS_APP_SCHEME] = experience.scheme!!

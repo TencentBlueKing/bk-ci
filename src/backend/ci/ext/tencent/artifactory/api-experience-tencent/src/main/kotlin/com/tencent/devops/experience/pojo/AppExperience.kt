@@ -41,7 +41,7 @@ data class AppExperience(
     val source: Source,
     @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @get:Schema(title = "版本名称", required = true)
+    @get:Schema(title = "文件名称", required = true)
     val name: String,
     @get:Schema(title = "版本体验版本号", required = true)
     val version: String,

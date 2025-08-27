@@ -25,26 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.api.app
+package com.tencent.devops.experience.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
-import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ExperienceList
-import com.tencent.devops.experience.pojo.P2PConnectEvent
-import com.tencent.devops.experience.pojo.P2PUserPoolVO
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.v3.oas.annotations.Operation
@@ -60,53 +57,19 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "APP_EXPERIENCE", description = "版本体验-发布体验")
-@Path("/app/experiences")
+@Tag(name = "OPEN_EXPERIENCE_V2", description = "版本体验-公开接口V2")
+@Path("/open/experiences/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
-interface AppExperienceResource {
-
-    @Operation(summary = "获取体验列表")
-    @Path("/list")
-    @GET
-    fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "页目", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页数目", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<List<AppExperience>>
-
-    @Operation(summary = "获取体验列表--v2")
-    @Path("/v2/list")
-    @GET
-    fun listV2(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "平台", required = true)
-        @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int,
-        @Parameter(description = "组织", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
-        organization: String? = null,
-        @Parameter(description = "页目", required = false)
-        @QueryParam("page")
-        page: Int,
-        @Parameter(description = "每页数目", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<Pagination<AppExperience>>
-
+interface OpenAppExperienceResource {
     @Operation(summary = "获取体验列表--v3")
     @Path("/v3/list")
     @GET
     fun listV3(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -122,6 +85,9 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/detail")
     @GET
     fun detail(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -146,6 +112,9 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/changeLog")
     @GET
     fun changeLog(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -194,6 +163,9 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/downloadUrl")
     @POST
     fun downloadUrl(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -209,6 +181,9 @@ interface AppExperienceResource {
     @Path("/{projectId}/history")
     @GET
     fun history(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -224,6 +199,9 @@ interface AppExperienceResource {
     @Path("/{projectId}/projectGroupAndUsers")
     @GET
     fun projectGroupAndUsers(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -232,24 +210,13 @@ interface AppExperienceResource {
         projectId: String
     ): Result<List<ProjectGroupAndUsers>>
 
-    @Operation(summary = "创建体验")
-    @Path("{projectId}")
-    @POST
-    fun create(
-        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目Id", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "体验详情", required = true)
-        experience: ExperienceCreate
-    ): Result<Boolean>
-
     @Operation(summary = "获取上一次体验的参数")
-    @Path("lastParams")
+    @Path("/lastParams")
     @GET
     fun lastParams(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -268,6 +235,9 @@ interface AppExperienceResource {
     @Path("/outer/list")
     @GET
     fun outerList(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -280,6 +250,9 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/installPackages")
     @GET
     fun installPackages(
+        @Parameter(description = "认证token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        token: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -296,33 +269,4 @@ interface AppExperienceResource {
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Pagination<AppExperienceInstallPackage>>
-
-    @Operation(summary = "P2P下载的用户池")
-    @Path("/p2p/userPools")
-    @GET
-    fun p2pUserPools(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "体验ID", required = true)
-        @QueryParam("experienceHashId")
-        experienceHashId: String,
-        @Parameter(description = "组织", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
-        organization: String? = null
-    ): Result<P2PUserPoolVO>
-
-    @Operation(summary = "P2P连接事件上报")
-    @Path("/p2p/connectEvent")
-    @POST
-    fun p2pConnectEvent(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "连接事件", required = true)
-        connectEvent: P2PConnectEvent,
-        @Parameter(description = "组织", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
-        organization: String? = null
-    ): Result<Boolean>
 }
