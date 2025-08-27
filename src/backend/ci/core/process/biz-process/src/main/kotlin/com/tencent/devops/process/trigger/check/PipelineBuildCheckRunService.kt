@@ -126,7 +126,7 @@ class PipelineBuildCheckRunService @Autowired constructor(
             )
         } catch (ignored: Exception) {
             logger.info(
-                "Failed to handle build event|b$projectId|$pipelineId|$buildId|$triggerType|$buildStatus",
+                "Failed to handle build event|$projectId|$pipelineId|$buildId|$triggerType|$buildStatus",
                 ignored
             )
             throw ignored
@@ -204,7 +204,7 @@ class PipelineBuildCheckRunService @Autowired constructor(
                     // 如果当前有正在运行的检查,且当前构建的构建号小于正在运行的检查的构建号,则需要跳过写入
                     else -> {
                         logger.info(
-                            "build check run has bigger build number|" +
+                            "build check run has bigger build number,skip|" +
                                     "${latestCheckRunRecord.buildId}|(${latestCheckRunRecord.buildNum})"
                         )
                         pipelineBuildCheckRunDao.update(
