@@ -35,7 +35,9 @@ enum class CodeType {
     TGIT,
     P4,
     // 通用git触发器
-    SCM_GIT;
+    SCM_GIT,
+    // 通用svn触发器
+    SCM_SVN;
 
     companion object {
         fun convert(codeType: String?) = values().find { it.name == codeType }
