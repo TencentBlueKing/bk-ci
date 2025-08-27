@@ -1,11 +1,13 @@
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.PipelineYamlDynamicDependencyDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDynamicDependency
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -16,7 +18,8 @@ class PipelineYamlDynamicDependencyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlDynamicDependencyDao: PipelineYamlDynamicDependencyDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService
+    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService,
+    private val client: Client
 ) {
 
     fun analyzeDynamicDependency(
@@ -45,7 +48,11 @@ class PipelineYamlDynamicDependencyService @Autowired constructor(
             pipelineId = templatePipelineVersion.templateId,
             version = templatePipelineVersion.templateVersion.toInt()
         ) ?: return null
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+            bizTag = PIPELINE_YAML_DYNAMIC_DEPENDENCY_BIZ_ID
+        ).data ?: 0
         return PipelineYamlDynamicDependency(
+            id = id,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
@@ -85,5 +92,6 @@ class PipelineYamlDynamicDependencyService @Autowired constructor(
 
     companion object {
         private const val DEFAULT_REF = "*"
+        private const val PIPELINE_YAML_DYNAMIC_DEPENDENCY_BIZ_ID = "PIPELINE_YAML_DYNAMIC_DEPENDENCY"
     }
 }
