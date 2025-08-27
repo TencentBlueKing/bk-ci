@@ -972,7 +972,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             instancePipelineCount = basicInfo.instancePipelineCount,
             creator = basicInfo.creator,
             updater = basicInfo.updater,
-            createdTime = basicInfo.createdTime,
+            createTime = basicInfo.createdTime,
             updateTime = basicInfo.updateTime,
             canView = permission2TemplatesMap[AuthPermission.VIEW]?.contains(basicInfo.id) ?: false,
             canEdit = permission2TemplatesMap[AuthPermission.EDIT]?.contains(basicInfo.id) ?: false,
