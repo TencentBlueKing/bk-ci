@@ -203,6 +203,10 @@ class PipelineBuildCheckRunService @Autowired constructor(
 
                     // 如果当前有正在运行的检查,且当前构建的构建号小于正在运行的检查的构建号,则需要跳过写入
                     else -> {
+                        logger.info(
+                            "build check run has bigger build number|" +
+                                    "${latestCheckRunRecord.buildId}|(${latestCheckRunRecord.buildNum})"
+                        )
                         pipelineBuildCheckRunDao.update(
                             dslContext = dslContext,
                             projectId = projectId,
