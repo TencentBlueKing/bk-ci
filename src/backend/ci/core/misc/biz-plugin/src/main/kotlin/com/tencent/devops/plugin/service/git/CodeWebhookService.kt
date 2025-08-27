@@ -745,13 +745,13 @@ class CodeWebhookService @Autowired constructor(
         buildId: String,
         channelCode: ChannelCode,
         variables: Map<String, String>
-    ) = if (channelCode == ChannelCode.CODECC) {
+    ) = if (channelCode == ChannelCode.GONGFENGSCAN) {
         val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
         val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
         if (codeccTaskId != null) {
             "$codeccPrefix/$codeccTaskId/detail"
         } else {
-            "codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
+            "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         }
     } else {
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"

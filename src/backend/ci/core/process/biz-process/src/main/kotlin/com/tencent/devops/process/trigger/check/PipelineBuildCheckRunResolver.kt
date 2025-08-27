@@ -232,7 +232,7 @@ class PipelineBuildCheckRunResolver @Autowired constructor(
         if (codeccTaskId != null) {
             "$codeccPrefix/$codeccTaskId/detail"
         } else {
-            "codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
+            "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
         }
     } else {
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
