@@ -34,9 +34,9 @@ import java.time.ZoneId
 
 @Service
 @SuppressWarnings("ALL")
-class PipelineCheckRunService @Autowired constructor(
+class PipelineBuildCheckRunService @Autowired constructor(
     private val pipelineBuildCheckRunDao: PipelineBuildCheckRunDao,
-    private val pipelineCheckRunQualityService: PipelineCheckRunQualityService,
+    private val pipelineBuildCheckRunQualityService: PipelineBuildCheckRunQualityService,
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val dslContext: DSLContext,
@@ -88,6 +88,7 @@ class PipelineCheckRunService @Autowired constructor(
         if (checkRunContext == null) {
             return
         }
+        logger.info("handle build event|$projectId|$pipelineId|$buildId|$triggerType|$buildStatus")
         val lock = PipelineBuildCheckRunLock(redisOperation = redisOperation, buildId = buildId)
         try {
             lock.lock()
@@ -123,6 +124,12 @@ class PipelineCheckRunService @Autowired constructor(
                     buildStatus = checkRunContext.buildStatus
                 )
             )
+        } catch (ignored: Exception) {
+            logger.info(
+                "Failed to handle build event|b$projectId|$pipelineId|$buildId|$triggerType|$buildStatus",
+                ignored
+            )
+            throw ignored
         } finally {
             lock.unlock()
         }
@@ -130,6 +137,7 @@ class PipelineCheckRunService @Autowired constructor(
 
     fun onBuildCheckRun(event: PipelineBuildCheckRunEvent) {
         with(event) {
+            logger.info("handle build check run|$projectId|$pipelineId|$buildId|$buildStatus")
             val lock = PipelineCheckRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
                 lock.lock()
@@ -205,6 +213,12 @@ class PipelineCheckRunService @Autowired constructor(
                         )
                     }
                 }
+            } catch (ignored: Exception) {
+                logger.info(
+                    "Failed to handle build check run event|b$projectId|$pipelineId|$buildId|$buildStatus",
+                    ignored
+                )
+                throw ignored
             } finally {
                 lock.unlock()
             }
@@ -268,7 +282,7 @@ class PipelineCheckRunService @Autowired constructor(
         val (checkRunState, checkRunConclusion) = getCheckRunState(buildStatus)
         // 执行结束后尝试获取报表
         val quality = if (buildStatus != BuildStatus.RUNNING && supportQuality(eventType)) {
-            pipelineCheckRunQualityService.getQuality(
+            pipelineBuildCheckRunQualityService.getQuality(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -368,6 +382,6 @@ class PipelineCheckRunService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineCheckRunService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineBuildCheckRunService::class.java)
     }
 }

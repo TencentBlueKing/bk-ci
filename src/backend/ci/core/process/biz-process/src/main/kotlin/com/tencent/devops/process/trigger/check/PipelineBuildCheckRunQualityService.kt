@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineCheckRunQualityService @Autowired constructor(
+class PipelineBuildCheckRunQualityService @Autowired constructor(
     private val client: Client
 ) {
     fun getQuality(
