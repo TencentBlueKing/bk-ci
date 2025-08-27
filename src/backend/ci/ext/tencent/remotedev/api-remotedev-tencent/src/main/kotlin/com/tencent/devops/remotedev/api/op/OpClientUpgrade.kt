@@ -1,8 +1,8 @@
 package com.tencent.devops.remotedev.api.op
 
-import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeVersions
 import io.swagger.v3.oas.annotations.Operation
@@ -40,7 +40,7 @@ interface OpClientUpgrade {
         @QueryParam("type")
         type: ClientUpgradeComp,
         @QueryParam("os")
-        os: OS,
+        os: ClientOS,
         @QueryParam("version")
         version: String
     ): Result<Boolean>
@@ -52,7 +52,7 @@ interface OpClientUpgrade {
         @QueryParam("type")
         type: ClientUpgradeComp,
         @QueryParam("os")
-        os: OS,
+        os: ClientOS,
         @QueryParam("maxNumber")
         maxNumber: Int
     ): Result<Boolean>
@@ -64,7 +64,7 @@ interface OpClientUpgrade {
         @QueryParam("type")
         type: ClientUpgradeComp,
         @QueryParam("os")
-        os: OS,
+        os: ClientOS,
         @QueryParam("opType")
         opType: ClientUpgradeOpType,
         data: Map<String, String>
@@ -77,7 +77,7 @@ interface OpClientUpgrade {
         @QueryParam("type")
         type: ClientUpgradeComp,
         @QueryParam("os")
-        os: OS,
+        os: ClientOS,
         @QueryParam("opType")
         opType: ClientUpgradeOpType,
         data: Map<String, String>
@@ -90,7 +90,7 @@ interface OpClientUpgrade {
         @QueryParam("type")
         type: ClientUpgradeComp,
         @QueryParam("os")
-        os: OS,
+        os: ClientOS,
         @QueryParam("opType")
         opType: ClientUpgradeOpType,
         data: Map<String, String>
