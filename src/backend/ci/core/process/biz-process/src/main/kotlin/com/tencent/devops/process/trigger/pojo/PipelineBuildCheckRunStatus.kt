@@ -14,4 +14,8 @@ enum class PipelineBuildCheckRunStatus {
     FAILED,
     @Schema(description = "跳过,不需要写入")
     SKIP;
+
+    fun isFinished(): Boolean {
+        return this == SUCCESS || this == FAILED || this == SKIP
+    }
 }

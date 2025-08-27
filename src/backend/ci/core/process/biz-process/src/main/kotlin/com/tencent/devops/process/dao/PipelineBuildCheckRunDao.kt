@@ -73,23 +73,22 @@ class PipelineBuildCheckRunDao {
         }
     }
 
-    fun get(
+    fun getLatestCheckRun(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         repoHashId: String,
         commitId: String,
-        pullRequestId: Long,
-        checkRunStatus: String,
+        pullRequestId: Long
     ): TPipelineBuildCheckRunRecord? {
         with(TPipelineBuildCheckRun.T_PIPELINE_BUILD_CHECK_RUN) {
-            val conditions = listOf(
+            val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
                 PIPELINE_ID.eq(pipelineId),
                 REPO_HASH_ID.eq(repoHashId),
                 COMMIT_ID.eq(commitId),
                 PULL_REQUEST_ID.eq(pullRequestId),
-                CHECK_RUN_STATUS.eq(checkRunStatus)
+                CHECK_RUN_ID.isNotNull
             )
             return dslContext.selectFrom(this)
                 .where(conditions)
