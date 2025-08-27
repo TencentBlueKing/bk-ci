@@ -153,7 +153,7 @@
                         },
                         {
                             key: 'createTime',
-                            value: convertTime(basicInfo?.createdTime)
+                            value: convertTime(basicInfo?.createdTime) ?? '--'
                         }
                     ]
                     : [

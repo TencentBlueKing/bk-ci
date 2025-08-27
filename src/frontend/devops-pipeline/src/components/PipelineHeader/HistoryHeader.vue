@@ -286,7 +286,7 @@
                     name: this.editRouteName
                 })
             }
-            if (this.releaseVersion !== this.currentVersion) {
+            if (this.releaseVersion !== this.currentVersion && !this.currentVersion) {
                 this.handleVersionChange(this.releaseVersion)
             } else {
                 this.init()
