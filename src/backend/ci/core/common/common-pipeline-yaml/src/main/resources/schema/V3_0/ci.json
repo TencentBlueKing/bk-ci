@@ -1426,7 +1426,7 @@
     "variables" : {
       "type" : "object",
       "patternProperties" : {
-        "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
+        "^(?!^[A-Z][A-Z0-9_]*$).+$" : {
           "anyOf" : [ {
             "type" : "string"
           }, {
@@ -1613,9 +1613,6 @@
               }
             }
           } ]
-        },
-        "^template$" : {
-          "$ref" : "#/definitions/template"
         },
         "^[A-Z][A-Z0-9_]{0,63}$" : {
           "type" : "object",
@@ -1886,20 +1883,107 @@
       "$ref" : "#/definitions/steps"
     },
     "extends" : {
-      "type" : "object",
-      "required" : [ "template" ],
-      "additionalProperties" : false,
-      "properties" : {
-        "template" : {
-          "type" : "string"
-        },
-        "ref" : {
-          "type" : "string"
-        },
-        "parameters" : {
-          "$ref" : "#/definitions/parameters"
+      "anyOf" : [ {
+        "type" : "object",
+        "required" : [ "template" ],
+        "additionalProperties" : false,
+        "properties" : {
+          "template" : {
+            "type" : "object",
+            "required" : [ "template" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "path" : {
+                "type" : "string"
+              },
+              "ref" : {
+                "type" : "string"
+              },
+              "template-id" : {
+                "type" : "string"
+              },
+              "version" : {
+                "type" : "string"
+              },
+              "variables" : {
+                "type" : "object",
+                "additionalProperties" : {
+                  "anyOf" : [ {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "value" : {
+                        "type" : "string"
+                      },
+                      "allow-modify-at-startup" : {
+                        "type" : "boolean"
+                      }
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                }
+              },
+              "trigger-conf" : {
+                "type" : "object",
+                "additionalProperties" : {
+                  "anyOf" : [ {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "disabled" : {
+                        "type" : "boolean"
+                      },
+                      "cron" : {
+                        "type" : "string"
+                      },
+                      "variables" : {
+                        "type" : "object"
+                      }
+                    }
+                  } ]
+                }
+              },
+              "recommended-version" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "enabled" : {
+                    "type" : "boolean"
+                  },
+                  "allow-modify-at-startup" : {
+                    "type" : "boolean"
+                  },
+                  "major" : {
+                    "type" : "integer"
+                  },
+                  "minor" : {
+                    "type" : "integer"
+                  },
+                  "fix" : {
+                    "type" : "integer"
+                  },
+                  "build-no" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "initial-value" : {
+                        "type" : "integer"
+                      },
+                      "strategy" : {
+                        "type" : "string",
+                        "pattern" : "\\bplus1-when-success\\b|\\bplus1-everytime\\b|\\binvariable\\b"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
-      }
+      }, {
+        "type" : "string"
+      } ]
     },
     "resources" : {
       "type" : "object",
@@ -2880,21 +2964,6 @@
     },
     "template" : {
       "anyOf" : [ {
-        "type" : "array",
-        "items" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "required" : [ "name" ],
-          "properties" : {
-            "name" : {
-              "type" : "string"
-            },
-            "parameters" : {
-              "$ref" : "#/definitions/parameters"
-            }
-          }
-        }
-      }, {
         "type" : "string"
       } ]
     },
@@ -2966,14 +3035,6 @@
       }, {
         "not" : {
           "required" : [ "variables" ]
-        }
-      }, {
-        "not" : {
-          "required" : [ "notices" ]
-        }
-      }, {
-        "not" : {
-          "required" : [ "label" ]
         }
       }, {
         "not" : {
