@@ -588,6 +588,9 @@
             userName () {
                 return this.$store.state.user.username
             },
+            isCancelReRelease () {
+                return this.initReleaseType === 'CANCEL_RE_RELEASE'
+            },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
@@ -627,13 +630,13 @@
         },
         methods: {
             branchBlur (value) {
-                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && this.initReleaseType !== 'CANCEL_RE_RELEASE') {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && !this.isCancelReRelease) {
                     this.getAtomLog(value)
                 }
             },
             releaseTypeChange (value) {
                 const branch = (value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch) ? this.atomForm.branch : null
-                if (this.initReleaseType !== 'CANCEL_RE_RELEASE') {
+                if (!this.isCancelReRelease) {
                     this.getAtomLog(branch)
                 }
             },
@@ -720,9 +723,10 @@
                                 this.curVersion = versionInfo.version
                                 this.atomForm.releaseType = versionInfo.releaseType
                                 this.initReleaseType = versionInfo.releaseType
+                                this.isCancelReRelease && (this.atomForm.versionContent = versionInfo.lastVersionContent)
                             }
                         })
-                        if (this.initReleaseType !== 'CANCEL_RE_RELEASE') {
+                        if (!this.isCancelReRelease) {
                             this.getAtomLog()
                         }
                     }
