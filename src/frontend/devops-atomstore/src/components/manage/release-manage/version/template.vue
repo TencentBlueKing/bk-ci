@@ -200,9 +200,6 @@
             async submitOfflineTemplateVersion () {
                 try {
                     const valid = await this.$refs.offlineForm.validate()
-                    if (!valid) {
-                        throw new Error(this.$t('store.校验失败，请修改再试'))
-                    }
                     const { templateCode, version, reason } = this.offlineData.form
 
                     this.offlineData.isLoading = true
@@ -214,7 +211,10 @@
                     this.cancelOfflineTemplate()
                     this.$emit('pageChanged')
                 } catch (err) {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                    this.$bkMessage({
+                        message: err.content || this.$t('store.校验失败，请修改再试'),
+                        theme: 'error'
+                    })
                 } finally {
                     this.offlineData.isLoading = false
                 }
