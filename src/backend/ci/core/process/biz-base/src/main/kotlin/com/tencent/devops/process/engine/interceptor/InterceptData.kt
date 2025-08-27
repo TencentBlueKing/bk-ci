@@ -58,5 +58,7 @@ data class InterceptData(
     @get:Schema(title = "是否为重试操作", required = false)
     val retry: Boolean? = false,
     @get:Schema(title = "是否为运行中重试", required = true)
-    val retryOnRunningBuild: Boolean = false
+    val retryOnRunningBuild: Boolean = false,
+    @get:Schema(title = "是否允许cancel处理", required = true)
+    val cancelAllowed: Boolean = true
 )
