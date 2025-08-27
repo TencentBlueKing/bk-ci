@@ -139,7 +139,7 @@ interface StoreCommonService {
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
         version: String?,
-        versionContent: String? = null
+        lastVersionContent: String? = null
     ): StoreShowVersionInfo
 
     /**

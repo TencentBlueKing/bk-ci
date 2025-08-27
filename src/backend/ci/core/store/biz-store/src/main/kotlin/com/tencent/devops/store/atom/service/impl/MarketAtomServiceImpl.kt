@@ -683,7 +683,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             versionLogRecord.releaseType
         }
-        val versionContent = if (record.atomStatus == AtomStatusEnum.INIT.status.toByte()) {
+        val lastVersionContent = if (record.atomStatus == AtomStatusEnum.INIT.status.toByte()) {
             null
         } else {
             versionLogRecord.content
@@ -698,7 +698,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             cancelFlag = cancelFlag,
             releaseType = showReleaseType,
             version = showVersion,
-            versionContent = versionContent
+            lastVersionContent = lastVersionContent
         )
         return Result(showVersionInfo)
     }
