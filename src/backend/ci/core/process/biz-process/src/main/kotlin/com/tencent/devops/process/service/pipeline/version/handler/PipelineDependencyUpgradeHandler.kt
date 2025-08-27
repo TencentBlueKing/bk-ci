@@ -77,6 +77,7 @@ class PipelineDependencyUpgradeHandler @Autowired constructor(
             )
             pipelineVersionPersistenceService.upgradeDependencyForRelease(
                 context = this,
+                upgradeVersion = releaseResource.version,
                 pipelineResourceVersion = pipelineResourceVersion,
                 pipelineSetting = pipelineSetting
             )

@@ -432,9 +432,12 @@ class PipelineVersionPersistenceService @Autowired constructor(
 
     /**
      * 正式版本依赖升级
+     *
+     * @param upgradeVersion 升级的版本
      */
     fun upgradeDependencyForRelease(
         context: PipelineVersionCreateContext,
+        upgradeVersion: Int,
         pipelineResourceVersion: PipelineResourceVersion,
         pipelineSetting: PipelineSetting
     ) {
@@ -463,7 +466,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    version = version!!,
+                    version = upgradeVersion,
                     versionStatus = VersionStatus.HIDDEN
                 )
                 createPipelineResourceVersion(
