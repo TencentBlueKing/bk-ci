@@ -144,20 +144,16 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         // 构建环境容器序号ID
         val vmSeqId = task.containerId
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        checkNotNull(pipelineInfo) {
-            BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = ERROR_PIPELINE_NOT_EXISTS,
-                    params = arrayOf(pipelineId)
-                ),
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-        }
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: throw BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
+            errorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)
+            ),
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
 
         val buildRecordContainer = containerBuildRecordService.getRecord(
             projectId = projectId,
@@ -174,20 +170,16 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             version = buildRecordContainer.resourceVersion,
             buildId = buildId,
             executeCount = task.executeCount ?: 1
-        )?.getContainer(vmSeqId)
-        checkNotNull(container) {
-            BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-                errorMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
-                    params = arrayOf(vmSeqId)
-                ),
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-        }
+        )?.getContainer(vmSeqId) ?: throw BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
+            errorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS, params = arrayOf(vmSeqId)
+            ),
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
 
         containerBuildRecordService.containerPreparing(
             projectId = projectId,

@@ -188,19 +188,16 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        checkNotNull(pipelineInfo) {
-            BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_PIPELINE_NOT_EXISTS, I18nUtil.getDefaultLocaleLanguage()
-                ),
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-        }
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: throw BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
+            errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_PIPELINE_NOT_EXISTS, I18nUtil.getDefaultLocaleLanguage()
+            ),
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
         val executeCount = task.executeCount ?: 1
         val buildRecordContainer = containerBuildRecordService.getRecord(
             projectId = projectId,
@@ -217,21 +214,18 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             version = buildRecordContainer.resourceVersion,
             buildId = buildId,
             executeCount = executeCount
-        )?.getContainer(vmSeqId)
-        checkNotNull(container) {
-            BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-                errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
-                    I18nUtil.getDefaultLocaleLanguage(),
-                    arrayOf(vmNames)
-                ),
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-        }
+        )?.getContainer(vmSeqId) ?: throw BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
+            errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
+                I18nUtil.getDefaultLocaleLanguage(),
+                arrayOf(vmNames)
+            ),
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
 
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
