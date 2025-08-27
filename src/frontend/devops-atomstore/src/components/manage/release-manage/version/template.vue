@@ -227,7 +227,11 @@
 
             offline (row) {
                 this.offlineData.show = true
-                this.offlineData.form = row
+                this.offlineData.form = {
+                    templateCode: row.templateCode,
+                    version: row.version,
+                    reason: ''
+                }
             },
 
             async online (row) {
