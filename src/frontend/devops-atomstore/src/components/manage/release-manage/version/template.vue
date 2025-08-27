@@ -78,8 +78,8 @@
                     v-if="offlineData.form"
                     ref="offlineForm"
                     class="offline-template-version-form"
-                    
                     :model="offlineData.form"
+                    :rules="offlineFormRules"
                     v-bkloading="{ isLoading: offlineData.isLoading }"
                 >
                     <bk-form-item
@@ -96,9 +96,8 @@
                     </bk-form-item>
                     <bk-form-item
                         :label="$t('store.下架原因')"
-                        :required="true"
+                        required
                         property="reason"
-                        :rules="[requireRule($t('store.下架原因'))]"
                     >
                         <bk-input
                             type="textarea"
@@ -172,6 +171,17 @@
                     createTime: convertTime(item.createTime)
                     
                 }))
+            },
+            offlineFormRules () {
+                return {
+                    reason: [
+                        {
+                            required: true,
+                            message: this.$t('store.validateMessage', [$t('store.下架原因'), this.$t('store.必填项')]),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
             }
         },
 
@@ -185,14 +195,6 @@
             },
             handleLimitChange (currentLimit, prevLimit) {
                 this.$emit('pageLimitChanged', currentLimit, prevLimit)
-            },
-
-            requireRule (name) {
-                return {
-                    required: true,
-                    message: this.$t('store.validateMessage', [name, this.$t('store.必填项')]),
-                    trigger: 'blur'
-                }
             },
 
             async submitOfflineTemplateVersion () {
