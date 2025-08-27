@@ -60,7 +60,6 @@ import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -69,6 +68,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
+import jakarta.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -253,7 +253,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         }
     }
 
-    fun getRepo(
+    private fun getRepo(
         projectId: String,
         repositoryConfig: RepositoryConfig,
         variables: Map<String, String>? = null

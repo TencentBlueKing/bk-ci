@@ -67,10 +67,6 @@ import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
@@ -309,17 +305,6 @@ class CodeWebhookService @Autowired constructor(
                 RepositoryType.ID -> RepositoryConfig(repositoryId, null, repositoryType)
                 RepositoryType.NAME -> RepositoryConfig(null, repositoryId, repositoryType)
             }
-            val repo = scmCheckService.getRepo(
-                projectId = projectId,
-                repositoryConfig = repositoryConfig,
-                variables = variables
-            )
-            if (!supportRepo(repo)) {
-                logger.info(
-                    "Process instance($buildId) not support write repo(${repo::class.simpleName}) check run"
-                )
-                return
-            }
 
             val webhookTypeStr = variables[PIPELINE_WEBHOOK_TYPE]
             val webhookEventTypeStr = variables[PIPELINE_WEBHOOK_EVENT_TYPE]
@@ -329,7 +314,13 @@ class CodeWebhookService @Autowired constructor(
                 logger.info("Process instance($buildId) is not web hook triggered")
                 return
             }
-
+            val codeType = CodeType.valueOf(webhookTypeStr)
+            if (!supportRepo(codeType)) {
+                logger.info(
+                    "Process instance($buildId) not support write repo($codeType) check run"
+                )
+                return
+            }
             val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             val targetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
@@ -769,8 +760,8 @@ class CodeWebhookService @Autowired constructor(
     /**
      * 支持的仓库类型
      */
-    private fun supportRepo(repository: Repository) = when (repository) {
-        is CodeGitRepository, is CodeTGitRepository, is GithubRepository -> true
+    private fun supportRepo(codeType: CodeType) = when (codeType) {
+        CodeType.GIT, CodeType.TGIT, CodeType.GITHUB -> true
         else -> false
     }
 }
