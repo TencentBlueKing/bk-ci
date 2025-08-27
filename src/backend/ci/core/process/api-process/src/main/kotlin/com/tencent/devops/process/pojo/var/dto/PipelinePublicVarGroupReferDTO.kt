@@ -38,6 +38,8 @@ data class PipelinePublicVarGroupReferDTO(
     val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "流水线/模板名称")
     val referName: String,
+    @get:Schema(title = "流水线/模板版本名称")
+    val referVersionName: String,
     @get:Schema(title = "变量组名称列表")
     val groupNames: List<String>
 )

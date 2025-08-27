@@ -33,8 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
@@ -171,7 +172,34 @@ interface UserPublicVarGroupResource {
         groupName: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取引用变量的流水线/模板列表")
+    @Operation(summary = "获取引用变量的模板列表")
+    @GET
+    @Path("/{groupName}/vars/{varName}/references")
+    fun getTemplateReferences(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "变量组名称", required = true)
+        @PathParam("groupName")
+        groupName: String,
+        @Parameter(description = "变量名称", required = true)
+        @PathParam("varName")
+        varName: String,
+        @Parameter(description = "版本号", required = false)
+        @QueryParam("version")
+        version: Int ?= null,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<PublicVarTemplateRefDO>>
+
+    @Operation(summary = "获取引用变量的流水线列表")
     @GET
     @Path("/{groupName}/vars/{varName}/references")
     fun getReferences(
@@ -196,7 +224,7 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<Page<PublicVarVariableReferenceDO>>
+    ): Result<Page<PublicVarPipelineRefDO>>
 
     @Operation(summary = "获取变量组的发布记录")
     @GET

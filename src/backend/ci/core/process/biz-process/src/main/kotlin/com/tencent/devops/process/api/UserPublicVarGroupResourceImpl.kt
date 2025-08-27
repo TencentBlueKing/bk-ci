@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarChangePreviewDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
@@ -132,6 +132,18 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun getTemplateReferences(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        varName: String,
+        version: Int?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarTemplateRefDO>> {
+        TODO("Not yet implemented")
+    }
+
     override fun getReferences(
         userId: String,
         projectId: String,
@@ -140,17 +152,8 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         version: Int?,
         page: Int,
         pageSize: Int
-    ): Result<Page<PublicVarVariableReferenceDO>> {
-        return Result(publicVarGroupService.listVarGroupReferInfo(
-            PublicVarGroupInfoQueryReqDTO(
-                projectId = projectId,
-                groupName = groupName,
-                varName = varName,
-                version = version,
-                page = page,
-                pageSize = pageSize
-            )
-        ))
+    ): Result<Page<PublicVarPipelineRefDO>> {
+        TODO("Not yet implemented")
     }
 
     override fun getReleaseHistory(

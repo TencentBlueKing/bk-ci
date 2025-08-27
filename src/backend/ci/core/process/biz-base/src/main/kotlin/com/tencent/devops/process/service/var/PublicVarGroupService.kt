@@ -47,7 +47,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PipelinePublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
@@ -376,7 +376,7 @@ class PublicVarGroupService @Autowired constructor(
         }
     }
 
-    fun listVarGroupReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicVarVariableReferenceDO> {
+    fun listVarGroupReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicVarTemplateRefDO> {
         val projectId = queryReq.projectId
         val groupName = queryReq.groupName!!
         val varName = queryReq.varName!!
@@ -414,7 +414,7 @@ class PublicVarGroupService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             records = varGroupReferInfo.map {
-                PublicVarVariableReferenceDO(
+                PublicVarTemplateRefDO(
                     referId = it.referId,
                     referType = it.referType,
                     referName = it.referName,

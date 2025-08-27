@@ -41,7 +41,6 @@ class PipelinePublicVarGroupReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
-        varName: String,
         page: Int,
         pageSize: Int
     ): List<PipelinePublicVarGroupReferPO> {
@@ -49,7 +48,6 @@ class PipelinePublicVarGroupReferInfoDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
                 .fetch()
@@ -58,8 +56,6 @@ class PipelinePublicVarGroupReferInfoDao {
                         id = it.id,
                         projectId = it.projectId,
                         groupName = it.groupName,
-                        varName = it.varName,
-                        varType = PublicVarTypeEnum.valueOf(it.varType),
                         version = it.version,
                         referId = it.referId,
                         referName= it.referName,
@@ -67,8 +63,8 @@ class PipelinePublicVarGroupReferInfoDao {
                         createTime = it.createTime,
                         updateTime = it.updateTime,
                         creator = it.creator,
-                        modifier = it.modifier
-
+                        modifier = it.modifier,
+                        referVersionName = it.referVersionName
                     )
                 }
         }

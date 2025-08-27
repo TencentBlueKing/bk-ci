@@ -27,24 +27,25 @@
 
 package com.tencent.devops.process.pojo.`var`.`do`
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "流水线公共变量组引用信息")
-data class PublicVarVariableReferenceDO(
-    @get:Schema(title = "流水线/模板ID")
+@Schema(title = "流水线公共变量模板引用信息")
+data class PublicVarTemplateRefDO(
+    @get:Schema(title = "模板ID")
     val referId: String,
-    @get:Schema(title = "流水线/模板名称")
+    @get:Schema(title = "模板名称")
     val referName: String,
-    @get:Schema(title = "流水线/模板引用数量")
-    val referCount: Int,
-    @get:Schema(title = "流水线/模板链接")
+    @get:Schema(title = "模板链接")
     val referUrl: String,
-    @get:Schema(title = "流水线/模板类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "修改人")
+    @get:Schema(title = "模板类型")
+    val referType: String,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "最近更新人")
     val modifier: String,
-    @get:Schema(title = "修改时间")
-    val updateTime: LocalDateTime
+    @get:Schema(title = "最近更新时间")
+    val updateTime: LocalDateTime,
+    @get:Schema(title = "实列个数")
+    val instanceCount: Int
 )
