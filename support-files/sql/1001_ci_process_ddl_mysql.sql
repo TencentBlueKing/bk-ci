@@ -1550,4 +1550,28 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE_VERSION`
     primary key (`PROJECT_ID`, `PIPELINE_ID`, `PIPELINE_VERSION`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='模版流水线关联版本表';
 
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DYNAMIC_DEPENDENCY`
+(
+    `ID`                    bigint comment '主键ID',
+    `PROJECT_ID`            varchar(64)                         not null comment '项目ID',
+    `REPO_HASH_ID`          varchar(64)                         not null comment '代码库HASH ID',
+    `FILE_PATH`             varchar(512)                        not null comment '文件路径',
+    `FILE_TYPE`             varchar(32)                         not null comment '文件类型',
+    `BLOB_ID`               varchar(64)                         not null comment '文件blob_id',
+    `REF`                   varchar(512)                        not null comment '来源分支/tag',
+    `COMMIT_ID`             varchar(64)                         not null comment '文件提交ID',
+    `COMMIT_TIME`           timestamp default CURRENT_TIMESTAMP not null comment '提交时间',
+    `DEPENDENT_FILE_PATH`   varchar(512)                        not null comment '依赖的文件路径',
+    `DEPENDENT_FILE_TYPE`   varchar(32)                         not null comment '依赖的文件类型',
+    `DEPENDENT_REF`         varchar(32)                         not null comment '依赖的分支',
+    `DEPENDENT_BLOB_ID`     varchar(64)                         not null comment '依赖文件blob_id',
+    `DEPENDENT_COMMIT_ID`   varchar(64)                         not null comment '依赖提交ID',
+    `DEPENDENT_COMMIT_TIME` timestamp default CURRENT_TIMESTAMP not null comment '依赖提交时间',
+    `CREATE_TIME`           timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`           timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
+    PRIMARY KEY (`ID`),
+    INDEX `IDX_PROJECT_REPO_FILE` (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件动态依赖';
+
 SET FOREIGN_KEY_CHECKS = 1;
