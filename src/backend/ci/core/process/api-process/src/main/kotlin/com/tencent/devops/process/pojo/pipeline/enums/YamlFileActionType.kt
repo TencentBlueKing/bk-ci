@@ -21,6 +21,8 @@ enum class YamlFileActionType {
     // 触发
     TRIGGER,
 
+    DEPENDENCY_UPGRADE,
+
     // 更新并触发
     UPDATE_AND_TRIGGER,
 

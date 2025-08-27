@@ -53,7 +53,10 @@ enum class PipelineVersionAction {
     INACTIVE_BRANCH,
 
     @Schema(title = "模版实例化")
-    TEMPLATE_INSTANCE;
+    TEMPLATE_INSTANCE,
+
+    @Schema(title = "依赖升级")
+    DEPENDENCY_UPGRADE;
 
     fun isCreateReleaseVersion(): Boolean {
         return this == RELEASE_DRAFT || this == CREATE_RELEASE

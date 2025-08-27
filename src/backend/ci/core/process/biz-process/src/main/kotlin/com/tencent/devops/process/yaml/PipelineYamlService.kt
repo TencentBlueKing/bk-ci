@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
+import com.tencent.devops.process.engine.PipelineYamlDynamicDependencyDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
@@ -59,7 +60,9 @@ class PipelineYamlService(
     private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
     private val client: Client,
-    private val pipelineInfoDao: PipelineInfoDao
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineYamlDynamicDependencyService: PipelineYamlDynamicDependencyService,
+    private val pipelineYamlDynamicDependencyDao: PipelineYamlDynamicDependencyDao
 ) {
 
     companion object {
@@ -144,6 +147,17 @@ class PipelineYamlService(
         version: Int
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
+        val dynamicDependency = pipelineYamlDynamicDependencyService.analyzeDynamicDependency(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = version,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            blobId = blobId,
+            commitId = commitId,
+            commitTime = commitTime,
+            ref = ref
+        )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.save(
@@ -181,6 +195,12 @@ class PipelineYamlService(
                 blobId = blobId,
                 commitTime = commitTime
             )
+            dynamicDependency?.let {
+                pipelineYamlDynamicDependencyDao.save(
+                    dslContext = transactionContext,
+                    record = it
+                )
+            }
         }
     }
 
@@ -262,6 +282,17 @@ class PipelineYamlService(
         version: Int
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
+        val dynamicDependency = pipelineYamlDynamicDependencyService.analyzeDynamicDependency(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = version,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            blobId = blobId,
+            commitId = commitId,
+            commitTime = commitTime,
+            ref = ref
+        )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.update(
@@ -296,6 +327,12 @@ class PipelineYamlService(
                 blobId = blobId,
                 commitTime = commitTime
             )
+            dynamicDependency?.let {
+                pipelineYamlDynamicDependencyDao.save(
+                    dslContext = transactionContext,
+                    record = it
+                )
+            }
         }
         if (!defaultBranch.isNullOrBlank()) {
             refreshPipelineYamlStatus(

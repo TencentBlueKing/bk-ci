@@ -47,7 +47,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
@@ -96,7 +95,8 @@ class PipelineYamlFileManager @Autowired constructor(
     private val pipelineYamlFileService: PipelineYamlFileService,
     private val pipelineYamlResourceManager: PipelineYamlResourceManager,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineYamlDiffService: PipelineYamlDiffService
+    private val pipelineYamlDiffService: PipelineYamlDiffService,
+    private val pipelineYamlDynamicDependencyService: PipelineYamlDynamicDependencyService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
@@ -274,6 +274,75 @@ class PipelineYamlFileManager @Autowired constructor(
             val oldFileEvent = event.copy(filePath = oldFilePath)
             deleteYamlFile(event = oldFileEvent)
             createOrUpdateYamlFile(event = event)
+        }
+    }
+
+    /**
+     * 依赖更新,当实例化的流水线,动态依赖模版,那么模版更新时,流水线也要更新
+     */
+    fun dependencyUpgradeYamlFile(event: PipelineYamlFileEvent) {
+        with(event) {
+            // 判断文件内容是否有依赖模版
+            val contentDependency = pipelineYamlDynamicDependencyService.getDynamicDependency(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                blobId = blobId
+            )
+            // 如果没有依赖模版,或者依赖的分支不是当前分支,则不更新
+            if (contentDependency == null ||
+                !(contentDependency.dependentRef == "*" || contentDependency.dependentRef == ref)
+            ) {
+                return
+            }
+            // 判断依赖的模版文件在本次中是否有变更
+            val dependentYamlDiff = pipelineYamlDiffService.getYamlDiff(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = contentDependency.dependentFilePath
+            )
+            // 依赖的模版没有变更,则不更新
+            if (dependentYamlDiff == null) {
+                return
+            }
+            // 判断当前分支上的依赖是否已经更新
+            val refDependency = pipelineYamlDynamicDependencyService.getDynamicDependency(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                blobId = blobId,
+                ref = ref
+            )
+            // 如果依赖的模版已经更新,则不更新
+            if (refDependency != null && refDependency.dependentBlobId != dependentYamlDiff.blobId) {
+                return
+            }
+            val lock = PipelineYamlTriggerLock(
+                redisOperation = redisOperation,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath
+            )
+            try {
+                lock.lock()
+                val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath
+                )
+                // 流水线被删除,则不更新
+                if (pipelineYamlInfo == null) {
+                    return
+                }
+                updateYamlPipeline(
+                    pipelineId = pipelineYamlInfo.pipelineId,
+                    dependencyUpgrade = true
+                )
+            } catch (ignored: Exception) {
+                throw ignored
+            } finally {
+                lock.unlock()
+            }
         }
     }
 
@@ -519,7 +588,6 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.createYamlPipeline(): DeployPipelineResult {
         val isDefaultBranch = ref == defaultBranch
         val directory = GitActionCommon.getCiDirectory(filePath)
-        val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
         // 如果不是默认分支,需要判断默认分支是否已经删除,如果删除,不能再创建
         if (!isDefaultBranch) {
             val defaultBranchDeleted = pipelineYamlFileService.getBranchFilePath(
@@ -749,7 +817,10 @@ class PipelineYamlFileManager @Autowired constructor(
         }
     }
 
-    private fun PipelineYamlFileEvent.updateYamlPipeline(pipelineId: String): DeployPipelineResult {
+    private fun PipelineYamlFileEvent.updateYamlPipeline(
+        pipelineId: String,
+        dependencyUpgrade: Boolean = false
+    ): DeployPipelineResult {
         val content = pipelineYamlFileService.getFileContent(
             projectId = projectId,
             path = filePath,
@@ -761,6 +832,7 @@ class PipelineYamlFileManager @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = content.content,
+            dependencyUpgrade = dependencyUpgrade,
             event = this
         )
         pipelineYamlService.update(
