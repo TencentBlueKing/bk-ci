@@ -9,6 +9,7 @@ import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -47,7 +48,13 @@ class PipelineYamlDynamicDependencyService @Autowired constructor(
             projectId = projectId,
             pipelineId = templatePipelineVersion.templateId,
             version = templatePipelineVersion.templateVersion.toInt()
-        ) ?: return null
+        ) ?: run {
+            logger.info(
+                "template yaml version not found|" +
+                        "$projectId|${templatePipelineVersion.templateId}|${templatePipelineVersion.templateVersion}"
+            )
+            return null
+        }
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(
             bizTag = PIPELINE_YAML_DYNAMIC_DEPENDENCY_BIZ_ID
         ).data ?: 0
@@ -93,5 +100,6 @@ class PipelineYamlDynamicDependencyService @Autowired constructor(
     companion object {
         private const val DEFAULT_REF = "*"
         private const val PIPELINE_YAML_DYNAMIC_DEPENDENCY_BIZ_ID = "PIPELINE_YAML_DYNAMIC_DEPENDENCY"
+        private val logger = LoggerFactory.getLogger(PipelineYamlDynamicDependencyService::class.java)
     }
 }
