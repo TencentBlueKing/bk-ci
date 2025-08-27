@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -170,6 +171,8 @@ class ModelTransfer @Autowired constructor(
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
 
+        model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map { PublicVarGroupRef(it.name, it.version) }
+
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         var stageIndex = 1
         stageList.add(modelStage.yaml2TriggerStage(yamlInput, stageIndex++))
@@ -279,12 +282,9 @@ class ModelTransfer @Autowired constructor(
         }
         yaml.stages = TransferMapper.anyTo(stages)
         val variables = mutableMapOf<String, Any>()
-        val publicvarGroupNames =
-            modelInput.model.getTriggerContainer().params.filter { !it.varGroupName.isNullOrBlank() }.map {
-                it.varGroupName!!
-            }
-        if (publicvarGroupNames.isNotEmpty()) {
-            variables[BK_PIPELINE_YAML_PUB_VAR_GRROUP_ID] = publicvarGroupNames
+        val publicVarGroupNames = modelInput.model.publicVarGroups
+        if (publicVarGroupNames.isNotEmpty()) {
+            variables[BK_PIPELINE_YAML_PUB_VAR_GRROUP_ID] = publicVarGroupNames
         }
         variableTransfer.makeVariableFromModel(modelInput.model)?.let { variables.putAll(it) }
         yaml.variables = if (variables.isEmpty()) null else variables

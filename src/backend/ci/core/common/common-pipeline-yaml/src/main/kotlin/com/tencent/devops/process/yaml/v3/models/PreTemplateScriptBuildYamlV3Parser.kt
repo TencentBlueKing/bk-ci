@@ -125,7 +125,7 @@ data class PreTemplateScriptBuildYamlV3Parser(
         return preYaml.variables ?: emptyMap()
     }
 
-    override fun fromatVariableTemplates(): List<VariableTemplate> {
+    override fun formatVariableTemplates(): List<VariableTemplate> {
         checkInitialized()
         return preYaml.variableTemplates ?: emptyList()
     }

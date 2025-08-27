@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
@@ -580,21 +581,27 @@ class PublicVarGroupService @Autowired constructor(
         return true
     }
 
-fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<String>): List<BuildFormProperty> {
-        if (groupNames.isEmpty()) {
+fun getProjectPublicParamByRef(
+    userId: String,
+    projectId: String,
+    varGroupRefs: List<PublicVarGroupRef>
+): List<BuildFormProperty> {
+        if (varGroupRefs.isEmpty()) {
             return emptyList()
         }
 
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         val processedVarNames = mutableSetOf<String>()
 
-        groupNames.forEach { groupName ->
+    varGroupRefs.forEach { varGroupRef ->
             try {
-                // 获取变量组信息（默认获取最新版本）
+                val groupName = varGroupRef.groupName
+                val versionName = varGroupRef.versionName
                 val groupRecord = publicVarGroupDao.getRecordByGroupName(
                     dslContext = dslContext,
                     projectId = projectId,
-                    groupName = groupName
+                    groupName = groupName,
+                    versionName = versionName
                 ) ?: run {
                     logger.warn("Variable group $groupName not found in project $projectId")
                     return@forEach
@@ -621,7 +628,7 @@ fun getProjectPublicParam(userId: String, projectId: String, groupNames: List<St
                     processedVarNames.add(po.varName)
                 }
             } catch (e: Throwable) {
-                logger.warn("Failed to get variables from group $groupName", e)
+                logger.warn("Failed to get variables from group ${varGroupRef.groupName}", e)
                 throw e
             }
         }

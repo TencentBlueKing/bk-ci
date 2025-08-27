@@ -27,32 +27,21 @@
 
 package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarVariableReferenceDO
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
-import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
 
 @Tag(name = "USER_PUBLIC_VAR_GROUP", description = "用户-公共变量组")
 @Path("/user/pipeline/public/var/groups")
@@ -71,6 +60,6 @@ interface ServicePublicVarGroupResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "变量组名称列表", required = true)
-        groupNames: List<String>
+        varGroupRefs: List<PublicVarGroupRef>
     ): Result<List<BuildFormProperty>>
 }

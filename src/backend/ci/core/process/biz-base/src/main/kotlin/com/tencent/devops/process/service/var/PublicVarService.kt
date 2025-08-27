@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
 import com.tencent.devops.process.dao.`var`.PublicVarDao
@@ -159,6 +160,42 @@ class PublicVarService @Autowired constructor(
                 buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
             )
         }
+    }
+
+    /**
+     * 根据变量组引用信息返回变量列表
+     * @param projectId 项目ID
+     * @param varGroupRefs 变量组引用列表
+     * @return BuildFormProperty列表
+     */
+    fun getVariablesByGroupRefs(
+        projectId: String,
+        varGroupRefs: List<PublicVarGroupRef>
+    ): List<BuildFormProperty> {
+        if (varGroupRefs.isEmpty()) return emptyList()
+
+        val allVariables = mutableListOf<BuildFormProperty>()
+
+        varGroupRefs.forEach { groupRef ->
+            val versionName = groupRef.versionName
+            if (versionName.isNullOrBlank() || versionName == "latest") {
+                return@forEach
+            }
+            val version = versionName.substring(1).toInt()
+            val publicVarPOs = publicVarDao.listVarBygroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupRef.groupName,
+                version = version
+            )
+
+            publicVarPOs.forEach { publicVarPO ->
+                val buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+                allVariables.add(buildFormProperty)
+            }
+        }
+
+        return allVariables
     }
 
     fun checkGroupPublicVar(publicVars: List<PublicVarVO>) {

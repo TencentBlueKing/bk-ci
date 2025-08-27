@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.devops.common.api.constant.LATEST
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -57,6 +58,7 @@ import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.ProjectCacheService
+import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
@@ -105,7 +107,8 @@ class PipelineBuildService(
     private val pipelineUrlBean: PipelineUrlBean,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val publicVarGroupService: PublicVarGroupService
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -212,6 +215,24 @@ class PipelineBuildService(
             }
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
+
+            // 获取流水线配置公共变量组中未指定具体版本的变量组变量模型
+            val publicVarGroupRef = resource.model.publicVarGroups.filter {
+                it.versionName.isNullOrBlank() || it.versionName == LATEST
+            }.map { it }
+            val publicParams =
+                publicVarGroupService.getProjectPublicParamByRef(userId, resource.projectId, publicVarGroupRef)
+            publicParams.forEach { param ->
+                pipelineParamMap[param.id] = BuildParameters(
+                    key = param.id,
+                    value = param.defaultValue,
+                    valueType = param.type,
+                    readOnly = param.readOnly,
+                    desc = param.desc,
+                    defaultValue = param.defaultValue,
+                    latestRandomStringInPath = param.latestRandomStringInPath
+                )
+            }
 
             initPipelineParamMap(
                 buildId = buildId,

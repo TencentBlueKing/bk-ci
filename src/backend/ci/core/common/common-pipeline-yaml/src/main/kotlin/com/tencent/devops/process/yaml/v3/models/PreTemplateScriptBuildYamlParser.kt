@@ -70,7 +70,7 @@ interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
 
     fun formatVariables(): Map<String, Variable>
 
-    fun fromatVariableTemplates(): List<VariableTemplate>
+    fun formatVariableTemplates(): List<VariableTemplate>
 
     fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>>
 
@@ -175,7 +175,7 @@ data class PreTemplateScriptBuildYamlParser(
         return preYaml.variables ?: emptyMap()
     }
 
-    override fun fromatVariableTemplates(): List<VariableTemplate> {
+    override fun formatVariableTemplates(): List<VariableTemplate> {
         checkInitialized()
         return preYaml.variableTemplates ?: emptyList()
     }

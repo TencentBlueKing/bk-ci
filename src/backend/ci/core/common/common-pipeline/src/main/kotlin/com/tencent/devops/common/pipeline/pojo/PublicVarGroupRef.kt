@@ -25,29 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.`var`.PublicVarGroupService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class ServicePublicVarGroupResourceImpl @Autowired constructor(
-    private val publicVarGroupService: PublicVarGroupService
-) : ServicePublicVarGroupResource {
+data class PublicVarGroupRef(
+    @get:Schema(title = "变量组名称", required = true)
+    val groupName: String,
+    @get:Schema(title = "版本名称", required = false)
+    val versionName: String? = null
+)
 
-    override fun getProjectPublicParam(
-        userId: String,
-        projectId: String,
-        varGroupRefs: List<PublicVarGroupRef>
-    ): Result<List<BuildFormProperty>> {
-        return Result(publicVarGroupService.getProjectPublicParamByRef(
-            userId = userId,
-            projectId = projectId,
-            varGroupRefs = varGroupRefs
-        ))
-    }
-}

@@ -84,6 +84,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.`var`.PublicVarService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
@@ -119,7 +120,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val scmProxyService: ScmProxyService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val publicVarService: PublicVarService
 ) {
 
     companion object {
@@ -868,6 +870,12 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 )
                 newYaml = result.yamlWithVersion
+                val varGroupRefs = modelAndYaml.modelAndSetting?.model?.getPublicVarGroupsWithVersion()
+                if (!varGroupRefs.isNullOrEmpty()) {
+                    val triggerContainer = modelAndYaml.modelAndSetting!!.model.getTriggerContainer()
+                    val groupVars = publicVarService.getVariablesByGroupRefs(projectId, varGroupRefs)
+                    triggerContainer.params += groupVars
+                }
             } catch (ignore: Throwable) {
                 // 旧流水线可能无法转换，用空YAML代替
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")

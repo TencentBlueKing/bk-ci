@@ -100,7 +100,9 @@ data class PreScriptBuildYamlParser(
             is Map<*, *> -> {
                 // 提取template数据
                 this.variableTemplates = (raw["template"] as? List<Map<String, String>>)
-                    ?.map { VariableTemplate(it["name"]!!) }
+                    ?.map {
+                        VariableTemplate(it["name"]!!, it["version"])
+                    }
                 val regularVariables = raw.filterKeys { it != "template" }
                     .mapKeys { it.key.toString() }
                 if (regularVariables.isNotEmpty()) {
@@ -139,14 +141,7 @@ data class PreScriptBuildYamlParser(
             readonly = map["readonly"] as? Boolean,
             allowModifyAtStartup = map["allow-modify-at-startup"] as? Boolean,
             const = map["const"] as? Boolean,
-            props = map["props"]?.let { props ->
-                if (props is Map<*, *>) {
-                    // 这里可以添加更详细的props解析逻辑
-                    null
-                } else {
-                    null
-                }
-            }
+            props = map["props"] as? VariableProps
         )
     }
 }

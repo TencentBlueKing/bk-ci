@@ -192,18 +192,23 @@ class PublicVarGroupDao {
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
-        version: Int? = null
+        version: Int? = null,
+        versionName: String? = null
     ): PublicVarGroupPO? {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            val condition = if (version == null) {
-                LATEST_FLAG.eq(true)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            if (version == null) {
+                conditions.add(LATEST_FLAG.eq(true))
             } else {
-                VERSION.eq(version)
+                conditions.add(VERSION.eq(version))
+            }
+            if (versionName != null) {
+                conditions.add(VERSION_NAME.eq(versionName))
             }
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(condition)
+                .where(conditions)
                 .fetchOne()?.let { record ->
                     PublicVarGroupPO(
                         id = record.id,

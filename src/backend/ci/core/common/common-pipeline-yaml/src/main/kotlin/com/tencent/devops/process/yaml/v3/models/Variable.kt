@@ -185,7 +185,7 @@ data class VariableDatasource(
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class VariableTemplate(val name: String)
+data class VariableTemplate(val name: String, val version: String? = null)
 
 enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),

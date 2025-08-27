@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -104,12 +105,14 @@ class StageTransfer @Autowired(required = false) constructor(
 
         val params = mutableListOf<BuildFormProperty>()
         params.addAll(variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)))
-        val publicVarGroupNames = yamlInput.yaml.fromatVariableTemplates().map { it.name }
-        if (publicVarGroupNames.isNotEmpty()) {
+        val varGroupRefs = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
+            PublicVarGroupRef(it.name, it.version)
+        }
+        if (varGroupRefs.isNotEmpty()) {
             client.get(ServicePublicVarGroupResource::class).getProjectPublicParam(
                 userId = yamlInput.userId,
                 projectId = yamlInput.projectCode,
-                groupNames = publicVarGroupNames
+                varGroupRefs = varGroupRefs
             ).data?.let {
                 params.addAll(it)
             }
