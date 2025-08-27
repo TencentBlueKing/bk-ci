@@ -246,16 +246,15 @@ class PipelineBuildCheckRunService @Autowired constructor(
             repositoryId = repoHashId,
             repositoryType = RepositoryType.ID
         )
-
-        val checkRun = if (checkRunId != null) {
-            val checkRunInput = checkRunContext.convertCheckRunInput(checkRunId)
+        val checkRunInput = checkRunContext.convertCheckRunInput(checkRunId)
+        // 重试
+        val checkRun = if (checkRunId != null && buildStatus.isFinish()) {
             updateCheckRun(
                 projectId = projectId,
                 repositoryConfig = repositoryConfig,
                 checkRunInput = checkRunInput
             )
         } else {
-            val checkRunInput = checkRunContext.convertCheckRunInput()
             addCheckRun(
                 projectId = projectId,
                 repositoryConfig = repositoryConfig,
