@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.vm
 
-import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -146,12 +145,14 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         val vmSeqId = task.containerId
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        Preconditions.checkNotNull(pipelineInfo) {
+        checkNotNull(pipelineInfo) {
             BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg =
-                I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                    params = arrayOf(pipelineId)
+                ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -174,12 +175,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             executeCount = task.executeCount ?: 1
         )?.getContainer(vmSeqId)
-        Preconditions.checkNotNull(container) {
+        checkNotNull(container) {
             BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
                 errorMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                    messageCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
                     params = arrayOf(vmSeqId)
                 ),
                 pipelineId = pipelineId,
@@ -195,7 +196,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             containerId = vmSeqId,
             executeCount = task.executeCount ?: 1
         )
-        dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
+        dispatch(container = container, task = task, pipelineInfo = pipelineInfo, param = param)
 
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)

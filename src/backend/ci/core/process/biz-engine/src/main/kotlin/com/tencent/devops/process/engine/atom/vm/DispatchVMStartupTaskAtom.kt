@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.vm
 
-import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -190,7 +189,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val vmNames = param.vmNames.joinToString(",")
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        Preconditions.checkNotNull(pipelineInfo) {
+        checkNotNull(pipelineInfo) {
             BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
@@ -219,7 +218,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             executeCount = executeCount
         )?.getContainer(vmSeqId)
-        Preconditions.checkNotNull(container) {
+        checkNotNull(container) {
             BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -240,7 +239,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         containerBuildRecordService.containerPreparing(
             projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
         )
-        dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds, pipelineAuthorizer)
+        dispatch(
+            task = task,
+            pipelineInfo = pipelineInfo,
+            param = param,
+            vmNames = vmNames,
+            container = container,
+            ignoreEnvAgentIds = ignoreEnvAgentIds,
+            pipelineAuthorizer = pipelineAuthorizer
+        )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.RUNNING)
     }
