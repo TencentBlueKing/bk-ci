@@ -87,13 +87,14 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         runVariables: Map<String, String>
     ): AtomResponse {
         var atomResponse: AtomResponse
+        val executeCount = task.executeCount ?: 1
         try {
             atomResponse = startUpDocker(task, param)
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = param.jobId,
                 stepId = task.stepId
             )
@@ -103,7 +104,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 message = "Build container init failed: ${e.message}",
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = null,
                 stepId = task.stepId
             )
@@ -120,7 +121,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 message = "Build container init failed: ${ignored.message}",
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = null,
                 stepId = task.stepId
             )
@@ -154,13 +155,13 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         )
-
+        val executeCount = task.executeCount ?: 1
         val buildRecordContainer = containerBuildRecordService.getRecord(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = vmSeqId,
-            executeCount = task.executeCount ?: 1
+            executeCount = executeCount
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
         )
@@ -169,7 +170,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             pipelineId = pipelineId,
             version = buildRecordContainer.resourceVersion,
             buildId = buildId,
-            executeCount = task.executeCount ?: 1
+            executeCount = executeCount
         )?.getContainer(vmSeqId) ?: throw BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -186,7 +187,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = vmSeqId,
-            executeCount = task.executeCount ?: 1
+            executeCount = executeCount
         )
         dispatch(container = container, task = task, pipelineInfo = pipelineInfo, param = param)
 

@@ -113,7 +113,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             NameAndValue(mit.key, EnvUtils.parseEnv(mit.value, context))
         }
         val fixParam = param.copy(customEnv = buildEnv)
-
+        val executeCount = task.executeCount ?: 1
         try {
             atomResponse = if (!checkBeforeStart(task, param, context)) {
                 AtomResponse(
@@ -129,7 +129,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = param.jobId,
                 stepId = task.stepId
             )
@@ -139,7 +139,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 message = "Fail to execute the task atom: ${e.message}",
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = null,
                 stepId = task.stepId
             )
@@ -156,7 +156,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 message = "Fail to execute the task atom: ${ignored.message}",
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = null,
                 stepId = task.stepId
             )
