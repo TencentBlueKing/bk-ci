@@ -311,9 +311,9 @@ class PipelineYamlFileManager @Autowired constructor(
                 ref = ref
             )
             // 如果依赖的模版已经更新,则不更新
-            if (refDependency != null && refDependency.dependentBlobId != dependentYamlDiff.blobId) {
+            if (refDependency != null && refDependency.dependentBlobId == dependentYamlDiff.blobId) {
                 logger.info(
-                    "[PAC_PIPELINE]|dependency yaml file not update,skip update|" +
+                    "[PAC_PIPELINE]|dependency yaml file has update,skip update|" +
                             "$eventId|$projectId|$repoHashId|$filePath|$ref|${dependentYamlDiff.blobId}"
                 )
                 return
