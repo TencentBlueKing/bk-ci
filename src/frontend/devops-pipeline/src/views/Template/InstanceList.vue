@@ -51,14 +51,12 @@
                     <bk-table-column
                         type="selection"
                         width="60"
-                        fixed="left"
                         align="center"
                         :selectable="isUpdating"
                     ></bk-table-column>
                     <bk-table-column
                         :label="$t('template.pipelineInstanceName')"
                         prop="pipelineName"
-                        fixed="left"
                     >
                         <template slot-scope="{ row }">
                             <span
