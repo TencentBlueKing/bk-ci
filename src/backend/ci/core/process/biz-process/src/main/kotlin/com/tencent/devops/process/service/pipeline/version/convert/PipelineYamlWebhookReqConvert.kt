@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service.pipeline.version.convert
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -59,7 +61,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
         request as PipelineYamlWebhookReq
         with(request) {
             if (yamlFileInfo == null) {
-                throw IllegalArgumentException("yamlFileInfo is null")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf(PipelineYamlWebhookReq::yamlFileInfo.name)
+                )
             }
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,
@@ -78,10 +83,20 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 yamlFileName
             }
 
-            val (versionStatus, versionAction) = if (isDefaultBranch) {
-                Pair(VersionStatus.RELEASED, PipelineVersionAction.CREATE_RELEASE)
+            val versionStatus = if (isDefaultBranch) {
+                VersionStatus.RELEASED
             } else {
-                Pair(VersionStatus.BRANCH, PipelineVersionAction.CREATE_BRANCH)
+                VersionStatus.BRANCH
+            }
+
+            val versionAction = if (dependencyUpgrade) {
+                PipelineVersionAction.DEPENDENCY_UPGRADE
+            } else {
+                if (isDefaultBranch) {
+                    PipelineVersionAction.CREATE_RELEASE
+                } else {
+                    PipelineVersionAction.CREATE_BRANCH
+                }
             }
 
             val pipelineAsCodeSettings = modelAndSetting.setting.pipelineAsCodeSettings?.copy(

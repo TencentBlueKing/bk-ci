@@ -39,20 +39,16 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineVersionValidator @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectCacheService: ProjectCacheService,
-    @Lazy
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val projectCacheService: ProjectCacheService
 ) {
 
     fun validate(context: PipelineVersionCreateContext) {

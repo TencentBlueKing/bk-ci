@@ -49,7 +49,7 @@ data class PipelineVersionCreateContext(
     val pipelineId: String,
     @get:Schema(title = "版本,发布时才有值", required = true)
     val version: Int? = null,
-    @get:Schema(title = "模版版本变更动作", required = true)
+    @get:Schema(title = "版本变更动作", required = true)
     val versionAction: PipelineVersionAction,
 
     @get:Schema(title = "是否校验权限", required = true)

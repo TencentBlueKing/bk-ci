@@ -86,6 +86,7 @@ class PTemplateYamlResourceService(
         projectId: String,
         pipelineId: String,
         yaml: String,
+        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult {
         with(event) {

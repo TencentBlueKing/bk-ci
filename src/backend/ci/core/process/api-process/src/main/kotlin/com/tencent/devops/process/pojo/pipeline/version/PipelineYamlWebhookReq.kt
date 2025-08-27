@@ -45,5 +45,7 @@ data class PipelineYamlWebhookReq(
     @get:Schema(title = "yaml文件信息", required = true)
     val yamlFileInfo: PipelineYamlFileInfo? = null,
     @get:Schema(title = "合并请求链接", required = true)
-    val pullRequestUrl: String? = null
+    val pullRequestUrl: String? = null,
+    @get:Schema(title = "是否依赖升级", required = false)
+    val dependencyUpgrade: Boolean = false
 ) : PipelineVersionCreateReq

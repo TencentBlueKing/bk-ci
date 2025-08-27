@@ -202,7 +202,8 @@ class PipelineYamlVersionDao {
                 commitId = commitId,
                 ref = ref,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                commitTime = commitTime,
             )
         }
     }

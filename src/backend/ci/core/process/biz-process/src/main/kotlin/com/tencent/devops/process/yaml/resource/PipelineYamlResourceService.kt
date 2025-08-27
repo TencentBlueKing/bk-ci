@@ -79,6 +79,7 @@ class PipelineYamlResourceService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
+        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult {
         with(event) {
@@ -92,7 +93,8 @@ class PipelineYamlResourceService @Autowired constructor(
                 isDefaultBranch = isDefaultBranch,
                 description = commit!!.commitMsg,
                 yamlFileInfo = yamlFileInfo,
-                pullRequestUrl = pullRequestUrl
+                pullRequestUrl = pullRequestUrl,
+                dependencyUpgrade = dependencyUpgrade
             )
             return pipelineVersionManager.deployPipeline(
                 userId = userId,

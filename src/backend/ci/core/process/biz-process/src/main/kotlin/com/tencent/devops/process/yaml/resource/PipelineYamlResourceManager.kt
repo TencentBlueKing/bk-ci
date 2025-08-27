@@ -58,6 +58,7 @@ class PipelineYamlResourceManager @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
+        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult {
         return getService(event.isTemplate).updateYamlPipeline(
@@ -65,6 +66,7 @@ class PipelineYamlResourceManager @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = yaml,
+            dependencyUpgrade = dependencyUpgrade,
             event = event
         )
     }

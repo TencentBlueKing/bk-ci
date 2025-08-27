@@ -241,6 +241,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
 
     private fun PipelineYamlFileEvent.triggerBuild() {
         try {
+            pipelineYamlFileManager.dependencyUpgradeYamlFile(this)
             webhookTriggerBuildService.yamlTrigger(this)
             pipelineYamlDiffService.updateStatus(
                 projectId = projectId,

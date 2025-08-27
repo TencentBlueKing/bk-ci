@@ -75,7 +75,10 @@ class PipelineDraftReleaseHandler @Autowired constructor(
         with(context) {
             if (enablePac) {
                 if (targetAction == null) {
-                    throw IllegalArgumentException("targetAction is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                        params = arrayOf(PipelineVersionReleaseRequest::targetAction.name)
+                    )
                 }
                 if (yamlFileInfo == null) {
                     throw ErrorCodeException(
