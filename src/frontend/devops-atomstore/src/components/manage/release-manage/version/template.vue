@@ -129,7 +129,7 @@
             versionList: Array,
             pagination: Object
         },
-
+        emits: ['pageChanged', 'pageLimitChanged'],
         data () {
             return {
                 offlineData: {
@@ -177,7 +177,7 @@
                     reason: [
                         {
                             required: true,
-                            message: this.$t('store.validateMessage', [$t('store.下架原因'), this.$t('store.必填项')]),
+                            message: this.$t('store.validateMessage', [this.$t('store.下架原因'), this.$t('store.必填项')]),
                             trigger: 'blur'
                         }
                     ]
