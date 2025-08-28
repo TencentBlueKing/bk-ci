@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.api.constant.SHOULD_ARCHIVE_TO_PARENT_PIPELINE
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -36,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -61,6 +63,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
+import kotlin.concurrent.thread
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -80,6 +83,7 @@ class ReportArchiveTask : ITask() {
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
         var indexFileContent: String
+        val shouldArchiveToParentPipeline = shouldArchiveToParentPipeline(buildVariables, buildTask)
         val token = api.getRepoToken(
             userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
             projectId = buildVariables.projectId,
@@ -139,6 +143,19 @@ class ReportArchiveTask : ITask() {
                         uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                     }
                 }
+                if (shouldArchiveToParentPipeline) {
+                    val handelParentExecutors = Executors.newFixedThreadPool(5)
+                    allFileList.forEach {
+                        handelParentExecutors.execute {
+                            try {
+                                uploadReportFileToParentPipeline(fileDirPath, it, elementId, buildVariables, token)
+                            } catch (ignore: Throwable) {
+                                logger.warn("upload report to parent pipeline failed: ${it.name}", ignore)
+                            }
+                        }
+                    }
+                    handelParentExecutors.shutdown()
+                }
                 executors.shutdown()
                 if (!executors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
                     throw TimeoutException("parallel upload report timeout")
@@ -185,6 +202,23 @@ class ReportArchiveTask : ITask() {
             reportEmail = reportEmail,
             token = token
         )
+        if (shouldArchiveToParentPipeline) {
+            //异步处理
+            thread {
+                try {
+                    api.createParentReportRecord(
+                        buildVariables = buildVariables,
+                        taskId = elementId,
+                        indexFile = indexFileParam,
+                        name = reportNameParam,
+                        reportType = reportType,
+                        token = token
+                    )
+                } catch (ignore: Throwable) {
+                    logger.warn("create parent report record fail", ignore)
+                }
+            }
+        }
     }
 
     private fun uploadReportFile(
@@ -197,6 +231,25 @@ class ReportArchiveTask : ITask() {
         val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
         HttpRetryUtils.retry(retryTime = 3) {
             api.uploadReport(
+                file = file,
+                taskId = elementId,
+                relativePath = relativePath,
+                buildVariables = buildVariables,
+                token = token
+            )
+        }
+    }
+
+    private fun uploadReportFileToParentPipeline(
+        fileDirPath: Path,
+        file: File,
+        elementId: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
+        HttpRetryUtils.retry(retryTime = 3) {
+            api.uploadReportFileToParentPipeline(
                 file = file,
                 taskId = elementId,
                 relativePath = relativePath,
@@ -226,5 +279,14 @@ class ReportArchiveTask : ITask() {
         } else {
             File(workspace, filePath)
         }
+    }
+
+    private fun shouldArchiveToParentPipeline(buildVariables: BuildVariables, buildTask: BuildTask): Boolean {
+        val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
+        val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
+        val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
+        return "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE)
+                && parentProjectId != null
+                && parentPipelineId != null && parentBuildId != null
     }
 }

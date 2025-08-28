@@ -78,6 +78,34 @@ interface ReportSDKApi : WorkerRestApiSDK {
     )
 
     /**
+     * 归档报告到父流水线
+     * @param file 报告首页文件
+     * @param taskId 当前插件任务id
+     * @param relativePath 报告首页所在的本地文件相对路径
+     * @param buildVariables 构建变量
+     * @param token 令牌
+     */
+    fun uploadReportFileToParentPipeline(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String? = null
+    )
+
+    /**
+     * 创建父流水线报告要上传的记录
+     */
+    fun createParentReportRecord(
+        buildVariables: BuildVariables,
+        taskId: String,
+        indexFile: String,
+        name: String,
+        reportType: String? = ReportTypeEnum.INTERNAL.name,
+        token: String?
+    ): Result<Boolean>
+
+    /**
      * 获取仓库token
      */
     fun getRepoToken(

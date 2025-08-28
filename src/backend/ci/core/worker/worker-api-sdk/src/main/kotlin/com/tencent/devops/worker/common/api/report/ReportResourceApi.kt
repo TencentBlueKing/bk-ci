@@ -98,6 +98,27 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
+    override fun uploadReportFileToParentPipeline(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun createParentReportRecord(
+        buildVariables: BuildVariables,
+        taskId: String,
+        indexFile: String,
+        name: String,
+        reportType: String?,
+        token: String?
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
         val request = buildGet(path)
