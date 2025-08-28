@@ -1299,20 +1299,17 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     fun processCommits(commits: List<Commit>): String {
-        val mergePattern = Regex("^Merge .+", RegexOption.IGNORE_CASE)
         // 过滤合并提交信息
         val filteredCommits = commits.filter { commit ->
-            val message = commit.message ?: ""
-            !mergePattern.matches(message)
+            !commit.message.isNullOrBlank() &&
+                    !commit.message!!.trimStart().startsWith("Merge ", ignoreCase = true)
         }
         // 最早的排最前面
-        val sortedCommits = filteredCommits.sortedWith(compareBy { commit ->
-            commit.committedDate?.let { timeStr ->
-                DateTimeUtil.zoneDateToDate(timeStr)
-            }
-        })
+        val sortedCommits = filteredCommits.sortedBy {
+            it.committedDate?.let { timeStr -> DateTimeUtil.zoneDateToDate(timeStr) }
+        }
         return sortedCommits.mapIndexed { index, commit ->
-            "${index + 1}. ${commit.message ?: ""}"
+            "${index + 1}. ${commit.message}"
         }.joinToString("")
     }
 }
