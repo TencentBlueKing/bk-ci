@@ -215,7 +215,7 @@ class RbacPermissionManageFacadeServiceImpl(
         tenantId: String?
     ): Map<String, MemberGroupDetailsResponse> {
         // 如果用户离职，查询权限中心接口会报错
-        if (deptService.isUserDeparted(memberId)) {
+        if (deptService.isUserDeparted(memberId, tenantId)) {
             return emptyMap()
         }
         // 用户组成员详情
@@ -414,7 +414,7 @@ class RbacPermissionManageFacadeServiceImpl(
         )
         // 获取用户部门信息
         val memberDeptInfos = if (operateChannel == OperateChannel.PERSONAL) {
-            getMemberDeptInfos(memberId)
+            getMemberDeptInfos(memberId, projectCode)
         } else {
             emptyList()
         }
@@ -563,10 +563,12 @@ class RbacPermissionManageFacadeServiceImpl(
     }
 
     private fun getMemberDeptInfos(
-        memberId: String
+        memberId: String,
+        projectCode: String
     ): List<String> {
-        deptService.getUserInfo(memberId)?.deptInfo ?: return emptyList()
-        return deptService.getUserDeptInfo(memberId).toList()
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        deptService.getUserInfo(memberId, tenantId)?.deptInfo ?: return emptyList()
+        return deptService.getUserDeptInfo(memberId, tenantId).toList()
     }
 
     private fun getGroupIdsByGroupMemberCondition(
@@ -1012,8 +1014,9 @@ class RbacPermissionManageFacadeServiceImpl(
         expiredAt: Long
     ) {
         logger.info("renewal group member ${renewalConditionReq.targetMember}|$projectCode|$groupId|$expiredAt")
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         val targetMember = renewalConditionReq.targetMember
-        if (targetMember.type == MemberType.USER.type && deptService.isUserDeparted(targetMember.id)) {
+        if (targetMember.type == MemberType.USER.type && deptService.isUserDeparted(targetMember.id, tenantId)) {
             return
         }
         val secondsOfRenewalDuration = TimeUnit.DAYS.toSeconds(renewalConditionReq.renewalDuration.toLong())
@@ -1031,7 +1034,7 @@ class RbacPermissionManageFacadeServiceImpl(
             groupId = groupId,
             members = listOf(ManagerMember(targetMember.type, targetMember.id)),
             expiredAt = finalExpiredAt,
-            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+            tenantId = tenantId
         )
         authResourceGroupMemberDao.update(
             dslContext = dslContext,
@@ -1668,6 +1671,7 @@ class RbacPermissionManageFacadeServiceImpl(
         conditionReq: GroupMemberCommonConditionReq
     ): BatchOperateGroupMemberCheckVo {
         logger.info("batch operate group member check|$userId|$projectCode|$batchOperateType|$conditionReq")
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         // 获取成员加入的用户组
         val joinedType2GroupIds = getGroupIdsByGroupMemberCondition(
             projectCode = projectCode,
@@ -1737,7 +1741,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 // 部门/组织加入以及永久权限的组不允许再续期
                 with(conditionReq) {
                     val isUserDeparted = targetMember.type == MemberType.USER.type &&
-                            deptService.isUserDeparted(targetMember.id)
+                            deptService.isUserDeparted(targetMember.id, tenantId)
                     // 离职用户不允许续期
                     if (isUserDeparted) {
                         BatchOperateGroupMemberCheckVo(
@@ -1825,6 +1829,7 @@ class RbacPermissionManageFacadeServiceImpl(
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo> {
         logger.info("remove member from project $userId|$projectCode|$removeMemberFromProjectReq")
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         return with(removeMemberFromProjectReq) {
             val memberType = targetMember.type
             if (memberType == MemberType.USER.type && isNeedToHandover()) {
@@ -1866,7 +1871,8 @@ class RbacPermissionManageFacadeServiceImpl(
 
             if (memberType == MemberType.USER.type) {
                 // 查询用户还存在哪些组织中
-                val userDeptInfos = deptService.getUserInfo(targetMember.id)?.deptInfo?.map { it.name!! }
+                val userDeptInfos =
+                    deptService.getUserInfo(userId = targetMember.id, tenantId = tenantId)?.deptInfo?.map { it.name!! }
                 if (userDeptInfos != null) {
                     return authResourceGroupMemberDao.isMembersInProject(
                         dslContext = dslContext,
@@ -1951,6 +1957,7 @@ class RbacPermissionManageFacadeServiceImpl(
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean {
         val overview = permissionHandoverApplicationService.getHandoverOverview(request.flowNo)
         logger.info("handle hanover application:{}|{} ", request, overview)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(request.projectCode)
         HandleHandoverApplicationLock(redisOperation, request.flowNo).use { lock ->
             if (!lock.tryLock()) {
                 logger.warn("The handover application is being processed!$request")
@@ -1973,10 +1980,10 @@ class RbacPermissionManageFacadeServiceImpl(
                     resourceCode = request.projectCode
                 ).resourceName
                 val handoverFromCnName = deptService.getMemberInfo(
-                    overview.applicant, ManagerScopesEnum.USER
+                    overview.applicant, ManagerScopesEnum.USER, tenantId
                 ).displayName
                 val handoverToCnName = deptService.getMemberInfo(
-                    overview.approver, ManagerScopesEnum.USER
+                    overview.approver, ManagerScopesEnum.USER, tenantId
                 ).displayName
                 val bodyParams = mapOf(
                     "projectName" to projectName,
@@ -2230,7 +2237,8 @@ class RbacPermissionManageFacadeServiceImpl(
         userId: String
     ): MemberExitsProjectCheckVo {
         logger.info("check member exits project:$projectCode|$userId")
-        val userDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! } ?: emptyList()
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val userDeptInfos = deptService.getUserInfo(userId, tenantId)?.deptInfo?.map { it.name!! } ?: emptyList()
         val userDepartmentsInProject = authResourceGroupMemberDao.isMembersInProject(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -2451,18 +2459,27 @@ class RbacPermissionManageFacadeServiceImpl(
             flowNo = overview.flowNo
         )
         val handoverType2Records = handoverDetails.groupBy { it.handoverType }
+        val tenantId = TenantUtils.getTenantIdByEnglishName(request.projectCode)
 
         // 交接用户组
         val groupsOfHandover = handoverType2Records[HandoverType.GROUP]?.map { it.itemId.toInt() }
         if (!groupsOfHandover.isNullOrEmpty()) {
             val targetMember = ResourceMemberInfo(
                 id = overview.applicant,
-                name = deptService.getMemberInfo(overview.applicant, ManagerScopesEnum.USER).displayName,
+                name = deptService.getMemberInfo(
+                    memberId = overview.applicant,
+                    memberType = ManagerScopesEnum.USER,
+                    tenantId = tenantId
+                ).displayName,
                 type = MemberType.USER.type
             )
             val handoverTo = ResourceMemberInfo(
                 id = overview.approver,
-                name = deptService.getMemberInfo(overview.approver, ManagerScopesEnum.USER).displayName,
+                name = deptService.getMemberInfo(
+                    memberId = overview.approver,
+                    memberType = ManagerScopesEnum.USER,
+                    tenantId = tenantId
+                ).displayName,
                 type = MemberType.USER.type
             )
 
@@ -2580,10 +2597,11 @@ class RbacPermissionManageFacadeServiceImpl(
         val futures = groupIdsChunk.map {
             CompletableFuture.supplyAsync(
                 {
+                    val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
                     memberGroupsDetailsList.addAll(
                         // 若离职，则从数据库获取用户加入组的过期时间，调用iam接口会报错。
                         // 虽然数据库的过期时间可能不是最新的。
-                        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId)) {
+                        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId, tenantId)) {
                             val records = authResourceGroupMemberDao.listMemberGroupDetail(
                                 dslContext = dslContext,
                                 projectCode = projectCode,
@@ -2598,11 +2616,12 @@ class RbacPermissionManageFacadeServiceImpl(
                                 }
                             }
                         } else {
+
                             iamV2ManagerService.listMemberGroupsDetails(
                                 memberType,
                                 memberId,
                                 it.joinToString(","),
-                                TenantUtils.getTenantIdByEnglishName(projectCode)
+                                tenantId
                             )
                         }
                     )

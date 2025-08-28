@@ -189,7 +189,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
         memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
             try {
-                if (deptService.isUserDeparted(memberId)) {
+                val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+                if (deptService.isUserDeparted(memberId, tenantId)) {
                     return@forEach
                 }
                 // 获取用户加入组的有效期
@@ -199,7 +200,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     val batchVerifyGroupValidMember = iamV2ManagerService.verifyGroupValidMember(
                         memberId,
                         batchGroupIds.joinToString(","),
-                        TenantUtils.getTenantIdByEnglishName(projectCode)
+                        tenantId
                     )
                     verifyResults.putAll(batchVerifyGroupValidMember)
                 }
@@ -352,42 +353,42 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
 
     override fun syncGroupAndMember(projectCode: String) {
 
-            SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
-                if (!lock.tryLock()) {
-                    logger.info("sync group and member|running:$projectCode")
-                    return@use
-                }
-                val startEpoch = System.currentTimeMillis()
-                try {
-                    logger.info("sync group and member|start:$projectCode")
-                    authResourceSyncDao.createOrUpdate(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        status = AuthMigrateStatus.PENDING.value
-                    )
-                    // 同步项目下的组信息
-                    syncProjectGroup(projectCode = projectCode)
-                    // 同步组成员
-                    syncResourceGroupMember(projectCode = projectCode)
-                    // 防止出现用户组表的数据已经删了，但是用户组成员表的数据未删除，导致出现不同步，调用iam接口报错问题。
-                    fixResourceGroupMember(projectCode = projectCode)
-                    // 记录完成状态
-                    authResourceSyncDao.updateStatus(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        status = AuthMigrateStatus.SUCCEED.value,
-                        totalTime = System.currentTimeMillis() - startEpoch
-                    )
-                    logger.info(
-                        "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
-                                "project group and members $projectCode"
-                    )
-                } catch (ex: Exception) {
-                    handleException(
-                        exception = ex,
-                        projectCode = projectCode,
-                        totalTime = System.currentTimeMillis() - startEpoch
-                    )
+        SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("sync group and member|running:$projectCode")
+                return@use
+            }
+            val startEpoch = System.currentTimeMillis()
+            try {
+                logger.info("sync group and member|start:$projectCode")
+                authResourceSyncDao.createOrUpdate(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    status = AuthMigrateStatus.PENDING.value
+                )
+                // 同步项目下的组信息
+                syncProjectGroup(projectCode = projectCode)
+                // 同步组成员
+                syncResourceGroupMember(projectCode = projectCode)
+                // 防止出现用户组表的数据已经删了，但是用户组成员表的数据未删除，导致出现不同步，调用iam接口报错问题。
+                fixResourceGroupMember(projectCode = projectCode)
+                // 记录完成状态
+                authResourceSyncDao.updateStatus(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    status = AuthMigrateStatus.SUCCEED.value,
+                    totalTime = System.currentTimeMillis() - startEpoch
+                )
+                logger.info(
+                    "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
+                            "project group and members $projectCode"
+                )
+            } catch (ex: Exception) {
+                handleException(
+                    exception = ex,
+                    projectCode = projectCode,
+                    totalTime = System.currentTimeMillis() - startEpoch
+                )
 
             }
         }

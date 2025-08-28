@@ -131,7 +131,7 @@ class AuthDeptServiceImpl(
             fuzzyLookups = null,
             accessToken = null
         )
-        return listDeptInfos(search)
+        return listDeptInfos(search, tenantId)
     }
 
     override fun getUserDeptInfo(userId: String, tenantId: String?): Set<String> {
@@ -161,13 +161,14 @@ class AuthDeptServiceImpl(
     ): UserAndDeptInfoVo {
         return when (memberType) {
             ManagerScopesEnum.USER -> {
-                getUserInfo(memberId)
+                getUserInfo(memberId, tenantId)
             }
 
             else -> {
                 listMemberInfos(
                     memberIds = listOf(memberId),
-                    memberType = memberType
+                    memberType = memberType,
+                    tenantId = tenantId
                 ).firstOrNull()
             }
         } ?: throw ErrorCodeException(
@@ -187,7 +188,7 @@ class AuthDeptServiceImpl(
         val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) }
 
         if (membersNotInCache.isNotEmpty()) {
-            val memberInfos = fetchMemberInfos(membersNotInCache, memberType)
+            val memberInfos = fetchMemberInfos(membersNotInCache, memberType, tenantId)
             membersNotInCache.forEach { memberId ->
                 val memberInfo = when (memberType) {
                     ManagerScopesEnum.USER -> memberInfos.firstOrNull { it.name == memberId }
@@ -210,7 +211,8 @@ class AuthDeptServiceImpl(
     override fun listDepartedMembers(memberIds: List<String>, tenantId: String?): List<String> {
         val activeMembers = listMemberInfos(
             memberIds = memberIds,
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
         ).map { it.name }
         return memberIds.subtract(activeMembers.toSet()).toList().also {
             logger.info("list departed members : $it")
@@ -221,7 +223,7 @@ class AuthDeptServiceImpl(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            getUserInfo(userId) == null
+            getUserInfo(userId, tenantId) == null
         }.also {
             if (it) {
                 departedMembersCache.put(userId, true)
@@ -273,80 +275,10 @@ class AuthDeptServiceImpl(
         }
     }
 
-    @Suppress("ComplexMethod")
-    private fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum,
-        exactLookups: Boolean?
-    ): List<UserAndDeptInfoVo?> {
-        val deptSearch = SearchUserAndDeptEntity(
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
-            bk_username = userId,
-            fields = null,
-            lookupField = NAME,
-            accessToken = accessToken
-        )
-        val userSearch = SearchUserAndDeptEntity(
-            bk_app_code = appCode,
-            bk_app_secret = appSecret,
-            bk_username = userId,
-            fields = USER_LABEL,
-            lookupField = USERNAME,
-            accessToken = accessToken
-        )
-        // 模糊搜索或者精准搜索方式
-        if (exactLookups == null || exactLookups == false) {
-            deptSearch.fuzzyLookups = name
-            userSearch.fuzzyLookups = name
-        } else {
-            deptSearch.exactLookups = name
-            userSearch.exactLookups = name
-        }
-
-        val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
-        when (type) {
-            ManagerScopesEnum.USER -> {
-                val userInfos = listUserInfos(userSearch)
-                userInfos.results.forEach {
-                    userAndDeptInfos.add(
-                        it.toUserAndDeptInfoVo()
-                    )
-                }
-            }
-
-            ManagerScopesEnum.DEPARTMENT -> {
-                val deptInfos = listDeptInfos(deptSearch)
-                deptInfos.results.forEach {
-                    it.toUserAndDeptInfoVo()
-                }
-            }
-
-            ManagerScopesEnum.ALL -> {
-                val userInfos = listUserInfos(userSearch)
-                userInfos.results.forEach {
-                    userAndDeptInfos.add(
-                        it.toUserAndDeptInfoVo()
-                    )
-                }
-                val deptInfos = listDeptInfos(deptSearch)
-                deptInfos.results.forEach {
-                    userAndDeptInfos.add(
-                        it.toUserAndDeptInfoVo()
-                    )
-                }
-            }
-
-            else -> {}
-        }
-        return userAndDeptInfos
-    }
-
     private fun fetchMemberInfos(
         memberIds: List<String>,
-        memberType: ManagerScopesEnum
+        memberType: ManagerScopesEnum,
+        tenantId: String?
     ): List<UserAndDeptInfoVo> {
         val memberInfos = when (memberType) {
             ManagerScopesEnum.USER -> {
@@ -358,7 +290,7 @@ class AuthDeptServiceImpl(
                     lookupField = USERNAME,
                     exactLookups = memberIds.joinToString(",")
                 )
-                listUserInfos(userSearch).results.map { it.toUserAndDeptInfoVo() }
+                listUserInfos(userSearch, tenantId).results.map { it.toUserAndDeptInfoVo() }
             }
 
             ManagerScopesEnum.DEPARTMENT -> {
@@ -370,7 +302,7 @@ class AuthDeptServiceImpl(
                     lookupField = ID,
                     exactLookups = memberIds.joinToString(",")
                 )
-                listDeptInfos(deptSearch).results.map { it.toUserAndDeptInfoVo() }
+                listDeptInfos(deptSearch, tenantId).results.map { it.toUserAndDeptInfoVo() }
             }
 
             else -> emptyList()
@@ -476,7 +408,7 @@ class AuthDeptServiceImpl(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -491,7 +423,7 @@ class AuthDeptServiceImpl(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(

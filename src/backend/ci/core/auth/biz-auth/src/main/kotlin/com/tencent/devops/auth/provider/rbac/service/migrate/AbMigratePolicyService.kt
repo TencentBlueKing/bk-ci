@@ -369,11 +369,12 @@ abstract class AbMigratePolicyService(
         managerGroupId: Int,
         results: List<MigrateTaskDataResult>
     ) {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         results.forEach { result ->
             logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
             val userId = result.subject.id
             // 离职人员,直接忽略
-            if (deptService.getUserInfo(userId) == null) {
+            if (deptService.getUserInfo(userId, tenantId) == null) {
                 logger.warn("user has resigned, skip custom policy migration|${result.projectId}|$userId")
                 return@forEach
             }

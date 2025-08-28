@@ -45,13 +45,13 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Service
 class UserManageService @Autowired constructor(
@@ -130,7 +130,7 @@ class UserManageService @Autowired constructor(
                                 fields = Constants.USER_LABEL,
                                 page = page,
                                 pageSize = pageSize
-                            )
+                            ), null
                         ).results
                     }
                 } catch (ex: Exception) {
@@ -171,7 +171,7 @@ class UserManageService @Autowired constructor(
 
             // 二次校验用户是否离职，防止误操作。
             departedUsers.forEach {
-                val userInfo = deptService.getUserInfo(it)
+                val userInfo = deptService.getUserInfo(it, null)
                 if (userInfo != null) {
                     val deptInfoDTO = extractDeptInfo(userInfo.name)
                     userInfoDao.create(
@@ -205,7 +205,7 @@ class UserManageService @Autowired constructor(
     }
 
     private fun extractDeptInfo(userName: String): DeptInfoDTO? {
-        val userDeptDetails = deptService.getUserDeptDetails(userId = userName)
+        val userDeptDetails = deptService.getUserDeptDetails(userId = userName, tenantId = null)
         return when {
             userDeptDetails == null -> {
                 null
@@ -276,7 +276,8 @@ class UserManageService @Autowired constructor(
                                 bk_app_secret = appSecret,
                                 page = page,
                                 pageSize = pageSize
-                            )
+                            ),
+                            tenantId = null
                         ).results
                     }
                 } catch (ex: Exception) {

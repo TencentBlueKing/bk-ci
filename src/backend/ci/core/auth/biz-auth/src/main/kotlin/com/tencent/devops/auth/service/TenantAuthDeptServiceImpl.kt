@@ -86,7 +86,8 @@ class TenantAuthDeptServiceImpl : DeptService {
     ): List<String> {
         val activeMembers = listMemberInfos(
             memberIds = memberIds,
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
         ).map { it.name }
         return memberIds.subtract(activeMembers.toSet()).toList()
     }
@@ -94,7 +95,8 @@ class TenantAuthDeptServiceImpl : DeptService {
     override fun isUserDeparted(userId: String, tenantId: String?): Boolean {
         return listMemberInfos(
             memberIds = listOf(userId),
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
         ).isEmpty()
     }
 

@@ -40,20 +40,20 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceDeptResourceImpl @Autowired constructor(
     val deptService: DeptService
 ) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
+    override fun getParentDept(userId: String, tenantId: String?): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId, tenantId))
     }
 
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
+    override fun getDeptByName(userId: String, tenantId: String?, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId, tenantId))
     }
 
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(name))
+    override fun getUserInfo(userId: String, tenantId: String?, name: String): Result<UserAndDeptInfoVo?> {
+        return Result(deptService.getUserInfo(name, tenantId))
     }
 
-    override fun checkUserDeparted(name: String): Result<Boolean> {
-        return Result(deptService.isUserDeparted(name))
+    override fun checkUserDeparted(name: String, tenantId: String?): Result<Boolean> {
+        return Result(deptService.isUserDeparted(name, tenantId))
     }
 
     override fun listUserInfos(

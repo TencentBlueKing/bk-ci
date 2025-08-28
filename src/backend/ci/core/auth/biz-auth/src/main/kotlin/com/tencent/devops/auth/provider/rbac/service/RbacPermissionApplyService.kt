@@ -102,7 +102,8 @@ class RbacPermissionApplyService @Autowired constructor(
         logger.info("RbacPermissionApplyService|listGroups:searchGroupInfo=$searchGroupInfo")
         verifyProjectRouterTag(projectId)
         // 校验新用户信息是否同步完成
-        isUserExists(userId)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+        isUserExists(userId, tenantId)
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -161,9 +162,9 @@ class RbacPermissionApplyService @Autowired constructor(
         )
     }
 
-    private fun isUserExists(userId: String) {
+    private fun isUserExists(userId: String, tenantId: String?) {
         // 校验新用户信息是否同步完成
-        val userExists = deptService.getUserInfo(userId) != null
+        val userExists = deptService.getUserInfo(userId = userId, tenantId = tenantId) != null
         if (!userExists) {
             logger.warn("user($userId) does not exist")
             throw ErrorCodeException(
@@ -326,9 +327,10 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
+        val projectCode = applyJoinGroupInfo.projectCode
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         try {
             logger.info("apply to join group: applyJoinGroupInfo=$applyJoinGroupInfo")
-            val projectCode = applyJoinGroupInfo.projectCode
             val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
                 ?: throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -399,7 +401,7 @@ class RbacPermissionApplyService @Autowired constructor(
                         resourceCodes = resourceCodes
                     )
                     val departedUsers = listResourcesCreator.filter {
-                        deptService.isUserDeparted(it)
+                        deptService.isUserDeparted(it, tenantId)
                     }.joinToString(",")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,

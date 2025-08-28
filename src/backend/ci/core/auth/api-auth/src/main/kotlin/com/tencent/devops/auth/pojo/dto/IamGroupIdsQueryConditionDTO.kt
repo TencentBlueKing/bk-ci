@@ -3,7 +3,7 @@ package com.tencent.devops.auth.pojo.dto
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户组ID查询业务实体")
-data class IamGroupIdsQueryConditionDTO(
+data class IamGroupIdsQueryConditionDTO        (
     @get:Schema(title = "项目ID")
     val projectCode: String,
     @get:Schema(title = "用户组名称")
