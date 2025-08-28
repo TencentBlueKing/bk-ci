@@ -1307,6 +1307,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         })
         return sortedCommits.mapIndexed { index, commit ->
             "${index + 1}. ${commit.message ?: ""}"
-        }.joinToString("\n")
+        }.joinToString("")
     }
 }
