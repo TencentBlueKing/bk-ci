@@ -164,13 +164,15 @@ class PipelineWebhookDao {
         dslContext: DSLContext,
         projectNames: Set<String>,
         repositoryType: String,
-        yamlPipelineIds: List<String>?
+        yamlPipelineIds: List<String>?,
+        eventType: String
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
                 .where(PROJECT_NAME.`in`(projectNames))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
+                .and(EVENT_TYPE.eq(eventType))
                 .let {
                     if (yamlPipelineIds.isNullOrEmpty()) {
                         it
