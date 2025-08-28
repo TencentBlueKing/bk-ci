@@ -113,7 +113,7 @@
                     image: () => this.requestImageReplyComment({ id, postData })
                 }
 
-                if (!Object.hasOwnProperty.call(funObj, type)) {
+                if (!Object.hasOwnProperty.call(funObj, type) || typeof funObj[type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }

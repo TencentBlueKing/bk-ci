@@ -364,13 +364,17 @@
                     >
                         <div>
                             <span>{{ props.row.pipelineVersionName ?? '--' }}</span>
-                            <logo
-                                v-if="isNotLatest(props)"
-                                v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
-                                size="12"
-                                class="version-tips"
-                                name="warning-circle"
-                            />
+                            <span
+                                v-if="!props.row.versionChange"
+                                @click.stop="showVersionDiffDialog(props.row.index)"
+                            >
+                                <logo
+                                    v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
+                                    size="12"
+                                    class="version-tips"
+                                    name="warning-circle"
+                                />
+                            </span>
                         </div>
                     </template>
                     <template
@@ -597,6 +601,10 @@
                 </bk-button>
             </footer>
         </bk-dialog>
+        <VersionDiffDialog
+            :visible.sync="isShowVersionDiffDialog"
+            :build-num="`#${activeBuild?.buildNum}`"
+        />
     </div>
 </template>
 
@@ -609,6 +617,7 @@
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
+    import VersionDiffDialog from './VersionDiffDialog'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
@@ -622,6 +631,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+
     const LS_COLUMN_KEY = 'shownColumnsKeys'
     export default {
         name: 'build-history-table',
@@ -633,7 +643,8 @@
             FilterBar,
             TableColumnSetting,
             ArtifactQuality,
-            EmptyException
+            EmptyException,
+            VersionDiffDialog
         },
         props: {
             showLog: {
@@ -660,7 +671,8 @@
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
-                dialogTopOffset: null
+                dialogTopOffset: null,
+                isShowVersionDiffDialog: false
             }
         },
         computed: {
@@ -872,6 +884,11 @@
                     })
                 },
                 deep: true
+            },
+            isShowVersionDiffDialog (val) {
+                if (!val) {
+                    this.visibleIndex = -1
+                }
             }
         },
         mounted () {
@@ -891,7 +908,7 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
-
+            
             getSlicedData (row) {
                 const keys = Object.keys(row.artifactQuality)
                 const slicedKeys = keys.slice(0, 2)
@@ -988,14 +1005,6 @@
             hideMoreMaterial () {
                 this.visibleIndex = -1
                 this.isShowMoreMaterial = false
-            },
-            isNotLatest ({ $index }) {
-                const length = this.buildHistoryList.length
-                // table最后一条记录必不变化
-                if ($index === length - 1) return false
-                const current = this.buildHistoryList[$index]
-                const before = this.buildHistoryList[$index + 1]
-                return current.pipelineVersion !== before.pipelineVersion
             },
             getStageTooltip (stage) {
                 switch (true) {
@@ -1248,6 +1257,10 @@
                 this.$nextTick(() => {
                     this.requestHistory()
                 })
+            },
+            showVersionDiffDialog (index) {
+                this.visibleIndex = index
+                this.isShowVersionDiffDialog = true
             }
         }
     }

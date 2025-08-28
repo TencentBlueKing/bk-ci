@@ -93,7 +93,7 @@
 
             getComment () {
                 if (this.commentId) {
-                    if (Object.hasOwnProperty.call(this.getCommentGenerator, this.type) === false) {
+                    if (!Object.hasOwnProperty.call(this.getCommentGenerator, this.type) || typeof this.getCommentGenerator[this.type] !== 'function') {
                         this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                         return Promise.reject(new Error(this.$t('store.typeError')))
                     }
@@ -153,7 +153,7 @@
                         score: this.rate
                     }
                 }
-                if (Object.hasOwnProperty.call(this.modifyCommentGenerator, this.type) === false) {
+                if (!Object.hasOwnProperty.call(this.modifyCommentGenerator, this.type) || typeof this.modifyCommentGenerator[this.type] !== 'function') {
                     return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.modifyCommentGenerator[this.type](data).then(() => ({
@@ -173,7 +173,7 @@
                         score: this.rate
                     }
                 }
-                if (Object.hasOwnProperty.call(this.addCommentGenerator, this.type) === false) {
+                if (!Object.hasOwnProperty.call(this.addCommentGenerator, this.type) || typeof this.addCommentGenerator[this.type] !== 'function') {
                     return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.addCommentGenerator[this.type](data)

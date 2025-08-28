@@ -644,6 +644,7 @@
     "close": "Disable",
     "timeCron": "Schedule Rule",
     "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID.",
+    "constraintMode": "The pipeline uses a constraint mode template",
     "notTemplate": "Template does not exist"
   },
   "newlist": {
@@ -1797,8 +1798,6 @@
   "editDraft": "Edit Draft",
   "thinkthink": "Thinking again",
   "editCurDraft": "Edit Draft",
-  "unSupportCodeMode": "Code mode is not supported yet",
-  "templateYamlNotSupport": "The constrained mode pipeline (template instance) currently does not support Code mode viewing and PAC mode publishing.",
   "eventID": "Event ID",
   "runningSteps": "Running steps: ",
   "completeness": "Completeness: ",
@@ -1960,5 +1959,13 @@
   "noticeConf": "Notification configuration",
   "constraintConfTips": "This setting follows the template. If customization is needed, you can ",
   "unfollow": "Unfollow template",
-  "triggerStepIdNotSet": "The trigger step ID is not set, please set it in the plugin configuration"
+  "triggerStepIdNotSet": "The trigger step ID is not set, please set it in the plugin configuration",
+  "pipelineVersionChnaged": "{0} - Pipeline has changed",
+  "templateVersionDiff": "Pipeline version change",
+  "templateDiffs": "Template content changes",
+  "refTemplateDiffTitle": "When the pipeline references the following templates via branch version or repository ref, the reference remains unchanged but the template content has changed",
+  "refTemplate": "Referenced template",
+  "preRef": "Previous version/Previous Commit",
+  "currentRef": "Current version/Current Commit"
+
 }

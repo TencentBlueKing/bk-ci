@@ -13,12 +13,52 @@
                 slot="trigger"
             >
                 <span @click="goHistory">{{ pipelineName }}</span>
-                <span
-                    class="template-instance-tag"
+                
+                <bk-popover
                     v-if="instanceFromTemplate"
+                    class="template-instance-tag"
+                    theme="light"
+                    :on-show="handleShowPopover"
+                    :on-hide="handleHidePopover"
                 >
-                    {{ $t('constraint') }}
-                </span>
+                    <span>
+                        {{ $t('constraint') }}
+                    </span>
+                    <section
+                        slot="content"
+                    >
+                        <p>{{ $t('template.constraintMode') }}</p>
+                        <div
+                            class="constraint-info-area"
+                            v-bkloading="constraintInfoFetching"
+                        >
+                            <p>
+                                <label>{{ $t('template.name') }}</label>
+                                <a
+                                    class="text-link"
+                                    target="_blank"
+                                    :href="constraintInfo?.templateDetailsUrl"
+                                >
+                                    {{ constraintInfo?.templateName ?? '--' }}
+                                </a>
+                            </p>
+                            <p>
+                                <label>{{ $t('template.templateVersion') }}</label>
+                                <span>
+                                    {{ constraintInfo?.templateVersionName ?? '--' }}
+                                </span>
+                                <a
+                                    v-if="constraintInfo?.upgradeFlag"
+                                    class="text-link"
+                                    target="_blank"
+                                    :href="constraintInfo?.upgradeUrl"
+                                >
+                                    {{ $t('template.goUpgrade') }}
+                                </a>
+                            </p>
+                        </div>
+                    </section>
+                </bk-popover>
                 <div
                     class="pipeline-pac-indicator"
                     @click.stop.prevent=""
@@ -49,6 +89,9 @@
     import { mapState, mapGetters, mapActions } from 'vuex'
     import PacTag from '@/components/PacTag'
     import { RESOURCE_ACTION } from '@/utils/permission'
+    import {
+        PROCESS_API_URL_PREFIX
+    } from '@/store/constants'
 
     export default {
         components: {
@@ -67,7 +110,10 @@
         data () {
             return {
                 pipelineList: [],
-                currentPipeline: null
+                currentPipeline: null,
+                contraintApiSignal: null,
+                constraintInfo: null,
+                constraintInfoFetching: { isLoading: false, size: 'small' }
             }
         },
         computed: {
@@ -168,6 +214,34 @@
                         ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
                     ]
                     : list
+            },
+            async handleShowPopover () {
+                try {
+                    this.constraintInfoFetching = {
+                        isLoading: true,
+                        size: 'small'
+                    }
+                    this.contraintApiSignal = new AbortController()
+                    const { projectId, pipelineId, version } = this.$route.params
+                    const res = await this.$ajax({
+                        url: `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version ?? this.pipelineInfo?.releaseVersion}/related/info`,
+                        method: 'GET',
+                        signal: this.contraintApiSignal?.signal
+                    })
+                    this.constraintInfo = res.data
+
+                } catch (error) {
+                    
+                } finally {
+                    this.constraintInfoFetching = {
+                        isLoading: false,
+                        size: 'small'
+                    }
+                }
+            },
+            handleHidePopover () {
+                this.constraintInfo = null
+                this.contraintApiSignal?.abort()
             }
         }
     }
@@ -182,6 +256,22 @@
         border: 1px solid #DCDEE5;
         border-radius: 2px;
         padding: 0 8px;
+    }
+    .constraint-info-area {
+        background: #F5F7FA;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        padding: 4px 16px;
+        gap: 6px;
+        min-width: 280px;
+        margin-top: 8px;
+        > p {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            grid-gap: 20px;
+        }
     }
     .pipeline-name-crumb {
         display: inline-flex;

@@ -647,6 +647,7 @@
     "close": "不启用",
     "timeCron": "定时规则",
     "notStepIdTips": "触发器[{0}]缺少 Step ID ，请修改模版补全 Step ID",
+    "constraintMode": "流水线使用了约束模式的模板",
     "notTemplate": "模板不存在"
   },
   "newlist": {
@@ -1799,8 +1800,6 @@
   "editDraft": "编辑原草稿",
   "thinkthink": "再想想",
   "editCurDraft": "编辑草稿",
-  "unSupportCodeMode": "暂不支持Code方式",
-  "templateYamlNotSupport": "约束模式流水线（模板实例）暂不支持Code方式查看和PAC模式发布。",
   "eventID": "事件ID",
   "runningSteps": "正在运行的步骤：",
   "completeness": "完成度：",
@@ -1963,5 +1962,12 @@
   "noticeConf": "通知配置",
   "constraintConfTips": "此设置以模板为准。如需自定义，可 ",
   "unfollow": "取消跟随模板",
-  "triggerStepIdNotSet": "触发器缺少 Step ID ，请修改模版补全 Step ID"
+  "triggerStepIdNotSet": "触发器缺少 Step ID ，请修改模版补全 Step ID",
+  "pipelineVersionChnaged": "{0} - 流水线发生了变更",
+  "templateVersionDiff": "流水线版本变更",
+  "templateDiffs": "模板内容变更",
+  "refTemplateDiffTitle": "流水线通过分支版本或代码库 ref 方式引用以下模板时，引用未变，但模板内容发生了变化",
+  "refTemplate": "引用模板",
+  "preRef": "上一版本/上一 Commit",
+  "currentRef": "当前版本/当前 Commit"
 }

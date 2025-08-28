@@ -136,7 +136,7 @@
 
 <script>
     import breadCrumbs from '@/components/bread-crumbs.vue'
-import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -229,7 +229,7 @@ import { mapActions, mapGetters } from 'vuex'
                     template: this.requestTemplateDetail,
                     image: this.requestImageDetailByCode
                 }
-                if (!Object.hasOwnProperty.call(methods, this.type)) {
+                if (!Object.hasOwnProperty.call(methods, this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
@@ -305,15 +305,15 @@ import { mapActions, mapGetters } from 'vuex'
                         return
                     }
 
-                const methods = {
-                    atom: this.installAtom,
-                    template: this.installTemplate,
-                    image: this.installImage
-                }
-                if (!Object.hasOwnProperty.call(methods, this.type)) {
-                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                    return
-                }
+                    const methods = {
+                        atom: this.installAtom,
+                        template: this.installTemplate,
+                        image: this.installImage
+                    }
+                    if (!Object.hasOwnProperty.call(methods, this.type)) {
+                        this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                        return
+                    }
 
                     this.isLoading = true
                 

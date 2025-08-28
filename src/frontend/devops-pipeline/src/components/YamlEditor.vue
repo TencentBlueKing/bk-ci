@@ -198,7 +198,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
                 this.$emit('input', value, this.editor)
             },
             format () {
-            this.editor?.getAction('editor.action.formatDocument').run()
+             this.editor?.getAction('editor.action.formatDocument').run()
             },
             highlightBlocks (blocks) {
                 if (this.monaco && this.editor && Array.isArray(blocks) && blocks.length > 0) {
