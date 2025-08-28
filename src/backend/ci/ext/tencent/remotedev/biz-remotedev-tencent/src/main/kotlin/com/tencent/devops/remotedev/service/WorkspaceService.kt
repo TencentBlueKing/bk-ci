@@ -1449,6 +1449,10 @@ class WorkspaceService @Autowired constructor(
                 hasMacPermissions = true
             }
         }
+        // 新增逻辑：如果userId非空且是集团员工，并且hasIpPermissions=false，则置为true
+        if (userId.isNotEmpty() && !userId.endsWith("@tai") && !hasIpPermissions) {
+            hasIpPermissions = true
+        }
     }
 
     @Deprecated("不要新增功能，希望废弃该接口")
