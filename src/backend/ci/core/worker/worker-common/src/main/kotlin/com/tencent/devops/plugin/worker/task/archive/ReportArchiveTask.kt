@@ -164,6 +164,15 @@ class ReportArchiveTask : ITask() {
                 allFileList.forEach {
                     uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                 }
+                if (shouldArchiveToParentPipeline) {
+                    allFileList.forEach {
+                        try {
+                            uploadReportFileToParentPipeline(fileDirPath, it, elementId, buildVariables, token)
+                        } catch (ignore: Throwable) {
+                            logger.warn("upload report to parent pipeline failed: ${it.name}", ignore)
+                        }
+                    }
+                }
             }
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
