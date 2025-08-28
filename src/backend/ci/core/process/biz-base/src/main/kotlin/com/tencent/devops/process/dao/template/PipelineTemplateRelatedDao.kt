@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.TPipelineTemplateInfo
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
@@ -99,6 +100,7 @@ class PipelineTemplateRelatedDao {
     ): List<PipelineTemplateRelatedSimple> {
         val templatePipelineTable = TTemplatePipeline.T_TEMPLATE_PIPELINE
         val pipelineInfoTable = TPipelineInfo.T_PIPELINE_INFO
+        val pipelineTemplateInfoTable = TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO
         return dslContext.select(
             templatePipelineTable.PROJECT_ID,
             templatePipelineTable.TEMPLATE_ID,
@@ -119,10 +121,13 @@ class PipelineTemplateRelatedDao {
             .from(templatePipelineTable)
             .join(pipelineInfoTable)
             .on(templatePipelineTable.PIPELINE_ID.eq(pipelineInfoTable.PIPELINE_ID))
+            .leftJoin(pipelineTemplateInfoTable)
+            .on(templatePipelineTable.TEMPLATE_ID.eq(pipelineTemplateInfoTable.ID))
             .where(
                 buildCommonConditions(
                     templatePipelineTable = templatePipelineTable,
                     pipelineInfoTable = pipelineInfoTable,
+                    pipelineTemplateInfoTable = pipelineTemplateInfoTable,
                     projectId = projectId,
                     templateId = templateId,
                     pipelineName = pipelineName,
@@ -157,6 +162,69 @@ class PipelineTemplateRelatedDao {
             }
     }
 
+    private fun buildCommonConditions(
+        templatePipelineTable: TTemplatePipeline,
+        pipelineInfoTable: TPipelineInfo,
+        pipelineTemplateInfoTable: TPipelineTemplateInfo,
+        projectId: String,
+        templateId: String,
+        pipelineName: String?,
+        updater: String?,
+        templateVersion: Long?,
+        status: TemplatePipelineStatus?,
+        pipelineIds: List<String>?,
+        instanceTypeEnum: PipelineInstanceTypeEnum
+    ): Condition {
+        var conditions = templatePipelineTable.PROJECT_ID.eq(projectId)
+            .and(templatePipelineTable.TEMPLATE_ID.eq(templateId))
+            .and(templatePipelineTable.DELETED.eq(false))
+            .and(templatePipelineTable.INSTANCE_TYPE.eq(instanceTypeEnum.type))
+            .and(pipelineInfoTable.PROJECT_ID.eq(projectId))
+            .and(pipelineInfoTable.DELETE.eq(false))
+
+        conditions = conditions.let {
+            if (!pipelineName.isNullOrBlank()) {
+                it.and(pipelineInfoTable.PIPELINE_NAME.like("%$pipelineName%"))
+            } else {
+                it
+            }
+        }
+        conditions = conditions.let {
+            if (!updater.isNullOrBlank()) {
+                it.and(templatePipelineTable.UPDATOR.like("%$updater%"))
+            } else {
+                it
+            }
+        }
+        conditions = conditions.let {
+            if (templateVersion != null) {
+                it.and(templatePipelineTable.VERSION.eq(templateVersion))
+            } else {
+                it
+            }
+        }
+        conditions = conditions.let {
+            if (status != null) {
+                if (status == TemplatePipelineStatus.PENDING_UPDATE) {
+                    it.and(templatePipelineTable.STATUS.eq(TemplatePipelineStatus.UPDATED.name))
+                        .and(templatePipelineTable.VERSION.ne(pipelineTemplateInfoTable.RELEASED_VERSION))
+                } else {
+                    it.and(templatePipelineTable.STATUS.eq(status.name))
+                }
+            } else {
+                it
+            }
+        }
+        conditions = conditions.let {
+            if (!pipelineIds.isNullOrEmpty()) {
+                it.and(templatePipelineTable.PIPELINE_ID.`in`(pipelineIds))
+            } else {
+                it
+            }
+        }
+        return conditions
+    }
+
     fun countSimple(
         dslContext: DSLContext,
         projectId: String,
@@ -170,14 +238,18 @@ class PipelineTemplateRelatedDao {
     ): Int {
         val templatePipelineTable = TTemplatePipeline.T_TEMPLATE_PIPELINE
         val pipelineInfoTable = TPipelineInfo.T_PIPELINE_INFO
+        val pipelineTemplateInfoTable = TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO
         return dslContext.selectCount()
             .from(templatePipelineTable)
             .join(pipelineInfoTable)
             .on(templatePipelineTable.PIPELINE_ID.eq(pipelineInfoTable.PIPELINE_ID))
+            .leftJoin(pipelineTemplateInfoTable)
+            .on(templatePipelineTable.TEMPLATE_ID.eq(pipelineTemplateInfoTable.ID))
             .where(
                 buildCommonConditions(
                     templatePipelineTable = templatePipelineTable,
                     pipelineInfoTable = pipelineInfoTable,
+                    pipelineTemplateInfoTable = pipelineTemplateInfoTable,
                     projectId = projectId,
                     templateId = templateId,
                     pipelineName = pipelineName,
@@ -189,61 +261,6 @@ class PipelineTemplateRelatedDao {
                 )
             )
             .fetchOne(0, Int::class.java)!!
-    }
-
-    private fun buildCommonConditions(
-        templatePipelineTable: TTemplatePipeline,
-        pipelineInfoTable: TPipelineInfo,
-        projectId: String,
-        templateId: String,
-        pipelineName: String?,
-        updater: String?,
-        templateVersion: Long?,
-        status: TemplatePipelineStatus?,
-        pipelineIds: List<String>?,
-        instanceTypeEnum: PipelineInstanceTypeEnum
-    ): Condition {
-        return templatePipelineTable.PROJECT_ID.eq(projectId)
-            .and(templatePipelineTable.TEMPLATE_ID.eq(templateId))
-            .and(templatePipelineTable.DELETED.eq(false))
-            .and(templatePipelineTable.INSTANCE_TYPE.eq(instanceTypeEnum.type))
-            .and(pipelineInfoTable.PROJECT_ID.eq(projectId))
-            .and(pipelineInfoTable.DELETE.eq(false))
-            .let {
-                if (!pipelineName.isNullOrBlank()) {
-                    it.and(pipelineInfoTable.PIPELINE_NAME.like("%$pipelineName%"))
-                } else {
-                    it
-                }
-            }
-            .let {
-                if (!updater.isNullOrBlank()) {
-                    it.and(templatePipelineTable.UPDATOR.like("%$updater%"))
-                } else {
-                    it
-                }
-            }
-            .let {
-                if (templateVersion != null) {
-                    it.and(templatePipelineTable.VERSION.eq(templateVersion))
-                } else {
-                    it
-                }
-            }
-            .let {
-                if (status != null) {
-                    it.and(templatePipelineTable.STATUS.eq(status.name))
-                } else {
-                    it
-                }
-            }
-            .let {
-                if (!pipelineIds.isNullOrEmpty()) {
-                    it.and(templatePipelineTable.PIPELINE_ID.`in`(pipelineIds))
-                } else {
-                    it
-                }
-            }
     }
 
     fun delete(

@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -29,6 +30,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LATEST_PUBLI
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM
+import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -102,7 +104,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val config: CommonConfig,
-    private val pipelineVersionFacadeService: PipelineVersionFacadeService
+    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
+    private val pipelineLabelDao: PipelineLabelDao
 ) {
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
@@ -655,7 +658,11 @@ class PipelineTemplateFacadeService @Autowired constructor(
             projectId = projectId,
             templateId = templateId,
             settingVersion = templateResource.settingVersion
-        )
+        ).let { pipelineSetting ->
+            val labelIds = pipelineSetting.labels.map { HashUtil.decodeIdToLong(it) }.toSet()
+            val labelNames = pipelineLabelDao.getByIds(dslContext, projectId, labelIds).map { it.name }
+            pipelineSetting.copy(labelNames = labelNames)
+        }
         val (yamlSupported, yamlPreview, msg) = try {
             val yaml = templateResource.yaml ?: pipelineTemplateGenerator.transfer(
                 userId = templateResource.creator,

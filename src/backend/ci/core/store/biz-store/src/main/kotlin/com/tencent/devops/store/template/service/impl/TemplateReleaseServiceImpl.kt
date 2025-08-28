@@ -47,6 +47,7 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.OFFSET_REASON_IS_NOT_ALLOW_NULL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.pojo.common.CLOSE
@@ -66,6 +67,7 @@ import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateReleaseReq
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateV2Request
+import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
@@ -630,19 +632,38 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
                 templateCode = templateCode
             ) ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(templateCode),
-                defaultMessage = I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf(templateCode),
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                ).message
+                params = arrayOf(templateCode)
             )
             val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                 dslContext = dslContext,
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+            val templateResource = client.get(ServicePipelineTemplateV2Resource::class).getTemplateDetails(
+                projectId = projectCode,
+                templateId = templateCode,
+                version = version
+            ).data?.resource!!
+            marketTemplatePublishedService.create(
+                TemplatePublishedVersionInfo(
+                    projectCode = projectCode,
+                    templateCode = templateCode,
+                    version = version,
+                    versionName = templateResource.versionName!!,
+                    number = templateResource.number,
+                    published = true,
+                    creator = userId,
+                    updater = userId
+                )
+            )
+            marketTemplateDao.updateTemplateStatusByCode(
+                dslContext = dslContext,
+                templateCode = templateCode,
+                templateOldStatus = TemplateStatusEnum.UNDERCARRIAGED.status.toByte(),
+                templateNewStatus = TemplateStatusEnum.RELEASED.status.toByte(),
+                userId = userId
+            )
+
             client.get(ServicePipelineTemplateV2Resource::class).handleMarketTemplateVersionPublished(
                 userId = userId,
                 projectId = projectCode,
@@ -986,6 +1007,10 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
         templateVersion: Long?,
         reason: String?
     ): Result<Boolean> {
+        if (templateVersion != null && reason.isNullOrBlank()) {
+            throw ErrorCodeException(errorCode = OFFSET_REASON_IS_NOT_ALLOW_NULL)
+        }
+
         // 判断用户是否有权限下架模板
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())) {
             throw ErrorCodeException(
