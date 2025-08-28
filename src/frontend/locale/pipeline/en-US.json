@@ -618,10 +618,10 @@
     "upgradeTemplate": "Upgrade",
     "templateUpgradeSuccess": "Upgrade template successfully",
     "instanceStatus": {
-      "pendingUpdate": "Pending Update",
-      "updating": "Updating",
-      "updated": "Update Successful",
-      "failed": "Update Failed"
+      "pendingUpdate": "Pending Upgrade",
+      "updating": "Upgrading",
+      "updated": "Upgrade Successful",
+      "failed": "Upgrade Failed"
     },
     "failedReason": "Failure Reason",
     "referenceById": "Reference through template ID",

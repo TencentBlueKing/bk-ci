@@ -175,7 +175,6 @@
                 }
             },
             async saveTemplateDraft () {
-                const valid = await this.$validator.validate()
                 const pipeline = Object.assign({}, this.pipeline, {
                     name: this.pipelineSetting.pipelineName,
                     stages: [
@@ -183,10 +182,12 @@
                         ...this.pipelineWithoutTrigger.stages
                     ]
                 })
-                if (!valid) {
+                const { inValid, message } = this.checkPipelineInvalid(pipeline.stages, this.pipelineSetting)
+             
+                if (inValid) {
                     this.$showTips({
                         theme: 'error',
-                        message: this.$t('template.versionErrTips')
+                        message
                     })
                     return
                 }

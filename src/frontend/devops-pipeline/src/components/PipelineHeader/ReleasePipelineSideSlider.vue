@@ -28,7 +28,7 @@
                         {{ $t("releasePipelineVersion",[customVersionName || newReleaseVersionName]) }}
                     </span>
                     <span v-bk-overflow-tips>
-                        {{ $t("releasePipelineBaseVersion", [customVersionName || newReleaseVersionName]) }}
+                        {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
                     </span>
                 </template>
                 <template v-else>
@@ -120,7 +120,7 @@
                         error-display-type="normal"
                     >
                         <bk-form-item
-                            v-if="isTemplate && !isTemplateInstanceMode"
+                            v-if="!releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
                             :label="$t('template.customVersionName')"
                             property="customVersionName"
                         >
@@ -132,7 +132,6 @@
                             >
                             </bk-input>
                         </bk-form-item>
-
                         <div v-if="releaseParams.enablePac && hasOauth">
                             <header
                                 @click="togglePacCodelibSettingForm"
@@ -349,6 +348,19 @@
                                     >
                                     </bk-option>
                                 </bk-select>
+                            </bk-form-item>
+                            <bk-form-item
+                                v-if="releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
+                                :label="$t('template.customVersionName')"
+                                property="customVersionName"
+                            >
+                                <bk-input
+                                    v-model="customVersionName"
+                                    @blur="handleBlurCustomVersionName"
+                                    :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                    :maxlength="30"
+                                >
+                                </bk-input>
                             </bk-form-item>
                         </div>
                     </bk-form>
@@ -732,7 +744,9 @@
             prefetchParams: {
                 deep: true,
                 handler: function (val) {
-                    this.prefetchReleaseVersion(val)
+                    this.$nextTick(() => {
+                        this.prefetchReleaseVersion(val)
+                    })
                 }
             },
             showTaskDetail: {
@@ -747,6 +761,11 @@
                 }
             },
             'releaseParams.targetAction': {
+                handler: function () {
+                    this.customVersionName = ''
+                }
+            },
+            'releaseParams.targetBranch': {
                 handler: function () {
                     this.customVersionName = ''
                 }
@@ -820,7 +839,7 @@
             },
 
             async prefetchReleaseVersion (params) {
-                if (this.releaseParams.enable && (!this.releaseParams.repoHashId || !this.releaseParams.targetAction)) return
+                if (params.enablePac && !params.repoHashId && !params.targetBranch) return
                 try {
                     const lackTargetAction = params.enablePac && !params.targetAction
                     const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
@@ -978,7 +997,7 @@
                         } else {
                             await this.requestPipelineSummary(this.$route.params)
                         }
-
+                        this.customVersionName = ''
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
                             : 'releaseTips'

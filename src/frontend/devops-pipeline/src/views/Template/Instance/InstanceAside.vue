@@ -232,9 +232,10 @@
                         triggerElements?.length ? {
                             triggerConfigs: triggerElements.map(trigger => {
                                 return {
+                                    id: trigger.id,
                                     atomCode: trigger.atomCode,
                                     stepId: trigger.stepId ?? '',
-                                    disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
+                                    disabled: Object.hasOwnProperty.call(trigger?.additionalOptions ?? {}, 'enable') ? !trigger?.additionalOptions?.enable : false,
                                     cron: trigger.advanceExpression,
                                     variables: trigger.startParams,
                                     name: trigger.name,
