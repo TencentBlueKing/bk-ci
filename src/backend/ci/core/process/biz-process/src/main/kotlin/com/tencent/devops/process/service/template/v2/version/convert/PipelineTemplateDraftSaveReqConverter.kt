@@ -127,6 +127,11 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                     version = it
                 )
             }
+            val (srcTemplateProjectId, srcTemplateId, srcTemplateVersion) =
+                takeIf { templateInfo.mode == TemplateType.CONSTRAINT && baseResource != null }?.let {
+                    with(baseResource!!) { Triple(srcTemplateProjectId, srcTemplateId, srcTemplateVersion) }
+                } ?: Triple(null, null, null)
+
             pipelineTemplateModelInitializer.initTemplateModel(transferResult.templateModel)
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(
                 projectId = projectId,
@@ -137,6 +142,9 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 yaml = transferResult.yamlWithVersion?.yamlStr,
                 status = VersionStatus.COMMITTING,
                 sortWeight = PipelineTemplateConstant.COMMITTING_STATUS_VERSION_SORT_WIGHT,
+                srcTemplateProjectId = srcTemplateProjectId,
+                srcTemplateId = srcTemplateId,
+                srcTemplateVersion = srcTemplateVersion,
                 baseVersion = baseVersion,
                 baseVersionName = baseResource?.versionName,
                 creator = userId,

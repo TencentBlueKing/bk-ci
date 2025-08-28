@@ -1045,8 +1045,12 @@ class TemplateFacadeService @Autowired constructor(
         val constrainedTemplateList = mutableListOf<String>()
         val tTemplate = TTemplate.T_TEMPLATE
         templates?.forEach { template ->
-            if (template[tTemplate.TYPE] == TemplateType.CONSTRAINT.name) {
-                constrainedTemplateList.add(template[tTemplate.SRC_TEMPLATE_ID])
+            try {
+                if (template[tTemplate.TYPE] == TemplateType.CONSTRAINT.name) {
+                    constrainedTemplateList.add(template[tTemplate.SRC_TEMPLATE_ID])
+                }
+            } catch (ex: Exception) {
+                logger.warn("get constrained src templates failed {}", template[tTemplate.ID])
             }
             // 非研发商店流水线模板ID集合
             templateIdList.add(template[tTemplate.ID])
