@@ -1299,8 +1299,14 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     fun processCommits(commits: List<Commit>): String {
+        val mergePattern = Regex("^Merge .+", RegexOption.IGNORE_CASE)
+        // 过滤合并提交信息
+        val filteredCommits = commits.filter { commit ->
+            val message = commit.message ?: ""
+            !mergePattern.matches(message)
+        }
         // 最早的排最前面
-        val sortedCommits = commits.sortedWith(compareBy { commit ->
+        val sortedCommits = filteredCommits.sortedWith(compareBy { commit ->
             commit.committedDate?.let { timeStr ->
                 DateTimeUtil.zoneDateToDate(timeStr)
             }
