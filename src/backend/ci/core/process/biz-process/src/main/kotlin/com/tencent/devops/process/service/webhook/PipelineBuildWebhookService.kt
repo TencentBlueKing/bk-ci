@@ -129,30 +129,33 @@ class PipelineBuildWebhookService @Autowired constructor(
 
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
             val repoEventIdMap = mutableMapOf<String, Long>()
-            triggerPipelines.forEach outside@{ subscriber ->
-                val projectId = subscriber.projectId
-                val pipelineId = subscriber.pipelineId
-                try {
-                    logger.info("pipelineId is $pipelineId")
-                    val builder = PipelineTriggerDetailBuilder()
-                        .projectId(projectId)
-                        .pipelineId(pipelineId)
+            triggerPipelines.chunked(20).forEach { group ->
+                val triggerDetailList = mutableListOf<PipelineTriggerDetailBuilder>()
+                group.forEach outside@{ subscriber ->
+                    val projectId = subscriber.projectId
+                    val pipelineId = subscriber.pipelineId
+                    try {
+                        logger.info("pipelineId is $pipelineId")
+                        val builder = PipelineTriggerDetailBuilder()
+                                .projectId(projectId)
+                                .pipelineId(pipelineId)
 
-                    webhookTriggerPipelineBuild(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        matcher = matcher,
-                        builder = builder
-                    )
-                    saveTriggerEvent(
-                        projectId = projectId,
-                        builder = builder,
-                        triggerEvent = triggerEvent,
-                        repoEventIdMap = repoEventIdMap
-                    )
-                } catch (e: Throwable) {
-                    logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+                        webhookTriggerPipelineBuild(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            matcher = matcher,
+                            builder = builder
+                        )
+                        triggerDetailList.add(builder)
+                    } catch (e: Throwable) {
+                        logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+                    }
                 }
+                saveTriggerEvent(
+                    triggerDetailBuildList = triggerDetailList,
+                    triggerEvent = triggerEvent,
+                    repoEventIdMap = repoEventIdMap
+                )
             }
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
                 git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
@@ -178,19 +181,23 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun saveTriggerEvent(
-        projectId: String,
-        builder: PipelineTriggerDetailBuilder,
         triggerEvent: PipelineTriggerEvent,
-        repoEventIdMap: MutableMap<String, Long>
+        repoEventIdMap: MutableMap<String, Long>,
+        triggerDetailBuildList: List<PipelineTriggerDetailBuilder>
     ) {
-        if (!builder.getEventSource().isNullOrBlank()) {
+        val list = triggerDetailBuildList.filter { !it.getEventSource().isNullOrBlank() }
+        if (list.isEmpty()) return
+        val triggerDetailList = list.map { builder ->
+            val projectId = builder.getProjectId()
             val eventSource = builder.getEventSource()!!
             val eventType = triggerEvent.eventType
             triggerEvent.eventSource = eventSource
             triggerEvent.projectId = projectId
             val eventId = repoEventIdMap[builder.getEventSource()] ?: run {
                 val eventId = pipelineTriggerEventService.getEventId(
-                    projectId = projectId, requestId = triggerEvent.requestId, eventSource = triggerEvent.eventSource!!
+                    projectId = builder.getProjectId(),
+                    requestId = triggerEvent.requestId,
+                    eventSource = triggerEvent.eventSource!!
                 )
                 repoEventIdMap[builder.getEventSource()!!] = eventId
                 eventId
@@ -199,10 +206,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             builder.eventId(eventId)
             builder.detailId(pipelineTriggerEventService.getDetailId())
             val triggerDetail = builder.build()
-            pipelineTriggerEventService.saveEvent(
-                triggerEvent = triggerEvent,
-                triggerDetail = triggerDetail
-            )
             // 判断刷新的eventType和repository_hash_id字段的准确性,为后期优化做准备
             pipelineWebhookService.get(
                 projectId = projectId,
@@ -214,7 +217,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                     "Failed to match pipeline webhook|$projectId|${triggerDetail.pipelineId}|$eventSource|$eventType"
                 )
             }
+            triggerDetail
         }
+        pipelineTriggerEventService.batchSaveEvent(
+            triggerEvent = triggerEvent,
+            triggerDetailList = triggerDetailList
+        )
     }
 
     @BkTimed

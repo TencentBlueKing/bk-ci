@@ -131,6 +131,23 @@ class PipelineTriggerEventService @Autowired constructor(
         }
     }
 
+    fun batchSaveEvent(
+        triggerEvent: PipelineTriggerEvent,
+        triggerDetailList: List<PipelineTriggerDetail>
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineTriggerEventDao.save(
+                dslContext = transactionContext,
+                triggerEvent = triggerEvent
+            )
+            pipelineTriggerEventDao.batchSaveDetail(
+                dslContext = transactionContext,
+                triggerDetailList = triggerDetailList
+            )
+        }
+    }
+
     fun saveTriggerEvent(triggerEvent: PipelineTriggerEvent) {
         pipelineTriggerEventDao.save(
             dslContext = dslContext,
