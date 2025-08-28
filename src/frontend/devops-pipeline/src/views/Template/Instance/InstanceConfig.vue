@@ -438,6 +438,7 @@
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
+            id: i.id,
             stepId: i.stepId ?? '',
             disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
@@ -463,7 +464,10 @@
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
                 return {
                     ...instance,
-                    param: curTemplateDetail.value.params,
+                    param: curTemplateDetail.value.params.map(i => ({
+                        ...i,
+                        isRequiredParam: true
+                    })),
                     buildNo: curTemplateDetail.value.buildNo
                 }
             }))
@@ -501,13 +505,18 @@
         }, {})
         for (const item of instanceParams) {
             const templateParamItem = templateParamsMap[item.id]
-
             if (!templateParamItem) {
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 item.isDelete = true
             } else {
                 // 对比 defaultValue, 如果不同则标记为isChange
-                item.isChange = item.defaultValue !== templateParamItem.defaultValue
+                // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
+                if (item.isFollowTemplate) {
+                    item.defaultValue = templateParamItem.defaultValue
+                } else {
+                    item.isChange = item.defaultValue !== templateParamItem.defaultValue
+                }
+                item.required = templateParamItem.required
             }
         }
 
@@ -525,19 +534,19 @@
     }
 
     function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
-        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.stepId, item]))
+        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.id, item]))
+        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.id, item]))
+
         const result = templateTriggerConfigs.map(item => {
-            if (!instanceTriggerMap.has(item.stepId)) {
+            if (!instanceTriggerMap.has(item.id)) {
                 return { ...item, isNew: true }
             }
-            const instanceTrigger = instanceTriggerMap.get(item.stepId)
-            return { ...item, ...instanceTrigger }
+            const instanceTrigger = instanceTriggerMap.get(item.id)
+            return  instanceTrigger.isFollowTemplate ? item : instanceTrigger
         })
 
-        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.stepId, item]))
-
         instanceTriggerConfigs.forEach(item => {
-            if (!templateTriggerMap.has(item.stepId)) {
+            if (!templateTriggerMap.has(item.id)) {
                 result.push({ ...item, isDelete: true })
             }
         })

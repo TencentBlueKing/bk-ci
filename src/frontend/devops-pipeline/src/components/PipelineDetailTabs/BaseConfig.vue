@@ -63,7 +63,7 @@
                                         class="base-info-block-row-value-label"
                                         @click="goPipelineManageList(row.key, label.id)"
                                     >
-                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
+                                        {{ label.name || label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>

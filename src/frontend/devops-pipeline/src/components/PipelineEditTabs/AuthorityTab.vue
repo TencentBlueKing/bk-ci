@@ -29,7 +29,7 @@
                 return (this.isTemplate ? this.pipelineInfo?.name : this.pipelineInfo?.pipelineName) ?? ''
             },
             resourceType () {
-                return this.isTemplate ? 'template' : 'pipeline'
+                return this.isTemplate ? 'pipeline_template' : 'pipeline'
             }
         }
     }

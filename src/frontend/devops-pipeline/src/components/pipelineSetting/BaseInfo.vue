@@ -19,6 +19,7 @@
                     name="pipelineName"
                     :value="pipelineSetting.pipelineName"
                     v-validate.initial="'required|max:128'"
+                    :disabled="!(editable || isOverride)"
                     :max-length="128"
                     :handle-change="handleBaseInfoChange"
                 />
@@ -116,6 +117,7 @@
                     name="desc"
                     :value="pipelineSetting.desc"
                     :maxlength="100"
+                    :disabled="!(editable || isOverride)"
                     :placeholder="$t('pipelineDescInputTips')"
                     v-validate.initial="'max:100'"
                     :handle-change="handleBaseInfoChange"

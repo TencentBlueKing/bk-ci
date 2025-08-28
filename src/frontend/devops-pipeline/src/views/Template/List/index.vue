@@ -59,7 +59,7 @@
                 <search-select
                     class="search-input"
                     :data="filterData"
-                    :placeholder="$t('template.searchPlaceholder')"
+                    :placeholder="filterTips"
                     :values="searchValue"
                     @change="handleSearchChange"
                 >
@@ -171,7 +171,17 @@
         {
             name: t('template.source'),
             default: true,
-            id: 'source'
+            id: 'mode',
+            children: [
+                {
+                    id: 'CUSTOMIZE',
+                    name: proxy.$t('template.customize')
+                },
+                {
+                    id: 'CONSTRAINT',
+                    name: proxy.$t('template.store')
+                }
+            ]
         },
         {
             name: t('template.lastModifiedBy'),
@@ -211,6 +221,7 @@
         acc[filter.id] = filter.values.map(val => val.id).join(',')
         return acc
     }, {}))
+    const filterTips = computed(() => filterData.value.map(item => item.name).join(' / '))
 
     watch(() => searchValue.value, () => {
         fetchTableData()

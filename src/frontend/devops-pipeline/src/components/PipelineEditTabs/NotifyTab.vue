@@ -21,7 +21,7 @@
                 >
                     <span class="notify-title">{{ card.name }}</span>
                     <bk-link
-                        :disabled="!(editable || isOverride)"
+                        v-if="editable"
                         theme="primary"
                         icon="bk-icon icon-plus"
                         @click.stop="handleEdit(card.type, -1)"
@@ -36,6 +36,7 @@
                         class="item-content"
                     >
                         <div
+                            v-if="editable"
                             class="operate-icons"
                         >
                             <bk-popover

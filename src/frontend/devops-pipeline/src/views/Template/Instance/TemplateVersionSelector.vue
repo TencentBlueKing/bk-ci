@@ -209,7 +209,8 @@
             templatePipeline.value = {
                 templateId: res.resource.templateId,
                 projectId: res.resource.projectId,
-                stages: res.resource.model.stages
+                stages: res.resource.model.stages,
+                name: res.setting.pipelineName
             }
         } catch (e) {
             console.error(e)
