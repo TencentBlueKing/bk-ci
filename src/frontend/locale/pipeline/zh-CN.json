@@ -621,10 +621,10 @@
     "upgradeTemplate": "模板升级",
     "templateUpgradeSuccess": "模板升级成功",
     "instanceStatus": {
-      "pendingUpdate": "待更新",
-      "updating": "更新中",
-      "updated": "更新成功",
-      "failed": "更新失败"
+      "pendingUpdate": "待升级",
+      "updating": "升级中",
+      "updated": "升级成功",
+      "failed": "升级失败"
     },
     "failedReason": "失败原因",
     "referenceById": "通过模板ID引用",

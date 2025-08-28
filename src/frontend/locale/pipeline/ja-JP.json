@@ -612,10 +612,10 @@
     "upgradeTemplate": "テンプレートアップグレード",
     "templateUpgradeSuccess": "テンプレートアップグレードが成功しました",
     "instanceStatus": {
-      "pendingUpdate": "更新待ち",
-      "updating": "更新中",
-      "updated": "更新成功",
-      "failed": "更新失敗"
+      "pendingUpdate": "アップグレードする",
+      "updating": "アップグレード中",
+      "updated": "アップグレード成功",
+      "failed": "アップグレードに失敗しました"
     },
     "failedReason": "失敗原因",
     "referenceById": "テンプレートIDによる参照",

@@ -235,7 +235,8 @@
                 })
             },
             paramsListMap () {
-                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+                const list = this.hideDeleted ? this.paramList.filter(i => !i.isDelete) : this.paramList
+                return getParamsGroupByLabel(list)?.listMap ?? {}
             },
             sortedCategories () {
                 return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
