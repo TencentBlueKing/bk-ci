@@ -148,7 +148,7 @@
                 type: this.$route.query.type,
                 code: this.$route.query.code,
                 from: this.$route.query.from,
-                name: '',
+                name: this.$route.query.name || '',
                 id: '',
                 installError: false,
                 projectListLoading: false,
