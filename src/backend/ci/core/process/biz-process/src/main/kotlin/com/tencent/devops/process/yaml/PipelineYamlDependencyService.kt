@@ -2,7 +2,7 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.process.engine.PipelineYamlDependencyDao
+import com.tencent.devops.process.engine.dao.PipelineYamlDependencyDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependency
