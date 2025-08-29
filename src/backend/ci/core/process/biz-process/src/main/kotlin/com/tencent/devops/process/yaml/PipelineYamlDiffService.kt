@@ -2,7 +2,7 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.PipelineYamlDiffDao
+import com.tencent.devops.process.engine.dao.PipelineYamlDiffDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamDiffFileStatus
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileSchedulerEvent

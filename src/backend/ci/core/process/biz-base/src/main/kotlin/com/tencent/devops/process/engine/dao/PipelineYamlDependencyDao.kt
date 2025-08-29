@@ -1,4 +1,4 @@
-package com.tencent.devops.process.engine
+package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.model.process.tables.TPipelineYamlDependency
 import com.tencent.devops.model.process.tables.records.TPipelineYamlDependencyRecord
