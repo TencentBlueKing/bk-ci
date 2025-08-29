@@ -41,7 +41,18 @@ config = {
         max_idle_time = 30000,  -- 保留在连接池的时间
         pool_size = 10,           -- 连接池的大小
         backlog = 10,           -- 连接等待队列
-        ssl = false
+        ssl = false,
+        auto_redis = {
+            host = "__AUTO_REDIS_IP0__",
+            port = __AUTO_REDIS_PORT__,
+            pass = "__AUTO_REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
+            database = __AUTO_REDIS_DB__, -- 默认选择db0
+            max_idle_time = 30000,  -- 保留在连接池的时间
+            pool_size = 10,           -- 连接池的大小
+            backlog = 10,           -- 连接等待队列
+            ssl = false,
+            tag = "kubernetes-auto"
+        }
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__IAM_IP0__",
