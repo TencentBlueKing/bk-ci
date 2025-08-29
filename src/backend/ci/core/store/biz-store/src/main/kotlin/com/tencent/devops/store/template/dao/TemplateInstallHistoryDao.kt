@@ -107,7 +107,7 @@ class TemplateInstallHistoryDao {
         return with(TTemplateVersionInstallHistory.T_TEMPLATE_VERSION_INSTALL_HISTORY) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(CREATE_TIME.desc(), NUMBER.desc())
                 .limit(1)
                 .fetchOne()?.let {
                     TemplateVersionInstallHistoryInfo(

@@ -46,8 +46,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PipelineTemplateVersionManager @Autowired constructor(
-    private val versionCreateHandlers: List<PipelineTemplateVersionCreateHandler>,
     private val versionReqConverters: List<PipelineTemplateVersionReqConverter>,
+    private val versionCreateHandlers: List<PipelineTemplateVersionCreateHandler>,
     private val pipelineTemplateVersionValidator: PipelineTemplateVersionValidator,
     private val versionDeleteHandler: PipelineTemplateVersionDeleteHandler,
     private val templateDao: TemplateDao,

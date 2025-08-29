@@ -260,6 +260,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
         installedTemplateCodes: List<String>?,
+        excludeProjectCode: String? = null,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
@@ -281,6 +282,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 classifyCode = classifyCode,
                 categoryList = categoryList,
                 labelCodeList = labelCodeList,
+                excludeProjectCode = excludeProjectCode,
                 score = score,
                 rdType = rdType
             )
@@ -294,6 +296,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 rdType = rdType,
                 sortType = sortType,
                 desc = desc,
+                excludeProjectCode = excludeProjectCode,
                 page = page,
                 pageSize = pageSize
             )
@@ -515,6 +518,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
         projectCode: String?,
+        excludeProjectCode: String?,
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp {
@@ -545,6 +549,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             sortType = sortType,
             installedTemplateCodes = installedTemplateCodes,
             desc = true,
+            excludeProjectCode = excludeProjectCode,
             page = page,
             pageSize = pageSize
         ).get()

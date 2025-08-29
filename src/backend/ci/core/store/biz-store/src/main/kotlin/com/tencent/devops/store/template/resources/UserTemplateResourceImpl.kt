@@ -181,6 +181,7 @@ class UserTemplateResourceImpl @Autowired constructor(
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
         projectCode: String?,
+        excludeProjectCode: String?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketTemplateResp> {
@@ -195,6 +196,7 @@ class UserTemplateResourceImpl @Autowired constructor(
                 rdType = rdType,
                 sortType = sortType,
                 projectCode = projectCode,
+                excludeProjectCode = excludeProjectCode,
                 page = page,
                 pageSize = pageSize
             )

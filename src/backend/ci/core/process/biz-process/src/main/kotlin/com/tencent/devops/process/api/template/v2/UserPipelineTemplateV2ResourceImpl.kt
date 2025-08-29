@@ -364,6 +364,12 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         commonCondition: PipelineTemplateCommonCondition
     ): Result<PTemplateSource2Count> {
+        val accessibleTemplateIds = permissionService.getResourcesByPermission(
+            userId = userId,
+            projectId = projectId,
+            permissions = setOf(AuthPermission.VIEW, AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT)
+        )[AuthPermission.LIST] ?: emptyList()
+        commonCondition.filterTemplateIds = accessibleTemplateIds
         return Result(templateInfoService.getSource2Count(commonCondition))
     }
 
