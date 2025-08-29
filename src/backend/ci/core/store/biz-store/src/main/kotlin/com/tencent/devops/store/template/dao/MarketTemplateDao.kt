@@ -243,7 +243,8 @@ class MarketTemplateDao {
             tTemplate = tt,
             conditions = conditions,
             labelCodeList = labelCodeList,
-            score = score
+            score = score,
+            excludeProjectCode = excludeProjectCode
         )
 
         if (null != sortType) {
