@@ -61,6 +61,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.listener.PipelineYamlChangeContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPipelineActionType
@@ -96,7 +97,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private val pipelineYamlResourceManager: PipelineYamlResourceManager,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineYamlDiffService: PipelineYamlDiffService,
-    private val pipelineYamlDynamicDependencyService: PipelineYamlDynamicDependencyService
+    private val pipelineYamlDependencyService: PipelineYamlDependencyService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
@@ -279,48 +280,40 @@ class PipelineYamlFileManager @Autowired constructor(
      */
     fun dependencyUpgradeYamlFile(event: PipelineYamlFileEvent) {
         with(event) {
-            // 判断文件内容是否有依赖模版
-            val contentDependency = pipelineYamlDynamicDependencyService.getDynamicDependency(
+            // 判断是否有依赖模版
+            val dependency = pipelineYamlDependencyService.getDependency(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId
+                ref = blobId!!
             )
-            // 如果没有依赖模版,或者依赖的分支不是当前分支,则不更新
-            if (contentDependency == null ||
-                !(contentDependency.dependentRef == "*" || contentDependency.dependentRef == ref)
-            ) {
+            // 没有依赖,直接返回
+            if (dependency == null) {
                 return
             }
             // 判断依赖的模版文件在本次中是否有变更
             val dependentYamlDiff = pipelineYamlDiffService.getYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
-                filePath = contentDependency.dependentFilePath
+                filePath = dependency.dependentFilePath
             )
             // 依赖的模版没有变更,则不更新
-            if (dependentYamlDiff == null) {
+            if (dependentYamlDiff == null || !dependentYamlDiff.actionType.isChange()) {
                 return
             }
-            // 判断当前分支上的依赖是否已经更新
-            val refDependency = pipelineYamlDynamicDependencyService.getDynamicDependency(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                blobId = blobId,
-                ref = ref
-            )
-            // 如果依赖的模版已经更新,则不更新
-            if (refDependency != null && refDependency.dependentBlobId == dependentYamlDiff.blobId) {
+
+            // 判断依赖的分支与变更的分支是否相同
+            if (dependency.dependentRef != Constansts.DEFAULT_DEPENDENT_REF &&
+                dependency.dependentRef != dependentYamlDiff.ref
+            ) {
                 logger.info(
-                    "[PAC_PIPELINE]|dependency yaml file has update,skip update|" +
-                            "$eventId|$projectId|$repoHashId|$filePath|$ref|${dependentYamlDiff.blobId}"
+                    "[PAC_PIPELINE]|dependency pipeline yaml dependent ref is not match|" +
+                            "$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId" +
+                            "${dependency.dependentRef}|${dependentYamlDiff.ref}"
                 )
                 return
             }
-            logger.info(
-                "[PAC_PIPELINE]|dependency pipeline yaml|$eventId|$projectId|$repoHashId|$filePath|$ref"
-            )
+
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
                 projectId = projectId,
@@ -329,18 +322,9 @@ class PipelineYamlFileManager @Autowired constructor(
             )
             try {
                 lock.lock()
-                val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath
-                )
-                // 流水线被删除,则不更新
-                if (pipelineYamlInfo == null) {
-                    return
-                }
-                updateYamlPipeline(
-                    pipelineId = pipelineYamlInfo.pipelineId,
-                    dependencyUpgrade = true
+                dependencyUpgradePipeline(
+                    dependentFilePath = dependency.dependentFilePath,
+                    dependentBlobId = dependentYamlDiff.blobId!!
                 )
             } catch (ignored: Exception) {
                 throw ignored
@@ -1043,6 +1027,47 @@ class PipelineYamlFileManager @Autowired constructor(
                 directory = directory
             )
         }
+    }
+
+    private fun PipelineYamlFileEvent.dependencyUpgradePipeline(
+        dependentFilePath: String,
+        dependentBlobId: String
+    ) {
+        logger.info(
+            "[PAC_PIPELINE]|dependency pipeline yaml|$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId"
+        )
+        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        )
+        // 流水线被删除,则不更新
+        if (pipelineYamlInfo == null) {
+            logger.info(
+                "[PAC_PIPELINE]|dependency pipeline yaml not found|" +
+                        "$eventId|$projectId|$repoHashId|$filePath|$ref"
+            )
+            return
+        }
+        // 判断当前文件依赖的版本是否已经存在,存在则不更新
+        val dependencyYamlVersion = pipelineYamlService.getPipelineYamlVersion(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            ref = ref,
+            blobId = blobId,
+            dependentFilePath = dependentFilePath,
+            dependentBlobId = blobId
+        )
+        if (dependencyYamlVersion != null) {
+            logger.info(
+                "[PAC_PIPELINE]|find dependency pipeline yaml version in ref" +
+                        "|$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId" +
+                        "$dependentFilePath|$dependentBlobId"
+            )
+            return
+        }
+        updateYamlPipeline(pipelineId = pipelineYamlInfo.pipelineId, dependencyUpgrade = true)
     }
 
     private fun PipelineYamlFileReleaseReq.getPullRequestTitle(

@@ -2,6 +2,7 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.pojo.pipeline.enums.YamDiffFileStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileExecutorEvent
@@ -58,28 +59,38 @@ class PipelineYamlFileScheduler @Autowired constructor(
             eventId = eventId
         )
         val dependencyTypeStatusMap = yamlDiffs.groupBy { it.fileType }.mapValues { (_, events) ->
-            events.all { it.status.isFinish() }
+            events.all { it.status.isFinished() }
         }
+        val dependencyFileStatusMap = yamlDiffs.associate { it.filePath to it.status.isFinished() }
 
-        logger.info("[PAC_PIPELINE] scheduler| dependency type status map: $dependencyTypeStatusMap")
+        logger.info(
+            "[PAC_PIPELINE] pipeline yaml diff scheduler| dependency type status map: $dependencyTypeStatusMap"
+        )
 
         yamlDiffs.filter {
             // 1. 不是回调回来的事件,触发所有的文件
             // 2. 如果是回调回来的事件,只需要通知指定的文件类型
             fileType == null || fileType.notifyType().contains(it.fileType)
         }.forEach { yamlDiff ->
-            if (yamlDiff.status.isFinish()) {
+            // 不是准备运行中的状态,不处理
+            if (!yamlDiff.status.isPending()) {
+                logger.info("[PAC_PIPELINE] pipeline yaml diff scheduler|status is not pending|${yamlDiff.status}")
                 return@forEach
             }
             val canDispatch = when (yamlDiff.actionType) {
-                // 触发和删除不需要判断是否有依赖
+                // 删除不需要判断是否有依赖
                 YamlFileActionType.TRIGGER, YamlFileActionType.DELETE -> {
                     true
                 }
 
+                // 依赖更新,需要判断依赖的文件是否已经执行完成
+                YamlFileActionType.DEPENDENCY_UPGRADE, YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER -> {
+                    yamlDiff.dependentFilePath?.let { dependencyFileStatusMap[it] ?: true } ?: true
+                }
+
                 // 当新增和修改时,这里还无法判断依赖了哪些文件,所以需要等待所有依赖的文件类型都执行完成后,才执行
                 else -> {
-                    isDependencyTypeFinished(
+                    isDependencyTypeAllFinished(
                         fileType = yamlDiff.fileType,
                         dependencyTypeStatusMap = dependencyTypeStatusMap
                     )
@@ -93,6 +104,12 @@ class PipelineYamlFileScheduler @Autowired constructor(
                     filePath = yamlDiff.filePath
                 )
                 sampleEventDispatcher.dispatch(yamlFileExecutorEvent)
+                pipelineYamlDiffService.updateStatus(
+                    projectId = projectId,
+                    eventId = eventId,
+                    filePath = yamlDiff.filePath,
+                    status = YamDiffFileStatus.RUNNING
+                )
             }
         }
     }
@@ -100,7 +117,7 @@ class PipelineYamlFileScheduler @Autowired constructor(
     /**
      * 判断依赖的类型文件是否都已经执行完成
      */
-    private fun isDependencyTypeFinished(
+    private fun isDependencyTypeAllFinished(
         fileType: YamlFileType,
         dependencyTypeStatusMap: Map<YamlFileType, Boolean>
     ): Boolean {

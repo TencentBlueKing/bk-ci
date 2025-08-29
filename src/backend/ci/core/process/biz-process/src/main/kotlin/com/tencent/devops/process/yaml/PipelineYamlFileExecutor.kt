@@ -1,7 +1,9 @@
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.pipeline.enums.YamDiffFileStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
@@ -40,7 +42,10 @@ class PipelineYamlFileExecutor @Autowired constructor(
             )
             try {
                 if (!lock.tryLock()) {
-                    logger.info("[PAC_PIPELINE] executor|$projectId|$eventId|$filePath|YamlExecutorLock try lock fail")
+                    logger.info(
+                        "[PAC_PIPELINE] yaml file executor|$projectId|$eventId|$filePath|" +
+                                "YamlExecutorLock try lock fail"
+                    )
                     retry()
                     return
                 }
@@ -49,9 +54,10 @@ class PipelineYamlFileExecutor @Autowired constructor(
                     eventId = eventId,
                     filePath = filePath
                 )
-                if (yamlDiff == null || yamlDiff.status.isFinish()) {
+                if (yamlDiff == null || yamlDiff.status.isFinished()) {
                     logger.info(
-                        "[PAC_PIPELINE] executor|$projectId|$eventId|$filePath|REPEAT_EVENT|${yamlDiff?.status}"
+                        "[PAC_PIPELINE] yaml file executor|$projectId|$eventId|$filePath|" +
+                                "REPEAT_EVENT|${yamlDiff?.status}"
                     )
                     return
                 }
@@ -67,7 +73,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
     }
 
     private fun PipelineYamlFileExecutorEvent.retry() {
-        logger.info("pipeline yaml executor|$projectId|$eventId|$filePath|RETRY_TO_EXECUTOR_LOCK")
+        logger.info("yaml file executor|$projectId|$eventId|$filePath|RETRY_TO_EXECUTOR_LOCK")
         this.delayMills = DEFAULT_DELAY
         sampleEventDispatcher.dispatch(this)
     }
@@ -101,7 +107,15 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 }
 
                 YamlFileActionType.TRIGGER -> {
-                    triggerBuild()
+                    triggerYamlFile()
+                }
+
+                YamlFileActionType.DEPENDENCY_UPGRADE -> {
+                    dependencyUpgradeYamlFile()
+                }
+
+                YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER -> {
+                    dependencyUpgradeAndTriggerYamlFile()
                 }
 
                 else -> Unit
@@ -164,11 +178,11 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 webhookTriggerBuildService.yamlTrigger(this)
             }
         } catch (ignored: Exception) {
-            pipelineYamlDiffService.updateStatus(
+            handleException(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
-                status = YamDiffFileStatus.FAILED
+                exception = ignored
             )
             logger.error(
                 "[PAC_PIPELINE]|Failed to create or update yaml|eventId:$eventId|" +
@@ -192,11 +206,11 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
-            pipelineYamlDiffService.updateStatus(
+            handleException(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
-                status = YamDiffFileStatus.FAILED
+                exception = ignored
             )
             logger.error(
                 "[PAC_PIPELINE]|Failed to delete yaml|eventId:$eventId|" +
@@ -222,11 +236,11 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 webhookTriggerBuildService.yamlTrigger(this)
             }
         } catch (ignored: Exception) {
-            pipelineYamlDiffService.updateStatus(
+            handleException(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
-                status = YamDiffFileStatus.FAILED
+                exception = ignored
             )
             logger.error(
                 "[PAC_PIPELINE]|Failed to rename yaml|eventId:$eventId|" +
@@ -239,7 +253,31 @@ class PipelineYamlFileExecutor @Autowired constructor(
         }
     }
 
-    private fun PipelineYamlFileEvent.triggerBuild() {
+    private fun PipelineYamlFileEvent.triggerYamlFile() {
+        try {
+            webhookTriggerBuildService.yamlTrigger(this)
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                status = YamDiffFileStatus.SUCCESS
+            )
+        } catch (ignored: Exception) {
+            handleException(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                exception = ignored
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to trigger yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                ignored
+            )
+        }
+    }
+
+    private fun PipelineYamlFileEvent.dependencyUpgradeAndTriggerYamlFile() {
         try {
             pipelineYamlFileManager.dependencyUpgradeYamlFile(this)
             webhookTriggerBuildService.yamlTrigger(this)
@@ -250,14 +288,38 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
+            handleException(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                exception = ignored
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to dependency upgrade yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                ignored
+            )
+        }
+    }
+
+    private fun PipelineYamlFileEvent.dependencyUpgradeYamlFile() {
+        try {
+            pipelineYamlFileManager.dependencyUpgradeYamlFile(this)
             pipelineYamlDiffService.updateStatus(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
-                status = YamDiffFileStatus.FAILED
+                status = YamDiffFileStatus.SUCCESS
+            )
+        } catch (ignored: Exception) {
+            handleException(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                exception = ignored
             )
             logger.error(
-                "[PAC_PIPELINE]|Failed to trigger yaml|eventId:$eventId|" +
+                "[PAC_PIPELINE]|Failed to dependency upgrade yaml|eventId:$eventId|" +
                         "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
                 ignored
             )
@@ -273,6 +335,33 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 filePath = filePath,
                 fileType = fileType
             )
+        )
+    }
+
+    private fun handleException(
+        projectId: String,
+        eventId: Long,
+        filePath: String,
+        exception: Exception
+    ) {
+        val errorMsg = when (exception) {
+            is ErrorCodeException -> {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = exception.errorCode,
+                    params = exception.params
+                )
+            }
+
+            else -> {
+                exception.message
+            }
+        }
+        pipelineYamlDiffService.updateStatus(
+            projectId = projectId,
+            eventId = eventId,
+            filePath = filePath,
+            status = YamDiffFileStatus.FAILED,
+            errorMsg = errorMsg
         )
     }
 

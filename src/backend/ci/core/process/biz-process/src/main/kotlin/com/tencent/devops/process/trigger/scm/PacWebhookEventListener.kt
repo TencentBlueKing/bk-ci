@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType.UPDATE
 import com.tencent.devops.process.trigger.scm.converter.WebhookYamlDiffConverterManager
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
+import com.tencent.devops.process.yaml.PipelineYamlDependencyService
 import com.tencent.devops.process.yaml.PipelineYamlDiffService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlViewService
@@ -55,7 +56,8 @@ class PacWebhookEventListener(
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookYamlDiffConverterManager: WebhookYamlDiffConverterManager,
     private val webhookGrayService: WebhookGrayService,
-    private val pipelineYamlDiffService: PipelineYamlDiffService
+    private val pipelineYamlDiffService: PipelineYamlDiffService,
+    private val pipelineYamlDependencyService: PipelineYamlDependencyService
 ) : WebHookEventListener {
 
     companion object {
@@ -91,11 +93,18 @@ class PacWebhookEventListener(
                 repository = repository,
                 yamlDiffs = finalYamlDiffs
             )
+            // 获取显示声明依赖的流水线,显示声明的需要动态更新,隐式声明(模版引用不填)的在触发的时候更新
+            val diffDependencies = pipelineYamlDependencyService.analyzeDiffDependencies(
+                projectId = projectId,
+                repoHashId = repository.repoHashId!!,
+                eventId = eventId,
+                yamlDiffs = yamlDiffs
+            )
             pipelineYamlDiffService.saveAndSend(
                 projectId = projectId,
                 repository = repository,
                 eventId = eventId,
-                yamlDiffs = yamlDiffs
+                yamlDiffs = diffDependencies
             )
         } catch (ignored: Exception) {
             logger.error(

@@ -23,6 +23,8 @@ enum class YamlFileActionType {
 
     DEPENDENCY_UPGRADE,
 
+    DEPENDENCY_UPGRADE_AND_TRIGGER,
+
     // 更新并触发
     UPDATE_AND_TRIGGER,
 
@@ -31,4 +33,8 @@ enum class YamlFileActionType {
 
     // 校验有问题，改流水线不触发
     NO_TRIGGER;
+
+    fun isChange(): Boolean {
+        return this == CREATE || this == UPDATE || this == DELETE || this == RENAME
+    }
 }

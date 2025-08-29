@@ -99,6 +99,11 @@ data class PipelineYamlDiff(
     val targetRepoUrl: String? = null,
     @get:Schema(title = "目标仓库全名", required = false)
     val targetFullName: String? = null,
-    @get:Schema(title = "旧的文件路径,重命名时才有值", required = false)
+    @get:Schema(title = "旧的文件路径,当action为RENAME时有值", required = false)
     val oldFilePath: String? = null,
+    @get:Schema(
+        title = "依赖的文件路径,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentFilePath: String? = null
 )

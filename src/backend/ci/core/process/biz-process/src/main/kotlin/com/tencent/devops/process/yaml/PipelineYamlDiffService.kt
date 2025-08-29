@@ -76,14 +76,16 @@ class PipelineYamlDiffService @Autowired constructor(
         projectId: String,
         eventId: Long,
         filePath: String,
-        status: YamDiffFileStatus
+        status: YamDiffFileStatus,
+        errorMsg: String? = null
     ) {
         pipelineYamlDiffDao.updateStatus(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
             filePath = filePath,
-            status = status
+            status = status,
+            errorMsg = errorMsg
         )
     }
 }

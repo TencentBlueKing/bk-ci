@@ -65,7 +65,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdat
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateYamlWebhookReq
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
 import com.tencent.devops.process.service.PipelineVersionFacadeService
-import com.tencent.devops.process.service.pipeline.PipelineYamlRefResolver
+import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
 import com.tencent.devops.process.util.FileExportUtil
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
@@ -95,7 +95,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineYamlService: PipelineYamlService,
-    private val pipelineYamlRefResolver: PipelineYamlRefResolver,
+    private val pipelineYamlVersionResolver: PipelineYamlVersionResolver,
     private val pipelineTemplatePersistenceService: PipelineTemplatePersistenceService,
     private val client: Client,
     private val pipelineTemplateMarketFacadeService: PipelineTemplateMarketFacadeService,
@@ -727,7 +727,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_ENABLE_PAC
         )
-        val pipelineYamlVersion = pipelineYamlRefResolver.resolvePipelineYamlVersion(
+        val pipelineYamlVersion = pipelineYamlVersionResolver.resolvePipelineYamlVersion(
             projectId = projectId,
             repoHashId = pipelineYamlInfo.repoHashId,
             filePath = pipelineYamlInfo.filePath,
