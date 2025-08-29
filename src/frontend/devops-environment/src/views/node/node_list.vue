@@ -227,7 +227,7 @@
                     loginName: '',
                     loginPassword: '',
                     installType: 'SERVICE',
-                    autoSwitchAccount: true
+                    autoSwitchAccount: false
                 },
                 // 构建机信息
                 connectNodeDetail: {
@@ -723,7 +723,9 @@
                         this.constructImportForm.location = 'shenzhen'
                     } else if (this.gatewayList.length && gateway && gateway !== 'shenzhen') {
                         const isTarget = this.gatewayList.find(item => item.showName === gateway)
-                        this.constructImportForm.location = isTarget && isTarget.zoneName
+                        if (isTarget) {
+                            this.constructImportForm.location = isTarget.zoneName
+                        }
                     }
                     
                     if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
