@@ -979,4 +979,13 @@ interface ServiceBuildResource {
         @BkField(required = true)
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
     )
+
+    @Operation(summary = "根据构建ID获取顶级父流水线的构建信息")
+    @GET
+    @Path("/builds/{buildId}/topParent/get")
+    fun getTopParentPipelineByBuildId(
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<BuildBasicInfo?>
 }

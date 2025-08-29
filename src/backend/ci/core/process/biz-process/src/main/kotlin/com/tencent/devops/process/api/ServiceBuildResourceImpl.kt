@@ -900,6 +900,15 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getTopParentPipelineByBuildId(buildId: String): Result<BuildBasicInfo?> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId, it must not empty.")
+        }
+        return Result(
+            data = pipelineRuntimeService.getTopParentPipelineByBuildId(buildId)
+        )
+    }
+
     private fun checkParam(projectId: String, pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")

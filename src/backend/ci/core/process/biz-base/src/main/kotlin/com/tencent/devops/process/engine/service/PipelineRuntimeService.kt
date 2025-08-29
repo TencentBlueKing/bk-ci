@@ -69,6 +69,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -142,15 +143,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -2263,6 +2264,31 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             keys = keys
+        )
+    }
+
+    fun getTopParentPipelineByBuildId(buildId: String): BuildBasicInfo? {
+
+        val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+
+        // 1. 查询当前构建ID对应的信息
+        val currentBuildInfo = pipelineBuildDao.getPipelineBuildInfo(dslContext, buildId)
+            ?: return null
+
+        val parentBuildId = currentBuildInfo[pipelineBuildHistory.PARENT_BUILD_ID]
+
+        if (parentBuildId.isNullOrBlank()) {
+            return null
+        }
+        val parentInfo = getTopParentPipelineByBuildId(parentBuildId)
+
+        return parentInfo ?: BuildBasicInfo(
+            buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],
+            projectId = currentBuildInfo[pipelineBuildHistory.PROJECT_ID],
+            pipelineId = currentBuildInfo[pipelineBuildHistory.PIPELINE_ID],
+            pipelineVersion = currentBuildInfo[pipelineBuildHistory.VERSION],
+            // 此接口暂时不需要该信息，默认给null
+            status = null
         )
     }
 }

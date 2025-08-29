@@ -54,17 +54,18 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import jakarta.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
+import org.jooq.Record6
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -2064,6 +2065,17 @@ class PipelineBuildDao {
                     debug = true // #8164 原历史表中查出的记录均为非调试的记录
                 )
             }
+        }
+    }
+
+    fun getPipelineBuildInfo(
+        dslContext: DSLContext,
+        buildId: String
+    ): Record6<String, String, String, String, Int, Int>? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(BUILD_ID, PROJECT_ID, PIPELINE_ID, PARENT_BUILD_ID,VERSION,STATUS)
+                .where((BUILD_ID.eq(buildId)))
+                .fetchOne()
         }
     }
 }
