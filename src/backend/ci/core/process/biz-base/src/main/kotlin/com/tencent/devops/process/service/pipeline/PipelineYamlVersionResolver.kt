@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource

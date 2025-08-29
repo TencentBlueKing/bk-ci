@@ -2,9 +2,9 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.process.engine.dao.PipelineYamlDependencyDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlDependencyDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependency
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependencyResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
@@ -144,7 +144,7 @@ class PipelineYamlDependencyService @Autowired constructor(
         val templateDiffs = yamlDiffs.filter { it.fileType == YamlFileType.TEMPLATE && it.actionType.isChange() }
         // 模版文件没有变更,不需要判断依赖
         if (templateDiffs.isEmpty()) {
-            return emptyList()
+            return yamlDiffs
         }
         val diffDependencies = mutableListOf<PipelineYamlDiff>()
         analyzeDependencyForEvent(

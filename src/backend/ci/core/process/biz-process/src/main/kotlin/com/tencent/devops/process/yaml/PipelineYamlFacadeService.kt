@@ -45,7 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq

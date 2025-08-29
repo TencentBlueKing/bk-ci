@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.engine.dao
+package com.tencent.devops.process.dao.yaml
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
