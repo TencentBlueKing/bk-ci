@@ -103,10 +103,19 @@ class WebhookRequestService(
             requestBody = request.body,
             createTime = eventTime
         )
+        val repoName = matcher.getRepoName()
+        // 如果整个仓库都开启灰度，则全部走新逻辑
+        val grayRepo = grayService.isGrayRepo(scmType.name, repoName)
+        // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
+        val pacGrayRepo = grayService.isPacGrayRepo(scmType.name, repoName)
         try {
-            client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
-                repositoryWebhookRequest = repositoryWebhookRequest
-            ).data!!
+            // 有一方为灰度, 则不保存request信息, 后续由灰度逻辑统一保存
+            // @see com.tencent.devops.process.trigger.scm.WebhookManager.handleRequestEvent
+            if (!(grayRepo || pacGrayRepo)) {
+                client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+                    repositoryWebhookRequest = repositoryWebhookRequest
+                ).data!!
+            }
         } catch (ignored: Throwable) {
             // 日志保存异常,不影响正常触发
             logger.warn("Failed to save webhook request", ignored)
@@ -122,9 +131,6 @@ class WebhookRequestService(
                 )
             }
         }
-        val repoName = matcher.getRepoName()
-        // 如果整个仓库都开启灰度，则全部走新逻辑
-        val grayRepo = grayService.isGrayRepo(scmType.name, repoName)
         if (grayRepo) {
             handleGrayRequest(scmType.name, repoName, request)
         } else {
@@ -136,8 +142,6 @@ class WebhookRequestService(
             )
         }
 
-        // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
-        val pacGrayRepo = grayService.isPacGrayRepo(scmType.name, repoName)
         when {
             // 如果是灰度仓库,同时也是pac灰度仓库,无需重复触发
             grayRepo && pacGrayRepo -> {
