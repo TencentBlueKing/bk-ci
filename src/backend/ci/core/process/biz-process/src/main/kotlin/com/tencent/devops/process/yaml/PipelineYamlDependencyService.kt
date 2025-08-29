@@ -103,29 +103,30 @@ class PipelineYamlDependencyService @Autowired constructor(
                 dependentFileType = dependencyResult.dependentFileType,
                 dependentRef = dependencyResult.dependentRef,
             )
-            // 分支的依赖
-            val branchDependency = PipelineYamlDependency(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                fileType = YamlFileType.PIPELINE,
-                ref = ref,
-                refValueType = YamlRefValueType.BRANCH,
-                dependentFilePath = dependencyResult.dependentFilePath,
-                dependentFileType = dependencyResult.dependentFileType,
-                dependentRef = dependencyResult.dependentRef,
-            )
             pipelineYamlDependencyDao.save(
                 dslContext = transactionContext ?: dslContext,
                 record = blobDependency
             )
-            // 记录流水线版本依赖关系,方便触发时,是否需要动态更新版本
+            // 记录当前流水线活跃的版本(最新的分支版本和最新的正式版本),跨分支引用的情况
             if (pipelineVersionStatus == VersionStatus.RELEASED ||
-                (pipelineVersionStatus == VersionStatus.BRANCH && branchAction == BranchVersionAction.ACTIVE)
+                (pipelineVersionStatus == VersionStatus.BRANCH && branchAction == BranchVersionAction.ACTIVE) &&
+                (dependentRef != Constansts.DEFAULT_DEPENDENT_REF && dependentRef != ref)
             ) {
+                // 分支交叉依赖
+                val acrossDependency = PipelineYamlDependency(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    fileType = YamlFileType.PIPELINE,
+                    ref = ref,
+                    refValueType = YamlRefValueType.BRANCH,
+                    dependentFilePath = dependencyResult.dependentFilePath,
+                    dependentFileType = dependencyResult.dependentFileType,
+                    dependentRef = dependencyResult.dependentRef,
+                )
                 pipelineYamlDependencyDao.save(
                     dslContext = transactionContext ?: dslContext,
-                    record = branchDependency
+                    record = acrossDependency
                 )
             }
         }
