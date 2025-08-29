@@ -12,6 +12,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -34,6 +35,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
         filePath: String,
         ref: String? = null
     ): PipelineYamlVersion {
+        logger.info("resolve pipeline yaml version|$projectId|$repoHashId|$filePath|$ref")
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repoHashId,
@@ -70,7 +72,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             defaultBranch = defaultBranch
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND,
-            params = arrayOf(finalRef!!, filePath)
+            params = arrayOf(finalRef, filePath)
         )
     }
 
@@ -89,6 +91,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
         blobId: String,
         defaultBranch: String
     ): PipelineYamlVersion? {
+        logger.info("get pipeline yaml version|$projectId|$repoHashId|$filePath|$ref|$blobId|$defaultBranch")
         val pipelineBranchVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
             dslContext = dslContext,
             projectId = projectId,
@@ -117,5 +120,9 @@ class PipelineYamlVersionResolver @Autowired constructor(
                 blobId = blobId
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineYamlVersionResolver::class.java)
     }
 }

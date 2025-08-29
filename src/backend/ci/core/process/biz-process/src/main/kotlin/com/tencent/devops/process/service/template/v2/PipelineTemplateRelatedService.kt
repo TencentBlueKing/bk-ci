@@ -196,8 +196,8 @@ class PipelineTemplateRelatedService @Autowired constructor(
         pullRequestUrl: String? = null
     ): Pair<Long, String> {
         logger.info(
-            "Start creating relation between template and pipeline: userId=$userId, " +
-                "templateId=$templateId, pipelineId=$pipelineId, instanceType=$instanceType"
+            "Start creating relation between template and pipeline|userId=$userId|" +
+                "$templateId|$pipelineId|$instanceType|$fixTemplateVersion"
         )
 
         val (templateVersion, versionName) = if (fixTemplateVersion != null) {
@@ -206,7 +206,6 @@ class PipelineTemplateRelatedService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 templateId = templateId,
-                status = VersionStatus.RELEASED,
                 version = fixTemplateVersion
             )
             if (v2Record != null) {
