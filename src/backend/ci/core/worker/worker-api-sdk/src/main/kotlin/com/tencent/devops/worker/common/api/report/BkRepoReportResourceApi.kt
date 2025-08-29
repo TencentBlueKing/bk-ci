@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.process.enums.VariableType
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -146,12 +146,12 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         shouldArchiveToParentPipeline: Boolean = false
     ) {
         if (shouldArchiveToParentPipeline) {
-            val (parentProjectId, parentPipelineId, parentBuildId) = getParentPipelineBuildInfo(buildVariables)
+            val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
             bkrepoResourceApi.uploadFileByToken(
                 file = file,
-                projectId = parentProjectId!!,
+                projectId = result.projectId,
                 repoName = "report",
-                destFullPath = "/$parentPipelineId/$parentBuildId/$elementId/${relativePath.removePrefix("/")}",
+                destFullPath = "/${result.pipelineId}/${result.buildId}/$elementId/${relativePath.removePrefix("/")}",
                 token = token,
                 buildVariables = buildVariables,
                 parseAppMetadata = false,
@@ -181,10 +181,10 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     ) {
         //  新增：父流水线逻辑
         if (shouldArchiveToParentPipeline) {
-            val (parentProjectId, parentPipelineId, parentBuildId) = getParentPipelineBuildInfo(buildVariables)
+            val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
             val path = relativePath.removePrefix("/")
             val parentUrl =
-                "/bkrepo/api/build/generic/$parentProjectId/report/$parentPipelineId/$parentBuildId/$elementId/$path"
+                "/bkrepo/api/build/generic/${result.projectId}/report/${result.pipelineId}/${result.buildId}/$elementId/$path"
             val parentRequest = buildPut(
                 path = parentUrl,
                 requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
@@ -258,7 +258,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         token: String?
     ) {
         if (bkrepoResourceApi.tokenAccess()) {
-            uploadBkRepoReportByToken(file, token!!, relativePath, buildVariables,true)
+            uploadBkRepoReportByToken(file, token!!, relativePath, buildVariables, true)
         } else {
             uploadBkRepoReport(file, relativePath, buildVariables, true)
         }
@@ -272,9 +272,13 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         reportType: String?,
         token: String?
     ): Result<Boolean> {
-        val (projectId, pipelineId, buildId) = getParentPipelineBuildInfo(buildVariables)
+        val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
         val path =
-            "/ms/process/api/build/reports/$projectId/$pipelineId/$buildId/$taskId?indexFile=${encode(indexFile)}&name=${
+            "/ms/process/api/build/reports/${result.projectId}/${result.pipelineId}/${result.buildId}/$taskId?indexFile=${
+                encode(
+                    indexFile
+                )
+            }&name=${
                 encode(
                     name
                 )
@@ -311,10 +315,13 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
-    private fun getParentPipelineBuildInfo(buildVariables: BuildVariables): Triple<String?, String?, String?> {
-        val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
-        val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
-        val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
-        return Triple(parentProjectId, parentPipelineId, parentBuildId)
+    private fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
+        val path = "/ms/process/api/service/builds/$buildId/topParent/get"
+        val request = buildGet(path)
+        val responseContent = request(
+            request,
+            "getParentPipelineBuildInfo error "
+        )
+        return objectMapper.readValue(responseContent)
     }
 }

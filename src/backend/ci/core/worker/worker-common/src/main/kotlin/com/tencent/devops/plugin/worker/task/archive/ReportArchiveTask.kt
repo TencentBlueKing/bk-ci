@@ -143,19 +143,6 @@ class ReportArchiveTask : ITask() {
                         uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                     }
                 }
-                if (shouldArchiveToParentPipeline) {
-                    val handelParentExecutors = Executors.newFixedThreadPool(5)
-                    allFileList.forEach {
-                        handelParentExecutors.execute {
-                            try {
-                                uploadReportFileToParentPipeline(fileDirPath, it, elementId, buildVariables, token)
-                            } catch (ignore: Throwable) {
-                                logger.warn("upload report to parent pipeline failed: ${it.name}", ignore)
-                            }
-                        }
-                    }
-                    handelParentExecutors.shutdown()
-                }
                 executors.shutdown()
                 if (!executors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
                     throw TimeoutException("parallel upload report timeout")
@@ -164,15 +151,15 @@ class ReportArchiveTask : ITask() {
                 allFileList.forEach {
                     uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                 }
-                if (shouldArchiveToParentPipeline) {
-                    allFileList.forEach {
-                        try {
-                            uploadReportFileToParentPipeline(fileDirPath, it, elementId, buildVariables, token)
-                        } catch (ignore: Throwable) {
-                            logger.warn("upload report to parent pipeline failed: ${it.name}", ignore)
-                        }
-                    }
-                }
+            }
+            if (shouldArchiveToParentPipeline) {
+                uploadReportFileToParentPipeline(
+                    fileDirPath = fileDirPath,
+                    elementId = elementId,
+                    buildVariables = buildVariables,
+                    allFileList = allFileList,
+                    buildTask = buildTask
+                )
             }
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
@@ -251,20 +238,60 @@ class ReportArchiveTask : ITask() {
 
     private fun uploadReportFileToParentPipeline(
         fileDirPath: Path,
-        file: File,
         elementId: String,
         buildVariables: BuildVariables,
-        token: String?
+        allFileList: List<File>,
+        buildTask: BuildTask
     ) {
-        val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
-        HttpRetryUtils.retry(retryTime = 3) {
-            api.uploadReportFileToParentPipeline(
-                file = file,
-                taskId = elementId,
-                relativePath = relativePath,
-                buildVariables = buildVariables,
-                token = token
+        val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
+        val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
+        val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
+        try {
+            val token = api.getRepoToken(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = parentProjectId!!,
+                repoName = "report",
+                path = "/${parentPipelineId}/${parentBuildId}",
+                type = TokenType.UPLOAD,
+                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
             )
+
+            // 局部函数：处理单个文件的上传（
+            fun uploadSingleFile(file: File) {
+                try {
+                    val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
+                    HttpRetryUtils.retry(retryTime = 3) {
+                        api.uploadReportFileToParentPipeline(
+                            file = file,
+                            taskId = elementId,
+                            relativePath = relativePath,
+                            buildVariables = buildVariables,
+                            token = token
+                        )
+                    }
+                } catch (ignore: Throwable) {
+                    LoggerService.addNormalLine("upload report to parent pipeline failed: ${file.name}, failed message ${ignore.message}")
+                }
+            }
+            if (allFileList.size > 10) {
+                val handelParentExecutors = Executors.newFixedThreadPool(5)
+                allFileList.forEach {
+                    handelParentExecutors.execute {
+                        uploadSingleFile(it)
+                    }
+                }
+                handelParentExecutors.shutdown()
+                if (!handelParentExecutors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
+                    LoggerService.addNormalLine("parallel upload to parent report timeout")
+                }
+            } else {
+                allFileList.forEach {
+                    uploadSingleFile(it)
+                }
+            }
+        } catch (ignore: Throwable) {
+            LoggerService.addNormalLine("upload report to parent pipeline failed: ${ignore.message}")
+            logger.error("upload report to parent pipeline failed", ignore)
         }
     }
 
