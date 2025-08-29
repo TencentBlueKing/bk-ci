@@ -2271,24 +2271,21 @@ class PipelineRuntimeService @Autowired constructor(
 
         val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
 
-        // 1. 查询当前构建ID对应的信息
         val currentBuildInfo = pipelineBuildDao.getPipelineBuildInfo(dslContext, buildId)
             ?: return null
 
         val parentBuildId = currentBuildInfo[pipelineBuildHistory.PARENT_BUILD_ID]
 
         if (parentBuildId.isNullOrBlank()) {
-            return null
+            return BuildBasicInfo(
+                buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],
+                projectId = currentBuildInfo[pipelineBuildHistory.PROJECT_ID],
+                pipelineId = currentBuildInfo[pipelineBuildHistory.PIPELINE_ID],
+                pipelineVersion = currentBuildInfo[pipelineBuildHistory.VERSION],
+                status = null // 此接口暂时不需要该信息，默认给null
+            )
         }
-        val parentInfo = getTopParentPipelineByBuildId(parentBuildId)
 
-        return parentInfo ?: BuildBasicInfo(
-            buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],
-            projectId = currentBuildInfo[pipelineBuildHistory.PROJECT_ID],
-            pipelineId = currentBuildInfo[pipelineBuildHistory.PIPELINE_ID],
-            pipelineVersion = currentBuildInfo[pipelineBuildHistory.VERSION],
-            // 此接口暂时不需要该信息，默认给null
-            status = null
-        )
+        return getTopParentPipelineByBuildId(parentBuildId)
     }
 }
