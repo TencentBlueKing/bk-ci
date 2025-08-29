@@ -52,11 +52,9 @@ class ScmWebhookApiService @Autowired constructor(
     providerRepositoryFactory = providerRepositoryFactory,
     repositoryScmConfigService = repositoryScmConfigService
 ) {
-    fun webhookParse(scmCode: String, request: HookRequest): Webhook {
+    fun webhookParse(scmCode: String, request: HookRequest): Webhook? {
         val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
-        return scmProviderManager.webhookParser(properties).parse(request) ?: throw UnsupportedOperationException(
-            "Unsupported webhook request $scmCode [$request]"
-        )
+        return scmProviderManager.webhookParser(properties).parse(request)
     }
 
     fun webhookEnrich(webhook: Webhook, authRepo: AuthRepository): Webhook {

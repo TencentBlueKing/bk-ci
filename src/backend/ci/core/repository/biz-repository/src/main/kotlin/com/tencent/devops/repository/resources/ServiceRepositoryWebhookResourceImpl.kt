@@ -45,7 +45,7 @@ class ServiceRepositoryWebhookResourceImpl @Autowired constructor(
     override fun webhookParse(
         scmCode: String,
         request: WebhookParseRequest
-    ): Result<WebhookData> {
+    ): Result<WebhookData?> {
         return Result(repositoryWebhookService.webhookParse(scmCode = scmCode, request = request))
     }
 

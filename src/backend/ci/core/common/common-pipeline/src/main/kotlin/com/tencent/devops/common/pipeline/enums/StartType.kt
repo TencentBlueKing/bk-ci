@@ -108,8 +108,8 @@ enum class StartType {
                 TIME_TRIGGER.name -> TimerTriggerElement.classType
                 WEB_HOOK.name -> {
                     when (webhookType) {
-                        CodeType.SVN.name -> CodeSVNWebHookTriggerElement.classType
-                        CodeType.GIT.name -> CodeGitWebHookTriggerElement.classType
+                        CodeType.SVN.name, CodeType.SCM_SVN.name -> CodeSVNWebHookTriggerElement.classType
+                        CodeType.GIT.name, CodeType.SCM_GIT.name -> CodeGitWebHookTriggerElement.classType
                         CodeType.GITLAB.name -> CodeGitlabWebHookTriggerElement.classType
                         CodeType.GITHUB.name -> CodeGithubWebHookTriggerElement.classType
                         CodeType.TGIT.name -> CodeTGitWebHookTriggerElement.classType
