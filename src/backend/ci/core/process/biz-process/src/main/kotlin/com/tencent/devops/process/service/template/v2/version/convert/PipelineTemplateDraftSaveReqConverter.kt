@@ -47,7 +47,6 @@ import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVe
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.logging.Logger
 
 /**
  * 保存草稿请求转换
