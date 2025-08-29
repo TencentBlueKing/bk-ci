@@ -115,6 +115,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                     pipelineId = newTemplateId,
                     projectId = projectId,
                     pipelineName = templateName,
+                    labels = emptyList(),
                     creator = userId
                 )
             } else {

@@ -39,6 +39,7 @@ import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.template.MarketTemplateInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
@@ -70,7 +71,8 @@ class MarketTemplateDao {
         categoryList: List<String>?,
         labelCodeList: List<String>?,
         score: Int?,
-        rdType: TemplateRdTypeEnum?
+        rdType: TemplateRdTypeEnum?,
+        excludeProjectCode: String? = null
     ): Int {
         val (tt, conditions) = formatConditions(
             keyword = keyword,
@@ -87,7 +89,8 @@ class MarketTemplateDao {
             tTemplate = tt,
             conditions = conditions,
             labelCodeList = labelCodeList,
-            score = score
+            score = score,
+            excludeProjectCode = excludeProjectCode
         )
 
         return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
@@ -100,7 +103,8 @@ class MarketTemplateDao {
         tTemplate: TTemplate,
         conditions: MutableList<Condition>,
         labelCodeList: List<String>?,
-        score: Int?
+        score: Int?,
+        excludeProjectCode: String? = null
     ) {
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
         // 根据应用范畴和功能标签筛选
@@ -139,6 +143,26 @@ class MarketTemplateDao {
                     .ge(BigDecimal.valueOf(score.toLong()))
             )
             conditions.add(t.field(tStoreStatisticsTotal.STORE_TYPE.name, Byte::class.java)!!.eq(storeType))
+        }
+        if (!excludeProjectCode.isNullOrBlank()) {
+            val storeProjectRelationshipTable = TStoreProjectRel.T_STORE_PROJECT_REL
+            val storeCodeField = storeProjectRelationshipTable.STORE_CODE
+            val projectCodeField = storeProjectRelationshipTable.PROJECT_CODE
+            val storeTypeField = storeProjectRelationshipTable.STORE_TYPE
+            val typeField = storeProjectRelationshipTable.TYPE
+            val storeProjectRelationships = dslContext.select(
+                storeCodeField,
+                projectCodeField,
+                storeTypeField,
+                typeField
+            ).from(storeProjectRelationshipTable).asTable("spr")
+            baseStep.leftJoin(storeProjectRelationships)
+                .on(tTemplate.TEMPLATE_CODE.eq(storeProjectRelationships.field(storeCodeField)))
+            conditions.add(storeProjectRelationships.field(storeTypeField)!!.eq(storeType))
+            conditions.add(
+                storeProjectRelationships.field(projectCodeField)!!.notEqual(excludeProjectCode)
+                    .and(storeProjectRelationships.field(typeField)!!.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            )
         }
     }
 
@@ -185,6 +209,7 @@ class MarketTemplateDao {
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
         desc: Boolean?,
+        excludeProjectCode: String? = null,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {

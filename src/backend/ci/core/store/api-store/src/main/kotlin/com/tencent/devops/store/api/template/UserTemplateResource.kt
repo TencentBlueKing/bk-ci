@@ -112,6 +112,9 @@ interface UserTemplateResource {
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectCode")
         projectCode: String?,
+        @Parameter(description = "排除项目ID", required = false)
+        @QueryParam("excludeProjectCode")
+        excludeProjectCode: String?,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,

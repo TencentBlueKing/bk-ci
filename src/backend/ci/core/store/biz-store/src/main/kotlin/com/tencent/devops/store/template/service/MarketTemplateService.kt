@@ -67,6 +67,7 @@ interface MarketTemplateService {
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
         projectCode: String?,
+        excludeProjectCode: String? = null,
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp
