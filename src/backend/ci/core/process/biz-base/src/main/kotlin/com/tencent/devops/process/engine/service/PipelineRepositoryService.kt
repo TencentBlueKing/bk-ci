@@ -1956,11 +1956,14 @@ class PipelineRepositoryService constructor(
                 )
                     .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
                     .scopeId = pipelineModelVersion.projectId
-                dslContext.transaction { configuration ->
-                    val transactionContext = DSL.using(configuration)
-                    pipelineResourceDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
-                    pipelineResourceVersionDao.updatePipelineModel(transactionContext, userId, pipelineModelVersion)
-                }
+                deployPipeline(
+                    model = JsonUtil.to(pipelineModelVersion.model, Model::class.java),
+                    projectId = pipelineModelVersion.projectId,
+                    signPipelineId = pipelineModelVersion.pipelineId,
+                    userId = pipelineModelVersion.creator,
+                    channelCode = pipelineModelVersion.channelCode,
+                    create = false
+                )
             } finally {
                 lock.unlock()
             }
