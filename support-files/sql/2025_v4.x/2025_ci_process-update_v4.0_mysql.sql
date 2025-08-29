@@ -77,6 +77,24 @@ BEGIN
         ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
+                    AND COLUMN_NAME = 'DEPENDENT_FILE_PATH') THEN
+         ALTER TABLE `T_PIPELINE_YAML_VERSION`
+            ADD COLUMN `DEPENDENT_FILE_PATH` varchar(512) null  comment '依赖的文件路径';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
+                AND COLUMN_NAME = 'DEPENDENT_BLOB_ID') THEN
+     ALTER TABLE `T_PIPELINE_YAML_VERSION`
+         ADD COLUMN `DEPENDENT_BLOB_ID` varchar(64) null comment '依赖的文件blob_id';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>

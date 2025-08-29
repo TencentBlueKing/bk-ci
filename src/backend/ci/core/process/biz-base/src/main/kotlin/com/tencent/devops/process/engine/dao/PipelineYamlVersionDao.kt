@@ -54,7 +54,9 @@ class PipelineYamlVersionDao {
         pipelineId: String,
         version: Int,
         commitTime: LocalDateTime,
-        userId: String
+        userId: String,
+        dependentFilePath: String? = null,
+        dependentBlobId: String? = null,
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
@@ -72,7 +74,9 @@ class PipelineYamlVersionDao {
                 VERSION,
                 BRANCH_ACTION,
                 CREATOR,
-                CREATE_TIME
+                CREATE_TIME,
+                DEPENDENT_FILE_PATH,
+                DEPENDENT_BLOB_ID
             ).values(
                 id,
                 projectId,
@@ -86,11 +90,14 @@ class PipelineYamlVersionDao {
                 version,
                 BranchVersionAction.ACTIVE.name,
                 userId,
-                now
+                now,
+                dependentFilePath,
+                dependentBlobId
             ).execute()
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     fun getPipelineYamlVersion(
         dslContext: DSLContext,
         projectId: String,
@@ -99,17 +106,25 @@ class PipelineYamlVersionDao {
         ref: String? = null,
         commitId: String? = null,
         blobId: String? = null,
-        branchAction: String? = null
+        branchAction: String? = null,
+        dependentFilePath: String? = null,
+        dependentBlobId: String? = null
     ): PipelineYamlVersion? {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
-                .let { if (ref != null) it.and(REF.eq(ref)) else it }
-                .let { if (commitId != null) it.and(COMMIT_ID.eq(ref)) else it }
-                .let { if (blobId != null) it.and(BLOB_ID.eq(blobId)) else it }
-                .let { if (branchAction != null) it.and(BRANCH_ACTION.eq(branchAction)) else it }
+                .let { if (!ref.isNullOrBlank()) it.and(REF.eq(ref)) else it }
+                .let { if (!commitId.isNullOrBlank()) it.and(COMMIT_ID.eq(ref)) else it }
+                .let { if (!blobId.isNullOrBlank()) it.and(BLOB_ID.eq(blobId)) else it }
+                .let { if (branchAction.isNullOrBlank()) it.and(BRANCH_ACTION.eq(branchAction)) else it }
+                .let {
+                    if (!dependentFilePath.isNullOrBlank()) it.and(DEPENDENT_FILE_PATH.eq(dependentFilePath)) else it
+                }
+                .let {
+                    if (!dependentBlobId.isNullOrBlank()) it.and(DEPENDENT_BLOB_ID.eq(dependentBlobId)) else it
+                }
                 .orderBy(COMMIT_TIME.desc())
                 .limit(1)
                 .fetchOne()

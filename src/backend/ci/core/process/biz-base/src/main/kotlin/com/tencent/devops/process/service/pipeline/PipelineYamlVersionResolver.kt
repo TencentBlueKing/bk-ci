@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
  * 流水线yaml引用解析器,用于将yaml文件中的引用解析成具体的yaml版本
  */
 @Service
-class PipelineYamlRefResolver @Autowired constructor(
+class PipelineYamlVersionResolver @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val client: Client,
@@ -81,7 +81,7 @@ class PipelineYamlRefResolver @Autowired constructor(
      * 2. 如果触发分支没有,则查看默认分支
      * 3. 如果默认分支也没有,则查看其他分支是不是有对应的版本
      */
-    private fun getPipelineYamlVersion(
+    fun getPipelineYamlVersion(
         projectId: String,
         repoHashId: String,
         filePath: String,

@@ -51,6 +51,7 @@ class PipelineYamlDiffDao {
                     TARGET_REPO_URL,
                     TARGET_FULL_NAME,
                     OLD_FILE_PATH,
+                    DEPENDENT_FILE_PATH,
                     CREATE_TIME,
                     UPDATE_TIME
                 ).values(
@@ -82,6 +83,7 @@ class PipelineYamlDiffDao {
                     diff.targetRepoUrl,
                     diff.targetFullName,
                     diff.oldFilePath,
+                    diff.dependentFilePath,
                     now,
                     now,
                 )
@@ -123,12 +125,14 @@ class PipelineYamlDiffDao {
         projectId: String,
         eventId: Long,
         filePath: String,
-        status: YamDiffFileStatus
+        status: YamDiffFileStatus,
+        errorMsg: String? = null
     ) {
         with(TPipelineYamlDiff.T_PIPELINE_YAML_DIFF) {
             dslContext.update(this)
                 .set(STATUS, status.name)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .let { if (!errorMsg.isNullOrBlank()) it.set(ERROR_MSG, errorMsg) else it }
                 .where(PROJECT_ID.eq(projectId))
                 .and(EVENT_ID.eq(eventId))
                 .and(FILE_PATH.eq(filePath))
@@ -166,7 +170,8 @@ class PipelineYamlDiffDao {
                     targetRepoUrl = it.targetRepoUrl,
                     targetFullName = it.targetFullName,
                     fork = it.fork,
-                    oldFilePath = it.oldFilePath
+                    oldFilePath = it.oldFilePath,
+                    dependentFilePath = it.dependentFilePath
                 )
             }
         }

@@ -1233,6 +1233,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `PIPELINE_ID`   varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
     `VERSION`       int(11) COMMENT '流水线版本',
     `BRANCH_ACTION`  varchar(32)   NOT NULL DEFAULT 'ACTIVE' COMMENT '分支状态',
+    `DEPENDENT_FILE_PATH` varchar(512) null  comment '依赖的文件路径',
+    `DEPENDENT_BLOB_ID` varchar(64) null comment '依赖的文件blob_id',
     `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
     `CREATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
     PRIMARY KEY(`ID`),
@@ -1451,55 +1453,61 @@ CREATE TABLE `T_PIPELINE_TEMPLATE_MIGRATION` (
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DIFF`
 (
-    `PROJECT_ID`        varchar(64)                         not null comment '项目ID',
-    `EVENT_ID`          bigint(20)                          not null comment '事件ID',
-    `EVENT_TYPE`        varchar(32)                         not null comment '事件类型',
-    `REPO_HASH_ID`      varchar(64)                         not null comment '代码库HASH ID',
-    `DEFAULT_BRANCH`    varchar(512)                        null comment '默认分支',
-    `FILE_PATH`         varchar(512)                        not null comment '文件路径',
-    `FILE_TYPE`         varchar(32)                         not null comment '文件类型',
-    `ACTION_TYPE`       varchar(32)                         not null comment '操作类型',
-    `STATUS`            varchar(32)                         not null comment '文件处理状态',
-    `TRIGGER_USER`      varchar(64)                         not null comment '触发用户',
-    `REF`               varchar(512)                        null comment '文件来源ref,分支/tag',
-    `BLOB_ID`           varchar(64)                         null comment '文件blob_id',
-    `COMMIT_ID`         varchar(64)                         null comment '文件commitId',
-    `COMMIT_TIME`       timestamp                           null comment '提交时间',
-    `COMMIT_MSG`        text                                null comment '提交信息',
-    `COMMITTER`         varchar(64)                         null comment '提交人',
-    `FORK`              bit       default 0 comment '是否是fork库',
-    `USE_FORK_TOKEN`    bit       default 0 comment '是否使用fork仓库token',
-    `MERGED`            bit       default 0 comment '是否已经合并',
-    `PULL_REQUEST_ID`   bigint                              null comment '合并请求ID',
-    `PULL_REQUEST_URL`  text                                null comment '合并请求URL',
-    `SOURCE_BRANCH`     varchar(512)                        null comment '源分支',
-    `TARGET_BRANCH`     varchar(512)                        null comment '目标分支',
-    `SOURCE_REPO_URL`   text                                null comment '源仓库URL',
-    `SOURCE_FULL_NAME`  varchar(512)                        null comment '源仓库URL',
-    `TARGET_REPO_URL`   text                                null comment '目标仓库URL',
-    `TARGET_FULL_NAME`  varchar(512)                        null comment '目标仓库URL',
-    `OLD_FILE_PATH`     varchar(512)                        null comment '旧的文件路径,重命名时才有值',
-    `CREATE_TIME`       timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
-    `UPDATE_TIME`       timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
+    `PROJECT_ID`          varchar(64)                         not null comment '项目ID',
+    `EVENT_ID`            bigint(20)                          not null comment '事件ID',
+    `EVENT_TYPE`          varchar(32)                         not null comment '事件类型',
+    `REPO_HASH_ID`        varchar(64)                         not null comment '代码库HASH ID',
+    `DEFAULT_BRANCH`      varchar(512)                        null comment '默认分支',
+    `FILE_PATH`           varchar(512)                        not null comment '文件路径',
+    `FILE_TYPE`           varchar(32)                         not null comment '文件类型',
+    `ACTION_TYPE`         varchar(32)                         not null comment '操作类型',
+    `STATUS`              varchar(32)                         not null comment '文件处理状态',
+    `TRIGGER_USER`        varchar(64)                         not null comment '触发用户',
+    `REF`                 varchar(255)                        null comment '文件来源ref,分支/tag',
+    `BLOB_ID`             varchar(64)                         null comment '文件blob_id',
+    `COMMIT_ID`           varchar(64)                         null comment '文件commitId',
+    `COMMIT_TIME`         timestamp                           null comment '提交时间',
+    `COMMIT_MSG`          text                                null comment '提交信息',
+    `COMMITTER`           varchar(64)                         null comment '提交人',
+    `FORK`                bit       default 0 comment '是否是fork库',
+    `USE_FORK_TOKEN`      bit       default 0 comment '是否使用fork仓库token',
+    `MERGED`              bit       default 0 comment '是否已经合并',
+    `PULL_REQUEST_ID`     bigint                              null comment '合并请求ID',
+    `PULL_REQUEST_URL`    text                                null comment '合并请求URL',
+    `SOURCE_BRANCH`       varchar(512)                        null comment '源分支',
+    `TARGET_BRANCH`       varchar(512)                        null comment '目标分支',
+    `SOURCE_REPO_URL`     text                                null comment '源仓库URL',
+    `SOURCE_FULL_NAME`    varchar(512)                        null comment '源仓库URL',
+    `TARGET_REPO_URL`     text                                null comment '目标仓库URL',
+    `TARGET_FULL_NAME`    varchar(512)                        null comment '目标仓库URL',
+    `OLD_FILE_PATH`       varchar(512)                        null comment '旧的文件路径,重命名时才有值',
+    `DEPENDENT_FILE_PATH` varchar(512)                        null comment '依赖的文件路径',
+    `ERROR_MSG`           text                                null comment '失败原因',
+    `CREATE_TIME`         timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`         timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
     PRIMARY KEY (`PROJECT_ID`, `EVENT_ID`, `FILE_PATH`, `CREATE_TIME`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件变更表,分区表';
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件变更表,分区表';
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DEPENDENCY`
 (
-    `PROJECT_ID`           varchar(64)                           not null comment '项目ID',
-    `REPO_HASH_ID`         varchar(64)                           not null comment '代码库HASH ID',
-    `FILE_PATH`            varchar(512)                          not null comment '文件路径',
-    `FILE_PATH_MD5`        varchar(64) default ''                not null comment '文件路径MD5',
-    `FILE_TYPE`            varchar(32)                           not null comment '文件类型',
-    `BLOB_ID`              varchar(64)                           not null comment '文件blob_id',
-    `DEPEND_FILE_PATH`     varchar(512)                          not null comment '依赖的文件路径',
-    `DEPEND_FILE_PATH_MD5` varchar(64) default ''                not null comment '依赖的文件路径MD5',
-    `DEPEND_FILE_TYPE`     varchar(32)                           not null comment '依赖的文件类型',
-    `DEPEND_REF`           varchar(32)                           not null comment '依赖的引用',
-    `CREATE_TIME`          timestamp   default CURRENT_TIMESTAMP not null comment '创建时间',
-    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH_MD5`, `BLOB_ID`, `DEPEND_FILE_PATH_MD5`),
-    KEY `IDX_PROJECT_FILE_PATH_BLOB_ID`(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`, `BLOB_ID`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件依赖关系表';
+    `PROJECT_ID`              varchar(64)                         not null comment '项目ID',
+    `REPO_HASH_ID`            varchar(64)                         not null comment '代码库HASH ID',
+    `FILE_PATH`               varchar(512)                        not null comment '文件路径',
+    `FILE_PATH_MD5`           varchar(64)                         not null comment '文件路径md5,FILE_PATH太长,不能做索引',
+    `FILE_TYPE`               varchar(32)                         not null comment '文件类型',
+    `REF`                     varchar(255)                        not null comment '文件分支或者blob_id',
+    `REF_VALUE_TYPE`          varchar(32)                         not null comment 'ref值的类型',
+    `DEPENDENT_FILE_PATH`     varchar(512)                        not null comment '依赖的文件路径',
+    `DEPENDENT_FILE_PATH_MD5` varchar(64)                         not null comment '依赖的文件路径md5,DEPENDENT_FILE_PATH太长,不能做索引',
+    `DEPENDENT_FILE_TYPE`     varchar(32)                         not null comment '依赖的文件类型',
+    `DEPENDENT_REF`           varchar(255)                        not null comment '依赖的分支',
+    `CREATE_TIME`             timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`             timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
+    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH_MD5`, `REF`),
+    KEY `IDX_PROJECT_DEPENDENT` (`PROJECT_ID`, `REPO_HASH_ID`, `DEPENDENT_FILE_PATH_MD5`, `DEPENDENT_REF`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件动态依赖';
 
 CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE_VERSION`
 (
@@ -1527,29 +1535,5 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE_VERSION`
     `UPDATER`                     varchar(64)                           default null COMMENT '修改人',
     primary key (`PROJECT_ID`, `PIPELINE_ID`, `PIPELINE_VERSION`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='模版流水线关联版本表';
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DYNAMIC_DEPENDENCY`
-(
-    `ID`                    bigint comment '主键ID',
-    `PROJECT_ID`            varchar(64)                         not null comment '项目ID',
-    `REPO_HASH_ID`          varchar(64)                         not null comment '代码库HASH ID',
-    `FILE_PATH`             varchar(512)                        not null comment '文件路径',
-    `FILE_TYPE`             varchar(32)                         not null comment '文件类型',
-    `BLOB_ID`               varchar(64)                         not null comment '文件blob_id',
-    `REF`                   varchar(512)                        not null comment '来源分支/tag',
-    `COMMIT_ID`             varchar(64)                         not null comment '文件提交ID',
-    `COMMIT_TIME`           timestamp default CURRENT_TIMESTAMP not null comment '提交时间',
-    `DEPENDENT_FILE_PATH`   varchar(512)                        not null comment '依赖的文件路径',
-    `DEPENDENT_FILE_TYPE`   varchar(32)                         not null comment '依赖的文件类型',
-    `DEPENDENT_REF`         varchar(32)                         not null comment '依赖的分支',
-    `DEPENDENT_BLOB_ID`     varchar(64)                         not null comment '依赖文件blob_id',
-    `DEPENDENT_COMMIT_ID`   varchar(64)                         not null comment '依赖提交ID',
-    `DEPENDENT_COMMIT_TIME` timestamp default CURRENT_TIMESTAMP not null comment '依赖提交时间',
-    `CREATE_TIME`           timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
-    `UPDATE_TIME`           timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
-    PRIMARY KEY (`ID`),
-    INDEX `IDX_PROJECT_REPO_FILE` (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件动态依赖';
 
 SET FOREIGN_KEY_CHECKS = 1;

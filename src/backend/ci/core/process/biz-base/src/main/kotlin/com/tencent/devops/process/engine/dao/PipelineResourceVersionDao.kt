@@ -345,6 +345,7 @@ class PipelineResourceVersionDao {
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
                     STATUS.ne(VersionStatus.DELETE.name)
+                        .or(STATUS.ne(VersionStatus.HIDDEN.name))
                         .or(STATUS.isNull)
                 )
                 .and(
@@ -710,6 +711,7 @@ class PipelineResourceVersionDao {
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
                     status = status,
+                    branchAction = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion,
                     description = record.description,
