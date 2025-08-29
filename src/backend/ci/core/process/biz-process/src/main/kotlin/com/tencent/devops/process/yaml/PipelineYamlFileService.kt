@@ -28,7 +28,7 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
-import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlBranchFileDao
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts

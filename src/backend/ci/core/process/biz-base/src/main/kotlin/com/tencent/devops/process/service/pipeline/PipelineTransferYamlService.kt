@@ -63,7 +63,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
