@@ -152,7 +152,8 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         return Result(ReportPluginConfig(
             enableCompress = false,
             enableCompressPipelines = emptyList(),
-            compressThreshold = Long.MAX_VALUE
+            compressThreshold = Long.MAX_VALUE,
+            compressSizeLimit = 0
         ))
     }
 
