@@ -49,7 +49,13 @@ class PipelineYamlDependencyDao {
                 record.dependentRef,
                 now,
                 now
-            ).execute()
+            ).onDuplicateKeyUpdate()
+                .set(DEPENDENT_FILE_PATH, record.dependentFilePath)
+                .set(DEPENDENT_FILE_PATH_MD5, DigestUtils.md5Hex(record.dependentFilePath))
+                .set(DEPENDENT_FILE_TYPE, record.dependentFileType.name)
+                .set(DEPENDENT_REF, record.dependentRef)
+                .set(UPDATE_TIME, now)
+                .execute()
         }
     }
 
