@@ -1944,29 +1944,23 @@ class PipelineRepositoryService constructor(
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
         pipelineModelVersionList.forEach { pipelineModelVersion ->
-            val lock = PipelineModelLock(redisOperation, pipelineModelVersion.pipelineId)
-            try {
-                lock.lock()
-                // 审计
-                ActionAuditContext.current().addInstanceInfo(
-                    pipelineModelVersion.pipelineId,
-                    pipelineModelVersion.pipelineId,
-                    null,
-                    pipelineModelVersion.model
-                )
-                    .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
-                    .scopeId = pipelineModelVersion.projectId
-                deployPipeline(
-                    model = JsonUtil.to(pipelineModelVersion.model, Model::class.java),
-                    projectId = pipelineModelVersion.projectId,
-                    signPipelineId = pipelineModelVersion.pipelineId,
-                    userId = pipelineModelVersion.creator,
-                    channelCode = pipelineModelVersion.channelCode,
-                    create = false
-                )
-            } finally {
-                lock.unlock()
-            }
+            // 审计
+            ActionAuditContext.current().addInstanceInfo(
+                pipelineModelVersion.pipelineId,
+                pipelineModelVersion.pipelineId,
+                null,
+                pipelineModelVersion.model
+            )
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
+                .scopeId = pipelineModelVersion.projectId
+            deployPipeline(
+                model = JsonUtil.to(pipelineModelVersion.model, Model::class.java),
+                projectId = pipelineModelVersion.projectId,
+                signPipelineId = pipelineModelVersion.pipelineId,
+                userId = pipelineModelVersion.creator,
+                channelCode = pipelineModelVersion.channelCode,
+                create = false
+            )
         }
     }
 
