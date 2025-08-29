@@ -964,7 +964,17 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         projectTemplateMap[projectId] = templateId
                     }
             }
-
+            storeProjectService.installStoreComponent(
+                userId = userId,
+                storeId = template.id,
+                installStoreReq = InstallStoreReq(
+                    projectCodes = projectCodeList,
+                    storeCode = templateCode,
+                    storeType = StoreTypeEnum.TEMPLATE
+                ),
+                publicFlag = template.publicFlag,
+                channelCode = channelCode
+            )
             // 结果处理
             val templateInfos = client.get(ServicePTemplateResource::class)
                 .getTemplateIdBySrcCode(
