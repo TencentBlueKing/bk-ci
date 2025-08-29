@@ -44,8 +44,10 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.logging.Logger
 
 /**
  * 保存草稿请求转换
@@ -129,8 +131,16 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
             }
             val (srcTemplateProjectId, srcTemplateId, srcTemplateVersion) =
                 takeIf { templateInfo.mode == TemplateType.CONSTRAINT && baseResource != null }?.let {
-                    with(baseResource!!) { Triple(srcTemplateProjectId, srcTemplateId, srcTemplateVersion) }
+                    with(baseResource!!) {
+                        Triple(srcTemplateProjectId, srcTemplateId, srcTemplateVersion)
+                    }
                 } ?: Triple(null, null, null)
+
+            logger.debug(
+                "PipelineTemplateDraftSaveReqConverter|baseResource={},srcTemplateProjectId={}," +
+                    "srcTemplateId={},srcTemplateVersion={},mode={}", baseResource, srcTemplateProjectId,
+                srcTemplateId, srcTemplateVersion, templateInfo.mode
+            )
 
             pipelineTemplateModelInitializer.initTemplateModel(transferResult.templateModel)
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(
@@ -167,5 +177,9 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 pTemplateSettingWithoutVersion = pTemplateSettingWithoutVersion
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftSaveReqConverter::class.java)
     }
 }
