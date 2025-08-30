@@ -292,24 +292,24 @@ class PipelineYamlFileManager @Autowired constructor(
                 return
             }
             // 判断依赖的模版文件在本次中是否有变更
-            val dependentYamlDiff = pipelineYamlDiffService.getYamlDiff(
+            val dependentFileDiff = pipelineYamlDiffService.getYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = dependency.dependentFilePath
             )
             // 依赖的模版没有变更,则不更新
-            if (dependentYamlDiff == null || !dependentYamlDiff.actionType.isChange()) {
+            if (dependentFileDiff == null || !dependentFileDiff.actionType.isChange()) {
                 return
             }
 
             // 判断依赖的分支与变更的分支是否相同
             if (dependency.dependentRef != Constansts.DEFAULT_DEPENDENT_REF &&
-                dependency.dependentRef != dependentYamlDiff.ref
+                GitActionCommon.trimRef(dependency.dependentRef) != dependentFileDiff.ref
             ) {
                 logger.info(
                     "[PAC_PIPELINE]|dependency pipeline yaml dependent ref is not match|" +
                             "$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId" +
-                            "${dependency.dependentRef}|${dependentYamlDiff.ref}"
+                            "${dependency.dependentRef}|${dependentFileDiff.ref}"
                 )
                 return
             }
@@ -324,7 +324,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 lock.lock()
                 dependencyUpgradePipeline(
                     dependentFilePath = dependency.dependentFilePath,
-                    dependentBlobId = dependentYamlDiff.blobId!!
+                    dependentBlobId = dependentFileDiff.blobId!!
                 )
             } catch (ignored: Exception) {
                 throw ignored
@@ -1057,7 +1057,7 @@ class PipelineYamlFileManager @Autowired constructor(
             ref = ref,
             blobId = blobId,
             dependentFilePath = dependentFilePath,
-            dependentBlobId = blobId
+            dependentBlobId = dependentBlobId
         )
         if (dependencyYamlVersion != null) {
             logger.info(

@@ -5,6 +5,7 @@ import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfoType
+import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -42,7 +43,7 @@ object GitActionCommon {
             gitProjectId = gitProjectId,
             cred = cred ?: action.getGitCred(),
             path = Constansts.ciFileDirectoryName,
-            ref = ref?.let { getTriggerBranch(it) },
+            ref = ref?.let { trimRef(it) },
             recursive = true,
             retry = ApiRequestRetryInfo(true)
         ).filter { (it.type == "blob") && checkYamlPipelineFile(it.name) && !checkYamlTemplateFile(it.name) }
@@ -75,11 +76,26 @@ object GitActionCommon {
         }
     }
 
-    fun getTriggerBranch(branch: String): String {
+    fun trimRef(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch
+        }
+    }
+
+    /**
+     * 扩展引用名称
+     * @param name 原始名称
+     * @param prefix 前缀
+     * @return 扩展后的名称
+     */
+    fun expandRef(name: String, prefix: String): String {
+        val trimmedPrefix = prefix.removeSuffix("/")
+        return if (name.startsWith(trimmedPrefix)) {
+            name
+        } else {
+            "$trimmedPrefix/$name"
         }
     }
 

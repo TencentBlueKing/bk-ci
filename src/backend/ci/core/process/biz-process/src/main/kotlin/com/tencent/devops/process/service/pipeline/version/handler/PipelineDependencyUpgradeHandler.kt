@@ -1,6 +1,5 @@
 package com.tencent.devops.process.service.pipeline.version.handler
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
@@ -16,6 +15,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreate
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -36,12 +36,10 @@ class PipelineDependencyUpgradeHandler @Autowired constructor(
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
         with(context) {
-            if (pipelineResourceWithoutVersion.status == VersionStatus.BRANCH) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                    params = arrayOf(PipelineVersionCreateContext::branchName.name)
-                )
-            }
+            logger.info(
+                "handle pipeline dependency upgrade|$projectId|$pipelineId|" +
+                    "$versionAction$|${pipelineResourceWithoutVersion.status}"
+            )
             val lock = PipelineModelLock(redisOperation, pipelineId)
             try {
                 lock.lock()
@@ -122,5 +120,9 @@ class PipelineDependencyUpgradeHandler @Autowired constructor(
             versionNum = resourceOnlyVersion.versionNum,
             versionName = resourceOnlyVersion.versionName
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineDependencyUpgradeHandler::class.java)
     }
 }

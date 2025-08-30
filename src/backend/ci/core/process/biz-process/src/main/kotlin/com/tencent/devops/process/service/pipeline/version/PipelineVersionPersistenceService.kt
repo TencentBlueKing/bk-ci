@@ -433,6 +433,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
     /**
      * 正式版本依赖升级
      *
+     * 正式版本依赖升级,版本名称不变,会将升级的版本状态置为hidden
+     *
      * @param upgradeVersion 升级的版本
      */
     fun upgradeDependencyForRelease(
