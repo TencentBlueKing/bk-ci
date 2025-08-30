@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources.scm
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
@@ -42,6 +43,21 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
     private val repositoryApiService: ScmRepositoryApiService
 ) : ServiceScmRepositoryApiResource {
+
+    override fun getServerRepositoryById(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String
+    ): Result<ScmServerRepository> {
+        return Result(
+            repositoryApiService.findRepository(
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName
+            )
+        )
+    }
+
     override fun getServerRepository(
         projectId: String,
         authRepository: AuthRepository
