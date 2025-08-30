@@ -100,14 +100,14 @@ class PipelineYamlDependencyDao {
         projectId: String,
         repoHashId: String,
         dependentFilePath: String,
-        dependentRef: String
+        dependentRefs: List<String>
     ): List<PipelineYamlDependency> {
         return with(TPipelineYamlDependency.T_PIPELINE_YAML_DEPENDENCY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(DEPENDENT_FILE_PATH_MD5.eq(DigestUtils.md5Hex(dependentFilePath)))
-                .and(DEPENDENT_REF.eq(dependentRef))
+                .and(DEPENDENT_REF.`in`(dependentRefs))
                 .and(REF_VALUE_TYPE.eq(YamlRefValueType.BRANCH.name))
                 .fetch(mapper)
         }

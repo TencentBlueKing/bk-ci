@@ -13,6 +13,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlRefValueType
 import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -109,11 +110,10 @@ class PipelineYamlDependencyService @Autowired constructor(
             )
             // 记录当前流水线活跃的版本(最新的分支版本和最新的正式版本),跨分支引用的情况
             if (pipelineVersionStatus == VersionStatus.RELEASED ||
-                (pipelineVersionStatus == VersionStatus.BRANCH && branchAction == BranchVersionAction.ACTIVE) &&
-                (dependentRef != Constansts.DEFAULT_DEPENDENT_REF && dependentRef != ref)
+                (pipelineVersionStatus == VersionStatus.BRANCH && branchAction == BranchVersionAction.ACTIVE)
             ) {
-                // 分支交叉依赖
-                val acrossDependency = PipelineYamlDependency(
+                // 流水线活跃版本依赖
+                val branchDependency = PipelineYamlDependency(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
@@ -126,7 +126,7 @@ class PipelineYamlDependencyService @Autowired constructor(
                 )
                 pipelineYamlDependencyDao.save(
                     dslContext = transactionContext ?: dslContext,
-                    record = acrossDependency
+                    record = branchDependency
                 )
             }
         }
@@ -218,10 +218,10 @@ class PipelineYamlDependencyService @Autowired constructor(
             diffDependencies.add(diff)
             return
         }
-        // 依赖的分支是当前分支或者分支为默认,将触发改成依赖更新后再触发
-        if (dependency.dependentRef == templateDiff.ref ||
-            dependency.dependentRef == Constansts.DEFAULT_DEPENDENT_REF
-        ) {
+        // 依赖的分支是当前分支或者分支不填,将触发改成依赖更新后再触发
+        // 依赖的分支可能是全路径拼写,但是触发分支是已经去掉refs/heads/或refs/tags/的
+        val dependentRef = GitActionCommon.trimRef(dependency.dependentRef)
+        if (dependentRef == templateDiff.ref || dependentRef == Constansts.DEFAULT_DEPENDENT_REF) {
             diffDependencies.add(
                 diff.copy(
                     actionType = YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER,
@@ -250,9 +250,14 @@ class PipelineYamlDependencyService @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 dependentFilePath = templateDiff.filePath,
-                dependentRef = templateDiff.ref
+                // 依赖的分支可能是全路径拼写,但是触发分支是已经去掉refs/heads/或refs/tags/的,所以这里全部查询
+                dependentRefs = listOf(
+                    GitActionCommon.expandRef(templateDiff.ref, "refs/heads/"),
+                    GitActionCommon.expandRef(templateDiff.ref, "refs/tags/"),
+                    templateDiff.ref
+                )
             ).forEach dependency@{ dependency ->
-                // 分支版本对应的最新版本信息,如果版本不存在,则跳过
+                // 依赖版本的版本信息,如果版本不存在或者已经不活跃,则跳过
                 val pipelineYamlVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
                     dslContext = dslContext,
                     projectId = projectId,
