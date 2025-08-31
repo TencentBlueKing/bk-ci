@@ -339,7 +339,7 @@ class PipelineModelParser @Autowired constructor(
                      * 2. 如果没有指定分支,当webhook触发时,使用触发的分支,否则使用默认分支
                      */
                     val ref = templateRef?.takeIf { it.isNotEmpty() } ?: branchName?.takeIf { it.isNotEmpty() }
-                    val pipelineYamlVersion = pipelineYamlVersionResolver.resolvePipelineYamlVersion(
+                    val pipelineYamlVersion = pipelineYamlVersionResolver.resolveTemplateRefVersion(
                         projectId = projectId,
                         repoHashId = finalRepoHashId,
                         filePath = templatePath!!,

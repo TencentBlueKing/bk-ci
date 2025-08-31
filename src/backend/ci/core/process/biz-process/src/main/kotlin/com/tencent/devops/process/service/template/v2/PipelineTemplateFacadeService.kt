@@ -727,7 +727,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_ENABLE_PAC
         )
-        val pipelineYamlVersion = pipelineYamlVersionResolver.resolvePipelineYamlVersion(
+        val pipelineYamlVersion = pipelineYamlVersionResolver.resolveTemplateRefVersion(
             projectId = projectId,
             repoHashId = pipelineYamlInfo.repoHashId,
             filePath = pipelineYamlInfo.filePath,

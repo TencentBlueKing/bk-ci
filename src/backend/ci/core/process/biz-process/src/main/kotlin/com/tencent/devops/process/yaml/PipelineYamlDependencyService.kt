@@ -284,9 +284,9 @@ class PipelineYamlDependencyService @Autowired constructor(
                     triggerUser = templateDiff.triggerUser,
                     ref = dependency.ref,
                     blobId = pipelineYamlVersion.blobId,
-                    commitId = templateDiff.commitId,
+                    commitId = pipelineYamlVersion.commitId,
                     commitMsg = templateDiff.commitMsg,
-                    commitTime = templateDiff.commitTime,
+                    commitTime = pipelineYamlVersion.commitTime,
                     committer = templateDiff.committer,
                     dependentFilePath = templateDiff.filePath
                 )
