@@ -66,6 +66,18 @@ class PipelineYamlFileExecutor @Autowired constructor(
                     yamlDiff = yamlDiff
                 )
                 yamlFileEvent.doHandle()
+            } catch (ignored: Exception) {
+                logger.error(
+                    "[PAC_PIPELINE]|Failed to execute yaml file|" +
+                        "$eventId|$projectId|${repository.repoHashId}|$filePath",
+                    ignored
+                )
+                handleException(
+                    projectId = projectId,
+                    eventId = eventId,
+                    filePath = filePath,
+                    exception = ignored
+                )
             } finally {
                 lock.unlock()
             }
@@ -79,54 +91,40 @@ class PipelineYamlFileExecutor @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.doHandle() {
-        val context = WebhookTriggerContext(
-            projectId = projectId,
-            pipelineId = filePath,
-            eventId = eventId
+        logger.info(
+            "[PAC_PIPELINE]|Start to handle yaml file event|$eventId|" +
+                "$projectId|${repository.repoHashId}$filePath|$ref|$commitId|$blobId|$actionType"
         )
-        try {
-            logger.info(
-                "[PAC_PIPELINE]|Start to handle yaml file event|$eventId|" +
-                        "$projectId|${repository.repoHashId}$filePath|$ref|$commitId|$blobId|$actionType"
-            )
-            when (actionType) {
-                YamlFileActionType.SYNC -> {
-                    sync()
-                }
-
-                YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
-                    createOrUpdateYamlFile()
-                }
-
-                YamlFileActionType.DELETE -> {
-                    deleteYamlFile()
-                }
-
-                YamlFileActionType.RENAME -> {
-                    renameYamlFile()
-                }
-
-                YamlFileActionType.TRIGGER -> {
-                    triggerYamlFile()
-                }
-
-                YamlFileActionType.DEPENDENCY_UPGRADE -> {
-                    dependencyUpgradeYamlFile()
-                }
-
-                YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER -> {
-                    dependencyUpgradeAndTriggerYamlFile()
-                }
-
-                else -> Unit
+        when (actionType) {
+            YamlFileActionType.SYNC -> {
+                sync()
             }
-        } catch (ignored: Exception) {
-            logger.error(
-                "[PAC_PIPELINE]|Failed to handle yaml file event|$eventId|" +
-                        "$projectId|${repository.repoHashId}|$filePath|$ref|$commitId|$blobId|$actionType",
-                ignored
-            )
-            webhookTriggerManager.fireError(context = context, exception = ignored)
+
+            YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
+                createOrUpdateYamlFile()
+            }
+
+            YamlFileActionType.DELETE -> {
+                deleteYamlFile()
+            }
+
+            YamlFileActionType.RENAME -> {
+                renameYamlFile()
+            }
+
+            YamlFileActionType.TRIGGER -> {
+                triggerYamlFile()
+            }
+
+            YamlFileActionType.DEPENDENCY_UPGRADE -> {
+                dependencyUpgradeYamlFile()
+            }
+
+            YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER -> {
+                dependencyUpgradeAndTriggerYamlFile()
+            }
+
+            else -> Unit
         }
     }
 
@@ -344,6 +342,11 @@ class PipelineYamlFileExecutor @Autowired constructor(
         filePath: String,
         exception: Exception
     ) {
+        val context = WebhookTriggerContext(
+            projectId = projectId,
+            pipelineId = filePath,
+            eventId = eventId
+        )
         val errorMsg = when (exception) {
             is ErrorCodeException -> {
                 I18nUtil.getCodeLanMessage(
@@ -356,6 +359,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 exception.message
             }
         }
+        webhookTriggerManager.fireError(context = context, exception = exception)
         pipelineYamlDiffService.updateStatus(
             projectId = projectId,
             eventId = eventId,

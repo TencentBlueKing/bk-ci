@@ -284,8 +284,10 @@ class PipelineYamlDependencyService @Autowired constructor(
                     triggerUser = templateDiff.triggerUser,
                     ref = dependency.ref,
                     blobId = pipelineYamlVersion.blobId,
-                    commitId = pipelineYamlVersion.commitId,
-                    commitTime = pipelineYamlVersion.commitTime,
+                    commitId = templateDiff.commitId,
+                    commitMsg = templateDiff.commitMsg,
+                    commitTime = templateDiff.commitTime,
+                    committer = templateDiff.committer,
                     dependentFilePath = templateDiff.filePath
                 )
                 diffDependencies.add(dependencyDiff)
