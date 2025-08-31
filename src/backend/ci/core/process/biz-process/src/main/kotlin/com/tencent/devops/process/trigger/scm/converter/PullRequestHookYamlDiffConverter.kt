@@ -39,6 +39,7 @@ import com.tencent.devops.scm.api.enums.EventAction
 import com.tencent.devops.scm.api.pojo.Tree
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.PullRequestHook
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -159,10 +160,13 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 fork = fork,
                 useForkToken = true,
                 pullRequestId = pullRequest.id,
+                pullRequestUrl = pullRequest.link,
                 sourceBranch = sourceBranch,
                 targetBranch = targetBranch,
                 sourceRepoUrl = sourceRepo.httpUrl,
-                sourceFullName = sourceRepo.fullName
+                sourceFullName = sourceRepo.fullName,
+                targetRepoUrl = targetRepo.httpUrl,
+                targetFullName = targetRepo.fullName
             )
             when {
                 // 源分支有，目标分支没有，新增列表或更新列表有，说明源分支新增,以源分支为主
@@ -170,6 +174,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 sourcePath !in targetFilePaths &&
                         (sourcePath in changeFiles.addedFiles || sourcePath in changeFiles.updatedFiles) -> {
                     val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.CREATE)
+                    logger.info("pull request yaml diff create|$eventId|$sourcePath")
                     yamlDiffs.add(yamlDiff)
                 }
                 // 源分支有，目标分支没有，重命名列表有，说明源分支重命名,以源分支为主
@@ -195,30 +200,44 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             if (targetPath in yamlDiffs.map { it.filePath }.toSet()) {
                 return@forEach
             }
+            val baseYamlDiff = PipelineYamlDiff(
+                projectId = repository.projectId!!,
+                eventId = eventId,
+                eventType = hook.eventType,
+                repoHashId = repoHashId,
+                defaultBranch = defaultBranch,
+                ref = pullRequest.targetRef.name,
+                filePath = targetPath,
+                fileType = YamlFileType.getFileType(targetPath),
+                triggerUser = hook.userName,
+                actionType = YamlFileActionType.TRIGGER,
+                blobId = targetTree.blobId,
+                commitId = hook.commit.sha,
+                commitMsg = hook.commit.message,
+                commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                committer = hook.commit.committer?.name ?: "",
+                fork = fork,
+                useForkToken = false,
+                pullRequestId = pullRequest.id,
+                pullRequestUrl = pullRequest.link,
+                sourceBranch = pullRequest.sourceRef.name,
+                targetBranch = pullRequest.targetRef.name,
+                sourceRepoUrl = sourceRepo.httpUrl,
+                sourceFullName = sourceRepo.fullName,
+                targetRepoUrl = targetRepo.httpUrl,
+                targetFullName = targetRepo.fullName
+            )
             when {
                 // 源分支没有，目标分支有，删除列表有，说明是删除,需要删除
                 targetPath !in sourceFilePaths && targetPath in changeFiles.deletedFiles -> {
-                    val yamlDiff = PipelineYamlDiff(
-                        projectId = repository.projectId!!,
-                        eventId = eventId,
-                        eventType = hook.eventType,
-                        repoHashId = repoHashId,
-                        defaultBranch = defaultBranch,
+                    val yamlDiff = baseYamlDiff.copy(
                         ref = GitActionCommon.getSourceRef(
                             fork = fork,
                             sourceFullName = sourceRepo.fullName,
                             sourceBranch = sourceBranch
                         ),
-                        filePath = targetPath,
-                        fileType = YamlFileType.getFileType(targetPath),
-                        triggerUser = hook.userName,
                         actionType = YamlFileActionType.DELETE,
-                        fork = fork,
-                        pullRequestId = pullRequest.id,
-                        sourceBranch = pullRequest.sourceRef.name,
-                        targetBranch = pullRequest.targetRef.name,
-                        sourceRepoUrl = sourceRepo.httpUrl,
-                        sourceFullName = sourceRepo.fullName
+                        blobId = null
                     )
                     yamlDiffs.add(yamlDiff)
                 }
@@ -232,22 +251,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                     if (!YamlFileType.getFileType(targetPath).canExecute()) {
                         return@forEach
                     }
-                    val yamlDiff = PipelineYamlDiff(
-                        projectId = repository.projectId!!,
-                        eventId = eventId,
-                        eventType = hook.eventType,
-                        repoHashId = repoHashId,
-                        defaultBranch = defaultBranch,
-                        ref = pullRequest.targetRef.name,
-                        filePath = targetPath,
-                        fileType = YamlFileType.getFileType(targetPath),
-                        triggerUser = hook.userName,
-                        actionType = YamlFileActionType.TRIGGER,
-                        blobId = targetTree.blobId,
-                        fork = fork,
-                        pullRequestId = pullRequest.id
-                    )
-                    yamlDiffs.add(yamlDiff)
+                    yamlDiffs.add(baseYamlDiff)
                 }
                 // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
                 targetPath in sourceFilePaths && targetPath !in changeFiles.allFiles -> {
@@ -255,22 +259,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                     if (!YamlFileType.getFileType(targetPath).canExecute()) {
                         return@forEach
                     }
-                    val yamlDiff = PipelineYamlDiff(
-                        projectId = repository.projectId!!,
-                        eventId = eventId,
-                        eventType = hook.eventType,
-                        repoHashId = repoHashId,
-                        defaultBranch = defaultBranch,
-                        ref = pullRequest.targetRef.name,
-                        filePath = targetPath,
-                        fileType = YamlFileType.getFileType(targetPath),
-                        triggerUser = hook.userName,
-                        actionType = YamlFileActionType.TRIGGER,
-                        blobId = targetTree.blobId,
-                        fork = fork,
-                        pullRequestId = pullRequest.id,
-                    )
-                    yamlDiffs.add(yamlDiff)
+                    yamlDiffs.add(baseYamlDiff)
                 }
             }
         }
@@ -403,5 +392,9 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             yamlDiffs.add(yamlDiff)
         }
         return yamlDiffs
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PullRequestHookYamlDiffConverter::class.java)
     }
 }

@@ -308,7 +308,9 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                dependentFilePath = dependencyResult?.dependentFilePath,
+                dependentBlobId = dependencyResult?.dependentBlobId
             )
             pipelineYamlBranchFileDao.save(
                 dslContext = transactionContext,
