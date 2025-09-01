@@ -298,17 +298,17 @@ class MetricsEventService @Autowired constructor(
                 map["${PipelineBuildStatusBroadCastEvent.Labels::stageName.name}.$it"] = stage.name ?: ""
             }
             stage.containers.forEach container@{ container ->
-                container.jobId?.ifEmpty { null }?.let {
+                container.jobId?.ifBlank { null }?.let {
                     map["${PipelineBuildStatusBroadCastEvent.Labels::jobName.name}.$it"] = container.name
                 }
                 container.containerHashId?.let {
                     map["${PipelineBuildStatusBroadCastEvent.Labels::jobName.name}.$it"] = container.name
                 }
                 container.elements.forEach { element ->
-                    element.stepId?.ifEmpty { null }?.let {
+                    element.stepId?.ifBlank { null }?.let {
                         map["${PipelineBuildStatusBroadCastEvent.Labels::stepName.name}.$it"] = element.name
                     }
-                    element.id?.let {
+                    element.id?.ifBlank { null }?.let {
                         map["${PipelineBuildStatusBroadCastEvent.Labels::stepName.name}.$it"] = element.name
                     }
                 }
@@ -520,7 +520,8 @@ class MetricsEventService @Autowired constructor(
                 cache["${property.name}.${event.jobId}"] ?: cache["${property.name}.${event.containerHashId}"]
 
             PipelineBuildStatusBroadCastEvent.Labels::stepName ->
-                cache["${property.name}.${event.stepId}"] ?: cache["${property.name}.${event.taskId}"]
+                event.stepId?.ifBlank { null }?.let { cache["${property.name}.${event.stepId}"] }
+                    ?: cache["${property.name}.${event.taskId}"]
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchType ->
                 cache["${property.name}.${event.containerHashId}"]
