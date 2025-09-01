@@ -204,25 +204,18 @@ interface UserPublicVarGroupResource {
     ): Result<Page<PublicGroupVarRefDO>>
 
     @Operation(summary = "获取变量组的发布记录")
-    @GET
-    @Path("/{groupName}/releaseHistory")
-    fun getReleaseHistory(
+    @POST
+    @Path("/{groupName}/changePreview")
+    fun getChangePreview(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        page: Int,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<Page<PublicVarReleaseDO>>
+        @Parameter(description = "公共变量组请求报文", required = true)
+        publicVarGroup: PublicVarGroupVO
+    ): Result<List<PublicVarReleaseDO>>
 
     @Operation(summary = "转换为变量组的YAML内容")
     @POST

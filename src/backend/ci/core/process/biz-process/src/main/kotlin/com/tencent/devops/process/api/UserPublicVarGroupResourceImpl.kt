@@ -158,21 +158,15 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getReleaseHistory(
+    override fun getChangePreview(
         userId: String,
         projectId: String,
-        groupName: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PublicVarReleaseDO>> {
-        return Result(publicVarGroupService.getReleaseHistory(
+        publicVarGroup: PublicVarGroupVO
+    ): Result<List<PublicVarReleaseDO>> {
+        return Result(publicVarGroupService.getChangePreview(
             userId = userId,
-            queryReq = PublicVarGroupInfoQueryReqDTO(
-                projectId = projectId,
-                groupName = groupName,
-                page = page,
-                pageSize = pageSize
-            )
+            projectId = projectId,
+            publicVarGroup = publicVarGroup
         ))
     }
 

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.`var`
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -47,6 +48,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
@@ -375,28 +377,204 @@ class PublicVarGroupService @Autowired constructor(
         }
     }
 
-    fun getReleaseHistory(
+    fun getChangePreview(
         userId: String,
-        queryReq: PublicVarGroupInfoQueryReqDTO
-    ): Page<PublicVarReleaseDO> {
-        val projectId = queryReq.projectId
-        val groupName = queryReq.groupName!!
-        val page = queryReq.page
-        val pageSize = queryReq.pageSize
-        val count = pipelinePublicVarGroupReleaseRecordDao.countByGroupName(dslContext, projectId, groupName)
-        val publicVarReleaseDOS = pipelinePublicVarGroupReleaseRecordDao.listGroupReleaseHistory(
+        projectId: String,
+        publicVarGroup: PublicVarGroupVO
+    ): List<PublicVarReleaseDO> {
+        val groupName = publicVarGroup.groupName
+        
+        // 获取数据库中最新版本的变量组信息
+        val latestGroupRecord = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
             projectId = projectId,
+            groupName = groupName
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_INVALID_PARAM_,
+            params = arrayOf(groupName)
+        )
+        
+        // 获取最新版本的变量列表
+        val latestVarPOs = publicVarService.getGroupPublicVar(
+            projectId = projectId,
             groupName = groupName,
-            page = page,
-            pageSize = pageSize
+            version = latestGroupRecord.version
         )
-        return Page(
-            count = count.toLong(),
-            page = page,
-            pageSize = pageSize,
-            records = publicVarReleaseDOS
-        )
+        
+        // 将PO转换为DO对象进行比较
+        val latestVarDOs = latestVarPOs.map { po ->
+            PublicVarDO(
+                varName = po.varName,
+                alias = po.alias,
+                desc = po.desc,
+                type = po.type,
+                valueType = po.valueType,
+                defaultValue = po.defaultValue,
+                referCount = po.referCount,
+                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+            )
+        }
+        
+        // 将VO转换为DO对象进行比较
+        val newVarDOs = publicVarGroup.publicVars.map { vo ->
+            PublicVarDO(
+                varName = vo.varName,
+                alias = vo.alias,
+                desc = vo.desc,
+                type = vo.type,
+                valueType = vo.valueType,
+                defaultValue = vo.defaultValue,
+                referCount = 0,
+                buildFormProperty = vo.buildFormProperty
+            )
+        }
+        
+        val releaseRecords = mutableListOf<PublicVarReleaseDO>()
+        val version = latestGroupRecord.version + 1
+        val pubTime = LocalDateTime.now()
+        
+        // 1. 处理删除的变量
+        val deletedVars = latestVarDOs.filter { oldVar ->
+            newVarDOs.none { it.varName == oldVar.varName }
+        }
+        deletedVars.forEach { oldVar ->
+            val content = jacksonObjectMapper().writeValueAsString(
+                mapOf(
+                    "operate" to "delete",
+                    "varName" to oldVar.varName,
+                    "alias" to oldVar.alias,
+                    "defaultValue" to oldVar.defaultValue,
+                    "desc" to oldVar.desc,
+                    "type" to oldVar.type.name
+                )
+            )
+            
+            releaseRecords.add(
+                PublicVarReleaseDO(
+                    groupName = groupName,
+                    version = version,
+                    publisher = userId,
+                    pubTime = pubTime,
+                    content = content,
+                    desc = publicVarGroup.versionDesc
+                )
+            )
+        }
+        
+        // 2. 处理新增的变量
+        val addedVars = newVarDOs.filter { newVar ->
+            newVar.varName !in latestVarDOs.map { it.varName }
+        }
+        addedVars.forEach { newVar ->
+            val content = jacksonObjectMapper().writeValueAsString(
+                mapOf(
+                    "operate" to OperateTypeEnum.CREATE,
+                    "varName" to newVar.varName,
+                    "alias" to newVar.alias,
+                    "defaultValue" to newVar.defaultValue,
+                    "desc" to newVar.desc,
+                    "type" to newVar.type.name
+                )
+            )
+            
+            releaseRecords.add(
+                PublicVarReleaseDO(
+                    groupName = groupName,
+                    version = version,
+                    publisher = userId,
+                    pubTime = pubTime,
+                    content = content,
+                    desc = publicVarGroup.versionDesc
+                )
+            )
+        }
+        
+        // 3. 处理修改的变量
+        val modifiedVars = newVarDOs.filter { newVar ->
+            latestVarDOs.any { oldVar ->
+                oldVar.varName == newVar.varName &&
+                        (oldVar.alias != newVar.alias ||
+                                oldVar.desc != newVar.desc ||
+                                oldVar.defaultValue != newVar.defaultValue ||
+                                !isBuildFormPropertyEqual(oldVar.buildFormProperty, newVar.buildFormProperty))
+            }
+        }
+        
+        modifiedVars.forEach { newVar ->
+            val oldVar = latestVarDOs.first { it.varName == newVar.varName }
+            
+            // 收集所有变更字段
+            val changes = mutableMapOf<String, Map<String, Any?>>()
+            
+            if (oldVar.alias != newVar.alias) {
+                changes["alias"] = mapOf("oldValue" to oldVar.alias, "newValue" to newVar.alias)
+            }
+            if (oldVar.desc != newVar.desc) {
+                changes["desc"] = mapOf("oldValue" to oldVar.desc, "newValue" to newVar.desc)
+            }
+            if (oldVar.defaultValue != newVar.defaultValue) {
+                changes["defaultValue"] = mapOf("oldValue" to oldVar.defaultValue, "newValue" to newVar.defaultValue)
+            }
+            
+            // 直接比较BuildFormProperty对象的属性
+            val oldBuildFormProperty = oldVar.buildFormProperty
+            val newBuildFormProperty = newVar.buildFormProperty
+            
+            if (oldBuildFormProperty.required != newBuildFormProperty.required) {
+                changes["required"] =
+                    mapOf("oldValue" to oldBuildFormProperty.required, "newValue" to newBuildFormProperty.required)
+            }
+            if (oldBuildFormProperty.readOnly != newBuildFormProperty.readOnly) {
+                changes["readOnly"] =
+                    mapOf("oldValue" to oldBuildFormProperty.readOnly, "newValue" to newBuildFormProperty.readOnly)
+            }
+            if (oldBuildFormProperty.valueNotEmpty != newBuildFormProperty.valueNotEmpty) {
+                changes["valueNotEmpty"] = mapOf(
+                    "oldValue" to oldBuildFormProperty.valueNotEmpty,
+                    "newValue" to newBuildFormProperty.valueNotEmpty
+                )
+            }
+            
+            if (changes.isNotEmpty()) {
+                val content = jacksonObjectMapper().writeValueAsString(
+                    mapOf(
+                        "operate" to OperateTypeEnum.UPDATE,
+                        "varName" to newVar.varName,
+                        "changes" to changes,
+                        "desc" to newVar.desc,
+                        "type" to newVar.type.name
+                    )
+                )
+                
+                releaseRecords.add(
+                    PublicVarReleaseDO(
+                        groupName = groupName,
+                        version = version,
+                        publisher = userId,
+                        pubTime = pubTime,
+                        content = content,
+                        desc = publicVarGroup.versionDesc
+                    )
+                )
+            }
+        }
+        
+        return releaseRecords
+    }
+    
+    /**
+     * 比较两个BuildFormProperty对象是否相等
+     */
+    private fun isBuildFormPropertyEqual(prop1: BuildFormProperty, prop2: BuildFormProperty): Boolean {
+        return prop1.id == prop2.id &&
+                prop1.name == prop2.name &&
+                prop1.type == prop2.type &&
+                prop1.defaultValue == prop2.defaultValue &&
+                prop1.desc == prop2.desc &&
+                prop1.required == prop2.required &&
+                prop1.readOnly == prop2.readOnly &&
+                prop1.valueNotEmpty == prop2.valueNotEmpty &&
+                prop1.constant == prop2.constant
     }
 
 fun getProjectPublicParamByRef(
