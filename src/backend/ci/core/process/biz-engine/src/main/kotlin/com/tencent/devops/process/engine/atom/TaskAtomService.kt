@@ -227,6 +227,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorMsg = atomResponse.errorMsg
             )
             labels[PipelineBuildStatusBroadCastEvent.Labels::specialStep.name] = VMUtils.getVmLabel(task.taskId)
+            labels[PipelineBuildStatusBroadCastEvent.Labels::stepName.name] = task.taskName
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(task.taskType) == null) {
                 val taskParams = task.taskParams

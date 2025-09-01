@@ -828,6 +828,7 @@ class MetricsEventService @Autowired constructor(
             jobName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobName),
             stepId = event.stepId ?: event.taskId ?: "",
             stepName = specialStep?.let { "DEVOPS_INNER_$it" }
+                ?: labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::stepName)
                 ?: cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stepName),
             errorCode = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::errorCode),
             errorType = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::errorType),
