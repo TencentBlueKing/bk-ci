@@ -175,7 +175,7 @@ interface UserPublicVarGroupResource {
 
     @Operation(summary = "获取引用变量的列表（模板或流水线）")
     @GET
-    @Path("/{groupName}/vars/{varName}/references")
+    @Path("/{groupName}/references")
     fun listVarReferInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -187,7 +187,7 @@ interface UserPublicVarGroupResource {
         @PathParam("groupName")
         groupName: String,
         @Parameter(description = "变量名称", required = true)
-        @PathParam("varName")
+        @QueryParam("varName")
         varName: String,
         @Parameter(description = "引用类型", required = false)
         @QueryParam("referType")
