@@ -99,11 +99,12 @@ import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.`var`.dto.PipelinePublicVarGroupReferDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -150,8 +151,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
     private val pipelineAuthorizationService: PipelineAuthorizationService,
-    private val auditService: AuditService,
-    private val publicVarGroupService: PublicVarGroupService
+    private val auditService: AuditService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -532,20 +532,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
-                val varGroupNames =
-                    triggerContainer.params.filter { !it.varGroupName.isNullOrBlank() }.map { it.varGroupName!! }
-                if (!varGroupNames.isNullOrEmpty()) {
-                    publicVarGroupService.addPipelineGroupRefer(
-                        userId = userId,
-                        projectId = projectId,
-                        PipelinePublicVarGroupReferDTO(
-                            referId = pipelineId,
-                            referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                            referName = model.name,
-                            groupNames = varGroupNames
-                        )
-                    )
-                }
 
                 ActionAuditContext.current()
                     .addInstanceInfo(pipelineId, model.name, null, null)
@@ -1149,22 +1135,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 yamlInfo = yamlInfo,
                 pipelineDisable = pipelineDisable
             )
-
-            val varGroupNames =
-                model.getTriggerContainer().params.filter { !it.varGroupName.isNullOrBlank() }.map { it.varGroupName!! }
-
-            if (varGroupNames.isNotEmpty()) {
-                publicVarGroupService.addPipelineGroupRefer(
-                    userId = userId,
-                    projectId = projectId,
-                    PipelinePublicVarGroupReferDTO(
-                        referId = pipelineId,
-                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                        referName = model.name,
-                        groupNames = varGroupNames
-                    )
-                )
-            }
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(pipelineId, model.name, existModel, model)

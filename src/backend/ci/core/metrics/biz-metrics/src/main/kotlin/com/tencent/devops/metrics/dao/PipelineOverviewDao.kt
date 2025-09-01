@@ -137,4 +137,20 @@ class PipelineOverviewDao {
         }
         return conditions
     }
+
+    fun queryPipelineMonthlyExecCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Int {
+        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
+            return dslContext.select(sum(TOTAL_EXECUTE_COUNT))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                .and(STATISTICS_TIME.between(startTime, endTime))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
 }

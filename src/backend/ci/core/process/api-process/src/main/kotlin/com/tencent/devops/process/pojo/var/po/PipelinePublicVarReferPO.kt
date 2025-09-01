@@ -35,12 +35,14 @@ import java.time.LocalDateTime
 data class PipelinePublicVarReferPO(
     @get:Schema(title = "主键ID")
     val id: Long,
-    @get:Schema(title = "项目ID")
-    val projectId: String,
     @get:Schema(title = "变量组名称")
     val groupName: String,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "变量名称")
+    val varName: String,
     @get:Schema(title = "版本号")
-    val version: Int,
+    val version: Int? = null,
     @get:Schema(title = "关联ID")
     val referId: String,
     @get:Schema(title = "关联类型")

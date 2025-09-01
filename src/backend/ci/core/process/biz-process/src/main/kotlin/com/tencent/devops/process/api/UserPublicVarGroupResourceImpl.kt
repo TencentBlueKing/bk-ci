@@ -34,19 +34,22 @@ import com.tencent.devops.process.api.user.UserPublicVarGroupResource
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService
+    val publicVarGroupService: PublicVarGroupService,
+    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) : UserPublicVarGroupResource {
 
     override fun addGroup(
@@ -132,28 +135,27 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getTemplateReferences(
+    override fun listVarReferInfo(
         userId: String,
         projectId: String,
         groupName: String,
         varName: String,
+        referType: PublicVerGroupReferenceTypeEnum?,
         version: Int?,
         page: Int,
         pageSize: Int
-    ): Result<Page<PublicVarTemplateRefDO>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getReferences(
-        userId: String,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        version: Int?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PublicVarPipelineRefDO>> {
-        TODO("Not yet implemented")
+    ): Result<Page<PublicGroupVarRefDO>> {
+        return Result(publicVarGroupReferInfoService.listVarReferInfo(
+            PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                groupName = groupName,
+                varName = varName,
+                referType = referType,
+                version = version,
+                page = page,
+                pageSize = pageSize
+            )
+        ))
     }
 
     override fun getReleaseHistory(

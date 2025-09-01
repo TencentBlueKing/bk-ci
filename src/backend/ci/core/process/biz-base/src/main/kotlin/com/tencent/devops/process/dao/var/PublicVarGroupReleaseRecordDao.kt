@@ -34,7 +34,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelinePublicVarGroupReleseRecordDao {
+class PublicVarGroupReleaseRecordDao {
 
     fun batchInsert(dslContext: DSLContext, records: List<PipelinePublicVarGroupReleaseRecordPO>) {
         with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {

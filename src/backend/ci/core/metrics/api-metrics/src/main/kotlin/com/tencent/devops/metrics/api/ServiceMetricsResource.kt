@@ -122,4 +122,16 @@ interface ServiceMetricsResource {
         @Parameter(description = "查询条件", required = false)
         dispatchJobReq: BaseQueryReqVO
     ): Result<MaxJobConcurrencyVO?>
+
+    @Operation(summary = "查询流水线最近一月执行次数")
+    @Path("/summary_pipeline/monthly")
+    @POST
+    fun queryPipelineMonthlyExecCount(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        pipelineId: String
+    ): Result<Int>
 }

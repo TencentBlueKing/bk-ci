@@ -31,7 +31,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReleseRecordDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
@@ -44,9 +44,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
+class PublicVarGroupReleaseRecordService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelinePublicVarGroupReleaseRecordDao: PipelinePublicVarGroupReleseRecordDao,
+    private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val client: Client
 ) {
 
@@ -207,6 +207,6 @@ class PipelinePublicVarGroupReleaseRecordService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelinePublicVarGroupReleaseRecordService::class.java)
+        private val logger = LoggerFactory.getLogger(PublicVarGroupReleaseRecordService::class.java)
     }
 }

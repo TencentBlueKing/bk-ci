@@ -28,26 +28,33 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
-import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelinePublicVarGroupReferInfoDao {
+class PublicVarGroupReferInfoDao {
 
     fun listVarGroupReferInfo(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        version: Int? = null,
         page: Int,
         pageSize: Int
     ): List<PipelinePublicVarGroupReferPO> {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            if (referType != null) {
+                conditions.add(REFER_TYPE.eq(referType.name))
+            }
+            conditions.add(GROUP_NAME.eq(groupName))
+            conditions.add(VERSION.eq(version))
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
+                .where(conditions)
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
                 .fetch()
@@ -70,90 +77,126 @@ class PipelinePublicVarGroupReferInfoDao {
         }
     }
 
-    fun countByGroupName(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String ?= null
-    ): Int {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(GROUP_NAME.eq(groupName))
-            if (varName != null) {
-                conditions.add(VAR_NAME.eq(varName))
-            }
-            return dslContext.selectCount()
-                .from(this)
-                .where(conditions)
-                .and(GROUP_NAME.eq(groupName))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    fun countByReferId(
+    fun countByPublicVarGroupRef(
         dslContext: DSLContext,
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        groupName: String,
-        varName: String
+        groupName: String? = null,
+        referVersionName: String? = null
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_TYPE.eq(referType.name))
+            if (groupName != null) {
+                conditions.add(GROUP_NAME.eq(groupName))
+            }
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
+                .where(conditions)
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
 
-    fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
+    fun deleteByReferIdExcludingGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String,
+        excludedGroupNames: List<String>? = null
+    ) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_TYPE.eq(referType.name))
+            conditions.add(REFER_ID.eq(referId))
+            if (!excludedGroupNames.isNullOrEmpty()) {
+                conditions.add(GROUP_NAME.notIn(excludedGroupNames))
+            }
+            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.`in`(groupName))
+                .where(conditions)
                 .execute()
         }
     }
 
-fun save(
+    fun deleteByReferId(
         dslContext: DSLContext,
-        pipelinePublicVarGroupReferPO: PipelinePublicVarGroupReferPO
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum
     ) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            dslContext.insertInto(
-                this,
-                ID,
-                PROJECT_ID,
-                GROUP_NAME,
-                VAR_NAME,
-                VAR_TYPE,
-                VERSION,
-                REFER_ID,
-                REFER_TYPE,
-                REFER_NAME,
-                CREATOR,
-                MODIFIER,
-                CREATE_TIME,
-                UPDATE_TIME
-            ).values(
-                pipelinePublicVarGroupReferPO.id,
-                pipelinePublicVarGroupReferPO.projectId,
-                pipelinePublicVarGroupReferPO.groupName,
-                pipelinePublicVarGroupReferPO.varName,
-                pipelinePublicVarGroupReferPO.varType.name,
-                pipelinePublicVarGroupReferPO.version,
-                pipelinePublicVarGroupReferPO.referId,
-                pipelinePublicVarGroupReferPO.referType.name,
-                pipelinePublicVarGroupReferPO.referName,
-                pipelinePublicVarGroupReferPO.creator,
-                pipelinePublicVarGroupReferPO.modifier,
-                pipelinePublicVarGroupReferPO.createTime,
-                pipelinePublicVarGroupReferPO.updateTime
-            ).execute()
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.name))
+                .execute()
+        }
+    }
+
+    fun batchSave(
+        dslContext: DSLContext,
+        pipelinePublicVarGroupReferPOs: List<PipelinePublicVarGroupReferPO>
+    ) {
+
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val insertSteps = pipelinePublicVarGroupReferPOs.map { po ->
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    PROJECT_ID,
+                    GROUP_NAME,
+                    VERSION,
+                    REFER_ID,
+                    REFER_TYPE,
+                    REFER_NAME,
+                    REFER_VERSION_NAME,
+                    CREATOR,
+                    MODIFIER,
+                    CREATE_TIME,
+                    UPDATE_TIME
+                ).values(
+                    po.id,
+                    po.projectId,
+                    po.groupName,
+                    po.version,
+                    po.referId,
+                    po.referType.name,
+                    po.referName,
+                    po.referVersionName,
+                    po.creator,
+                    po.modifier,
+                    po.createTime,
+                    po.updateTime
+                )
+            }
+            dslContext.batch(insertSteps).execute()
+        }
+    }
+
+    fun countByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        version: Int? = null
+    ): Int {
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            if (referType != null) {
+                conditions.add(REFER_TYPE.eq(referType.name))
+            }
+            conditions.add(GROUP_NAME.eq(groupName))
+            conditions.add(VERSION.eq(version))
+            return dslContext.select(DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 }

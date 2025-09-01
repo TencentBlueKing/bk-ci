@@ -123,4 +123,19 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
     }
+
+    override fun queryPipelineMonthlyExecCount(
+        projectId: String,
+        pipelineId: String,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime
+    ): Int {
+        return pipelineOverviewDao.queryPipelineMonthlyExecCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            startTime = startDate,
+            endTime = endDate
+        )
+    }
 }

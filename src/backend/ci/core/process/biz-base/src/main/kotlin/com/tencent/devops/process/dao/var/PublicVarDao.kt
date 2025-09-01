@@ -125,7 +125,7 @@ class PublicVarDao {
         }
     }
 
-    fun listVarBygroupName(
+    fun listVarByGroupName(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
@@ -175,12 +175,18 @@ class PublicVarDao {
         }
     }
 
-    fun queryVarNamesBygroupName(dslContext: DSLContext, projectId: String, groupName: String): List<String> {
+    fun queryVarNamesByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int
+    ): List<String> {
         with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
             with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
                 return dslContext.select(VAR_NAME).from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(GROUP_NAME.eq(groupName))
+                    .and(VERSION.eq(version))
                     .groupBy(VAR_NAME)
                     .fetch().map { it.value1() }
             }

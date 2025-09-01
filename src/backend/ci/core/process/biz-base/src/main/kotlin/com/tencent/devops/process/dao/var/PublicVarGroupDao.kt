@@ -34,6 +34,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import org.tmatesoft.svn.core.internal.io.dav.DAVElement.VERSION_NAME
 
 @Repository
 class PublicVarGroupDao {
@@ -216,9 +217,6 @@ class PublicVarGroupDao {
             } else {
                 conditions.add(VERSION.eq(version))
             }
-            if (versionName != null) {
-                conditions.add(VERSION_NAME.eq(versionName))
-            }
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchOne()?.let { record ->
@@ -237,6 +235,27 @@ class PublicVarGroupDao {
                         updateTime = record.updateTime
                     )
                 }
+        }
+    }
+
+    fun countRecordByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int? = null
+    ): Int {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            if (version == null) {
+                conditions.add(LATEST_FLAG.eq(true))
+            } else {
+                conditions.add(VERSION.eq(version))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 

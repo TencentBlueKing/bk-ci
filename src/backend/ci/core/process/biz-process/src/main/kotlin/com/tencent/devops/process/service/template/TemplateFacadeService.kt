@@ -54,6 +54,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -121,6 +122,8 @@ import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -183,7 +186,8 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val templateCommonService: TemplateCommonService,
     private val templateSettingService: TemplateSettingService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -250,6 +254,17 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 templateName = template.name
+            )
+            publicVarGroupReferInfoService.updatePublicGroupRefer(
+                userId = userId,
+                projectId = projectId,
+                PublicVarGroupReferDTO(
+                    referId = templateId,
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referName = template.name,
+                    referVersionName = version.toString(),
+                    publicVarGroupRefs = template.publicVarGroups
+                )
             )
             logger.info("Get the template version $version")
         }
@@ -493,6 +508,11 @@ class TemplateFacadeService @Autowired constructor(
                     projectCode = template.projectId
                 )
             }
+            publicVarGroupReferInfoService.deletePublicVerGroupRefByReferId(
+                referId = templateId,
+                projectId = projectId,
+                referType = PublicVerGroupReferenceTypeEnum.TEMPLATE
+            )
         }
         return true
     }
@@ -540,6 +560,17 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 version = version
             )
+            publicVarGroupReferInfoService.updatePublicGroupRefer(
+                userId = userId,
+                projectId = projectId,
+                PublicVarGroupReferDTO(
+                    referId = templateId,
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referName = "",
+                    referVersionName = version.toString(),
+                    publicVarGroupRefs = emptyList()
+                )
+            )
             templateDao.delete(dslContext, projectId, templateId, setOf(version)) == 1
         }
     }
@@ -575,6 +606,11 @@ class TemplateFacadeService @Autowired constructor(
                     instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                     versionName = versionName
                 )
+            val template = templateDao.getTemplate(
+                dslContext = dslContext,
+                templateId = templateId,
+                versionName = versionName
+            )!!
             if (instanceSize > 0) {
                 logger.warn("There are $instanceSize pipeline attach to $templateId of versionName $versionName")
                 throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
@@ -590,6 +626,17 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 versionName = versionName
+            )
+            publicVarGroupReferInfoService.updatePublicGroupRefer(
+                userId = userId,
+                projectId = projectId,
+                PublicVarGroupReferDTO(
+                    referId = templateId,
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referName = template.templateName,
+                    referVersionName = template.version.toString(),
+                    publicVarGroupRefs = emptyList()
+                )
             )
         }
         return true
@@ -686,6 +733,17 @@ class TemplateFacadeService @Autowired constructor(
                     templateName = template.name
                 )
             }
+            publicVarGroupReferInfoService.updatePublicGroupRefer(
+                userId = userId,
+                projectId = projectId,
+                PublicVarGroupReferDTO(
+                    referId = templateId,
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referName = template.name,
+                    referVersionName = version.toString(),
+                    publicVarGroupRefs = template.publicVarGroups
+                )
+            )
             logger.info("Get the update template version $version")
         }
 

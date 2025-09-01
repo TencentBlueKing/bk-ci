@@ -47,6 +47,7 @@ import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil
+import java.time.LocalDateTime
 
 @RestResource
 class ServiceMetricsResourceImpl constructor(
@@ -134,6 +135,18 @@ class ServiceMetricsResourceImpl constructor(
         return Result(
             dispatchJobMetricsService.getMaxJobConcurrency(
                 dispatchJobReq = dispatchJobReq
+            )
+        )
+    }
+
+    override fun queryPipelineMonthlyExecCount(projectId: String, pipelineId: String): Result<Int> {
+        return Result(
+            pipelineOverviewManageService.queryPipelineMonthlyExecCount(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                startDate = LocalDateTime.now()
+                    .minusMonths(1).withHour(0).withMinute(0).withSecond(0),
+                endDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0)
             )
         )
     }

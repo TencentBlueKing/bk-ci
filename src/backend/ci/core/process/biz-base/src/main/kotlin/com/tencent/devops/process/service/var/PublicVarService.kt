@@ -54,7 +54,7 @@ class PublicVarService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val client: Client,
-    private val pipelinePublicVarGroupReleaseRecordService: PipelinePublicVarGroupReleaseRecordService
+    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
 
     fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
@@ -82,7 +82,7 @@ class PublicVarService @Autowired constructor(
                 updateTime = LocalDateTime.now()
             )
         }
-        val oldVarPOs = publicVarDao.listVarBygroupName(
+        val oldVarPOs = publicVarDao.listVarByGroupName(
             dslContext = context,
             projectId = projectId,
             groupName = groupName,
@@ -90,7 +90,7 @@ class PublicVarService @Autowired constructor(
             varNameList = publicVarDTO.publicVars.map { it.varName }
         )
         publicVarDao.batchSave(dslContext, publicVarPOs)
-        pipelinePublicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
+        publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
             PublicVarGroupReleaseDTO(
                 projectId = projectId,
                 groupName = groupName,
@@ -123,7 +123,7 @@ class PublicVarService @Autowired constructor(
     }
 
     fun getGroupPublicVar(projectId: String, groupName: String, version: Int): List<PublicVarPO> {
-        return publicVarDao.listVarBygroupName(
+        return publicVarDao.listVarByGroupName(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
@@ -143,7 +143,7 @@ class PublicVarService @Autowired constructor(
             groupName = groupName
         ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
 
-            return publicVarDao.listVarBygroupName(
+            return publicVarDao.listVarByGroupName(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
@@ -182,7 +182,7 @@ class PublicVarService @Autowired constructor(
                 return@forEach
             }
             val version = versionName.substring(1).toInt()
-            val publicVarPOs = publicVarDao.listVarBygroupName(
+            val publicVarPOs = publicVarDao.listVarByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupRef.groupName,

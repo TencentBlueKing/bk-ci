@@ -27,11 +27,12 @@
 
 package com.tencent.devops.process.pojo.`var`.`do`
 
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "流水线公共变量模板引用信息")
-data class PublicVarTemplateRefDO(
+@Schema(title = "流水线公共变量引用信息")
+data class PublicGroupVarRefDO(
     @get:Schema(title = "模板ID")
     val referId: String,
     @get:Schema(title = "模板名称")
@@ -39,7 +40,7 @@ data class PublicVarTemplateRefDO(
     @get:Schema(title = "模板链接")
     val referUrl: String,
     @get:Schema(title = "模板类型")
-    val referType: String,
+    val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "最近更新人")
@@ -47,5 +48,7 @@ data class PublicVarTemplateRefDO(
     @get:Schema(title = "最近更新时间")
     val updateTime: LocalDateTime,
     @get:Schema(title = "实列个数")
-    val instanceCount: Int
+    val instanceCount: Int? = null,
+    @get:Schema(title = "最近一个月的执行次数")
+    val executeCount: Int? = null
 )

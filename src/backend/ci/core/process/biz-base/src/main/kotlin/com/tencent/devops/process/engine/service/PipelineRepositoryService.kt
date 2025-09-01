@@ -116,10 +116,13 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
@@ -178,7 +181,8 @@ class PipelineRepositoryService constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
-    private val pipelineInfoService: PipelineInfoService
+    private val pipelineInfoService: PipelineInfoService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) {
 
     companion object {
@@ -812,6 +816,19 @@ class PipelineRepositoryService constructor(
                     )
                 }
 
+                publicVarGroupReferInfoService.updatePublicGroupRefer(
+                    userId = userId,
+                    projectId = projectId,
+                    PublicVarGroupReferDTO(
+                        referId = pipelineId,
+                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
+                        // 分支版本直接使用版本名称进行记录
+                        referVersionName = versionName ?: VersionStatus.COMMITTING.name,
+                        publicVarGroupRefs = model.publicVarGroups
+                    )
+                )
+
                 pipelineResourceDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -939,6 +956,7 @@ class PipelineRepositoryService constructor(
         var branchAction: BranchVersionAction? = null
         var versionNum: Int? = null
         var updateBuildNo = false
+        var referVersionName: String? = null
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -965,6 +983,7 @@ class PipelineRepositoryService constructor(
                 when (versionStatus) {
                     // 1 草稿版本保存 —— 寻找当前草稿，存在则同版本更新，不存在则新建
                     VersionStatus.COMMITTING -> {
+                        referVersionName = VersionStatus.COMMITTING.name
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -999,6 +1018,7 @@ class PipelineRepositoryService constructor(
                             params = arrayOf("branchName")
                         )
                         versionName = branchName
+                        referVersionName = versionName
                         val activeBranchVersion = pipelineResourceVersionDao.getBranchVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1030,6 +1050,7 @@ class PipelineRepositoryService constructor(
                     }
                     // 3 通过分支发布 —— 将要通过分支发布的草稿直接更新为分支版本
                     VersionStatus.BRANCH_RELEASE -> {
+
                         if (branchName.isNullOrBlank()) throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                             params = arrayOf("branchName")
@@ -1065,6 +1086,7 @@ class PipelineRepositoryService constructor(
                         }
                         version = draftVersion.version
                         versionName = branchName
+                        referVersionName = versionName
                         branchAction = BranchVersionAction.ACTIVE
 
                         operationLogParams = versionName
@@ -1081,6 +1103,7 @@ class PipelineRepositoryService constructor(
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
                     else -> {
                         watcher.start("getOriginModel")
+                        referVersionName = VersionStatus.RELEASED.name
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1232,6 +1255,19 @@ class PipelineRepositoryService constructor(
                         pipelineId = pipelineId,
                         currentVersion = version,
                         maxPipelineResNum = it
+                    )
+                }
+                referVersionName?.let {
+                    publicVarGroupReferInfoService.updatePublicGroupRefer(
+                        userId = userId,
+                        projectId = projectId,
+                        PublicVarGroupReferDTO(
+                            referId = pipelineId,
+                            referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                            referName = model.name,
+                            referVersionName = it,
+                            publicVarGroupRefs = model.publicVarGroups
+                        )
                     )
                 }
             }
@@ -1755,6 +1791,11 @@ class PipelineRepositoryService constructor(
                         )
                     )
                 }
+                publicVarGroupReferInfoService.deletePublicVerGroupRefByReferId(
+                    referId = pipelineId,
+                    projectId = projectId,
+                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE
+                )
             }
         } finally {
             lock.unlock()

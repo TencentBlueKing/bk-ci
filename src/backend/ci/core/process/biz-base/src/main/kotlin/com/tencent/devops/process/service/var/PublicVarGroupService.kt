@@ -41,21 +41,17 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_REFERENCED
-import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReferInfoDao
-import com.tencent.devops.process.dao.`var`.PipelinePublicVarGroupReleseRecordDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
-import com.tencent.devops.process.pojo.`var`.dto.PipelinePublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
@@ -83,8 +79,8 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarService: PublicVarService,
     private val variableTransfer: VariableTransfer,
     private val publicVarDao: PublicVarDao,
-    private val pipelinePublicVarGroupReleaseRecordDao: PipelinePublicVarGroupReleseRecordDao,
-    private val pipelinePublicVarGroupReferInfoDao: PipelinePublicVarGroupReferInfoDao,
+    private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
+    private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templateService: TemplateService
 ) {
 
@@ -376,71 +372,6 @@ class PublicVarGroupService @Autowired constructor(
         }
     }
 
-    fun listVarGroupReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicVarTemplateRefDO> {
-        val projectId = queryReq.projectId
-        val groupName = queryReq.groupName!!
-        val varName = queryReq.varName!!
-        val version = queryReq.version
-        val page = queryReq.page
-        val pageSize = queryReq.pageSize
-        val pipelinePublicVarGroupInfo = publicVarGroupDao.getRecordByGroupName(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            version = version
-        ) ?: return Page(
-            count = 0,
-            page = page,
-            pageSize = pageSize,
-            records = emptyList()
-        )
-
-        val totalCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            varName = varName
-        )
-        val varGroupReferInfo = pipelinePublicVarGroupReferInfoDao.listVarGroupReferInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            varName = varName,
-            page = page,
-            pageSize = pageSize
-        )
-        return Page(
-            count = totalCount.toLong(),
-            page = page,
-            pageSize = pageSize,
-            records = varGroupReferInfo.map {
-                PublicVarTemplateRefDO(
-                    referId = it.referId,
-                    referType = it.referType,
-                    referName = it.referName,
-                    referCount = pipelinePublicVarGroupInfo.referCount,
-                    referUrl = getVarGroupReferUrl(projectId, it.referType, it.referId),
-                    modifier = it.modifier,
-                    updateTime = it.updateTime
-                )
-            }
-        )
-    }
-
-    private fun getVarGroupReferUrl(
-        projectId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referId: String
-    ): String {
-        return when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> "/console/pipeline/$projectId/$referId/history/pipeline"
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
-                val version = templateService.getTemplateLatestVersion(referId) ?: return ""
-                "/console/pipeline/$projectId/template/$referId/$version/pipeline"
-            }
-        }
-    }
-
     fun getReleaseHistory(
         userId: String,
         queryReq: PublicVarGroupInfoQueryReqDTO
@@ -465,115 +396,6 @@ class PublicVarGroupService @Autowired constructor(
         )
     }
 
-    fun addPipelineGroupRefer(
-        userId: String,
-        projectId: String,
-        pipelinePublicVarGroupReferInfo: PipelinePublicVarGroupReferDTO
-    ): Boolean {
-        val referId = pipelinePublicVarGroupReferInfo.referId
-        val referType = pipelinePublicVarGroupReferInfo.referType
-        val groupNames = pipelinePublicVarGroupReferInfo.groupNames
-        val referName = pipelinePublicVarGroupReferInfo.referName
-
-        if (groupNames.isEmpty()) {
-            return true
-        }
-
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_${referId}_${referType.name}",
-            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
-        )
-
-        redisLock.lock()
-        try {
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-
-                groupNames.forEach { groupName ->
-                    // 检查变量组是否存在
-                    val groupRecord = publicVarGroupDao.getRecordByGroupName(
-                        dslContext = context,
-                        projectId = projectId,
-                        groupName = groupName
-                    ) ?: throw ErrorCodeException(
-                        errorCode = ERROR_INVALID_PARAM_,
-                        params = arrayOf(groupName)
-                    )
-
-                    // 获取变量组下的所有变量信息
-                    val varPOs = publicVarService.getGroupPublicVar(
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = groupRecord.version
-                    )
-
-                    // 为每个变量生成引用记录
-                    varPOs.forEach { varPO ->
-                        val varName = varPO.varName
-                        
-                        // 检查该变量是否已与该流水线建立引用
-                        val existingReferCount = pipelinePublicVarGroupReferInfoDao.countByReferId(
-                            dslContext = context,
-                            projectId = projectId,
-                            referId = referId,
-                            referType = referType,
-                            groupName = groupName,
-                            varName = varName
-                        )
-
-                        if (existingReferCount > 0) {
-                            return@forEach
-                        }
-
-                        // 插入引用记录
-                        pipelinePublicVarGroupReferInfoDao.save(
-                            dslContext = context,
-                            PipelinePublicVarGroupReferPO(
-                                id = client.get(ServiceAllocIdResource::class)
-                                    .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO").data ?: 0,
-                                projectId = projectId,
-                                groupName = groupName,
-                                varName = varName,
-                                varType = varPO.type,
-                                version = groupRecord.version,
-                                referId = referId,
-                                referName = referName,
-                                referType = referType,
-                                modifier = userId,
-                                updateTime = LocalDateTime.now(),
-                                creator = userId,
-                                createTime = LocalDateTime.now()
-                            )
-                        )
-                    }
-
-                    val currentCount = pipelinePublicVarGroupReferInfoDao.countByGroupName(
-                        dslContext = context,
-                        projectId = projectId,
-                        groupName = groupName
-                    )
-
-                    // 更新变量组引用计数
-                    publicVarGroupDao.updateReferCount(
-                        dslContext = context,
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = groupRecord.version,
-                        referCount = currentCount
-                    )
-                }
-            }
-        } catch (t: Throwable) {
-            logger.warn("Failed to add pipeline group refer for $referId", t)
-            throw t
-        } finally {
-            redisLock.unlock()
-        }
-
-        return true
-    }
-
 fun getProjectPublicParamByRef(
     userId: String,
     projectId: String,
@@ -589,12 +411,12 @@ fun getProjectPublicParamByRef(
     varGroupRefs.forEach { varGroupRef ->
             try {
                 val groupName = varGroupRef.groupName
-                val versionName = varGroupRef.versionName
+                val version = varGroupRef.versionName?.substring(1)?.toIntOrNull()
                 val groupRecord = publicVarGroupDao.getRecordByGroupName(
                     dslContext = dslContext,
                     projectId = projectId,
                     groupName = groupName,
-                    versionName = versionName
+                    version = version
                 ) ?: run {
                     logger.warn("Variable group $groupName not found in project $projectId")
                     return@forEach
