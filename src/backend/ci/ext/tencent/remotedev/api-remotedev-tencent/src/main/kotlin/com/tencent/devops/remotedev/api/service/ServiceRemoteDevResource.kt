@@ -55,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -958,8 +959,10 @@ interface ServiceRemoteDevResource {
     fun tgitGetUserOauth(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
+        userId: String,
+        @QueryParam("redirectUrl")
+        redirectUrl: String?
+    ): Result<AuthorizeResult>
 
     @Operation(summary = "工蜂获取绑定的项目列表")
     @GET

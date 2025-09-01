@@ -59,6 +59,7 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -728,8 +729,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).whitelistGet(userId, type, body)
     }
 
-    override fun tgitGetUserOauth(userId: String): Result<Boolean> {
-        logger.info("tgitGetUserOauth |$userId")
+    override fun tgitGetUserOauth(userId: String, redirectUrl: String?): Result<AuthorizeResult> {
+        logger.info("tgitGetUserOauth |$userId|$redirectUrl")
         return client.get(ServiceRemoteDevResource::class).tgitGetUserOauth(userId)
     }
 

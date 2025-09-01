@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -89,11 +90,14 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
@@ -130,7 +134,8 @@ class ServiceRemoteDevResourceImpl(
     private val remotedevProjectService: RemotedevProjectService,
     private val bkItsmService: BKItsmService,
     private val projectStrategyService: ProjectStrategyService,
-    private val tGitBindService: TGitService
+    private val tGitBindService: TGitService,
+    private val gitTransfer: RemoteDevGitTransfer
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -877,8 +882,14 @@ class ServiceRemoteDevResourceImpl(
         return Result(whiteListService.apiGetWhiteList(userId, type, body))
     }
 
-    override fun tgitGetUserOauth(userId: String): Result<Boolean> {
-        return Result(tGitBindService.checkUserOauthToken(userId))
+    override fun tgitGetUserOauth(userId: String, redirectUrl: String?): Result<AuthorizeResult> {
+        // 权限校验？
+        return gitTransfer.load(RemoteDevGitType.T_GIT).isOAuth(
+            userId = userId,
+            redirectUrlType = RedirectUrlTypeEnum.SPEC,
+            redirectUrl = redirectUrl,
+            refreshToken = null
+        )
     }
 
     override fun tgitGetProjectList(
