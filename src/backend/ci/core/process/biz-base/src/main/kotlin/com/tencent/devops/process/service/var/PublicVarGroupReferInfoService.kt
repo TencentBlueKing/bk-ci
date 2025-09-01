@@ -38,7 +38,6 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
@@ -313,7 +312,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
-            referType = queryReq.referType!!,
+            referType = queryReq.referType,
             version = version,
             page = queryReq.page,
             pageSize = queryReq.pageSize

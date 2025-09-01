@@ -30,15 +30,17 @@ package com.tencent.devops.process.pojo.`var`.`do`
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "公共变量组变更预览")
-data class PublicVarChangePreviewDO(
-    @get:Schema(title = "发布时间")
-    val pubTime: LocalDateTime,
-    @get:Schema(title = "发布人")
-    val publisher: String,
-    @get:Schema(title = "变更内容")
-    val content: String,
-    @get:Schema(title = "变更描述")
-    val desc: String? = null
+@Schema(title = "流水线关联公共变量组信息")
+data class PipelinePublicVarGroupDO(
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "变量总数")
+    val varCount: Int,
+    @get:Schema(title = "变量组描述")
+    val desc: String? = null,
+    @get:Schema(title = "修改人")
+    var modifier: String,
+    @get:Schema(title = "更新时间")
+    var updateTime: LocalDateTime
 )
 

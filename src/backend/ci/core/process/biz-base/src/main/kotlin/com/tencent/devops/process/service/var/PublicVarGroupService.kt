@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -41,10 +42,11 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_REFERENCED
-import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
-import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
+import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
@@ -52,6 +54,7 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
@@ -495,5 +498,83 @@ fun getProjectPublicParamByRef(
             desc = parserVO.desc,
             publicVars = publicVars
         )
+    }
+
+    fun listPipelineVariables(
+        userId: String,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum
+    ): Result<List<PipelinePublicVarGroupDO>> {
+        try {
+            logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
+            
+            // 查询流水线关联的变量组信息
+            val referInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
+                dslContext = dslContext,
+                projectId = projectId,
+                referId = referId,
+                referType = referType
+            )
+            
+            if (referInfos.isEmpty()) {
+                return Result(emptyList())
+            }
+            
+            // 转换为PipelinePublicVarGroupDO列表
+            val pipelineVarGroups = referInfos.map { referInfo ->
+                val groupRecord = publicVarGroupDao.getRecordByGroupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = referInfo.groupName,
+                    version = referInfo.version
+                ) ?: return@map null
+                
+                PipelinePublicVarGroupDO(
+                    groupName = groupRecord.groupName,
+                    varCount = groupRecord.varCount,
+                    desc = groupRecord.desc,
+                    modifier = groupRecord.modifier,
+                    updateTime = groupRecord.updateTime
+                )
+            }.filterNotNull()
+            
+            return Result(pipelineVarGroups)
+        } catch (e: Throwable) {
+            logger.error("[$projectId|$referId] Failed to get pipeline variables", e)
+            return Result(emptyList())
+        }
+    }
+
+    fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
+        try {
+            logger.info("[$projectId] Get all public variable groups info")
+            
+            // 获取项目中所有的公共变量组
+            val varGroups = publicVarGroupDao.listGroupsByProjectId(
+                dslContext = dslContext,
+                projectId = projectId
+            )
+            
+            if (varGroups.isEmpty()) {
+                return Result(emptyList())
+            }
+            
+            // 转换为PipelinePublicVarGroupDO列表
+            val pipelineVarGroups = varGroups.map { groupRecord ->
+                PipelinePublicVarGroupDO(
+                    groupName = groupRecord.groupName,
+                    varCount = groupRecord.varCount,
+                    desc = groupRecord.desc,
+                    modifier = groupRecord.modifier,
+                    updateTime = groupRecord.updateTime
+                )
+            }
+            
+            return Result(pipelineVarGroups)
+        } catch (e: Throwable) {
+            logger.error("[$projectId] Failed to get project variable groups info", e)
+            return Result(emptyList())
+        }
     }
 }

@@ -104,7 +104,9 @@ data class BuildFormProperty(
     @get:Schema(title = "级联选择器属性", required = false)
     var cascadeProps: BuildCascadeProps? = null,
     @get:Schema(title = "所属公共变量组名称", required = false)
-    var varGroupName: String? = null
+    var varGroupName: String? = null,
+    @get:Schema(title = "所属公共变量组版本", required = false)
+    var varGroupVersion: Int? = null
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")

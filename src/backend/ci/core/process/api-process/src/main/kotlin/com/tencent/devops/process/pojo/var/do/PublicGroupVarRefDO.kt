@@ -33,13 +33,13 @@ import java.time.LocalDateTime
 
 @Schema(title = "流水线公共变量引用信息")
 data class PublicGroupVarRefDO(
-    @get:Schema(title = "模板ID")
+    @get:Schema(title = "引用ID")
     val referId: String,
-    @get:Schema(title = "模板名称")
+    @get:Schema(title = "引用名称")
     val referName: String,
-    @get:Schema(title = "模板链接")
+    @get:Schema(title = "引用链接")
     val referUrl: String,
-    @get:Schema(title = "模板类型")
+    @get:Schema(title = "引用类型")
     val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "创建人")
     val creator: String,

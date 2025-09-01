@@ -62,6 +62,8 @@ class PublicVarService @Autowired constructor(
         val userId = publicVarDTO.userId
         val groupName = publicVarDTO.groupName
         val publicVarPOs = publicVarDTO.publicVars.map {
+            it.buildFormProperty.varGroupName = groupName
+            it.buildFormProperty.varGroupVersion = publicVarDTO.version
             PublicVarPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_PUBLIC_VAR").data ?: 0,

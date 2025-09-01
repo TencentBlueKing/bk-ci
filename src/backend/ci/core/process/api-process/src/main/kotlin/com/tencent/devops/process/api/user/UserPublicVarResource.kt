@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -68,22 +67,4 @@ interface UserPublicVarResource {
         @QueryParam("version")
         version: Int? = null
     ): Result<PublicVarGroupVO>
-
-    @Operation(summary = "获取变量组变量列表")
-    @GET
-    @Path("/{groupName}/variables")
-    fun getVariables(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "版本号", required = false)
-        @QueryParam("version")
-        version: Int ?= null
-    ): Result<List<PublicVarDO>>
 }

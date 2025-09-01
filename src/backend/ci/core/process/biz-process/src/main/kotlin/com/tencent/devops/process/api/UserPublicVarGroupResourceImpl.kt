@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
+import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
@@ -194,5 +194,26 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             projectId = projectId,
             yaml = yaml
         ))
+    }
+
+    override fun listPipelineVarGroupInfo(
+        userId: String,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum
+    ): Result<List<PipelinePublicVarGroupDO>> {
+        return publicVarGroupService.listPipelineVariables(
+            userId = userId,
+            projectId = projectId,
+            referId = referId,
+            referType = referType
+        )
+    }
+
+    override fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
+        return publicVarGroupService.listProjectVarGroupInfo(
+            userId = userId,
+            projectId = projectId
+        )
     }
 }

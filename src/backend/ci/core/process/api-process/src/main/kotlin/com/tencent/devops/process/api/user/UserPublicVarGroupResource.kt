@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
@@ -250,4 +251,33 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "YAML内容", required = true)
         yaml: PublicVarGroupYamlStringVO
     ): Result<PublicVarGroupVO>
+
+    @Operation(summary = "获取流水线关联公共变量组信息")
+    @GET
+    @Path("/refers/{referId}/group/info")
+    fun listPipelineVarGroupInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "引用资源ID", required = true)
+        @PathParam("referId")
+        referId: String,
+        @Parameter(description = "引用资源类型", required = true)
+        referType: PublicVerGroupReferenceTypeEnum
+    ): Result<List<PipelinePublicVarGroupDO>>
+
+    @Operation(summary = "获取流水线关联公共变量组信息")
+    @GET
+    @Path("/refers/{referId}/group/info")
+    fun listProjectVarGroupInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String
+    ): Result<List<PipelinePublicVarGroupDO>>
 }

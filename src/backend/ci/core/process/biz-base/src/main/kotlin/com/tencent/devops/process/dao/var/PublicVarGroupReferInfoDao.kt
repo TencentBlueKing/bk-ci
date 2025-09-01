@@ -78,6 +78,43 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    fun listVarGroupReferInfoByReferId(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String? = null
+    ): List<PipelinePublicVarGroupReferPO> {
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_TYPE.eq(referType.name))
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.asc())
+                .fetch()
+                .map {
+                    PipelinePublicVarGroupReferPO(
+                        id = it.id,
+                        projectId = it.projectId,
+                        groupName = it.groupName,
+                        version = it.version,
+                        referId = it.referId,
+                        referName= it.referName,
+                        referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
+                        createTime = it.createTime,
+                        updateTime = it.updateTime,
+                        creator = it.creator,
+                        modifier = it.modifier,
+                        referVersionName = it.referVersionName
+                    )
+                }
+        }
+    }
+
     fun countByPublicVarGroupRef(
         dslContext: DSLContext,
         projectId: String,
