@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.api.report
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.ReportPluginConfig
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -123,4 +124,9 @@ interface ReportSDKApi : WorkerRestApiSDK {
      * 获取归档报告插件配置
      */
     fun getPluginConfig(): Result<ReportPluginConfig>
+
+    /**
+     * 获取父流水线构建信息
+     */
+    fun getParentPipelineBuildInfo(buildId: String):Result<BuildBasicInfo>
 }

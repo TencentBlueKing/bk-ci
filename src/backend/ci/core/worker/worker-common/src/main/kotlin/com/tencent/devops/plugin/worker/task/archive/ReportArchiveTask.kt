@@ -248,15 +248,13 @@ class ReportArchiveTask : ITask() {
         allFileList: List<File>,
         buildTask: BuildTask
     ) {
-        val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
-        val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
-        val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
+        val result = api.getParentPipelineBuildInfo(buildVariables.buildId).data!!
         try {
             val token = api.getRepoToken(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                projectId = parentProjectId!!,
+                projectId = result.projectId,
                 repoName = "report",
-                path = "/${parentPipelineId}/${parentBuildId}",
+                path = "/${result.pipelineId}/${result.buildId}",
                 type = TokenType.UPLOAD,
                 expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
             )

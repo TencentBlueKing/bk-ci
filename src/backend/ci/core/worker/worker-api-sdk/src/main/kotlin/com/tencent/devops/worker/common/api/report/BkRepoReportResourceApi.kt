@@ -324,7 +324,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
-    private fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
+    override fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
         val path = "/ms/process/api/service/builds/$buildId/topParent/get"
         val request = buildGet(path)
         val responseContent = request(
