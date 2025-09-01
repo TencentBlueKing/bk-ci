@@ -17,6 +17,12 @@ import {
 import { parsePathAlias } from '../../utils'
 const vue = new Vue()
 export default {
+    props: {
+        oauthUserList: {
+            type: Array,
+            default: () => []
+        }
+    },
     data () {
         return {
             pacProjectName: '', // 已开启PAC的项目名
@@ -169,8 +175,6 @@ export default {
             if (this.codelibConfig.label === 'SVN') {
                 payload = `${this.codelibConfig.label}${this.codelib.svnType}`
             }
-            console.log(payload, 'payload')
-            console.log(this.codelib.authType, 'this.codelib.authType')
             return (
                 this.placeholders.url[payload]
                 || this.placeholders.url[this.codelib.authType]
@@ -316,7 +320,8 @@ export default {
             this.checkOAuth({
                 projectId,
                 type: codelibTypeConstants,
-                search
+                search,
+                username: this.codelib.userName
             })
         },
 
@@ -326,7 +331,8 @@ export default {
                 projectId,
                 type: codelibTypeConstants,
                 scmCode: this.codelib.scmCode,
-                search
+                search,
+                username: this.codelib.userName
             })
         },
 

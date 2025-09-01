@@ -38,7 +38,7 @@ export default function useRouteParams() {
     packageName: route.query.packageName as string,
     property: route.query.property as string,
     direction: route.query.direction as string,
-    packageDisplayName: (route.query.package as string ?? '').replace(/^.*:\/\/(?:.*:)*([^:]+)$/, '$1') || '<PACKAGE_NAME>',
+    packageDisplayName: (route.query.package as string ?? '').split(':').pop() || '<PACKAGE_NAME>',
     userName: store.state.currentUser?.username ?? '<USERNAME>',
     repoUrl: `${location.origin}/${route.params.repoType}/${route.params.projectId}/${route.query.repoName}`,
     versionLabel: route.query.version || '<PACKAGE_VERSION>',

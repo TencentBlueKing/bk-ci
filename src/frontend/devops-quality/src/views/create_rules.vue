@@ -817,7 +817,7 @@
                 },
                 customRuleId: {
                     getMessage: field => this.$t('quality.开头必须是英文字母，中间可以包含英文，数字，中划线'),
-                    validate: value => /^[a-zA-Z]([a-z|A-Z|0-9|-]+)*$/.test(value)
+                    validate: value => /^[a-z][a-z0-9-]*$/i.test(value)
                 }
             }
         },

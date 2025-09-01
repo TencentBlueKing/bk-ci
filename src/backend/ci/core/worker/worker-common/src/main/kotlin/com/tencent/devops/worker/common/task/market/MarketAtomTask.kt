@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.META_DATA
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
@@ -926,6 +927,7 @@ open class MarketAtomTask : ITask() {
         )
         try {
             val artifacts = output[VALUE] as List<String>
+            val metadata = output[META_DATA]?.let { it as Map<String, String> } ?: emptyMap()
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
                 if (artifactoryType == ArtifactoryType.PIPELINE.name) {
@@ -933,7 +935,8 @@ open class MarketAtomTask : ITask() {
                         filePath = artifact,
                         workspace = atomWorkspace,
                         buildVariables = buildVariables,
-                        token = token
+                        token = token,
+                        metadata = metadata
                     )
                 } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
                     output[PATH] ?: throw TaskExecuteException(
@@ -947,7 +950,8 @@ open class MarketAtomTask : ITask() {
                         destPath = destPath,
                         workspace = atomWorkspace,
                         buildVariables = buildVariables,
-                        token = token
+                        token = token,
+                        metadata = metadata
                     )
                 }
             }

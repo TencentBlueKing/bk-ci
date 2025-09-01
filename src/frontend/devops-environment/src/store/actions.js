@@ -26,8 +26,9 @@ const actions = {
     /**
      * 环境列表
      */
-    requestEnvList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}`).then(response => {
+    requestEnvList ({ commit }, { projectId, params }) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}?${query}`).then(response => {
             return response
         })
     },
@@ -130,6 +131,11 @@ const actions = {
             return response
         })
     },
+    batchEditTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/batchEditTag?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
     /**
      * 环境的节点列表
      */
@@ -173,9 +179,10 @@ const actions = {
     /**
      * 生成构建机命令
      */
-    requestDevCommand ({ commit }, { projectId, model, zoneName }) {
-        const urls = zoneName ? `${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateLink?zoneName=${zoneName}` : `${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateLink`
-        return vue.$ajax.get(urls).then(response => {
+    requestDevCommand ({ commit }, { projectId, model, params }) {
+        const queryString = new URLSearchParams(params).toString()
+
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/os/${model}/generateBatchInstallLink?${queryString}`).then(response => {
             return response
         })
     },

@@ -104,8 +104,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
-    override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
-        return Result(envService.listEnvironment(userId, projectId))
+    override fun list(
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?
+    ): Result<List<EnvWithPermission>> {
+        return Result(
+            envService.listEnvironment(
+                userId = userId,
+                projectId = projectId,
+                envName = envName,
+                envType = envType,
+                nodeHashId = nodeHashId
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])

@@ -151,8 +151,8 @@ class PipelineYamlFileManager @Autowired constructor(
                         commit = FileCommit(
                             commitId = commit.sha,
                             commitMsg = commit.message,
-                            commitTime = commit.commitTime,
-                            committer = commit.committer.name
+                            commitTime = commit.commitTime ?: LocalDateTime.now(),
+                            committer = commit.committer?.name ?: ""
                         )
                     )
                     yamlFileEvents.add(yamlFileEvent)
@@ -327,7 +327,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     )
                 }
                 lock.lock()
-                val defaultBranch = serverRepository.defaultBranch
+                val defaultBranch = serverRepository.defaultBranch!!
                 val ref = when {
                     targetAction == CodeTargetAction.COMMIT_TO_MASTER -> defaultBranch
                     targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> defaultBranch
@@ -514,7 +514,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 blobId = content.blobId!!,
                 ref = ref,
                 commitId = commit.sha,
-                commitTime = commit.commitTime,
+                commitTime = commit.commitTime ?: LocalDateTime.now(),
                 pipelineId = pipelineId,
                 status = if (ref == defaultBranch) {
                     PipelineYamlStatus.OK.name
@@ -531,7 +531,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 filePath = filePath,
                 blobId = content.blobId,
                 commitId = commit.sha,
-                commitTime = commit.commitTime,
+                commitTime = commit.commitTime ?: LocalDateTime.now(),
                 ref = ref,
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,

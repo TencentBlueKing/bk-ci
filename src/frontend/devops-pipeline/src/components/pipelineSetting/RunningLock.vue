@@ -51,6 +51,7 @@
                     </label>
                 </div>
                 <bk-radio-group
+                    class="variable-radio"
                     v-model="proxyFailIfVariableInvalid"
                     @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
                 >
@@ -215,6 +216,7 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
+    import Vue from 'vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
@@ -235,7 +237,7 @@
                     return this.pipelineSetting.failIfVariableInvalid ?? false
                 },
                 set (val) {
-                    this.pipelineSetting.failIfVariableInvalid = val
+                    Vue.set(this.pipelineSetting, 'failIfVariableInvalid', val)
                 }
             },
             runTypeMap () {
@@ -346,6 +348,10 @@
             color: #63656E;
             font-size: 12px;
             font-weight: 500;
+
+            .variable-radio .bk-form-radio {
+                display: inline-block !important;
+            }
         }
         .single-lock-sub-form {
             margin-bottom: 20px;

@@ -492,7 +492,9 @@
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
                     const atomMap = {
                         codeTGitWebHookTrigger: CodeWebHookTrigger,
-                        codeP4WebHookTrigger: CodeWebHookTrigger
+                        codeP4WebHookTrigger: CodeWebHookTrigger,
+                        codeScmGitWebHookTrigger: CodeWebHookTrigger,
+                        codeScmSvnWebHookTrigger: CodeWebHookTrigger
                     }
                     return atomMap[this.atomCode] || NormalAtomV2
                 }

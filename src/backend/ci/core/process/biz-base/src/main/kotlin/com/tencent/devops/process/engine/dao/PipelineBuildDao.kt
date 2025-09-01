@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -1678,6 +1679,7 @@ class PipelineBuildDao {
     fun updateArtifactList(
         dslContext: DSLContext,
         artifactList: String?,
+        artifactQualityList: String?,
         projectId: String,
         pipelineId: String,
         buildId: String
@@ -1685,6 +1687,7 @@ class PipelineBuildDao {
         val success = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
+                .set(ARTIFACT_QUALITY_INFO, artifactQualityList)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -1693,6 +1696,7 @@ class PipelineBuildDao {
         return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
+                .set(ARTIFACT_QUALITY_INFO, artifactQualityList)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -1983,6 +1987,9 @@ class PipelineBuildDao {
                     artifactList = t.artifactInfo?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<FileInfo>
                     },
+                    artifactQualityList = t.artifactQualityInfo?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<ArtifactQualityMetadataAnalytics>
+                    },
                     retryFlag = t.isRetry,
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
@@ -2050,6 +2057,9 @@ class PipelineBuildDao {
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
                     artifactList = t.artifactInfo?.let { self ->
                         JsonUtil.to(self, object : TypeReference<List<FileInfo>?>() {})
+                    },
+                    artifactQualityList = t.artifactQualityInfo?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<ArtifactQualityMetadataAnalytics>
                     },
                     buildMsg = t.buildMsg,
                     errorType = t.errorType,

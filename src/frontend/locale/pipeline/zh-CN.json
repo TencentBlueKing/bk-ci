@@ -332,7 +332,7 @@
     },
     "disableSetting": "禁用设置",
     "stopWhenNewCome": "取消正在运行的构建",
-    "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持的上下文变量：${{ci.pipeline_id}} | ${{ci.branch}}",
+    "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持在启动阶段能确定值的变量，比如 ${{ci.pipeline_id}}、${{ci.branch}}、${{variables.a}} (前提是a在启动时值已明确)等",
     "notify": "通知",
     "auth": "权限",
     "authManage": "权限管理",
@@ -1194,7 +1194,8 @@
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
     "minutes": "分钟",
-    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'",
+    "paramLengthLimitTips": "流水线变量［{0}］长度［{1}］超过限制［{2}］"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1744,6 +1745,7 @@
     "下次：": "下次：",
     "小时": "小时"
   },
+  "validVariableFormat": "请输入有效的变量格式",
   "enterRepoAlias": "请输入代码库别名",
   "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
   "addParam": "添加参数",
@@ -1753,6 +1755,12 @@
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
   "notGrouped": "未分组",
+  "attributeValue": "属性值",
+  "attributeName": "属性名",
+  "metadataAttributeName": "元数据属性名",
+  "metadataAttributeValue": "元数据属性值",
+  "artifactQuality": "制品质量",
+  "totalArtifactCount": "共 {0} 个",
   "noArchivedPipelines": "暂无已存档流水线，不用操作",
   "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。"
 }

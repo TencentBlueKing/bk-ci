@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
@@ -906,6 +907,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         }
         return Result(
             data = pipelineRuntimeService.getTopParentPipelineByBuildId(buildId)
+        )
+    }
+
+    override fun getLatestBuildInfo(
+        projectId: String,
+        pipelineId: String,
+        debug: Boolean?
+    ): Result<BuildInfo?> {
+        return Result(
+            pipelineRuntimeService.getLastTimeBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                debug = debug ?: false
+            )
         )
     }
 

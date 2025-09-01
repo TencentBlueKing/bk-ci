@@ -92,6 +92,7 @@ const val LABEL = "label" // 标签
 const val NO_LABEL = "noLabel" // 无标题
 const val URL = "url" // url链接
 const val PATH = "path" // 路径
+const val META_DATA = "metadata" // 制品元数据
 const val ARTIFACTORY_TYPE = "artifactoryType" // 归档仓库类型
 const val REPORT_TYPE = "reportType" // 报告类型
 const val SHOULD_ARCHIVE_TO_PARENT_PIPELINE = "shouldArchiveToParentPipeline"

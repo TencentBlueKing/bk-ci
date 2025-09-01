@@ -88,6 +88,19 @@
                 @page-limit-change="handleLimitChange"
             >
                 <bk-table-column
+                    :width="32"
+                    :resizable="false"
+                >
+                    <template v-slot="{ row }">
+                        <div
+                            v-if="row.artifactQuality && Object.keys(row.artifactQuality).length >= 3"
+                            @click.stop="toggleRowShowAll(row)"
+                        >
+                            <i :class="['devops-icon', 'shape-icon', row.showAll ? 'icon-down-shape' : 'icon-right-shape']" />
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
                     v-for="col in tableColumnFields"
                     v-bind="col"
                     :prop="col.id"
@@ -246,6 +259,30 @@
                         <span v-else>--</span>
                     </template>
                     <template
+                        v-else-if="col.id === 'artifactQuality'"
+                        v-slot="{ row }"
+                    >
+                        <div
+                            v-if="row.artifactQuality && Object.keys(row.artifactQuality).length"
+                            class="artifact-quality"
+                        >
+                            <ArtifactQuality
+                                :data="row.showAll ? row.artifactQuality : getSlicedData(row)"
+                            />
+                            <div
+                                v-if="Object.keys(row.artifactQuality).length >= 3"
+                                class="more-btn"
+                                @click.stop="toggleRowShowAll(row)"
+                            >
+                                <span>
+                                    {{ row.showAll ? $t('settings.fold') : $t('totalArtifactCount', [Object.keys(row.artifactQuality).length]) }}
+                                    <i :class="['devops-icon', 'angle-icon', row.showAll ? 'icon-angle-up' : 'icon-angle-down']" />
+                                </span>
+                            </div>
+                        </div>
+                        <span v-else>--</span>
+                    </template>
+                    <template
                         v-else-if="col.id === 'startType'"
                         v-slot="props"
                     >
@@ -283,6 +320,7 @@
                                     ref="remarkInput"
                                     rows="3"
                                     :disabled="isChangeRemark"
+                                    :maxlength="4096"
                                     class="remark-input"
                                     v-model.trim="tempRemark"
                                 />
@@ -571,6 +609,7 @@
     import StageSteps from '@/components/StageSteps'
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
+    import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
@@ -594,6 +633,7 @@
             MaterialItem,
             FilterBar,
             TableColumnSetting,
+            ArtifactQuality,
             EmptyException
         },
         props: {
@@ -768,6 +808,7 @@
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories,
                         stageStatus,
+                        showAll: false,
                         errorInfoList:
                             (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
                                 ? item.errorInfoList.slice(0, 1)
@@ -851,6 +892,18 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+
+            getSlicedData (row) {
+                const keys = Object.keys(row.artifactQuality)
+                const slicedKeys = keys.slice(0, 2)
+                return slicedKeys.reduce((obj, key) => {
+                    obj[key] = row.artifactQuality[key]
+                    return obj
+                }, {})
+            },
+            toggleRowShowAll (row) {
+                row.showAll = !row.showAll
+            },
             updateTableHeight () {
                 this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
@@ -1343,6 +1396,28 @@
                 pointer-events: auto;
             }
         }
+      }
+      .shape-icon {
+        color: #C4C6CC;
+      }
+      .angle-icon {
+        margin-left: 4px;
+        font-size: 10px;
+      }
+      .more-btn {
+        min-width: 80px;
+        max-width: 90px;
+        margin-top: 3px;
+        background: #FAFBFD;
+        text-align: center;
+        border: 1px solid #DCDEE5;
+        border-radius: 2px;
+        padding: 2px;
+        font-size: 12px;
+        color: #3A84FF;
+      }
+      .artifact-quality {
+        padding: 10px 0;
       }
       .trigger-cell {
         display: flex;

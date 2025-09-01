@@ -30,10 +30,12 @@ package com.tencent.devops.worker.common.api.report
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.pojo.ReportPluginConfig
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.plugin.worker.task.archive.ReportArchiveTask
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -79,7 +81,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         name: String,
         reportType: String?,
         reportEmail: ReportEmail?,
-        token: String?
+        token: String?,
+        compressed: Boolean,
     ): Result<Boolean> {
         createReportRecordToBkRepo(
             buildVariables = buildVariables,
@@ -87,7 +90,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             indexFile = indexFile,
             reportName = name,
             reportType = reportType,
-            token = token
+            token = token,
+            compressed = compressed
         )
         val indexFileEncode = encode(indexFile)
         val nameEncode = encode(name)
@@ -113,7 +117,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         indexFile: String,
         reportName: String,
         reportType: String?,
-        token: String?
+        token: String?,
+        compressed: Boolean
     ) {
         val userId = buildVariables.variables[PIPELINE_START_USER_ID].toString()
         val projectId = buildVariables.projectId
@@ -132,7 +137,11 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             emptyFile.delete()
             filePath
         } else {
-            "/$pipelineId/$buildId/$taskId/$indexFile"
+            if (compressed) {
+                "/$pipelineId/$buildId/$taskId/${ReportArchiveTask.COMPRESS_REPORT_FILE_NAME}"
+            } else {
+                "/$pipelineId/$buildId/$taskId/$indexFile"
+            }
         }
 
         bkrepoResourceApi.saveMetadata(userId, projectId, "report", fullPath, metadata)
@@ -323,5 +332,26 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             "getParentPipelineBuildInfo error "
         )
         return objectMapper.readValue(responseContent)
+    }
+
+
+    override fun getPluginConfig(): Result<ReportPluginConfig> {
+        val path = "/ms/artifactory/api/build/artifactories/conf/report"
+        val request = buildGet(path)
+        return try {
+            val responseContent = request(
+                request,
+                "get plugin config fail"
+            )
+            objectMapper.readValue(responseContent)
+        } catch (e: Exception) {
+            logger.warn(e.message)
+            Result(ReportPluginConfig(
+                enableCompress = false,
+                enableCompressPipelines = emptyList(),
+                compressThreshold = Long.MAX_VALUE
+            ))
+        }
+
     }
 }
