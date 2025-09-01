@@ -1081,7 +1081,7 @@ interface ApigwRemoteDevResource {
 
     @Operation(summary = "工蜂仓库绑定蓝盾云研发", tags = ["v4_app_remotedev_tgit_bind_remotedev_project"])
     @POST
-    @Path("tgit_bind_remotedev_project")
+    @Path("/tgit_bind_remotedev_project")
     fun tgitBindRemotedevProject(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
