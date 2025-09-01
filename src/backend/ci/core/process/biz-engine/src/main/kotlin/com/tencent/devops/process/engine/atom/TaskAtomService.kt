@@ -226,6 +226,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
+            labels[PipelineBuildStatusBroadCastEvent.Labels::specialStep.name] = VMUtils.getVmLabel(task.taskId)
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(task.taskType) == null) {
                 val taskParams = task.taskParams
@@ -289,9 +290,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 labels[PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name] = timeCost?.queueCost
                 labels[PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name] = timeCost?.waitCost
                 labels[PipelineBuildStatusBroadCastEvent.Labels::startTime.name] = recordTask?.startTime?.timestamp()
-                labels[PipelineBuildStatusBroadCastEvent.Labels::specialStep.name] = VMUtils.getVmLabel(
-                    recordTask?.taskId ?: ""
-                )
                 if (atomResponse.buildStatus.isFailure()) {
                     labels[PipelineBuildStatusBroadCastEvent.Labels::errorCode.name] = atomResponse.errorCode
                     labels[PipelineBuildStatusBroadCastEvent.Labels::errorType.name] = atomResponse.errorType
