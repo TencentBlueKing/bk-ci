@@ -184,19 +184,13 @@ class PipelineBuildCheckRunService @Autowired constructor(
                 )
                 when {
                     // 如果当前没有最新的构建检查或者最近的构建检查是当前构建,则写入当前构建到检查
-                    latestCheckRunRecord == null || buildCheckRun.buildNum == latestCheckRunRecord.buildNum -> {
+                    // 如果当前构建的构建号大于最新的构建检查,则用当前构建覆盖构建检查
+                    latestCheckRunRecord == null ||
+                            buildCheckRun.buildNum == latestCheckRunRecord.buildNum ||
+                            buildCheckRun.buildNum > latestCheckRunRecord.buildNum -> {
                         writeBuildCheckRun(
                             repoHashId = buildCheckRun.repoHashId,
                             checkRunId = buildCheckRun.checkRunId,
-                            checkRunContext = checkRunContext
-                        )
-                    }
-
-                    // 如果当前构建的构建号大于最新的构建检查,则用当前构建覆盖构建检查
-                    buildCheckRun.buildNum > latestCheckRunRecord.buildNum -> {
-                        writeBuildCheckRun(
-                            repoHashId = buildCheckRun.repoHashId,
-                            checkRunId = latestCheckRunRecord.checkRunId,
                             checkRunContext = checkRunContext
                         )
                     }
