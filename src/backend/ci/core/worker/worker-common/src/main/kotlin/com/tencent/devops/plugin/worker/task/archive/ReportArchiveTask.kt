@@ -204,7 +204,7 @@ class ReportArchiveTask : ITask() {
             compressed = compressed
         )
         if (shouldArchiveToParentPipeline) {
-            //异步处理
+            // 异步处理
             thread {
                 try {
                     api.createParentReportRecord(
@@ -273,7 +273,10 @@ class ReportArchiveTask : ITask() {
                         )
                     }
                 } catch (ignore: Throwable) {
-                    LoggerService.addNormalLine("upload report to parent pipeline failed: ${file.name}, failed message ${ignore.message}")
+                    LoggerService.addNormalLine(
+                        "upload report to parent pipeline failed:" +
+                                " ${file.name}, failed message ${ignore.message}"
+                    )
                 }
             }
             if (allFileList.size > 10) {
@@ -293,7 +296,10 @@ class ReportArchiveTask : ITask() {
                 }
             }
         } catch (ignore: Throwable) {
-            LoggerService.addNormalLine("upload report to parent pipeline failed: ${ignore.message}")
+            LoggerService.addNormalLine(
+                "upload report to parent pipeline failed:" +
+                        " ${ignore.message}"
+            )
             logger.error("upload report to parent pipeline failed", ignore)
         }
     }
@@ -373,8 +379,9 @@ class ReportArchiveTask : ITask() {
         val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
         val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
         val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
-        return "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE)
-                && parentProjectId != null
-                && parentPipelineId != null && parentBuildId != null
+        return "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE) &&
+                parentProjectId != null &&
+                parentPipelineId != null &&
+                parentBuildId != null
     }
 }

@@ -2083,7 +2083,7 @@ class PipelineBuildDao {
         buildId: String
     ): Record6<String, String, String, String, Int, Int>? {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(BUILD_ID, PROJECT_ID, PIPELINE_ID, PARENT_BUILD_ID,VERSION,STATUS).from(this)
+            dslContext.select(BUILD_ID, PROJECT_ID, PIPELINE_ID, PARENT_BUILD_ID, VERSION, STATUS).from(this)
                 .where((BUILD_ID.eq(buildId)))
                 .fetchOne()
         }

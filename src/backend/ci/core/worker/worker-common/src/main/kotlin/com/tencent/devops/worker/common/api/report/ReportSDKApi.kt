@@ -128,5 +128,5 @@ interface ReportSDKApi : WorkerRestApiSDK {
     /**
      * 获取父流水线构建信息
      */
-    fun getParentPipelineBuildInfo(buildId: String):Result<BuildBasicInfo>
+    fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo>
 }
