@@ -139,7 +139,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         groupName: String,
-        varName: String,
+        varName: String?,
         referType: PublicVerGroupReferenceTypeEnum?,
         version: Int?,
         page: Int,

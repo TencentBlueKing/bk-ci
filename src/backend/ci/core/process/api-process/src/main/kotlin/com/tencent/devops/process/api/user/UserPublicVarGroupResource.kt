@@ -32,10 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
@@ -186,9 +185,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "变量名称", required = true)
+        @Parameter(description = "变量名称", required = false)
         @QueryParam("varName")
-        varName: String,
+        varName: String? = null,
         @Parameter(description = "引用类型", required = false)
         @QueryParam("referType")
         referType: PublicVerGroupReferenceTypeEnum? = null,
