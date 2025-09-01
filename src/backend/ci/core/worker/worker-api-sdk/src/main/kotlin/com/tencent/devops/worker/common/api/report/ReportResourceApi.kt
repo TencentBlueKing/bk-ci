@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -175,6 +176,10 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             enableCompressPipelines = emptyList(),
             compressThreshold = Long.MAX_VALUE
         ))
+    }
+
+    override fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
+        TODO("Not yet implemented")
     }
 
     companion object {
