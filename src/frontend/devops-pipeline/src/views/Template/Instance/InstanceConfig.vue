@@ -14,9 +14,21 @@
             <div slot="title">
                 <p>
                     {{ $t('template.notSpecifiedRef.tips1') }}
-                    <span class="doc-btn">
-                        {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
-                    </span>
+                    <bk-popover
+                        placement="top"
+                        width="620"
+                    >
+                        <span class="doc-btn">
+                            {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
+                        </span>
+                        <div slot="content">
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips1') }}</p>
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips2') }}</p>
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips3') }}</p>
+                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips4') }}</p>
+                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips5') }}</p>
+                        </div>
+                    </bk-popover>
                 </p>
                 <p>
                     {{ $t('template.notSpecifiedRef.tips2') }}

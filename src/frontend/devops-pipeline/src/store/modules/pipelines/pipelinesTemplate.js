@@ -39,7 +39,7 @@ const mutations = {
 
 const actions = {
     installPipelineTemplate (_, params) {
-        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install/v2`, params).then(response => {
         })
     },
     requestInstallTemplate (_, params) {

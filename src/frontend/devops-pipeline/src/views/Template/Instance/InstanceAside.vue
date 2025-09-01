@@ -156,6 +156,10 @@
     })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     async function checkPipelineName (val) {
+        if (renderInstanceList.value.find(i => i.pipelineName === val)) {
+            isErrorName.value = true
+            return
+        }
         try {
             isErrorName.value = await proxy.$store.dispatch('pipelines/checkPipelineName', {
                 projectId: projectId.value,
