@@ -129,8 +129,8 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         val defaultBranch = serverRepo.defaultBranch!!
         val fork = sourceRepo.id != targetRepo.id
 
-        val targetFilePaths = targetFileTrees.map { it.path }
-        val sourceFilePaths = sourceFileTrees.map { it.path }
+        val targetFilePaths = targetFileTrees.map { GitActionCommon.getCiFilePath(it.path) }
+        val sourceFilePaths = sourceFileTrees.map { GitActionCommon.getCiFilePath(it.path) }
 
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
 
