@@ -271,7 +271,7 @@ interface UserPublicVarGroupResource {
 
     @Operation(summary = "获取流水线关联公共变量组信息")
     @GET
-    @Path("/refers/{referId}/group/info")
+    @Path("/projects/group/info")
     fun listProjectVarGroupInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
