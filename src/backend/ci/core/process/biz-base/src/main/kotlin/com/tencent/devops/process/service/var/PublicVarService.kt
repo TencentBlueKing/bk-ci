@@ -178,6 +178,7 @@ class PublicVarService @Autowired constructor(
 
         varGroupRefs.forEach { groupRef ->
             val versionName = groupRef.versionName
+            // 未指定具体版本的跳过
             if (versionName.isNullOrBlank() || versionName == "latest") {
                 return@forEach
             }

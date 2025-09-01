@@ -253,7 +253,7 @@ class PublicVarGroupDao {
             } else {
                 conditions.add(VERSION.eq(version))
             }
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java) ?: 0
         }

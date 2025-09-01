@@ -68,7 +68,9 @@ class PublicVarReferInfoService @Autowired constructor(
                 val publicVarReferPOs = mutableListOf<PipelinePublicVarReferPO>()
                 publicVarGroupRefs.forEach { ref ->
                     val groupName = ref.groupName
-                    val version = ref.versionName?.substring(1)?.toInt() ?: return@forEach
+                    val version = ref.versionName?.takeIf {
+                        it.startsWith("v")
+                    }?.substring(1)?.toIntOrNull() ?: return@forEach
 
                     val publicVars = publicVarDao.queryVarNamesByGroupName(
                         dslContext = context,
