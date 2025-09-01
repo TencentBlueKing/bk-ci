@@ -131,15 +131,4 @@ interface StoreComponentQueryService {
         osName: String? = null,
         osArch: String? = null
     ): VersionInfo?
-
-    /**
-     * 获取git仓库最近commit信息
-     */
-    fun getStoreGitRecentCommitMessages(
-        userId: String,
-        branch: String?,
-        codeSrc: String,
-        gitProjectId: Long?,
-        commitNumber: Int
-    ): String
 }

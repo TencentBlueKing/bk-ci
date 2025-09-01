@@ -725,4 +725,20 @@ class ServiceGitResourceImpl @Autowired constructor(
             gitCreateMergeRequest = gitCreateMergeRequest
         )
     }
+
+    override fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String,
+        gitProjectId: Long?,
+        commitNumber: Int
+    ): Result<String> {
+        return gitService.getRecentGitCommitMessages(
+            userId = userId,
+            branch = branch,
+            codeSrc = codeSrc,
+            gitProjectId = gitProjectId,
+            commitNumber = commitNumber
+        )
+    }
 }

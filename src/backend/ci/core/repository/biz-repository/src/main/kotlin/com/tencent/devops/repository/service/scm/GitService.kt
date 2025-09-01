@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.ID
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
@@ -92,15 +93,8 @@ import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import java.io.File
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.Executors
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -116,12 +110,21 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
+import java.io.File
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.util.Base64
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val gitOauthService: IGitOauthService,
 ) : IGitService {
 
     companion object {
@@ -2106,5 +2109,62 @@ class GitService @Autowired constructor(
             .setCredentialsProvider(credentialsProvider)
             .call()
         cloneRepo.close()
+    }
+
+    override fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String,
+        gitProjectId: Long?,
+        commitNumber: Int
+    ): Result<String> {
+        val accessToken = gitOauthService.getAccessToken(userId)?.accessToken
+        if (accessToken.isNullOrBlank()) {
+            throw NotFoundException("cannot found access token for user($userId)")
+        }
+        val projectId = gitProjectId
+            ?: getGitProjectInfo(
+                token = accessToken,
+                id = GitUtils.getProjectName(codeSrc),
+                tokenType = TokenTypeEnum.OAUTH
+            ).data?.id
+
+        if (projectId == null) {
+            throw NotFoundException("cannot found git projectId for codeSrc($codeSrc)")
+
+        }
+        return Result(
+            getCommits(
+                gitProjectId = projectId,
+                branch = branch ?: MASTER,
+                token = accessToken,
+                tokenType = TokenTypeEnum.OAUTH,
+                page = 1,
+                perPage = commitNumber,
+                since = null,
+                until = null,
+                filePath = null
+            ).data?.let { commits ->
+                processCommits(commits)
+            } ?: ""
+        )
+    }
+
+    fun processCommits(commits: List<Commit>): String {
+        // 过滤合并提交信息
+        val filteredCommits = commits.filter { commit ->
+            commit.message?.takeIf { it.isNotBlank() }
+                ?.trimStart()
+                ?.startsWith("Merge ", ignoreCase = true)
+                ?.not()
+                ?: false
+        }
+        // 最早的排最前面
+        val sortedCommits = filteredCommits.sortedBy {
+            it.committedDate?.let { timeStr -> DateTimeUtil.zoneDateToDate(timeStr) }
+        }
+        return sortedCommits.mapIndexed { index, commit ->
+            "${index + 1}. ${commit.message}"
+        }.joinToString("")
     }
 }
