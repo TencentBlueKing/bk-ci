@@ -144,4 +144,32 @@ interface BuildFileResource {
         @QueryParam("customFilePath")
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>
+
+
+    @Operation(summary = "归档文件到父流水线")
+    @POST
+    @Path("projectId/{projectId}/pipelineId/{pipelineId}/buildId/{buildId}/file/archiveToParentPipeline")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun archiveFileToParentPipeline(
+        @Parameter(description = "projectCode", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "buildId", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "文件类型", required = true)
+        @QueryParam("fileType")
+        fileType: FileTypeEnum,
+        @Parameter(description = "自定义文件路径", required = false)
+        @QueryParam("customFilePath")
+        customFilePath: String?,
+        @Parameter(description = "文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }
