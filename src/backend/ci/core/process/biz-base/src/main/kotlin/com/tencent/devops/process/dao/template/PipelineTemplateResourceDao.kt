@@ -408,7 +408,7 @@ class PipelineTemplateResourceDao {
                 // 优先处理批量查询条件
                 if (!templateVersionPairs.isNullOrEmpty()) {
                     val pairConditions = templateVersionPairs!!.map { pair ->
-                        DSL.row(TEMPLATE_ID, SETTING_VERSION).eq(DSL.row(pair.templateId, pair.version))
+                        DSL.row(TEMPLATE_ID, VERSION).eq(DSL.row(pair.templateId, pair.version.toLong()))
                     }
                     conditions.add(DSL.or(pairConditions))
                 } else {
