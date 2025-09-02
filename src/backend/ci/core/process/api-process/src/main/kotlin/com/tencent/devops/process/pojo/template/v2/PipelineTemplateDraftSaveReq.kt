@@ -9,8 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模板更新请求体")
 data class PipelineTemplateDraftSaveReq(
-    @get:Schema(title = "草稿源版本", required = true)
-    val baseVersion: Long? = null,
+    @get:Schema(title = "草稿源版本，若为空，默认最新版本", required = true)
+    var baseVersion: Long? = null,
     @get:Schema(title = "logo地址", required = false)
     val logoUrl: String? = null,
     @get:Schema(title = "是否开启PAC", required = false)

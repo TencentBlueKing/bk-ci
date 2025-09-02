@@ -120,6 +120,11 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                     latestVersionStatus = VersionStatus.COMMITTING
                 )
             }
+
+            baseVersion = baseVersion ?: templateInfo.releasedVersion.takeIf {
+                templateInfo.latestVersionStatus != VersionStatus.COMMITTING
+            }
+
             // 获取基础版本名称
             val baseResource = baseVersion?.let {
                 pipelineTemplateResourceService.get(
