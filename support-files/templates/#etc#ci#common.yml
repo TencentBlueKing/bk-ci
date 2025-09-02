@@ -264,6 +264,9 @@ spring:
       - index: 67
         name: T_PIPELINE_SUB_REF
         databaseShardingStrategy: SHARDING
+      - index: 68
+        name: T_PIPELINE_BUILD_CHECK_RUN
+        broadcastFlag: true
 
 endpoints:
   metrics:
