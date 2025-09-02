@@ -414,7 +414,7 @@ class PipelineTemplateResourceDao {
                 } else {
                     // 如果没有批量查询条件，则处理单个 templateId 和 version 条件
                     if (templateId != null) conditions.add(TEMPLATE_ID.eq(templateId))
-                    if (version != null) conditions.add(SETTING_VERSION.eq(settingVersion))
+                    if (version != null) conditions.add(VERSION.eq(version))
                     if (!versions.isNullOrEmpty()) conditions.add(VERSION.`in`(versions))
                 }
                 if (type != null) conditions.add(TYPE.eq(type!!.value))
