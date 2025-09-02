@@ -29,7 +29,6 @@ package com.tencent.devops.repository.service.hub
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
