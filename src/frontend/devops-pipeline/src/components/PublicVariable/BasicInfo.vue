@@ -128,7 +128,7 @@
         EDIT_VARIABLE,
         VARIABLE,
         CONSTANT
-    } from '@/store/modules/publicVar/constants.js'
+    } from '@/store/modules/publicVar/constants'
     import { OPERATE_TYPE } from '../../store/modules/publicVar/constants'
 
     const props = defineProps({
@@ -203,8 +203,18 @@
     const variableList = computed(() => {
         return [
             {
-                title: proxy.$t('publicVar.params'),
-                data: publicVars.value.filter(i => i.type === VARIABLE),
+                title: proxy.$t('newui.pipelineParam.buildParam'),
+                data: publicVars.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required),
+                emptyBtnText: proxy.$t('publicVar.addParam'),
+                emptyBtnFn: () => props?.handleAddParam(VARIABLE),
+                handleEditParam: props.handleEditParam,
+                handleDeleteParam: props.handleDeleteParam,
+                handleCopyParam: props.handleCopyParam,
+                key: VARIABLE
+            },
+            {
+                title: proxy.$t('newui.pipelineParam.otherVar'),
+                data: publicVars.value.filter(i => i.type === VARIABLE && !i.buildFormProperty.required),
                 emptyBtnText: proxy.$t('publicVar.addParam'),
                 emptyBtnFn: () => props?.handleAddParam(VARIABLE),
                 handleEditParam: props.handleEditParam,

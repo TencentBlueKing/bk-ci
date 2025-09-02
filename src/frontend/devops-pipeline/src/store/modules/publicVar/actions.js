@@ -26,17 +26,19 @@ const actions = {
     },
     // 导出公共变量组（yaml）
     exportVariable (_, { projectId, groupName }) {
-        // const fn = (blob) => {
-        //     const a = document.createElement('a')
-        //     const url = window.URL || window.webkitURL || window.moxURL
-        //     a.href = url.createObjectURL(blob)
-        //     if (name) a.download = name
-        //     document.body.appendChild(a)
-        //     a.click()
-        //     document.body.removeChild(a)
-        // }
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/projects/${projectId}/groups/${groupName}/export`).then(response => {
-            return response.data
+        const fn = (blob) => {
+            const a = document.createElement('a')
+            const url = window.URL || window.webkitURL || window.moxURL
+            a.href = url.createObjectURL(blob)
+            if (groupName) a.download = `${groupName}.yaml`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        }
+
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/projects/${projectId}/groups/${groupName}/export`).then(res => {
+            const blob = new Blob([res], { type: 'text/yaml;charset=utf-8' })
+            fn(blob)
         })
     },
     // 获取变量组列表
@@ -48,6 +50,12 @@ const actions = {
             return response.data
         })
     },
+    // 获取流水线下使用的变量组列表
+    fetchAllVariableGroupByPipeline (_, { pipelineId, referType }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/refers/${pipelineId}/group/info?referType=${referType}`).then(response => {
+            return response.data
+        })
+    },
     // 删除变量组
     deleteVariableGroup (_, { groupName }) {
         return ajax.delete(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/${groupName}`).then(response => {
@@ -56,7 +64,7 @@ const actions = {
     },
     // 获取变量组变量列表
     getVariables (_, { groupName }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/${groupName}/variables`).then(response => {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/group/${groupName}/variables`).then(response => {
             return response.data
         })
     },
@@ -85,8 +93,8 @@ const actions = {
         })
     },
     // 发布变量组-变更预览
-    getChangePreview (_, { groupName }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/${groupName}/changePreview`, params).then(response => {
+    getChangePreview (_, params) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/changePreview`, params).then(response => {
             return response.data
         })
     },

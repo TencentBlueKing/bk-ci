@@ -1961,7 +1961,7 @@
   "unfollow": "Unfollow template",
   "triggerStepIdNotSet": "The trigger step ID is not set, please set it in the plugin configuration",
   "publicVar": {
-    "variable": "Public Variables",
+    "publicVariable": "Public Variables",
     "publicVarTips": "Only serves as common definitions for project variables; cannot be used for cross-pipeline data transfer",
     "addParamGroup": "Add Variable Group",
     "editParamGroup": "Edit Variable Group",
@@ -2029,6 +2029,16 @@
     "execCount": "Recent Executions (30d)",
     "releaseVarGroup": "Publish Variable Group",
     "confirmDeleteGroup": "Delete this variable group?",
-    "deleteSubTitle": "Group: {0}"
+    "deleteSubTitle": "Group: {0}",
+    "create": "Create",
+    "delete": "Delete",
+    "update": "Edit",
+    "varDesc": "Var Desc",
+    "constantDesc": "Const Desc",
+    "referencesTips": "Linked pipelines/templates will update this constant",
+    "manageGroup": "Manage Variable Groups",
+    "addVarGroup": "Add Variable Group",
+    "varGroup": "Variable Group",
+    "append": "Add"
   }
 }

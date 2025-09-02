@@ -49,7 +49,7 @@
                     name: 'TemplateManageList'
                 },
                 {
-                    label: vm.proxy.$t('publicVar.variable'),
+                    label: vm.proxy.$t('publicVar.publicVariable'),
                     name: 'PublicVarList'
                 }
             ]

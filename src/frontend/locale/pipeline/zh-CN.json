@@ -1964,7 +1964,7 @@
   "unfollow": "取消跟随模板",
   "triggerStepIdNotSet": "触发器缺少 Step ID ，请修改模版补全 Step ID",
   "publicVar": {
-    "variable": "公共变量",
+    "publicVariable": "公共变量",
     "publicVarTips": "仅为项目下变量的公共定义，不支持用于跨流水线数据传递",
     "addParamGroup": "新增变量组",
     "editParamGroup": "编辑变量组",
@@ -2032,6 +2032,16 @@
     "execCount": "最近一个月执行次数",
     "releaseVarGroup": "发布变量组",
     "confirmDeleteGroup": "确认删除该变量组？",
-    "deleteSubTitle": "变量组：{0}"
+    "deleteSubTitle": "变量组：{0}",
+    "create": "创建",
+    "delete": "删除",
+    "update": "修改",
+    "varDesc": "变量描述",
+    "constantDesc": "常量描述",
+    "referencesTips": "以下流水线/模板都将同步更新此常量属性",
+    "manageGroup": "管理变量组",
+    "addVarGroup": "添加变量组",
+    "varGroup": "变量组",
+    "append": "添加"
   }
 }

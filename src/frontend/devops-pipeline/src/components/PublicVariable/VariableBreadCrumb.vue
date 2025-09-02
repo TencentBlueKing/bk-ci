@@ -67,7 +67,7 @@
             }
             const breadCrumbs = computed(() => [
                 {
-                    title: t('publicVar.variable'),
+                    title: t('publicVar.publicVariable'),
                     to: manageRoute
                 }, {
                     slot: VariableNameCrumbItem,

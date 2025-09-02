@@ -1956,7 +1956,7 @@
   "triggerStepIdNotSet": "トリガーにStep IDが不足しています。テンプレートを修正してStep IDを補完してください",
   "pacTemplaneEnableTips": "パイプラインテンプレートはPACモードが有効になっており、コードリポジトリでパイプライン設定を管理できます。",
   "publicVar": {
-    "variable": "パブリック変数",
+    "publicVariable": "パブリック変数",
     "publicVarTips": "プロジェクト内の変数の共通定義のみであり、クロスパイプラインのデータ伝送には使用できません",
     "addParamGroup": "新しい変数グループを追加",
     "editParamGroup": "変数グループを編集",
@@ -2024,6 +2024,16 @@
     "execCount": "直近1ヶ月の実行回数",
     "releaseVarGroup": "変数グループを公開",
     "confirmDeleteGroup": "この変数グループを削除しますか？",
-    "deleteSubTitle": "変数グループ：{0}"
+    "deleteSubTitle": "変数グループ：{0}",
+    "create": "作成",
+    "delete": "削除",
+    "update": "更新",
+    "varDesc": "変数の説明",
+    "constantDesc": "定数の説明",
+    "referencesTips": "以下のパイプライン/テンプレートは、この定数の属性をすべて同期して更新します",
+    "manageGroup": "変数グループの管理",
+    "addVarGroup": "変数グループを追加",
+    "varGroup": "変数グループ",
+    "append": "追加"
   }
 }

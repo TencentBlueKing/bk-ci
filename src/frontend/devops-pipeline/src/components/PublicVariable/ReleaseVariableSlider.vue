@@ -113,12 +113,13 @@
                     ? proxy.$t('publicVar.updateVarGroupSuccess')
                     : proxy.$t('publicVar.newVarGroupSuccess')
             })
-            proxy.$router.push({
-                name: 'PublicVarList',
-                query: {
-                    flagName: groupName
-                }
-            })
+            proxy.$emit('success', groupName)
+            // proxy.$router.push({
+            //     name: 'PublicVarList',
+            //     query: {
+            //         flagName: groupName
+            //     }
+            // })
         } catch (e) {
             proxy.$bkMessage({
                 theme: 'error',

@@ -159,6 +159,16 @@
                             v-if="exceptionType === 'empty'"
                             text
                             class="empty-tips"
+                            v-perm="{
+                                hasPermission: isManage,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'project',
+                                    resourceCode: projectId,
+                                    action: PROJECT_RESOURCE_ACTION.MANAGE
+                                }
+                            }"
                             @click="handleAddGroup"
                         >
                             {{ $t('publicVar.createNow') }}
@@ -173,6 +183,7 @@
                 :show-type="showType"
                 :read-only="readOnly"
                 :handle-edit-group="handleEditGroup"
+                @release-success="handleReleaseSuccess"
             />
             <importParamGroupPopup
                 :is-show.sync="showImportDialog"
@@ -199,7 +210,6 @@
     import ExtMenu from '@/components/pipelineList/extMenu'
     import EmptyException from '@/components/common/exception'
     import ImportParamGroupPopup from './ImportParamGroupPopup.vue'
-    import publicVar from '../../store/modules/publicVar'
 
     const { proxy } = UseInstance()
     const isLoading = ref(false)
@@ -252,7 +262,6 @@
             return acc
         }, {})
     })
-    const flagName = computed(() => proxy.$route.query?.flagName)
     const filterTips = computed(() => searchList.value.map(item => item.name).join('/'))
     const exceptionType = computed(() => searchValue.value.length ? 'search-empty': 'empty')
     const renderTableData = computed(() => {
@@ -434,11 +443,10 @@
     }
     async function handleExportGroup (data, item) {
         try {
-            const res = await proxy.$store.dispatch('publicVar/exportVariable', {
+            await proxy.$store.dispatch('publicVar/exportVariable', {
                 projectId: projectId.value,
                 groupName: item.data.groupName
             })
-            console.log(res, 123)
         } catch (e) {
             console.error(e)
         }
@@ -470,17 +478,6 @@
                 }
             }
         })
-    }
-    async function setNewGroupStyle (groupName) {
-        newNameFlag.value = groupName
-        setTimeout(() => {
-            newNameFlag.value = ''
-            const urlQuery = { ...proxy.$route.query }
-            delete urlQuery['flagName']
-            proxy.$router.push({
-                query: urlQuery
-            })
-        }, 5000)
     }
     async function handleImportSuccess (yaml, name) {
         try {
@@ -514,12 +511,17 @@
             projectId: projectId.value
         })
     }
+    async function handleReleaseSuccess (groupName) {
+        showDetail.value = false
+        await fetchVariableGroupList()
+        newNameFlag.value = groupName
+        setTimeout(() => {
+            newNameFlag.value = ''
+        }, 5000)
+    }
     onMounted(() => {
         fetchVariableGroupList()
         checkViewManageAuth()
-        if (flagName.value) {
-            setNewGroupStyle(flagName.value)
-        }
     })
 </script>
 <style lang="scss">

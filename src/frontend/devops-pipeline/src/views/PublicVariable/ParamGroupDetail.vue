@@ -143,7 +143,13 @@
         </bk-sideslider>
         <VariableGroupPreviewDialog
             :is-show.sync="showPreView"
+            :preview-data="previewData"
             :group-data="groupData"
+            @confirm="handleShowReleaseSlider"
+        />
+        <release-variable-slider
+            :value.sync="showReleaseSlider"
+            @success="handleReleaseSuccess"
         />
     </section>
 </template>
@@ -156,6 +162,7 @@
     import { deepClone } from '../../utils/util'
     import {
         VARIABLE,
+        CONSTANT,
         OPERATE_TYPE
     } from '@/store/modules/publicVar/constants'
     import { navConfirm } from '@/utils/util'
@@ -164,6 +171,7 @@
     import ReferenceList from '@/components/PublicVariable/ReferenceList'
     import ReleaseHistory from '@/components/PublicVariable/ReleaseHistory'
     import PipelineParamForm from '@/components/PipelineEditTabs/components/pipeline-param-form'
+    import ReleaseVariableSlider from '@/components/PublicVariable/ReleaseVariableSlider'
     import VariableGroupPreviewDialog from '@/components/PublicVariable/VariableGroupPreviewDialog'
 
     const { proxy } = UseInstance()
@@ -193,6 +201,8 @@
     ])
     const published = ref(false)
     const showPreView = ref(false)
+    const showReleaseSlider = ref(false)
+    const previewData = ref([])
     const groupData = computed(() => proxy.$store.state.publicVar.groupData)
     const isManage = computed(() => proxy.$store.state.pipelines.isManage)
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -343,6 +353,7 @@
         sliderEditItem.value = {
             ...data,
             id: `${data.id}${data.constant ? '_COPY' : '_copy'}`,
+            name: `${data.name}_copy`,
             published: false
         }
         paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.addParam') : proxy.$t('publicVar.addConst')
@@ -354,15 +365,63 @@
     function resetEditParam (param = {}) {
         sliderEditItem.value = param
     }
+    function getOperateVarTitle (operate, type) {
+        const operateMap = {
+            [OPERATE_TYPE.CREATE]: proxy.$t('publicVar.create'),
+            [OPERATE_TYPE.DELETE]: proxy.$t('publicVar.delete'),
+            [OPERATE_TYPE.UPDATE]: proxy.$t('publicVar.update')
+        }
+        const typeMap = {
+            [VARIABLE]: proxy.$t('publicVar.params'),
+            [CONSTANT]: proxy.$t('publicVar.constant')
+        }
+        return `${operateMap[operate]}${typeMap[type]}`
+    }
+    function getChangesByField (data, field) {
+        if (data?.content?.changes[field]) {
+            return data?.content?.changes[field]
+        }
+        return undefined
+    }
+    async function fetchPreviewData () {
+        try {
+            const res = await proxy.$store.dispatch('publicVar/getChangePreview', groupData.value)
+            previewData.value = res.map(i => {
+                const parseContent = JSON.parse(i.content)
+                return {
+                    ...i,
+                    varName: parseContent.varName,
+                    content: parseContent,
+                    type: parseContent.type,
+                    getChangesByField,
+                    operateTitle: getOperateVarTitle(parseContent.operate, parseContent.type)
+                }
+            })
+
+            if (res.length) {
+                showPreView.value = true
+            } else {
+                showReleaseSlider.value = true
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    function handleShowReleaseSlider () {
+        showPreView.value = false
+        showReleaseSlider.value = true
+    }
     async function handlePreview () {
         if (releasing.value) return
         if (operateType.value === OPERATE_TYPE.CREATE) {
-            proxy?.$router?.push({
-                name: 'VariableRelease'
-            })
+            showReleaseSlider.value = true
         } else {
-            showPreView.value = true
+            fetchPreviewData()
         }
+    }
+    function handleReleaseSuccess (groupName) {
+        showReleaseSlider.value = false
+        proxy.$emit('release-success', groupName)
     }
 </script>
 

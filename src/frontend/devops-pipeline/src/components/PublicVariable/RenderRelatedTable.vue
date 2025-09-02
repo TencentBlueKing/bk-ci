@@ -6,53 +6,24 @@
                     type="right-shape"
                     class="icon-angle-right"
                 />
-                模板(100)
+                {{ tabTitle }}
+                <span v-if="data?.length">
+                    ({{ data.length }})
+                </span>
             </summary>
             <div
                 class="collapse-content"
             >
                 <bk-table
                     class="variable-list-table"
+                    :data="data"
                     max-height="350"
                 >
-                    <!-- <bk-table-column
-                        :label="$t('pipelineName')"
-                        prop="name"
-                    /> -->
                     <bk-table-column
-                        :label="$t('template.name')"
-                        prop="name"
+                        v-for="column in columns"
+                        :key="column.prop"
+                        v-bind="column"
                     />
-                    <bk-table-column
-                        :label="$t('template.type')"
-                        prop="type"
-                    >
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('creator')"
-                        prop="desc"
-                    >
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('publicVar.lastModifiedUser')"
-                        prop="lastModifiedUser"
-                    >
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('publicVar.lastModifiedTime')"
-                        prop="lastModifiedTime"
-                    >
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('publicVar.instanceNum')"
-                        prop="instanceNum"
-                    >
-                    </bk-table-column>
-                    <!-- <bk-table-column
-                        :label="$t('publicVar.execCount')"
-                        prop="execCount"
-                    >
-                    </bk-table-column> -->
                 </bk-table>
             </div>
         </details>
@@ -65,10 +36,12 @@
         VARIABLE
     } from '@/store/modules/publicVar/constants'
     const props = defineProps({
+        tabTitle: String,
         isShow: Boolean,
         data: Object,
         readOnly: Boolean,
-        newParamId: String
+        newParamId: String,
+        columns: Array
     })
 
     function rowClassName ({ row }) {

@@ -3,8 +3,9 @@
         v-model="isShow"
         width="1080"
         :position="dialogPositionConfig"
+        render-directive="if"
         class="variable-group-preview-dialog"
-        @after-leave="handleHideShow"
+        @value-change="handleHideShow"
     >
         <template slot="header">
             <div class="preview-header">
@@ -16,58 +17,111 @@
         </template>
         <div class="preview-content-main">
             <div class="left-wrapper">
-                <div class="tab-item active">
+                <div
+                    v-for="(item, index) in previewData"
+                    :key="item.varName"
+                    :class="{
+                        'tab-item': true,
+                        'active': index === activeIdx
+                    }"
+                    @click="handleToggle(index)"
+                >
                     <div>
-                        <span class="operate-type">修改变量</span>
+                        <span class="operate-type">{{ item.operateTitle }}</span>
                         <span class="var-name">
-                            MAX_COUNT
-                        </span>
-                    </div>
-                </div>
-                <div class="tab-item">
-                    <div>
-                        <span class="operate-type">修改变量</span>
-                        <span class="var-name">
-                            MAX_COUNT
-                        </span>
-                    </div>
-                </div>
-                <div class="tab-item">
-                    <div>
-                        <span class="operate-type">修改变量</span>
-                        <span class="var-name">
-                            MAX_COUNT
+                            {{ item.varName }}
                         </span>
                     </div>
                 </div>
             </div>
-            <div class="right-wrapper">
+            <div
+                v-bkloading="{ isLoading }"
+                class="right-wrapper"
+            >
                 <div class="title">
                     {{ $t('publicVar.modifiedTitle') }}
                 </div>
                 <div class="change-content">
-                    <span class="key">常量别名 </span>
-                    <span class="value">
-                        <span class="current-value">aaa</span>
-                        <Logo
-                            class="arrow-right-icon"
-                            size="14"
-                            name="arrow-right"
-                        />
-                        <span class="after-value">bbb</span>
-                    </span>
+                    <div class="row-item">
+                        <span class="key">
+                            {{ curVarData.type === VARIABLE ? $t('newui.pipelineParam.varAlias') : $t('newui.pipelineParam.constAlias') }}
+                        </span>
+                        <template v-if="curVarData?.content?.changes?.alias">
+                            <span class="value">
+                                <span class="current-value">{{ curVarData.getChangesByField(curVarData, 'alias')?.oldValue }}</span>
+                                <Logo
+                                    class="arrow-right-icon"
+                                    size="18"
+                                    name="arrow-right"
+                                />
+                                <span class="after-value">{{ curVarData.getChangesByField(curVarData, 'alias').newValue }}</span>
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span class="value">
+                                <span class="after-value">{{ curVarData?.content?.alias ?? '--' }}</span>
+                            </span>
+                        </template>
+                    </div>
+                    <div class="row-item">
+                        <span class="key">
+                            {{ curVarData.type === VARIABLE ? $t('publicVar.varDesc') : $t('publicVar.constantDesc') }}
+                        </span>
+                        <template v-if="curVarData?.content?.changes?.desc">
+                            <span class="value">
+                                <span class="current-value">{{ curVarData.getChangesByField(curVarData, 'desc')?.oldValue }}</span>
+                                <Logo
+                                    class="arrow-right-icon"
+                                    size="18"
+                                    name="arrow-right"
+                                />
+                                <span class="after-value">{{ curVarData.getChangesByField(curVarData, 'desc').newValue }}</span>
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span class="value">
+                                <span class="after-value">{{ curVarData?.content?.desc ?? '--' }}</span>
+                            </span>
+                        </template>
+                    </div>
+                    <div class="row-item">
+                        <span class="key">
+                             
+                            {{ curVarData.type === VARIABLE ? $t('publicVar.defaultValue') : $t('newui.pipelineParam.constValue') }}
+                        </span>
+                        <template v-if="curVarData?.content?.changes?.defaultValue">
+                            <span class="value">
+                                <span class="current-value">{{ curVarData.getChangesByField(curVarData, 'defaultValue')?.oldValue }}</span>
+                                <Logo
+                                    class="arrow-right-icon"
+                                    size="18"
+                                    name="arrow-right"
+                                />
+                                <span class="after-value">{{ curVarData.getChangesByField(curVarData, 'defaultValue').newValue }}</span>
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span class="value">
+                                <span class="after-value">{{ curVarData?.content?.defaultValue ?? '--' }}</span>
+                            </span>
+                        </template>
+                    </div>
                 </div>
                 <div class="references-list">
                     <div class="title">
                         <div>
                             {{ $t('publicVar.referencesTitle') }}
                             <span class="references-tips">
-                                以下流水线/模板都将同步更新此常量属性
+                                {{ $t('publicVar.referencesTips') }}
                             </span>
                         </div>
                     </div>
-                    <render-related-table />
-                    <render-related-table />
+                    <render-related-table
+                        v-for="item in referenceList"
+                        v-bind="item"
+                        :key="item.key"
+                        class="related-list"
+                    />
                 </div>
             </div>
         </div>
@@ -83,26 +137,132 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import Logo from '@/components/Logo'
     import RenderRelatedTable from './RenderRelatedTable'
     import UseInstance from '@/hook/useInstance'
+    import { convertTime } from '@/utils/util'
     const { proxy } = UseInstance()
     const props = defineProps({
         isShow: Boolean,
-        groupData: Object
+        groupData: Object,
+        previewData: Object
     })
+    const activeIdx = ref(0)
+    const isLoading = ref(false)
+    const referenceList = ref([])
     const dialogPositionConfig = ref({
         top: window.innerHeight < 800 ? '20' :  window.innerHeight > 1000 ? '8%' : '80'
     })
-    function handleHideShow () {
-        proxy.$emit('update:isShow', false)
+    const curVarData = computed(() => props.previewData[activeIdx.value] ?? {})
+    watch(() => curVarData.value, () => {
+        isLoading.value = true
+        Promise.all([
+            fetchReferenceList('PIPELINE'),
+            fetchReferenceList('TEMPLATE')
+        ]).then(([pipelineRefList, templateRefList]) => {
+            const pipelineRef = {
+                tabTitle: proxy.$t('pipeline'),
+                data: pipelineRefList?.map(i => ({
+                    ...i,
+                    updateTime: convertTime(i.updateTime)
+                })),
+                key: 'pipeline',
+                columns: getColumnsByType('pipeline')
+            }
+            const templateRef = {
+                tabTitle: proxy.$t('template.template'),
+                data: templateRefList?.map(i => ({
+                    ...i,
+                    updateTime: convertTime(i.updateTime)
+                })),
+                key: 'template',
+                columns: getColumnsByType('template')
+            }
+            referenceList.value = [pipelineRef, templateRef]
+        }).finally(() => {
+            isLoading.value = false
+        })
+    }, {
+        immediate: true,
+        deep: true
+    })
+    function getColumnsByType (type = 'pipeline') {
+        return [
+            ...(type === 'pipeline'
+                ? [
+                    {
+                        label: proxy.$t('pipelineName'),
+                        prop: 'referName'
+                    }
+                ] : [
+                    {
+                        label: proxy.$t('template.name'),
+                        prop: 'referName'
+                    },
+                    {
+                        label: proxy.$t('template.type'),
+                        prop: 'referType'
+                    }
+                ]
+            ),
+            {
+                label: proxy.$t('creator'),
+                prop: 'creator'
+            },
+            {
+                label: proxy.$t('publicVar.lastModifiedUser'),
+                prop: 'modifier'
+            },
+            {
+                label: proxy.$t('publicVar.lastModifiedTime'),
+                prop: 'updateTime'
+            },
+            ...(type === 'pipeline'
+                ? [
+                    {
+                        label: proxy.$t('publicVar.execCount'),
+                        prop: 'instanceCount'
+                    }
+                ] : [
+                    {
+                        label: proxy.$t('publicVar.instanceNum'),
+                        prop: 'executeCount'
+                    }
+                ]
+            )
+           
+        ]
+    }
+    async function fetchReferenceList (type) {
+        if (!curVarData.value.groupName) return
+        try {
+            const res = await proxy.$store.dispatch('publicVar/getReferenceList', {
+                page:1,
+                pageSize: 2000,
+                groupName: curVarData.groupName,
+                varName: curVarData.varName,
+                referType: type
+            })
+            return res.records
+        } catch (e) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: e.message || e
+            })
+        }
+    }
+    function handleHideShow (value) {
+        if (!value) {
+            proxy.$emit('update:isShow', value)
+            activeIdx.value = 0
+        }
     }
     function handleRelease () {
-        proxy.$emit('update:isShow', false)
-        proxy?.$router?.push({
-            name: 'VariableRelease'
-        })
+        proxy.$emit('confirm')
+    }
+    function handleToggle (index) {
+        activeIdx.value = index
     }
 </script>
 
@@ -188,11 +348,17 @@
             .change-content {
                 font-size: 12px;
                 margin-bottom: 20px;
+                .row-item {
+                    margin-bottom: 8px;
+                }
                 .key {
+                    display: inline-block;
                     background: #F0F1F5;
                     border-radius: 2px;
                     padding: 4px 8px;
                     margin-right: 8px;
+                    min-width: 70px;
+                    text-align: center;
                 }
                 .value {
                     display: inline-flex;
@@ -205,7 +371,14 @@
                     color: #4D4F56;
                 }
                 .arrow-right-icon {
+                    margin: 0 6px;
                     color: #F8B64F;
+                }
+            }
+            .related-list {
+                margin-bottom: 20px;
+                &:last-child {
+                    margin-bottom: 0;
                 }
             }
         }

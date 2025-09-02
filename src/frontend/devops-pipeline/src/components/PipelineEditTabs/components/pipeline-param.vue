@@ -26,14 +26,21 @@
                     >
                         {{ $t('newui.pipelineParam.addConst') }}
                     </bk-button>
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleManageVarGroup('constant')"
+                    >
+                        {{ $t('publicVar.manageGroup') }}
+                    </bk-button>
+                    <bk-input
+                        class="search-input"
+                        v-model="searchStr"
+                        :clearable="true"
+                        :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
+                        :right-icon="'bk-icon icon-search'"
+                    />
                 </template>
-                <bk-input
-                    class="search-input"
-                    v-model="searchStr"
-                    :clearable="true"
-                    :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
-                    :right-icon="'bk-icon icon-search'"
-                />
             </div>
         </div>
 
@@ -96,6 +103,9 @@
                 </bk-button>
             </div>
         </div>
+        <manage-variable-group
+            :is-show.sync="showManageVarGroupSlider"
+        />
     </div>
 </template>
 
@@ -107,11 +117,13 @@
     import { deepCopy, navConfirm } from '@/utils/util'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
+    import ManageVariableGroup from '@/components/PublicVariable/ManageVariableGroup'
 
     export default {
         components: {
             PipelineParamForm,
-            ParamGroup
+            ParamGroup,
+            ManageVariableGroup
         },
         props: {
             params: {
@@ -140,7 +152,8 @@
                 searchStr: '',
                 confirmMsg: this.$t('editPage.closeConfirmMsg'),
                 cancelText: this.$t('cancel'),
-                isAlertTips: true
+                isAlertTips: true,
+                showManageVarGroupSlider: false
             }
         },
         computed: {
@@ -310,6 +323,10 @@
             },
             alertClose () {
                 this.isAlertTips = false
+            },
+
+            handleManageVarGroup () {
+                this.showManageVarGroupSlider = true
             }
         }
     }
@@ -360,12 +377,12 @@
             align-items: center;
             justify-content: space-between;
             .var-btn {
-                min-width: 88px;
+                min-width: 78px;
                 width: -webkit-fill-available;
                 margin-right: 8px;
             }
             .search-input {
-                min-width: 215px;
+                min-width: 100px;
             }
         }
         .variable-content {
