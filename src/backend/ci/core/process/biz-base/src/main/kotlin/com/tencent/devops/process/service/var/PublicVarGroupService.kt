@@ -577,19 +577,18 @@ class PublicVarGroupService @Autowired constructor(
                 prop1.constant == prop2.constant
     }
 
-fun getProjectPublicParamByRef(
-    userId: String,
-    projectId: String,
-    varGroupRefs: List<PublicVarGroupRef>
-): List<BuildFormProperty> {
+    fun getProjectPublicParamByRef(
+        userId: String,
+        projectId: String,
+        varGroupRefs: List<PublicVarGroupRef>
+    ): List<BuildFormProperty> {
         if (varGroupRefs.isEmpty()) {
             return emptyList()
         }
 
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         val processedVarNames = mutableSetOf<String>()
-
-    varGroupRefs.forEach { varGroupRef ->
+        varGroupRefs.forEach { varGroupRef ->
             try {
                 val groupName = varGroupRef.groupName
                 val version = varGroupRef.versionName?.substring(1)?.toIntOrNull()
