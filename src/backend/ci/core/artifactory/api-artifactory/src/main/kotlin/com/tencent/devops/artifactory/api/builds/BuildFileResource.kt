@@ -151,9 +151,9 @@ interface BuildFileResource {
     @Path("projectId/{projectId}/pipelineId/{pipelineId}/buildId/{buildId}/file/archiveToParentPipeline")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFileToParentPipeline(
-        @Parameter(description = "projectCode", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
-        projectCode: String,
+        projectId: String,
         @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
