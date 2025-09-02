@@ -111,7 +111,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
         val url = "/ms/artifactory/api/build/artifactories/projectId" +
                 "/${result.projectId}/pipelineId/${result.pipelineId}" +
-                "/buildId/${result.buildId}/file/archive" +
+                "/buildId/${result.buildId}/file/archiveToParentPipeline" +
                 "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
 
         val fileBody = RequestBody.create(MultipartFormData, file)
