@@ -279,7 +279,14 @@
                 ></select-input>
             </form-field>
 
-            <section v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
+            <section
+                v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+                class="performance"
+            >
+                <span
+                    v-show="isShowPerformance"
+                    class="performance-desc"
+                >{{ $t('editPage.performanceDesc') }}</span>
                 <form-field
                     :label="$t('editPage.performance')"
                     v-show="isShowPerformance"
@@ -1234,6 +1241,20 @@
         }
         .image-tag {
             flex: 1;
+        }
+    }
+
+    .performance {
+        position: relative;
+
+        .performance-desc {
+            position: absolute;
+            left: 8%;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            color: #62a5fb;
+            cursor: pointer;
         }
     }
 

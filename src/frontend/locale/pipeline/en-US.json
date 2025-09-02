@@ -890,6 +890,7 @@
     "assignResource": "Build Resource",
     "imageTicket": "Docker Image Ticket",
     "performance": "Model",
+    "performanceDesc": "View Model Description",
     "cpuUnit": "C",
     "workspace": "Workspace",
     "workspaceTips": "If not filled, the it will be saved in [Agent installation directory]/workspace/[pipeline ID]/src by default",
