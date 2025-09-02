@@ -14,6 +14,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommon
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -196,6 +197,7 @@ class PipelineTemplateSettingDao {
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun buildQueryCondition(
         commonCondition: PipelineTemplateSettingCommonCondition
     ): MutableList<Condition> {
@@ -203,9 +205,18 @@ class PipelineTemplateSettingDao {
             with(commonCondition) {
                 val conditions = mutableListOf<Condition>()
                 conditions.add(PROJECT_ID.eq(projectId))
-                if (templateId != null) conditions.add(TEMPLATE_ID.eq(templateId))
-                if (settingVersion != null) conditions.add(SETTING_VERSION.eq(settingVersion))
                 if (!name.isNullOrBlank()) conditions.add(NAME.eq(name))
+                // 优先处理批量查询条件
+                if (!templateVersionPairs.isNullOrEmpty()) {
+                    val pairConditions = templateVersionPairs!!.map { pair ->
+                        DSL.row(TEMPLATE_ID, SETTING_VERSION).eq(DSL.row(pair.templateId, pair.version))
+                    }
+                    conditions.add(DSL.or(pairConditions))
+                } else {
+                    // 如果没有批量查询条件，则处理单个 templateId 和 settingVersion 条件
+                    if (templateId != null) conditions.add(TEMPLATE_ID.eq(templateId))
+                    if (settingVersion != null) conditions.add(SETTING_VERSION.eq(settingVersion))
+                }
                 if (creator != null) conditions.add(CREATOR.eq(creator))
                 if (updater != null) conditions.add(UPDATER.eq(updater))
                 conditions

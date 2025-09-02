@@ -44,6 +44,7 @@ import com.tencent.devops.process.permission.template.PipelineTemplatePermission
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
@@ -197,6 +198,13 @@ class UserPipelineTemplateV2ResourceImpl(
         request: PipelineTemplateCommonCondition
     ): Result<SQLPage<PipelineTemplateListSimpleResponse>> {
         return Result(templateFacadeService.listTemplateSimpleInfos(userId, request))
+    }
+
+    override fun listAllTemplates(
+        userId: String,
+        projectId: String
+    ): Result<OptionalTemplateList> {
+        return Result(templateFacadeService.listAllTemplates(userId, projectId))
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_VIEW)

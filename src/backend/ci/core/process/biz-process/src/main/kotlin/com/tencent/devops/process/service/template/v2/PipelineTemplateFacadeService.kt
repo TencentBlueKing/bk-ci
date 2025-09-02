@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service.template.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -11,6 +12,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -31,6 +33,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RECENTLY_INS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM
 import com.tencent.devops.process.dao.label.PipelineLabelDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -40,6 +43,9 @@ import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
+import com.tencent.devops.process.pojo.template.OptionalTemplate
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.TemplateRefType
@@ -61,9 +67,11 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketRelatedInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateYamlWebhookReq
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
+import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
 import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
@@ -105,7 +113,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val config: CommonConfig,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
-    private val pipelineLabelDao: PipelineLabelDao
+    private val pipelineLabelDao: PipelineLabelDao,
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao
 ) {
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
@@ -624,6 +633,88 @@ class PipelineTemplateFacadeService @Autowired constructor(
     // 获取各类最新版本
     fun <T> List<PipelineTemplateInfoV2>.fetchVersions(fetch: (List<String>) -> List<T>) =
         takeIf { it.isNotEmpty() }?.let { fetch(it.map { t -> t.id }) } ?: emptyList()
+
+    fun listAllTemplates(
+        userId: String,
+        projectId: String
+    ): OptionalTemplateList {
+        logger.info("list all templates projectId={},userId={}", projectId, userId)
+        val permissionMap = pipelineTemplatePermissionService.getResourcesByPermission(
+            userId = userId,
+            projectId = projectId,
+            permissions = setOf(AuthPermission.LIST)
+        )
+        val hasListPermTemplates = permissionMap[AuthPermission.LIST] ?: emptyList()
+        takeIf { hasListPermTemplates.isEmpty() }?.let { return OptionalTemplateList().withEmptyTemplate() }
+
+        val templateInfos = pipelineTemplateInfoService.list(
+            PipelineTemplateCommonCondition(
+                projectId = projectId,
+                filterTemplateIds = hasListPermTemplates,
+                latestVersionStatus = VersionStatus.RELEASED,
+                type = PipelineTemplateType.PIPELINE
+            )
+        )
+        val templateId2Version = templateInfos.map { TemplateVersionPair(it.id, it.releasedVersion.toInt()) }
+        val templateId2SettingVersion = templateInfos.map { TemplateVersionPair(it.id, it.releasedSettingVersion) }
+
+        val template2Resource = pipelineTemplateResourceService.list(
+            PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateVersionPairs = templateId2Version
+            )
+        ).associateBy { it.templateId }
+
+        val template2Settings = pipelineTemplateSettingService.list(
+            PipelineTemplateSettingCommonCondition(
+                projectId = projectId,
+                templateVersionPairs = templateId2SettingVersion
+            )
+        ).associateBy { it.pipelineId }
+
+        val templateIds = templateInfos.map { it.id }
+
+        val pipelinesWithLabels = pipelineLabelPipelineDao.exitsLabelPipelines(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = templateIds.toSet()
+        )
+
+        val templates = templateInfos.mapNotNull { templateInfo ->
+            try {
+                val category = templateInfo.category.takeIf { categoryStr -> !categoryStr.isNullOrBlank() }?.let {
+                    JsonUtil.to(it, object : TypeReference<List<String>>() {})
+                } ?: emptyList()
+
+                OptionalTemplate(
+                    name = templateInfo.name,
+                    templateId = templateInfo.id,
+                    projectId = templateInfo.projectId,
+                    version = templateInfo.releasedVersion,
+                    versionName = templateInfo.releasedVersionName!!,
+                    templateType = templateInfo.mode.name,
+                    templateTypeDesc = templateInfo.desc ?: "",
+                    category = category,
+                    logoUrl = templateInfo.logoUrl ?: "",
+                    stages = (template2Resource[templateInfo.id]?.model as? Model)?.stages ?: emptyList(),
+                    cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
+                        setting = template2Settings[templateInfo.id],
+                        pipelinesWithLabels = pipelinesWithLabels
+                    ),
+                    desc = templateInfo.desc ?: ""
+                )
+            } catch (ex: Exception) {
+                logger.error("build optional template failed {}", templateInfo.id, ex)
+                null // 在发生异常时返回 null，mapNotNull 会自动过滤掉它
+            }
+        }
+        return OptionalTemplateList(
+            count = templates.size,
+            page = 1,
+            pageSize = templateInfos.size,
+            templates = templates.associateBy { it.templateId }
+        ).withEmptyTemplate()
+    }
 
     // 查看模板详情
     @ActionAuditRecord(

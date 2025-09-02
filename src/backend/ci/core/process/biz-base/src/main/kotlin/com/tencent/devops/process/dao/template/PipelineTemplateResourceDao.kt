@@ -395,6 +395,7 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun buildQueryCondition(commonCondition: PipelineTemplateResourceCommonCondition): MutableList<Condition> {
         with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
             with(commonCondition) {
@@ -404,11 +405,20 @@ class PipelineTemplateResourceDao {
                     conditions.add(STATUS.ne(VersionStatus.DELETE.name))
                 }
                 conditions.add((BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)).or(BRANCH_ACTION.isNull))
-                if (templateId != null) conditions.add(TEMPLATE_ID.eq(templateId))
+                // 优先处理批量查询条件
+                if (!templateVersionPairs.isNullOrEmpty()) {
+                    val pairConditions = templateVersionPairs!!.map { pair ->
+                        DSL.row(TEMPLATE_ID, SETTING_VERSION).eq(DSL.row(pair.templateId, pair.version))
+                    }
+                    conditions.add(DSL.or(pairConditions))
+                } else {
+                    // 如果没有批量查询条件，则处理单个 templateId 和 version 条件
+                    if (templateId != null) conditions.add(TEMPLATE_ID.eq(templateId))
+                    if (version != null) conditions.add(SETTING_VERSION.eq(settingVersion))
+                    if (!versions.isNullOrEmpty()) conditions.add(VERSION.`in`(versions))
+                }
                 if (type != null) conditions.add(TYPE.eq(type!!.value))
                 if (settingVersion != null) conditions.add(SETTING_VERSION.eq(settingVersion))
-                if (version != null) conditions.add(VERSION.eq(version))
-                if (!versions.isNullOrEmpty()) conditions.add(VERSION.`in`(versions))
                 if (number != null) conditions.add(NUMBER.eq(number))
                 if (versionName != null && versionName!!.isNotBlank()) conditions.add(VERSION_NAME.eq(versionName))
                 if (settingVersionNum != null) conditions.add(SETTING_VERSION_NUM.eq(settingVersionNum))

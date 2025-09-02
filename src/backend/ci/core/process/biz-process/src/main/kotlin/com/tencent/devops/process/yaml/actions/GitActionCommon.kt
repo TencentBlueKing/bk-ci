@@ -5,7 +5,6 @@ import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfoType
-import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File

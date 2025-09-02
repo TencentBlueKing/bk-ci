@@ -258,8 +258,8 @@ data class Model(
     companion object {
         const val classType = "model"
         fun defaultModel(
-            pipelineName: String,
-            userId: String
+            pipelineName: String = "",
+            userId: String? = null
         ): Model {
             return Model(
                 name = pipelineName,
@@ -275,10 +275,8 @@ data class Model(
                                     ManualTriggerElement(
                                         id = "T-1-1-1",
                                         name = I18nUtil.getCodeLanMessage(
-                                            CommonMessageCode.BK_MANUAL_TRIGGER,
-                                            language = I18nUtil.getLanguage(
-                                                userId
-                                            )
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = userId?.let { I18nUtil.getLanguage(userId) }
                                         )
                                     ).apply {
                                         additionalOptions = ElementAdditionalOptions(enable = true)

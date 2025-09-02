@@ -11,6 +11,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
@@ -154,6 +155,18 @@ interface UserPipelineTemplateV2Resource {
         @Parameter(description = "请求体", required = true)
         request: PipelineTemplateCommonCondition
     ): Result<SQLPage<PipelineTemplateListSimpleResponse>>
+
+    @Operation(summary = "创建流水线-获取模版列表")
+    @GET
+    @Path("/allTemplates")
+    fun listAllTemplates(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<OptionalTemplateList>
 
     @Operation(summary = "查看模板详情")
     @GET

@@ -31,6 +31,8 @@ data class PipelineTemplateResourceCommonCondition(
     val version: Long? = null,
     @get:Schema(title = "版本号列表", required = false)
     val versions: List<Long>? = null,
+    @get:Schema(title = "模板ID与版本号对列表", required = false)
+    val templateVersionPairs: List<TemplateVersionPair>? = emptyList(),
     @get:Schema(title = "版本名称", required = false)
     val versionName: String? = null,
     @get:Schema(title = "模板配置发布版本号", required = false)

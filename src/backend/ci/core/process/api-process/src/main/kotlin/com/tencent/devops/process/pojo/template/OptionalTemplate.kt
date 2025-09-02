@@ -27,21 +27,61 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
+import com.tencent.devops.process.utils.EMPTY_TEMPLATE_ID
+import com.tencent.devops.process.utils.EMPTY_TEMPLATE_VERSION
+import com.tencent.devops.process.utils.EMPTY_TEMPLATE_VERSION_DESC
+import com.tencent.devops.process.utils.EMPTY_TEMPLATE_VERSION_NAME
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板列表")
 data class OptionalTemplateList(
     @get:Schema(title = "数量", required = false)
-    val count: Int,
+    val count: Int = 1,
     @get:Schema(title = "页数", required = false)
-    val page: Int?,
+    val page: Int? = 1,
     @get:Schema(title = "每页数量", required = false)
-    val pageSize: Int?,
+    val pageSize: Int? = 1,
     @get:Schema(title = "模板列表", required = false)
-    val templates: Map<String, OptionalTemplate>
-)
+    val templates: Map<String, OptionalTemplate> = emptyMap()
+) {
+    fun withEmptyTemplate(): OptionalTemplateList {
+        if (page != 1) {
+            return this
+        }
+        val newMap = linkedMapOf<String, OptionalTemplate>().apply {
+            val emptyTemplate = OptionalTemplate(
+                name = I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE),
+                templateId = EMPTY_TEMPLATE_ID,
+                projectId = "",
+                version = EMPTY_TEMPLATE_VERSION,
+                versionName = EMPTY_TEMPLATE_VERSION_NAME,
+                templateType = TemplateType.PUBLIC.name,
+                templateTypeDesc = TemplateType.PUBLIC.value,
+                category = emptyList(),
+                logoUrl = "",
+                stages = Model.defaultModel().stages,
+                cloneTemplateSettingExist = CloneTemplateSettingExist(
+                    notifySettingExist = false,
+                    concurrencySettingExist = false,
+                    labelSettingExist = false,
+                    inheritedDialect = true
+                ),
+                desc = EMPTY_TEMPLATE_VERSION_DESC
+            )
+
+            // 1. 先放入空模板
+            put(EMPTY_TEMPLATE_ID, emptyTemplate)
+            // 2. 放入原有所有模板
+            putAll(this@OptionalTemplateList.templates)
+        }
+        return this.copy(templates = newMap)
+    }
+}
 
 @Schema(title = "模板")
 data class OptionalTemplate(
