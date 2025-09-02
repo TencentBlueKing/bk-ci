@@ -203,7 +203,7 @@ interface UserPublicVarGroupResource {
         pageSize: Int
     ): Result<Page<PublicGroupVarRefDO>>
 
-    @Operation(summary = "获取变量组的发布记录")
+    @Operation(summary = "预览变更")
     @POST
     @Path("/changePreview")
     fun getChangePreview(
@@ -259,10 +259,11 @@ interface UserPublicVarGroupResource {
         @PathParam("referId")
         referId: String,
         @Parameter(description = "引用资源类型", required = true)
+        @QueryParam("referType")
         referType: PublicVerGroupReferenceTypeEnum
     ): Result<List<PipelinePublicVarGroupDO>>
 
-    @Operation(summary = "获取流水线关联公共变量组信息")
+    @Operation(summary = "获取项目关联公共变量组信息")
     @GET
     @Path("/projects/group/info")
     fun listProjectVarGroupInfo(
