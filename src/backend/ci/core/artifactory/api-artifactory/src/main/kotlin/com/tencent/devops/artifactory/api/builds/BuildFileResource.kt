@@ -145,7 +145,6 @@ interface BuildFileResource {
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>
 
-
     @Operation(summary = "归档文件到父流水线")
     @POST
     @Path("projectId/{projectId}/pipelineId/{pipelineId}/buildId/{buildId}/file/archiveToParentPipeline")
