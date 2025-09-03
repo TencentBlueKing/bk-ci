@@ -62,6 +62,11 @@ interface OpPipelineTemplateResource {
         projectId: String,
     ): Result<Boolean>
 
+    @Operation(summary = "迁移公共模板")
+    @POST
+    @Path("/migrate/migratePublicTemplates")
+    fun migratePublicTemplates(): Result<Boolean>
+
     @Operation(summary = "迁移模板-根据模板ID")
     @POST
     @Path("/migrate/{projectId}/{templateId}/migrateTemplate")

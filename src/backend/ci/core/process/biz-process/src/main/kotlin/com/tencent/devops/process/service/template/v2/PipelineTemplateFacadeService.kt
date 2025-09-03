@@ -646,7 +646,16 @@ class PipelineTemplateFacadeService @Autowired constructor(
             permissions = setOf(AuthPermission.LIST)
         )
         val hasListPermTemplates = permissionMap[AuthPermission.LIST] ?: emptyList()
-        takeIf { hasListPermTemplates.isEmpty() }?.let { return OptionalTemplateList().withEmptyTemplate() }
+        val emptyTemplate = pipelineTemplateInfoService.get(
+            PipelineTemplateCommonCondition(
+                projectId = "",
+                mode = TemplateType.PUBLIC
+            )
+        )
+
+        takeIf { hasListPermTemplates.isEmpty() }?.let {
+            return OptionalTemplateList().withEmptyTemplate(emptyTemplate)
+        }
 
         val templateInfos = pipelineTemplateInfoService.list(
             PipelineTemplateCommonCondition(
@@ -714,7 +723,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             page = 1,
             pageSize = templateInfos.size,
             templates = templates.associateBy { it.templateId }
-        ).withEmptyTemplate()
+        ).withEmptyTemplate(emptyTemplate)
     }
 
     // 查看模板详情

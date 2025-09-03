@@ -117,6 +117,10 @@ class PipelineTemplateMigrateService(
         } while (projectCodes.size == limit)
     }
 
+    fun migratePublicTemplates() {
+        migrateTemplates("")
+    }
+
     /**
      * 迁移一个项目下的所有模板（协调函数）。
      *

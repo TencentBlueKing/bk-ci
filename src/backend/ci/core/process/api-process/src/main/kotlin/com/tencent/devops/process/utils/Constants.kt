@@ -259,11 +259,3 @@ const val KEY_TASK = "task"
 const val KEY_TASK_ATOM = "taskAtom"
 
 const val BK_EMPTY_PIPELINE = "bkEmptyPipeline"
-
-/**
-* 空白流水线，从旧版迁移，新版本不再落库，固定格式
-* */
-const val EMPTY_TEMPLATE_ID = "b0070f67b1454e818821128f5da5bcd6"
-const val EMPTY_TEMPLATE_VERSION = 4320L
-const val EMPTY_TEMPLATE_VERSION_NAME = "init"
-const val EMPTY_TEMPLATE_VERSION_DESC = "This is an empty pipeline"
