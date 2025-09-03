@@ -32,6 +32,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType.CREATE
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType.RENAME
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType.UPDATE
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.trigger.scm.converter.WebhookYamlDiffConverterManager
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
@@ -151,8 +152,8 @@ class PacWebhookEventListener(
         yamlDiffs: List<PipelineYamlDiff>
     ) {
         val directories = yamlDiffs.filter {
-            // 创建、更新、重命名事件
-            setOf(CREATE, UPDATE, RENAME).contains(it.actionType)
+            // 流水线创建、更新、重命名事件
+            it.fileType == YamlFileType.PIPELINE && setOf(CREATE, UPDATE, RENAME).contains(it.actionType)
         }.map { GitActionCommon.getCiDirectory(it.filePath) }.toSet()
         if (directories.isNotEmpty()) {
             // 创建yaml流水线组

@@ -59,7 +59,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             )
         }
         val defaultBranch = serverRepository.defaultBranch!!
-        val finalRef = ref ?: defaultBranch
+        val finalRef = ref?.let { trimRef(it) } ?: defaultBranch
         // 这里后续看是否可以改成从T_PIPELINE_YAML_BRANCH_FILE表中获取
         val fileContent = scmProxyService.getFileContent(
             projectId = projectId,
@@ -183,6 +183,14 @@ class PipelineYamlVersionResolver @Autowired constructor(
             dependentFilePath = dependency?.dependentFilePath,
             dependentBlobId = dependentBlobId
         )
+    }
+
+    private fun trimRef(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch
+        }
     }
 
     companion object {

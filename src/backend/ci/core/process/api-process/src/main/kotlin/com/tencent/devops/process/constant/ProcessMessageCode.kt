@@ -408,7 +408,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BASE_VERSION_NOT_FOUND = "2101292" // 未找到基线版本
     const val ERROR_TEMPLATE_YAML_REPOSITORY_NOT_FOUND = "2101293" // 模板YAML文件所属的代码仓库不存在
     const val ERROR_YAML_FOR_TEMPLATE_NOT_FOUND = "2101294" // YAML文件{0}对应的模板不存在
-    const val ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND = "2101295" // 分支{0}下的文件{1}对应的模版版本不存在
+    const val ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND = "2101295" // 分支[{0}]下的文件[{1}]对应的模版版本不存在
     const val ERROR_TEMPLATE_VERSION_BY_ID_NOT_FOUND = "2101296" // 模版{0}对应的版本{1}不存在
     const val ERROR_TEMPLATE_VERSION_BY_PATH_NOT_FOUND = "2101297" // 模版{0}在分支{1}对应的版本不存在
     const val ERROR_TEMPLATE_REF_TYPE = "2101298" // 模版引用templateId和templatePath不能同时为空

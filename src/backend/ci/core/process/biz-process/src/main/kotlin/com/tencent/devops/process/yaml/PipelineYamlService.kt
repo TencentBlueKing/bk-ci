@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlBranchFileDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
@@ -474,14 +474,24 @@ class PipelineYamlService(
         ref: String,
         branchAction: String
     ) {
-        pipelineYamlVersionDao.updateBranchAction(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            ref = ref,
-            branchAction = branchAction
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlVersionDao.updateBranchAction(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                ref = ref,
+                branchAction = branchAction
+            )
+            pipelineYamlDependencyService.delete(
+                transactionContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                ref = ref
+            )
+        }
     }
 
     fun getPipelineYamlVo(
@@ -634,6 +644,12 @@ class PipelineYamlService(
             )
             pipelineYamlVersionDao.deleteAll(
                 dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath
+            )
+            pipelineYamlDependencyService.delete(
+                transactionContext = transactionContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath

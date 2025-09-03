@@ -118,7 +118,7 @@ class PipelineYamlVersionDao {
                 .let { if (!ref.isNullOrBlank()) it.and(REF.eq(ref)) else it }
                 .let { if (!commitId.isNullOrBlank()) it.and(COMMIT_ID.eq(ref)) else it }
                 .let { if (!blobId.isNullOrBlank()) it.and(BLOB_ID.eq(blobId)) else it }
-                .let { if (branchAction.isNullOrBlank()) it.and(BRANCH_ACTION.eq(branchAction)) else it }
+                .let { if (!branchAction.isNullOrBlank()) it.and(BRANCH_ACTION.eq(branchAction)) else it }
                 .let {
                     if (!dependentFilePath.isNullOrBlank()) it.and(DEPENDENT_FILE_PATH.eq(dependentFilePath)) else it
                 }

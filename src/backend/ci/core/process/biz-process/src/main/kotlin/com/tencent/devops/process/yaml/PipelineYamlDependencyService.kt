@@ -3,8 +3,8 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.dao.yaml.PipelineYamlDependencyDao
-import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependency
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDependencyResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
@@ -309,6 +309,22 @@ class PipelineYamlDependencyService @Autowired constructor(
     ): PipelineYamlDependency? {
         return pipelineYamlDependencyDao.getDependency(
             dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            ref = ref
+        )
+    }
+
+    fun delete(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        ref: String? = null
+    ) {
+        pipelineYamlDependencyDao.delete(
+            dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,

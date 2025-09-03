@@ -63,15 +63,16 @@ class PipelineYamlDependencyDao {
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
-        ref: String,
-        filePath: String
+        filePath: String,
+        ref: String? = null
     ) {
         with(TPipelineYamlDependency.T_PIPELINE_YAML_DEPENDENCY) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
-                .and(REF.eq(ref))
+                .let { if (ref != null) it.and(REF.eq(ref)) else it }
+                .execute()
         }
     }
 
