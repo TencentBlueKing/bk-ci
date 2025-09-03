@@ -286,6 +286,7 @@
                 <span
                     v-show="isShowPerformance"
                     class="performance-desc"
+                    @click="goPerformanceDesc"
                 >{{ $t('editPage.performanceDesc') }}</span>
                 <form-field
                     :label="$t('editPage.performance')"
@@ -1188,6 +1189,10 @@
             },
             changeShowPerformance (isShow = false) {
                 this.isShowPerformance = isShow
+            },
+            goPerformanceDesc () {
+                const url = 'https://iwiki.woa.com/p/4015974495'
+                window.open(url, '_blank')
             }
         }
     }
