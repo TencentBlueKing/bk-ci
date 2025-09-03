@@ -743,6 +743,7 @@
                     this.nodeList = res.records.map(i => {
                         return {
                             isEnableEdit: i.nodeHashId === this.curEditNodeItem,
+                            allOperator: `${i.operator};${i.bakOperator}`,
                             ...i
                         }
                     })
@@ -985,7 +986,7 @@
                 this.constructImportForm.link = ''
                 this.constructImportForm.loginName = ''
                 this.constructImportForm.loginPassword = ''
-                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.autoSwitchAccount = false
                 this.constructImportForm.installType = 'SERVICE'
                 this.constructToolConf.importText = this.$t('environment.import')
                 this.requestList()
