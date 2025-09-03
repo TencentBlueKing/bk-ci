@@ -55,7 +55,7 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
         val userDeptList = getUserDeptList(userId)
         if (userDeptList.isEmpty()) return scmCodes
         val result = mutableListOf<String>()
-        scmCodes.forEach { scmCode ->
+        scmCodes.forEach scmEach@{ scmCode ->
             val deptList = repositoryConfigDeptDao.list(
                 dslContext = dslContext,
                 scmCode = scmCode,
@@ -63,8 +63,9 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
                 offset = 0
             ).map { it.deptId }
             deptList.forEach deptEach@{ deptId ->
-                if (!result.contains(scmCode) && validateDeptId(deptId, userDeptList)) {
+                if (validateDeptId(deptId, userDeptList)) {
                     result.add(scmCode)
+                    return@scmEach
                 }
             }
         }
@@ -138,6 +139,6 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
     }
 
     companion object {
-        const val MAX_DEPT_COUNT = 100
+        const val MAX_DEPT_COUNT = 1000
     }
 }

@@ -51,17 +51,9 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     private val repositoryScmConfigService: RepositoryScmConfigService
 ) : UserRepositoryConfigResource {
 
-    override fun list(
-        userId: String,
-        projectId: String,
-        scmType: ScmType?
-    ): Result<List<ScmConfigBaseInfo>> {
+    override fun list(userId: String, scmType: ScmType?): Result<List<ScmConfigBaseInfo>> {
         return Result(
-            repositoryScmConfigService.listConfigBaseInfo(
-                userId = userId,
-                scmType = scmType,
-                projectId = projectId
-            )
+            repositoryScmConfigService.listConfigBaseInfo(userId, scmType)
         )
     }
 

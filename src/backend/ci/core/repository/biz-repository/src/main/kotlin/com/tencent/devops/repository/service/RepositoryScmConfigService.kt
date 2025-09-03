@@ -190,11 +190,7 @@ class RepositoryScmConfigService @Autowired constructor(
         }
     }
 
-    fun listConfigBaseInfo(
-        userId: String,
-        scmType: ScmType?,
-        projectId: String
-    ): List<ScmConfigBaseInfo> {
+    fun listConfigBaseInfo(userId: String, scmType: ScmType?): List<ScmConfigBaseInfo> {
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(PageUtil.DEFAULT_PAGE, PageUtil.MAX_PAGE_SIZE)
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val scmConfigs = repositoryScmConfigDao.list(
@@ -233,6 +229,7 @@ class RepositoryScmConfigService @Autowired constructor(
         offset: Int,
         limit: Int
     ): SQLPage<RepositoryScmConfigVo> {
+        validateUserPlatformPermission(userId = userId)
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val count = repositoryScmConfigDao.count(
             dslContext = dslContext,
