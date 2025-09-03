@@ -846,7 +846,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum,
         branch: String?,
-        codeSrc: String,
+        codeSrc: String?,
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {

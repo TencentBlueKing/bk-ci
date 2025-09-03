@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.MASTER
@@ -2702,7 +2703,7 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum,
         branch: String?,
-        codeSrc: String,
+        codeSrc: String?,
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {
@@ -2723,6 +2724,13 @@ class GitService @Autowired constructor(
             )
         }
         val projectId = gitProjectId ?: run {
+            if (codeSrc.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = PARAMETER_IS_NULL,
+                    params = arrayOf("codeSrc"),
+                    defaultMessage = "codeSrc parameter is invalid"
+                )
+            }
             val projectName = GitUtils.getProjectName(codeSrc)
             getGitProjectInfo(token, projectName, TokenTypeEnum.OAUTH)
                 .data?.id ?: throw ErrorCodeException(

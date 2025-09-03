@@ -1212,9 +1212,9 @@ interface ServiceGitResource {
         @Parameter(description = "分支", required = false)
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "代码库链接", required = true)
+        @Parameter(description = "代码库链接", required = false)
         @QueryParam("codeSrc")
-        codeSrc: String,
+        codeSrc: String?,
         @Parameter(description = "gitProjectId", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long? = null,
