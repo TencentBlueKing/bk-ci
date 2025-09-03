@@ -729,7 +729,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).whitelistGet(userId, type, body)
     }
 
-    override fun tgitGetUserOauth(userId: String, redirectUrl: String?): Result<AuthorizeResult> {
+    override fun tgitGetUserOauth(userId: String, redirectUrl: String): Result<AuthorizeResult> {
         logger.info("tgitGetUserOauth |$userId|$redirectUrl")
         return client.get(ServiceRemoteDevResource::class).tgitGetUserOauth(userId, redirectUrl)
     }

@@ -961,7 +961,7 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("redirectUrl")
-        redirectUrl: String?
+        redirectUrl: String
     ): Result<AuthorizeResult>
 
     @Operation(summary = "工蜂获取绑定的项目列表")

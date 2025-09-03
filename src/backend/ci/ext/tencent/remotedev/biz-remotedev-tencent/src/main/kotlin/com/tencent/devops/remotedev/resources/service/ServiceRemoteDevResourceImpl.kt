@@ -882,7 +882,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(whiteListService.apiGetWhiteList(userId, type, body))
     }
 
-    override fun tgitGetUserOauth(userId: String, redirectUrl: String?): Result<AuthorizeResult> {
+    override fun tgitGetUserOauth(userId: String, redirectUrl: String): Result<AuthorizeResult> {
         // 权限校验？
         return gitTransfer.load(RemoteDevGitType.T_GIT).isOAuth(
             userId = userId,
