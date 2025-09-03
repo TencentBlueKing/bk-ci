@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -236,6 +237,7 @@ data class Model(
     /**
      * 获取versionName非空的公共变量组引用集合
      */
+    @JsonIgnore
     fun getPublicVarGroupsWithVersion(): List<PublicVarGroupRef> {
         return publicVarGroups.filter { it.versionName != null }
     }
