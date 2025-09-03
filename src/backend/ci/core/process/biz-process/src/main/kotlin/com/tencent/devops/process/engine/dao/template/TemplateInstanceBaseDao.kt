@@ -251,6 +251,7 @@ class TemplateInstanceBaseDao {
             targetBranch = targetBranch,
             templateRefType = templateRefType?.let { TemplateRefType.valueOf(it) },
             templateRef = templateRef,
+            pullRequestUrl = pullRequestUrl,
             creator = creator,
             modifier = modifier,
             createTime = createTime.timestampmilli(),

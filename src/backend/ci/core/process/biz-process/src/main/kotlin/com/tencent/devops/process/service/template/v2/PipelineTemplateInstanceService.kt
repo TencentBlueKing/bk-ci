@@ -560,7 +560,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
             totalItemNum = instanceBase.totalItemNum,
             successItemNum = instanceBase.successItemNum,
             failItemNum = instanceBase.failItemNum,
-            errorMessages = errorMessages
+            errorMessages = errorMessages,
+            pullRequestUrl = instanceBase.pullRequestUrl
         )
     }
 
@@ -636,7 +637,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 buildNo = it.buildNo,
                 param = it.params,
                 triggerConfigs = it.triggerConfigs,
-                filePath = it.filePath
+                filePath = it.filePath,
+                overrideTemplateField = it.overrideTemplateField
             )
         }
         val request = with(instanceBase) {
