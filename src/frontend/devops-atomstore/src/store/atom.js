@@ -202,7 +202,7 @@ export const actions = {
      */
     requestAtomLog ({ commit }, params) {
         const query = new URLSearchParams(params).toString()
-        return vue.$ajax.get(`${repositoryPrefix}/service/git/commitMessages/get?${query}`)
+        return vue.$ajax.get(`${repositoryPrefix}/user/git/commitMessages/get?${query}`)
     },
     /**
      * 流水线插件详情
