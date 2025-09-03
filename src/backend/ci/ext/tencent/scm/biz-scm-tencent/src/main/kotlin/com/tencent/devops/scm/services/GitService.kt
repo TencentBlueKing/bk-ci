@@ -33,10 +33,13 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -2692,5 +2695,71 @@ class GitService @Autowired constructor(
             .setCredentialsProvider(credentialsProvider)
             .call()
         cloneRepo.close()
+    }
+
+    fun getRecentGitCommitMessages(
+        userId: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        branch: String?,
+        codeSrc: String,
+        gitProjectId: Long?,
+        commitNumber: Int
+    ): Result<String> {
+        if (commitNumber <= 0) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                params = arrayOf("commitNumber", "value is $commitNumber, must be greater than 0"),
+                defaultMessage = "commitNumber parameter validation error:" +
+                        " value is $commitNumber, must be greater than 0"
+            )
+        }
+        if (commitNumber > 10) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                params = arrayOf("commitNumber", "value is $commitNumber, must not be greater than 10"),
+                defaultMessage = "commitNumber parameter validation error: " +
+                        "value is $commitNumber, must not be greater than 10"
+            )
+        }
+        val projectId = gitProjectId ?: run {
+            val projectName = GitUtils.getProjectName(codeSrc)
+            getGitProjectInfo(token, projectName, TokenTypeEnum.OAUTH)
+                .data?.id ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
+                params = arrayOf(projectName),
+                defaultMessage = "Cannot find git projectId for codeSrc($codeSrc)"
+            )
+        }
+        val commits = getCommits(
+            gitProjectId = projectId,
+            branch = branch ?: MASTER,
+            token = token,
+            tokenType = TokenTypeEnum.OAUTH,
+            page = 1,
+            perPage = commitNumber,
+            since = null,
+            until = null,
+            filePath = null
+        )
+        return Result(processCommits(commits))
+    }
+
+    fun processCommits(commits: List<Commit>): String {
+        // 过滤合并提交信息
+        val filteredCommits = commits.filter { commit ->
+            commit.message?.takeIf { it.isNotBlank() }
+                ?.trimStart()
+                ?.startsWith("Merge ", ignoreCase = true)
+                ?.not()
+                ?: false
+        }
+        // 最早的排最前面
+        val sortedCommits = filteredCommits.sortedBy {
+            it.committedDate?.let { timeStr -> DateTimeUtil.zoneDateToDate(timeStr) }
+        }
+        return sortedCommits.mapIndexed { index, commit ->
+            "${index + 1}. ${commit.message}"
+        }.joinToString("")
     }
 }
