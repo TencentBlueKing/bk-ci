@@ -4,7 +4,7 @@
             'instance-config-wrapper': true,
             'has-ref-tips': !templateRefTypeById
         }"
-        v-bkloading="{ isLoading: isLoading }"
+        v-bkloading="{ isLoading }"
     >
         <bk-alert
             v-if="!templateRefTypeById"
@@ -118,8 +118,8 @@
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
                                         :handle-set-build-no-required="handleSetBuildNoRequired"
-                                        :is-required-param="curInstance.buildNo.isRequiredParam"
-                                        :is-follow-template="curInstance.buildNo.isFollowTemplate"
+                                        :is-required-param="curInstance.buildNo?.isRequiredParam"
+                                        :is-follow-template="curInstance.buildNo?.isFollowTemplate"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -473,14 +473,17 @@
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
+            if (!curTemplateVersion.value) {
+                isLoading.value = false
+            }
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
                 return {
                     ...instance,
-                    param: curTemplateDetail.value.params.map(i => ({
+                    param: curTemplateDetail.value?.params?.map(i => ({
                         ...i,
                         isRequiredParam: true
                     })),
-                    buildNo: curTemplateDetail.value.buildNo
+                    buildNo: curTemplateDetail.value?.buildNo
                 }
             }))
         } else {

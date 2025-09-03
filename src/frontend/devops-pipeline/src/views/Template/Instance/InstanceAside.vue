@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, onMounted, onBeforeUnmount } from 'vue'
+    import { ref, defineProps, computed, watch, onMounted, onBeforeUnmount } from 'vue'
     import {
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
@@ -142,6 +142,8 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
+    const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
+    const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
     const templateTriggerConfigs = computed(() => {
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
@@ -155,6 +157,12 @@
         }))
     })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    watch(() => curTemplateDetail.value, (val) => {
+        if (pipelineName.value) {
+            handleAddInstance()
+            proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, useTemplateSettings.value)
+        }
+    })
     async function checkPipelineName (val) {
         if (renderInstanceList.value.find(i => i.pipelineName === val)) {
             isErrorName.value = true
@@ -272,6 +280,7 @@
         const { params, buildNo } = deepClone(curTemplateDetail.value)
         const newInstance = {
             enablePac: false,
+            pipelineName: pipelineName.value ?? '',
             param: params.map(p => {
                 return {
                     ...p,

@@ -515,7 +515,7 @@
             },
             async selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
-                if (target?.templateType !== 'PUBLIC') {
+                if (target?.templateType !== 'PUBLIC' && target.templateId) {
                     await this.requestTemplateSetting({
                         projectId: this.$route.params.projectId,
                         templateId: target.templateId

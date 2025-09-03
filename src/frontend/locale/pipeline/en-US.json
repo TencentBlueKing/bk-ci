@@ -564,7 +564,7 @@
     "MANUAL-UPGRADE": "Manual Upgrade",
     "MANUAL-upgradeStrategyDesc": "When there are updates in the dev store, manually install new versions as needed",
     "AUTO-upgradeStrategyDesc": "Automatically install new versions when they are released in the dev store",
-    "syncSettingStrategyDesc": "When auto-installing new versions, notifications/basic settings will be updated along with the template",
+    "syncSettingStrategyDesc": "When automatically installing new versions, notifications/basic settings (excluding tags) will be updated along with the template",
     "goStore": "View Store",
     "upgradeSettingSuccess": "Upgrade settings successfully",
     "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed.",
@@ -652,7 +652,9 @@
     "timeCron": "Schedule Rule",
     "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID.",
     "constraintMode": "The pipeline uses a constraint mode template",
-    "notTemplate": "Template does not exist"
+    "notTemplate": "Template does not exist",
+    "pleaseMergePullUrl": "Resolve merge request in code repo first.",
+    "toHandle": "Resolve now"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

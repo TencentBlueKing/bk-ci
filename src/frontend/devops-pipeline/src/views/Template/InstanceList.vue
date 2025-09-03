@@ -99,13 +99,27 @@
                                 >
                                     <span class="template-version">
                                         {{ $t('template.Upgrading') }}
-                                        <bk-loading
-                                            class="loading-icon"
-                                            theme="primary"
-                                            mode="spin"
-                                            size="mini"
-                                            is-loading
-                                        />
+                                        <bk-popover
+                                            ext-cls="pull-url-popover"
+                                            :disabled="!row.pullRequestUrl"
+                                        >
+                                            <bk-loading
+                                                class="loading-icon"
+                                                theme="primary"
+                                                mode="spin"
+                                                size="mini"
+                                                is-loading
+                                            />
+                                            <div slot="content">
+                                                <span>{{ $t('template.pleaseMergePullUrl') }}</span>
+                                                <span
+                                                    class="btn-text"
+                                                    @click="HandleMR(row)"
+                                                >
+                                                    {{ $t('template.toHandle') }}
+                                                </span>
+                                            </div>
+                                        </bk-popover>
                                     </span>
                                 </template>
 
@@ -163,15 +177,6 @@
                     >
                         <template slot-scope="{ row }">
                             <bk-button
-                                class="mr10"
-                                theme="primary"
-                                text
-                                :disabled="!row.canEdit || !!row.pullRequestUrl"
-                                @click="updateInstance(row)"
-                            >
-                                {{ $t('template.updateInstance') }}
-                            </bk-button>
-                            <bk-button
                                 v-if="row.pullRequestUrl"
                                 class="mr10"
                                 theme="primary"
@@ -179,6 +184,16 @@
                                 @click="HandleMR(row)"
                             >
                                 {{ $t('template.handleMR') }}
+                            </bk-button>
+                            <bk-button
+                                v-else
+                                class="mr10"
+                                theme="primary"
+                                text
+                                :disabled="!row.canEdit || !!row.pullRequestUrl"
+                                @click="updateInstance(row)"
+                            >
+                                {{ $t('template.updateInstance') }}
                             </bk-button>
                             <bk-button
                                 class="mr10"
@@ -569,6 +584,13 @@
         .batch-update {
             padding: 0 11px;
             font-size: 12px;
+        }
+    }
+    .pull-url-popover {
+        .btn-text {
+            font-size: 12px;
+            color: $primaryColor;
+            cursor: pointer;
         }
     }
 </style>
