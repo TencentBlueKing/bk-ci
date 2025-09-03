@@ -72,8 +72,6 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
         return result
     }
 
-
-
     fun createDept(
         scmCode: String,
         deptList: List<RepositoryConfigDept>,

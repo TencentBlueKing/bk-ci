@@ -239,7 +239,7 @@ interface UserRepositoryConfigResource {
         @PathParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要添加的代码源管理的组织架构", required = true)
-        list: List<RepositoryConfigDept>? = null
+        deptList: List<RepositoryConfigDept>? = null
     ): Result<Boolean>
 
     @Operation(summary = "批量删除目标代码源的组织架构")
@@ -253,6 +253,6 @@ interface UserRepositoryConfigResource {
         @PathParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要删除的代码源管理的组织架构", required = true)
-        list: List<Int>? = null
+        deptList: List<Int>? = null
     ): Result<Boolean>
 }

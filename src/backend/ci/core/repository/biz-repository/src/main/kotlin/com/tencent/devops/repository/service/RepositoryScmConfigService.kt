@@ -497,14 +497,14 @@ class RepositoryScmConfigService @Autowired constructor(
     fun addDept(
         scmCode: String,
         userId: String,
-        depts: List<RepositoryConfigDept>
+        deptList: List<RepositoryConfigDept>
     ) {
         validateUserPlatformPermission(userId)
-        if (depts.isNotEmpty()) {
+        if (deptList.isNotEmpty()) {
             repositoryConfigDeptService.createDept(
                 scmCode = scmCode,
                 userId = userId,
-                deptList = depts
+                deptList = deptList
             )
         }
     }
@@ -512,13 +512,13 @@ class RepositoryScmConfigService @Autowired constructor(
     fun deleteDept(
         scmCode: String,
         userId: String,
-        depts: List<Int>
+        deptList: List<Int>
     ) {
         validateUserPlatformPermission(userId)
-        if (depts.isNotEmpty()) {
+        if (deptList.isNotEmpty()) {
             repositoryConfigDeptService.deleteDept(
                 scmCode = scmCode,
-                deptList = depts.toSet()
+                deptList = deptList.toSet()
             )
         }
     }

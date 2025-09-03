@@ -180,13 +180,13 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     override fun addDept(
         userId: String,
         scmCode: String,
-        list: List<RepositoryConfigDept>?
+        deptList: List<RepositoryConfigDept>?
     ): Result<Boolean> {
-        list?.let {
+        deptList?.let {
             repositoryScmConfigService.addDept(
                 userId = userId,
                 scmCode = scmCode,
-                depts = it
+                deptList = it
             )
         }
         return Result(true)
@@ -195,13 +195,13 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     override fun deleteDept(
         userId: String,
         scmCode: String,
-        list: List<Int>?
+        deptList: List<Int>?
     ): Result<Boolean> {
-        list?.let {
+        deptList?.let {
             repositoryScmConfigService.deleteDept(
                 userId = userId,
                 scmCode = scmCode,
-                depts = it
+                deptList = it
             )
         }
         return Result(true)

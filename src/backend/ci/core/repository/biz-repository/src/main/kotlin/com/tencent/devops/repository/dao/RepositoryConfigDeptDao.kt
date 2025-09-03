@@ -64,6 +64,7 @@ class RepositoryConfigDeptDao {
                 .onDuplicateKeyUpdate()
                 .set(CREATE_TIME, now)
                 .set(CREATOR, userId)
+                .set(DEPT_NAME, it.deptName)
                 .execute()
             }
         }
