@@ -32,10 +32,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_TOKEN_EMPTY
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -94,7 +97,6 @@ import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import jakarta.servlet.http.HttpServletResponse
-import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -2118,36 +2120,51 @@ class GitService @Autowired constructor(
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {
+        if (commitNumber <= 0) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                params = arrayOf("commitNumber", "value is $commitNumber, must be greater than 0"),
+                defaultMessage = "commitNumber parameter validation error:" +
+                        " value is $commitNumber, must be greater than 0"
+            )
+        }
+        if (commitNumber > 10) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_VALIDATE_ERROR,
+                params = arrayOf("commitNumber", "value is $commitNumber, must not be greater than 10"),
+                defaultMessage = "commitNumber parameter validation error: " +
+                        "value is $commitNumber, must not be greater than 10"
+            )
+        }
         val accessToken = gitOauthService.getAccessToken(userId)?.accessToken
         if (accessToken.isNullOrBlank()) {
-            throw NotFoundException("cannot found access token for user($userId)")
+            throw ErrorCodeException(
+                errorCode = GIT_TOKEN_EMPTY,
+                defaultMessage = "cannot found access token for user($userId)",
+            )
         }
-        val projectId = gitProjectId
-            ?: getGitProjectInfo(
-                token = accessToken,
-                id = GitUtils.getProjectName(codeSrc),
-                tokenType = TokenTypeEnum.OAUTH
-            ).data?.id
-
-        if (projectId == null) {
-            throw NotFoundException("cannot found git projectId for codeSrc($codeSrc)")
-
+        val projectId = gitProjectId ?: run {
+            val projectName = GitUtils.getProjectName(codeSrc)
+            getGitProjectInfo(accessToken, projectName, TokenTypeEnum.OAUTH)
+                .data?.id ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
+                params = arrayOf(projectName),
+                defaultMessage = "Cannot find git projectId for codeSrc($codeSrc)"
+            )
         }
-        return Result(
-            getCommits(
-                gitProjectId = projectId,
-                branch = branch ?: MASTER,
-                token = accessToken,
-                tokenType = TokenTypeEnum.OAUTH,
-                page = 1,
-                perPage = commitNumber,
-                since = null,
-                until = null,
-                filePath = null
-            ).data?.let { commits ->
-                processCommits(commits)
-            } ?: ""
-        )
+        val commits = getCommits(
+            gitProjectId = projectId,
+            branch = branch ?: MASTER,
+            token = accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+            page = 1,
+            perPage = commitNumber,
+            since = null,
+            until = null,
+            filePath = null
+        ).data ?: emptyList()
+
+        return Result(processCommits(commits))
     }
 
     fun processCommits(commits: List<Commit>): String {

@@ -963,7 +963,7 @@ interface ServiceGitResource {
         gitCreateMergeRequest: GitCreateMergeRequest
     ): Result<GitMrInfo>
 
-    @Operation(summary = "根据组件分支获取组件代码库最近提交信息")
+    @Operation(summary = "根据分支获取代码库最近提交信息")
     @GET
     @Path("/commitMessages/get")
     fun getRecentGitCommitMessages(
