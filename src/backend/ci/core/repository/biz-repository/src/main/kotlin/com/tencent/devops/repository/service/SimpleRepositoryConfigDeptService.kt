@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class SimpleRepositoryConfigPermissionService @Autowired constructor(
+class SimpleRepositoryConfigDeptService @Autowired constructor(
     override val dslContext: DSLContext,
     override val repositoryConfigDeptDao: RepositoryConfigDeptDao,
     override val client: Client
