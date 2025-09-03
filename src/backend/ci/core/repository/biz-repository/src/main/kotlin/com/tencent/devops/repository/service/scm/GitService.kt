@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_TOKEN_EMPTY
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.MASTER
@@ -49,6 +48,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -2139,8 +2139,8 @@ class GitService @Autowired constructor(
         val accessToken = gitOauthService.getAccessToken(userId)?.accessToken
         if (accessToken.isNullOrBlank()) {
             throw ErrorCodeException(
-                errorCode = GIT_TOKEN_EMPTY,
-                defaultMessage = "cannot found access token for user($userId)",
+                errorCode = NOT_AUTHORIZED_BY_OAUTH,
+                defaultMessage = "User [$userId] has not performed OAUTH authorization, please authorize first",
             )
         }
         val projectId = gitProjectId ?: run {
