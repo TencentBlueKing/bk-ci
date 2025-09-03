@@ -424,7 +424,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
             "page" to mapOf(
                 "num" to pageNum,
                 "size" to pageSize
-            )
+            ),
+            "panel_id" to 7345
         )
         if (input != null) {
             requestBody.putAll(input)
