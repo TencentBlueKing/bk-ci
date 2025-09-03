@@ -89,7 +89,8 @@ import {
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_TEMPLATE_CONSTRAINT,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS
 } from './constants'
 
 export default {
@@ -519,6 +520,11 @@ export default {
             ...state.pipeline.overrideTemplateField,
             [classify]: constraintList
         } })
+        return state
+    },
+    [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
+        console.log(publicVarGroups, 11111111)
+        Object.assign(state.pipeline, { publicVarGroups })
         return state
     }
 }

@@ -33,14 +33,14 @@
                     >
                         {{ $t('publicVar.manageGroup') }}
                     </bk-button>
-                    <bk-input
-                        class="search-input"
-                        v-model="searchStr"
-                        :clearable="true"
-                        :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
-                        :right-icon="'bk-icon icon-search'"
-                    />
                 </template>
+                <bk-input
+                    class="search-input"
+                    v-model="searchStr"
+                    :clearable="true"
+                    :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
+                    :right-icon="'bk-icon icon-search'"
+                />
             </div>
         </div>
 
@@ -105,6 +105,7 @@
         </div>
         <manage-variable-group
             :is-show.sync="showManageVarGroupSlider"
+            :handle-save-variable-by-group="handleSaveVariableByGroup"
         />
     </div>
 </template>
@@ -117,7 +118,7 @@
     import { deepCopy, navConfirm } from '@/utils/util'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
-    import ManageVariableGroup from '@/components/PublicVariable/ManageVariableGroup'
+    import ManageVariableGroup from '@/components/PublicVariable/ManageVariableGroup/'
 
     export default {
         components: {
@@ -296,6 +297,9 @@
                         this.hideSlider(false)
                     }
                 })
+            },
+            handleSaveVariableByGroup (list) {
+                this.updateContainerParams('params', [...this.globalParams, ...list, ...this.versions])
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
