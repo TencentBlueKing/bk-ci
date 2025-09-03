@@ -89,8 +89,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val branchAction = versionStatus.takeIf {
                 it == VersionStatus.BRANCH
             }?.let { BranchVersionAction.ACTIVE }
+            // 正式版本和分支版本需要有发布时间
             val releaseTime = versionStatus.takeIf {
-                it == VersionStatus.RELEASED
+                it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
             }?.let { LocalDateTime.now().timestampmilli() }
 
             val pipelineTemplateResource = PipelineTemplateResource(
@@ -309,6 +310,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateResource = PipelineTemplateResource(
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateResourceOnlyVersion = resourceOnlyVersion
+            ).copy(
+                releaseTime = LocalDateTime.now().timestampmilli()
             )
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
@@ -543,7 +546,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 branchAction = BranchVersionAction.ACTIVE,
                 description = pipelineTemplateResource.description,
                 updater = userId,
-                sortWeight = PipelineTemplateConstant.OTHER_STATUS_VERSION_SORT_WIGHT
+                sortWeight = PipelineTemplateConstant.OTHER_STATUS_VERSION_SORT_WIGHT,
+                releaseTime = LocalDateTime.now()
             )
             val templateResourceCondition = PipelineTemplateResourceCommonCondition(
                 projectId = projectId,

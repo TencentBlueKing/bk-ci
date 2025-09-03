@@ -105,5 +105,15 @@ data class PipelineYamlDiff(
         title = "依赖的文件路径,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
         required = false
     )
-    val dependentFilePath: String? = null
+    val dependentFilePath: String? = null,
+    @get:Schema(
+        title = "依赖的分支,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentRef: String? = null,
+    @get:Schema(
+        title = "依赖的文件blobId,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentBlobId: String? = null
 )

@@ -1476,16 +1476,17 @@ CREATE TABLE `T_PIPELINE_TEMPLATE_MIGRATION` (
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DIFF`
 (
     `PROJECT_ID`          varchar(64)                         not null comment '项目ID',
-    `EVENT_ID`            bigint(20)                          not null comment '事件ID',
+    `EVENT_ID`            bigint                              not null comment '事件ID',
     `EVENT_TYPE`          varchar(32)                         not null comment '事件类型',
     `REPO_HASH_ID`        varchar(64)                         not null comment '代码库HASH ID',
     `DEFAULT_BRANCH`      varchar(512)                        null comment '默认分支',
     `FILE_PATH`           varchar(512)                        not null comment '文件路径',
+    `FILE_PATH_MD5`       varchar(64)                         not null comment '文件路径md5,文件路径太长,不能做索引',
     `FILE_TYPE`           varchar(32)                         not null comment '文件类型',
     `ACTION_TYPE`         varchar(32)                         not null comment '操作类型',
     `STATUS`              varchar(32)                         not null comment '文件处理状态',
     `TRIGGER_USER`        varchar(64)                         not null comment '触发用户',
-    `REF`                 varchar(255)                        null comment '文件来源ref,分支/tag',
+    `REF`                 varchar(255)                        not null comment '文件来源ref,分支/tag',
     `BLOB_ID`             varchar(64)                         null comment '文件blob_id',
     `COMMIT_ID`           varchar(64)                         null comment '文件commitId',
     `COMMIT_TIME`         timestamp                           null comment '提交时间',
@@ -1504,10 +1505,12 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_DIFF`
     `TARGET_FULL_NAME`    varchar(512)                        null comment '目标仓库URL',
     `OLD_FILE_PATH`       varchar(512)                        null comment '旧的文件路径,重命名时才有值',
     `DEPENDENT_FILE_PATH` varchar(512)                        null comment '依赖的文件路径',
+    `DEPENDENT_REF`       varchar(255)                        null comment '依赖的分支',
+    `DEPENDENT_BLOB_ID`   varchar(64)                         null comment '依赖文件blob_id',
     `ERROR_MSG`           text                                null comment '失败原因',
     `CREATE_TIME`         timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
     `UPDATE_TIME`         timestamp default CURRENT_TIMESTAMP not null comment '修改时间',
-    PRIMARY KEY (`PROJECT_ID`, `EVENT_ID`, `FILE_PATH`, `CREATE_TIME`)
+    PRIMARY KEY (`PROJECT_ID`, `EVENT_ID`, `FILE_PATH_MD5`, `REF`, `CREATE_TIME`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件变更表,分区表';
 

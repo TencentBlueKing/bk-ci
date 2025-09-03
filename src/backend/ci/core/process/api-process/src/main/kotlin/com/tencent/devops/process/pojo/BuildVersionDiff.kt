@@ -11,7 +11,7 @@ data class BuildVersionDiff(
     @get:Schema(title = "当前版本", required = true)
     val currVersion: Int,
     @get:Schema(title = "当前版本名称", required = true)
-    val curVersionName: String?,
+    val currVersionName: String?,
     @get:Schema(title = "引用资源版本差异", required = true)
     val resourceDiffs: List<BuildResourceVersionDiff>
 )

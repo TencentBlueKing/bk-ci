@@ -3,6 +3,7 @@ package com.tencent.devops.process.dao.template
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.api.util.toLocalDateTimeOrDefault
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -112,7 +113,7 @@ class PipelineTemplateResourceDao {
                 .set(SORT_WEIGHT, record.sortWeight)
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
-                .set(RELEASE_TIME, record.releaseTime.toLocalDateTimeOrDefault())
+                .set(RELEASE_TIME, record.releaseTime?.toLocalDateTime())
                 .execute()
         }
     }
@@ -247,7 +248,7 @@ class PipelineTemplateResourceDao {
                 UPDATE_TIME
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
-                .orderBy(SORT_WEIGHT.desc(), NUMBER.desc())
+                .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc())
                 .fetch()
                 .map {
                     PipelineVersionSimple(

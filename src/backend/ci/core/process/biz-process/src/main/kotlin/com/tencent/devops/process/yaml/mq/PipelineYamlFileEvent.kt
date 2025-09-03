@@ -110,7 +110,22 @@ data class PipelineYamlFileEvent(
     @get:Schema(title = "目标仓库URL", required = false)
     val targetRepoUrl: String? = null,
     @get:Schema(title = "目标仓库全名", required = false)
-    val targetFullName: String? = null
+    val targetFullName: String? = null,
+    @get:Schema(
+        title = "依赖的文件路径,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentFilePath: String? = null,
+    @get:Schema(
+        title = "依赖的分支,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentRef: String? = null,
+    @get:Schema(
+        title = "依赖的文件blobId,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentBlobId: String? = null
 ) : IEvent() {
     @JsonIgnore
     val repoHashId = repository.repoHashId!!
@@ -168,7 +183,10 @@ data class PipelineYamlFileEvent(
         sourceRepoUrl = yamlDiff.sourceRepoUrl,
         sourceFullName = yamlDiff.sourceFullName,
         targetRepoUrl = yamlDiff.targetRepoUrl,
-        targetFullName = yamlDiff.targetFullName
+        targetFullName = yamlDiff.targetFullName,
+        dependentFilePath = yamlDiff.dependentFilePath,
+        dependentRef = yamlDiff.dependentRef,
+        dependentBlobId = yamlDiff.dependentBlobId
     )
 }
 

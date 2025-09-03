@@ -32,7 +32,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
     fun execute(event: PipelineYamlFileExecutorEvent) {
         with(event) {
             logger.info(
-                "[PAC_PIPELINE]|Start to execute yaml file|$eventId|$projectId|${repository.repoHashId}|$filePath"
+                "[PAC_PIPELINE]|Start to execute yaml file|$eventId|$projectId|${repository.repoHashId}|$filePath|$ref"
             )
             val lock = PipelineYamlExecutorLock(
                 redisOperation = redisOperation,
@@ -43,7 +43,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
             try {
                 if (!lock.tryLock()) {
                     logger.info(
-                        "[PAC_PIPELINE] yaml file executor|$projectId|$eventId|$filePath|" +
+                        "[PAC_PIPELINE] yaml file executor|$projectId|$eventId|$filePath|$ref|" +
                                 "YamlExecutorLock try lock fail"
                     )
                     retry()
@@ -52,11 +52,12 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 val yamlDiff = pipelineYamlDiffService.getYamlDiff(
                     projectId = projectId,
                     eventId = eventId,
-                    filePath = filePath
+                    filePath = filePath,
+                    ref = ref
                 )
                 if (yamlDiff == null || yamlDiff.status.isFinished()) {
                     logger.info(
-                        "[PAC_PIPELINE] yaml file executor|$projectId|$eventId|$filePath|" +
+                        "[PAC_PIPELINE] yaml file executor|$projectId|$eventId|$filePath|$ref|" +
                                 "REPEAT_EVENT|${yamlDiff?.status}"
                     )
                     return
@@ -69,13 +70,14 @@ class PipelineYamlFileExecutor @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to execute yaml file|" +
-                        "$eventId|$projectId|${repository.repoHashId}|$filePath",
+                        "$eventId|$projectId|${repository.repoHashId}|$filePath|$ref",
                     ignored
                 )
                 handleException(
                     projectId = projectId,
                     eventId = eventId,
                     filePath = filePath,
+                    ref = ref,
                     exception = ignored
                 )
             } finally {
@@ -140,6 +142,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
@@ -155,6 +158,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.FAILED
             )
         }
@@ -170,6 +174,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
             if (fileType.canExecute()) {
@@ -180,6 +185,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 exception = ignored
             )
             logger.error(
@@ -201,6 +207,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
@@ -208,6 +215,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 exception = ignored
             )
             logger.error(
@@ -228,6 +236,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
             if (fileType.canExecute()) {
@@ -238,6 +247,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 exception = ignored
             )
             logger.error(
@@ -258,6 +268,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
@@ -265,6 +276,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 exception = ignored
             )
             logger.error(
@@ -283,6 +295,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
@@ -290,6 +303,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 exception = ignored
             )
             logger.error(
@@ -307,6 +321,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 status = YamDiffFileStatus.SUCCESS
             )
         } catch (ignored: Exception) {
@@ -314,6 +329,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 filePath = filePath,
+                ref = ref,
                 exception = ignored
             )
             logger.error(
@@ -340,6 +356,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
         projectId: String,
         eventId: Long,
         filePath: String,
+        ref: String,
         exception: Exception
     ) {
         val context = WebhookTriggerContext(
@@ -364,6 +381,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             filePath = filePath,
+            ref = ref,
             status = YamDiffFileStatus.FAILED,
             errorMsg = errorMsg
         )

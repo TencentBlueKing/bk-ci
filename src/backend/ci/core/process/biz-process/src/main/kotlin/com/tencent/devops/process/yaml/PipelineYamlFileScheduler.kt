@@ -101,13 +101,15 @@ class PipelineYamlFileScheduler @Autowired constructor(
                     projectId = projectId,
                     repository = repository,
                     eventId = eventId,
-                    filePath = yamlDiff.filePath
+                    filePath = yamlDiff.filePath,
+                    ref = yamlDiff.ref
                 )
                 sampleEventDispatcher.dispatch(yamlFileExecutorEvent)
                 pipelineYamlDiffService.updateStatus(
                     projectId = projectId,
                     eventId = eventId,
                     filePath = yamlDiff.filePath,
+                    ref = yamlDiff.ref,
                     status = YamDiffFileStatus.RUNNING
                 )
             }

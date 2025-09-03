@@ -39,11 +39,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VER
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
 import org.jooq.DSLContext
@@ -56,11 +54,9 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PipelineTemplateVersionDeleteHandler @Autowired constructor(
-    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val redisOperation: RedisOperation,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateTransactionService: PipelineTemplatePersistenceService,
+    private val pipelineTemplatePersistenceService: PipelineTemplatePersistenceService,
     private val versionDeletePostProcessor: PTemplateVersionDeletePostProcessor,
     private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
@@ -139,7 +135,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE
             )
         }
-        pipelineTemplateTransactionService.deleteVersion(
+        pipelineTemplatePersistenceService.deleteVersion(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -170,7 +166,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
             )
         }
-        pipelineTemplateTransactionService.deleteTemplateAllVersions(
+        pipelineTemplatePersistenceService.deleteTemplateAllVersions(
             projectId = projectId,
             templateId = templateId
         )
@@ -180,7 +176,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
         if (branch == null) {
             throw IllegalArgumentException("branchName is null")
         }
-        pipelineTemplateTransactionService.inactiveBranchVersion(
+        pipelineTemplatePersistenceService.inactiveBranchVersion(
             projectId = projectId,
             templateId = templateId,
             branch = branch

@@ -174,7 +174,6 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 sourcePath !in targetFilePaths &&
                         (sourcePath in changeFiles.addedFiles || sourcePath in changeFiles.updatedFiles) -> {
                     val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.CREATE)
-                    logger.info("pull request yaml diff create|$eventId|$sourcePath")
                     yamlDiffs.add(yamlDiff)
                 }
                 // 源分支有，目标分支没有，重命名列表有，说明源分支重命名,以源分支为主
@@ -189,9 +188,10 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 sourcePath !in targetFilePaths && sourcePath !in changeFiles.allFiles -> {
                     return@forEach
                 }
-                // 源分支有，目标分支有，变更列表有，需要校验版本 // TODO 如果有预合并,推荐使用预合并commitId
+                // 源分支有，目标分支有，变更列表有，需要对版本进行预合并 // TODO 如果有预合并,推荐使用预合并commitId
                 sourcePath in targetFilePaths && sourcePath in changeFiles.updatedFiles -> {
-                    //
+                    val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.UPDATE)
+                    yamlDiffs.add(yamlDiff)
                 }
             }
         }

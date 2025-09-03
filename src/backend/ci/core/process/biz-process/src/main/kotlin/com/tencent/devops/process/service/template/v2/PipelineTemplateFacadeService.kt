@@ -5,6 +5,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -1099,7 +1100,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
         with(commonCondition) {
             val finCondition = upgradableVersionsQuery?.takeIf { it }?.let {
                 if (templateId == null) {
-                    throw IllegalArgumentException("templateId is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf(PipelineTemplateResourceCommonCondition::templateId.name)
+                    )
                 }
                 client.get(ServiceTemplateResource::class).getLatestInstalledVersion(
                     templateCode = templateId!!

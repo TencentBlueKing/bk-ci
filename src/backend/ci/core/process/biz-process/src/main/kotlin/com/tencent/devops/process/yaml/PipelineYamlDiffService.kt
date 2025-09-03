@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
 class PipelineYamlDiffService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlDiffDao: PipelineYamlDiffDao,
-    private val eventDispatcher: SampleEventDispatcher,
+    private val sampleEventDispatcher: SampleEventDispatcher,
     private val redisOperation: RedisOperation
 ) {
 
@@ -42,7 +42,7 @@ class PipelineYamlDiffService @Autowired constructor(
                 repository = repository,
                 eventId = eventId
             )
-            eventDispatcher.dispatch(yamlFileSchedulerEvent)
+            sampleEventDispatcher.dispatch(yamlFileSchedulerEvent)
         } finally {
             lock.unlock()
         }
@@ -62,13 +62,15 @@ class PipelineYamlDiffService @Autowired constructor(
     fun getYamlDiff(
         projectId: String,
         eventId: Long,
-        filePath: String
+        filePath: String,
+        ref: String
     ): PipelineYamlDiff? {
         return pipelineYamlDiffDao.getYamlDiff(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
-            filePath = filePath
+            filePath = filePath,
+            ref = ref
         )
     }
 
@@ -76,6 +78,7 @@ class PipelineYamlDiffService @Autowired constructor(
         projectId: String,
         eventId: Long,
         filePath: String,
+        ref: String,
         status: YamDiffFileStatus,
         errorMsg: String? = null
     ) {
@@ -84,6 +87,7 @@ class PipelineYamlDiffService @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             filePath = filePath,
+            ref = ref,
             status = status,
             errorMsg = errorMsg
         )

@@ -6,6 +6,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamDiffFileStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -29,6 +30,7 @@ class PipelineYamlDiffDao {
                     REPO_HASH_ID,
                     DEFAULT_BRANCH,
                     FILE_PATH,
+                    FILE_PATH_MD5,
                     FILE_TYPE,
                     ACTION_TYPE,
                     STATUS,
@@ -52,6 +54,8 @@ class PipelineYamlDiffDao {
                     TARGET_FULL_NAME,
                     OLD_FILE_PATH,
                     DEPENDENT_FILE_PATH,
+                    DEPENDENT_REF,
+                    DEPENDENT_BLOB_ID,
                     CREATE_TIME,
                     UPDATE_TIME
                 ).values(
@@ -61,6 +65,7 @@ class PipelineYamlDiffDao {
                     diff.repoHashId,
                     diff.defaultBranch,
                     diff.filePath,
+                    DigestUtils.md5Hex(diff.filePath),
                     diff.fileType.name,
                     diff.actionType.name,
                     diff.status.name,
@@ -84,6 +89,8 @@ class PipelineYamlDiffDao {
                     diff.targetFullName,
                     diff.oldFilePath,
                     diff.dependentFilePath,
+                    diff.dependentRef,
+                    diff.dependentBlobId,
                     now,
                     now,
                 )
@@ -109,13 +116,15 @@ class PipelineYamlDiffDao {
         dslContext: DSLContext,
         projectId: String,
         eventId: Long,
-        filePath: String
+        filePath: String,
+        ref: String
     ): PipelineYamlDiff? {
         return with(TPipelineYamlDiff.T_PIPELINE_YAML_DIFF) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(EVENT_ID.eq(eventId))
-                .and(FILE_PATH.eq(filePath))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
+                .and(REF.eq(ref))
                 .fetchOne(mapper)
         }
     }
@@ -125,6 +134,7 @@ class PipelineYamlDiffDao {
         projectId: String,
         eventId: Long,
         filePath: String,
+        ref: String,
         status: YamDiffFileStatus,
         errorMsg: String? = null
     ) {
@@ -135,7 +145,8 @@ class PipelineYamlDiffDao {
                 .let { if (!errorMsg.isNullOrBlank()) it.set(ERROR_MSG, errorMsg) else it }
                 .where(PROJECT_ID.eq(projectId))
                 .and(EVENT_ID.eq(eventId))
-                .and(FILE_PATH.eq(filePath))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
+                .and(REF.eq(ref))
                 .execute()
         }
     }
@@ -171,7 +182,9 @@ class PipelineYamlDiffDao {
                     targetFullName = it.targetFullName,
                     fork = it.fork,
                     oldFilePath = it.oldFilePath,
-                    dependentFilePath = it.dependentFilePath
+                    dependentFilePath = it.dependentFilePath,
+                    dependentRef = it.dependentRef,
+                    dependentBlobId = it.dependentBlobId
                 )
             }
         }

@@ -16,5 +16,7 @@ data class PipelineYamlFileExecutorEvent(
     @get:Schema(title = "事件ID", required = true)
     val eventId: Long,
     @get:Schema(title = "文件路径", required = true)
-    val filePath: String
+    val filePath: String,
+    @get:Schema(title = "变更分支", required = true)
+    val ref: String
 ) : IEvent()

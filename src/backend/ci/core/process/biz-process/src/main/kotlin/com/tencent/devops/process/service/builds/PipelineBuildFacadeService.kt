@@ -3005,7 +3005,7 @@ class PipelineBuildFacadeService(
         if (currBuildInfo.buildNum == 1) {
             return BuildVersionDiff(
                 currVersion = currBuildInfo.version,
-                curVersionName = currBuildInfo.versionName,
+                currVersionName = currBuildInfo.versionName,
                 resourceDiffs = emptyList()
             )
         }
@@ -3017,7 +3017,7 @@ class PipelineBuildFacadeService(
         // 获取当前构建对应的模版信息
         return BuildVersionDiff(
             currVersion = currBuildInfo.version,
-            curVersionName = currBuildInfo.versionName,
+            currVersionName = currBuildInfo.versionName,
             resourceDiffs = emptyList()
         )
     }

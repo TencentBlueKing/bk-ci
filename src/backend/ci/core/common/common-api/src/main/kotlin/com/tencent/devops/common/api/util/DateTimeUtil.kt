@@ -55,6 +55,10 @@ fun Long?.toLocalDateTimeOrDefault(): LocalDateTime {
     return this?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) } ?: LocalDateTime.now()
 }
 
+fun Long?.toLocalDateTime(): LocalDateTime? {
+    return this?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
+}
+
 @Suppress("ALL")
 object DateTimeUtil {
 

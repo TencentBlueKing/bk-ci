@@ -280,6 +280,13 @@ class PipelineYamlFileManager @Autowired constructor(
      */
     fun dependencyUpgradeYamlFile(event: PipelineYamlFileEvent) {
         with(event) {
+            if (dependentFilePath == null || dependentRef == null || dependentBlobId == null) {
+                logger.info(
+                    "[PAC_PIPELINE]|dependency upgrade yaml file|dependent file is null|" +
+                            "$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId"
+                )
+                return
+            }
             // 判断是否有依赖模版
             val dependency = pipelineYamlDependencyService.getDependency(
                 projectId = projectId,
@@ -291,25 +298,23 @@ class PipelineYamlFileManager @Autowired constructor(
             if (dependency == null) {
                 return
             }
-            // 判断依赖的模版文件在本次中是否有变更
-            val dependentFileDiff = pipelineYamlDiffService.getYamlDiff(
-                projectId = projectId,
-                eventId = eventId,
-                filePath = dependency.dependentFilePath
-            )
-            // 依赖的模版没有变更,则不更新
-            if (dependentFileDiff == null || !dependentFileDiff.actionType.isChange()) {
+            // 判断依赖的路径是否相同
+            if (dependency.dependentFilePath != dependentFilePath) {
+                logger.info(
+                    "[PAC_PIPELINE]|dependency pipeline yaml dependent file path not match|" +
+                            "$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId" +
+                            "${dependency.dependentFilePath}|$dependentFilePath"
+                )
                 return
             }
-
-            // 判断依赖的分支与变更的分支是否相同
+            // 判断依赖的分支是否相同
             if (dependency.dependentRef != Constansts.DEFAULT_DEPENDENT_REF &&
-                GitActionCommon.trimRef(dependency.dependentRef) != dependentFileDiff.ref
+                GitActionCommon.trimRef(dependency.dependentRef) != dependentRef
             ) {
                 logger.info(
-                    "[PAC_PIPELINE]|dependency pipeline yaml dependent ref is not match|" +
+                    "[PAC_PIPELINE]|dependency pipeline yaml dependent ref not match|" +
                             "$eventId|$projectId|$repoHashId|$filePath|$ref|$blobId" +
-                            "${dependency.dependentRef}|${dependentFileDiff.ref}"
+                            "${dependency.dependentRef}|$dependentRef"
                 )
                 return
             }
@@ -323,8 +328,8 @@ class PipelineYamlFileManager @Autowired constructor(
             try {
                 lock.lock()
                 dependencyUpgradePipeline(
-                    dependentFilePath = dependency.dependentFilePath,
-                    dependentBlobId = dependentFileDiff.blobId!!
+                    dependentFilePath = dependentFilePath,
+                    dependentBlobId = dependentBlobId
                 )
             } catch (ignored: Exception) {
                 throw ignored
