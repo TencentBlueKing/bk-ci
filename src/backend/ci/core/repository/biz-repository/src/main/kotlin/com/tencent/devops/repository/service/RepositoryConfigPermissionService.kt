@@ -120,7 +120,7 @@ abstract class RepositoryConfigPermissionService @Autowired constructor(
         scmCode = scmCode,
         limit = limit,
         offset = offset
-    ).toList().map {
+    ).map {
         RepositoryConfigDept(
             deptId = it.deptId,
             deptName = it.deptName

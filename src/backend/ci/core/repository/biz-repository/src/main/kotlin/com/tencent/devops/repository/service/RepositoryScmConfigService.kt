@@ -509,13 +509,13 @@ class RepositoryScmConfigService @Autowired constructor(
     fun deleteDept(
         scmCode: String,
         userId: String,
-        depts: List<RepositoryConfigDept>
+        depts: List<Int>
     ) {
         validateUserPlatformPermission(userId)
         if (depts.isNotEmpty()) {
             repositoryConfigPermissionService.delete(
                 scmCode = scmCode,
-                deptList = depts.map { it.deptId }.toSet()
+                deptList = depts.toSet()
             )
         }
     }

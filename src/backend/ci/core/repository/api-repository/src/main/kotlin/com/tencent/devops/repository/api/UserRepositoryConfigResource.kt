@@ -257,6 +257,6 @@ interface UserRepositoryConfigResource {
         @PathParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要删除的代码源管理的组织架构", required = true)
-        list: List<RepositoryConfigDept>? = null
+        list: List<Int>? = null
     ): Result<Boolean>
 }

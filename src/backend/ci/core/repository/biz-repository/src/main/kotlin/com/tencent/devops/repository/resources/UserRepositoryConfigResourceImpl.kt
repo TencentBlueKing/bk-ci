@@ -203,7 +203,7 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     override fun deleteDept(
         userId: String,
         scmCode: String,
-        list: List<RepositoryConfigDept>?
+        list: List<Int>?
     ): Result<Boolean> {
         list?.let {
             repositoryScmConfigService.deleteDept(
