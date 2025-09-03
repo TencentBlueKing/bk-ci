@@ -25,32 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources.scm
+package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.scm.UserGitResource
-import com.tencent.devops.repository.service.scm.IGitService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
-@RestResource
-class UserGitResourceImpl @Autowired constructor(
-    private val gitService: IGitService
-) : UserGitResource {
+@Tag(name = "USER_OAUTH_GIT", description = "用户-git的oauth")
+@Path("/user/git/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserGitRepositoryResource {
 
-    override fun getRecentGitCommitMessages(
+    @Operation(summary = "根据分支获取代码库最近提交信息")
+    @GET
+    @Path("/commitMessages/get")
+    fun getRecentGitCommitMessages(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "分支", required = false)
+        @QueryParam("branch")
         branch: String?,
+        @Parameter(description = "代码库链接", required = false)
+        @QueryParam("codeSrc")
         codeSrc: String?,
-        gitProjectId: Long?,
+        @Parameter(description = "gitProjectId", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long? = null,
+        @Parameter(description = "获取提交信息数量(默认读取最近5条)", required = false)
+        @QueryParam("commitNumber")
+        @DefaultValue("5")
         commitNumber: Int
-    ): Result<String> {
-        return gitService.getRecentGitCommitMessages(
-            userId = userId,
-            branch = branch,
-            codeSrc = codeSrc,
-            gitProjectId = gitProjectId,
-            commitNumber = commitNumber
-        )
-    }
+    ): Result<String>
 }

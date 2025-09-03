@@ -2153,7 +2153,7 @@ class GitService @Autowired constructor(
                 )
             }
             val projectName = GitUtils.getProjectName(codeSrc)
-            getGitProjectInfo(accessToken, projectName, TokenTypeEnum.OAUTH)
+            getGitProjectInfo(projectName, accessToken, TokenTypeEnum.OAUTH)
                 .data?.id ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
                 params = arrayOf(projectName),
