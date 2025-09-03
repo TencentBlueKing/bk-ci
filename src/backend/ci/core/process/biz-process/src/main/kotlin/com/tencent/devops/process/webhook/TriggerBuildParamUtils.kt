@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTION
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTOR
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTOR_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BASE_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BASE_REPO_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BEFORE_SHA
@@ -83,8 +84,10 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_COMMENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_CREATOR
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_CREATOR_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_MODIFIER
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_MODIFIER_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_VERSION
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PROJECT_ID
@@ -155,6 +158,7 @@ object TriggerBuildParamUtils {
     fun getBasicBuildParams(): List<BuildEnvParameters> {
         return listOf(
             CI_ACTOR,
+            CI_ACTOR_NAME,
             CI_BUILD_MSG,
             CI_BUILD_NO,
             CI_BUILD_NUM,
@@ -164,7 +168,9 @@ object TriggerBuildParamUtils {
             CI_PROJECT_NAME,
             CI_PIPELINE_NAME,
             CI_PIPELINE_CREATOR,
+            CI_PIPELINE_CREATOR_NAME,
             CI_PIPELINE_MODIFIER,
+            CI_PIPELINE_MODIFIER_NAME,
             CI_PIPELINE_VERSION,
             CI_BUILD_START_TYPE,
             CI_WORKSPACE,
@@ -410,6 +416,7 @@ object TriggerBuildParamUtils {
             mapOf(CodeEventType.ISSUES.name to params)
         )
     }
+
     /**
      * git事件触发Review变量名列表
      */
