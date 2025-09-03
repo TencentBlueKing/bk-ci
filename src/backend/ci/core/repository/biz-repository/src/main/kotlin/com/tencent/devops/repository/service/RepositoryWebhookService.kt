@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
 import com.tencent.devops.repository.dao.RepositoryWebhookRequestDao
 import com.tencent.devops.repository.pojo.RepoCondition
@@ -32,11 +33,14 @@ class RepositoryWebhookService @Autowired constructor(
     fun webhookParse(
         scmCode: String,
         request: WebhookParseRequest
-    ): WebhookData {
+    ): WebhookData? {
         val hookRequest = with(request) {
             HookRequest(headers, body, queryParams)
         }
-        val webhook = webhookApiService.webhookParse(scmCode = scmCode, request = hookRequest)
+        val webhook = webhookApiService.webhookParse(scmCode = scmCode, request = hookRequest) ?: run {
+            logger.warn("Unsupported webhook request $scmCode [${JsonUtil.toJson(request, false)}]")
+            return null
+        }
         val serverRepo = webhook.repository()
         logger.info(
             "webhook parse result|scmCode:$scmCode|id:${serverRepo.id}|fullName:${serverRepo.fullName}"

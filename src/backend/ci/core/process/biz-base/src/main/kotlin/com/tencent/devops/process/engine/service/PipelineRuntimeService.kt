@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ElementUtils
@@ -607,7 +608,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } else null,
                 executeTime = executeTime,
                 buildParameters = buildParameters,
-                webHookType = webhookType,
+                webHookType = transferWebhookType(webhookType),
                 webhookInfo = webhookInfo,
                 startType = StartType.transform(trigger, webhookType),
                 recommendVersion = recommendVersion,
@@ -2299,5 +2300,11 @@ class PipelineRuntimeService @Autowired constructor(
         }
 
         return getTopParentPipelineByBuildId(parentBuildId)
+    }
+
+    fun transferWebhookType(webhookType: String?) = when (webhookType) {
+        CodeType.SCM_GIT.name -> CodeType.GIT.name
+        CodeType.SCM_SVN.name -> CodeType.SVN.name
+        else -> webhookType
     }
 }
