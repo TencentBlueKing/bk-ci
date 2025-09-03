@@ -962,26 +962,4 @@ interface ServiceGitResource {
         gitProjectId: String,
         gitCreateMergeRequest: GitCreateMergeRequest
     ): Result<GitMrInfo>
-
-    @Operation(summary = "根据分支获取代码库最近提交信息")
-    @GET
-    @Path("/commitMessages/get")
-    fun getRecentGitCommitMessages(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "分支", required = false)
-        @QueryParam("branch")
-        branch: String?,
-        @Parameter(description = "代码库链接", required = true)
-        @QueryParam("codeSrc")
-        codeSrc: String,
-        @Parameter(description = "gitProjectId", required = false)
-        @QueryParam("gitProjectId")
-        gitProjectId: Long? = null,
-        @Parameter(description = "获取提交信息数量(默认读取最近5条)", required = false)
-        @QueryParam("commitNumber")
-        @DefaultValue("5")
-        commitNumber: Int
-    ): Result<String>
 }

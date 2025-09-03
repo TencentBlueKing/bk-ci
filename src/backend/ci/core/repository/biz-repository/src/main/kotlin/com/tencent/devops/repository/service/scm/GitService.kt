@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.MASTER
@@ -118,7 +119,7 @@ import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 
 @Service
@@ -2116,7 +2117,7 @@ class GitService @Autowired constructor(
     override fun getRecentGitCommitMessages(
         userId: String,
         branch: String?,
-        codeSrc: String,
+        codeSrc: String?,
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {
@@ -2144,6 +2145,13 @@ class GitService @Autowired constructor(
             )
         }
         val projectId = gitProjectId ?: run {
+            if (codeSrc.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = PARAMETER_IS_NULL,
+                    params = arrayOf("codeSrc"),
+                    defaultMessage = "codeSrc parameter is invalid"
+                )
+            }
             val projectName = GitUtils.getProjectName(codeSrc)
             getGitProjectInfo(accessToken, projectName, TokenTypeEnum.OAUTH)
                 .data?.id ?: throw ErrorCodeException(

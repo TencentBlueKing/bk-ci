@@ -405,7 +405,7 @@ interface IGitService {
     fun getRecentGitCommitMessages(
         userId: String,
         branch: String?,
-        codeSrc: String,
+        codeSrc: String?,
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String>
