@@ -748,7 +748,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_START,
                         labels = mapOf(
                             PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
-                                LocalDateTime.now().timestamp()
+                                LocalDateTime.now().timestamp(),
+                            PipelineBuildStatusBroadCastEvent.Labels::stepName.name to
+                                task.taskName
                         )
                     )
                 )
@@ -946,6 +948,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             labels[PipelineBuildStatusBroadCastEvent.Labels::systemDuration.name] = timeCost?.systemCost
             labels[PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name] = timeCost?.queueCost
             labels[PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name] = timeCost?.waitCost
+            labels[PipelineBuildStatusBroadCastEvent.Labels::stepName.name] = task.taskName
             if (buildStatus.isFailure()) {
                 labels[PipelineBuildStatusBroadCastEvent.Labels::errorCode.name] = result.errorCode
                 labels[PipelineBuildStatusBroadCastEvent.Labels::errorType.name] = result.errorType
