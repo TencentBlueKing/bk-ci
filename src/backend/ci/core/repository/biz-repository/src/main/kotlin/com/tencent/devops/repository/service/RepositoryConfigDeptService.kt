@@ -27,11 +27,7 @@
 
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.repository.dao.RepositoryConfigDeptDao
 import com.tencent.devops.repository.pojo.RepositoryConfigDept
@@ -41,9 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired
 /**
  * 代码库源权限抽象类
  */
-abstract class RepositoryConfigPermissionService @Autowired constructor(
+abstract class RepositoryConfigDeptService @Autowired constructor(
     open val dslContext: DSLContext,
-    open val authPlatformApi: AuthPlatformApi,
     open val repositoryConfigDeptDao: RepositoryConfigDeptDao,
     open val client: Client
 ) {
@@ -76,20 +71,9 @@ abstract class RepositoryConfigPermissionService @Autowired constructor(
         return result
     }
 
-    /**
-     * 校验管理员权限
-     */
-    fun validateAdminPerm(userId: String) {
-        if (!authPlatformApi.validateUserPlatformPermission(userId)) {
-            throw OperationException(
-                message = I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.ERROR_USER_NO_PLATFORM_ADMIN_PERMISSION
-                )
-            )
-        }
-    }
 
-    fun create(
+
+    fun createDept(
         scmCode: String,
         deptList: List<RepositoryConfigDept>,
         userId: String
@@ -102,7 +86,7 @@ abstract class RepositoryConfigPermissionService @Autowired constructor(
         )
     }
 
-    fun delete(
+    fun deleteDept(
         scmCode: String,
         deptList: Set<Int>
     ) = repositoryConfigDeptDao.delete(
@@ -111,11 +95,11 @@ abstract class RepositoryConfigPermissionService @Autowired constructor(
         deptList = deptList
     )
 
-    fun list(
+    fun listDept(
         scmCode: String,
         limit: Int,
         offset: Int
-    ) = repositoryConfigDeptDao.list(
+    ): List<RepositoryConfigDept> = repositoryConfigDeptDao.list(
         dslContext = dslContext,
         scmCode = scmCode,
         limit = limit,
@@ -126,6 +110,13 @@ abstract class RepositoryConfigPermissionService @Autowired constructor(
             deptName = it.deptName
         )
     }
+
+    fun countDept(
+        scmCode: String
+    ) = repositoryConfigDeptDao.count(
+        dslContext = dslContext,
+        scmCode = scmCode
+    )
 
     private fun validateDeptId(
         deptId: Int,

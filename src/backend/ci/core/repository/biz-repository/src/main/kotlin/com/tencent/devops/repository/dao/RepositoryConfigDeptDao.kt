@@ -84,6 +84,18 @@ class RepositoryConfigDeptDao {
         }
     }
 
+    fun count(
+        dslContext: DSLContext,
+        scmCode: String
+    ): Int {
+        return with(TRepositoryScmConfigDeptRel.T_REPOSITORY_SCM_CONFIG_DEPT_REL) {
+            dslContext.selectCount()
+                    .from(this)
+                    .where(SCM_CODE.eq(scmCode))
+                    .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         scmCode: String,

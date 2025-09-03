@@ -1,6 +1,5 @@
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.dao.RepositoryConfigDeptDao
 import org.jooq.DSLContext
@@ -10,12 +9,10 @@ import org.springframework.stereotype.Service
 @Service
 class SimpleRepositoryConfigPermissionService @Autowired constructor(
     override val dslContext: DSLContext,
-    override val authPlatformApi: AuthPlatformApi,
     override val repositoryConfigDeptDao: RepositoryConfigDeptDao,
     override val client: Client
-) : RepositoryConfigPermissionService(
+) : RepositoryConfigDeptService(
     dslContext = dslContext,
-    authPlatformApi = authPlatformApi,
     repositoryConfigDeptDao = repositoryConfigDeptDao,
     client = client
 ) {

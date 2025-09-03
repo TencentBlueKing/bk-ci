@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
@@ -80,7 +81,8 @@ class RepositoryScmConfigService @Autowired constructor(
     private val repositoryScmProviderDao: RepositoryScmProviderDao,
     private val repositoryDao: RepositoryDao,
     private val uploadFileService: RepositoryUploadFileService,
-    private val repositoryConfigPermissionService: RepositoryConfigPermissionService
+    private val authPlatformApi: AuthPlatformApi,
+    private val repositoryConfigDeptService: RepositoryConfigDeptService
 ) {
     @Value("\${aes.scm.props:#{null}}")
     private val aesKey: String = ""
@@ -482,13 +484,17 @@ class RepositoryScmConfigService @Autowired constructor(
         userId: String,
         limit: Int,
         offset: Int
-    ): List<RepositoryConfigDept> {
+    ): SQLPage<RepositoryConfigDept> {
         validateUserPlatformPermission(userId)
-        return repositoryConfigPermissionService.list(
+        val record = repositoryConfigDeptService.listDept(
             scmCode = scmCode,
             limit = limit,
             offset = offset
         )
+        val count = repositoryConfigDeptService.countDept(
+            scmCode = scmCode
+        ).toLong()
+        return SQLPage(count = count, records = record)
     }
 
     fun addDept(
@@ -498,7 +504,7 @@ class RepositoryScmConfigService @Autowired constructor(
     ) {
         validateUserPlatformPermission(userId)
         if (depts.isNotEmpty()) {
-            repositoryConfigPermissionService.create(
+            repositoryConfigDeptService.createDept(
                 scmCode = scmCode,
                 userId = userId,
                 deptList = depts
@@ -513,7 +519,7 @@ class RepositoryScmConfigService @Autowired constructor(
     ) {
         validateUserPlatformPermission(userId)
         if (depts.isNotEmpty()) {
-            repositoryConfigPermissionService.delete(
+            repositoryConfigDeptService.deleteDept(
                 scmCode = scmCode,
                 deptList = depts.toSet()
             )
@@ -688,13 +694,19 @@ class RepositoryScmConfigService @Autowired constructor(
      * 校验平台管理权限
      */
     private fun validateUserPlatformPermission(userId: String) {
-        repositoryConfigPermissionService.validateAdminPerm(userId)
+        if (!authPlatformApi.validateUserPlatformPermission(userId)) {
+            throw OperationException(
+                message = I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.ERROR_USER_NO_PLATFORM_ADMIN_PERMISSION
+                )
+            )
+        }
     }
 
     private fun validateUserPermission(
         userId: String,
         scmCodes: List<String>
-    ) = repositoryConfigPermissionService.listScmCode(
+    ) = repositoryConfigDeptService.listScmCode(
         userId = userId,
         scmCodes = scmCodes
     )

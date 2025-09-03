@@ -171,7 +171,7 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
         scmCode: String,
         page: Int?,
         pageSize: Int?
-    ): Result<List<RepositoryConfigDept>> {
+    ): Result<SQLPage<RepositoryConfigDept>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)

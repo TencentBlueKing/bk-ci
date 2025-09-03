@@ -230,7 +230,7 @@ interface UserRepositoryConfigResource {
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<RepositoryConfigDept>>
+    ): Result<SQLPage<RepositoryConfigDept>>
 
     @Operation(summary = "批量添加目标代码源的组织架构")
     @POST
