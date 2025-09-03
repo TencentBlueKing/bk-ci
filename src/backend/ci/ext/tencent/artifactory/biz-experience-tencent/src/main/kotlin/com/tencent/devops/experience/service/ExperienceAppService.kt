@@ -75,10 +75,10 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.core.Response
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
-import jakarta.ws.rs.core.Response
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -386,6 +386,7 @@ class ExperienceAppService(
                 createDate = it.createTime.run { if (isOldVersion) timestamp() else timestampmilli() },
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
+                name = it.name,
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier,
