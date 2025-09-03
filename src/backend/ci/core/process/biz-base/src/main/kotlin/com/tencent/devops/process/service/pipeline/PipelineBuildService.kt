@@ -445,7 +445,7 @@ class PipelineBuildService(
         if (TenantUtils.isMultiTenantMode()) {
             val tenantId = TenantUtils.getTenantIdByEnglishName(pipeline.projectId)
             pipelineParamMap[PIPELINE_START_USER_DISPLAY_NAME] = BuildParameters(
-                PIPELINE_START_USER_NAME,
+                PIPELINE_START_USER_DISPLAY_NAME,
                 getUserDisplayName(pipelineParamMap[PIPELINE_START_USER_NAME]!!.value.toString(), tenantId)
             )
             pipelineParamMap[PIPELINE_CREATE_USER_NAME] = BuildParameters(
