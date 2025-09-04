@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_HISTORY` (
   `UPDATE_TIME` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `VERSION_NAME` varchar(64) DEFAULT NULL COMMENT '正式版本名称',
   `YAML_VERSION` varchar(34) DEFAULT NULL COMMENT 'YAML的版本标记',
+  `VERSION_CHANGE` bit default null comment '是否发生版本变更',
   PRIMARY KEY (`BUILD_ID`),
   KEY `STATUS_KEY` (`PROJECT_ID`,`PIPELINE_ID`,`STATUS`),
   KEY `INX_TPBH_PROJECT_PIPELINE_NUM` (`PROJECT_ID`, `PIPELINE_ID`, `BUILD_NUM`),
@@ -149,6 +150,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_HISTORY_DEBUG` (
   `YAML_VERSION` varchar(34) DEFAULT NULL COMMENT 'YAML的版本标记',
   `RESOURCE_MODEL` mediumtext COMMENT '本次调试的编排备份',
   `DELETE_TIME` timestamp NULL DEFAULT NULL COMMENT '记录删除时间',
+  `VERSION_CHANGE` bit default null comment '是否发生版本变更',
   PRIMARY KEY (`BUILD_ID`),
   KEY `STATUS_KEY` (`PROJECT_ID`,`PIPELINE_ID`,`STATUS`),
   KEY `INX_TPBH_PROJECT_PIPELINE_NUM` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_NUM`),
@@ -1561,4 +1563,21 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE_VERSION`
     primary key (`PROJECT_ID`, `PIPELINE_ID`, `PIPELINE_VERSION`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='模版流水线关联版本表';
 
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_VERSION_DIFF`
+(
+    `ID`                        varchar(32) NOT NULL DEFAULT '' COMMENT '主键ID',
+    `PROJECT_ID`                varchar(64) not null comment '项目ID',
+    `PIPELINE_ID`               varchar(34) not null comment '流水线ID',
+    `BUILD_ID`                  varchar(34) not null comment '构建ID',
+    `TEMPLATE_TYPE`             varchar(32) not null comment '模板类型，PIPELINE/STAGE/JOB/STEP/VARIABLE',
+    `TEMPLATE_NAME`             varchar(64) not null comment '模板名称',
+    `TEMPLATE_ID`               varchar(32) not null comment '模板ID',
+    `TEMPLATE_VERSION_NAME`     varchar(64) not null comment '模板版本名称-分支/tag/latest',
+    `PREV_TEMPLATE_VERSION`     bigint(20)  not null comment '上一个版本号',
+    `CURR_TEMPLATE_VERSION`     bigint(20)  not null comment '当前版本号',
+    `PREV_TEMPLATE_VERSION_REF` varchar(256)         default null comment '上一次版本名/上一次commit',
+    `CURR_TEMPLATE_VERSION_REF` varchar(256)         default null comment '当前版本号/当前commit',
+    PRIMARY KEY (`ID`),
+    KEY `INX_BUILD` (`PROJECT_ID`, `PIPELINE_ID`, `BUILD_ID`) USING BTREE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线构建版本差异';
 SET FOREIGN_KEY_CHECKS = 1;

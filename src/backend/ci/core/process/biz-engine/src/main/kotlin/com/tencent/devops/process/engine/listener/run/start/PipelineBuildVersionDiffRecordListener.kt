@@ -25,35 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.init
+package com.tencent.devops.process.engine.listener.run.start
 
-import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
-import com.tencent.devops.process.engine.listener.run.start.PipelineBuildVersionDiffRecordListener
-import com.tencent.devops.process.engine.listener.run.start.SubPipelineBuildQueueListener
+import com.tencent.devops.process.engine.service.PipelineBuildVersionDiffService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Configuration
+import org.springframework.stereotype.Component
 
-/**
- * 流水线构建扩展配置
- */
-@Configuration
-class BuildEngineExtendConfiguration {
-    @EventConsumer
-    fun subPipelineBuildFinishConsumer(
-        @Autowired buildListener: SubPipelineBuildFinishListener
-    ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> { buildListener.run(it) }
-
-    @EventConsumer
-    fun subPipelineQueueFinishConsumer(
-        @Autowired buildListener: SubPipelineBuildQueueListener
-    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
-
-    @EventConsumer
-    fun buildVersionDiffRecordListenerConsumer(
-        @Autowired buildListener: PipelineBuildVersionDiffRecordListener
-    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
+@Component
+class PipelineBuildVersionDiffRecordListener @Autowired constructor(
+    private val pipelineBuildVersionDiffService: PipelineBuildVersionDiffService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : PipelineEventListener<PipelineBuildQueueBroadCastEvent>(pipelineEventDispatcher) {
+    override fun run(event: PipelineBuildQueueBroadCastEvent) {
+        pipelineBuildVersionDiffService.onBuildQueue(event)
+    }
 }

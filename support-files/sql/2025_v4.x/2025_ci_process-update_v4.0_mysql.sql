@@ -95,6 +95,23 @@ BEGIN
          ADD COLUMN `DEPENDENT_BLOB_ID` varchar(64) null comment '依赖的文件blob_id';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                AND COLUMN_NAME = 'VERSION_CHANGE') THEN
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY
+        ADD`VERSION_CHANGE` BIT DEFAULT NULL comment '是否发生版本变更';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                AND COLUMN_NAME = 'VERSION_CHANGE') THEN
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY
+        ADD`VERSION_CHANGE` BIT DEFAULT NULL comment '是否发生版本变更';
+    END IF;
 COMMIT;
 
 END <CI_UBF>

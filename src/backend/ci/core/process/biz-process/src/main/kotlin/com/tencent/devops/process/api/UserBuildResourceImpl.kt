@@ -669,7 +669,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Result<BuildVersionDiff> {
+    ): Result<BuildVersionDiff?> {
         return Result(
             pipelineBuildFacadeService.getBuildVersionDiff(
                 userId = userId,

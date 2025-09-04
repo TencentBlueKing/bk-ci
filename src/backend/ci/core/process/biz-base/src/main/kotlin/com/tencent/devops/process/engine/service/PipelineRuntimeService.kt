@@ -636,7 +636,7 @@ class PipelineRuntimeService @Autowired constructor(
                 updateTime = updateTime ?: endTime ?: 0L, // 防止空异常
                 concurrencyGroup = concurrencyGroup,
                 executeCount = executeCount,
-                versionChange = lastBuildVersion != null && version != lastBuildVersion
+                versionChange = (versionChange ?: false) || (lastBuildVersion != null && version != lastBuildVersion)
             )
         }
     }
@@ -2153,6 +2153,22 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildNum = buildNum,
             debugVersion = debugVersion
+        )
+    }
+
+    fun updateBuildVersionChangeFlag(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        versionChange: Boolean,
+        archiveFlag: Boolean? = false
+    ) {
+        pipelineBuildDao.updateBuildVersionChangeFlag(
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            versionChange = versionChange
         )
     }
 

@@ -31,7 +31,8 @@ enum class PipelineTemplateType(val value: String) {
     PIPELINE("pipeline"),
     STAGE("stage"),
     JOB("job"),
-    STEP("step");
+    STEP("step"),
+    VARIABLE("variable");
 
     companion object {
         fun get(value: String): PipelineTemplateType {

@@ -104,6 +104,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.PipelineBuildVersionDiffService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -189,7 +190,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildRetryService: PipelineBuildRetryService
+    private val pipelineBuildRetryService: PipelineBuildRetryService,
+    private val pipelineBuildVersionDiffService: PipelineBuildVersionDiffService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -2976,8 +2978,8 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): BuildVersionDiff {
-        // 校验用户是否有执行流水线权限
+    ): BuildVersionDiff? {
+        // 校验用户是否有查看权限
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -3002,23 +3004,29 @@ class PipelineBuildFacadeService(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
             params = arrayOf(buildId)
         )
-        if (currBuildInfo.buildNum == 1) {
-            return BuildVersionDiff(
-                currVersion = currBuildInfo.version,
-                currVersionName = currBuildInfo.versionName,
-                resourceDiffs = emptyList()
-            )
+        if (currBuildInfo.buildNum == 1 || currBuildInfo.versionChange == false || currBuildInfo.debug) {
+            return null
         }
-        val lastBuildInfo = pipelineRuntimeService.getBuildInfoByBuildNum(
+        val buildVersionDiffs = pipelineBuildVersionDiffService.list(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        val prevBuildInfo = pipelineRuntimeService.getBuildInfoByBuildNum(
             projectId = projectId,
             pipelineId = pipelineId,
             buildNum = currBuildInfo.buildNum - 1
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId)
         )
-        // 获取当前构建对应的模版信息
         return BuildVersionDiff(
             currVersion = currBuildInfo.version,
             currVersionName = currBuildInfo.versionName,
-            resourceDiffs = emptyList()
+            lastVersion = prevBuildInfo.version,
+            lastVersionName = prevBuildInfo.versionName,
+            buildVersionDiffs = buildVersionDiffs
         )
     }
 
