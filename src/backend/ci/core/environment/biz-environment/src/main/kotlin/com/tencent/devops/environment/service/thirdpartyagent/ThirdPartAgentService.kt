@@ -22,6 +22,7 @@ import com.tencent.devops.environment.utils.ThirdAgentActionAddLock
 import com.tencent.devops.environment.utils.ThirdAgentUpdateEnvLock
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -271,16 +272,20 @@ class ThirdPartAgentService @Autowired constructor(
             if (subIds.isNotEmpty()) {
                 throw ErrorCodeException(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                    params = subIds.map { it.toString() }.toTypedArray()
+                    params = arrayOf(subIds.joinToString(separator = ","))
                 )
             }
             agentDao.batchUpdateParallelTaskCount(
-                dslContext = dslContext,
+                dslContext = context,
                 projectId = projectId,
                 ids = agentRecords.map { it.id }.toSet(),
                 parallelTaskCount = parallelTaskCount,
                 dockerParallelTaskCount = dockerParallelTaskCount
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ThirdPartAgentService::class.java)
     }
 }
