@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
@@ -438,7 +439,7 @@ class PublicVarGroupService @Autowired constructor(
         deletedVars.forEach { oldVar ->
             val content = jacksonObjectMapper().writeValueAsString(
                 mapOf(
-                    "operate" to "delete",
+                    "operate" to OperateTypeEnum.DELETE,
                     "varName" to oldVar.varName,
                     "alias" to oldVar.alias,
                     "defaultValue" to oldVar.defaultValue,
@@ -679,7 +680,8 @@ class PublicVarGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String?
     ): Result<List<PipelinePublicVarGroupDO>> {
         try {
             logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
@@ -689,7 +691,8 @@ class PublicVarGroupService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 referId = referId,
-                referType = referType
+                referType = referType,
+                referVersionName = referVersionName ?: VersionStatus.COMMITTING.name
             )
             
             if (referInfos.isEmpty()) {
