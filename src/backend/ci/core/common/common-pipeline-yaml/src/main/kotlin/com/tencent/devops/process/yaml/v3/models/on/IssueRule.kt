@@ -37,4 +37,4 @@ data class IssueRule(
     override val name: String? = null,
     override val enable: Boolean? = true,
     val action: List<String>? = null
-): Rule(id, name, enable)
+) : Rule(id, name, enable)

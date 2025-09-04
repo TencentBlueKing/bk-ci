@@ -38,4 +38,4 @@ class NoteRule(
     override val enable: Boolean? = true,
     val types: List<String>? = null,
     val comment: List<String>? = null
-): Rule(id, name, enable)
+) : Rule(id, name, enable)

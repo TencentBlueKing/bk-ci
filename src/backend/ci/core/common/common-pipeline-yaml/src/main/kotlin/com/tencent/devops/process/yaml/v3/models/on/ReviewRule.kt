@@ -38,4 +38,4 @@ data class ReviewRule(
     override val enable: Boolean? = true,
     val types: List<String>? = null,
     val states: List<String>? = null
-): Rule(id, name, enable)
+) : Rule(id, name, enable)

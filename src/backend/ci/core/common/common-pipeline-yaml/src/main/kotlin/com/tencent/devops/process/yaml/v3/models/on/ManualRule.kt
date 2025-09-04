@@ -44,7 +44,7 @@ data class ManualRule(
     @get:Schema(title = "手动触发执行时使用最近一次构建参数值 ", name = "use-latest-inputs", required = false)
     @JsonProperty("use-latest-inputs")
     var useLatestParameters: Boolean? = false
-): Rule(id, name, enable) {
+) : Rule(id, name, enable) {
     override fun equals(other: Any?): Boolean {
         if (other is ManualRule) {
             return other.canElementSkip == canElementSkip &&

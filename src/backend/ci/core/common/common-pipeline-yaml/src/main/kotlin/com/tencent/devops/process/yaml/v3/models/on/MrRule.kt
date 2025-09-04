@@ -94,4 +94,4 @@ data class MrRule(
     @JsonProperty("skip-wip")
     @get:Schema(title = "skip-wip")
     var skipWip: Boolean? = null
-): Rule(id, name, enable)
+) : Rule(id, name, enable)

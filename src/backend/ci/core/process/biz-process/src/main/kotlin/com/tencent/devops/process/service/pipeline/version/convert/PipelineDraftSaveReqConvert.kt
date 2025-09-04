@@ -228,7 +228,7 @@ class PipelineDraftSaveReqConvert(
             }
         }
     }
-    
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDraftSaveReqConvert::class.java)
     }

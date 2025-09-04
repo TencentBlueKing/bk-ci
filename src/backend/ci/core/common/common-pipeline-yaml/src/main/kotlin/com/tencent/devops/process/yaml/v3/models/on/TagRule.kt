@@ -56,4 +56,4 @@ data class TagRule(
     @get:Schema(title = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null
-): Rule(id, name, enable)
+) : Rule(id, name, enable)

@@ -68,7 +68,7 @@ data class PushRule(
     @get:Schema(title = "custom-filter")
     @JsonProperty("custom-filter")
     val custom: CustomFilter? = null
-): Rule(id, name, enable)
+) : Rule(id, name, enable)
 
 data class CustomFilter(
     @get:Schema(title = "custom-filter-url")

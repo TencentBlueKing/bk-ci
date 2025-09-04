@@ -66,7 +66,7 @@ data class SchedulesRule(
     @get:Schema(title = "start-params")
     @JsonProperty("start-params")
     val startParams: Map<String, String>? = null
-): Rule(id, name, enable) {
+) : Rule(id, name, enable) {
     data class Interval(
         val week: List<String>,
         @get:Schema(title = "time-points")
