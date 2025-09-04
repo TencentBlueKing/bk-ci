@@ -123,6 +123,10 @@ allprojects {
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("org.apache.poi:poi:${Versions.apachepoi}")
+            dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
+            dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
             // worker需要依赖
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")

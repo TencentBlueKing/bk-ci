@@ -22,10 +22,14 @@ const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
+const getConfig = require('./constConfig.js')
+
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const envDist = env && env.dist ? env.dist : 'frontend'
+    const version = env && env.version ? env.version : 'tencent'
     const dist = path.join(__dirname, `../${envDist}/pipeline`)
+    const constConfig = getConfig(version)
     const config = webpackBaseConfig({
         env,
         argv,
@@ -41,7 +45,6 @@ module.exports = (env, argv) => {
         ...config.plugins,
         new MonacoWebpackPlugin({
             publicPath: '/pipeline',
-            languages: ['yaml'],
             filename: '[name].[contenthash].worker.js',
             customLanguages: [
                 {
@@ -54,6 +57,7 @@ module.exports = (env, argv) => {
                 }
             ]
         }),
+        new webpack.DefinePlugin(constConfig),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
@@ -64,7 +68,8 @@ module.exports = (env, argv) => {
             },
             templateParameters: {
                 PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
-                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
+                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : '',
+                API_PATH_PREFIX: isProd ? '/ms' : '//dev.devops.woa.com/ms'
             },
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),

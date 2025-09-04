@@ -1,5 +1,5 @@
 import { copyToClipboard } from '@/utils/util'
-import { bkMessage } from 'bk-magic-vue'
+import { bkMessage } from '@tencent/bk-magic-vue'
 import createLocale from '../../../locale'
 const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 const locale = i18n.locale

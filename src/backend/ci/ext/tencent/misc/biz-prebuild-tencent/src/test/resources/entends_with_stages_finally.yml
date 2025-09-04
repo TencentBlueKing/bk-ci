@@ -1,0 +1,15 @@
+version: v2.0
+
+extends:
+  template: build.yml
+  parameters:
+    repo: "hello/my-first-repo"
+
+stages:
+  - name: "stage1"
+    jobs:
+      job1:
+        runs-on: docker
+        steps:
+          - run: |
+              echo "hello world"

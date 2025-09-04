@@ -69,7 +69,7 @@
 </template>
 
 <script>
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -82,6 +82,7 @@
         data () {
             return {
                 paramsValid: true,
+                RESOURCE_ACTION,
                 pipelineName: ''
             }
         },
@@ -96,9 +97,6 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
-            },
             title () {
                 return this.$t(`details.${this.isDebugPipeline ? 'debug' : 'exec'}Preview`)
             },

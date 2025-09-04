@@ -34,7 +34,7 @@
                                     flex
                                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                                     :class="{
-                                        'is-diff-param': highlightChangedParam && param.isChanged
+                                        'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged
                                     }"
                                     :disabled="disabled"
                                     :placeholder="param.placeholder"
@@ -44,11 +44,17 @@
                                 />
                             </section>
                             <span
-                                v-if="!errors.has('devops' + param.name)"
+                                v-if="!errors.has('devops' + param.name) && param.desc"
                                 :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                                 :title="param.desc"
                             >
                                 {{ param.desc }}
+                            </span>
+                            <span
+                                v-if="param.affectTips"
+                                class="preview-params-desc affect-warning"
+                            >
+                                {{ param.affectTips }}
                             </span>
                         </form-field>
                     </template>
@@ -73,7 +79,7 @@
                             flex
                             v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                             :class="{
-                                'is-diff-param': highlightChangedParam && param.isChanged
+                                'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged
                             }"
                             :disabled="disabled"
                             :placeholder="param.placeholder"
@@ -83,11 +89,17 @@
                         />
                     </section>
                     <span
-                        v-if="!errors.has('devops' + param.name)"
+                        v-if="!errors.has('devops' + param.name) && param.desc"
                         :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                         :title="param.desc"
                     >
                         {{ param.desc }}
+                    </span>
+                    <span
+                        v-if="param.affectTips"
+                        class="preview-params-desc affect-warning"
+                    >
+                        {{ param.affectTips }}
                     </span>
                 </form-field>
             </template>
@@ -107,6 +119,7 @@
     import metadataList from '@/components/common/metadata-list'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import {
+        ARTIFACTORY,
         BOOLEAN,
         BOOLEAN_LIST,
         CODE_LIB,
@@ -115,6 +128,8 @@
         getBranchOption,
         getParamsGroupByLabel,
         GIT_REF,
+        isArtifactoryParam,
+        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
@@ -131,7 +146,7 @@
         SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
-    import { isObject } from '@/utils/util'
+    import { isObject, isShallowEqual } from '@/utils/util'
 
     export default {
 
@@ -170,19 +185,34 @@
                 default: false
             }
         },
+        data () {
+            return {
+                prevAffectedValues: {}
+            }
+        },
         computed: {
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
+                            const val = (param.type === 'MULTIPLE' && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
+                            const affected = this.getAffectedBy(param.payload.url)
+                            const affectedChanged = this.detectChanged(this.prevAffectedValues?.[param.id], affected)
+                            this.prevAffectedValues[param.id] = affected
+
                             restParam = {
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
+                                value: param.type === 'MULTIPLE' && !Array.isArray(val) ? [] : val,
+                                allIdString: true,
+                                paramValues: this.paramValues,
+                                affected,
+                                affectedChanged,
+                                affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
-                        } else {
+                        } else if (!isBuildResourceParam(param.type)) {
                             restParam = {
                                 ...restParam,
                                 displayKey: 'value',
@@ -192,13 +222,24 @@
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
-                        if (param.type === CODE_LIB) {
+                        if (param.type === CODE_LIB || isBuildResourceParam(param.type)) {
                             const value = this.paramValues[param.id]
                             const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
                             if (listItemIndex < 0 && value) {
                                 restParam.list.push({
                                     key: value,
                                     value: value
+                                })
+                            }
+                            if (isBuildResourceParam(param.type)) {
+                                const url = `environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+                                const paramId = 'displayName'
+                                Object.assign(restParam, {
+                                    url: `${url}&displayName=${value || ''}`,
+                                    paramId,
+                                    paramName: paramId,
+                                    replaceKey: '{{__keywords__}}',
+                                    searchUrl: `${url}&keywords={{__keywords__}}`
                                 })
                             }
                         }
@@ -264,6 +305,7 @@
             
         },
         methods: {
+            isArtifactoryParam,
             isObject,
             getBranchOption,
             isEqual (a, b) {
@@ -278,7 +320,7 @@
                 }
             },
             getParamComponentType (param) {
-                if (isRemoteType(param)) {
+                if (isRemoteType(param) || isBuildResourceParam(param.type)) {
                     return 'request-selector'
                 } else {
                     return ParamComponentMap[param.type]
@@ -294,6 +336,7 @@
                     case param.type === GIT_REF:
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
+                    case param.type === ARTIFACTORY:
                     case param.type === SUB_PIPELINE:
                     case param.type === REPO_REF:
                         return param.options
@@ -321,13 +364,36 @@
             },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
-                if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
-                    value = Array.isArray(value) ? value.join(',') : ''
+                if (isMultipleParam(param.type) || (isRemoteType(param) && param.multiSelect)) { // 复选框，需要将数组转化为逗号隔开的字符串
+                    this.handleParamChange(param.name, Array.isArray(value) ? value.join(',') : '')
+                } else {
+                    this.handleParamChange(param.name, value)
                 }
-                this.handleParamChange(param.name, value)
+            },
+            showMetadata (type, value) {
+                return isArtifactoryParam(type) && value && this.$route.path.indexOf('preview') > -1
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+            getAffectedBy (originUrl) {
+                try {
+                    const PLUGIN_URL_PARAM_REG = /\{(.*?)(\?){0,1}\}/g
+                    return originUrl.match(PLUGIN_URL_PARAM_REG).map(item => item.replace(/\{(\S+)\}/, '$1')).reduce((acc, key) => {
+                        if (Object.hasOwnProperty.call(this.paramValues, key)) {
+                            acc[key] = this.paramValues[key]
+                        }
+                        return acc
+                    }, {})
+                } catch (error) {
+                    return {}
+                }
+            },
+            detectChanged (prev, current) {
+                if (prev && current) {
+                    return !isShallowEqual(prev, current)
+                }
+                return false
             }
         }
     }
@@ -381,6 +447,9 @@
         width: 100%;
         font-size: 12px;
         @include ellipsis();
+        &.affect-warning {
+            color: #FF9C01;
+        }
     }
     .params-desc-styles {
         margin-top: 32px;

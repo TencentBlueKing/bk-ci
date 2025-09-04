@@ -19,21 +19,20 @@ import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
 import bkuiEn from 'bkui-vue/dist/locale/en.esm'
 import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
 
-const cookiesObj = getCookies() || {};
 const localeAliasMap = {
-  'zh-CN': 'zh-CN',
-  'zh-cn': 'zh-CN',
-  'ja-JP': 'ja-JP',
-  ja: 'ja-JP',
-  zh_CN: 'zh-CN',
-  zh_cn: 'zh-CN',
-  cn: 'zh-CN',
-  'en-US': 'en-US',
-  'en-us': 'en-US',
-  en: 'en-US',
-  us: 'en-US',
-  en_US: 'en-US',
-  en_us: 'en-US'
+    'zh-CN': 'zh-CN',
+    'zh-cn': 'zh-CN',
+    'ja-JP': 'ja-JP',
+    ja: 'ja-JP',
+    zh_CN: 'zh-CN',
+    zh_cn: 'zh-CN',
+    cn: 'zh-CN',
+    'en-US': 'en-US',
+    'en-us': 'en-US',
+    en: 'en-US',
+    us: 'en-US',
+    en_US: 'en-US',
+    en_us: 'en-US'
 }
 const bkUiLocaleAliasMap = {
   'zh-CN': bkuiZhCn,
@@ -66,7 +65,7 @@ createApp(App)
   .use(router)
   .use(createPinia())
   .use(bkui, {
-    locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
+    locale: bkUiLocaleAliasMap[i18nLocale.toLowerCase()] || bkuiZhCn
   })
   .use(i18n)
   .mount('.app');

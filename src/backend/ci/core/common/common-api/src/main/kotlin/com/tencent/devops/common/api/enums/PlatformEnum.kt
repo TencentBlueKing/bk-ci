@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.enums
 
+
 enum class PlatformEnum(
     val id: Int,
     val mean: String,
@@ -34,11 +35,13 @@ enum class PlatformEnum(
 ) {
     UNKNOWN(-1, "未知", emptyList()),
 
-    ANDROID(1, "安卓", listOf(".apk")),
+    ANDROID(1, "安卓", listOf(".apk", ".apks")),
 
     IOS(2, "IOS", listOf(".ipa")),
 
-    HAP(3, "鸿蒙", listOf(".hap"))
+    HAP(3, "鸿蒙", listOf(".hap")),
+
+    WIN(4, "Windows", listOf(".zip"))
 
     ;
 
@@ -62,7 +65,7 @@ enum class PlatformEnum(
          */
         fun ofName(name: String): PlatformEnum {
             for (platformEnum in values()) {
-                if (platformEnum.mean.equals(name, true)) {
+                if (platformEnum.toString().equals(name, true)) {
                     return platformEnum
                 }
             }
@@ -77,10 +80,6 @@ enum class PlatformEnum(
         }
 
         fun of(id: Int?): PlatformEnum? {
-            if (null == id) {
-                return null
-            }
-
             values().forEach {
                 if (it.id == id) {
                     return it

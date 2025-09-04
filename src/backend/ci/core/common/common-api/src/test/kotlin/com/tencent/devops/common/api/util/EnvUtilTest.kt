@@ -33,6 +33,14 @@ import org.junit.jupiter.api.Test
 class EnvUtilTest {
 
     @Test
+    fun parseEnvNested() {
+        val data = HashMap<String, String>()
+        data["Nested"] = "first"
+        data["first"] = "hello"
+        parseAndEquals(data = data, template = "\${\${Nested}}.html", expect = "hello.html")
+    }
+
+    @Test
     fun parseEnvTwice() {
         val map = mutableMapOf<String, String>()
         map["GDP"] = "10000000"

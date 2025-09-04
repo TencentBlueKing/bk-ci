@@ -159,7 +159,8 @@
                     isLoading: false
                 },
                 groupList: [],
-                hasLoadEnd: false
+                hasLoadEnd: false,
+                keyWords: ''
             }
         },
         watch: {

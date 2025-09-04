@@ -24,7 +24,11 @@
     </div>
 </template>
 <script>
+    import {
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         props: {
             value: {
@@ -43,6 +47,10 @@
                 type: String,
                 default: 'text'
             },
+            aceLangMap: {
+                type: Object,
+                default: () => ({})
+            },
             readOnly: {
                 type: Boolean,
                 default: false
@@ -58,13 +66,67 @@
             highlightRanges: {
                 type: Array,
                 default: () => []
+            },
+            enableCopilot: {
+                type: Boolean,
+                default: true
+            },
+            parentElementAlias: {
+                type: String,
+                default: ''
             }
         },
         data () {
             return {
                 editor: null,
                 isLoading: false,
-                monaco: null
+                monaco: null,
+                gongfengEditor: null
+            }
+        },
+        computed: {
+            ...mapState('atom', [
+                'commonParams',
+                'triggerParams',
+                'editingElementPos'
+            ]),
+            ...mapGetters('atom', [
+                'allPipelineParams',
+                'getAllAtomOutputList'
+            ]),
+            langMap () {
+                return {
+                    sh: 'shell',
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell',
+                    ...(this.aceLangMap ?? {})
+                }
+            },
+            pipelineParams () {
+                const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
+                const currentElementPos = parseInt(`${stageIndex}${containerIndex}${elementIndex}`)
+                if (this.readOnly) return []
+                return [
+                    ...this.commonParams.reduce((acc, item) => [
+                        ...acc,
+                        ...item.params.map(param => param.name)
+                    ], []),
+                    ...this.triggerParams.reduce((acc, item) => [
+                        ...acc,
+                        ...item.params.map(param => param.name)
+                    ], []),
+                    ...this.allPipelineParams.map(param => param.id),
+                    ...(this.getAllAtomOutputList().reduce((acc, item) => {
+                        if (!item.stepId || item.totalIndex > currentElementPos) return acc
+                        return [
+                            ...acc,
+                            ...item.params.map(param => `${item.envPrefix}${param.name}`)
+                        ]
+                    }, []))
+
+                ]
             }
         },
         watch: {
@@ -78,7 +140,7 @@
 
             lang (newVal) {
                 if (this.editor) {
-                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
+                    this.monaco.editor.setModelLanguage(this.editor.getModel(), this.getLang(newVal))
                 }
             },
 
@@ -88,28 +150,29 @@
                 if (parent) {
                     parent.classList.toggle('with-ace-full-screen')
                 }
+            },
+
+            pipelineParams () {
+                this.$nextTick(this.registryCopilotContext)
+            },
+
+            parentElementAlias () {
+                this.$nextTick(this.registryCopilotContext)
             }
         },
         async mounted () {
             this.isLoading = true
-            this.monaco = await import(
-                /* webpackMode: "lazy" */
-                /* webpackPrefetch: true */
-                /* webpackPreload: true */
-                /* webpackChunkName: "monaco-editor" */
-                'monaco-editor'
-            )
-            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
-            this.editor = this.monaco.editor.create(this.$el, {
-                value: this.value,
-                language: this.getLang(this.lang),
-                theme: 'ciYamlTheme',
-                automaticLayout: true,
-                minimap: {
-                    enabled: false
-                },
-                readOnly: this.readOnly
-            })
+
+            if (this.enableCopilot) {
+                await this.initCopilotMonaco()
+            } else {
+                await this.initDefaultMonaco()
+            }
+
+            if (this.atomsOutputMap == null) {
+                this.fetchAtomsOutput()
+            }
+
             this.isLoading = false
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
@@ -124,13 +187,11 @@
             this.editor?.dispose?.()
         },
         methods: {
+            ...mapActions('atom', [
+                'fetchAtomsOutput'
+            ]),
             getLang (lang) {
-                const langMap = {
-                    sh: 'shell',
-                    batchfile: 'bat'
-                }
-
-                return langMap[lang] || lang
+                return this.langMap[lang] || lang
             },
             calcSize (size) {
                 const _size = size.toString()
@@ -139,6 +200,113 @@
                 if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
+            },
+            async getAccessToken (refresh = true) {
+                try {
+                    const tokenKey = '__GONGFENG_COPILOT_TOKEN__'
+                    if (!refresh) {
+                        const token = localStorage.getItem(tokenKey)
+                        if (token) return token
+                    }
+                    const res = await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/copilot/tgit/getCopilotOpenToken?refresh=${refresh}`)
+                    localStorage.setItem(tokenKey, res.data)
+                    return res.data
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message,
+                        theme: 'error'
+                    })
+                }
+            },
+            async initDefaultMonaco () {
+                const monaco = await import(
+                    /* webpackMode: "lazy" */
+                    /* webpackPrefetch: true */
+                    /* webpackPreload: true */
+                    /* webpackChunkName: "monaco-editor" */
+                    'monaco-editor'
+                )
+                this.monaco = monaco
+
+                this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
+                this.editor = await this.monaco.editor.create(this.$el, {
+                    value: this.value,
+                    language: this.getLang(this.lang),
+                    theme: 'ciYamlTheme',
+                    automaticLayout: true,
+                    minimap: {
+                        enabled: false
+                    },
+                    scrollbar: {
+                        alwaysConsumeMouseWheel: false
+                    },
+                    readOnly: this.readOnly
+                })
+            },
+
+            async initCopilotMonaco () {
+                const [monaco, accessToken] = await Promise.all([
+                    import(
+                        /* webpackMode: "lazy" */
+                        /* webpackPrefetch: true */
+                        /* webpackPreload: true */
+                        /* webpackChunkName: "monaco-editor" */
+                        'monaco-editor'
+                    ),
+                    this.getAccessToken(false)
+                ])
+                this.monaco = monaco
+                this.gongfengEditor = window.GongfengMonacoEditor.create(this.monaco, {
+                    app: {
+                        name: 'bkci',
+                        // 接入方版本号
+                        version: '1.0.0'
+                    },
+
+                    // env: 'insider',
+                    env: 'production',
+                    brandPaddingRight: 32,
+                    authenticatedSession: {
+                        accessToken,
+                        user: this.$userInfo.username,
+                        refreshToken: this.getAccessToken
+                    }
+                })
+
+                this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
+                this.editor = await this.gongfengEditor.createEditor(this.$el, {
+                    value: this.value,
+                    language: this.getLang(this.lang),
+                    theme: 'ciYamlTheme',
+                    automaticLayout: true,
+                    minimap: {
+                        enabled: false
+                    },
+                    scrollbar: {
+                        alwaysConsumeMouseWheel: false
+                    },
+                    readOnly: this.readOnly
+                })
+
+                this.registryCopilotContext()
+            },
+            registryCopilotContext () {
+                const [pipelineId, elementId, elementName, version, jobId, stepId] = this.parentElementAlias.split(':')
+                console.log('pipelineParams', this.pipelineParams)
+                this.gongfengEditor.registerContextDefinition(this.editor, {
+                    variables: this.pipelineParams,
+                    workspace: [
+                        pipelineId, elementId, elementName, version
+                    ].join(':'),
+                    options: {
+                        ...this.editingElementPos,
+                        projectId: this.$route.params.projectId,
+                        pipelineId,
+                        version,
+                        jobId,
+                        stepId
+                    }
+                })
             }
         }
     }

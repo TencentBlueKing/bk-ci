@@ -278,9 +278,9 @@
 
 <script>
     import Pipeline from '@/components/Pipeline'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -436,6 +436,7 @@
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
                     }
+
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: isObject(p.defaultValue)
@@ -644,10 +645,11 @@
                 } finally {
                     this.setExecuteStatus(false)
 
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
 

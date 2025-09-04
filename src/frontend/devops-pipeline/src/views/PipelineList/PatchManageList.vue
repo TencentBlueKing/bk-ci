@@ -95,11 +95,11 @@
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapGetters } from 'vuex'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
     import PipelineSearcher from './PipelineSearcher'
     import { ARCHIVE_VIEW_ID } from '@/store/constants'
     import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
     import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
-    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
 
     export default {
         name: 'patch-manage-list',

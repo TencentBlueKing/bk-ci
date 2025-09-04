@@ -61,5 +61,21 @@ enum class ScmType(val alis: String) {
             }
             return null
         }
+
+        /**
+         * short值转ScmType
+         * @see parse
+         */
+        fun parseShort(scmType: Short): ScmType {
+            return when (scmType) {
+                1.toShort() -> CODE_SVN
+                2.toShort() -> CODE_GIT
+                3.toShort() -> CODE_GITLAB
+                4.toShort() -> GITHUB
+                5.toShort() -> CODE_TGIT
+                6.toShort() -> CODE_P4
+                else -> CODE_GITLAB
+            }
+        }
     }
 }

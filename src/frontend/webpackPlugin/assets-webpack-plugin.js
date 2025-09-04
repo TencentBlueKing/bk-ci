@@ -21,6 +21,9 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 class assetsPlugin {
+    constructor (props) {
+        this.isDev = props.isDev ?? false
+    }
     apply (compiler) {
         compiler.hooks.compilation.tap('assetsPlugin', async (compilation) => {
             console.log('The compiler is starting a new compilation...')
@@ -43,10 +46,16 @@ class assetsPlugin {
                     // Manipulate the content
                     const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
                     if (assetsPos > -1) {
+                        const devBundle = this.isDev ? `
+                            <script type="text/javascript" src="${'//dev.devops.woa.com/assetsBundles.js'}"></script>
+                        ` : ''
                         data.html = `${data.html.slice(0, assetsPos)} 
-                        <script type='text/javascript' src='${assets.js[0]}'></script>
+                        ${devBundle}<script type='text/javascript' src='${assets.js[0]}'></script>
                         <script type='text/javascript'>window.jsAssets = ${JSON.stringify(assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
+
+                        
                     }
+                    
                     // Tell webpack to move on
                     cb(null, data)
                 }

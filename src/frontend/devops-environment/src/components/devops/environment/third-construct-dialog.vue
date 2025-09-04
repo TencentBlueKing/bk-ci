@@ -210,6 +210,7 @@
         <div slot="footer">
             <div class="footer-handler">
                 <bk-button
+                    key="a"
                     theme="primary"
                     @click="confirmFn"
                 >
@@ -243,7 +244,8 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE
+                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE,
+                spawnNodesDescLink: this.BKCI_DOCS.SPAWN_NODES_DOC
             }
         },
         computed: {
@@ -355,7 +357,7 @@
         .no-connection-node {
             margin-top: 18px;
             width: 100%;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
 
         .refresh-detail {
@@ -406,7 +408,7 @@
             .icon-close {
                 position: relative;
                 top: -26px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 font-size: 12px;
                 cursor: pointer;
             }

@@ -9,7 +9,7 @@
             <div
                 class="bk-tree-title"
                 :class="{ open: item.isOpen, selected: isActive(index) }"
-                :style="{ &quot;padding-left&quot;: 23 * _deepCount + &quot;px&quot; }"
+                :style="{ 'padding-left': 23 * _deepCount + 'px' }"
                 @dblclick.stop="itemDbClickHandler({
                     index,
                     deepCount,
@@ -49,7 +49,7 @@
 
 <script>
     import CollapseTransition from '@/utils/collapse-transition.js'
-    import { mapState, mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import { bus } from '../../../utils/bus'
     export default {
         name: 'bk-trees',

@@ -119,7 +119,7 @@
                         <span
                             class="shelf-btn"
                             v-if="props.row.imageStatus === 'RELEASED' && !props.row.publicFlag"
-                            @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'imageWork' } })"
+                            @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'serviceWork' } })"
                         > {{ $t('store.安装') }} </span>
                         <span
                             class="schedule-btn"
@@ -219,8 +219,13 @@
                         <bk-radio-group
                             v-model="relateImageData.form.imageSourceType"
                             @change="handleChangeForm"
-                            class="mt6"
                         >
+                            <!-- <bk-radio
+                                value="BKDEVOPS"
+                                class="mr12"
+                            >
+                                {{ $t('store.蓝盾源') }}
+                            </bk-radio> -->
                             <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -550,6 +555,8 @@
                 }
                 this.$bkInfo({
                     title: this.$t('store.确认要删除？'),
+                    type: 'warning',
+                    theme: 'warning',
                     confirmFn
                 })
             },
@@ -566,7 +573,7 @@
                             this.relateImageData.form = {
                                 projectCode: '',
                                 imageName: '',
-                                imageSourceType: 'BKDEVOPS',
+                                imageSourceType: 'THIRD',
                                 ticketId: ''
                             }
                             setTimeout(() => {
@@ -596,7 +603,7 @@
                             this.relateImageData.form = {
                                 projectCode: '',
                                 imageName: '',
-                                imageSourceType: 'BKDEVOPS',
+                                imageSourceType: 'THIRD',
                                 ticketId: ''
                             }
                             setTimeout(() => {
@@ -610,7 +617,7 @@
                     this.relateImageData.form = {
                         projectCode: '',
                         imageName: '',
-                        imageSourceType: 'BKDEVOPS',
+                        imageSourceType: 'THIRD',
                         ticketId: ''
                     }
                 }

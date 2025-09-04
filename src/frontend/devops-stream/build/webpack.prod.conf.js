@@ -51,7 +51,6 @@ const prodConf = merge(baseConf, {
             chunks: 'all',
             // 表示提取出来的文件在压缩前的最小大小，默认为 30kb
             minSize: 30000,
-            
             // 表示被引用次数，默认为 1
             minChunks: 1,
             // 最多有 5 个异步加载请求该 module
@@ -90,7 +89,7 @@ const prodConf = merge(baseConf, {
                     priority: -20,
                     reuseExistingChunk: true
                 },
-                vendors: {
+                defaultVendors: {
                     test: /[\\/]node_modules[\\/]/,
                     priority: -10
                 }

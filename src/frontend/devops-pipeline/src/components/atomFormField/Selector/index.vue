@@ -76,11 +76,13 @@
             },
             searchUrl: String,
             replaceKey: String,
+            onSearch: Function,
             dataPath: String
         },
         data () {
             return {
-                listData: []
+                listData: [],
+                timeId: null
             }
         },
         computed: {
@@ -106,15 +108,19 @@
                     clearable: this.clearable,
                     placeholder: this.placeholder,
                     zIndex: this.zIndex,
-                    'search-key': this.displayKey,
                     'popover-options': this.popoverOptions,
                     'enable-virtual-scroll': this.list.length > 3000,
                     list: this.listData,
                     'id-key': this.settingKey,
                     'display-key': this.displayKey,
                     'show-select-all': this.showSelectAll
+
                 }
-                if (this.searchUrl) props['remote-method'] = this.remoteMethod
+                if (typeof this.onSearch === 'function') {
+                    props['remote-method'] = this.onSearch
+                } else if (this.searchUrl) {
+                    props['remote-method'] = this.remoteMethod
+                }
                 return props
             }
         },
@@ -125,6 +131,9 @@
                 },
                 immediate: true
             }
+        },
+        beforeDestroy () {
+            clearTimeout(this.timeId)
         },
         methods: {
             onChange (val, oldVal) {
@@ -137,8 +146,8 @@
             },
             remoteMethod (name) {
                 return new Promise((resolve, reject) => {
-                    clearTimeout(this.remoteMethod.timeId)
-                    this.remoteMethod.timeId = setTimeout(async () => {
+                    clearTimeout(this.timeId)
+                    this.timeId = setTimeout(async () => {
                         try {
                             const regExp = new RegExp(this.replaceKey, 'g')
                             const url = this.searchUrl.replace(regExp, name)
@@ -157,27 +166,27 @@
 </script>
 
 <style lang="scss">
-    @import "../../../scss/conf";
-    .bkdevops-option-name {
-        width: 100%;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
-        &.selected {
-            width: calc(100% - 24px)
-        }
-    }
-    .bk-selector-create-item {
-        a {
-            display: block;
-            color: $fontWeightColor;
-        }
+@import "../../../scss/conf";
+.bkdevops-option-name {
+  width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  &.selected {
+    width: calc(100% - 24px);
+  }
+}
+.bk-selector-create-item {
+  a {
+    display: block;
+    color: $fontWeightColor;
+  }
 
-        &:hover {
-            &, a {
-                color: $primaryColor !important;
-            }
-        }
+  &:hover {
+    &,
+    a {
+      color: $primaryColor !important;
     }
-
+  }
+}
 </style>

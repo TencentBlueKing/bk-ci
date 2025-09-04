@@ -1,0 +1,330 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.remotedev.service.workspace
+
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
+import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.client.StartCloudClient
+import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+@Suppress("LongMethod")
+class StartControl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val workspaceDao: WorkspaceDao,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val workspaceHistoryDao: WorkspaceHistoryDao,
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val permissionService: PermissionService,
+    private val dispatcher: SampleEventDispatcher,
+    private val workspaceCommon: WorkspaceCommon,
+    private val notifyControl: NotifyControl,
+    private val startCloudClient: StartCloudClient
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartControl::class.java)
+        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+    }
+
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_START,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_START_CONTENT
+    )
+    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
+        logger.info("$userId start workspace $workspaceName")
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+        // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
+        permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
+            expiredTimeInSeconds
+        ).tryLock().use {
+            // 校验状态
+            when {
+                workspace.status.checkRunning() -> {
+                    logger.info("${workspace.workspaceName} is running.")
+                    val workspaceInfo = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
+                        .getWorkspaceInfo(
+                            userId, workspaceName,
+                            workspace.workspaceMountType
+                        )
+
+                    return WorkspaceResponse(
+                        workspaceName = workspaceName,
+                        workspaceHost = workspaceInfo.data?.environmentHost ?: "",
+                        status = WorkspaceAction.START,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType
+                    )
+                }
+
+                workspaceCommon.notOk2doNextAction(workspace) -> {
+                    logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                        params = arrayOf(
+                            workspace.workspaceName,
+                            "status is already ${workspace.status}, can't start now"
+                        )
+                    )
+                }
+
+                else -> {
+                    /*处理异常的情况*/
+                    workspaceCommon.checkAndFixExceptionWS(
+                        status = workspace.status,
+                        userId = userId,
+                        workspaceName = workspaceName,
+                        mountType = workspace.workspaceMountType
+                    )
+
+                    createWorkspaceHistoryForStart(userId, workspaceName)
+                    updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
+                    val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+                    val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+                    dispatcher.dispatch(
+                        WorkspaceOperateEvent(
+                            userId = userId,
+                            traceId = bizId,
+                            type = UpdateEventType.START,
+                            workspaceName = workspace.workspaceName,
+                            mountType = workspace.workspaceMountType,
+                            appName = gameId.first
+                        )
+                    )
+
+                    // 发送给用户
+                    notifyControl.dispatchWebsocketPushEvent(
+                        userId = userId,
+                        workspaceName = workspaceName,
+                        workspaceHost = null,
+                        errorMsg = null,
+                        type = WebSocketActionType.WORKSPACE_START,
+                        status = true,
+                        action = WorkspaceAction.STARTING,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
+                    )
+                    return WorkspaceResponse(
+                        workspaceName = workspace.workspaceName,
+                        workspaceHost = "",
+                        status = WorkspaceAction.STARTING,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType
+                    )
+                }
+            }
+        }
+    }
+
+    private fun createWorkspaceHistoryForStart(userId: String, workspaceName: String) {
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.START,
+            actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
+        )
+    }
+
+    private fun updateWorkspaceStatus(workspaceName: String, status: WorkspaceStatus, userId: String) {
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.STARTING
+        )
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.START,
+            actionMessage = String.format(
+                workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                status.name,
+                WorkspaceStatus.STARTING.name
+            )
+        )
+    }
+
+    fun doStartWS(
+        status: Boolean,
+        operator: String,
+        workspaceName: String,
+        environmentHost: String?,
+        errorMsg: String? = null
+    ): WorkspaceStatus {
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+        var workspaceStatus = WorkspaceStatus.RUNNING
+        if (workspace.status.checkRunning()) return workspaceStatus
+        if (status) {
+            val cgsStatus = try {
+                startCloudClient.computerStatus(setOf(workspace.hostIp!!))?.firstOrNull()
+            } catch (e: Exception) {
+                logger.warn("get computerStatus error", e)
+                null
+            }
+            if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
+                logger.warn("computerStatus is not normal, start failed.")
+                workspaceStatus = WorkspaceStatus.EXCEPTION_CDS_OFFLINE
+            }
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceStatus(
+                    workspaceName = workspaceName,
+                    status = workspaceStatus,
+                    dslContext = transactionContext
+                )
+
+                val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+                    dslContext = transactionContext,
+                    workspaceName = workspaceName
+                )
+                if (workspaceStatus.checkRunning()) {
+                    val lastSleepTimeCost = if (lastHistory?.endTime != null) {
+                        Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt()
+                    } else {
+                        0
+                    }
+                    workspaceHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceName = workspaceName,
+                        startUserId = operator,
+                        lastSleepTimeCost = lastSleepTimeCost
+                    )
+                    // 分发到WS
+                    notifyControl.dispatchWebsocketPushEvent(
+                        userId = operator,
+                        workspaceName = workspaceName,
+                        workspaceHost = environmentHost,
+                        errorMsg = errorMsg,
+                        type = WebSocketActionType.WORKSPACE_START,
+                        status = true,
+                        action = WorkspaceAction.START,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
+                    )
+                }
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceName = workspaceName,
+                    operator = operator,
+                    action = WorkspaceAction.START,
+                    actionMessage = String.format(
+                        workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                        workspace.status.name,
+                        workspaceStatus
+                    )
+                )
+            }
+        } else {
+            // 启动失败,记录为EXCEPTION
+            workspaceStatus = WorkspaceStatus.EXCEPTION
+            logger.warn("start workspace $workspaceName failed")
+            workspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = workspaceStatus,
+                dslContext = dslContext
+            )
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = operator,
+                action = WorkspaceAction.START,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    workspace.status.name,
+                    workspaceStatus.name
+                )
+            )
+        }
+        return workspaceStatus
+    }
+}

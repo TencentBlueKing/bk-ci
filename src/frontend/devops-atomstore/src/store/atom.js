@@ -18,7 +18,6 @@
  */
 
 const prefix = 'store/api'
-const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
 const artifactoryPrefix = 'artifactory/api'
 const Vue = window.Vue
@@ -178,13 +177,6 @@ export const actions = {
     },
 
     /**
-     * git OAuth授权
-     */
-    checkIsOAuth ({ commit }, { type, atomCode }) {
-        return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=${type}&atomCode=${atomCode}`)
-    },
-
-    /**
      * 新增流水线插件
      */
     createNewAtom ({ commit }, { params }) {
@@ -271,8 +263,8 @@ export const actions = {
     /**
      * 重新构建
      */
-    rebuild ({ commit }, { atomId, projectId }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`)
+    rebuild ({ commit }, { atomId, projectId, initProject, fieldCheckConfirmFlag }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`, { fieldCheckConfirmFlag }, { headers: { 'X-DEVOPS-PROJECT-ID': initProject } })
     },
 
     /**
@@ -306,8 +298,12 @@ export const actions = {
     /**
      * 根据机构类型和机构ID查看机构列表
      */
-    requestOrganizations ({ commit }, { type, id }) {
-        return vue.$ajax.get(`${projectPrefix}/user/organizations/types/${type}/ids/${id}`)
+    requestOrganizations ({ commit }, { type, id, excludeBelowTheDept }) {
+        let url = `${projectPrefix}/user/organizations/types/${type}/ids/${id}`
+        if (excludeBelowTheDept !== undefined && excludeBelowTheDept !== null) {
+            url += `?excludeBelowTheDept=${encodeURIComponent(excludeBelowTheDept)}`
+        }
+        return vue.$ajax.get(url)
     },
 
     /**
@@ -398,5 +394,13 @@ export const actions = {
     // 获取所有环境列表
     getContainerList ({ commit }) {
         return vue.$ajax.get(`${prefix}/user/pipeline/container/all`)
+    },
+    // 获取组件所属组织架构
+    getDeptCodes ({ commit }, { storeCode, storeType }) {
+        return vue.$ajax.get(`${prefix}/user/store/dept/codes/${storeCode}/get?storeType=${storeType}`)
+    },
+    // 更新组件所属组织架构
+    updateDeptInfo ({ commit }, params) {
+        return vue.$ajax.put(`${prefix}/user/store/dept/update`, params)
     }
 }

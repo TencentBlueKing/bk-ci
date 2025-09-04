@@ -18,9 +18,12 @@
             class="ace-wrapper"
             :read-only="disabled"
             :value="value"
-            :lang="lang"
+            :lang="dynamicLang"
+            :ace-lang-map="aceLangMap"
             :name="name"
+            :parent-element-alias="elementAlias"
             :full-screen="isFullScreen"
+            :enable-copilot="enableCopilot"
             @input="handleScriptInput"
             :height="height"
             width="100%"
@@ -31,8 +34,8 @@
 
 <script>
     import Ace from '@/components/common/ace-editor'
-    import atomFieldMixin from '../atomFieldMixin'
     import { getActualTop } from '@/utils/util'
+    import atomFieldMixin from '../atomFieldMixin'
 
     export default {
         name: 'atom-ace-editor',
@@ -41,12 +44,21 @@
         },
         mixins: [atomFieldMixin],
         props: {
+            enableCopilot: {
+                type: Boolean,
+                default: true
+            },
             lang: {
                 type: String,
-                default: 'sh'
+                default: 'shell'
             },
+            aceLangMap: Object,
             default: String,
             bashConf: {
+                type: Object,
+                default: () => ({})
+            },
+            atomValue: {
                 type: Object,
                 default: () => ({})
             },
@@ -62,6 +74,24 @@
                 isFullScreen: false
             }
         },
+        computed: {
+            dynamicLang () {
+                if (this.lang === 'auto') {
+                    return this.container?.baseOS === 'WINDOWS' ? 'cmd' : 'shell'
+                }
+                return this.lang
+            },
+            elementAlias () {
+                return [
+                    this.$route.params.pipelineId,
+                    this.element?.id,
+                    this.element?.name,
+                    this.$route.params.version,
+                    this.container?.jobId,
+                    this.element?.stepId
+                ].join(':')
+            }
+        },
         watch: {
             isFullScreen (newVal) {
                 const top = getActualTop(this.$el)
@@ -74,6 +104,7 @@
             }
         },
         mounted () {
+            console.log(this.element, ';11111')
             const top = getActualTop(this.$el)
             const { clientHeight } = document.body
             if (this.defaultHeight !== 360) {
@@ -146,6 +177,7 @@
 
 <style lang="scss">
     .ace-fullscreen {
+        top: 1px;
         right: 10px;
         position: absolute;
         z-index: 999;

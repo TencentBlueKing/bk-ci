@@ -17,6 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import ftpPipelineRoute from './ftp'
+import tapdPipelineRoute from './tapd'
+import zyPipelineRoute from './zhiyan'
+
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
 const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
@@ -52,10 +56,11 @@ const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../c
 
 const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
+
 const DraftDebugRecord = () => import(/* webpackChunkName: "draftDebug" */'../views/subpages/DraftDebugRecord.vue')
 const DraftDebugHeader = () => import(/* webpackChunkName: "draftDebug" */'../components/PipelineHeader/DraftDebugHeader.vue')
 
-// 客户端流水线执行预览 - edit
+// 客户端流水线执行预览 - preview
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
 
@@ -65,6 +70,7 @@ const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'.
 
 // 流水线导入
 const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
+const PipelineDataBoard = () => import(/* webpackChunkName: "pipelineDataBoard" */'../views/PipelineList/EplusBoard.vue')
 
 const routes = [
     {
@@ -97,6 +103,11 @@ const routes = [
                         path: 'listAuth/:id/:groupName',
                         name: 'PipelineListAuth',
                         component: PipelineListAuth
+                    },
+                    {
+                        path: 'metrics',
+                        name: 'PipelineDataBoard',
+                        component: PipelineDataBoard
                     },
                     {
                         path: ':viewId?/:type?',
@@ -193,6 +204,19 @@ const routes = [
                             header: 'pipeline',
                             icon: 'pipeline',
                             to: 'PipelineManageList'
+                        },
+                        beforeEnter: (to, from, next) => {
+                            if (['partView', 'output'].includes(to.params.type)) { // 重定向到outputs
+                                next({
+                                    ...to,
+                                    params: {
+                                        ...to.params,
+                                        type: 'outputs'
+                                    }
+                                })
+                            } else {
+                                next()
+                            }
                         }
                     },
                     {
@@ -276,6 +300,21 @@ const routes = [
                 ]
             }
         ]
+    },
+    {
+        path: '/pipeline/zhiyan/:projectId',
+        component: pipelines,
+        children: zyPipelineRoute
+    },
+    {
+        path: '/pipeline/ftp/:projectId',
+        component: pipelines,
+        children: ftpPipelineRoute
+    },
+    {
+        path: '/pipeline/tapd/:projectId',
+        component: pipelines,
+        children: tapdPipelineRoute
     }
 ]
 

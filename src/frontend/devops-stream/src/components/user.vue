@@ -15,7 +15,10 @@
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <i class="stream-icon stream-user"></i>
+                <img
+                    :src="user.avatarUrl"
+                    alt="userAvatar"
+                >
                 <span>{{ user.chineseName }}</span>
             </p>
             <slot name="menu">
@@ -33,7 +36,6 @@
 
 <script>
     import { mapState } from 'vuex'
-    import { common } from '@/http'
 
     export default ({
         props: {
@@ -63,7 +65,7 @@
             },
 
             logout () {
-                common.logout()
+                location.href = window.getLoginUrl(`http://${location.hostname}/_logout/`)
             }
         }
     })
@@ -136,11 +138,9 @@
                 border-bottom: 1px solid $borderWeightColor;
                 color: $fontWeightColor;
                 padding: 20px;
-                .stream-user {
+                > img {
                     width: 34px;
                     height: 34px;
-                    font-size: 22px;
-                    line-height: 34px;
                 }
                 > span {
                     padding-left: 15px;

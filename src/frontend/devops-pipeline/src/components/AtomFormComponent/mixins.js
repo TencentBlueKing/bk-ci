@@ -95,7 +95,7 @@ export default {
         generateReqUrl (url, query) {
             const queryKey = []
             let lackParam = false
-            const newUrl = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+            const newUrl = url.replace(/^https?\:\/\/((dev|test)\.)?devops\.oa\.com\/ms/, '').replace(/{([^\{\}]+)}/g, (str, key) => {
                 const value = query[key]
                 queryKey.push(key)
                 if (typeof value === 'undefined') lackParam = true

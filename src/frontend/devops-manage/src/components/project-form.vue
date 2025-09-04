@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { onMounted, ref, watch, computed} from 'vue';
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
 import { BaseInfoContent, PermissionContent, PipelineContent } from "@/components/project-form-item/";
@@ -23,15 +23,12 @@ const props = defineProps({
   btnLoading: Boolean
 });
 
-const isRbac = computed(() => {
-  return authProvider.value === 'rbac'
-})
-const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
-const projectForm = ref();
+const projectForm = ref<any>(null);
+const projectData = ref<any>(props.data);
 const rules = {
   englishName: [
     {
-      validator: value => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
+      validator: value => props.type !== 'apply' || /^[a-z][a-z0-9-]{1,32}$/.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
     },
@@ -51,8 +48,6 @@ const rules = {
     },
   ],
 };
-
-const projectData = ref<any>(props.data);
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
 const collapsePanels = computed(() => [
@@ -61,11 +56,11 @@ const collapsePanels = computed(() => [
     title: '基础信息',
     component: BaseInfoContent,
   },
-  ...isRbac.value ? [{
+  {
     name: 'permission',
     title: '权限',
     component: PermissionContent,
-  }] : [],
+  },
   // ...projectData.value.properties ? [{
   //   name: 'pipeline',
   //   title: '流水线',
@@ -74,21 +69,62 @@ const collapsePanels = computed(() => [
   // }] : [],
 ]);
 
+const setProjectDeptProp = (dept: Dept) => {
+  if (!dept) return;
+  const { id, name, type } = dept;
+  projectData.value[`${type}Id`] = id;
+  projectData.value[`${type}Name`] = name;
+};
+
 const handleChangeForm = () => {
   emits('change', true);
 };
 
+const curDeptInfo = ref();
 const fetchUserDetail = async () => {
-  if (props.type !== 'apply') {
+  let deptInfos: Dept[] = [];
+  let centerId = '';
+  let centerName = '';
+  if (props.type !== 'apply') { // 编辑项目
+    centerId = projectData.value.centerId;
+    centerName = projectData.value.centerName;
+    deptInfos = [{
+      id: '0',
+      name: '',
+      type: 'bg',
+    }, ...(projectData.value.bgId ? [{
+      id: projectData.value.bgId,
+      name: projectData.value.bgName,
+      type: 'bg',
+    }] : []),
+    ...((projectData.value.businessLineId && projectData.value.businessLineName) ? [{
+      id: projectData.value.businessLineId,
+      name: projectData.value.businessLineName,
+      type: 'businessLine',
+    }] : []),
+    ...(projectData.value.deptId ? [{
+      id: projectData.value.deptId,
+      name: projectData.value.deptName,
+      type: 'dept',
+    }] : []),
+    ];
+    
     initPipelineDialect.value = projectData.value?.properties?.pipelineDialect
-    return;
-  };
-  await http.getUserDetail().then((res) => {
-    const { bgId, centerId, deptId } = res;
-    projectData.value.bgId = bgId;
-    projectData.value.centerId = centerId === '0' ? '' : centerId;
-    projectData.value.deptId = deptId;
-  });
+  } else { // 申请创建项目
+    const res = await http.getUserDetail();
+    deptInfos = res.deptInfos;
+    centerId = res.centerId;
+    centerName = res.centerName;
+  }
+  if (centerId) {
+    setProjectDeptProp({
+      type: 'center',
+      id: centerId,
+      name: centerName,
+    });
+  }
+
+  curDeptInfo.value = deptInfos;
 };
 
 const handleClearValidate = () => {
@@ -109,7 +145,7 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (n
 });
 
 onMounted(async () => {
-  await fetchUserDetail();
+  await fetchUserDetail()
   emits('initProjectForm', projectForm.value);
 });
 </script>
@@ -139,32 +175,33 @@ onMounted(async () => {
               <component
                 :is="panel.component"
                 :type="type"
-                :is-rbac="isRbac"
                 :data="projectData"
                 :initPipelineDialect="initPipelineDialect"
+                :curDeptInfo="curDeptInfo"
                 @handle-change-form="handleChangeForm"
                 @clearValidate="handleClearValidate"
+                @setProjectDeptProp="setProjectDeptProp"
               />
             </div>
           </template>
       </bk-collapse-panel>
     </bk-collapse>
     <project-settings
-      v-else 
+      v-else
       :type="type"
-      :is-rbac="isRbac"
       :data="projectData"
       :initPipelineDialect="initPipelineDialect"
+      :curDeptInfo="curDeptInfo"
       :btnLoading="btnLoading"
       @change="handleChangeForm"
       @clearValidate="handleClearValidate"
+      @setProjectDeptProp="setProjectDeptProp"
       @handleCancel="$emit('handleCancel')"
       @handleUpdate="handleUpdate"
       @initProjectData="$emit('initProjectData', $event)"
     />
   </bk-form>
 </template>
-
 <style lang="scss">
   .textarea {
     margin-top: 10px;

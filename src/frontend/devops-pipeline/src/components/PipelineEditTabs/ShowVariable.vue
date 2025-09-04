@@ -63,8 +63,8 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import PipelineParam from './components/pipeline-param'
     import AtomOutputVar from './components/atom-output-var'
+    import PipelineParam from './components/pipeline-param'
     import PipelineVersion from './components/pipeline-version'
     import SystemVar from './components/system-var'
 
@@ -120,10 +120,22 @@
             },
             buildNo () {
                 return this.container?.buildNo || {}
+            },
+            triggerCodeList () {
+                const triggerList = (this.container?.elements || []).map(item => item.atomCode)
+                return triggerList.filter(item => !['manualTrigger', 'remoteTrigger', 'timerTrigger'].includes(item))
+            }
+        },
+        watch: {
+            triggerCodeList (newValue) {
+                this.requestTriggerParams(newValue)
             }
         },
         created () {
-            this.requestCommonParams()
+            Promise.all([
+                this.requestCommonParams(),
+                this.requestTriggerParams(this.triggerCodeList)
+            ])
         },
         mounted () {
             this.setShowVariable(true)
@@ -139,7 +151,8 @@
                 'setShowVariable',
                 'toggleAtomSelectorPopup',
                 'updateContainer',
-                'requestCommonParams'
+                'requestCommonParams',
+                'requestTriggerParams'
             ]),
             handleContainerChange (name, value) {
                 this.updateContainer({
@@ -234,6 +247,8 @@
         cursor: pointer;
         font-size: 14px;
         color: #63656e;
+        margin: 0 8px;
+        @include ellipsis();
         &.actived {
           color: #3a84ff;
           border-bottom: 2px solid #3a84ff;

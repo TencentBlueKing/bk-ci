@@ -45,6 +45,7 @@
     </bk-form-item>
     <bk-form-item :label="t('项目类型')" property="projectType" required>
       <bk-select
+        class="project-select"
         v-model="projectData.projectType"
         :placeholder="t('选择项目类型')"
         name="center"
@@ -59,8 +60,60 @@
         />
       </bk-select>
     </bk-form-item>
+    <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
+      <div class="bk-dropdown-box">
+        <bk-cascader
+          :list="orgTree"
+          v-model="orgValue"
+          filterable
+          is-remote
+          :placeholder="t('请选择部门')"
+          :loading="deptLoading.dept"
+          :remote-method="getDepartment"
+          @change="handleChangeDept"
+        />
+      </div>
+      <div class="bk-dropdown-box">
+        <bk-select
+          v-model="projectData.centerId"
+          :placeholder="t('请选择中心')"
+          name="center"
+          :loading="deptLoading.center"
+          filterable
+          @change="handleChangeCenter"
+        >
+          <bk-option
+            v-for="center in centerList"
+            :value="center.id"
+            :key="center.id"
+            :label="center.name"
+          />
+        </bk-select>
+      </div>
+    </bk-form-item>
     <bk-form-item
-      v-if="isRbac"
+      :label="t('项目所属运营产品')"
+      property="productId"
+      :required="true"
+      :description="t('公司OBS结算业务的运营产品，1个项目仅支持关联1个运营产品，多个项目可关联到同一运营产品')"
+    >
+      <bk-select
+        class="project-select"
+        v-model="projectData.productId"
+        :placeholder="t('请选择所属运营产品')"
+        :scroll-height="160"
+        name="center"
+        filterable
+        enable-virtual-render
+        :list="operationalList"
+        :input-search="false"
+        :loading="deptLoading.product"
+        searchable
+        @change="handleChangeForm"
+      >
+      </bk-select>
+    </bk-form-item>
+    <bk-form-item
       :label="t('项目性质')"
       property="authSecrecy"
       :required="true"
@@ -86,22 +139,21 @@
 
 <script setup lang="ts" name="BaseInfoContent">
 import http from '@/http/api';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, shallowRef, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Message, Popover } from 'bkui-vue';
+import { Dept } from "@/components/project-form.vue";
 
 const { t } = useI18n();
-
 const props = defineProps({
   data: {
     type: Object,
     required: true
   },
   type: String,
-  isRbac: Boolean,
-  initPipelineDialect: String
+  curDeptInfo: Array
 });
-const emits = defineEmits(['handleChangeForm', 'clearValidate']);
+const emits = defineEmits(['handleChangeForm', 'clearValidate', 'setProjectDeptProp']);
 
 const projectData = ref(props.data);
 const projectTypeList = [
@@ -126,12 +178,25 @@ const projectTypeList = [
     name: t('支撑产品'),
   },
 ];
+const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
 const validateProjectNameTips = ref('');
 const validateEnglishNameTips = ref('');
 
+const orgValue = ref<string[]>([]);
+const operationalList = ref([]);
+const orgTree = shallowRef<Dept[]>([]);
+const deptMap = shallowRef(new Map());
+const inited = ref(false);
+const centerList = ref<Dept[]>([]);
+const deptLoading = ref({
+  dept: false,
+  center: false,
+  product: false,
+});
+
 const logoFiles = computed(() => {
   const { logoAddr } = projectData.value;
-  const files: any = [];
+  const files: {url: string}[] = [];
   if (logoAddr) {
     files.push({
       url: logoAddr,
@@ -158,7 +223,7 @@ watch(() => projectData.value.projectName, (val) => {
 });
 
 watch(() => projectData.value.englishName, (val) => {
-  if (props.type === 'apply' && val && /^[a-z][a-z0-9\-]{1,32}$/.test(val)) {
+  if (props.type === 'apply' && val && englishNameReg.test(val)) {
     http.validateEnglishName(val)
       .then(() => {
         validateEnglishNameTips.value = '';
@@ -167,12 +232,154 @@ watch(() => projectData.value.englishName, (val) => {
         emits('clearValidate');
         validateEnglishNameTips.value = t('项目ID已存在');
       });
-  } else if (!val || !/^[a-z][a-z0-9\-]{1,32}$/.test(val)) {
+  } else if (!val || !englishNameReg.test(val)) {
     validateEnglishNameTips.value = '';
   }
 }, {
   deep: true,
 });
+
+watch(()=>props.curDeptInfo, (newVal)=>{
+  if (newVal) {
+    fetchCenterList();
+    fetchDepartmentList(newVal)
+  }
+}, { immediate:true,deep:true })
+
+const fetchDepartmentList = async (deptInfos: Dept[]) => {
+  deptLoading.value.dept = true;
+  deptInfos.forEach((item, index) => {
+    deptMap.value.set(item.id, {
+      ...item,
+      parentId: index > 0 ? (deptInfos[index - 1]?.id ?? '0') : '-1',
+      ...(index < deptInfos.length - 1 ? {
+        children: [],
+      } : {
+        leaf: true,
+      }),
+    });
+  });
+  const depts = deptInfos.slice(0, -1);
+  await Promise.all(depts.map(dept => getDepartment({
+    id: dept.id,
+    type: 'dept',
+  })));
+  orgTree.value = Array.from(deptMap.value.values()).filter(i => i.parentId === '0');
+  orgValue.value = deptInfos.slice(1).map((i) => {
+    setProjectDeptProp(i);
+    return i.id;
+  });
+
+  nextTick(() => {
+    inited.value = true;
+  });
+  deptLoading.value.dept = false;
+};
+
+
+const getDepartment = async ({ id, type = 'dept' }: Partial<Dept>, resolve?) => {
+  try {
+    if (!id) return [];
+    const res = await http.getOrganizations({
+      type,
+      id,
+    });
+    const parent = deptMap.value.get(id);
+    res.forEach((i) => {
+      if (deptMap.value.has(i.id)) return;
+      deptMap.value.set(i.id, i);
+    });
+    if (parent && !parent.leaf) {
+      parent.children = res.map((i) => {
+        if (deptMap.value.has(i.id)) return deptMap.value.get(i.id);
+        return i;
+      });
+      deptMap.value.set(id, parent);
+    }
+    resolve?.(res);
+    return res;
+  } catch (err: any) {
+    Message({
+      message: err.message || err,
+      theme: 'danger',
+    });
+  }
+};
+
+async function fetchCenterList () {
+  let deptInfos: Dept[] = props.curDeptInfo as Dept[];
+
+  centerList.value = await getDepartment({
+    id: deptInfos[deptInfos.length - 1].id,
+    type: 'center',
+  });
+  if (deptInfos.length && deptInfos[1].type === 'bg') {
+    fetchOperationalList(deptInfos[1].name);
+  }
+}
+
+async function fetchOperationalList (bgName) {
+  if (!bgName) return;
+  deptLoading.value.product = true;
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  deptLoading.value.product = false;
+};
+
+function setProjectDeptProp (dept: Dept) {
+ emits('setProjectDeptProp', dept)
+}
+
+async function handleChangeDept (deptPath) {
+  if (!inited.value) return;  // 防止初始化时触发
+  [{
+    type: 'businessLine',
+    id: '',
+    name: '',
+  }, {
+    type: 'center',
+    id: '',
+    name: '',
+  }].forEach(setProjectDeptProp);
+
+  deptPath.forEach((deptId: string) => {
+    const dept = deptMap.value.get(deptId);
+    if (dept.type === 'bg') {
+      fetchOperationalList(dept.name);
+      projectData.value.productId = '';
+    }
+    setProjectDeptProp(deptMap.value.get(deptId));
+  });
+  handleChangeForm();
+  if (!deptPath.length) {
+    ['bg', 'businessLine', 'dept', 'center'].forEach((type) => {
+      projectData.value[`${type}Id`] = '';
+      projectData.value[`${type}Name`] = '';
+    });
+    return;
+  }
+  const deptId = deptPath[deptPath.length - 1];
+  const lastOne = deptMap.value.get(deptId);
+  if (Array.isArray(lastOne?.children) && lastOne?.children.length > 0) {
+    centerList.value = lastOne.children;
+  } else {
+    centerList.value = await getDepartment({
+      id: deptId,
+      type: 'center',
+    });
+  }
+};
+
+function handleChangeCenter (id: any) {
+  handleChangeForm();
+  const name = centerList.value.find(i => i.id === id)?.name;
+  projectData.value.centerName = name ?? '';
+};
 
 function handleChangeForm() {
   emits('handleChangeForm')

@@ -65,7 +65,7 @@
                                 >
                                     {{ $t('editPage.unRecommend') }}（{{ tab.unRecommendData.length }}）
                                     <bk-popover placement="top">
-                                        <i class="bk-icon icon-info-circle "></i>
+                                        <i class="devops-icon icon-info-circle "></i>
                                         <div slot="content">
                                             {{ $t('editPage.unRecomReason') }}
                                         </div>
@@ -134,7 +134,7 @@
                             >
                                 {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
-                                    <i class="bk-icon icon-info-circle "></i>
+                                    <i class="devops-icon icon-info-circle "></i>
                                     <div slot="content">
                                         {{ $t('editPage.unRecomReason') }}
                                     </div>

@@ -13,11 +13,10 @@
         :searchable="searchable"
         :multi-select="multiSelect"
         :disabled="disabled || isLoading"
-        :search-url="searchUrl"
-        :replace-key="replaceKey"
         :data-path="dataPath"
         :setting-key="settingKey"
         :display-key="displayKey"
+        v-bind="remoteSearchObj"
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
@@ -34,6 +33,7 @@
 </template>
 
 <script>
+    import { findItemById } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
     import Selector from '../Selector'
     export default {
@@ -88,12 +88,10 @@
             replaceKey: String,
             dataPath: String,
             displayKey: {
-                type: String,
-                default: 'name'
+                type: String
             },
             settingKey: {
-                type: String,
-                default: 'id'
+                type: String
             },
             initRequest: {
                 type: Boolean,
@@ -102,19 +100,62 @@
             options: {
                 type: Array,
                 default: () => []
+            },
+            paramValues: {
+                type: Object,
+                default: () => ({})
+            },
+            // TODO: 历史遗留问题，将ID转为String, 否则对于数字ID,无法选中
+            allIdString: Boolean,
+            affected: {
+                type: Array,
+                default: []
             }
         },
         data () {
             return {
                 isLoading: false,
                 list: [],
-                webUrl: WEB_URL_PREFIX
+                webUrl: WEB_URL_PREFIX,
+                timeId: null
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            parsedUrl () {
+                try {
+                    const { url, element } = this
+                    const query = this.$route.params
+                    return this.urlParse(url, {
+                        bkPoolType: this?.container?.dispatchType?.buildType,
+                        ...query,
+                        ...(this.paramValues || {}),
+                        ...element
+                    })
+                } catch (error) {
+                    console.log(error)
+                    return this.url
+                }
+            },
+            remoteSearchObj () {
+                return typeof this.searchUrl === 'string' && !!this.searchUrl
+                    ? {
+                        onSearch: this.handleRemoteSearch
+                    }
+                    : {
+                    
+                    }
             }
+        },
+        watch: {
+            parsedUrl () {
+                this.$nextTick(() => {
+                    this.freshList()
+                })
+            }
+
         },
         created () {
             if (this.initRequest) {
@@ -122,6 +163,9 @@
             } else {
                 this.list = this.options
             }
+        },
+        beforeDestroy () {
+            clearTimeout(this.timeId)
         },
         methods: {
             edit (index) {
@@ -173,41 +217,28 @@
             },
             async freshList () {
                 try {
-                    const { url, element } = this
-                    const query = this.$route.params
-                    const changeUrl = this.urlParse(url, {
-                        bkPoolType: this?.container?.dispatchType?.buildType,
-                        ...query,
-                        ...element
-                    })
                     this.isLoading = true
-                    const res = await this.$ajax.get(changeUrl)
-
+                    const res = await this.$ajax.get(this.parsedUrl)
                     const resData = this.getResponseData(res, this.dataPath)
 
                     // 正常情况
-                    this.list = (resData || []).map(item => ({
-                        ...item,
-                        id: item[this.paramId],
-                        name: item[this.paramName]
-                    }))
-
+                    this.list = this.formatList(resData)
                     // 单选selector时处理******
                     if (!this.multiSelect) {
-                        if (this.value !== '' && this.list.filter(item => item.id === this.value).length === 0) {
+                        if (this.value !== '' && !findItemById(this.list, this.value)) {
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: this.$t('editPage.withoutOption')
                             })
                         }
                     } else {
                         // 多选selector时处理******,现在的处理方式是，把多选的数组遍历，看里面的每一项是否在list，若不在则加一项***
                         this.value = this.value.length ? this.value : []
                         this.value.forEach(value => {
-                            if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
+                            if (value !== '' && !findItemById(this.list, value)) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: `******（${this.$t('editPage.noPermToView')}）`
+                                    name: this.$t('editPage.withoutOption')
                                 })
                             }
                         })
@@ -221,6 +252,38 @@
                 } finally {
                     this.isLoading = false
                 }
+            },
+            handleRemoteSearch (name) {
+                return new Promise((resolve, reject) => {
+                    clearTimeout(this.timeId)
+                    this.timeId = setTimeout(async () => {
+                        try {
+                            const regExp = new RegExp(this.replaceKey, 'g')
+                            const url = this.searchUrl.replace(regExp, name)
+                            const data = await this.$ajax.get(url)
+                            const resData = this.getResponseData(data)
+
+                            this.list = this.formatList(resData)
+                            resolve()
+                        } catch (error) {
+                            console.error(error)
+                            reject(error)
+                        }
+                    }, 500)
+                })
+            },
+            formatList (resData = []) {
+                const idKey = this.paramId
+                const nameKey = this.paramName
+                // 正常情况
+                return resData.map(item => {
+                    const id = item[idKey] ?? item.id ?? item
+                    return {
+                        ...item,
+                        id: this.allIdString ? String(id) : id,
+                        name: item[nameKey] ?? item.name ?? item
+                    }
+                })
             }
         }
     }

@@ -64,6 +64,41 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
+            <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
+                <bk-form-item
+                    :label="$t('store.是否开源')"
+                    property="visibilityLevel"
+                >
+                    <bk-radio-group
+                        v-model="formData.visibilityLevel"
+                        class="radio-group"
+                    >
+                        <bk-radio
+                            :disabled="entry.disable"
+                            :title="entry.title"
+                            :value="entry.value"
+                            v-for="(entry, key) in isOpenSource"
+                            :key="key"
+                            @click.native="formData.privateReason = ''"
+                        >
+                            {{ entry.label }}
+                        </bk-radio>
+                    </bk-radio-group>
+                </bk-form-item>
+                <bk-form-item
+                    v-if="formData.visibilityLevel === 'PRIVATE'"
+                    :label="$t('store.不开源原因')"
+                    :rules="[requireRule($t('store.不开源原因'))]"
+                    :required="true"
+                    property="privateReason"
+                    error-display-type="normal"
+                >
+                    <bk-input
+                        type="textarea"
+                        v-model="formData.privateReason"
+                    ></bk-input>
+                </bk-form-item>
+            </template>
             <bk-form-item
                 :label="$t('store.简介')"
                 :rules="[requireRule($t('store.简介')), numMax(256)]"
@@ -78,7 +113,7 @@
                 ></bk-input>
             </bk-form-item>
             <bk-form-item
-                :label="$t('store.描述')"
+                :label="$t('store.详细描述')"
                 property="description"
                 :desc="`${$t('store.atomRemark')}<br>${$t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。')}`"
             >
@@ -145,6 +180,7 @@
 <script>
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -175,6 +211,10 @@
         },
 
         computed: {
+            ...mapGetters('store', {
+                userInfo: 'getUserInfo'
+            }),
+
             userName () {
                 return this.$store.state.user.username
             },

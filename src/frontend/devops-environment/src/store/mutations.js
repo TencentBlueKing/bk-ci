@@ -16,24 +16,12 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import { SET_ENVIRONMENT_EXTENSIONS } from './constants'
 
 const mutations = {
-    modifyProcessHead: (state, { process, current }) => {
-        Object.assign(state.processHeadConf, { process, current })
-    },
     selectModelApply: (state, { obj }) => {
         Object.assign(state, {
             currentSelectedModel: obj
-        })
-    },
-    updatePublicImages: (state, { list }) => {
-        Object.assign(state, {
-            publicDockerList: list
-        })
-    },
-    updateCustomizeImages: (state, { list }) => {
-        Object.assign(state, {
-            customizeDockerList: list
         })
     },
     updateDevCloudQuta: (state, { res }) => {
@@ -51,6 +39,12 @@ const mutations = {
     },
     setNodeCount (state, res) {
         state.nodeCount = res
+    },
+    [SET_ENVIRONMENT_EXTENSIONS]: (state, { extensionMap, extensions }) => {
+        Object.assign(state, {
+            extensionMap,
+            extensions
+        })
     },
     setSelectionTagList (state, list) {
         state.selectionTagList = list

@@ -130,7 +130,8 @@ object OkhttpUtils {
         .dns(object : Dns {
             override fun lookup(hostname: String): List<InetAddress> {
                 return if (hostname == host) {
-                    ips.map { InetAddress.getByName(it) }.toList()
+                    val inets = ips.map { InetAddress.getByName(it) }.toList()
+                    inets
                 } else {
                     Dns.SYSTEM.lookup(hostname)
                 }

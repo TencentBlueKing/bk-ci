@@ -70,6 +70,7 @@ const jobOptionConfigMixin = {
                     component: 'atom-ace-editor',
                     lang: 'yaml',
                     defaultHeight: 100,
+                    enableCopilot: false,
                     label: this.$t('storeMap.strategy'),
                     desc: this.$t('storeMap.strategyDesc'),
                     default: ''
@@ -79,6 +80,7 @@ const jobOptionConfigMixin = {
                     component: 'atom-ace-editor',
                     lang: 'yaml',
                     defaultHeight: 100,
+                    enableCopilot: false,
                     label: this.$t('storeMap.includeCase'),
                     desc: this.$t('storeMap.includeCaseDesc'),
                     default: ''
@@ -88,6 +90,7 @@ const jobOptionConfigMixin = {
                     component: 'atom-ace-editor',
                     lang: 'yaml',
                     defaultHeight: 100,
+                    enableCopilot: false,
                     label: this.$t('storeMap.excludeCase'),
                     desc: this.$t('storeMap.excludeCaseDesc'),
                     default: ''
@@ -301,6 +304,7 @@ const jobOptionConfigMixin = {
                     component: 'vuex-input',
                     default: '',
                     required: true,
+                    maxLength: 512,
                     label: this.$t('storeMap.customConditionExp'),
                     docsLink: this.customExpressionsDoc,
                     isHidden: (container) => {

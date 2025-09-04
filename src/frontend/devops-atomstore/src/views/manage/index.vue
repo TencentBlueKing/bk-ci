@@ -47,7 +47,15 @@
                 panelMap: {
                     atom: [
                         { label: this.$t('store.概览'), name: 'overView', children: [{ name: 'statisticData' }, { name: 'statisticPipeline' }], showChildTab: false },
-                        { label: this.$t('store.发布管理'), name: 'release', children: [{ label: this.$t('store.版本管理'), name: 'version' }], showChildTab: true },
+                        {
+                            label: this.$t('store.发布管理'),
+                            name: 'release',
+                            children: [
+                                { label: this.$t('store.版本管理'), name: 'version' },
+                                { label: this.$t('store.代码质量'), name: 'check' }
+                            ],
+                            showChildTab: true
+                        },
                         { label: this.$t('store.协作审批'), name: 'approval' },
                         { label: this.$t('store.基本信息'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
                         {
@@ -55,8 +63,10 @@
                             name: 'setting',
                             children: [
                                 { label: this.$t('store.成员管理'), name: 'member' },
+                                { label: this.$t('store.可见范围'), name: 'visible', hidden: VERSION_TYPE === 'ee' },
                                 { label: this.$t('store.私有配置'), name: 'private' },
-                                { label: this.$t('store.apiSettingManage'), name: 'api' }
+                                { label: this.$t('store.apiSettingManage'), name: 'api' },
+                                { label: this.$t('store.归属信息'), name: 'deptInfo' }
                             ],
                             showChildTab: true
                         }
@@ -68,7 +78,8 @@
                             label: this.$t('store.基本设置'),
                             name: 'setting',
                             children: [
-                                { label: this.$t('store.成员管理'), name: 'member' }
+                                { label: this.$t('store.成员管理'), name: 'member' },
+                                { label: this.$t('store.可见范围'), name: 'visible', hidden: VERSION_TYPE === 'ee' }
                             ],
                             showChildTab: true
                         }
@@ -77,7 +88,31 @@
                         {
                             label: this.$t('store.基本设置'),
                             name: 'setting',
-                            children: [],
+                            children: [
+                                { label: this.$t('store.可见范围'), name: 'visible', hidden: VERSION_TYPE === 'ee' }
+                            ],
+                            showChildTab: true
+                        }
+                    ],
+                    service: [
+                        { label: this.$t('store.概览'), name: 'statisticData' },
+                        {
+                            label: this.$t('store.发布管理'),
+                            name: 'release',
+                            children: [
+                                { label: this.$t('store.版本管理'), name: 'version' },
+                                { label: this.$t('store.环境管理'), name: 'environment' }
+                            ],
+                            showChildTab: true
+                        },
+                        { label: this.$t('store.基本信息'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
+                        {
+                            label: this.$t('store.基本设置'),
+                            name: 'setting',
+                            children: [
+                                { label: this.$t('store.成员管理'), name: 'member' },
+                                { label: this.$t('store.可见范围'), name: 'visible', hidden: VERSION_TYPE === 'ee' }
+                            ],
                             showChildTab: true
                         }
                     ]
@@ -94,7 +129,8 @@
                 const storeTypeMap = {
                     atom: 'ATOM',
                     template: 'TEMPLATE',
-                    image: 'IMAGE'
+                    image: 'IMAGE',
+                    service: 'SERVICE'
                 }
                 return storeTypeMap[this.type]
             },
@@ -107,6 +143,9 @@
                         break
                     case 'image':
                         name = this.$t('store.容器镜像')
+                        break
+                    case 'service':
+                        name = this.$t('store.微扩展')
                         break
                     default:
                         name = this.$t('store.流水线插件')
@@ -158,7 +197,8 @@
                 const methodUrl = {
                     atom: 'store/requestAtom',
                     template: 'store/requestTemplate',
-                    image: 'store/requestImageDetailByCode'
+                    image: 'store/requestImageDetailByCode',
+                    service: 'store/requestServiceDetailByCode'
                 }
                 const currentUrl = methodUrl[this.type]
                 return this.$store.dispatch(currentUrl, code).then(res => this.$store.dispatch('store/setDetail', res))

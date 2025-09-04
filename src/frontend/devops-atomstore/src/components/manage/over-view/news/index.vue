@@ -41,7 +41,8 @@
             initData () {
                 
                 const methodGenerator = {
-                    atom: this.getAtomData
+                    atom: this.getAtomData,
+                    service: this.getImageData
                 }
 
                 if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
@@ -74,6 +75,15 @@
                 })
             },
 
+            getImageData () {
+                return this.$store.dispatch('store/requestVersionLog', this.detail.serviceCode).then((res) => {
+                    const records = res.records || []
+                    this.list = records.map((x) => ({
+                        tag: x.createTime,
+                        content: `${x.creator} ${this.$t('store.新增版本')} ${x.version}`
+                    }))
+                })
+            },
             scrollLoadMore (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop

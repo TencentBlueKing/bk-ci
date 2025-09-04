@@ -127,9 +127,7 @@
                                             v-else-if="props.row.id === CREATOR_FILTER_TYPE"
                                             v-bind="getDynamicFilterConf(props.row.id)"
                                         >
-                                            <bk-tag-input
-                                                allow-create
-                                                allow-auto-match
+                                            <bk-member-selector
                                                 v-model="props.row.userIds"
                                             />
                                         </bk-form-item>

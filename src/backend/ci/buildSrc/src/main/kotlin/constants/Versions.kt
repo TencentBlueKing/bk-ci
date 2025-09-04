@@ -46,9 +46,10 @@ object Versions {
     const val iam = "2.0.0"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
+    const val apachepoi = "5.2.4"
     const val audit = "2.0.1"
     const val MysqlDriver = "8.0.33"
-    const val HttpClient = "4.5.14"
+    const val tencentcloudsdkcfs = "3.1.946"
     // worker
     const val Winp = "1.28"
     const val Jna = "5.14.0"

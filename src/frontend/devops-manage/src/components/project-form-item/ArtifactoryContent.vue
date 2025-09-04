@@ -252,7 +252,6 @@ const props = defineProps({
     required: true
   },
   type: String,
-  isRbac: Boolean,
   initPipelineDialect: String
 });
 const emits = defineEmits(['handleChangeForm', 'beforeChange', 'updateMetadata']);

@@ -146,8 +146,8 @@
         },
         data () {
             return {
-                showVersionSideslider: false,
-                isPipelineIdChanged: false
+                RESOURCE_ACTION,
+                showVersionSideslider: false
             }
         },
         computed: {
@@ -225,9 +225,6 @@
                         content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
-            },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag

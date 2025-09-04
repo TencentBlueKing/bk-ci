@@ -69,7 +69,7 @@
                                                     :key="error"
                                                 >
                                                     {{ error }}</p>
-                                                    
+
                                                 <template v-if="!errors.all(`param-${param.id}-repo-name`).length">
                                                     <p
                                                         v-for="error in (errors.all(`param-${param.id}-branch`))"
@@ -110,7 +110,9 @@
                                                 :disabled="disabled"
                                                 name="type"
                                                 :list="paramsList"
-                                                :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
+                                                :handle-change="
+                                                    (name, value) => handleParamTypeChange(name, value, index)
+                                                "
                                                 :value="param.type"
                                             />
                                         </bk-form-item>
@@ -144,7 +146,7 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :disabled="disabled"
                                                 :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
-                                                v-validate.initial="`required|paramsIdRule|unique:${validateParams.map(p => p.id).join(',')}`"
+                                                v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`"
                                                 name="id"
                                                 :placeholder="$t('nameInputTips')"
                                                 :value="param.id"
@@ -236,20 +238,23 @@
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
+                                                    replace-key="{keyword}"
+                                                    :search-url="getSearchUrl(param.scmType)"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isBuildResourceParam(param.type)"
                                                     style="max-width: 250px"
                                                     :popover-min-width="250"
-                                                    :url="getBuildResourceUrl(param.containerType)"
-                                                    param-id="name"
+                                                    :url="`${buildResourceUrl}&displayName=${param.defaultValue}`"
+                                                    param-id="displayName"
+                                                    param-name="displayName"
                                                     :disabled="disabled"
                                                     name="defaultValue"
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
-                                                    :replace-key="param.replaceKey"
-                                                    :search-url="param.searchUrl"
+                                                    replace-key="\{\{__keywords__\}\}"
+                                                    :search-url="buildResourceSearchUrl"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isSubPipelineParam(param.type)"
@@ -265,7 +270,7 @@
                                                     :search-url="param.searchUrl"
                                                 ></request-selector>
                                             </bk-form-item>
-    
+
                                             <bk-form-item
                                                 v-else
                                                 style="max-width: 100%;"
@@ -315,8 +320,8 @@
                                             :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             :data-vv-scope="`param-${param.id}`"
                                             v-validate.initial="'required'"
-                                            :replace-key="param.replaceKey"
-                                            :search-url="param.searchUrl"
+                                            replace-key="{keyword}"
+                                            :search-url="getSearchUrl('CODE_SVN')"
                                         ></request-selector>
                                     </bk-form-item>
 
@@ -356,7 +361,7 @@
                                             :search-url="getSearchUrl('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')"
                                         ></request-selector>
                                     </bk-form-item>
-                                    
+
                                     <template v-if="isRepoParam(param.type)">
                                         <bk-form-item
                                             label-width="auto"
@@ -419,45 +424,42 @@
                                         ></selector>
                                     </bk-form-item>
 
-                                    <template v-if="isBuildResourceParam(param.type)">
-                                        <bk-form-item
-                                            label-width="auto"
-                                            :label="$t('editPage.buildEnv')"
-                                            :is-error="errors.has(`param-${param.id}.os`)"
-                                            :error-msg="errors.first(`param-${param.id}.os`)"
-                                        >
-                                            <selector
-                                                :popover-min-width="510"
-                                                :disabled="disabled"
-                                                :list="baseOSList"
-                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
-                                                name="os"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                placeholder=""
-                                                :value="param.containerType.os"
-                                            ></selector>
-                                        </bk-form-item>
+                                    <bk-form-item
+                                        label-width="auto"
+                                        v-if="isArtifactoryParam(param.type)"
+                                        :label="$t('editPage.filterRule')"
+                                        :is-error="errors.has(`param-${param.id}.glob`)"
+                                        :error-msg="errors.first(`param-${param.id}.glob`)"
+                                    >
+                                        <vuex-input
+                                            :disabled="disabled"
+                                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                            name="glob"
+                                            :data-vv-scope="`param-${param.id}`"
+                                            :placeholder="$t('editPage.filterRuleTips')"
+                                            :value="param.glob"
+                                        ></vuex-input>
+                                    </bk-form-item>
 
-                                        <bk-form-item
-                                            label-width="auto"
-                                            :label="$t('editPage.addMetaData')"
-                                            :is-error="errors.has(`param-${param.id}.buildType`)"
-                                            :error-msg="errors.first(`param-${param.id}.buildType`)"
-                                        >
-                                            <selector
-                                                :popover-min-width="510"
-                                                :disabled="disabled"
-                                                :list="getBuildTypeList(param.containerType.os)"
-                                                setting-key="type"
-                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
-                                                name="buildType"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                placeholder=""
-                                                :value="param.containerType.buildType"
-                                            ></selector>
-                                        </bk-form-item>
-                                    </template>
-
+                                    <bk-form-item
+                                        label-width="auto"
+                                        v-if="isArtifactoryParam(param.type)"
+                                        :label="$t('metaData')"
+                                        :is-error="errors.has(`param-${param.id}.properties`)"
+                                        :error-msg="errors.first(`param-${param.id}.properties`)"
+                                    >
+                                        <key-value-normal
+                                            :disabled="disabled"
+                                            name="properties"
+                                            :data-vv-scope="`param-${param.id}`"
+                                            :is-metadata-var="true"
+                                            :add-btn-text="$t('editPage.addMetaData')"
+                                            :value="getProperties(param)"
+                                            :handle-change="
+                                                (name, value) => handleProperties(name, value, index)
+                                            "
+                                        ></key-value-normal>
+                                    </bk-form-item>
                                     <bk-form-item
                                         label-width="auto"
                                         :label="$t('desc')"
@@ -501,7 +503,7 @@
                             @click.stop.prevent="editParam(globalParams.length, true)"
                         >
                             <i class="devops-icon icon-plus-circle" />
-                            <span>{{ $t('editPage.addParams') }}</span>
+                            <span>{{ $t("editPage.addParams") }}</span>
                         </a>
                     </template>
                 </template>
@@ -516,12 +518,17 @@
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
+    import {
+        ENVIRONMENT_API_URL_PREFIX,
+        PROCESS_API_URL_PREFIX,
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -533,6 +540,7 @@
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
+        isArtifactoryParam,
         isBooleanParam,
         isBuildResourceParam,
         isCodelibParam,
@@ -574,6 +582,7 @@
             draggable,
             VuexTextarea,
             RequestSelector,
+            KeyValueNormal,
             FileParamInput,
             SelectTypeParam,
             SubParameter
@@ -613,24 +622,23 @@
             }
         },
         computed: {
-            ...mapGetters('atom', [
-                'osList',
-                'getBuildResourceTypeList'
-            ]),
+            ...mapGetters('atom', ['osList', 'getBuildResourceTypeList']),
             isTemplateParams () {
                 return this.settingKey === 'templateParams'
             },
             baseOSList () {
-                return this.osList.filter(os => os.value !== 'NONE').map(os => ({
-                    id: os.value,
-                    name: os.label
-                }))
+                return this.osList
+                    .filter((os) => os.value !== 'NONE')
+                    .map((os) => ({
+                        id: os.value,
+                        name: os.label
+                    }))
             },
             validateParams () {
                 return this.params.concat(this.additionParams)
             },
             paramsList () {
-                return PARAM_LIST.map(item => {
+                return PARAM_LIST.map((item) => {
                     return {
                         id: item.id,
                         name: this.$t(`storeMap.${item.name}`)
@@ -651,14 +659,16 @@
             },
             globalParams: {
                 get () {
-                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.renderParams.filter(
+                        (p) => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG'
+                    )
                 },
                 set (params) {
                     this.updateContainerParams(this.settingKey, [...params, ...this.versions])
                 }
             },
             versions () {
-                return this.params.filter(p => allVersionKeyList.includes(p.id))
+                return this.params.filter((p) => allVersionKeyList.includes(p.id))
             },
             hasGlobalParams () {
                 return this.globalParams.length !== 0
@@ -671,6 +681,12 @@
                     animation: 200,
                     disabled: this.disabled
                 }
+            },
+            buildResourceUrl () {
+                return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+            },
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             },
             displayConditionList () {
                 return {
@@ -702,6 +718,7 @@
             isSvnParam,
             isGitParam,
             isCodelibParam,
+            isArtifactoryParam,
             isBuildResourceParam,
             isSubPipelineParam,
             isFileParam,
@@ -732,10 +749,7 @@
                     ...this.globalParams.slice(paramIndex + 1)
                 ]
 
-                this.handleChange([
-                    ...newGlobalParams,
-                    ...this.versions
-                ])
+                this.handleChange([...newGlobalParams, ...this.versions])
             },
 
             handleUpdateParamId (key, value, paramIndex) {
@@ -748,14 +762,16 @@
                             [key]: value
                         })
 
-                        this.handleChange([
-                            ...this.renderParams
-                        ])
+                        this.handleChange([...this.renderParams])
                         this.$nextTick(() => {
-                            if (this.$refs[`paramId${paramIndex}Input`] && this.$refs[`paramId${paramIndex}Input`][0]) {
+                            if (
+                                this.$refs[`paramId${paramIndex}Input`]
+                                && this.$refs[`paramId${paramIndex}Input`][0]
+                            ) {
                                 this.$refs[`paramId${paramIndex}Input`][0].$el.focus()
                             }
-                            setTimeout(() => { // hack remove error
+                            setTimeout(() => {
+                                // hack remove error
                                 this.errors.clear(`param-${preValue}`)
                             }, 0)
                         })
@@ -778,7 +794,7 @@
             },
             handleChangeBranch (key, value, paramIndex) {
                 const param = this.globalParams[paramIndex]
-               
+
                 Object.assign(param, {
                     [key]: {
                         ...param.defaultValue,
@@ -797,9 +813,7 @@
                             [key]: value
                         })
                     }
-                    this.handleChange([
-                        ...this.renderParams
-                    ])
+                    this.handleChange([...this.renderParams])
                 } catch (e) {
                     console.log('update error', e)
                 }
@@ -818,10 +832,7 @@
                 } else {
                     globalParams.splice(index, 1)
                 }
-                this.handleChange([
-                    ...globalParams,
-                    ...versions
-                ])
+                this.handleChange([...globalParams, ...versions])
             },
 
             editParamShow (paramIndex) {
@@ -850,8 +861,14 @@
                     this.transformOpt(value)
                     this.handleUpdateParam(name, value, index)
                     const param = this.renderParams[index]
-                    if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
-                        const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
+                    if (
+                        typeof param.defaultValue === 'string'
+                        && (isMultipleParam(param.type) || isEnumParam(param.type))
+                    ) {
+                        // 选项清除时，修改对应的默认值
+                        const dv = param.defaultValue
+                            .split(',')
+                            .filter((v) => param.options.map((k) => k.key).includes(v))
                         if (isMultipleParam(param.type)) {
                             this.handleUpdateParam('defaultValue', dv, index)
                         } else {
@@ -868,25 +885,29 @@
             },
 
             handleBuildResourceChange (name, value, index, param) {
-                const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
+                const resetBuildType
+                    = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
 
-                this.handleUpdateParam('containerType', Object.assign({
-                    ...param.containerType,
-                    [name]: value
-                }, resetBuildType), index)
+                this.handleUpdateParam(
+                    'containerType',
+                    Object.assign(
+                        {
+                            ...param.containerType,
+                            [name]: value
+                        },
+                        resetBuildType
+                    ),
+                    index
+                )
                 this.handleUpdateParam('defaultValue', '', index)
             },
 
             handleProperties (key, value, index) {
                 const properties = {}
-                value.forEach(val => {
+                value.forEach((val) => {
                     properties[val.key] = val.value
                 })
                 this.handleUpdateParam(key, properties, index)
-            },
-
-            getBuildResourceUrl ({ os, buildType }) {
-                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
 
             handleCodeTypeChange (name, value, index) {
@@ -912,7 +933,9 @@
 
             getOptions (param) {
                 try {
-                    return param.options.map(opt => opt.key === opt.value ? opt.key : `${opt.key}=${opt.value}`).join('\n')
+                    return param.options
+                        .map((opt) => (opt.key === opt.value ? opt.key : `${opt.key}=${opt.value}`))
+                        .join('\n')
                 } catch (e) {
                     return ''
                 }
@@ -920,7 +943,7 @@
 
             getProperties (param) {
                 try {
-                    return Object.keys(param.properties).map(item => {
+                    return Object.keys(param.properties).map((item) => {
                         return {
                             key: item,
                             value: param.properties[item]
@@ -932,10 +955,13 @@
             },
             // 全局参数添加遍历的key值
             getParams (params) {
-                const result = params.map(item => {
+                const result = params.map((item) => {
                     const temp = { ...item }
                     if (!allVersionKeyList.includes(item.id)) {
-                        temp.paramIdKey = typeof item.paramIdKey !== 'undefined' ? item.paramIdKey : `paramIdKey-${this.paramIdCount++}`
+                        temp.paramIdKey
+                            = typeof item.paramIdKey !== 'undefined'
+                                ? item.paramIdKey
+                                : `paramIdKey-${this.paramIdCount++}`
                     }
                     return temp
                 })
@@ -944,15 +970,17 @@
 
             transformOpt (opts) {
                 const uniqueMap = {}
-                opts = opts.filter(opt => opt.key.length)
+                opts = opts.filter((opt) => opt.key.length)
                 return Array.isArray(opts)
-                    ? opts.filter(opt => {
-                        if (!uniqueMap[opt.key]) {
-                            uniqueMap[opt.key] = 1
-                            return true
-                        }
-                        return false
-                    }).map(opt => ({ id: opt.key, name: opt.value }))
+                    ? opts
+                        .filter((opt) => {
+                            if (!uniqueMap[opt.key]) {
+                                uniqueMap[opt.key] = 1
+                                return true
+                            }
+                            return false
+                        })
+                        .map((opt) => ({ id: opt.key, name: opt.value }))
                     : []
             },
             handleUpdateDisplayCondition (key, value, paramIndex) {
@@ -967,127 +995,107 @@
 </script>
 
 <style lang="scss">
-@import '../../scss/conf';
-
+@import "../../scss/conf";
 .build-params-comp {
-    margin: 20px 0;
-
-    .params-flex-col {
-        display: flex;
-
-        .bk-form-item {
-            flex: 1;
-            padding-right: 8px;
-            max-width: 50%;
-            margin-top: 0;
-            line-height: 30px;
-
-            &:last-child {
-                padding-right: 0;
-            }
-
-            &+.bk-form-item {
-                margin-top: 0 !important;
-            }
-
-            span.bk-form-help {
-                display: block;
-            }
-        }
-
-        .flex-col-span-1 {
-            flex: 1;
-        }
-    }
-
-    .content .text-link {
-        font-size: 14px;
-        cursor: pointer;
-    }
-}
-
-.no-prop {
-    height: 100%;
+  margin: 20px 0;
+  .params-flex-col {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    .bk-form-item {
+      flex: 1;
+      padding-right: 8px;
+      max-width: 50%;
+      margin-top: 0;
+      line-height: 30px;
+      &:last-child {
+        padding-right: 0;
+      }
+      & + .bk-form-item {
+        margin-top: 0 !important;
+      }
+      span.bk-form-help {
+        display: block;
+      }
+    }
+    .flex-col-span-1 {
+      flex: 1;
+    }
+  }
+  .content .text-link {
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+.no-prop {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .param-option {
-    display: flex;
-    align-items: flex-start;
-    margin: 0 0 10px 0;
-
-    .option-input {
-        flex: 1;
-
-        &:first-child {
-            margin-right: 10px;
-        }
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 10px 0;
+  .option-input {
+    flex: 1;
+    &:first-child {
+      margin-right: 10px;
     }
-
-    .devops-icon {
-        font-size: 14px;
-        padding: 10px 0 0 10px;
-        cursor: pointer;
-
-        &:disabled {
-            cursor: auto;
-            opacity: .5;
-        }
+  }
+  .devops-icon {
+    font-size: 14px;
+    padding: 10px 0 0 10px;
+    cursor: pointer;
+    &:disabled {
+      cursor: auto;
+      opacity: 0.5;
     }
+  }
 }
 
 .param-header {
-    display: flex;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  word-wrap: break-word;
+  word-break: break-all;
+  > span {
     flex: 1;
-    align-items: center;
-    word-wrap: break-word;
-    word-break: break-all;
-
-    >span {
-        flex: 1;
+  }
+  > .devops-icon {
+    width: 24px;
+    text-align: center;
+    &.icon-plus {
+      &:hover {
+        color: $primaryColor;
+      }
     }
-
-    >.devops-icon {
-        width: 24px;
-        text-align: center;
-
-        &.icon-plus {
-            &:hover {
-                color: $primaryColor;
-            }
-        }
-
-        &.icon-delete {
-            &:hover {
-                color: $dangerColor;
-            }
-        }
+    &.icon-delete {
+      &:hover {
+        color: $dangerColor;
+      }
     }
+  }
 }
 
 .params-help {
-    color: $fontColor;
-    font-size: 12px;
+  color: $fontColor;
+  font-size: 12px;
 }
-
 .sortable-ghost-atom {
-    opacity: 0.5;
+  opacity: 0.5;
 }
-
 .sortable-chosen-atom {
-    transform: scale(1.0);
+  transform: scale(1);
 }
 
 .param-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-
-    >span {
-        margin: 0 10px;
-    }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  > span {
+    margin: 0 10px;
+  }
 }
 </style>

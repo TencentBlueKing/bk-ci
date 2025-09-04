@@ -68,9 +68,7 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >
-                        {{ item.label }}
-                    </span>
+                    >{{ item.label }}</span>
                     <div class="bkdevops-button">
                         <a
                             :href="BKCI_DOCS.BKCI_DOC"
@@ -178,6 +176,7 @@
                 </section>
             </template>
         </section>
+        <consult-tools />
     </div>
 </template>
 
@@ -187,6 +186,7 @@
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import ConsultTools from '../components/ConsultTools/index.vue'
     import Logo from '../components/Logo/index.vue'
     import NavBox from '../components/NavBox/index.vue'
 
@@ -195,7 +195,8 @@
             NavBox,
             Accordion,
             AccordionItem,
-            Logo
+            Logo,
+            ConsultTools
         }
     })
     export default class Home extends Vue {
@@ -209,7 +210,7 @@
         BK_CI_VERSION: string = window.BK_CI_VERSION
         hasSharedResUrl: boolean = !!(window.BK_SHARED_RES_URL)
 
-        get funcArray (): object[] {
+        get funcArray (): any[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
             return funcArray.map((item, index) => ({
                 label: this.$t(item),

@@ -17,9 +17,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import {
+    DEVCLOUD_API_URL_PREFIX,
     FETCH_ERROR,
     LOG_API_URL_PREFIX,
-    MACOS_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
@@ -56,6 +56,7 @@ import {
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
+    SET_TRIGGER_PARAMS,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_DEFAULT_STAGE_TAG,
@@ -347,7 +348,12 @@ export default {
     },
     requestTriggerParams: async ({ commit }, params) => {
         try {
-            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            let data = []
+            if (params?.length > 0) {
+                const res = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+                data = res.data
+            }
+            commit(SET_TRIGGER_PARAMS, data)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -869,15 +875,15 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/systemVersions/v2`)
     },
 
     getMacXcodeVersion (_, systemVersion = '') {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/xcodeVersions/v2?systemVersion=${systemVersion}`)
     },
 
     getWinVersion () {
-        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/windows/systemVersions`).then((res) => {
             return res.data
         })
     },

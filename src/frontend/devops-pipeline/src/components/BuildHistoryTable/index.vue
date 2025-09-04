@@ -106,7 +106,7 @@
                     :prop="col.id"
                     :label="$t(col.label)"
                     :key="col.id"
-                    show-overflow-tooltip
+                    :show-overflow-tooltip="col.id !== 'appVersions'"
                 >
                     <template
                         v-if="col.id === 'buildNum'"
@@ -734,6 +734,7 @@
             versionToolTipsConf () {
                 return {
                     delay: 500,
+                    allowHTML: true,
                     content: '#app-version-tooltip-content'
                 }
             },
@@ -801,8 +802,16 @@
                         startTime: item.startTime ? convertTime(item.startTime) : '--',
                         endTime: item.endTime ? convertTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
-                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
-                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
+                        totalTime: item.totalTime
+                            ? `${convertMStoString(item.totalTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
+                        executeTime: item.executeTime
+                            ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
                         sumSize: convertFileSize(sumSize, 'B'),
@@ -892,7 +901,6 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
-
             getSlicedData (row) {
                 const keys = Object.keys(row.artifactQuality)
                 const slicedKeys = keys.slice(0, 2)
@@ -1129,17 +1137,18 @@
             async downloadFile ({ artifactoryType, path, name }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
+                    const isDevnet = await this.$store.dispatch('common/requestDevnetGateway')
                     const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-
+                    const url = isDevnet ? res.url : res.url2
                     this.$showTips({
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(url, '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this
                     this.handleError(err, {

@@ -1,0 +1,25 @@
+version: "v2.0"
+name: "bk-ci前端部署【test-rbac】"
+
+on:
+  push:
+    branches:
+      - "test"
+    paths:
+      - "src/frontend/**"
+      - ".ci/frontend_test_rbac.yml"
+
+concurrency:
+  group: frontend-test-rbac
+
+stages:
+  - template: frontend-stage.yml
+    parameters:
+      ips: "11.185.145.49"
+      tag: rbac
+      env: test
+      code-branch: test
+      config-branch: integration
+
+notices:
+  - type: wework-message

@@ -185,6 +185,37 @@ export const DEFAULT_PARAM = {
         category: '',
         displayCondition: {}
     },
+    [CONTAINER_TYPE]: {
+        id: 'buildResource',
+        name: 'buildResource',
+        defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        // containerType: {
+        //     os: 'LINUX',
+        //     buildType: 'DOCKER'
+        // },
+        desc: '',
+        options: [],
+        type: CONTAINER_TYPE,
+        typeDesc: 'buildResource',
+        required: true,
+        readOnly: false,
+        replaceKey: '{{__keywords__}}'
+    },
+    [ARTIFACTORY]: {
+        id: 'artifactory',
+        defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        desc: '',
+        options: [],
+        glob: '*',
+        properties: {},
+        type: ARTIFACTORY,
+        typeDesc: 'artifactory',
+        required: true
+    },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
         name: 'subPipeline',
@@ -293,7 +324,7 @@ export const ParamComponentMap = {
     [SVN_TAG]: 'Selector',
     [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
-    [CONTAINER_TYPE]: 'Selector',
+    [CONTAINER_TYPE]: 'RequestSelector',
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'FileParamInput',
@@ -351,6 +382,10 @@ export const CODE_LIB_TYPE = [
     {
         id: 'CODE_GIT',
         name: 'GIT'
+    },
+    {
+        id: 'CODE_SVN',
+        name: 'SVN'
     },
     {
         id: 'GITHUB',

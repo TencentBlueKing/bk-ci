@@ -131,7 +131,9 @@ export default {
             }
             if (option && !option.disabled) {
                 this.handleChange(this.name, option.id)
-                this.handleBlur()
+                this.$nextTick(() => {
+                    this.handleBlur()
+                })
             }
         }
     }

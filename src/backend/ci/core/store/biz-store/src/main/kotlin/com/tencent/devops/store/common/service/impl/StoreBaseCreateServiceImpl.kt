@@ -182,7 +182,7 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         val bkStoreContext = storeCreateRequest.bkStoreContext
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
         val storeCode = storeBaseCreateRequest.storeCode
-        getStoreSpecBusService(storeType).doStorePostCreateBus(
+        getStoreSpecBusService(storeType).doStoreCreatePostBus(
             userId = userId,
             storeCode = storeCode,
             storeType = storeType

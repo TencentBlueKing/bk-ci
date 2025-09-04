@@ -54,7 +54,7 @@
         class="textarea"
         v-show="projectData.properties.enablePipelineNameTips"
         v-model="projectData.properties.pipelineNameFormat"
-        :placeholder="t('请输入流水线命名规范提示说明')"
+        :placeholder="t('请输入流水线命名规范提示说明。示例: 请遵循流水线命名规范，以\'模块名(一个/多个/场景等)_触发机制(premerge/trunk/daily等)_测试裂隙(UT/引流/DIFF等)\'的命名格式')"
         :rows="3"
         :maxlength="200"
         type="textarea"
@@ -80,7 +80,6 @@
       >
       </bk-input>
     </bk-form-item>
-    
     <bk-sideslider
       v-model:isShow="pipelineSideslider"
       :title="`${t('切换变量语法风格影响的流水线列表')}(${t('共X个', [pipelinePagination.count])})`"
@@ -120,20 +119,16 @@ import { copyToClipboard } from "@/utils/util.js"
 import copyImg from "@/css/svg/copy.svg";
 import { Message, Button, InfoBox, Alert } from 'bkui-vue';
 import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
-
 const { t } = useI18n();
-
 const props = defineProps({
   data: {
     type: Object,
     required: true
   },
   type: String,
-  isRbac: Boolean,
   initPipelineDialect: String
 });
 const emits = defineEmits(['handleChangeForm', 'beforeChange']);
-
 const projectData = ref(props.data);
 const confirmSwitch = ref('');
 const infoBoxRef = ref();
@@ -143,7 +138,6 @@ const pipelineSideslider = ref(false);
 const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
 const projectId = computed(() => projectData.value.englishName);
 const currentPipelineDialect = computed(() => projectData.value?.properties?.pipelineDialect);
-
 function handleChangeForm() {
   emits('handleChangeForm')
 }
@@ -203,7 +197,7 @@ async function getCountPipelineByDialect () {
     console.log(error);
   }
 }
-function beforeChange(params) {
+function beforeChange() {
   return new Promise(async (resolve) => {
     if (props.type === 'edit' && props.initPipelineDialect === currentPipelineDialect.value) {
       confirmSwitch.value = '';
@@ -289,12 +283,10 @@ async function fetchListViewPipelines () {
     isLoading.value = false;
   }
 }
-
 function pageLimitChange (limit) {
   pipelinePagination.value.limit = limit;
   fetchListViewPipelines();
 }
-
 function pageValueChange (value) {
   pipelinePagination.value.current = value;
   fetchListViewPipelines();
@@ -302,7 +294,6 @@ function pageValueChange (value) {
 function handleToPipeline (row) {
   window.open(`/console/pipeline/${projectId.value}/${row.pipelineId}/history/pipeline`, '__blank');
 }
-
 </script>
 <style lang="scss">
 .dialect-radio {

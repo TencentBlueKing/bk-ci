@@ -226,7 +226,7 @@
 </template>
 
 <script>
-    import { bkCheckbox, bkPopover } from 'bk-magic-vue'
+    import { bkCheckbox, bkPopover } from '@tencent/bk-magic-vue'
     import Logo from './Logo'
     import StatusIcon from './StatusIcon'
     import {

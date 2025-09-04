@@ -153,7 +153,6 @@
                 }))
             }
         },
-
         watch: {
             queryParams (newQueryParams, oldQueryParams) {
                 if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
@@ -244,7 +243,6 @@
                 })
                 this.updateParameters()
             },
-
             handleChangeValue (value, index) {
                 this.parameters[index].value = value
                 this.$nextTick(() => {
@@ -372,9 +370,9 @@
   }
 </style>
 <style lang="scss">
-    .sub-parameter .is-error {
-        input {
-            border-color: #ff5656;
-        }
-    }
+  .sub-parameter .is-error {
+      input {
+          border-color: #ff5656;
+      }
+  }
 </style>

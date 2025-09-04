@@ -123,7 +123,9 @@
             ...mapActions('store', [
                 'requestMarketAtom',
                 'requestMarketTemplate',
-                'requestMarketImage'
+                'requestMarketImage',
+                'requestMarketIDE',
+                'requestMarketService'
             ]),
             closeOrderList () {
                 this.showOrderList = false
@@ -173,7 +175,9 @@
                 const apiFun = {
                     atom: this.requestMarketAtom,
                     template: this.requestMarketTemplate,
-                    image: this.requestMarketImage
+                    image: this.requestMarketImage,
+                    ide: this.requestMarketIDE,
+                    service: this.requestMarketService
                 }
                 if (!Object.keys(apiFun).includes(pipeType) || typeof apiFun[pipeType] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })

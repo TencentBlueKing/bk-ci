@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import ProjectForm from '@/components/project-form.vue';
+import http from '@/http/api';
 import {
   RESOURCE_ACTION,
   handleProjectManageNoPermission,
@@ -8,27 +10,25 @@ import {
   onMounted,
   ref,
 } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   useRoute,
   useRouter,
 } from 'vue-router';
-import http from '@/http/api';
-import { useI18n } from 'vue-i18n';
-import ProjectForm from '@/components/project-form.vue';
-
 
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
 const { projectCode } = route.params;
-const projectData = ref<any>({});
+const projectData = ref<any>(null);
 const projectForm = ref(null);
 const isLoading = ref(false);
 const isChange = ref(false);
+const isToBeApproved = ref(false);
 const btnLoading = ref(false);
-const hasPermission = ref(true)
-
+const hasPermission = ref(true);
+const operationalList = ref({});
 const currentDialect = ref();
 const isDialectDialog = ref(false);
 let initdata;
@@ -100,14 +100,23 @@ const handleFormChange = (val: boolean) => {
   isChange.value = val;
 };
 
+const handleApprovedChange = (val: boolean) => {
+  isToBeApproved.value = val;
+};
+
 const infoBoxInstance = ref();
 
 const updateProject = async () => {
-  infoBoxInstance.value?.hide()
+  infoBoxInstance.value?.hide();
   btnLoading.value = true;
+  await fetchOperationalList(projectData.value.bgName);
+  await checkProductIdName({
+    id: projectData.value?.productId,
+    list: operationalList.value,
+  });
   const result = await http
     .requestUpdateProject({
-      projectId: projectData.value.englishName,
+      projectId: projectData.value?.englishName,
       projectData: projectData.value,
     })
     .catch((err) => {
@@ -116,12 +125,12 @@ const updateProject = async () => {
           action: RESOURCE_ACTION.EDIT,
           projectId: projectCode,
           resourceCode: projectCode,
-        })
+        });
       }
       Message({
         theme: 'error',
         message: err.message || err,
-      })
+      });
     })
     .finally(() => {
       btnLoading.value = false;
@@ -133,8 +142,24 @@ const updateProject = async () => {
     });
     goShow()
   }
-  return Promise.resolve(false)
+  return Promise.resolve(false);
 };
+
+const fetchOperationalList = async (bgName) => {
+  if (!bgName) return
+  const res = await http.getOperationalList(bgName)
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+};
+
+const checkProductIdName = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName || '';
+};
+
 const showNeedApprovedTips = () => {
   infoBoxInstance.value = InfoBox({
     isShow: true,
@@ -173,6 +198,11 @@ const undateMetadata = async (params) => {
  * 更新项目
  */
 const handleUpdate = (panel, params) => {
+  if (isToBeApproved.value) {
+    showNeedApprovedTips();
+    return;
+  }
+  
   if (panel) {
     undateMetadata(params)
   } else {
@@ -213,11 +243,11 @@ const handleNoPermission = () => {
     action: RESOURCE_ACTION.VIEW,
     projectId: projectCode,
     resourceCode: projectCode,
-  })
+  });
 };
 
-onMounted(() => {
-  fetchProjectData();
+onMounted(async () => {
+  await fetchProjectData();
 });
 </script>
 
@@ -225,7 +255,7 @@ onMounted(() => {
   <bk-loading class="edit-project-content" :loading="isLoading">
     <section class="edit-project-form" v-if="hasPermission">
       <project-form
-        v-if="!isLoading"
+        v-if="!isLoading && projectData"
         class="edit-form"
         type="edit"
         :is-change="isChange"
@@ -233,6 +263,7 @@ onMounted(() => {
         :btnLoading="btnLoading"
         @change="handleFormChange"
         @initProjectForm="initProjectForm"
+        @approvedChange="handleApprovedChange"
         @handleCancel="handleCancel"
         @handleUpdate="handleUpdate"
         @initProjectData="initProjectData"

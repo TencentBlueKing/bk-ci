@@ -4,12 +4,10 @@
     :resource-type="resourceType"
     :resource-code="projectCode"
     :project-code="projectCode"
-    :rename-group-name="handelRenameGroupName"
   />
 </template>
 
 <script lang="ts">
-import http from '@/http/api';
 import PermissionMain from '@/components/user-group/components/permission-main.vue';
 import tools from '@/utils/tools';
 import { Message } from 'bkui-vue';

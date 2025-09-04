@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
 import { RESOURCE_ACTION, RESOURCE_TYPE} from '@/utils/permission.js';
@@ -10,8 +10,8 @@ const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProje
 const props = defineProps({
   data: Object,
   type: String,
-  isRbac: Boolean,
   initPipelineDialect: String,
+  curDeptInfo: Array,
   btnLoading: Boolean
 });
 
@@ -34,11 +34,11 @@ const tabPanels = [
       title: '基础信息',
       component: BaseInfoContent,
     },
-    ...props.isRbac ? [{
+    {
       name: 'permission',
       title: '权限',
       component: PermissionContent,
-    }] : []]
+    }]
   },
   {
     name: 'pipelineSettings',
@@ -74,6 +74,9 @@ function handleChangeForm () {
 function handleClearValidate () {
   emits('clearValidate');
 };
+function setProjectDeptProp (dept) {
+  emits('setProjectDeptProp', dept)
+}
 function tabBeforeChange(name){
   if (props.type === 'edit' && isChange.value) {
     infoBoxRef.value = InfoBox({
@@ -157,11 +160,12 @@ onMounted(() => {
                     <component
                       :is="panel.component"
                       :type="type"
-                      :is-rbac="isRbac"
                       :data="projectData"
                       :initPipelineDialect="initPipelineDialect"
                       @handle-change-form="handleChangeForm"
                       @clearValidate="handleClearValidate"
+                      @setProjectDeptProp="setProjectDeptProp"
+                      :curDeptInfo="curDeptInfo"
                     />
                   </div>
                 </template>
@@ -177,7 +181,6 @@ onMounted(() => {
                   :ref="el => { if (panel.name === 'artifactory') componentsRef = el }"  
                   :is="panel.component"
                   :type="type"
-                  :is-rbac="isRbac"
                   :data="projectData"
                   :initPipelineDialect="initPipelineDialect"
                   @handle-change-form="handleChangeForm"

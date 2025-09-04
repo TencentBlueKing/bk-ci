@@ -89,7 +89,7 @@ const devConf = merge(baseConf, {
                     priority: -20,
                     reuseExistingChunk: true
                 },
-                vendors: {
+                defaultVendors: {
                     test: /[\\/]node_modules[\\/]/,
                     priority: -10
                 }

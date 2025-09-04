@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         :value="isShow"
-        :width="560"
+        :width="836"
         :auto-close="false"
         :show-footer="false"
         :title="$t('newlist.chooseExport')"
@@ -38,10 +38,10 @@
 </template>
 
 <script>
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import Logo from '@/components/Logo'
-    import { mapActions, mapState } from 'vuex'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -95,13 +95,22 @@
                         name: `${this.pipelineName}.yml`,
                         tips: this.$t('newlist.exportPipelineYamlTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${this.projectId}?pipelineId=${this.pipelineId}&actionType=FULL_MODEL2YAML`,
-                        tipsLink: this.BKCI_DOCS?.PAC_GUIDE_DOC,
+                        tipsLink: `${IWIKI_DOCS_URL}/p/4009967153`,
                         params: {
                             modelAndSetting: {
                                 model: this.pipeline,
                                 setting: this.pipelineSetting
                             }
                         }
+                    },
+                    {
+                        type: 'preCi',
+                        title: 'PreCI',
+                        icon: 'export-prebuild',
+                        name: `${this.pipelineName}.yml`,
+                        tips: this.$t('newlist.exportYamlTip'),
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/prebuild${queryString}`,
+                        tipsLink: `${IWIKI_DOCS_URL}/x/ruhACw`
                     }
                 ]
             }

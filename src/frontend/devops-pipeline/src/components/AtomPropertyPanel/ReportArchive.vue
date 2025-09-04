@@ -1,7 +1,7 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <form-field
-            v-for="(obj, key) in commonModel[&quot;row&quot;]"
+            v-for="(obj, key) in commonModel['row']"
             :key="key"
             :desc="obj.desc"
             :desc-link="obj.descLink"
@@ -68,8 +68,8 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'normal-atom',

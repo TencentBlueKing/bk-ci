@@ -145,6 +145,7 @@
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
                 isLoading: !this.codelibs,
+                isSearch: false,
                 defaultPagesize: 10,
                 startPage: 1,
                 showCodelibDialog: false,

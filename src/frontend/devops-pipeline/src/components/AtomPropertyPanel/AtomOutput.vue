@@ -75,7 +75,7 @@
                 >
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
-                        <i class="bk-icon icon-info-circle" />
+                        <i class="devops-icon icon-info-circle" />
                         <div slot="content">
                             {{ output.description }}
                         </div>

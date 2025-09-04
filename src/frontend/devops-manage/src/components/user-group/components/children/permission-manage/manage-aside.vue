@@ -263,16 +263,16 @@
 </template>
 
 <script setup name="ManageAside">
+import ProjectUserSelector from '@/components/project-user-selector';
 import http from '@/http/api';
+import useManageAside from "@/store/manageAside";
 import { Message } from 'bkui-vue';
-import { useI18n } from 'vue-i18n';
+import { Spinner, Success } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
+import { computed, defineEmits, defineExpose, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import MemberItem from './MemberItem.vue';
-import useManageAside from "@/store/manageAside";
-import { Success, Spinner } from 'bkui-vue/lib/icon';
-import ProjectUserSelector from '@/components/project-user-selector'
-import { ref, defineProps, defineEmits, computed, defineExpose, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   memberList: {
@@ -452,6 +452,7 @@ async function handleChangeOverFormName ({list, userList}){
     preCheck: true,
     checkPermission: true
   }
+  
   if (!params.handoverTo) return
   isChecking.value = true;
   isAuthorizedSuccess.value = false;

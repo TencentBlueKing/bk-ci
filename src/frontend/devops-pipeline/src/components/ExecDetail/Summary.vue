@@ -257,11 +257,11 @@
                         }
                     }]
             },
-            artifactQuality () {
-                return this.execDetail?.artifactQuality
-            },
             archiveFlag () {
                 return this.$route.query.archiveFlag
+            },
+            artifactQuality () {
+                return this.execDetail?.artifactQuality
             }
         },
         watch: {

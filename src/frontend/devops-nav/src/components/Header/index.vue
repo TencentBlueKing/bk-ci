@@ -1,6 +1,7 @@
 <template>
     <div class="devops-header">
         <div class="header-left-bar">
+            <Wedev />
             <router-link
                 class="header-logo"
                 to="/console/"
@@ -86,7 +87,12 @@
                                 @click.stop.prevent="popProjectDialog"
                             >
                                 <i class="devops-icon icon-plus-circle mr5" />
-                                <span class="text">{{ $t('newProject') }}</span>
+                                <span
+                                    class="text"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ $t('newProject') }}
+                                </span>
                             </span>
                             <span class="extension-line" />
                             <span
@@ -98,7 +104,12 @@
                                     size="14"
                                     class="mr5"
                                 />
-                                <span class="text">{{ $t('joinProject') }}</span>
+                                <span
+                                    class="text"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ $t('joinProject') }}
+                                </span>
                             </span>
                         </div>
                     </template>
@@ -110,8 +121,15 @@
                 class="service-title"
                 @click="goHome"
             >
+                <img
+                    v-if="isAbsoluteUrl(serviceLogo)"
+                    :src="serviceLogo"
+                    class="service-logo"
+                />
                 <logo
+                    v-else
                     :name="serviceLogo"
+                    class="service-logo"
                     size="20"
                 />
                 {{ title }}
@@ -150,6 +168,7 @@
                     </li>
                 </template>
             </bk-popover>
+            <qrcode class="feed-back-icon" />
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"
@@ -203,6 +222,12 @@
             :title="projectDialogTitle"
         />
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
+
+        <RemindAssociateOperationalDialog
+            :is-show="showOperationalDialog"
+            @to-associate="handleToAssociate"
+            @check-associate="handleCheckAssociate"
+        />
         <system-log
             :show-system-log="showSystemLog"
             :toggle-show-log="toggleShowVersionLog"
@@ -212,28 +237,34 @@
 
 <script lang="ts">
     import eventBus from '@/utils/eventBus'
-    import { urlJoin } from '@/utils/util'
+    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
-    import { Component } from 'vue-property-decorator'
+    import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import SystemLog from '../SystemLog/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
+    import Qrcode from './Qrcode.vue'
+    import Wedev from './WeDev.vue'
 
     @Component({
         components: {
+            Wedev,
             User,
             NavMenu,
+            Qrcode,
             ProjectDialog,
             ApplyProjectDialog,
             Logo,
             DevopsSelect,
             LocaleSwitcher,
+            RemindAssociateOperationalDialog,
             SystemLog
         }
     })
@@ -249,9 +280,13 @@
 
         @Action toggleProjectDialog
         @Action togglePopupShow
+        @Action remindUserOfRelatedProduct
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+        isAbsoluteUrl = isAbsoluteUrl
+        showOperationalDialog: boolean = false
+
         showSystemLog: boolean = false
         langs: Array<any> = [
             {
@@ -326,7 +361,13 @@
             projectDropdown: any
         }
 
+        @Watch('projectId')
+        changeProjectId () {
+            this.checkRemindUserOfRelatedProduct()
+        }
+
         created () {
+            this.checkRemindUserOfRelatedProduct()
             eventBus.$on('show-project-menu', () => {
                 const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
                 if (ele) {
@@ -376,10 +417,10 @@
         }
 
         goHomeById (projectId: string, reload: boolean = false): void {
-            const hasProjectId = this.currentPage.show_project_list
-            let path = urlJoin('/console', this.currentPage.link_new)
+            const hasProjectId = this.currentPage?.show_project_list
+            let path = urlJoin('/console', this.currentPage?.link_new)
             if (hasProjectId) {
-                if (this.currentPage.project_id_type === 'path') {
+                if (this.currentPage?.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
                 } else {
                     path += `?projectId=${projectId}`
@@ -396,6 +437,8 @@
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
             
+            window.setProjectIdCookie(id)
+
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
             } else {
@@ -405,9 +448,8 @@
                     }
                 })
             }
-            window.setProjectIdCookie(id)
-
-            if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
+            
+            if (!oldProject?.routerTag || project?.routerTag !== oldProject?.routerTag) {
                 this.goHomeById(id, true)
             }
         }
@@ -462,6 +504,23 @@
             this.togglePopupShow(false)
         }
 
+        checkRemindUserOfRelatedProduct () {
+            if (this.$route.name === 'manage' || !this.projectId) return
+            this.remindUserOfRelatedProduct({
+                projectId: this.projectId
+            }).then(res => {
+                this.showOperationalDialog = res
+            })
+        }
+
+        handleToAssociate () {
+            this.to(`/console/manage/${this.projectId}/edit`)
+        }
+
+        handleCheckAssociate () {
+            this.checkRemindUserOfRelatedProduct()
+        }
+
         toggleShowVersionLog (value: boolean) {
             this.showSystemLog = value
         }
@@ -513,7 +572,7 @@
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
                 width: 233px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 border-color: $dropdownBorder;
                 background-color: $headerBgColor;
                 
@@ -536,7 +595,7 @@
                     outline: none;
                 }
                 ::v-deep .bk-select-dropdown .bk-select-name {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     height: 36px;
                     line-height: 36px;
                     font-size: 14px;
@@ -549,7 +608,7 @@
                 height: 100%;
                 padding: 0 18px;
                 margin-left: 10px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 font-size: 14px;
                 cursor: pointer;
 
@@ -557,7 +616,9 @@
                     color: white;
                     background-color: black;
                 }
-                > svg {
+                .service-logo {
+                    width: 20px;
+                    height: 20px;
                     margin-right: 5px;
                 }
             }
@@ -582,14 +643,14 @@
             > .seperate-line {
                 padding: 0 5px;
                 font-size: 20px;
-                // color: $fontLigtherColor;
+                // color: $fontLighterColor;
                 line-height: $headerHeight;
             }
 
             > .devops-icon {
                 padding: 0 10px;
                 font-size: 20px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 line-height: $headerHeight;
                 cursor: pointer;
             }

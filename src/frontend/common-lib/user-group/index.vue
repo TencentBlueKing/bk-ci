@@ -51,7 +51,6 @@
     import NotOpenManage from './not-open-manage.vue'
     import NoPermission from './no-permission.vue'
     import IamIframe from './iam-Iframe.vue'
-
     export default {
         components: {
             GroupAside,

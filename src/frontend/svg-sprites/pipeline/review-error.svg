@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="28px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>手动触发-错误</title>
+    <g id="流水线" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-Copy" transform="translate(-40.000000, -278.000000)">
+            <g id="手动触发-错误" transform="translate(40.000000, 278.000000)">
+                <g id="编组-2" fill="#FFFFFF" stroke="#EC4A28">
+                    <rect id="矩形" x="0.5" y="0.5" width="27" height="27" rx="13.5"></rect>
+                </g>
+                <path d="M20,21 L20,22 L8,22 L8,21 L20,21 Z M14,6 C16.209139,6 18,7.790861 18,10 C18,11.4801068 17.1961002,12.7724528 16.0011092,13.4642293 L16,16 L21,16 L21,20 L7,20 L7,16 L12,16 L11.9998796,13.4648015 C10.8584011,12.8044389 10.0735389,11.5961843 10.0048953,10.1996403 L10,10 C10,7.790861 11.790861,6 14,6 Z" id="Combined-Shape" fill="#3C96FF" fill-rule="nonzero"></path>
+            </g>
+        </g>
+    </g>
+</svg>

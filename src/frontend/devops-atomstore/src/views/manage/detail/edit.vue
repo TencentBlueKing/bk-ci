@@ -5,6 +5,7 @@
         </header>
         <component
             :is="`${$route.params.type}Edit`"
+            :user-info="userInfo"
             :detail="detail"
             class="edit-main"
             ref="edit"
@@ -13,19 +14,22 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomEdit from '@/components/manage/detail/atom-detail/edit.vue'
     import imageEdit from '@/components/manage/detail/image-detail/edit.vue'
+    import serviceEdit from '@/components/manage/detail/service-detail/edit.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
             atomEdit,
-            imageEdit
+            imageEdit,
+            serviceEdit
         },
 
         computed: {
             ...mapGetters('store', {
-                detail: 'getDetail'
+                detail: 'getDetail',
+                userInfo: 'getUserInfo'
             })
         },
 
@@ -95,6 +99,11 @@
                 margin-top: 0;
                 .bk-label {
                     display: none;
+                }
+            }
+            .radio-group {
+                .bk-form-radio {
+                    margin-right: 10px;
                 }
             }
         }

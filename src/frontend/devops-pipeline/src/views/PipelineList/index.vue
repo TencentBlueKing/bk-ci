@@ -4,14 +4,15 @@
         :label-height="48"
         type="unborder-card"
         class="pipeline-content"
+        @tab-change="handleTabChange"
         :validate-active="false"
     >
         <bk-tab-panel
             v-for="panel in panels"
+            render-directive="if"
             :label="panel.label"
             :name="panel.name"
             :key="panel.name"
-            render-directive="if"
         >
             <router-view></router-view>
         </bk-tab-panel>
@@ -40,13 +41,25 @@
             const panels = [
                 {
                     label: vm.proxy.$t('pipeline'),
-                    name: 'PipelineManageList',
-                    component: 'router-view'
+                    name: 'PipelineManageList'
+                },
+                {
+                    label: vm.proxy.$t('pipelineDataBoard'),
+                    name: 'PipelineDataBoard'
                 }
             ]
+
+            function handleTabChange (name) {
+                if (activePanel.value === name) return
+                // 跳转到对应的路由
+                vm.proxy.$router.push({
+                    name
+                })
+            }
             return {
                 activePanel,
-                panels
+                panels,
+                handleTabChange
             }
         }
     })

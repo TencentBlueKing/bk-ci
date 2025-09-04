@@ -88,6 +88,7 @@
                 'isElementModified'
             ]),
             ...mapGetters('atom', [
+                'getDefaultVersion',
                 'getElement',
                 'getContainer',
                 'getContainers',

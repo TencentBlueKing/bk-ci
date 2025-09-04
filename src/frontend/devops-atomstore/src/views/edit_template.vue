@@ -249,8 +249,8 @@
 </template>
 
 <script>
-    import selectLogo from '@/components/common/selectLogo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
 
     export default {
@@ -626,7 +626,7 @@
                 .bk-tooltip {
                     margin-top: 10px;
                     margin-left: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     p {
                         max-width: 400px;
                         text-align: left;

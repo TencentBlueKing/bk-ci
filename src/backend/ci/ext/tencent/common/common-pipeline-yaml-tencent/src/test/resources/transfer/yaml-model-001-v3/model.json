@@ -1,0 +1,1589 @@
+{
+  "model" : {
+    "name" : "all job",
+    "desc" : "",
+    "stages" : [ {
+      "containers" : [ {
+        "@type" : "trigger",
+        "id" : "0",
+        "name" : "",
+        "elements" : [ {
+          "@type" : "manualTrigger",
+          "name" : "手动触发",
+          "id" : "T-1-1-1",
+          "canElementSkip" : true,
+          "useLatestParameters" : false,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "manualTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "manualTrigger"
+        }, {
+          "@type" : "timerTrigger",
+          "name" : "定时触发",
+          "newExpression" : [ "0 0 1 ? * 3,4,5", "0 2 1 ? * 3,4,5" ],
+          "advanceExpression" : [ "0 1 * * *", "0 2 * * *" ],
+          "noScm" : true,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "timerTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "timerTrigger"
+        }, {
+          "@type" : "remoteTrigger",
+          "name" : "远程触发",
+          "canElementSkip" : false,
+          "remoteToken" : "PipelineRemoteToken",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "remoteTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "remoteTrigger"
+        }, {
+          "@type" : "codeGitWebHookTrigger",
+          "name" : "Git事件触发",
+          "branchName" : "master",
+          "excludeBranchName" : "排除以下目标分支",
+          "pathFilterType" : "NamePrefixFilter",
+          "includePaths" : "监听以下路径：",
+          "excludePaths" : "排除以下路径：",
+          "includeUsers" : [ "yongyiduan" ],
+          "excludeUsers" : [ "yongyiduan" ],
+          "eventType" : "PUSH",
+          "repositoryType" : "NAME",
+          "repositoryName" : "aliasName/xxx",
+          "webhookQueue" : false,
+          "enableCheck" : true,
+          "enableThirdFilter" : false,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeGitWebHookTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "codeGitWebHookTrigger"
+        }, {
+          "@type" : "codeTGitWebHookTrigger",
+          "name" : "TGit事件触发",
+          "data" : {
+            "input" : {
+              "branchName" : "master",
+              "excludeBranchName" : "排除以下目标分支",
+              "pathFilterType" : "NamePrefixFilter",
+              "includePaths" : "监听以下路径：",
+              "excludePaths" : "排除以下路径：",
+              "excludeUsers" : [ "yongyiduan" ],
+              "eventType" : "PUSH",
+              "repositoryType" : "NAME",
+              "repositoryName" : "aliasName/xxx",
+              "webhookQueue" : false,
+              "enableCheck" : true,
+              "enableThirdFilter" : false
+            }
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeTGitWebHookTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "codeTGitWebHookTrigger"
+        }, {
+          "@type" : "codeGithubWebHookTrigger",
+          "name" : "GitHub事件触发",
+          "branchName" : "master",
+          "excludeBranchName" : "mr",
+          "pathFilterType" : "NamePrefixFilter",
+          "excludeUsers" : "排除以下人员：",
+          "webhookQueue" : false,
+          "enableCheck" : true,
+          "enableThirdFilter" : false,
+          "eventType" : "PUSH",
+          "repositoryType" : "NAME",
+          "repositoryName" : "aliasName/xxx",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeGithubWebHookTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "codeGithubWebHookTrigger"
+        }, {
+          "@type" : "codeSVNWebHookTrigger",
+          "name" : "SVN事件触发",
+          "pathFilterType" : "NamePrefixFilter",
+          "relativePath" : "代码库相对路径：",
+          "excludePaths" : "排除以下路径：",
+          "excludeUsers" : [ "yongyiduan" ],
+          "includeUsers" : [ "yongyiduan" ],
+          "repositoryType" : "NAME",
+          "repositoryName" : "按代码库别名输入",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeSVNWebHookTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "codeSVNWebHookTrigger"
+        }, {
+          "@type" : "codeP4WebHookTrigger",
+          "name" : "P4事件触发",
+          "data" : {
+            "input" : {
+              "repositoryType" : "NAME",
+              "repositoryName" : "123",
+              "includePaths" : "监听以下路径：",
+              "excludePaths" : "排除以下路径：",
+              "eventType" : "CHANGE_COMMIT"
+            }
+          },
+          "executeCount" : 1,
+          "version" : "2.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeP4WebHookTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "codeP4WebHookTrigger"
+        }, {
+          "@type" : "codeGitlabWebHookTrigger",
+          "name" : "Gitlab变更触发",
+          "repositoryType" : "NAME",
+          "repositoryName" : "aliasName/xxx",
+          "eventType" : "TAG_PUSH",
+          "pathFilterType" : "NamePrefixFilter",
+          "excludeUsers" : [ "yongyiduan" ],
+          "tagName" : "监听以下tag：",
+          "excludeTagName" : "排除以下tag：",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : true,
+            "timeout" : 100,
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "",
+            "customCondition" : "",
+            "enableCustomEnv" : false
+          },
+          "classType" : "codeGitlabWebHookTrigger",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "codeGitlabWebHookTrigger"
+        } ],
+        "params" : [ {
+          "id" : "字符串",
+          "required" : true,
+          "constant" : false,
+          "type" : "STRING",
+          "defaultValue" : "value",
+          "desc" : "描述描述描述描述描述",
+          "readOnly" : false
+        }, {
+          "id" : "文本框",
+          "required" : true,
+          "constant" : false,
+          "type" : "TEXTAREA",
+          "defaultValue" : "文本框",
+          "desc" : "描述描述描述描述描述",
+          "readOnly" : false
+        }, {
+          "id" : "布尔值",
+          "required" : true,
+          "constant" : false,
+          "type" : "BOOLEAN",
+          "defaultValue" : true,
+          "readOnly" : false
+        }, {
+          "id" : "单选框",
+          "required" : true,
+          "constant" : false,
+          "type" : "ENUM",
+          "defaultValue" : "1",
+          "options" : [ {
+            "key" : "1",
+            "value" : "1"
+          }, {
+            "key" : "2",
+            "value" : "2"
+          }, {
+            "key" : "3",
+            "value" : "3"
+          } ],
+          "desc" : "描述描述描述描述",
+          "readOnly" : false
+        }, {
+          "id" : "复选框",
+          "required" : true,
+          "constant" : false,
+          "type" : "MULTIPLE",
+          "defaultValue" : "1,2",
+          "options" : [ {
+            "key" : "1",
+            "value" : "1"
+          }, {
+            "key" : "2",
+            "value" : "2"
+          }, {
+            "key" : "3",
+            "value" : "3"
+          } ],
+          "readOnly" : false
+        }, {
+          "id" : "代码库",
+          "required" : true,
+          "constant" : false,
+          "type" : "CODE_LIB",
+          "defaultValue" : "lockiechen/obb-demo",
+          "scmType" : "CODE_GIT",
+          "readOnly" : false
+        }, {
+          "id" : "git分支或tag",
+          "required" : true,
+          "constant" : false,
+          "type" : "GIT_REF",
+          "defaultValue" : "",
+          "repoHashId" : "302rW",
+          "readOnly" : false
+        }, {
+          "id" : "构建资源",
+          "required" : true,
+          "constant" : false,
+          "type" : "CONTAINER_TYPE",
+          "defaultValue" : "tlinux2.2",
+          "desc" : "描述描述描述描述描述",
+          "containerType" : {
+            "buildType" : "DOCKER",
+            "os" : "LINUX"
+          },
+          "readOnly" : false
+        }, {
+          "id" : "版本仓库过滤器",
+          "required" : true,
+          "constant" : false,
+          "type" : "ARTIFACTORY",
+          "defaultValue" : "",
+          "desc" : "666",
+          "glob" : "*",
+          "properties" : {
+            "key1asd" : "asdasd",
+            "key2" : "qwe"
+          },
+          "readOnly" : false
+        }, {
+          "id" : "子流水线",
+          "required" : true,
+          "constant" : false,
+          "type" : "SUB_PIPELINE",
+          "defaultValue" : "test123",
+          "readOnly" : false
+        }, {
+          "id" : "文件",
+          "required" : true,
+          "constant" : false,
+          "type" : "CUSTOM_FILE",
+          "defaultValue" : "123",
+          "readOnly" : false
+        } ],
+        "matrixGroupFlag" : false,
+        "classType" : "trigger"
+      } ],
+      "id" : "stage-1",
+      "name" : "stage-1",
+      "fastKill" : false,
+      "finally" : false
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "name" : "Windows-私有单构建机",
+        "elements" : [ {
+          "@type" : "windowsScript",
+          "name" : "Batch Script",
+          "id" : "e-c7656b8d5f2f49a2a3d6b397fc7e5384",
+          "script" : "echo 1",
+          "scriptType" : "BAT",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : true,
+            "manualSkip" : true,
+            "retryWhenFailed" : true,
+            "retryCount" : 4,
+            "manualRetry" : false,
+            "timeout" : 666,
+            "timeoutVar" : "666",
+            "runCondition" : "CUSTOM_VARIABLE_MATCH",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "customVariables" : [ {
+              "key" : "AAA",
+              "value" : "bbb"
+            }, {
+              "key" : "VVV",
+              "value" : "wwww"
+            } ],
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "classType" : "windowsScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "windowsScript"
+        } ],
+        "baseOS" : "WINDOWS",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ID",
+          "value" : "ydpzneyp",
+          "workspace" : "工作空间",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_daZ",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "Windows-私有构建机群",
+        "elements" : [ {
+          "@type" : "windowsScript",
+          "name" : "Batch Script",
+          "id" : "e-5318e29ba9454718a1ce2af525ea47cf",
+          "script" : "echo 1",
+          "scriptType" : "BAT",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : false,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "classType" : "windowsScript",
+          "taskAtom" : "",
+          "elementEnable" : false,
+          "atomCode" : "windowsScript"
+        } ],
+        "baseOS" : "WINDOWS",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ENV",
+          "value" : "dpenqqym",
+          "workspace" : "工作空间",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_nT0",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "Windows-云",
+        "elements" : [ {
+          "@type" : "windowsScript",
+          "name" : "Batch Script",
+          "id" : "e-cce2aab2c372421caf39d5a08c49705d",
+          "script" : "echo 1",
+          "scriptType" : "BAT",
+          "charsetType" : "GBK",
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "CUSTOM_VARIABLE_MATCH_NOT_RUN",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "customVariables" : [ {
+              "key" : "param1",
+              "value" : ""
+            } ],
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "classType" : "windowsScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "windowsScript"
+        }, {
+          "@type" : "marketBuild",
+          "name" : "RunScript",
+          "id" : "e-1c5b6b5715d1477bba7b0cb33af83735",
+          "atomCode" : "run",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "script" : "echo 1\r echo 2",
+              "shell" : "pwsh",
+              "charsetType" : "UTF_8"
+            }
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : true,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "WINDOWS",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "WINDOWS",
+          "value" : "windows-2016",
+          "systemVersion" : "windows-2016"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_W7R",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      } ],
+      "id" : "stage-2",
+      "name" : "win",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "AFTER_LAST_FINISHED",
+        "customVariables" : [ ],
+        "manualTrigger" : false
+      },
+      "checkIn" : {
+        "manualTrigger" : true,
+        "reviewDesc" : "审核说明：",
+        "reviewGroups" : [ {
+          "name" : "人工审核",
+          "reviewers" : [ "yongyiduan" ]
+        } ],
+        "reviewParams" : [ {
+          "key" : "人工审核参数",
+          "value" : "",
+          "valueType" : "STRING",
+          "required" : true,
+          "desc" : "描述",
+          "options" : [ ],
+          "chineseName" : "中文名"
+        } ],
+        "timeout" : 24,
+        "markdownContent" : true,
+        "notifyType" : [ "RTX", "WEWORK_GROUP" ],
+        "notifyGroup" : [ "ww2075063897" ]
+      }
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "name" : "MacOS-公共构建机",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-9474cbd8311140a8b00676f71e3581e9",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "MACOS",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "MACOS",
+          "value" : "BigSur11.4:13.2.1",
+          "systemVersion" : "BigSur11.4",
+          "xcodeVersion" : "13.2.1"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "qweqwe",
+            "value" : "222"
+          } ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_fQc",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "MacOS-私有构建机",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-f1643a08dbe344c587f6a918533bfe99",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "MACOS",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ID",
+          "value" : "zmoxbbqp",
+          "workspace" : "工作空间",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_LaA",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "MacOS-私有构建机群",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-a54b8d5d0c9b465e8c045a51504f6865",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "MACOS",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ENV",
+          "value" : "rqmakgrm",
+          "workspace" : "工作空间",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_kLT",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      } ],
+      "id" : "stage-3",
+      "name" : "mac",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : true,
+      "finally" : false,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "CUSTOM_VARIABLE_MATCH",
+        "customVariables" : [ {
+          "key" : "param1",
+          "value" : ""
+        } ],
+        "manualTrigger" : false
+      }
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "name" : "Linux-docker",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-fb31b31a54d5440c827fd7fdc3175acd",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "${bianliang}",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "mirrors.tencent.com/ci/tlinux3_ci:2.0.0",
+          "performanceConfigId" : "0",
+          "persistence" : false,
+          "imageType" : "THIRD",
+          "credentialId" : "royalhuang_up",
+          "credentialProject" : "",
+          "imageCode" : "mirrors.tencent.com/ci/tlinux3_ci",
+          "imageVersion" : "2.0.0",
+          "imageName" : "",
+          "dockerBuildVersion" : "mirrors.tencent.com/ci/tlinux3_ci:2.0.0",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "${bianliang}",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_rTM",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "Linux-私有构建机",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-5e63669846d640258a7743bed95f87ad",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ID",
+          "value" : "xpvwazlm",
+          "workspace" : "工作空间",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_B1j",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "Linux-私有构建机群",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-55a48a21459648f6b6d9b07326c633bd",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "THIRD_PARTY_AGENT_ENV",
+          "value" : "njmkyaom",
+          "workspace" : "工作空间",
+          "agentType" : "ID"
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID",
+          "dependOnId" : [ "job_rTM" ]
+        },
+        "jobId" : "job_QxG",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "Linux-矩阵",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-73cf50f893a04012ba009dc4aa653f7f",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "0",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "mutexGroup" : {
+          "enable" : true,
+          "mutexGroupName" : "a",
+          "queueEnable" : true,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "queue" : 5
+        },
+        "jobId" : "job__JE",
+        "matrixGroupFlag" : true,
+        "matrixControlOption" : {
+          "strategyStr" : "---
+os:
+- \"docker\"
+- \"macos-10.15\"
+",
+          "fastKill" : true,
+          "maxConcurrency" : 5
+        },
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      }, {
+        "@type" : "vmBuild",
+        "name" : "互斥组",
+        "elements" : [ {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-a3f65c5be7834f1ab57d8eecddeff383",
+          "scriptType" : "SHELL",
+          "script" : "echo 2",
+          "continueNoneZero" : false,
+          "enableArchiveFile" : false,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 111,
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "0",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.*",
+          "imageName" : "",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 111,
+          "timeoutVar" : "111",
+          "runCondition" : "CUSTOM_VARIABLE_MATCH",
+          "customVariables" : [ {
+            "key" : "3333",
+            "value" : "6666"
+          } ],
+          "dependOnType" : "NAME",
+          "dependOnName" : "job_QxG"
+        },
+        "mutexGroup" : {
+          "enable" : true,
+          "mutexGroupName" : "aasd",
+          "queueEnable" : true,
+          "timeout" : 900,
+          "timeoutVar" : "${bianliang}",
+          "queue" : 3
+        },
+        "jobId" : "job_3DQ",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      } ],
+      "id" : "stage-4",
+      "name" : "linux",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "AFTER_LAST_FINISHED",
+        "customVariables" : [ ],
+        "manualTrigger" : false
+      }
+    }, {
+      "containers" : [ {
+        "@type" : "normal",
+        "name" : "无编译环境",
+        "elements" : [ {
+          "@type" : "marketBuildLess",
+          "name" : "Python脚本执行",
+          "id" : "e-37e7b364570e4f49bdf852145cf4d1a2",
+          "atomCode" : "pythonscriptrun",
+          "version" : "8.*",
+          "data" : {
+            "input" : {
+              "pythonVersion" : "0",
+              "optionType" : "online",
+              "scriptCode" : "1",
+              "scriptPath" : ""
+            }
+          },
+          "executeCount" : 1,
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : true,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "classType" : "marketBuildLess",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "manualReviewUserTask",
+          "name" : "人工审核",
+          "id" : "e-41223b0476d6417a865639410ce51324",
+          "reviewUsers" : [ "yongyiduan" ],
+          "desc" : "审核说明：",
+          "suggest" : "",
+          "params" : [ {
+            "key" : "人工审核插件变量",
+            "value" : "value22",
+            "valueType" : "STRING",
+            "required" : true,
+            "desc" : "描述",
+            "chineseName" : "中文名称"
+          }, {
+            "key" : "文本框",
+            "value" : "qwqwe",
+            "valueType" : "TEXTAREA",
+            "required" : true,
+            "desc" : "描述",
+            "chineseName" : "中文名称"
+          }, {
+            "key" : "布尔值",
+            "value" : true,
+            "valueType" : "BOOLEAN",
+            "required" : true,
+            "desc" : "描述",
+            "chineseName" : "中文名称"
+          }, {
+            "key" : "单选框",
+            "value" : "w",
+            "valueType" : "ENUM",
+            "required" : true,
+            "desc" : "描述",
+            "options" : [ {
+              "key" : "w",
+              "value" : "w"
+            }, {
+              "key" : "2",
+              "value" : "2"
+            }, {
+              "key" : "34",
+              "value" : "34"
+            }, {
+              "key" : "22",
+              "value" : "22"
+            } ],
+            "chineseName" : "中文名称"
+          }, {
+            "key" : "复选框",
+            "value" : "qwe,前往",
+            "valueType" : "MULTIPLE",
+            "required" : true,
+            "desc" : "描述",
+            "options" : [ {
+              "key" : "qwe",
+              "value" : "qwe"
+            }, {
+              "key" : "前往",
+              "value" : "前往"
+            }, {
+              "key" : "qq",
+              "value" : "qq"
+            } ],
+            "chineseName" : "中文名称"
+          } ],
+          "namespace" : "wqeqweqwe666",
+          "notifyType" : [ "RTX", "EMAIL", "MOA", "WEWORK_GROUP" ],
+          "notifyTitle" : "通知标题：",
+          "markdownContent" : true,
+          "notifyGroup" : [ "qweqweqwe" ],
+          "reminderTime" : 66,
+          "executeCount" : 1,
+          "version" : "1.*",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "taskAtom" : "manualReviewTaskAtom",
+          "classType" : "manualReviewUserTask",
+          "elementEnable" : true,
+          "atomCode" : "manualReviewUserTask"
+        } ],
+        "enableSkip" : false,
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 1440,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "900",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_i4Z",
+        "matrixGroupFlag" : false,
+        "classType" : "normal"
+      } ],
+      "id" : "stage-5",
+      "name" : "stage-5",
+      "tag" : [ "28ee946a59f64949a74f3dee40a1bda4" ],
+      "fastKill" : false,
+      "finally" : false,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "AFTER_LAST_FINISHED",
+        "customVariables" : [ ],
+        "manualTrigger" : false
+      }
+    }, {
+      "containers" : [ {
+        "@type" : "vmBuild",
+        "name" : "Linux-插件测试",
+        "elements" : [ {
+          "@type" : "marketBuild",
+          "name" : "Checkout",
+          "id" : "e-9214de84777049959d0ddb47d04dc49b",
+          "atomCode" : "checkout",
+          "version" : "1.*",
+          "data" : {
+            "input" : {
+              "enableGitLfsClean" : false,
+              "lfsConcurrentTransfers" : "",
+              "submoduleJobs" : "",
+              "submoduleDepth" : "",
+              "enableGitCleanNested" : false,
+              "type" : "ID",
+              "repositoryHashId" : "302rW",
+              "repositoryType" : "ID"
+            }
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        }, {
+          "@type" : "linuxScript",
+          "name" : "Bash",
+          "id" : "e-842599c83ba34564bd407fca173a995d",
+          "scriptType" : "SHELL",
+          "script" : "echo 1",
+          "continueNoneZero" : true,
+          "enableArchiveFile" : true,
+          "archiveFile" : "*.log",
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : true,
+            "manualSkip" : true,
+            "retryWhenFailed" : true,
+            "retryCount" : 4,
+            "manualRetry" : true,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_FAILED_BUT_CANCEL",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "customCondition" : "ALWAYS_UNLESS_CANCELLED",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "version" : "1.*",
+          "classType" : "linuxScript",
+          "taskAtom" : "",
+          "elementEnable" : true,
+          "atomCode" : "linuxScript"
+        }, {
+          "@type" : "marketBuild",
+          "name" : "腾讯代码分析(官方-代码分析工作组)",
+          "id" : "e-c70b56db7c1040d19453337f808a2a94",
+          "atomCode" : "CodeccCheckAtomDebug",
+          "version" : "4.*",
+          "data" : {
+            "input" : {
+              "languages" : [ "KOTLIN" ],
+              "tools" : [ "CLOC", "DUPC", "WOODPECKER_SENSITIVE", "DETEKT" ],
+              "bkcheckDebug" : false,
+              "bkcheckCustomMacros" : [ ],
+              "bk_atom_del_hook_url" : "http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D",
+              "languageRuleSetMap" : {
+                "SWIFT_RULE" : [ ],
+                "KOTLIN_RULE" : [ "codecc_default_kotlin", "standard_kotlin" ]
+              },
+              "openScanFilterEnable" : false,
+              "maxIssue" : 1000,
+              "SWIFT_RULE" : [ ],
+              "SWIFT_TOOL" : [ {
+                "toolList" : [ "CLOC", "WOODPECKER_SENSITIVE", "IP_CHECK", "CCN" ]
+              } ],
+              "KOTLIN_RULE" : [ "codecc_default_kotlin", "standard_kotlin" ],
+              "KOTLIN_TOOL" : [ {
+                "toolList" : [ "CLOC", "DUPC", "WOODPECKER_SENSITIVE", "DETEKT" ]
+              }, {
+                "toolList" : [ "DETEKT" ]
+              } ]
+            }
+          },
+          "additionalOptions" : {
+            "enable" : true,
+            "continueWhenFailed" : false,
+            "manualSkip" : false,
+            "retryWhenFailed" : false,
+            "retryCount" : 0,
+            "manualRetry" : false,
+            "timeout" : 900,
+            "timeoutVar" : "900",
+            "runCondition" : "PRE_TASK_SUCCESS",
+            "pauseBeforeExec" : false,
+            "subscriptionPauseUser" : "testUser",
+            "enableCustomEnv" : false,
+            "customEnv" : [ ]
+          },
+          "executeCount" : 1,
+          "classType" : "marketBuild",
+          "taskAtom" : "",
+          "elementEnable" : true
+        } ],
+        "baseOS" : "LINUX",
+        "vmNames" : [ ],
+        "maxQueueMinutes" : 60,
+        "maxRunningMinutes" : 900,
+        "dispatchType" : {
+          "buildType" : "PUBLIC_DEVCLOUD",
+          "value" : "tlinux3_ci",
+          "performanceConfigId" : "0",
+          "persistence" : false,
+          "imageType" : "BKSTORE",
+          "credentialProject" : "",
+          "imageCode" : "tlinux3_ci",
+          "imageVersion" : "2.1",
+          "imageName" : "",
+          "dockerBuildVersion" : "tlinux3_ci",
+          "imagePublicFlag" : false,
+          "imageRDType" : "",
+          "recommendFlag" : true
+        },
+        "showBuildResource" : false,
+        "enableExternal" : false,
+        "jobControlOption" : {
+          "enable" : true,
+          "prepareTimeout" : 10,
+          "timeout" : 900,
+          "timeoutVar" : "${bianliang}",
+          "runCondition" : "STAGE_RUNNING",
+          "customVariables" : [ ],
+          "dependOnType" : "ID"
+        },
+        "jobId" : "job_s5r",
+        "matrixGroupFlag" : false,
+        "nfsSwitch" : false,
+        "classType" : "vmBuild"
+      } ],
+      "id" : "stage-6",
+      "name" : "Finally",
+      "tag" : [ ],
+      "fastKill" : false,
+      "finally" : true,
+      "stageControlOption" : {
+        "enable" : true,
+        "runCondition" : "AFTER_LAST_FINISHED",
+        "customVariables" : [ ],
+        "manualTrigger" : false
+      }
+    } ],
+    "labels" : [ ],
+    "instanceFromTemplate" : false,
+    "pipelineCreator" : "",
+    "events" : { },
+    "staticViews" : [ ],
+    "latestVersion" : 0
+  },
+  "setting" : {
+    "projectId" : "",
+    "pipelineId" : "",
+    "pipelineName" : "all job",
+    "version" : 1,
+    "desc" : "",
+    "labels" : [ ],
+    "successSubscription" : {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    },
+    "failSubscription" : {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    },
+    "successSubscriptionList" : [ {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    } ],
+    "failSubscriptionList" : [ {
+      "types" : [ ],
+      "groups" : [ ],
+      "users" : "",
+      "wechatGroupFlag" : false,
+      "wechatGroup" : "",
+      "wechatGroupMarkdownFlag" : false,
+      "detailFlag" : false,
+      "content" : ""
+    } ],
+    "runLockType" : "MULTIPLE",
+    "waitQueueTimeMinute" : 480,
+    "maxQueueSize" : 10,
+    "concurrencyGroup" : "${{ci.pipeline_id}}",
+    "concurrencyCancelInProgress" : false,
+    "maxConRunningQueueSize" : 200,
+    "maxPipelineResNum" : 50,
+    "cleanVariablesWhenRetry" : false
+  }
+}
