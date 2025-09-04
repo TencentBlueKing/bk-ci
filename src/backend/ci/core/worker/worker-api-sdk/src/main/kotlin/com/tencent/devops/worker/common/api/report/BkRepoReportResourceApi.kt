@@ -193,7 +193,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
             val path = relativePath.removePrefix("/")
             val parentUrl =
-                "/bkrepo/api/build/generic/${result.projectId}" +
+                "/bkrepo/api/build/generic/${result.projectId}/" +
                         "report/${result.pipelineId}/${result.buildId}/$elementId/$path"
             val parentRequest = buildPut(
                 path = parentUrl,

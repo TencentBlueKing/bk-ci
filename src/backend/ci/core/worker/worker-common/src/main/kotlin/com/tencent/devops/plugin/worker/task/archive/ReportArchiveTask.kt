@@ -281,14 +281,17 @@ class ReportArchiveTask : ITask() {
             }
             if (allFileList.size > 10) {
                 val handelParentExecutors = Executors.newFixedThreadPool(5)
-                allFileList.forEach {
-                    handelParentExecutors.execute {
-                        uploadSingleFile(it)
+                try {
+                    allFileList.forEach {
+                        handelParentExecutors.execute {
+                            uploadSingleFile(it)
+                        }
                     }
-                }
-                handelParentExecutors.shutdown()
-                if (!handelParentExecutors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
-                    LoggerService.addNormalLine("parallel upload to parent report timeout")
+                    if (!handelParentExecutors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
+                        LoggerService.addNormalLine("parallel upload to parent report timeout")
+                    }
+                } finally {
+                    handelParentExecutors.shutdown()
                 }
             } else {
                 allFileList.forEach {
