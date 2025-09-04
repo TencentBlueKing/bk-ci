@@ -9,7 +9,7 @@
         >
             <slot
                 name="constraint-title"
-                v-bind:props="{ isOverride: isOverrideField, toggleConstraint: toggleConstraint }"
+                v-bind:props="{ isOverride: isOverrideField, toggleConstraint: toggleConstraint, isTemplateInstance: instanceFromTemplate }"
             >
                 <label
                     v-if="label"
@@ -61,7 +61,7 @@
         >
             <slot
                 name="constraint-area"
-                v-bind:props="{ isOverride: isOverrideField, toggleConstraint: toggleConstraint }"
+                v-bind:props="{ isOverride: isOverrideField, toggleConstraint: toggleConstraint, isTemplateInstance: instanceFromTemplate }"
             >
             </slot>
         </div>

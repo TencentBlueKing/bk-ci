@@ -84,6 +84,7 @@
     const projectId = computed(() => proxy.$route.params?.projectId)
     const operateType = computed(() => proxy.$store.state.publicVar.operateType)
     function handleHideReleaseSlider () {
+        releaseParams.value.versionDesc = ''
         proxy.$emit('update:value', false)
     }
     async function handleRelease () {

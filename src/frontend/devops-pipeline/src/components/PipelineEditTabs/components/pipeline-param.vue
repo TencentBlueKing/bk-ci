@@ -73,6 +73,12 @@
                     @click="hideSlider"
                 />
                 {{ sliderTitle }}
+                <div
+                    v-if="isPublicVarGroup"
+                    class="public-var-group-name"
+                >
+                    {{ $t('publicVar.varGroupName', [sliderEditItem.varGroupName]) }}
+                </div>
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
@@ -80,7 +86,8 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
-                    :disabled="!editable"
+                    :disabled="!editable || isPublicVarGroup"
+                    :is-public-var="isPublicVarGroup"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -226,6 +233,9 @@
                     ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
                     ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
                 ]
+            },
+            isPublicVarGroup () {
+                return !!this.sliderEditItem.varGroupName
             }
         },
         methods: {
@@ -368,7 +378,14 @@
         .current-edit-param-item {
             position: fixed;
             top: 48px;
-
+            .public-var-group-name {
+                color: #63656E;
+                background: #F0F1F5;
+                border-radius: 2px;
+                font-size: 12px;
+                padding: 2px 8px;
+                margin-left: 10px;
+            }
             .edit-var-content {
                 height: calc(100% - 138px);
             }

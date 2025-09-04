@@ -70,13 +70,17 @@
                                         <span>{{ param.id }}</span>
                                         <span>({{ param.name || param.id }})</span>
                                     </div>
-                                    <Logo
+                                    <span
                                         v-if="!!param.varGroupName"
                                         class="variable-group-flag"
-                                        name="publicVarGroup"
-                                        size="18"
+                                        v-bk-tooltips="$t('publicVar.viewGroup')"
                                         @click.stop="handleViewVarGroup(param.varGroupName)"
-                                    />
+                                    >
+                                        <Logo
+                                            name="publicVarGroup"
+                                            size="16"
+                                        />
+                                    </span>
                                     <div
                                         class="value-operate-row"
                                         style="justify-content: space-between;"

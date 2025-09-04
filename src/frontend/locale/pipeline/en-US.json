@@ -2043,6 +2043,8 @@
     "deleteGroupTitle": "Are you sure you want to delete this variable group?",
     "deleteGroupTips": "After deletion, pipelines will no longer be able to reference variables in this group.",
     "remove": "Remove",
-    "hasRefNumTips": "The variable has been referenced and the variable group cannot be removed"
+    "hasRefNumTips": "The variable has been referenced and the variable group cannot be removed",
+    "viewGroup": "View variable group",
+    "varGroupName": "Variable Group: {0}"
   }
 }

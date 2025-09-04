@@ -2046,6 +2046,8 @@
     "deleteGroupTitle": "确定移除该变量组吗?",
     "deleteGroupTips": "删除后，流水线将无法引用组内变量。",
     "remove": "移除",
-    "hasRefNumTips": "变量已被引用，无法移除变量组"
+    "hasRefNumTips": "变量已被引用，无法移除变量组",
+    "viewGroup": "查看变量组",
+    "varGroupName": "变量组：{0}"
   }
 }

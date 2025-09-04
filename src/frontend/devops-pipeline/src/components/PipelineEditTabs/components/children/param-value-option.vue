@@ -119,14 +119,14 @@
             :required="valueRequired"
             @toggleConstraint="handleToggleConstraint"
         >
-            <template #constraint-area="{ props: { isOverride } }">
+            <template #constraint-area="{ props: { isOverride, isTemplateInstance } }">
                 <form-field
                     v-if="!isRepoParam(param.type)"
                     :hide-colon="true"
                     :required="valueRequired"
                     :is-error="errors.has(`pipelineParam.defaultValue`)"
                     :error-msg="errors.first(`pipelineParam.defaultValue`)"
-                    :disabled="!isOverride"
+                    :disabled="isTemplateInstance && !isOverride"
                     :desc="valueRequired ? undefined : $t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
                 >
                     <template v-if="isSelectorParam(param.type)">
@@ -135,7 +135,7 @@
                             v-bind="remoteParamOption"
                             v-validate.initial="{ required: valueRequired }"
                             :popover-min-width="250"
-                            :disabled="disabled && !isOverride"
+                            :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                             name="defaultValue"
                             :multi-select="isMultipleParam(param.type)"
                             :data-vv-scope="'pipelineParam'"
@@ -153,7 +153,7 @@
                             v-validate="{ required: valueRequired }"
                             :data-vv-scope="'pipelineParam'"
                             :placeholder="$t('editPage.defaultValueTips')"
-                            :disabled="disabled && !isOverride"
+                            :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                             show-select-all
                             :key="param.type"
                             :value="selectDefautVal"
@@ -164,14 +164,14 @@
                         v-if="isBooleanParam(param.type)"
                         name="defaultValue"
                         :list="boolList"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                         :handle-change="handleChange"
                         :value="param.defaultValue"
                     >
                     </enum-input>
                     <vuex-input
                         v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isRepoParam(param.type)"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -184,7 +184,7 @@
                         v-if="isFileParam(param.type)"
                         name="defaultValue"
                         :required="valueRequired"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                         :value="param.defaultValue"
                         :enable-version-control="param.enableVersionControl"
                         :random-sub-path="param.randomStringInPath"
@@ -192,7 +192,7 @@
                     />
                     <vuex-textarea
                         v-if="isTextareaParam(param.type)"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -205,7 +205,7 @@
                         :popover-min-width="250"
                         :url="getCodeUrl(param.scmType)"
                         v-bind="codelibOption"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -219,7 +219,7 @@
                         v-if="isSubPipelineParam(param.type)"
                         :popover-min-width="250"
                         v-bind="subPipelineOption"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isTemplateInstance ? disabled && !isOverride : disabled"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
