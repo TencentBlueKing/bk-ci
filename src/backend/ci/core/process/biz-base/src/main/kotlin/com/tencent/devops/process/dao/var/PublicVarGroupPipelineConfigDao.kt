@@ -110,29 +110,35 @@ class PublicVarGroupPipelineConfigDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referVersionName: String
+        referVersionName: String? = null
     ): List<PublicVarGroupPipelineConfigPO> {
         with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
+            
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_VERSION_NAME.eq(referVersionName))
+                .where(conditions)
                 .fetch { record ->
-                    PublicVarGroupPipelineConfigPO(
-                        id = record.id,
-                        projectId = record.projectId,
-                        referId = record.referId,
-                        referVersionName = record.referVersionName,
-                        groupName = record.groupName,
-                        groupVersion = record.groupVersion,
-                        positionInfo = record.positionInfo,
-                        referType = record.referType,
-                        creator = record.creator,
-                        modifier = record.modifier,
-                        createTime = record.createTime,
-                        updateTime = record.updateTime
-                    )
-                }
+                PublicVarGroupPipelineConfigPO(
+                    id = record.id,
+                    projectId = record.projectId,
+                    referId = record.referId,
+                    referVersionName = record.referVersionName,
+                    groupName = record.groupName,
+                    groupVersion = record.groupVersion,
+                    positionInfo = record.positionInfo,
+                    referType = record.referType,
+                    creator = record.creator,
+                    modifier = record.modifier,
+                    createTime = record.createTime,
+                    updateTime = record.updateTime
+                )
+            }
         }
     }
 
@@ -143,10 +149,13 @@ class PublicVarGroupPipelineConfigDao {
         groupVersion: Int
     ): List<PublicVarGroupPipelineConfigPO> {
         with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            conditions.add(GROUP_VERSION.eq(groupVersion))
+            
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(GROUP_VERSION.eq(groupVersion))
+                .where(conditions)
                 .fetch { record ->
                     PublicVarGroupPipelineConfigPO(
                         id = record.id,
@@ -174,11 +183,14 @@ class PublicVarGroupPipelineConfigDao {
         groupName: String
     ): PublicVarGroupPipelineConfigPO? {
         with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            conditions.add(GROUP_NAME.eq(groupName))
+            
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_VERSION_NAME.eq(referVersionName))
-                .and(GROUP_NAME.eq(groupName))
+                .where(conditions)
                 .fetchOne()?.let { record ->
                     PublicVarGroupPipelineConfigPO(
                         id = record.id,
@@ -223,10 +235,13 @@ class PublicVarGroupPipelineConfigDao {
                 update.set(REFER_TYPE, referType)
             }
 
-            update.where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_VERSION_NAME.eq(referVersionName))
-                .and(GROUP_NAME.eq(groupName))
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            conditions.add(GROUP_NAME.eq(groupName))
+            
+            update.where(conditions)
                 .execute()
         }
     }
@@ -235,15 +250,19 @@ class PublicVarGroupPipelineConfigDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referVersionName: String,
-        groupName: String
+        referVersionName: String? = null
     ) {
         with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
+            
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_VERSION_NAME.eq(referVersionName))
-                .and(GROUP_NAME.eq(groupName))
+                .where(conditions)
                 .execute()
         }
     }
@@ -254,9 +273,12 @@ class PublicVarGroupPipelineConfigDao {
         referId: String
     ) {
         with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
+                .where(conditions)
                 .execute()
         }
     }
@@ -267,9 +289,12 @@ class PublicVarGroupPipelineConfigDao {
         groupName: String
     ) {
         with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
+                .where(conditions)
                 .execute()
         }
     }
@@ -311,6 +336,68 @@ class PublicVarGroupPipelineConfigDao {
                 .fetch { record ->
                     Triple(record.get(REFER_ID), record.get(REFER_VERSION_NAME), record.get(REFER_TYPE))
                 }
+        }
+    }
+
+    fun batchDeleteByGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referVersionName: String,
+        groupNames: List<String>
+    ) {
+        if (groupNames.isEmpty()) {
+            return
+        }
+        
+        with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            conditions.add(GROUP_NAME.`in`(groupNames))
+            
+            dslContext.deleteFrom(this)
+                .where(conditions)
+                .execute()
+        }
+    }
+
+    fun deleteByReferIdAndVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referVersionName: String
+    ) {
+        with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            
+            dslContext.deleteFrom(this)
+                .where(conditions)
+                .execute()
+        }
+    }
+
+    fun batchDeleteByReferIds(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: List<String>
+    ) {
+        if (referIds.isEmpty()) {
+            return
+        }
+        
+        with(TPipelinePublicVarGroupPipelineConfig.T_PIPELINE_PUBLIC_VAR_GROUP_PIPELINE_CONFIG) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.`in`(referIds))
+            
+            dslContext.deleteFrom(this)
+                .where(conditions)
+                .execute()
         }
     }
 }

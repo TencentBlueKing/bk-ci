@@ -181,17 +181,23 @@ class PublicVarGroupReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referIds: List<String>,
-        referType: PublicVerGroupReferenceTypeEnum
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String? = null
     ) {
         if (referIds.isEmpty()) {
             return
         }
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            dslContext.deleteFrom(this)
+            val deleteQuery = dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.`in`(referIds))
                 .and(REFER_TYPE.eq(referType.name))
-                .execute()
+            
+            if (referVersionName != null) {
+                deleteQuery.and(REFER_VERSION_NAME.eq(referVersionName))
+            }
+            
+            deleteQuery.execute()
         }
     }
 

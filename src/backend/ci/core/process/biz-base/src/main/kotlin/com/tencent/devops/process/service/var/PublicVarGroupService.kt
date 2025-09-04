@@ -685,7 +685,7 @@ class PublicVarGroupService @Autowired constructor(
     ): Result<List<PipelinePublicVarGroupDO>> {
         try {
             logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
-            
+
             // 查询流水线关联的变量组信息
             val referInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
                 dslContext = dslContext,

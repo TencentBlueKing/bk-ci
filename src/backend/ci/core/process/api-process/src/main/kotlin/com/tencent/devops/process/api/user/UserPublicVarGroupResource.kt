@@ -261,6 +261,8 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "引用资源类型", required = true)
         @QueryParam("referType")
         referType: PublicVerGroupReferenceTypeEnum,
+        @Parameter(description = "引用资源类型", required = true)
+        @QueryParam("referVersionName")
         referVersionName: String? = null
     ): Result<List<PipelinePublicVarGroupDO>>
 

@@ -80,14 +80,19 @@ class PublicVarReferInfoDao {
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String
+        referVersionName: String? = null
     ) {
         with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                REFER_ID.eq(referId),
+                REFER_TYPE.eq(referType.name)
+            )
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .and(REFER_VERSION_NAME.eq(referVersionName))
+                .where(conditions)
                 .execute()
         }
     }
