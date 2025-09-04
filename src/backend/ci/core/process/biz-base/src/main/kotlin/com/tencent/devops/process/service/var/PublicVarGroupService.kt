@@ -61,7 +61,6 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
-import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.VariableTransfer
 import com.tencent.devops.process.yaml.transfer.pojo.PublicVarGroupYamlParser
@@ -85,8 +84,7 @@ class PublicVarGroupService @Autowired constructor(
     private val variableTransfer: VariableTransfer,
     private val publicVarDao: PublicVarDao,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
-    private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
-    private val templateService: TemplateService
+    private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao
 ) {
 
     companion object {

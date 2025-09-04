@@ -25,15 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.pojo.`var`.po
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-data class PublicVarGroupRef(
-    @get:Schema(title = "变量组名称", required = true)
+@Schema(title = "流水线公共变量组关于流水线的配置数据")
+data class PublicVarGroupPipelineConfigPO(
+    @get:Schema(title = "主键ID")
+    val id: Long,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "引用ID")
+    val referId: String,
+    @get:Schema(title = "引用版本名称")
+    val referVersionName: String,
+    @get:Schema(title = "变量组名称")
     val groupName: String,
-    @get:Schema(title = "版本名称", required = false)
-    val versionName: String? = null,
+    @get:Schema(title = "变量组版本号")
+    val groupVersion: Int,
     @get:Schema(title = "变量位置信息")
-    val positionInfoMap: Map<String, Int> = emptyMap()
+    val positionInfo: String? = null,
+    @get:Schema(title = "引用类型")
+    val referType: String,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "修改人")
+    val modifier: String,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime
 )

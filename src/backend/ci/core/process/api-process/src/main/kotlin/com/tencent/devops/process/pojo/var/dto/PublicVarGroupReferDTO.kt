@@ -42,5 +42,5 @@ data class PublicVarGroupReferDTO(
     @get:Schema(title = "流水线/模板版本名称")
     val referVersionName: String,
     @get:Schema(title = "变量组引用列表")
-    val publicVarGroupRefs: List<PublicVarGroupRef> = emptyList()
+    val publicVarGroupRefs: List<PublicVarGroupRef> = emptyList(),
 )
