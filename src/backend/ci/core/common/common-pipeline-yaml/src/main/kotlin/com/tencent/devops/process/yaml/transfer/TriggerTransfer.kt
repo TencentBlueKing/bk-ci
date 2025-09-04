@@ -211,7 +211,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = mote.id,
+                    id = note.id,
                     name = note.name ?: "Git事件触发",
                     includeNoteTypes = note.types?.map {
                         when (it) {
@@ -695,7 +695,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeSVNWebHookTriggerElement(
-                    id = pysh.id,
+                    id = push.id,
                     name = push.name ?: "SVN事件触发",
                     relativePath = push.paths.nonEmptyOrNull()?.join(),
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
