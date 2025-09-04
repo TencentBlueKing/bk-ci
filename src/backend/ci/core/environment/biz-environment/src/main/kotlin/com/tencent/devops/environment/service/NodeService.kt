@@ -60,6 +60,8 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.OS_TYPE
@@ -741,6 +743,70 @@ class NodeService @Autowired constructor(
             }
         }
         return node.displayName
+    }
+
+    fun batchChangeCreateUser(userId: String,
+                              projectId: String,
+                              nodeHashIds: List<String>): List<Pair<String, String>> {
+        val nodeList = nodeDao.listAllByIds(
+            dslContext,
+            projectId,
+            nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        )
+        checkNodesExists(nodeList, nodeHashIds)
+        checkNodesTypeCmdb(nodeList)
+        checkNodesImportPermission(userId, nodeList)
+
+        nodeList.forEach { it ->
+            nodeDao.updateCreatedUser(dslContext, it.nodeId, userId)
+        }
+
+        return nodeList.map { Pair(it.nodeHashId, it.displayName) }
+    }
+
+    private fun checkNodesExists(existedNodeList: List<TNodeRecord>, toChangeNodeHashIds: List<String>) {
+        val existNodeHashIdSet = existedNodeList.map { it.nodeHashId }.toSet()
+        val noExistNodeHashIdSet = toChangeNodeHashIds.toSet().minus(existNodeHashIdSet)
+        if (noExistNodeHashIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(noExistNodeHashIdSet.joinToString(","))
+            )
+        }
+    }
+
+    private fun checkNodesTypeCmdb(nodeList: List<TNodeRecord>) {
+        val invalidTypeNodeHashIds: MutableList<String> = mutableListOf()
+        nodeList.forEach { it ->
+            if (it.nodeType != NodeType.CMDB.name) {
+                invalidTypeNodeHashIds.add(it.nodeHashId)
+            }
+        }
+        if (invalidTypeNodeHashIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
+            )
+        }
+    }
+
+    private fun checkNodesImportPermission(userId: String, nodeList: List<TNodeRecord>) {
+        val noPermissionNodeHashIds: MutableList<String> = mutableListOf()
+        nodeList.forEach { it ->
+            if (!(it.bakOperator.split(";").contains(userId) || it.operator == userId)) {
+                noPermissionNodeHashIds.add(it.nodeHashId)
+            }
+        }
+        if (noPermissionNodeHashIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
+                params = arrayOf(noPermissionNodeHashIds.joinToString(",")),
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
+                    params = arrayOf(noPermissionNodeHashIds.joinToString(",")),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
     }
 
     fun checkCmdbOperator(
