@@ -647,8 +647,10 @@ abstract class ImageReleaseService {
             val encoder = Base64.getEncoder()
             val decoder = Base64.getDecoder()
             val credentialResult = client.get(ServiceCredentialResource::class).get(
-                projectCode, ticketId,
-                encoder.encodeToString(pair.publicKey)
+                projectId = projectCode,
+                credentialId = ticketId,
+                publicKey = encoder.encodeToString(pair.publicKey),
+                padding = true
             )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
                 throw ParamBlankException("Fail to get the credential($ticketId) of project($projectCode)")
