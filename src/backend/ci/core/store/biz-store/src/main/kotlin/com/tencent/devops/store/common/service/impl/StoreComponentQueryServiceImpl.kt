@@ -100,6 +100,7 @@ import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -189,6 +190,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
+        private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
     }
 
     private val storeBusNumCache = Caffeine.newBuilder()
