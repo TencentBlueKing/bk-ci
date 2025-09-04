@@ -360,7 +360,6 @@ interface AppPipelineBuildResource {
         triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 
-
     @Operation(summary = "获取流水线构建参数")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/parameters")
