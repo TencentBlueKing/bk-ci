@@ -37,7 +37,6 @@
             :label="$t('publicVar.referenceStatus')"
             prop="referCount"
         >
-            1
         </bk-table-column>
     </bk-table>
 </template>

@@ -13,6 +13,7 @@
         >
             <bk-button
                 icon="plus"
+                :disabled="showAddComp"
                 @click="handleAddGroup"
             >
                 {{ $t('publicVar.addVarGroup') }}
@@ -47,13 +48,13 @@
                     <bk-button
                         class="mr10"
                         text
-                        @click="handleConfirmAdd"
+                        @click="handleAppend"
                     >
                         {{ $t('publicVar.append') }}
                     </bk-button>
                     <bk-button
                         text
-                        @click="handelCancelAdd"
+                        @click="handelCancelAppend"
                     >
                         {{ $t('cancel') }}
                     </bk-button>
@@ -64,7 +65,7 @@
                     </div>
                     <div
                         class="variable-list"
-                        v-for="data in renderVariableList"
+                        v-for="data in renderSelectedVariableList"
                         :key="data.key"
                     >
                         <variable-table
@@ -72,11 +73,34 @@
                         />
                     </div>
                 </div>
-                <render-var-group
-                    class="mt10"
-                />
             </div>
+            <render-var-group
+                v-for="(data, index) in allVarGroup"
+                :key="data.groupName"
+                class="mt10"
+                :data="data"
+                :index="index"
+                @delete="handleDeleteVarGroup"
+                @updateData="handleUpdataVarGroup"
+            />
         </div>
+        <footer
+            slot="footer"
+            class="var-group-footer"
+        >
+            <bk-button
+                theme="primary"
+                :disabled="showAddComp"
+                @click="handleConfirmAdd"
+            >
+                {{ $t('confirm') }}
+            </bk-button>
+            <bk-button
+                @click="handleCancelAdd"
+            >
+                {{ $t('cancel') }}
+            </bk-button>
+        </footer>
     </bk-sideslider>
 </template>
 
@@ -96,9 +120,17 @@
             type: Boolean,
             default: false
         },
-        handleSaveVariableByGroup: {
+        saveVariable: {
             type: Function,
             default: () => () => {}
+        },
+        globalParams: {
+            type: Array,
+            default: () => []
+        },
+        groupName: {
+            type: String,
+            default: ''
         }
     })
     const showAddComp = ref(false)
@@ -106,19 +138,29 @@
     const allVarGroup = ref([]) // 项目下使用的变量组
     const pagination = ref({
         page: 1,
-        pageSize: 20,
+        pageSize: 2000,
         loadEnd: false
     })
-    const selectedVarGroupData = ref({})
-    const variablesList = ref([])
+
     const newGroups = ref({})
+    const selectedVarGroupData = ref({})
+    const selectedVariableList = ref([])
+
+    const groupsMap = ref({
+        // 用于存储新增的变量组数据
+        publicVarGroups: [],
+        variableList: []
+    })
+
     const projectId = computed(() => proxy.$route.params?.projectId)
-    const pipelineId = computed(() => proxy.$route.params?.pipelineId)
+    // const pipelineId = computed(() => proxy.$route.params?.pipelineId)
+    // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups)
-    const renderVariableList = computed(() => {
-        const requiredParam = variablesList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
-        const otherParam = variablesList.value.filter(i => i.type === VARIABLE && !i.buildFormProperty.required)
-        const constantParam = variablesList.value.filter(i => i.type === CONSTANT)
+    const renderSelectedVariableList = computed(() => {
+        // 新增变量组-选中变量组对应的变量
+        const requiredParam = selectedVariableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
+        const otherParam = selectedVariableList.value.filter(i => i.type === VARIABLE && !i.buildFormProperty.required)
+        const constantParam = selectedVariableList.value.filter(i => i.type === CONSTANT)
 
         return [
             ...(
@@ -157,18 +199,21 @@
             pagination.value.page = 1
             pagination.value.loadEnd = false
             selectedVarGroupData.value = {}
-            variablesList.value = []
+            selectedVariableList.value = []
             varGroupList.value = []
         }
     })
-    watch(() => props.isShow, (val) => {
+    watch(() => props.isShow, async (val) => {
         if (val) {
-            fetchAllVarGroupByPipeline()
+            groupsMap.value.publicVarGroups = publicVarGroups.value
+            groupsMap.value.variableList = props.globalParams
+            await fetchVarGroupList()
+            await fetchAllVarGroupByGroupName()
         } else {
             pagination.value.page = 1
             pagination.value.loadEnd = false
             selectedVarGroupData.value = {}
-            variablesList.value = []
+            selectedVariableList.value = []
             varGroupList.value = []
             showAddComp.value = false
         }
@@ -181,19 +226,27 @@
         newGroups.value = {
             groupName: id
         }
-        const res = await proxy.$store.dispatch('publicVar/getVariables', {
+        selectedVariableList.value = await proxy.$store.dispatch('publicVar/getVariables', {
             groupName: id
         })
-        variablesList.value = res
     }
-    async function fetchAllVarGroupByPipeline () {
+    async function fetchAllVarGroupByGroupName () {
         try {
-            const res = await proxy.$store.dispatch('publicVar/fetchAllVariableGroupByPipeline', {
-                pipelineId: pipelineId.value,
-                referType: 'PIPELINE'
+            // const res = await proxy.$store.dispatch('publicVar/fetchAllVariableGroupByPipeline', {
+            //     pipelineId: pipelineId.value,
+            //     referType: 'PIPELINE',
+            //     versionName: pipelineInfo.value?.versionName ?? ''
+            // })
+            const list = groupsMap.value.publicVarGroups.map(i => {
+                const groupData = varGroupList.value.find(group => group.groupName === i.groupName)
+                return groupData
             })
-            allVarGroup.value = res
-            console.log(res, 123)
+            allVarGroup.value = list.map((data, index) => ({
+                ...data,
+                variableList: [],
+                isOpen: props.groupName ? data.groupName === props.groupName : index === 0,
+                isRequested: false
+            }))
         } catch (e) {
             console.error(e)
         }
@@ -210,7 +263,7 @@
             })
             varGroupList.value = res.records.map(i => ({
                 ...i,
-                disabled: publicVarGroups.value?.findIndex(group => group.groupName === i.groupName) > -1
+                disabled: [...publicVarGroups.value, ...groupsMap.value.publicVarGroups]?.findIndex(group => group.groupName === i.groupName) > -1
             }))
             pagination.value.loadEnd = res.page === res.totalPages
             pagination.value.page = res.page + 1
@@ -218,28 +271,62 @@
             console.error(e, 'fetchVarGroupList')
         }
     }
+    function handleUpdataVarGroup (payload) {
+        const { index, data } = payload
+        allVarGroup.value = allVarGroup.value.map((group, idx) => {
+            if (idx === index) {
+                return {
+                    ...group,
+                    ...data
+                }
+            }
+            return group
+        })
+    }
+    function handleDeleteVarGroup (groupName) {
+        const curVariableList = allVarGroup.value.find(group => group.groupName === groupName)?.variableList.map(i => ({
+            ...i.buildFormProperty
+        }))
+        const ids = new Set(curVariableList.map(item => item.id))
+        groupsMap.value.publicVarGroups = groupsMap.value.publicVarGroups.filter(group => group.groupName !== groupName)
+        groupsMap.value.variableList = groupsMap.value.variableList.filter(i => !ids.has(i.id))
+        allVarGroup.value = allVarGroup.value.filter(group => group.groupName !== groupName)
+    }
     function handleAddGroup () {
-        // todo
         showAddComp.value = true
     }
-    function handleConfirmAdd () {
+    function handleAppend () {
         showAddComp.value = false
         try {
-            proxy.$store.dispatch('atom/setPipelineEditing', true)
-            proxy.$store.dispatch('atom/updatePipelinePublicVarGroups', [
-                ...publicVarGroups.value,
-                newGroups.value
-            ])
-            props.handleSaveVariableByGroup(variablesList.value.map(i => ({
+            groupsMap.value.publicVarGroups.push(newGroups.value)
+            groupsMap.value.variableList = [...groupsMap.value.variableList, ...selectedVariableList.value.map(i => ({
                 ...i.buildFormProperty
-            })))
+            }))]
+
+            const newVarGroupData = varGroupList.value.find(i => i.groupName === newGroups.value.groupName)
+            allVarGroup.value.unshift({
+                ...newVarGroupData,
+                variableList: selectedVariableList.value,
+                isOpen: true,
+                isRequested: true
+            })
         } catch (e) {
             console.error(e)
         }
     }
-    function handelCancelAdd () {
+    function handelCancelAppend () {
         showAddComp.value = false
         newGroups.value = {}
+    }
+    function handleConfirmAdd () {
+        proxy.$store.dispatch('atom/setPipelineEditing', true)
+        console.log(groupsMap.value, '123')
+        proxy.$store.dispatch('atom/updatePipelinePublicVarGroups', groupsMap.value.publicVarGroups)
+        props.saveVariable(groupsMap.value.variableList)
+        proxy.$emit('update:isShow', false)
+    }
+    function handleCancelAdd () {
+        proxy.$emit('update:isShow', false)
     }
 </script>
 
@@ -251,6 +338,9 @@
         .var-group-wrapper {
             height: 100%;
             padding: 24px;
+        }
+        .var-group-footer {
+            padding-left: 24px;
         }
         .group-select-wrapper {
             width: 100%;

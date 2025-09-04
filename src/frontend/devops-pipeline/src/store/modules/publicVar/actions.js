@@ -51,8 +51,8 @@ const actions = {
         })
     },
     // 获取流水线下使用的变量组列表
-    fetchAllVariableGroupByPipeline (_, { pipelineId, referType }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/refers/${pipelineId}/group/info?referType=${referType}`).then(response => {
+    fetchAllVariableGroupByPipeline (_, { pipelineId, referType, versionName }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/refers/${pipelineId}/group/info?referType=${referType}&versionName=${versionName}`).then(response => {
             return response.data
         })
     },

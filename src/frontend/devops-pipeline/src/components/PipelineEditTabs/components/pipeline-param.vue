@@ -57,6 +57,7 @@
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
+                @show-group="handleViewVarGroup"
             />
         </div>
 
@@ -105,7 +106,9 @@
         </div>
         <manage-variable-group
             :is-show.sync="showManageVarGroupSlider"
-            :handle-save-variable-by-group="handleSaveVariableByGroup"
+            :global-params="globalParams"
+            :group-name="groupName"
+            :save-variable="handleSaveVariableByGroup"
         />
     </div>
 </template>
@@ -154,7 +157,8 @@
                 confirmMsg: this.$t('editPage.closeConfirmMsg'),
                 cancelText: this.$t('cancel'),
                 isAlertTips: true,
-                showManageVarGroupSlider: false
+                showManageVarGroupSlider: false,
+                groupName: ''
             }
         },
         computed: {
@@ -299,7 +303,7 @@
                 })
             },
             handleSaveVariableByGroup (list) {
-                this.updateContainerParams('params', [...this.globalParams, ...list, ...this.versions])
+                this.updateContainerParams('params', [...list, ...this.versions])
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
@@ -331,6 +335,11 @@
 
             handleManageVarGroup () {
                 this.showManageVarGroupSlider = true
+            },
+
+            handleViewVarGroup (groupName) {
+                this.showManageVarGroupSlider = true
+                this.groupName = groupName
             }
         }
     }

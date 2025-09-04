@@ -1,42 +1,169 @@
 <template>
     <section class="render-var-group-main">
-        <details open>
-            <summary class="category-collapse-trigger">
+        <details :open="data.isOpen">
+            <summary
+                class="category-collapse-trigger"
+                @click="toggleOpen"
+            >
                 <bk-icon
                     type="right-shape"
                     class="icon-angle-right"
                 />
                 <div>
-                    <p class="group-name">{{ '测试测试' }}</p>
-                    <p class="group-desc">123</p>
                 </div>
+                <div>
+                    <p class="group-name">{{ data.groupName }}</p>
+                    <p class="group-desc">{{ data.desc }}</p>
+                </div>
+                <div
+                    v-if="hasRefNum"
+                    class="delete-icon"
+                >
+                    <i
+                        class="devops-icon icon-minus-circle"
+                        @click="handleDelete"
+                        v-bk-tooltips="$t('publicVar.hasRefNumTips')"
+                    />
+                </div>
+                <bk-popconfirm
+                    v-else
+                    trigger="click"
+                    class="delete-icon-popconfirm"
+                    :title="$t('publicVar.deleteGroupTitle')"
+                    :content="$t('publicVar.deleteGroupTips')"
+                    :confirm-text="$t('publicVar.remove')"
+                    width="288"
+                    @confirm="confirmRemove"
+                >
+                    <i
+                        class="devops-icon icon-minus-circle"
+                        @click="handleDelete"
+                    />
+                </bk-popconfirm>
             </summary>
             <div
                 class="collapse-content"
+                v-bkloading="{ isLoading }"
             >
-                123
+                <div
+                    class="variable-list"
+                    v-for="data in renderVariableList"
+                    :key="data.key"
+                >
+                    <variable-table
+                        show-ref
+                        :data="data"
+                    />
+                </div>
             </div>
         </details>
     </section>
 </template>
 
 <script setup>
+    import { ref, watch, computed } from 'vue'
+    import UseInstance from '@/hook/useInstance'
+    import variableTable from './variableTable'
+    import {
+        VARIABLE,
+        CONSTANT
+    } from '@/store/modules/publicVar/constants'
+
+    const { proxy } = UseInstance()
     const props = defineProps({
-        isShow: Boolean,
-        data: Object,
-        readOnly: Boolean,
-        newParamId: String,
-        showRefField: {
-            type: Boolean,
-            default: true
+        data: {
+            type: Object,
+            default: () => {}
+        },
+        index: {
+            type: String,
+            default: 0
         }
     })
+    const isLoading = ref(false)
+    const variableList = computed(() => props.data.variableList)
+    const hasRefNum = computed(() => variableList.value.some(i => i.referCount > 0))
+    const renderVariableList = computed(() => {
+        const requiredParam = variableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
+        const otherParam = variableList.value.filter(i => i.type === VARIABLE && !i.buildFormProperty.required)
+        const constantParam = variableList.value.filter(i => i.type === CONSTANT)
+
+        return [
+            ...(
+                requiredParam.length ? [
+                    {
+                        title: proxy.$t('newui.pipelineParam.buildParam'),
+                        data: requiredParam,
+                        key: VARIABLE
+                    }
+                ] : []
+            ),
+            ...(
+                otherParam.length ? [
+                    {
+                        title: proxy.$t('newui.pipelineParam.otherVar'),
+                        data: otherParam,
+                        key: VARIABLE
+                    }
+                ] : []
+            ),
+            ...(
+                constantParam.length ? [
+                    {
+                        title: proxy.$t('publicVar.constant'),
+                        data: constantParam,
+                        key: CONSTANT
+                    }
+                ] : []
+            )
+        ]
+    })
+    watch(() => props.data.isOpen,  (value) => {
+        if (value && !props.data.isRequested) {
+            fetchVariablesByGroupName()
+        }
+    }, {
+        deep: true,
+        immediate: true
+    })
+    function toggleOpen () {
+        console.log(props.data)
+        if (!props.data.isRequested) {
+            fetchVariablesByGroupName()
+        }
+    }
+    function handleDelete (event) {
+        event.preventDefault()
+    }
+    function confirmRemove () {
+        proxy.$emit('delete', props.data.groupName)
+    }
+    async function fetchVariablesByGroupName () {
+        try {
+            isLoading.value = true
+            const variableList = await proxy.$store.dispatch('publicVar/getVariables', {
+                groupName: props.data.groupName
+            })
+            proxy.$emit('updateData', {
+                index: props.index,
+                data: {
+                    variableList,
+                    isRequested: true
+                }
+            })
+        } catch (e) {
+            console.error(e)
+        } finally {
+            isLoading.value = false
+        }
+    }
 </script>
 
 <style lang="scss">
 .render-var-group-main {
     .category-collapse-trigger {
         display: flex;
+        position: relative;
         align-items: center;
         cursor: pointer;
         background: #F5F7FA;
@@ -63,6 +190,15 @@
             color: #979BA5;
             margin: 8px 0 0px !important;
         }
+        .delete-icon,
+        .delete-icon-popconfirm {
+            position: absolute;
+            right: 24px;
+            top: 20px;
+            color: #C4C6CC;
+            cursor: pointer;
+            z-index: 1001;
+        }
     }
     details:not([open]) .collapse-content {
         display: none;
@@ -70,7 +206,7 @@
 
     .collapse-content {
         background: #F5F7FA;
-        padding: 0 24px;
+        padding: 0 24px 16px;
     }
 
     details:not([open]) .category-collapse-trigger > .icon-angle-right {

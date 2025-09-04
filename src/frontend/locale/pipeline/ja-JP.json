@@ -2034,6 +2034,10 @@
     "manageGroup": "変数グループの管理",
     "addVarGroup": "変数グループを追加",
     "varGroup": "変数グループ",
-    "append": "追加"
+    "append": "追加",
+    "deleteGroupTitle": "この変数グループを削除してもよろしいですか？",
+    "deleteGroupTips": "削除後、パイプラインではこのグループ内の変数を参照できなくなります。",
+    "remove": "移除",
+    "hasRefNumTips": "この変数は既に参照されているため、変数グループを削除できません。"
   }
 }

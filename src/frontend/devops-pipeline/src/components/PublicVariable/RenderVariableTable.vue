@@ -138,7 +138,6 @@
         readOnly: Boolean,
         newParamId: String
     })
-
     function rowClassName ({ row }) {
         if (row.varName === props.newParamId) return 'is-new'
         return ''

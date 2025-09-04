@@ -2042,6 +2042,10 @@
     "manageGroup": "管理变量组",
     "addVarGroup": "添加变量组",
     "varGroup": "变量组",
-    "append": "添加"
+    "append": "添加",
+    "deleteGroupTitle": "确定移除该变量组吗?",
+    "deleteGroupTips": "删除后，流水线将无法引用组内变量。",
+    "remove": "移除",
+    "hasRefNumTips": "变量已被引用，无法移除变量组"
   }
 }

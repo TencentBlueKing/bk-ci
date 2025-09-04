@@ -70,6 +70,13 @@
                                         <span>{{ param.id }}</span>
                                         <span>({{ param.name || param.id }})</span>
                                     </div>
+                                    <logo
+                                        v-if="!!param.varGroupName"
+                                        class="variable-group-flag"
+                                        name="publicVarGroup"
+                                        size="18"
+                                        @click.stop="handleViewVarGroup(param.varGroupName)"
+                                    />
                                     <div
                                         class="value-operate-row"
                                         style="justify-content: space-between;"
@@ -86,6 +93,7 @@
                                                 {{ param.defaultValue ?? '--' }}
                                             </span>
                                         </div>
+                                        
                                         <div
                                             v-if="editable"
                                             class="var-operate"
@@ -135,6 +143,7 @@
 <script>
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     import vueDraggable from 'vuedraggable'
+    import Logo from '@/components/Logo'
     export default {
         components: {
             vueDraggable
@@ -212,6 +221,10 @@
                 const curElement = paramList[newIndex]
                 const preElement = oldIndex < newIndex ? paramList[newIndex - 1] : paramList[newIndex + 1]
                 this.handleSort(preElement.id, curElement.id, oldIndex > newIndex)
+            },
+
+            handleViewVarGroup (groupName) {
+                this.$emit('show-group', groupName)
             }
         }
     }
@@ -369,6 +382,10 @@
                         color: #313238;
                         max-width: 350px;
                         @include ellipsis();
+                    }
+                    .variable-group-flag {
+                        position: absolute;
+                        right: 18px;
                     }
                     .desc-param {
                         display: inline;
