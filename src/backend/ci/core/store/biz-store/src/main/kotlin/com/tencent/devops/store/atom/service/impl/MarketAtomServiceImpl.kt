@@ -784,11 +784,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 )
             }
             val repositoryHashId = record[tAtom.REPOSITORY_HASH_ID]
-            val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
-            if (repositoryInfoResult.isNotOk()) {
-                Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
+            var repositoryInfo: Repository? = null
+            try {
+                repositoryInfo = getRepositoryInfo(projectCode, repositoryHashId).data
+            } catch (ignored: Throwable) {
+                logger.warn("atom($atomCode) getAtomVersion|get repository info failed", ignored)
             }
-            val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
             val labelList = atomLabelService.getLabelsByAtomId(atomId) // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)

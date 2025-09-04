@@ -158,7 +158,7 @@ class ProcessDataMigrateDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(CREATED_TIME.asc(), ID.asc())
+                .orderBy(ID.asc())
                 .limit(limit).offset(offset).fetchInto(TAuditResourceRecord::class.java)
         }
     }
@@ -398,7 +398,7 @@ class ProcessDataMigrateDao {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .orderBy(ID.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineGroupRecord::class.java)
         }
     }
@@ -444,6 +444,7 @@ class ProcessDataMigrateDao {
         with(TPipelineJobMutexGroup.T_PIPELINE_JOB_MUTEX_GROUP) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .orderBy(JOB_MUTEX_GROUP_NAME.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineJobMutexGroupRecord::class.java)
         }
     }
@@ -467,7 +468,7 @@ class ProcessDataMigrateDao {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .orderBy(ID.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineLabelRecord::class.java)
         }
     }
@@ -654,7 +655,7 @@ class ProcessDataMigrateDao {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .orderBy(ID.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineViewRecord::class.java)
         }
     }
@@ -775,7 +776,7 @@ class ProcessDataMigrateDao {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(ID.asc())
+                .orderBy(ID.asc(), CREATED_TIME.asc())
                 .limit(limit).offset(offset).fetchInto(TProjectPipelineCallbackHistoryRecord::class.java)
         }
     }
@@ -824,7 +825,7 @@ class ProcessDataMigrateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(ID.asc())
+                .orderBy(VERSION.asc())
                 .limit(limit).offset(offset).fetchInto(TTemplateRecord::class.java)
         }
     }
@@ -967,7 +968,7 @@ class ProcessDataMigrateDao {
         with(TPipelineRecentUse.T_PIPELINE_RECENT_USE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(USER_ID.asc(), PIPELINE_ID.asc())
+                .orderBy(USER_ID.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineRecentUseRecord::class.java)
         }
     }
@@ -1102,7 +1103,7 @@ class ProcessDataMigrateDao {
         with(TPipelineTimerBranch.T_PIPELINE_TIMER_BRANCH) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(PIPELINE_ID.asc(), REPO_HASH_ID.asc(), BRANCH.asc())
+                .orderBy(TASK_ID.asc(), REPO_HASH_ID.asc(), BRANCH.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineTimerBranchRecord::class.java)
         }
     }
@@ -1127,7 +1128,7 @@ class ProcessDataMigrateDao {
         with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(DETAIL_ID.asc(), PIPELINE_ID.asc())
+                .orderBy(DETAIL_ID.asc(), CREATE_TIME.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineTriggerDetailRecord::class.java)
         }
     }
@@ -1151,7 +1152,7 @@ class ProcessDataMigrateDao {
         with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(EVENT_ID.asc())
+                .orderBy(EVENT_ID.asc(), CREATE_TIME.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineTriggerEventRecord::class.java)
         }
     }
@@ -1198,7 +1199,7 @@ class ProcessDataMigrateDao {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(VERSION.asc())
+                .orderBy(ID.asc())
                 .limit(limit).offset(offset).fetchInto(TPipelineYamlVersionRecord::class.java)
         }
     }
