@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -66,6 +67,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                     params = arrayOf(PipelineYamlWebhookReq::yamlFileInfo.name)
                 )
             }
+            logger.info(
+                "Start to convert yaml webhook request|$projectId|$pipelineId|" +
+                        "$branchName|$yamlFileName|$dependencyUpgrade|yaml=$yaml"
+            )
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,
                 projectId = projectId,
@@ -130,5 +135,9 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 branchName = branchName
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineYamlWebhookReqConvert::class.java)
     }
 }

@@ -51,6 +51,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenera
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.yaml.PipelineYamlService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -81,6 +82,9 @@ class PipelineDraftSaveReqConvert(
     ): PipelineVersionCreateContext {
         request as PipelineDraftSaveReq
         with(request) {
+            logger.info(
+                "Start to convert draft release request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
+            )
             val (modelAndSetting, yamlWithVersion) = if (storageType == PipelineStorageType.YAML) {
                 if (yaml.isNullOrEmpty()) {
                     throw IllegalArgumentException("yaml can not be empty")
@@ -223,5 +227,9 @@ class PipelineDraftSaveReqConvert(
                 model
             }
         }
+    }
+    
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineDraftSaveReqConvert::class.java)
     }
 }

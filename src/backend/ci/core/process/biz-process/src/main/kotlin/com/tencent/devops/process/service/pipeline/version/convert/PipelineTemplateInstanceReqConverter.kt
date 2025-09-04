@@ -63,6 +63,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceSe
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.yaml.PipelineYamlService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -134,6 +135,10 @@ class PipelineTemplateInstanceReqConverter(
                     )
                 }
             }
+
+            logger.info(
+                "Start to convert template instance request|$projectId|$pipelineId|$templateId|$templateVersion"
+            )
 
             // 生成流水线ID
             val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
@@ -363,5 +368,9 @@ class PipelineTemplateInstanceReqConverter(
             pipelineSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         } ?: pipelineSetting
         return pacSetting
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateInstanceReqConverter::class.java)
     }
 }

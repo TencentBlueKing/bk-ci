@@ -257,6 +257,10 @@ class PipelineYamlDependencyService @Autowired constructor(
                     templateDiff.ref
                 )
             ).forEach dependency@{ dependency ->
+                if (dependency.ref == templateDiff.ref) {
+                    // 如果依赖的分支是当前分支,则不处理,已经在analyzeTriggerAction中处理了
+                    return@dependency
+                }
                 // 依赖版本的版本信息,如果版本不存在或者已经不活跃,则跳过
                 val pipelineYamlVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
                     dslContext = dslContext,

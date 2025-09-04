@@ -42,6 +42,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -74,6 +75,10 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
             if (version == null) {
                 throw IllegalArgumentException("version is null")
             }
+            logger.info(
+                "Start to convert draft release request|$projectId|$pipelineId|" +
+                        "$version|$enablePac|$targetAction|${yamlInfo?.repoHashId}|${yamlInfo?.filePath}|$targetBranch"
+            )
             pipelineInfoService.getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId
@@ -168,5 +173,9 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 targetBranch = targetBranch
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineDraftReleaseReqConvert::class.java)
     }
 }
