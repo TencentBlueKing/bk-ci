@@ -133,6 +133,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             )
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
+                    id = element.id,
                     name = element.name,
                     enable = element.elementEnabled().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(false),
@@ -177,6 +178,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 }
                 schedules.add(
                     SchedulesRule(
+                        id = element.id,
                         name = element.name,
                         interval = week?.let { SchedulesRule.Interval(week, timePoints) },
                         cron = if (element.advanceExpression?.size == 1) {
@@ -197,9 +199,9 @@ class ElementTransfer @Autowired(required = false) constructor(
             }
             if (element is RemoteTriggerElement) {
                 triggerOn.value.remote = if (element.elementEnabled()) {
-                    RemoteRule(element.name, EnableType.TRUE.value)
+                    RemoteRule(id = element.id, name = element.name, enable = EnableType.TRUE.value)
                 } else {
-                    RemoteRule(element.name, EnableType.FALSE.value)
+                    RemoteRule(id = element.id, name = element.name, enable = EnableType.FALSE.value)
                 }
             }
         }

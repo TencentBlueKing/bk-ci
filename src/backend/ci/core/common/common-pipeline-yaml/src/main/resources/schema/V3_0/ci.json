@@ -37,6 +37,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -118,6 +121,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -167,6 +173,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -269,6 +278,9 @@
                   "type" : "object",
                   "additionalProperties" : false,
                   "properties" : {
+                    "id" : {
+                      "type" : "string"
+                    },
                     "name" : {
                       "type" : "string"
                     },
@@ -328,6 +340,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -384,27 +399,6 @@
                 }
               } ]
             },
-            "delete" : {
-              "oneOf" : [ {
-                "type" : "array",
-                "items" : {
-                  "type" : "string"
-                }
-              }, {
-                "type" : "object",
-                "additionalProperties" : false,
-                "properties" : {
-                  "types" : {
-                    "type" : "array",
-                    "uniqueItems" : true,
-                    "items" : {
-                      "enum" : [ "branch", "tag" ]
-                    },
-                    "additionalItems" : false
-                  }
-                }
-              } ]
-            },
             "issue" : {
               "oneOf" : [ {
                 "type" : "array",
@@ -415,6 +409,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -442,6 +439,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -477,6 +477,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -508,6 +511,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -522,10 +528,6 @@
                   }
                 }
               } ]
-            },
-            "openapi" : {
-              "type" : "string",
-              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
             },
             "remote" : {
               "oneOf" : [ {
@@ -546,12 +548,6 @@
               } ]
             },
             "repo-name" : {
-              "type" : "string"
-            },
-            "repo-id" : {
-              "type" : "string"
-            },
-            "credentials" : {
               "type" : "string"
             },
             "type" : {
@@ -737,6 +733,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -818,6 +817,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -867,6 +869,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -969,6 +974,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -1028,6 +1036,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1084,27 +1095,6 @@
               }
             } ]
           },
-          "delete" : {
-            "oneOf" : [ {
-              "type" : "array",
-              "items" : {
-                "type" : "string"
-              }
-            }, {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "types" : {
-                  "type" : "array",
-                  "uniqueItems" : true,
-                  "items" : {
-                    "enum" : [ "branch", "tag" ]
-                  },
-                  "additionalItems" : false
-                }
-              }
-            } ]
-          },
           "issue" : {
             "oneOf" : [ {
               "type" : "array",
@@ -1115,6 +1105,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1142,6 +1135,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1177,6 +1173,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1208,6 +1207,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1222,10 +1224,6 @@
                 }
               }
             } ]
-          },
-          "openapi" : {
-            "type" : "string",
-            "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
           },
           "remote" : {
             "oneOf" : [ {
@@ -1246,12 +1244,6 @@
             } ]
           },
           "repo-name" : {
-            "type" : "string"
-          },
-          "repo-id" : {
-            "type" : "string"
-          },
-          "credentials" : {
             "type" : "string"
           },
           "type" : {
@@ -1511,34 +1503,6 @@
                       }
                     }
                   },
-                  "datasource" : {
-                    "type" : "object",
-                    "additionalProperties" : false,
-                    "required" : [ "url" ],
-                    "properties" : {
-                      "url" : {
-                        "type" : "string"
-                      },
-                      "data-path" : {
-                        "type" : "string"
-                      },
-                      "param-id" : {
-                        "type" : "string"
-                      },
-                      "param-name" : {
-                        "type" : "string"
-                      },
-                      "has-add-item" : {
-                        "type" : "boolean"
-                      },
-                      "item-text" : {
-                        "type" : "string"
-                      },
-                      "item-target-url" : {
-                        "type" : "string"
-                      }
-                    }
-                  },
                   "description" : {
                     "type" : "string"
                   },
@@ -1695,34 +1659,6 @@
                     }
                   }
                 },
-                "datasource" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "required" : [ "url" ],
-                  "properties" : {
-                    "url" : {
-                      "type" : "string"
-                    },
-                    "data-path" : {
-                      "type" : "string"
-                    },
-                    "param-id" : {
-                      "type" : "string"
-                    },
-                    "param-name" : {
-                      "type" : "string"
-                    },
-                    "has-add-item" : {
-                      "type" : "boolean"
-                    },
-                    "item-text" : {
-                      "type" : "string"
-                    },
-                    "item-target-url" : {
-                      "type" : "string"
-                    }
-                  }
-                },
                 "description" : {
                   "type" : "string"
                 },
@@ -1856,9 +1792,6 @@
             },
             "jobs" : {
               "$ref" : "#/definitions/jobs"
-            },
-            "if-modify" : {
-              "$ref" : "#/definitions/ifModify"
             }
           }
         }, {
@@ -2473,12 +2406,6 @@
               "items" : {
                 "type" : "string"
               }
-            },
-            "notify-groups" : {
-              "type" : "array",
-              "items" : {
-                "type" : "string"
-              }
             }
           }
         },
@@ -2783,12 +2710,6 @@
                 "type" : "string"
               }
             },
-            "depend-on-type" : {
-              "type" : "string"
-            },
-            "if-modify" : {
-              "$ref" : "#/definitions/ifModify"
-            },
             "mutex" : {
               "$ref" : "#/definitions/resourceExclusiveDeclaration"
             }
@@ -2877,9 +2798,6 @@
                   }
                 }
               } ]
-            },
-            "if-modify" : {
-              "$ref" : "#/definitions/ifModify"
             },
             "shell" : {
               "type" : "string"
@@ -2983,12 +2901,6 @@
     },
     "buildEnv" : {
       "type" : "object"
-    },
-    "ifModify" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string"
-      }
     },
     "resourceExclusiveDeclaration" : {
       "type" : "object",
