@@ -72,7 +72,8 @@ class PublicVarGroupReferInfoDao {
                         updateTime = it.updateTime,
                         creator = it.creator,
                         modifier = it.modifier,
-                        referVersionName = it.referVersionName
+                        referVersionName = it.referVersionName,
+                        positionInfo = it.positionInfo
                     )
                 }
         }
@@ -109,7 +110,8 @@ class PublicVarGroupReferInfoDao {
                         updateTime = it.updateTime,
                         creator = it.creator,
                         modifier = it.modifier,
-                        referVersionName = it.referVersionName
+                        referVersionName = it.referVersionName,
+                        positionInfo = it.positionInfo
                     )
                 }
         }
@@ -218,6 +220,7 @@ class PublicVarGroupReferInfoDao {
                     REFER_TYPE,
                     REFER_NAME,
                     REFER_VERSION_NAME,
+                    POSITION_INFO,
                     CREATOR,
                     MODIFIER,
                     CREATE_TIME,
@@ -231,6 +234,7 @@ class PublicVarGroupReferInfoDao {
                     po.referType.name,
                     po.referName,
                     po.referVersionName,
+                    po.positionInfo,
                     po.creator,
                     po.modifier,
                     po.createTime,

@@ -253,5 +253,6 @@ data class Model(
             publicVarGroups =
                 varGroupParams.map { PublicVarGroupRef(it.varGroupName!!, "v${it.varGroupVersion}") }
         }
+        triggerContainer.filterParamsWithVarGroupName()
     }
 }

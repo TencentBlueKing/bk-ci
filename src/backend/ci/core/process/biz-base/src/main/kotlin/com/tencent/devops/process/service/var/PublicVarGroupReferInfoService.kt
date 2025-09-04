@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.service.`var`
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.metrics.api.ServiceMetricsResource
@@ -60,7 +62,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarReferInfoService: PublicVarReferInfoService,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -230,6 +233,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         groupName: String,
         version: Int?
     ): PipelinePublicVarGroupReferPO {
+
+        val positionInfoJson = publicVarGroupReferInfo.positionInfo?.let { JsonUtil.toJson(it) }
+        
         return PipelinePublicVarGroupReferPO(
             id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO").data ?: 0,
@@ -240,6 +246,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             referName = publicVarGroupReferInfo.referName,
             referVersionName = publicVarGroupReferInfo.referVersionName,
             referType = publicVarGroupReferInfo.referType,
+            positionInfo = positionInfoJson,
             modifier = userId,
             updateTime = LocalDateTime.now(),
             creator = userId,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -58,6 +59,8 @@ data class TriggerContainer(
     var templateParams: List<BuildFormProperty>? = null,
     @get:Schema(title = "构建版本号", required = false)
     var buildNo: BuildNo? = null,
+    @get:Schema(title = "公共变量序号集合", required = false)
+    var publicParamsIndex:  Map<String, Int?>? = null,
     @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
@@ -111,4 +114,21 @@ data class TriggerContainer(
     override fun transformCompatibility() {
         super.transformCompatibility()
     }
+
+    /**
+     * 筛选 params 中 varGroupName 不为空的数据，并更新 index 为参数在 params 中的下标位置。
+     */
+    fun filterParamsWithVarGroupName() {
+        val paramsIndex = mutableMapOf<String, Int?>()
+        params.mapIndexed { index, property ->
+            if (property.varGroupName != null) {
+                property.index = index
+            }
+            paramsIndex[property.id] = property.index
+        }
+        publicParamsIndex = paramsIndex
+    }
+
+    @JsonIgnore
+    fun getPublicParamsIndex() = publicParamsIndex
 }

@@ -264,7 +264,8 @@ class TemplateFacadeService @Autowired constructor(
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = template.name,
                     referVersionName = version.toString(),
-                    publicVarGroupRefs = template.publicVarGroups
+                    publicVarGroupRefs = template.publicVarGroups,
+                    positionInfo = template.getTriggerContainer().getPublicParamsIndex()
                 )
             )
             logger.info("Get the template version $version")
@@ -743,7 +744,8 @@ class TemplateFacadeService @Autowired constructor(
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = template.name,
                     referVersionName = version.toString(),
-                    publicVarGroupRefs = template.publicVarGroups
+                    publicVarGroupRefs = template.publicVarGroups,
+                    positionInfo = template.getTriggerContainer().getPublicParamsIndex()
                 )
             )
             logger.info("Get the update template version $version")
