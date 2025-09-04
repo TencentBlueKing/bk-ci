@@ -46,9 +46,17 @@
                                 class="bk-dropdown-list"
                                 slot="dropdown-content"
                             >
-                                <li>
+                                <li
+                                    v-for="item in batchMenuItems"
+                                    :key="item.key"
+                                >
                                     <a
                                         href="javascript:;"
+                                        :class="item.disabled ? 'disabled' : ''"
+                                        v-bk-tooltips="{
+                                            content: item.tooltips,
+                                            disabled: !item.disabled
+                                        }"
                                         v-perm="{
                                             permissionData: {
                                                 projectId: projectId,
@@ -57,28 +65,10 @@
                                                 action: NODE_RESOURCE_ACTION.CREATE
                                             }
                                         }"
-                                        @click="batchSetTag"
+                                        @click="item.handler"
                                         key="thirdPartyBuildMachine"
                                     >
-                                        {{ $t('environment.batchSetTag') }}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a
-                                        href="javascript:;"
-                                        v-perm="{
-                                            permissionData: {
-                                                projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
-                                                resourceCode: projectId,
-                                                action: NODE_RESOURCE_ACTION.CREATE
-                                            }
-                                        }"
-                                        theme="primary"
-                                        @click="batchDeleteNode"
-                                        key="idcTestMachine"
-                                    >
-                                        {{ $t('environment.batchDeleteNode') }}
+                                        {{ $t(item.textKey) }}
                                     </a>
                                 </li>
                             </ul>
@@ -154,6 +144,126 @@
             :node-ip="nodeIp"
             :request-dev-command="requestDevCommand"
         ></third-construct>
+
+        <bk-dialog
+            v-model="isShowEditMaxConcurrency"
+            :width="480"
+            :mask-close="false"
+            :loading="dialogLoading.isLoading"
+            header-position="left"
+            ext-cls="max-concurrency"
+            :ok-text="$t('environment.save')"
+            :title="$t('environment.bulkEditMaxConcurrency')"
+            @confirm="handleSetMaxConcurrency"
+        >
+            <div>
+                <p class="tag">
+                    <i18n
+                        tag="span"
+                        path="environment.已选X个节点"
+                    >
+                        <span class="third">
+                            {{ selectNodeCounts.total }}
+                        </span>
+                    </i18n>
+                    <i18n
+                        tag="span"
+                        v-if="selectNodeCounts.cmdb"
+                        path="environment.其中X个非构建节点已忽略"
+                    >
+                        <span class="ignored blod">
+                            {{ selectNodeCounts.cmdb }}
+                        </span>
+                        <span class="ignored">
+                            {{ $t('environment.ignored') }}
+                        </span>
+                    </i18n>
+                </p>
+                <div class="content">
+                    <div>
+                        <p>{{ $t('environment.最大构建并发数') }}</p>
+                        <bk-input
+                            type="number"
+                            size="small"
+                            :min="0"
+                            :precision="0"
+                            :placeholder="$t('environment.保持不变')"
+                            v-model="parallelTaskCount"
+                        ></bk-input>
+                    </div>
+                    <div>
+                        <p>docker {{ $t('environment.最大构建并发数') }}</p>
+                        <bk-input
+                            type="number"
+                            size="small"
+                            :min="0"
+                            :precision="0"
+                            :placeholder="$t('environment.保持不变')"
+                            v-model="dockerParallelTaskCount"
+                        ></bk-input>
+                    </div>
+                </div>
+            </div>
+        </bk-dialog>
+        <bk-dialog
+            v-model="isShowResetImportUser"
+            :width="480"
+            :mask-close="false"
+            :loading="dialogLoading.isLoading"
+            footer-position="center"
+            ext-cls="reset-import-user"
+            :ok-text="$t('environment.reset')"
+            :title="$t('environment.confirmBulkResetImportUser')"
+            @confirm="handleChangeImportUser"
+        >
+            <div class="content">
+                <div class="top">
+                    <i18n
+                        v-if="selectNodeCounts.thirdParty || selectNodeCounts.noPermission"
+                        tag="p"
+                        path="environment.已选X个节点，其中"
+                    >
+                        <span class="third">
+                            {{ selectNodeCounts.total }}
+                        </span>
+                    </i18n>
+                    <i18n
+                        v-else
+                        tag="p"
+                        path="environment.已选X个节点"
+                    >
+                        <span class="third">
+                            {{ selectNodeCounts.total }}
+                        </span>
+                    </i18n>
+                    <i18n
+                        v-if="selectNodeCounts.thirdParty"
+                        tag="p"
+                        path="environment.X个非部署节点已忽略"
+                    >
+                        <span class="ignored blod">
+                            {{ selectNodeCounts.thirdParty }}
+                        </span>
+                        <span class="ignored">
+                            {{ $t('environment.ignored') }}
+                        </span>
+                    </i18n>
+                    <i18n
+                        v-if="selectNodeCounts.noPermission"
+                        tag="p"
+                        path="environment.X个节点你无权限（主备负责人不是你）已忽略"
+                    >
+                        <span class="ignored blod">
+                            {{ selectNodeCounts.noPermission }}
+                        </span>
+                        <span class="ignored">
+                            {{ $t('environment.ignored') }}
+                        </span>
+                    </i18n>
+                </div>
+                <div class="bottom">{{ $t('environment.重置后，「作业平台-脚本执行」和「 作业平台-构件分发 」插件运行时将以你的授权执行，请谨慎操作，避免流水线越权。') }}</div>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 
@@ -272,7 +382,11 @@
                 tagSearchValue: [],
                 isBatchDropdownShow: false,
                 selectedNodes: [],
-                reInstallId: ''
+                reInstallId: '',
+                isShowEditMaxConcurrency: false,
+                isShowResetImportUser: false,
+                parallelTaskCount: 0,
+                dockerParallelTaskCount: 0
             }
         },
         computed: {
@@ -385,6 +499,54 @@
             },
             installModeAsService () {
                 return this.constructImportForm.installType === 'SERVICE'
+            },
+            batchMenuItems () {
+                return [
+                    {
+                        key: 'thirdPartyBuildMachine',
+                        textKey: 'environment.batchSetTag',
+                        handler: () => this.batchSetTag()
+                    },
+                    {
+                        key: 'bulkEditMaxConcurrency',
+                        textKey: 'environment.bulkEditMaxConcurrency',
+                        tooltips: this.$t('未选择构建节点，不支持修改'),
+                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
+                        handler: () => this.batchSetMaxConcurrency()
+                    },
+                    {
+                        key: 'bulkResetImportUser',
+                        textKey: 'environment.bulkResetImportUser',
+                        tooltips: this.$t('未选择部署节点，不支持重置'),
+                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
+                        handler: () => this.batchResetImportUser()
+                    },
+                    {
+                        key: 'idcTestMachine',
+                        textKey: 'environment.batchDeleteNode',
+                        handler: () => this.batchDeleteNode()
+                    }
+                ]
+            },
+            selectNodeCounts () {
+                const username = window.top.userInfo.username
+                const count = this.selectedNodes.reduce(
+                    (acc, node) => {
+                        acc.total++
+
+                        if (node.nodeType === 'THIRDPARTY') acc.thirdParty++
+
+                        if (node.nodeType === 'CMDB') acc.cmdb++
+
+                        if (node.nodeType === 'CMDB' && !(node.bakOperator?.split(';').includes(username) || node.operator === username)) {
+                            acc.noPermission++
+                        }
+      
+                        return acc
+                    },
+                    { total: 0, cmdb: 0,  thirdParty: 0, noPermission: 0 }
+                )
+                return count
             }
         },
         watch: {
@@ -466,35 +628,102 @@
             batchDropdown () {
                 this.isBatchDropdownShow = !this.isBatchDropdownShow
             },
-            batchSetTag () {
+            hasSelectedNode (){
                 if (!this.selectedNodes.length) {
                     this.$bkMessage({
                         message: this.$t('environment.placeSelectNode'),
                         theme: 'error'
                     })
-                } else {
-                    const currentNodeType = this.$route.params.nodeType || ALLNODE
-                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
-                    this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
-                    this.$router.push({
-                        name: 'setNodeTag',
-                        params: {
-                            projectId: this.projectId
-                        }
+                    return false
+                }
+                return true
+            },
+            batchSetTag () {
+                if (!this.hasSelectedNode()) return
+                const currentNodeType = this.$route.params.nodeType || ALLNODE
+                localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
+                this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
+                this.$router.push({
+                    name: 'setNodeTag',
+                    params: {
+                        projectId: this.projectId
+                    }
+                })
+            },
+            batchSetMaxConcurrency (){
+                if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) return
+                this.isShowEditMaxConcurrency = true
+            },
+            async handleSetMaxConcurrency () {
+                try {
+                    this.dialogLoading.isLoading = true
+                    const {parallelTaskCount, dockerParallelTaskCount} = this
+                    const nodeHashIds = this.selectedNodes.filter(node => node.nodeType === 'THIRDPARTY').map(node => node.nodeHashId)
+                    const params = {
+                        nodeHashIds,
+                        parallelTaskCount: Number(parallelTaskCount),
+                        dockerParallelTaskCount: Number(dockerParallelTaskCount)
+                    }
+                    const res = await this.$store.dispatch('environment/batchUpdateParallelTaskCount', {
+                        projectId: this.projectId,
+                        params
                     })
+                    if (res) {
+                        this.$bkMessage({
+                            message: this.$t('environment.successfullySaved'),
+                            theme: 'success'
+                        })
+                    }
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                } finally {
+                    this.dialogLoading.isLoading = false
+                    this.isShowEditMaxConcurrency = false
+                    this.parallelTaskCount = 0
+                    this.dockerParallelTaskCount = 0
+                }
+            },
+            batchResetImportUser (){
+                if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'CMDB')) return
+                this.isShowResetImportUser = true
+            },
+            async handleChangeImportUser () {
+                try {
+                    this.dialogLoading.isLoading = true
+                    const nodeHashIds = this.selectedNodes.filter(node => node.nodeType === 'CMDB').map(node => node.nodeHashId)
+                    const res = await this.$store.dispatch('environment/batchChangeImportUser', {
+                        projectId: this.projectId,
+                        nodeHashIds
+                    })
+                    if (res) {
+                        this.$bkMessage({
+                            message: this.$t('environment.successfullyModified'),
+                            theme: 'success'
+                        })
+                    }
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                } finally {
+                    this.dialogLoading.isLoading = false
+                    this.isShowResetImportUser = false
                 }
             },
             async batchDeleteNode () {
-                if (!this.selectedNodes.length) {
-                    this.$bkMessage({
-                        message: this.$t('environment.placeSelectNode'),
-                        theme: 'error'
-                    })
-                    return
-                }
+                if (!this.hasSelectedNode()) return
                 this.$bkInfo({
                     title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
                     extCls: 'info-content',
+                    theme: 'danger',
                     confirmFn: async () => {
                         try {
                             const params = this.selectedNodes.map(i=>i.nodeHashId)
@@ -1077,11 +1306,87 @@
 
     .batch-menu {
         margin: 0 8px;
+
+        .disabled {
+            color: #C4C6CC !important;
+            cursor: not-allowed;
+        }
     }
     
     .info-content {
         .bk-dialog-header-inner {
             white-space: normal !important;
+        }
+    }
+    .max-concurrency {
+
+        .tag {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #F0F1F5;
+            font-size: 12px;
+            text-align: left;
+            border-radius: 16px;
+
+            .third {
+                color: #3A84FF;
+                font-weight: 700;
+            }
+
+            .ignored {
+                color: #E38B02;
+            }
+            
+            .blod {
+                font-weight: 700;
+            }
+        }
+        .content {
+            display: flex;
+            gap: 24px;
+            justify-content: space-between;
+            margin-top: 24px;
+            div {
+                flex:1;
+                p {
+                    text-align: left;
+                    margin-bottom: 6px;
+                    font-size: 12px;
+                }
+            }
+        }
+    }
+    .reset-import-user {
+        .content {
+            padding: 12px 16px;
+            background-color: #F5F7FA;
+            font-size: 14px;
+            color: #4D4F56;
+            text-align: left;
+            .top {
+                padding-bottom: 12px;
+                .third {
+                    color: #3A84FF;
+                    font-weight: 700;
+                }
+
+                .ignored {
+                    color: #E38B02;
+                }
+                
+                .blod {
+                    font-weight: 700;
+                }
+
+                p {
+                    text-align: left;
+
+                }
+            }
+            .bottom {
+                padding-top: 12px;
+                border-top: 1px solid #DCDEE5;
+            }
         }
     }
 </style>
