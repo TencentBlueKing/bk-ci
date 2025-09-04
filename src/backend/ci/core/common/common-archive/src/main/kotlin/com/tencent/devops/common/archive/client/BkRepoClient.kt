@@ -1288,12 +1288,11 @@ class BkRepoClient constructor(
             val currentSpan = Span.current()
             val traceId = currentSpan.spanContext.traceId
             val spanId = currentSpan.spanContext.spanId
-             "$traceId-$spanId"
+            "$traceId-$spanId"
         } catch (e: Exception) {
             logger.warn("get trace id failed: ${e.localizedMessage}")
             null
         }
-
     }
 
     private fun doRequest(request: Request): okhttp3.Response {
