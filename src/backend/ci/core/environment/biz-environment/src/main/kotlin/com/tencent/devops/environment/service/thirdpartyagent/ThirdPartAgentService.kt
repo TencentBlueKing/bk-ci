@@ -3,11 +3,13 @@ package com.tencent.devops.environment.service.thirdpartyagent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
@@ -19,6 +21,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.utils.ThirdAgentActionAddLock
 import com.tencent.devops.environment.utils.ThirdAgentUpdateEnvLock
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -232,5 +235,52 @@ class ThirdPartAgentService @Autowired constructor(
         }
 
         return true
+    }
+
+    fun batchSetParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?
+    ) {
+        if (parallelTaskCount == null && dockerParallelTaskCount == null) {
+            return
+        }
+        val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+        val permissionNodeIds =
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.EDIT)
+        if (nodeIds.subtract(permissionNodeIds).isNotEmpty()) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val agentRecords = agentDao.getAgentsByNodeIds(
+                dslContext = context,
+                nodeIds = nodeIds,
+                projectId = projectId
+            )
+            val recordNodeIds = agentRecords.map { it.nodeId }.toSet()
+            val subIds = nodeIds.subtract(recordNodeIds)
+            if (subIds.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                    params = subIds.map { it.toString() }.toTypedArray()
+                )
+            }
+            agentDao.batchUpdateParallelTaskCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                ids = agentRecords.map { it.id }.toSet(),
+                parallelTaskCount = parallelTaskCount,
+                dockerParallelTaskCount = dockerParallelTaskCount
+            )
+        }
     }
 }
