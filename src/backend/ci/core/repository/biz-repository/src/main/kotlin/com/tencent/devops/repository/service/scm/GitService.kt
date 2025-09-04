@@ -134,6 +134,8 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
         private const val SLEEP_MILLS_FOR_RETRY = 2000L
+        private const val MAX_COMMIT_NUMBER = 10
+        private const val MIN_COMMIT_NUMBER = 1
     }
 
     @Value("\${scm.git.public.account}")
@@ -2121,20 +2123,15 @@ class GitService @Autowired constructor(
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {
-        if (commitNumber <= 0) {
+        if (commitNumber !in MIN_COMMIT_NUMBER..MAX_COMMIT_NUMBER) {
             throw ErrorCodeException(
                 errorCode = PARAMETER_VALIDATE_ERROR,
-                params = arrayOf("commitNumber", "value is $commitNumber, must be greater than 0"),
-                defaultMessage = "commitNumber parameter validation error:" +
-                        " value is $commitNumber, must be greater than 0"
-            )
-        }
-        if (commitNumber > 10) {
-            throw ErrorCodeException(
-                errorCode = PARAMETER_VALIDATE_ERROR,
-                params = arrayOf("commitNumber", "value is $commitNumber, must not be greater than 10"),
-                defaultMessage = "commitNumber parameter validation error: " +
-                        "value is $commitNumber, must not be greater than 10"
+                params = arrayOf(
+                    "commitNumber", "value is $commitNumber," +
+                            " must be between $MIN_COMMIT_NUMBER and $MAX_COMMIT_NUMBER"
+                ),
+                defaultMessage = "commitNumber must be" +
+                        " between $MIN_COMMIT_NUMBER and $MAX_COMMIT_NUMBER, but got $commitNumber"
             )
         }
         val accessToken = gitOauthService.getAccessToken(userId)?.accessToken
