@@ -112,6 +112,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.namespace.consecutiveFailures6m.card.id}")
     private var consecutiveFailures6mCardId: Int = 0 // 近6个月内持续失败流水线卡片ID
 
+    @Value("\${eplus.ms.metrics.panelId}")
+    private val panelId: Int = 0
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
         // HTTP请求超时时间（秒）
@@ -424,7 +427,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
             "page" to mapOf(
                 "num" to pageNum,
                 "size" to pageSize
-            )
+            ),
+            "panel_id" to panelId
         )
         if (input != null) {
             requestBody.putAll(input)
