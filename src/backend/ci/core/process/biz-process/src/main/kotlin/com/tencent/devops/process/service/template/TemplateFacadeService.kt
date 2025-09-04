@@ -255,6 +255,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 templateName = template.name
             )
+            template.handlePublicVarInfo()
             publicVarGroupReferInfoService.updatePublicGroupRefer(
                 userId = userId,
                 projectId = projectId,
@@ -610,8 +611,8 @@ class TemplateFacadeService @Autowired constructor(
                 dslContext = dslContext,
                 templateId = templateId,
                 versionName = versionName
-            )!!
-            if (instanceSize > 0) {
+            )
+            if (instanceSize > 0 || template == null) {
                 logger.warn("There are $instanceSize pipeline attach to $templateId of versionName $versionName")
                 throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
             }
@@ -733,6 +734,7 @@ class TemplateFacadeService @Autowired constructor(
                     templateName = template.name
                 )
             }
+            template.handlePublicVarInfo()
             publicVarGroupReferInfoService.updatePublicGroupRefer(
                 userId = userId,
                 projectId = projectId,

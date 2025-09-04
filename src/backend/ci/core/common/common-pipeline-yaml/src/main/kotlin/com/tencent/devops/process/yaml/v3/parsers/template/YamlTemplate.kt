@@ -293,7 +293,7 @@ class YamlTemplate<T>(
         variables.forEach { (key, value) ->
             if (key == Constants.TEMPLATE_KEY) {
                 value as ArrayList<Map<String, String>>
-                if (!value.isEmpty()) {
+                if (value.isNotEmpty()) {
                     preYamlObject.variableTemplates = value.map { VariableTemplate(it["name"]!!) }
                 }
                 return@forEach

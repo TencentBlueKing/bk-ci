@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
@@ -235,10 +236,22 @@ data class Model(
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
 
     /**
-     * 获取versionName非空的公共变量组引用集合
+     * 处理公共变量组信息
      */
-    @JsonIgnore
-    fun getPublicVarGroupsWithVersion(): List<PublicVarGroupRef> {
-        return publicVarGroups.filter { it.versionName != null }
+    fun handlePublicVarInfo() {
+        val triggerContainer = getTriggerContainer()
+        val params = triggerContainer.params
+
+        // 从params获取varGroupName不为空的参数
+        val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
+
+        if (varGroupParams.isEmpty()) {
+            // 如果没有公共变量组参数，清空publicVarGroups
+            publicVarGroups = emptyList()
+            return
+        } else {
+            publicVarGroups =
+                varGroupParams.map { PublicVarGroupRef(it.varGroupName!!, "v${it.varGroupVersion}") }
+        }
     }
 }

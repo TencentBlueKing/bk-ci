@@ -760,6 +760,9 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         /* 兼容存量数据 */
         model.desc = setting.desc
+        // 更新触发器容器中的公共变量到最新版本
+        val triggerContainer = model.getTriggerContainer()
+        triggerContainer.params = publicVarService.updatePublicVarToLatest(projectId, triggerContainer.params)
         // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
@@ -874,12 +877,6 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 )
                 newYaml = result.yamlWithVersion
-                val varGroupRefs = modelAndYaml.modelAndSetting?.model?.getPublicVarGroupsWithVersion()
-                if (!varGroupRefs.isNullOrEmpty()) {
-                    val triggerContainer = modelAndYaml.modelAndSetting!!.model.getTriggerContainer()
-                    val groupVars = publicVarService.getVariablesByGroupRefs(projectId, varGroupRefs)
-                    triggerContainer.params += groupVars
-                }
             } catch (ignore: Throwable) {
                 // 旧流水线可能无法转换，用空YAML代替
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")

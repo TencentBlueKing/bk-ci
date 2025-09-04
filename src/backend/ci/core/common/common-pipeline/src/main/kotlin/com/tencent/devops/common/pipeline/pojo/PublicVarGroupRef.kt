@@ -33,7 +33,5 @@ data class PublicVarGroupRef(
     @get:Schema(title = "变量组名称", required = true)
     val groupName: String,
     @get:Schema(title = "版本名称", required = false)
-    val versionName: String? = null,
-    @get:Schema(title = "变量位置信息")
-    val positionInfoMap: Map<String, Int> = emptyMap()
+    val versionName: String? = null
 )

@@ -104,19 +104,18 @@ class StageTransfer @Autowired(required = false) constructor(
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
 
         val params = mutableListOf<BuildFormProperty>()
-        params.addAll(variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)))
+        var publicParam: List<BuildFormProperty>? = null
         val varGroupRefs = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
             PublicVarGroupRef(it.name, it.version)
         }
         if (varGroupRefs.isNotEmpty()) {
-            client.get(ServicePublicVarGroupResource::class).getProjectPublicParam(
+            publicParam = client.get(ServicePublicVarGroupResource::class).getProjectPublicParam(
                 userId = yamlInput.userId,
                 projectId = yamlInput.projectCode,
                 varGroupRefs = varGroupRefs
-            ).data?.let {
-                params.addAll(it)
-            }
+            ).data
         }
+        params.addAll(variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml), publicParam))
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),

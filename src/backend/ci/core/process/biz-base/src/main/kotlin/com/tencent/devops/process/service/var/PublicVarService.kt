@@ -63,7 +63,7 @@ class PublicVarService @Autowired constructor(
         val groupName = publicVarDTO.groupName
         val publicVarPOs = publicVarDTO.publicVars.map {
             it.buildFormProperty.varGroupName = groupName
-            it.buildFormProperty.varGroupVersion = publicVarDTO.version
+            it.buildFormProperty.varGroupVersion= publicVarDTO.version
             PublicVarPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_PUBLIC_VAR").data ?: 0,
@@ -164,43 +164,6 @@ class PublicVarService @Autowired constructor(
         }
     }
 
-    /**
-     * 根据变量组引用信息返回变量列表
-     * @param projectId 项目ID
-     * @param varGroupRefs 变量组引用列表
-     * @return BuildFormProperty列表
-     */
-    fun getVariablesByGroupRefs(
-        projectId: String,
-        varGroupRefs: List<PublicVarGroupRef>
-    ): List<BuildFormProperty> {
-        if (varGroupRefs.isEmpty()) return emptyList()
-
-        val allVariables = mutableListOf<BuildFormProperty>()
-
-        varGroupRefs.forEach { groupRef ->
-            val versionName = groupRef.versionName
-            // 未指定具体版本的跳过
-            if (versionName.isNullOrBlank() || versionName == "latest") {
-                return@forEach
-            }
-            val version = versionName.substring(1).toInt()
-            val publicVarPOs = publicVarDao.listVarByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupRef.groupName,
-                version = version
-            )
-
-            publicVarPOs.forEach { publicVarPO ->
-                val buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
-                allVariables.add(buildFormProperty)
-            }
-        }
-
-        return allVariables
-    }
-
     fun checkGroupPublicVar(publicVars: List<PublicVarVO>) {
         if (publicVars.isEmpty()) {
             return
@@ -215,5 +178,140 @@ class PublicVarService @Autowired constructor(
         if (!publicVars.all { verNameRegex.matches(it.varName) }) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR)
         }
+    }
+
+    /**
+     * 更新公共变量组引用列表，将varGroupName非空且varGroupVersion为空的变量更新为最新版本
+     * @param projectId 项目ID
+     * @param params 变量列表
+     * @return 更新后的BuildFormProperty列表
+     */
+    fun updatePublicVarToLatest(
+        projectId: String,
+        params: List<BuildFormProperty>
+    ): List<BuildFormProperty> {
+        if (params.isEmpty()) return emptyList()
+        
+        val result = params.toMutableList()
+        
+        // 按组名分组处理
+        val groupedVars = params.filter {
+            !it.varGroupName.isNullOrBlank() && it.varGroupVersion == null
+        }.groupBy { it.varGroupName }
+
+        // 收集所有最新版本变量用于检查同名
+        val allLatestVars = mutableListOf<BuildFormProperty>()
+
+        groupedVars.forEach { (groupName, vars) ->
+
+            // 获取该组的最新版本
+            val latestVersion = publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName!!
+            ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+
+            // 获取最新版本的变量列表
+            val latestVarPOs = publicVarDao.listVarByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = latestVersion
+            )
+
+            // 转换最新变量为BuildFormProperty
+            val latestVars = latestVarPOs.map { publicVarPO ->
+                JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+            }
+
+            // 收集最新版本变量
+            allLatestVars.addAll(latestVars)
+
+            // 1. 先对相同ID的变量进行替换
+            val replacedIds = mutableSetOf<String>()
+            latestVars.forEach { latestVar ->
+                val existingIndex = result.indexOfFirst { it.id == latestVar.id }
+                if (existingIndex >= 0) {
+                    // 同ID的进行替换
+                    result[existingIndex] = latestVar
+                    replacedIds.add(latestVar.id)
+                }
+            }
+
+            // 2. 移除该组中未被替换的旧变量（只移除属于当前组的变量）
+            val varsToRemove = vars.filter { it.id !in replacedIds }
+            result.removeAll(varsToRemove)
+
+            // 3. 添加新变量到列表末尾
+            latestVars.forEach { latestVar ->
+                if (latestVar.id !in replacedIds) {
+                    result.add(latestVar)
+                }
+            }
+        }
+
+        // 检查所有最新版本变量是否存在同名
+        val allLatestVarNames = allLatestVars.map { it.name }
+        if (allLatestVarNames.size != allLatestVarNames.distinct().size) {
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
+        }
+
+        return result
+    }
+
+    /**
+     * 更新公共变量组引用列表到最新版本
+     * @param projectId 项目ID
+     * @param publicVarGroups 变量组引用列表
+     * @return 更新后的BuildFormProperty列表
+     */
+    fun updatePublicVarGroupsToLatest(
+        projectId: String,
+        publicVarGroups: List<PublicVarGroupRef>
+    ): List<BuildFormProperty> {
+        if (publicVarGroups.isEmpty()) return emptyList()
+        
+        val result = mutableListOf<BuildFormProperty>()
+        
+        // 收集所有最新版本变量用于检查同名
+        val allLatestVars = mutableListOf<BuildFormProperty>()
+
+        publicVarGroups.forEach { groupRef ->
+            val groupName = groupRef.groupName
+            val version = groupRef.versionName?.substring(1)?.toIntOrNull()
+            // 获取该组的最新版本（如果versionName为空则使用最新版本）
+            val targetVersion = version ?: publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
+            ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+
+            // 获取目标版本的变量列表
+            val varPOs = publicVarDao.listVarByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = targetVersion
+            )
+
+            // 转换变量为BuildFormProperty
+            val vars = varPOs.map { publicVarPO ->
+                JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+            }
+
+            // 收集最新版本变量
+            allLatestVars.addAll(vars)
+            
+            // 添加变量到结果列表
+            result.addAll(vars)
+        }
+
+        // 检查所有变量是否存在同名
+        val allVarNames = allLatestVars.map { it.name }
+        if (allVarNames.size != allVarNames.distinct().size) {
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
+        }
+
+        return result
     }
 }

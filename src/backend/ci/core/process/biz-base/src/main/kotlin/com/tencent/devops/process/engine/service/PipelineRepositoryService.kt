@@ -815,7 +815,7 @@ class PipelineRepositoryService constructor(
                         versionNum, pipelineVersion, triggerVersion, settingVersion
                     )
                 }
-
+                model.handlePublicVarInfo()
                 publicVarGroupReferInfoService.updatePublicGroupRefer(
                     userId = userId,
                     projectId = projectId,
@@ -824,7 +824,7 @@ class PipelineRepositoryService constructor(
                         referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
                         referName = model.name,
                         // 分支版本直接使用版本名称进行记录
-                        referVersionName = versionName ?: VersionStatus.COMMITTING.name,
+                        referVersionName = getPublicVarReferVersionName(versionName, versionStatus),
                         publicVarGroupRefs = model.publicVarGroups
                     )
                 )
@@ -915,6 +915,14 @@ class PipelineRepositoryService constructor(
             versionNum = versionNum,
             versionName = versionName
         )
+    }
+
+    private fun getPublicVarReferVersionName(versionName: String?, versionStatus: VersionStatus?): String {
+        return when (versionStatus) {
+            VersionStatus.BRANCH -> versionName!!
+            VersionStatus.COMMITTING -> VersionStatus.COMMITTING.name
+            else -> VersionStatus.RELEASED.name
+        }
     }
 
     private fun useTemplateSettings(
@@ -1258,6 +1266,7 @@ class PipelineRepositoryService constructor(
                     )
                 }
                 referVersionName?.let {
+                    model.handlePublicVarInfo()
                     publicVarGroupReferInfoService.updatePublicGroupRefer(
                         userId = userId,
                         projectId = projectId,

@@ -233,16 +233,44 @@ class VariableTransfer {
     }
 
     fun makeVariableFromYaml(
-        variables: Map<String, Variable>?
+        variables: Map<String, Variable>?,
+        publicParam: List<BuildFormProperty>? = null
     ): List<BuildFormProperty> {
         if (variables.isNullOrEmpty()) {
-            return emptyList()
+            return publicParam ?: emptyList()
         }
+        
         val buildFormProperties = mutableListOf<BuildFormProperty>()
+        
+        // 如果publicParam非空，将其分为index为空和不为空的集合
+        val publicParamWithIndex = mutableMapOf<Int, BuildFormProperty>()
+        val publicParamWithoutIndex = mutableListOf<BuildFormProperty>()
+        
+        publicParam?.forEach { param ->
+            if (param.index != null) {
+                publicParamWithIndex[param.index!!] = param
+            } else {
+                publicParamWithoutIndex.add(param)
+            }
+        }
+        val indexSet = publicParamWithIndex.keys.toMutableSet()
+        
         variables.forEach { (key, variable) ->
             val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                 ?: BuildFormPropertyType.STRING
             check(key, variable)
+            var currentIndex = buildFormProperties.size
+            // 如果publicParam不为空，判断buildFormProperties的下一次添加是否在indexSet中
+            if (publicParamWithIndex.isNotEmpty()) {
+                
+                while (indexSet.contains(currentIndex)) {
+                    // 先把publicParam参数插入
+                    buildFormProperties.add(publicParamWithIndex[currentIndex]!!)
+                    indexSet.remove(currentIndex)
+                    currentIndex = buildFormProperties.size
+                }
+            }
+            
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
@@ -286,6 +314,16 @@ class VariableTransfer {
                 )
             )
         }
+        
+        // 处理剩余的有index的publicParam参数
+        if (indexSet.isNotEmpty()) {
+            val remainingParams = indexSet.sorted().map { publicParamWithIndex[it]!! }
+            buildFormProperties.addAll(remainingParams)
+        }
+        
+        // 把index为空的放入
+        buildFormProperties.addAll(publicParamWithoutIndex)
+        
         return buildFormProperties
     }
 
