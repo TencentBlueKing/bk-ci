@@ -3007,25 +3007,21 @@ class PipelineBuildFacadeService(
         if (currBuildInfo.buildNum == 1 || currBuildInfo.versionChange == false || currBuildInfo.debug) {
             return null
         }
+        val prevBuildInfo = pipelineRuntimeService.getBuildInfoByBuildNum(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = currBuildInfo.buildNum - 1
+        )
         val buildVersionDiffs = pipelineBuildVersionDiffService.list(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
         )
-        val prevBuildInfo = pipelineRuntimeService.getBuildInfoByBuildNum(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildNum = currBuildInfo.buildNum - 1
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            params = arrayOf(buildId)
-        )
         return BuildVersionDiff(
             currVersion = currBuildInfo.version,
             currVersionName = currBuildInfo.versionName,
-            lastVersion = prevBuildInfo.version,
-            lastVersionName = prevBuildInfo.versionName,
+            prevVersion = prevBuildInfo?.version,
+            prevVersionName = prevBuildInfo?.versionName,
             buildVersionDiffs = buildVersionDiffs
         )
     }

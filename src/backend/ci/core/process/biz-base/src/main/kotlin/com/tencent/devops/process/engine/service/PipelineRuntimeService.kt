@@ -356,18 +356,18 @@ class PipelineRuntimeService @Autowired constructor(
             updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
-        var lastBuildVersion: Int? = null
-        list.forEach {
+        var prevBuildVersion: Int? = null
+        list.reversed().forEach {
             result.add(
                 genBuildHistory(
                     buildInfo = it,
                     currentTimestamp = currentTimestamp,
-                    lastBuildVersion = lastBuildVersion
+                    prevBuildVersion = prevBuildVersion
                 )
             )
-            lastBuildVersion = it.version
+            prevBuildVersion = it.version
         }
-        return result
+        return result.reversed()
     }
 
     fun listPipelineBuildHistory(
@@ -440,8 +440,8 @@ class PipelineRuntimeService @Autowired constructor(
             triggerUser = triggerUser
         )
         val result = mutableListOf<BuildHistory>()
-        var lastBuildVersion: Int? = null
-        list.forEach { buildInfo ->
+        var prevBuildVersion: Int? = null
+        list.reversed().forEach { buildInfo ->
             val artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
                 projectId = projectId,
@@ -452,12 +452,12 @@ class PipelineRuntimeService @Autowired constructor(
                     buildInfo = buildInfo,
                     currentTimestamp = currentTimestamp,
                     artifactQuality = artifactQuality,
-                    lastBuildVersion = lastBuildVersion
+                    prevBuildVersion = prevBuildVersion
                 )
             )
-            lastBuildVersion = buildInfo.version
+            prevBuildVersion = buildInfo.version
         }
-        return result
+        return result.reversed()
     }
 
     fun updateBuildRemark(projectId: String, pipelineId: String, buildId: String, remark: String?) {
@@ -595,7 +595,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildInfo: BuildInfo,
         currentTimestamp: Long,
         artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
-        lastBuildVersion: Int? = null
+        prevBuildVersion: Int? = null
     ): BuildHistory {
         return with(buildInfo) {
             val startType = StartType.toStartType(trigger)
@@ -636,7 +636,7 @@ class PipelineRuntimeService @Autowired constructor(
                 updateTime = updateTime ?: endTime ?: 0L, // 防止空异常
                 concurrencyGroup = concurrencyGroup,
                 executeCount = executeCount,
-                versionChange = (versionChange ?: false) || (lastBuildVersion != null && version != lastBuildVersion)
+                versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion)
             )
         }
     }
