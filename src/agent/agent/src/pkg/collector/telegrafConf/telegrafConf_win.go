@@ -167,7 +167,7 @@ const TelegrafConf = `
 
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
-    ObjectName = "Processor"
+    ObjectName = "Processor Information"
     Instances = ["*"]
     Counters = [
       "% Idle Time",
