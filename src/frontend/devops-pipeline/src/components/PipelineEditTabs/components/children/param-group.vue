@@ -70,7 +70,7 @@
                                         <span>{{ param.id }}</span>
                                         <span>({{ param.name || param.id }})</span>
                                     </div>
-                                    <logo
+                                    <Logo
                                         v-if="!!param.varGroupName"
                                         class="variable-group-flag"
                                         name="publicVarGroup"
@@ -146,7 +146,8 @@
     import Logo from '@/components/Logo'
     export default {
         components: {
-            vueDraggable
+            vueDraggable,
+            Logo
         },
         props: {
             showContent: {
