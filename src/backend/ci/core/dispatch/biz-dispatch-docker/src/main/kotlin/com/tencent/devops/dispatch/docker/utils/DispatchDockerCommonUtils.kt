@@ -56,8 +56,12 @@ object DispatchDockerCommonUtils {
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         try {
-            val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
+            val credentialResult = client.get(ServiceCredentialResource::class).get(
+                projectId = projectId,
+                credentialId = credentialId,
+                publicKey = encoder.encodeToString(pair.publicKey),
+                padding = true
+            )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
