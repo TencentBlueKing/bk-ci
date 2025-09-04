@@ -154,13 +154,15 @@ class PipelineTemplateRelatedService @Autowired constructor(
         projectId: String,
         pipelineIds: List<String>,
         status: TemplatePipelineStatus,
-        instanceErrorInfo: String? = null
+        instanceErrorInfo: String? = null,
+        pullRequestUrl: String? = null
     ) {
         pipelineTemplateRelatedDao.update(
             dslContext = transactionContext ?: dslContext,
             updateInfo = PipelineTemplateRelatedUpdateInfo(
                 status = status,
-                instanceErrorInfo = instanceErrorInfo
+                instanceErrorInfo = instanceErrorInfo,
+                pullRequestUrl = pullRequestUrl
             ),
             condition = PipelineTemplateRelatedCommonCondition(
                 projectId = projectId,

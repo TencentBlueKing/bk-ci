@@ -332,6 +332,7 @@ class PipelineTemplateRelatedDao {
                     updateInfo.instanceErrorInfo?.let { set(INSTANCE_ERROR_INFO, it) }
                     updateInfo.updater?.let { set(UPDATOR, it) }
                     updateInfo.status?.let { set(STATUS, it.name) }
+                    updateInfo.pullRequestUrl?.let { set(PULL_REQUEST_URL, it) }
                 }
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(buildQueryCondition(condition))
