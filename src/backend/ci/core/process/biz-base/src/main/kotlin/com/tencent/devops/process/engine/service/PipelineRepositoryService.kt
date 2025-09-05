@@ -1604,7 +1604,7 @@ class PipelineRepositoryService constructor(
             val latestResource = getLatestResource(
                 context = context,
                 projectId = projectId,
-                pipelineId = projectId
+                pipelineId = pipelineId
             )
             // 删除草稿并获取最新版本用于版本号计算
             pipelineResourceVersionDao.clearDraftVersion(
