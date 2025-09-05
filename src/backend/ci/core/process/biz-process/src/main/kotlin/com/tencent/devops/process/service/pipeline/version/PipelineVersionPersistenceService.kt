@@ -285,18 +285,34 @@ class PipelineVersionPersistenceService @Autowired constructor(
             val pipelineSetting = pipelineSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion!!
             )
+            val branchResource = pipelineResourceVersionDao.getBranchVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branchName = branchName
+            )
+            val latestReleaseResource = pipelineResourceDao.getReleaseVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                // 分支版本需要将同分支版本置为无效
-                val cnt = pipelineResourceVersionDao.updateBranchVersion(
-                    dslContext = transactionContext,
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    branchName = branchName,
-                    branchVersionAction = BranchVersionAction.INACTIVE
-                )
-                if (cnt > 0) {
+                if (branchResource != null) {
+                    pipelineResourceVersionDao.updateBranchVersion(
+                        dslContext = transactionContext,
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        branchName = branchName,
+                        branchVersionAction = BranchVersionAction.INACTIVE
+                    )
+                    if (latestReleaseResource != null && latestReleaseResource.version == branchResource.version) {
+                        updatePipelineResource(
+                            transactionContext = transactionContext,
+                            pipelineResourceVersion = pipelineResourceVersion
+                        )
+                    }
                     operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
                     operationLogParams = resourceOnlyVersion.versionName ?: ""
                 } else {
@@ -404,6 +420,11 @@ class PipelineVersionPersistenceService @Autowired constructor(
             val pipelineSetting = pipelineSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion!!
             )
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 // 分支版本需要将同分支版本置为无效
@@ -428,6 +449,20 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     userId = userId,
                     pipelineResourceVersion = pipelineResourceVersion
                 )
+                // 将草稿版本发布成分支版本,需要把最新状态转换成分支版本,只有当流水线创建时时分支版本才会出现这种情况
+                if (pipelineInfo != null &&
+                    pipelineInfo.version == resourceOnlyVersion.version &&
+                    pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING.name
+                ) {
+                    pipelineInfoDao.update(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                        latestVersionStatus = VersionStatus.BRANCH
+                    )
+                }
                 postProcessInTransactionVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
