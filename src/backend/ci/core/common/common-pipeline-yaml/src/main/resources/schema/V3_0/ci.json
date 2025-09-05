@@ -1470,7 +1470,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                   },
                   "options" : {
                     "type" : "array",
@@ -1508,9 +1508,6 @@
                   },
                   "group" : {
                     "type" : "string"
-                  },
-                  "multiple" : {
-                    "type" : "boolean"
                   },
                   "required" : {
                     "type" : "boolean"
@@ -1626,7 +1623,7 @@
                   "type" : "string"
                 },
                 "type" : {
-                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                 },
                 "options" : {
                   "type" : "array",
@@ -1664,9 +1661,6 @@
                 },
                 "group" : {
                   "type" : "string"
-                },
-                "multiple" : {
-                  "type" : "boolean"
                 },
                 "required" : {
                   "type" : "boolean"
@@ -1823,7 +1817,6 @@
         "properties" : {
           "template" : {
             "type" : "object",
-            "required" : [ "template" ],
             "additionalProperties" : false,
             "properties" : {
               "path" : {
@@ -2199,7 +2192,7 @@
             "type" : "boolean"
           },
           "if" : {
-            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS" ]
+            "enum" : [ "FAILURE", "SUCCESS" ]
           }
         }
       }
