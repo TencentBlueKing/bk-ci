@@ -259,44 +259,23 @@ class ReportArchiveTask : ITask() {
                 expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
             )
 
-            // 局部函数：处理单个文件的上传（
-            fun uploadSingleFile(file: File) {
-                try {
-                    val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
-                    HttpRetryUtils.retry(retryTime = 3) {
-                        api.uploadReportFileToParentPipeline(
-                            file = file,
-                            taskId = elementId,
-                            relativePath = relativePath,
-                            buildVariables = buildVariables,
-                            token = token
-                        )
-                    }
-                } catch (ignore: Throwable) {
-                    LoggerService.addNormalLine(
-                        "upload report to parent pipeline failed:" +
-                                " ${file.name}, failed message ${ignore.message}"
-                    )
+            if (allFileList.size <= 10) {
+                allFileList.forEach { file ->
+                    uploadSingleFile(file, fileDirPath, elementId, buildVariables, token)
                 }
+                return
             }
-            if (allFileList.size > 10) {
-                val handelParentExecutors = Executors.newFixedThreadPool(5)
-                try {
-                    allFileList.forEach {
-                        handelParentExecutors.execute {
-                            uploadSingleFile(it)
-                        }
-                    }
-                    if (!handelParentExecutors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
-                        LoggerService.addNormalLine("parallel upload to parent report timeout")
-                    }
-                } finally {
-                    handelParentExecutors.shutdown()
+
+            val executor = Executors.newFixedThreadPool(5)
+            try {
+                allFileList.forEach { file ->
+                    executor.execute { uploadSingleFile(file, fileDirPath, elementId, buildVariables, token) }
                 }
-            } else {
-                allFileList.forEach {
-                    uploadSingleFile(it)
+                if (!executor.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
+                    LoggerService.addNormalLine("parallel upload to parent report timeout")
                 }
+            } finally {
+                executor.shutdown()
             }
         } catch (ignore: Throwable) {
             LoggerService.addNormalLine(
@@ -304,6 +283,32 @@ class ReportArchiveTask : ITask() {
                         " ${ignore.message}"
             )
             logger.error("upload report to parent pipeline failed", ignore)
+        }
+    }
+
+    private fun uploadSingleFile(
+        file: File,
+        fileDirPath: Path,
+        elementId: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        try {
+            val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
+            HttpRetryUtils.retry(retryTime = 3) {
+                api.uploadReportFileToParentPipeline(
+                    file = file,
+                    taskId = elementId,
+                    relativePath = relativePath,
+                    buildVariables = buildVariables,
+                    token = token
+                )
+            }
+        } catch (ignore: Throwable) {
+            LoggerService.addNormalLine(
+                "upload report to parent pipeline failed:" +
+                        " ${file.name}, failed message ${ignore.message}"
+            )
         }
     }
 
