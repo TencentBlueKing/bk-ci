@@ -162,11 +162,11 @@ data class MatrixControlOption(
                 emptyMap(), mutableListOf(), mutableListOf()
             )
         }
+        val contextStr = replaceJsonPattern(
+            command = strategyStr,
+            buildContext = buildContext
+        )
         try {
-            val contextStr = replaceJsonPattern(
-                command = strategyStr,
-                buildContext = buildContext
-            )
             // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
             val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
             return MatrixConfig(
@@ -186,7 +186,7 @@ data class MatrixControlOption(
         } catch (ignore: Exception) {
             // 适用于不包含key的list类型JSON,这种情况只会是strategy
             val str = kotlin.runCatching { YamlUtil.to<Map<String, Any>>(strategyStr) }.getOrElse {
-                throw Exception(I18nUtil.getCodeLanMessage(BK_JOB_MATRIX_STR_ERROR, params = arrayOf(strategyStr)))
+                throw Exception(I18nUtil.getCodeLanMessage(BK_JOB_MATRIX_STR_ERROR, params = arrayOf(contextStr)))
             }
             return MatrixConfig(
                 strategy = str.map {
