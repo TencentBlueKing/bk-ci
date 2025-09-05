@@ -157,15 +157,6 @@
                             }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
-                        <span
-                            v-if="resetBuildNo && isInstance"
-                            class="reset-build-no"
-                        >
-                            <Logo
-                                size="14"
-                                name="arrow-right"
-                            />
-                        </span>
                     </p>
                 </div>
             </div>

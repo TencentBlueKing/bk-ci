@@ -199,6 +199,7 @@
                         ...i,
                         required: i.isRequiredParam
                     })),
+                    resetBuildNo: item.resetBuildNO,
                     timerTrigger: item.timerTrigger,
                     filePath: item.filePath,
                     overrideTemplateField: item.overrideTemplateField,

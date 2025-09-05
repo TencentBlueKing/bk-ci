@@ -717,6 +717,7 @@
         let target = id, index
         switch (key) {
             case 'introVersion':
+                // 推荐版本号-取消跟随模板，存入overrideTemplateField字段为BK_CI_BUILD_NO
                 target = 'BK_CI_BUILD_NO'
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
@@ -739,10 +740,6 @@
                         index: activeIndex.value - 1,
                         value: {
                             ...curInstance.value,
-                            overrideTemplateField: {
-                                ...curInstance.value.overrideTemplateField,
-                                paramIds
-                            },
                             param: curInstance.value?.param.map(p => {
                                 return {
                                     ...p,
