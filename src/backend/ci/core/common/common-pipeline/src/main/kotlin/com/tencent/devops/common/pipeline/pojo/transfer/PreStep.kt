@@ -73,3 +73,11 @@ data class PreStep(
     var manualRetry: Boolean? = null,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData, IPreStep
+
+data class PreStepTemplate(
+    override val templatePath: String?,
+    override val templateRef: String?,
+    override val templateId: String?,
+    override val templateVersionName: String?,
+    override val variables: Map<String, PreTemplateVariable>?
+) : IPreStep, CodeTemplate
