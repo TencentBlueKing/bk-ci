@@ -330,7 +330,7 @@ interface UserThirdPartyAgentResource {
         @PathParam("projectId")
         projectId: String,
         data: BatchUpdateParallelTaskCountData
-    )
+    ): Result<Boolean>
 
     @Operation(summary = "获取构建机详情")
     @GET

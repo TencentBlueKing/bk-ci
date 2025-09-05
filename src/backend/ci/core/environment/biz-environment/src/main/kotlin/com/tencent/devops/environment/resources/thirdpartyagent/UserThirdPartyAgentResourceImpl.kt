@@ -225,7 +225,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         data: BatchUpdateParallelTaskCountData
-    ) {
+    ): Result<Boolean> {
         checkUserId(userId)
         checkProjectId(projectId)
         tpaService.batchSetParallelTaskCount(
@@ -235,6 +235,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
             parallelTaskCount = data.parallelTaskCount,
             dockerParallelTaskCount = data.dockerParallelTaskCount
         )
+        return Result(true)
     }
 
     @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
