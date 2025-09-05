@@ -27,7 +27,7 @@
                             'active': isRequiredParam
                         }]"
                         v-bk-tooltips=" isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')"
-                        @click="handelChangeBuildNoRequired"
+                        @click="handelChangeRequired"
                     >
                         <Logo
                             :name="isRequiredParam ? 'set-param-active' : 'set-param-default'"
@@ -94,7 +94,7 @@
                 type: Function,
                 default: () => () => {}
             },
-            handleSetBuildNoRequired: {
+            handleSetRequired: {
                 type: Function,
                 default: () => () => {}
             },
@@ -158,9 +158,9 @@
                 if (this.checkStepId && !this.stepId) return
                 this.handleFollowTemplate(this.followTemplateKey)
             },
-            handelChangeBuildNoRequired (event) {
+            handelChangeRequired (event) {
                 event.preventDefault()
-                this.handleSetBuildNoRequired()
+                this.handleSetRequired()
             }
         }
     }
