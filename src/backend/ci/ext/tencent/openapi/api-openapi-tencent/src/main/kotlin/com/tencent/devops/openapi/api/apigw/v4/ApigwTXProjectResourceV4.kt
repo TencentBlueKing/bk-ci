@@ -84,7 +84,7 @@ interface ApigwTXProjectResourceV4 {
 
     @GET
     @Path("/product/{productId}/getProductByProductId/")
-    @Operation(summary = "根据运营产品ID获取产品信息", tags = ["get_product_by_product_id"])
+    @Operation(summary = "根据运营产品ID获取产品信息", tags = ["v4_app_get_product_by_product_id"])
     fun getProductByProductId(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
