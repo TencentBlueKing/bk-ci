@@ -214,7 +214,6 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            
             // 最新的流水线版本信息
             activeDisplayName () {
                 return this.activeVersion?.displayName ?? '--'

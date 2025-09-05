@@ -39,7 +39,7 @@
                         v-model="activeVersion"
                         @change="diffActiveVersion"
                         :is-template="isTemplateDiff"
-                        :unique-id="templateId || pipelineId"
+                        :unique-id="uniqueId"
                     />
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
@@ -50,7 +50,7 @@
                         v-model="currentVersion"
                         @change="diffCurrentVersion"
                         :is-template="isTemplateDiff"
-                        :unique-id="templateId || pipelineId"
+                        :unique-id="uniqueId"
                     />
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">
@@ -148,6 +148,15 @@
             },
             isTemplateDiff () {
                 return this.isTemplate || this.forceTemplate
+            },
+            uniqueId () {
+                const { pipelineId, templateId } = this.$route.params
+                if (this.isTemplateInstance) {
+                    return templateId
+                } else if (this.isTemplateDiff) {
+                    return this.templateId || templateId
+                }
+                return this.pipelineId || pipelineId
             }
         },
 
