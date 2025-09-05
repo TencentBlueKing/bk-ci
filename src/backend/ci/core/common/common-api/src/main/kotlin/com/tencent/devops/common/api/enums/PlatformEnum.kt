@@ -38,7 +38,9 @@ enum class PlatformEnum(
 
     IOS(2, "IOS", listOf(".ipa")),
 
-    HAP(3, "鸿蒙", listOf(".hap"))
+    HAP(3, "鸿蒙", listOf(".hap")),
+
+    WIN(4, "Windows", listOf(".zip"))
 
     ;
 
@@ -62,7 +64,7 @@ enum class PlatformEnum(
          */
         fun ofName(name: String): PlatformEnum {
             for (platformEnum in values()) {
-                if (platformEnum.mean.equals(name, true)) {
+                if (platformEnum.toString().equals(name, true)) {
                     return platformEnum
                 }
             }
