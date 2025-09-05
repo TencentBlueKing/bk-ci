@@ -38,6 +38,8 @@
                         :show-extension="false"
                         v-model="activeVersion"
                         @change="diffActiveVersion"
+                        :is-template="isTemplateDiff"
+                        :unique-id="templateId || pipelineId"
                     />
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
@@ -47,6 +49,8 @@
                         :show-extension="false"
                         v-model="currentVersion"
                         @change="diffCurrentVersion"
+                        :is-template="isTemplateDiff"
+                        :unique-id="templateId || pipelineId"
                     />
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">
@@ -118,7 +122,12 @@
             },
             type: String,
             pipelineId: String,
-            archiveFlag: Boolean
+            templateId: String,
+            archiveFlag: Boolean,
+            forceTemplate: {
+                type: Boolean,
+                default: false
+            }
         },
         data () {
             return {
@@ -132,9 +141,13 @@
             }
         },
         computed: {
+            // isTemplate代表是一个模板，而不是说是模板实例
             ...mapGetters('atom', ['isTemplate']),
             isTemplateInstance () {
                 return this.type === 'templateInstance' && this.isTemplate
+            },
+            isTemplateDiff () {
+                return this.isTemplate || this.forceTemplate
             }
         },
 
@@ -146,8 +159,9 @@
             ...mapActions('templates', ['requestVersionCompare']),
             async fetchPipelineYaml (version) {
                 try {
-                    const fn = this.isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
+                    const fn = this.isTemplateDiff ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
                     const res = await fn({
+                        ...(this.isTemplateDiff ? {templateId: this.templateId} : {}),
                         ...this.$route.params,
                         version,
                         archiveFlag: this.archiveFlag

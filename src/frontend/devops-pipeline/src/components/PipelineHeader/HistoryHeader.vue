@@ -12,6 +12,8 @@
                     @showAllVersion="showVersionSideSlider"
                     :include-draft="false"
                     refresh-list-on-expand
+                    :is-template="isTemplate"
+                    :unique-id="uniqueId"
                 />
                 <div slot="content">
                     <p>{{ $t('versionRuleP') }}</p>

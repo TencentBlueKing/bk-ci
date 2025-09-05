@@ -135,7 +135,7 @@
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime } from '@/utils/util'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
         emit: ['input', 'change', 'showAllVersion'],
@@ -178,6 +178,14 @@
             buildOnly: {
                 type: Boolean,
                 default: false
+            },
+            isTemplate: {
+                type: Boolean,
+                default: false
+            },
+            uniqueId: {
+                type: [String, Number],
+                required: true
             }
         },
         data () {
@@ -203,15 +211,10 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
-            ...mapGetters('atom', [
-                'isTemplate'
-            ]),
             projectId () {
                 return this.$route.params.projectId
             },
-            uniqueId () {
-                return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
-            },
+            
             // 最新的流水线版本信息
             activeDisplayName () {
                 return this.activeVersion?.displayName ?? '--'
