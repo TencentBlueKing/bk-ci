@@ -146,7 +146,7 @@ class TemplateInstanceItemDao {
                     it.filePath,
                     it.triggerConfigs?.let { self -> JsonUtil.toJson(self, formatted = false) },
                     it.overrideTemplateField?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                    it.restBuildNo
+                    it.resetBuildNo
                 ).onDuplicateKeyUpdate()
                     .set(PIPELINE_NAME, it.pipelineName)
                     .set(BUILD_NO_INFO, buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) })
@@ -160,7 +160,7 @@ class TemplateInstanceItemDao {
                     .set(
                         OVERRIDE_TEMPLATE_FIELD,
                         it.overrideTemplateField?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                    .set(RESET_BUILD_NO, it.restBuildNo)
+                    .set(RESET_BUILD_NO, it.resetBuildNo)
                     .execute()
             }
         }

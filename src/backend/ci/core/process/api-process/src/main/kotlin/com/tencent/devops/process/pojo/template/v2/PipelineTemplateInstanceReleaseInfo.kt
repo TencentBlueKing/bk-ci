@@ -50,5 +50,5 @@ data class PipelineTemplateInstanceReleaseInfo(
     @get:Schema(title = "覆盖模版字段", required = false)
     val overrideTemplateField: TemplateInstanceField? = null,
     @get:Schema(title = "重置实例推荐版本为基准值", required = false)
-    val restBuildNo: Boolean? = false
+    val resetBuildNo: Boolean? = false
 )
