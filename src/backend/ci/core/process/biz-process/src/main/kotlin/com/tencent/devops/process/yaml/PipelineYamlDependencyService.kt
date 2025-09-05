@@ -225,7 +225,9 @@ class PipelineYamlDependencyService @Autowired constructor(
             diffDependencies.add(
                 diff.copy(
                     actionType = YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER,
-                    dependentFilePath = templateDiff.filePath
+                    dependentFilePath = templateDiff.filePath,
+                    dependentRef = templateDiff.ref,
+                    dependentBlobId = templateDiff.blobId
                 )
             )
         } else {
