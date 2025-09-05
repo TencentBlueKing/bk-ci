@@ -564,7 +564,7 @@
     "MANUAL-UPGRADE": "Manual Upgrade",
     "MANUAL-upgradeStrategyDesc": "When there are updates in the dev store, manually install new versions as needed",
     "AUTO-upgradeStrategyDesc": "Automatically install new versions when they are released in the dev store",
-    "syncSettingStrategyDesc": "When auto-installing new versions, notifications/basic settings will be updated along with the template",
+    "syncSettingStrategyDesc": "When automatically installing new versions, notifications/basic settings (excluding tags) will be updated along with the template",
     "goStore": "View Store",
     "upgradeSettingSuccess": "Upgrade settings successfully",
     "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed.",
@@ -635,6 +635,13 @@
       "tips2": "the following parameter input interface, where the parameters are pulled from the default branch. For triggers like push or tag events, the parameters may differ. Exercise caution when using the default ref approach.",
       "arrangingValueStrategy": "Orchestration Value Strategy"
     },
+    "arrangingValueStrategyTips": {
+      "tips1": "1. For triggers via push, tag, or manual execution with branch selection, the pipeline orchestration always follows the latest template content on the current branch",
+      "tips2": "2. For manual triggers without branch selection, or triggers via issue/note/code review events, the pipeline orchestration follows the latest content from the template's default branch",
+      "tips3": "3. For merge request triggers:",
+      "tips4": "- If only the source or target branch modified the template, orchestration uses the modified version",
+      "tips5": "- If both branches modified the template/pipeline configuration, changes must first be synchronized from the target branch to the source branch. After synchronization, the source branch version will be used"
+    },
     "followTemplateTips": "Switch to follow template:<br/>During instance upgrades, if a new template version modifies default variable values, the instance will automatically update to match template defaults.",
     "notFollowTemplateTips": "Disable template following:<br/>During instance upgrades, default values will not automatically update with template changes. Manually update as needed.",
     "customVersionName": "Version Name",
@@ -645,7 +652,9 @@
     "timeCron": "Schedule Rule",
     "notStepIdTips": "Trigger [{0}] is missing a Step ID. Please update the template to include the Step ID.",
     "constraintMode": "The pipeline uses a constraint mode template",
-    "notTemplate": "Template does not exist"
+    "notTemplate": "Template does not exist",
+    "pleaseMergePullUrl": "Resolve merge request in code repo first.",
+    "toHandle": "Resolve now"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -1967,5 +1976,4 @@
   "refTemplate": "Referenced template",
   "preRef": "Previous version/Previous Commit",
   "currentRef": "Current version/Current Commit"
-
 }

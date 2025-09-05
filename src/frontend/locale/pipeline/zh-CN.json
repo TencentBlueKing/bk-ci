@@ -563,7 +563,7 @@
     "MANUAL-UPGRADE": "手动升级",
     "MANUAL-upgradeStrategyDesc": "研发商店有更新时，手动按需安装新版本",
     "AUTO-upgradeStrategyDesc": "研发商店有新版本发布时，自动安装新版本",
-    "syncSettingStrategyDesc": "自动安装新版本时，通知/基础设置跟随模板一起更新",
+    "syncSettingStrategyDesc": "自动安装新版本时，通知/基础设置（标签除外）跟随模板一起更新",
     "goStore": "去研发商店查看",
     "upgradeSettingSuccess": "升级设置成功",
     "autoUpgradeStrategyTips": "确定后， 将会自动安装 {0} 版本。",
@@ -638,6 +638,13 @@
       "tips2": "如下入参填写界面，拉取的是默认分支的入参；push、tag 等方式触发时，入参可能不同，请谨慎使用缺省 ref 的方式。",
       "arrangingValueStrategy": "编排取值策略"
     },
+    "arrangingValueStrategyTips": {
+      "tips1": "1. push、tag、手动且选择了分支版本 触发方式下，「流水线编排」始终以当前分支上的模版的最新内容为准",
+      "tips2": "2. 手动且未选择分支版本、issue、note、cr 触发时，「流水线编排」以模版默认分支最新内容为准",
+      "tips3": "3. mr 触发时：",
+      "tips4": "- 若源和目标仅有一方修改了模版，「流水线编排」以修改后的内容为准",
+      "tips5": "- 若源和目标都修改了模版、或者都修改了流水线配置，需要先将目标分支上的变更同步到源分支。同步之后，以源分支为准"
+    },
     "followTemplateTips": "切换为跟随模板：<br/>升级实例时，若模版新版本修改了变量默认值，实例将自动跟随模版变更默认值，以模版为准。",
     "notFollowTemplateTips": "取消跟随模板：<br/>升级实例时，不自动跟随模版变更默认值，按需手动修改。",
     "customVersionName": "版本名称",
@@ -648,7 +655,9 @@
     "timeCron": "定时规则",
     "notStepIdTips": "触发器[{0}]缺少 Step ID ，请修改模版补全 Step ID",
     "constraintMode": "流水线使用了约束模式的模板",
-    "notTemplate": "模板不存在"
+    "notTemplate": "模板不存在",
+    "pleaseMergePullUrl": "请到代码库处理合并请求，",
+    "toHandle": "去处理"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

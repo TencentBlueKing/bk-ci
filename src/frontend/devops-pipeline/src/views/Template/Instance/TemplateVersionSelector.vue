@@ -137,6 +137,7 @@
         UPDATE_TEMPLATE_REF_TYPE,
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
+    import { debounce } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
     defineProps({
         isInstanceCreateType: Boolean
@@ -239,8 +240,7 @@
         })
         templatePipeline.value = {}
     }
-
-    async function handelChangeTemplateRef (value) {
+    async function fetchTemplateDateByRef (value) {
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, value)
         try {
             const res = await proxy.$store.dispatch('templates/fetchTemplateByRef', {
@@ -261,9 +261,19 @@
                 templateVersion: '',
                 templateDetail: {}
             })
-            console.error(e)
+            proxy.$bkMessage({
+                theme: 'error',
+                message: errorRefMsg.value
+            })
         }
     }
+    // 防抖包装
+    const debouncedFetchTemplate = debounce(fetchTemplateDateByRef, 300)
+
+    const handelChangeTemplateRef = (value) => {
+        debouncedFetchTemplate(value)
+    }
+  
 </script>
 
 <style lang="scss">

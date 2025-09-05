@@ -807,6 +807,7 @@
                     }
                     if (this.isTemplateInstanceMode && this.templateRefType === 'PATH') {
                         this.releaseParams.enablePac = true
+                        this.showPacCodelibSetting = true
                     }
                     await Promise.all([
                         ...(enablePac
