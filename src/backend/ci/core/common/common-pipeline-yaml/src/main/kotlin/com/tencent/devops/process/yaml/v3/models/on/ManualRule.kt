@@ -49,8 +49,13 @@ data class ManualRule(
         if (other is ManualRule) {
             return other.canElementSkip == canElementSkip &&
                 other.useLatestParameters == useLatestParameters &&
-                other.enable == enable
+                other.enable == enable &&
+                other.id == id
         }
         return super.equals(other)
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
     }
 }
