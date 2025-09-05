@@ -212,9 +212,7 @@
             :loading="dialogLoading.isLoading"
             footer-position="center"
             ext-cls="reset-import-user"
-            :ok-text="$t('environment.reset')"
             :title="$t('environment.confirmBulkResetImportUser')"
-            @confirm="handleChangeImportUser"
         >
             <div class="content">
                 <div class="top">
@@ -262,6 +260,28 @@
                     </i18n>
                 </div>
                 <div class="bottom">{{ $t('environment.重置后，「作业平台-脚本执行」和「 作业平台-构件分发 」插件运行时将以你的授权执行，请谨慎操作，避免流水线越权。') }}</div>
+            </div>
+            <div slot="footer">
+                <p
+                    v-bk-tooltips="{
+                        content: $t('environment.没有能导入的节点'),
+                        disabled: hasPermissionCMDBCount
+                    }"
+                    style="display: inline-block;"
+                >
+                    <bk-button
+                        theme="primary"
+                        :disabled="!hasPermissionCMDBCount"
+                        @click="handleChangeImportUser"
+                    >
+                        {{ $t('environment.reset') }}
+                    </bk-button>
+                </p>
+                <bk-button
+                    @click="cancelFn"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </bk-dialog>
     </div>
@@ -528,8 +548,10 @@
                     }
                 ]
             },
+            username (){
+                return window.top.userInfo.username
+            },
             selectNodeCounts () {
-                const username = window.top.userInfo.username
                 const count = this.selectedNodes.reduce(
                     (acc, node) => {
                         acc.total++
@@ -538,15 +560,19 @@
 
                         if (node.nodeType === 'CMDB') acc.cmdb++
 
-                        if (node.nodeType === 'CMDB' && !(node.bakOperator?.split(';').includes(username) || node.operator === username)) {
+                        if (node.nodeType === 'CMDB' && !(node.bakOperator?.split(';').includes(this.username) || node.operator === this.username)) {
                             acc.noPermission++
                         }
       
                         return acc
                     },
-                    { total: 0, cmdb: 0,  thirdParty: 0, noPermission: 0 }
+                    { total: 0, cmdb: 0, thirdParty: 0, noPermission: 0 }
                 )
                 return count
+            },
+            hasPermissionCMDBCount () {
+                const { total = 0, thirdParty = 0, noPermission = 0 } = this.selectNodeCounts
+                return total - thirdParty - noPermission
             }
         },
         watch: {
@@ -697,7 +723,9 @@
             async handleChangeImportUser () {
                 try {
                     this.dialogLoading.isLoading = true
-                    const nodeHashIds = this.selectedNodes.filter(node => node.nodeType === 'CMDB').map(node => node.nodeHashId)
+                    const nodeHashIds = this.selectedNodes
+                        .filter(node => node.nodeType === 'CMDB' && (node.bakOperator?.split(';').includes(this.username) || node.operator === this.username))
+                        .map(node => node.nodeHashId)
                     const res = await this.$store.dispatch('environment/batchChangeImportUser', {
                         projectId: this.projectId,
                         nodeHashIds
@@ -721,6 +749,9 @@
                     this.dialogLoading.isLoading = false
                     this.isShowResetImportUser = false
                 }
+            },
+            cancelFn () {
+                this.isShowResetImportUser = false
             },
             async batchDeleteNode () {
                 if (!this.hasSelectedNode()) return

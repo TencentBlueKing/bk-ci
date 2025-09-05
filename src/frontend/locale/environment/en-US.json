@@ -378,5 +378,6 @@
     "X个非部署节点已忽略": "{0} non-deployment nodes are {1};",
     "X个节点你无权限（主备负责人不是你）已忽略": "{0} nodes you have no permission (you are not the primary or backup person in charge) are {1}.",
     "重置后，「作业平台-脚本执行」和「 作业平台-构件分发 」插件运行时将以你的授权执行，请谨慎操作，避免流水线越权。": "After resetting, the 「Job Platform - Script Execution」 and 「Job Platform - File Distribution」 plugins will run with your authorization. Please operate cautiously to avoid pipeline unauthorized access.",
-    "重置成功": "Reset Successful"
+    "重置成功": "Reset Successful",
+    "没有能导入的节点": "No nodes available for import"
 }
