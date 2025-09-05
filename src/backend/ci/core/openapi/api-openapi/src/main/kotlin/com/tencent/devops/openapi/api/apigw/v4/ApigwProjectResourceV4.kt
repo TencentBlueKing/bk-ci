@@ -166,7 +166,7 @@ interface ApigwProjectResourceV4 {
 
     @POST
     @Path("/list/by/conditions/{page}/{pageSize}")
-    @Operation(summary = "根据条件查询项目", tags = ["v4_app_project_list"])
+    @Operation(summary = "根据条件查询项目", tags = ["v4_app_list_projects_by_conditions"])
     @BkApigwApi(version = "v4", apigwPathTail = "/projects/list/by/conditions/{page}/{pageSize}")
     fun listByConditions(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
