@@ -96,7 +96,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "Git事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
@@ -125,7 +125,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = tag.id,
+                    stepId = tag.id,
                     name = tag.name ?: "Git事件触发",
                     tagName = tag.tags.nonEmptyOrNull()?.join(),
                     excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
@@ -144,7 +144,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = mr.id,
+                    stepId = mr.id,
                     name = mr.name ?: "Git事件触发",
                     branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
                     excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
@@ -180,7 +180,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.review?.let { review ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = review.id,
+                    stepId = review.id,
                     name = review.name ?: "Git事件触发",
                     includeCrState = review.states,
                     includeCrTypes = review.types,
@@ -196,7 +196,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.issue?.let { issue ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = issue.id,
+                    stepId = issue.id,
                     name = issue.name ?: "Git事件触发",
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
@@ -211,7 +211,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
-                    id = note.id,
+                    stepId = note.id,
                     name = note.name ?: "Git事件触发",
                     includeNoteTypes = note.types?.map {
                         when (it) {
@@ -412,7 +412,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -442,7 +442,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
-                    id = tag.id,
+                    stepId = tag.id,
                     name = tag.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -465,7 +465,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
-                    id = mr.id,
+                    stepId = mr.id,
                     name = mr.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -502,7 +502,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.review?.let { review ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
-                    id = review.id,
+                    stepId = review.id,
                     name = review.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -522,7 +522,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.issue?.let { issue ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
-                    id = issue.id,
+                    stepId = issue.id,
                     name = issue.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -541,7 +541,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
-                    id = note.id,
+                    stepId = note.id,
                     name = note.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -576,7 +576,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "GitHub事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
@@ -597,7 +597,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
-                    id = tag.id,
+                    stepId = tag.id,
                     name = tag.name ?: "GitHub事件触发",
                     tagName = tag.tags.nonEmptyOrNull()?.join(),
                     excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
@@ -614,7 +614,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
-                    id = mr.id,
+                    stepId = mr.id,
                     name = mr.name ?: "GitHub事件触发",
                     branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
                     excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
@@ -639,7 +639,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.review?.let { review ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
-                    id = review.id,
+                    stepId = review.id,
                     name = review.name ?: "GitHub事件触发",
                     includeCrState = review.states,
                     includeCrTypes = review.types,
@@ -653,7 +653,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.issue?.let { issue ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
-                    id = issue.id,
+                    stepId = issue.id,
                     name = issue.name ?: "GitHub事件触发",
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
@@ -666,7 +666,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
-                    id = note.id,
+                    stepId = note.id,
                     name = note.name ?: "GitHub事件触发",
                     includeNoteTypes = note.types?.map {
                         when (it) {
@@ -695,7 +695,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeSVNWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "SVN事件触发",
                     relativePath = push.paths.nonEmptyOrNull()?.join(),
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
@@ -738,7 +738,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             elementQueue.add(
                 ManualTriggerElement(
                     name = manual.name ?: "手动触发",
-                    id = manual.id,
+                    stepId = manual.id,
                     canElementSkip = manual.canElementSkip,
                     useLatestParameters = manual.useLatestParameters
                 ).apply {
@@ -763,7 +763,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
                 elementQueue.add(
                     TimerTriggerElement(
-                        id = timer.id,
+                        stepId = timer.id,
                         name = timer.name ?: "定时触发",
                         repositoryType = repositoryType,
                         repoHashId = timer.repoId,
@@ -798,7 +798,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.remote?.let { remote ->
             elementQueue.add(
                 RemoteTriggerElement(
-                    id = remote.id,
+                    stepId = remote.id,
                     name = remote.name ?: "远程触发",
                     remoteToken = yamlInput.pipelineInfo?.pipelineId?.let {
                         transferCache.getPipelineRemoteToken(
@@ -822,7 +822,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "Gitlab事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
@@ -848,7 +848,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    id = tag.id,
+                    stepId = tag.id,
                     name = tag.name ?: "Gitlab变更触发",
                     tagName = tag.tags.nonEmptyOrNull()?.join(),
                     excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
@@ -864,7 +864,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
-                    id = mr.id,
+                    stepId = mr.id,
                     name = mr.name ?: "Gitlab事件触发",
                     branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
                     excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
@@ -902,7 +902,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeScmGitWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "Git通用事件触发",
                     data = CodeScmGitWebHookTriggerData(
                         input = CodeScmGitWebHookTriggerInput(
@@ -933,7 +933,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeScmGitWebHookTriggerElement(
-                    id = mr.id,
+                    stepId = mr.id,
                     name = mr.name ?: "Git通用事件触发",
                     data = CodeScmGitWebHookTriggerData(
                         input = CodeScmGitWebHookTriggerInput(
@@ -977,7 +977,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeSVNWebHookTriggerElement(
-                    id = push.id,
+                    stepId = push.id,
                     name = push.name ?: "SVN通用事件触发",
                     relativePath = push.paths.nonEmptyOrNull()?.join(),
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
@@ -1017,7 +1017,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
     ): Element? {
         return rule?.let {
             CodeP4WebHookTriggerElement(
-                id = rule.id,
+                stepId = rule.id,
                 name = rule.name ?: "P4事件触发",
                 data = CodeP4WebHookTriggerData(
                     input = CodeP4WebHookTriggerInput(
