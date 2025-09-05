@@ -21,9 +21,7 @@
 
                 
                 <VersionDiffEntry
-                    force-template
                     class="check-diff-btn"
-                    :template-id="buildVersionDiffState?.templateId"
                     :version="buildVersionDiffState?.prevVersion"
                     :latest-version="buildVersionDiffState?.currVersion"
                 >
@@ -68,7 +66,6 @@
                     >
                         <template #default="{ row }">
                             <VersionDiffEntry
-                            
                                 force-template
                                 :template-id="row.templateId"
                                 :version="row.prevTemplateVersion"
