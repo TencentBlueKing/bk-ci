@@ -60,6 +60,7 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
     }
 
     override fun listBranches(
+        userId: String,
         projectId: String,
         repositoryType: RepositoryType?,
         repoHashIdOrName: String,
@@ -69,6 +70,7 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
     ): Result<List<Reference>> {
         return Result(
             repositoryApiService.listBranches(
+                userId = userId,
                 projectId = projectId,
                 repositoryType = repositoryType,
                 repoHashIdOrName = repoHashIdOrName,
@@ -80,6 +82,7 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
     }
 
     override fun listTags(
+        userId: String,
         projectId: String,
         repositoryType: RepositoryType?,
         repoHashIdOrName: String,
@@ -89,6 +92,7 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
     ): Result<List<Reference>> {
         return Result(
             repositoryApiService.listTags(
+                userId = userId,
                 projectId = projectId,
                 repositoryType = repositoryType,
                 repoHashIdOrName = repoHashIdOrName,

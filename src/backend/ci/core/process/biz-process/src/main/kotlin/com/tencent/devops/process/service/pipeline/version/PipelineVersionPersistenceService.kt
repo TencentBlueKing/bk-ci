@@ -50,6 +50,7 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
@@ -188,6 +189,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 )
                 context.pipelineModelBasicInfo.buildNo?.let {
                     if (resetBuildNo == true) {
+                        logger.info("reset build no|$projectId|$pipelineId|${it.buildNo}")
                         pipelineBuildSummaryDao.updateBuildNo(
                             dslContext = dslContext,
                             projectId = projectId,
@@ -770,5 +772,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
 
     companion object {
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
+        private val logger = LoggerFactory.getLogger(PipelineVersionPersistenceService::class.java)
     }
 }

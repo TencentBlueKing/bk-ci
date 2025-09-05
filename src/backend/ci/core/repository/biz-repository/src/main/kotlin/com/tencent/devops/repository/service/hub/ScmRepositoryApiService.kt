@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.hub
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.credential.AuthRepository
@@ -224,6 +225,7 @@ class ScmRepositoryApiService @Autowired constructor(
     }
 
     fun listBranches(
+        userId: String,
         projectId: String,
         repositoryType: RepositoryType?,
         repoHashIdOrName: String,
@@ -231,10 +233,14 @@ class ScmRepositoryApiService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<Reference> {
+        val repository = repositoryService.userGet(
+            userId = userId,
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoHashIdOrName, repositoryType)
+        )
         return invokeApi(
             projectId = projectId,
-            repositoryType = repositoryType,
-            repoHashIdOrName = repoHashIdOrName
+            authRepository = AuthRepository(repository)
         ) { providerProperties, providerRepository ->
             scmApiManager.listBranches(
                 providerProperties = providerProperties,
@@ -289,6 +295,7 @@ class ScmRepositoryApiService @Autowired constructor(
     }
 
     fun listTags(
+        userId: String,
         projectId: String,
         repositoryType: RepositoryType?,
         repoHashIdOrName: String,
@@ -296,10 +303,14 @@ class ScmRepositoryApiService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<Reference> {
+        val repository = repositoryService.userGet(
+            userId = userId,
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoHashIdOrName, repositoryType)
+        )
         return invokeApi(
             projectId = projectId,
-            repositoryType = repositoryType,
-            repoHashIdOrName = repoHashIdOrName
+            authRepository = AuthRepository(repository)
         ) { providerProperties, providerRepository ->
             scmApiManager.findTags(
                 providerProperties = providerProperties,
