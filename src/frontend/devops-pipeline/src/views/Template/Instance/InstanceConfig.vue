@@ -117,7 +117,7 @@
                                         v-bind="versionParams"
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
-                                        :handle-set-build-no-required="handleSetBuildNoRequired"
+                                        :handle-set-required="handleSetBuildNoRequired"
                                         :is-required-param="curInstance.buildNo?.isRequiredParam"
                                         :is-follow-template="curInstance.buildNo?.isFollowTemplate"
                                     >
@@ -127,7 +127,8 @@
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
                                                 is-instance
-                                                :is-reset-build-no="isResetBuildNo"
+                                                :is-follow-template="curInstance.buildNo?.isFollowTemplate"
+                                                :reset-build-no="curInstance.resetBuildNo"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
@@ -322,7 +323,6 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
-    const isResetBuildNo = ref(false)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
@@ -568,20 +568,27 @@
         return result
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
-        if (!instanceBuildNo && !!templateBuildNo) {
-            // 将模板的推荐版本号配置覆盖实例推荐版本号
+        if (instanceBuildNo?.isFollowTemplate) {
             return {
                 ...instanceBuildNo,
                 ...templateBuildNo
             }
-        }
-        if (instanceBuildNo && templateBuildNo) {
-            return {
-                ...instanceBuildNo,
-                required: templateBuildNo.required
+        } else {
+            if (!instanceBuildNo && !!templateBuildNo) {
+                // 将模板的推荐版本号配置覆盖实例推荐版本号
+                return {
+                    ...instanceBuildNo,
+                    ...templateBuildNo
+                }
             }
+            if (instanceBuildNo && templateBuildNo) {
+                return {
+                    ...instanceBuildNo,
+                    required: templateBuildNo.required
+                }
+            }
+            return instanceBuildNo
         }
-        return instanceBuildNo
     }
     
     function handleSetParmaRequired (id) {
@@ -659,16 +666,15 @@
         })
     }
     function handleCheckChange (value) {
-        isResetBuildNo.value = value
-        if (!value) return
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
                 ...curInstance.value,
                 buildNo: {
                     ...curInstance.value?.buildNo,
-                    currentBuildNo: curInstance.value.buildNo?.buildNo
-                }
+                    currentBuildNo: value ? curInstance.value.buildNo?.buildNo : curInstance.value.buildNo?.currentBuildNo
+                },
+                resetBuildNo: value
             }
         })
     }
@@ -711,6 +717,7 @@
         let target = id, index
         switch (key) {
             case 'introVersion':
+                // 推荐版本号-取消跟随模板，存入overrideTemplateField字段为BK_CI_BUILD_NO
                 target = 'BK_CI_BUILD_NO'
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
@@ -723,11 +730,27 @@
                             paramIds
                         },
                         buildNo: {
-                            ...curInstance.value?.buildNo,
-                            isFollowTemplate: !curInstance.value.buildNo.isFollowTemplate
+                            ...curTemplateDetail.value?.buildNo,
+                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate
                         }
                     }
                 })
+                if (curInstance.value?.buildNo?.isFollowTemplate) {
+                    proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                        index: activeIndex.value - 1,
+                        value: {
+                            ...curInstance.value,
+                            param: curInstance.value?.param.map(p => {
+                                return {
+                                    ...p,
+                                    defaultValue: allVersionKeyList.includes(p.id)
+                                        ? curTemplateDetail.value.params?.find(t => t.id === p.id)?.defaultValue
+                                        : p.defaultValue
+                                }
+                            })
+                        }
+                    })
+                }
                 break
 
             case 'trigger':

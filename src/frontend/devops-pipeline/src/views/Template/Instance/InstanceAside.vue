@@ -268,6 +268,7 @@
                 })
                 if (item.buildNo) {
                     proxy.$set(item.buildNo, 'isRequiredParam', item?.buildNo?.required)
+                    proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
