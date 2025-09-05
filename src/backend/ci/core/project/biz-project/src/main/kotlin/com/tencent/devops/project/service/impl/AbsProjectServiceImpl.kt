@@ -1113,6 +1113,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.listProjectsByCondition(
+            dslContext = dslContext,
+            projectConditionDTO = projectConditionDTO,
+            limit = limit,
+            offset = offset
+        ).map { ProjectUtils.packagingBean(it) }
+    }
+
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
