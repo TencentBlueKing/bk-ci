@@ -63,6 +63,7 @@ BEGIN
         ADD `FILE_PATH` text COMMENT 'yaml文件路径',
         ADD `TRIGGER_CONFIGS` mediumtext COMMENT '触发器配置',
         ADD `OVERRIDE_TEMPLATE_FIELD` mediumtext COMMENT '覆盖模版字段';
+        ADD `RESET_BUILD_NO` bit default 0 comment '重置实例推荐版本为基准值';
     END IF;
 
      -- 4. 为 T_TEMPLATE_PIPELINE 表添加多个字段

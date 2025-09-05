@@ -130,7 +130,8 @@ class TemplateInstanceItemDao {
                     MODIFIER,
                     FILE_PATH,
                     TRIGGER_CONFIGS,
-                    OVERRIDE_TEMPLATE_FIELD
+                    OVERRIDE_TEMPLATE_FIELD,
+                    RESET_BUILD_NO
                 ).values(
                     UUIDUtil.generate(),
                     projectId,
@@ -144,7 +145,8 @@ class TemplateInstanceItemDao {
                     userId,
                     it.filePath,
                     it.triggerConfigs?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                    it.overrideTemplateField?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                    it.overrideTemplateField?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    it.restBuildNo
                 ).onDuplicateKeyUpdate()
                     .set(PIPELINE_NAME, it.pipelineName)
                     .set(BUILD_NO_INFO, buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) })
@@ -158,6 +160,7 @@ class TemplateInstanceItemDao {
                     .set(
                         OVERRIDE_TEMPLATE_FIELD,
                         it.overrideTemplateField?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(RESET_BUILD_NO, it.restBuildNo)
                     .execute()
             }
         }
@@ -381,6 +384,7 @@ class TemplateInstanceItemDao {
             },
             filePath = filePath,
             errorMessage = errorMessage,
+            resetBuildNo = resetBuildNo,
             creator = creator,
             modifier = modifier,
             createTime = createTime.timestampmilli(),

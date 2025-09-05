@@ -57,6 +57,8 @@ data class PipelineTemplateInstanceReq(
     val params: List<BuildFormProperty>? = null,
     @get:Schema(title = "流水线触发器配置", required = false)
     val triggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
+    @get:Schema(title = "重置实例推荐版本为基准值", required = false)
+    val resetBuildNo: Boolean? = false,
     @get:Schema(title = "是否使用模版设置", required = false)
     val useTemplateSetting: Boolean,
     @get:Schema(title = "是否开启PAC", required = true)

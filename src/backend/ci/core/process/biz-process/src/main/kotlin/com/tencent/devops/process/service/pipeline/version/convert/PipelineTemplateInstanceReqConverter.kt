@@ -314,6 +314,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 templateInstanceBasicInfo = templateInstanceBasicInfo,
+                resetBuildNo = resetBuildNo,
                 enablePac = enablePac,
                 yamlFileInfo = enablePac.takeIf { it }?.let {
                     PipelineYamlFileInfo(

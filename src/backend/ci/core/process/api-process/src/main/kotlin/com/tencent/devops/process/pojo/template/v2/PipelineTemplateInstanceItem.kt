@@ -32,6 +32,8 @@ data class PipelineTemplateInstanceItem(
     val filePath: String?,
     @get:Schema(title = "实例化错误信息", required = true)
     val errorMessage: String?,
+    @get:Schema(title = "重置实例推荐版本为基准值", required = false)
+    val resetBuildNo: Boolean? = false,
     @get:Schema(title = "创建者", required = true)
     val creator: String,
     @get:Schema(title = "修改者", required = true)

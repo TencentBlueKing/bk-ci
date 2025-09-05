@@ -833,6 +833,7 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_INSTANCE_ITEM` (
   `FILE_PATH` text COMMENT 'yaml文件路径',
   `TRIGGER_CONFIGS` mediumtext COMMENT '触发器配置',
   `OVERRIDE_TEMPLATE_FIELD` mediumtext COMMENT '覆盖模版字段',
+  `RESET_BUILD_NO` bit default 0 comment '重置实例推荐版本为基准值',
   `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
   `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
   `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',

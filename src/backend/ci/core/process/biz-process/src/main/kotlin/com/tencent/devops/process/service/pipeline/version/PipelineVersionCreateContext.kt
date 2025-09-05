@@ -68,6 +68,8 @@ data class PipelineVersionCreateContext(
     @get:Schema(title = "模版实例化信息", required = false)
     val templateInstanceBasicInfo: PipelineTemplateInstanceBasicInfo? = null,
 
+    @get:Schema(title = "重置实例推荐版本为基准值", required = false)
+    val resetBuildNo: Boolean? = false,
     @get:Schema(title = "是否开启PAC", required = true)
     val enablePac: Boolean = false,
     @get:Schema(title = "yaml文件分支信息", required = true)
