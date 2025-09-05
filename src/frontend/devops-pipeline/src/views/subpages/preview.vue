@@ -20,6 +20,7 @@
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
+                :unique-id="pipelineId"
                 build-only
             />
             <i

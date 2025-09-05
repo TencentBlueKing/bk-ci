@@ -27,12 +27,14 @@
             </span>
             <VersionSelector
                 v-if="templateRefTypeById"
+                is-template
                 class="version-selector"
                 :value="versionValue"
                 @change="handleVersionChange"
                 :include-draft="false"
                 refresh-list-on-expand
                 :show-extension="false"
+                :unique-id="templateId"
             />
         </template>
         <template v-else>
@@ -125,17 +127,18 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, watch } from 'vue'
     import Logo from '@/components/Logo'
-    import UseInstance from '@/hook/useInstance'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
+    import UseInstance from '@/hook/useInstance'
     import {
-        UPDATE_USE_TEMPLATE_SETTING,
-        UPDATE_TEMPLATE_REF_TYPE,
+        SET_TEMPLATE_DETAIL,
         UPDATE_TEMPLATE_REF,
-        SET_TEMPLATE_DETAIL
+        UPDATE_TEMPLATE_REF_TYPE,
+        UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
+    import { debounce } from '@/utils/util'
+    import { computed, defineProps, ref, watch } from 'vue'
     defineProps({
         isInstanceCreateType: Boolean
     })
@@ -237,8 +240,7 @@
         })
         templatePipeline.value = {}
     }
-
-    async function handelChangeTemplateRef (value) {
+    async function fetchTemplateDateByRef (value) {
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, value)
         try {
             const res = await proxy.$store.dispatch('templates/fetchTemplateByRef', {
@@ -259,9 +261,19 @@
                 templateVersion: '',
                 templateDetail: {}
             })
-            console.error(e)
+            proxy.$bkMessage({
+                theme: 'error',
+                message: errorRefMsg.value
+            })
         }
     }
+    // 防抖包装
+    const debouncedFetchTemplate = debounce(fetchTemplateDateByRef, 300)
+
+    const handelChangeTemplateRef = (value) => {
+        debouncedFetchTemplate(value)
+    }
+  
 </script>
 
 <style lang="scss">

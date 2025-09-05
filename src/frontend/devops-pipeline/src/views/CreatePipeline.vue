@@ -472,7 +472,8 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     projectCode: this.$route.params.projectId,
-                    keyword: this.searchName
+                    keyword: this.searchName,
+                    excludeProjectCode: this.$route.params.projectId
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++
@@ -514,7 +515,7 @@
             },
             async selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
-                if (target?.templateType !== 'PUBLIC') {
+                if (target?.templateType !== 'PUBLIC' && target.templateId) {
                     await this.requestTemplateSetting({
                         projectId: this.$route.params.projectId,
                         templateId: target.templateId
@@ -573,14 +574,15 @@
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
                         this.$router.push({
-                            name: 'createInstance',
+                            name: 'instanceEntry',
                             params: {
+                                ...this.$route.params,
                                 templateId: this.activeTemp.templateId,
-                                curVersionId: this.activeTemp.version,
-                                pipelineName: this.newPipelineName
-
+                                version: this.activeTemp.version,
+                                type: 'create'
                             },
                             query: {
+                                pipelineName: this.newPipelineName,
                                 useTemplateSettings: true
                             }
                         })
