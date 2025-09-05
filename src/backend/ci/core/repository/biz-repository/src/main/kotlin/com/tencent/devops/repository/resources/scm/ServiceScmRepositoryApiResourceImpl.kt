@@ -83,7 +83,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         )
     }
 
-    override fun findBranches(
+    override fun listBranches(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -91,7 +91,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<List<Reference>> {
         return Result(
-            repositoryApiService.findBranches(
+            repositoryApiService.listBranches(
                 projectId = projectId,
                 authRepository = authRepository,
                 search = search,
@@ -115,7 +115,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         )
     }
 
-    override fun findTags(
+    override fun listTags(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -123,7 +123,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<List<Reference>> {
         return Result(
-            repositoryApiService.findTags(
+            repositoryApiService.listTags(
                 projectId = projectId,
                 authRepository = authRepository,
                 search = search,

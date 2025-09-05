@@ -200,7 +200,7 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
-    fun findBranches(
+    fun listBranches(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -210,6 +210,31 @@ class ScmRepositoryApiService @Autowired constructor(
         return invokeApi(
             projectId = projectId,
             authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.listBranches(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = BranchListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
+    fun listBranches(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        return invokeApi(
+            projectId = projectId,
+            repositoryType = repositoryType,
+            repoHashIdOrName = repoHashIdOrName
         ) { providerProperties, providerRepository ->
             scmApiManager.listBranches(
                 providerProperties = providerProperties,
@@ -240,7 +265,7 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
-    fun findTags(
+    fun listTags(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -263,10 +288,35 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
+    fun listTags(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        return invokeApi(
+            projectId = projectId,
+            repositoryType = repositoryType,
+            repoHashIdOrName = repoHashIdOrName
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findTags(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = TagListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
     /**
      * 批量创建hook,蓝盾每个事件一条hook记录,方便用户查询webhook历史
      *
-     * @param event webhook事件,如果能够在ScmEventType中找到,则转换成HookEvent,否则转换成nativeEvent
+     * @param events webhook事件,如果能够在ScmEventType中找到,则转换成HookEvent,否则转换成nativeEvent
      */
     fun createHook(
         projectId: String,

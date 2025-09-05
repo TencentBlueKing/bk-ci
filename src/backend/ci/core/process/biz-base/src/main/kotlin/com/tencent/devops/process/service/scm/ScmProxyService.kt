@@ -436,7 +436,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 }
             }
             is ScmGitRepository, is ScmSvnRepository -> {
-                return client.get(ServiceScmRepositoryApiResource::class).findBranches(
+                return client.get(ServiceScmRepositoryApiResource::class).listBranches(
                     projectId = projectId,
                     authRepository = AuthRepository(repo),
                     search = search,
@@ -536,7 +536,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 }
             }
             is ScmGitRepository -> {
-                return client.get(ServiceScmRepositoryApiResource::class).findTags(
+                return client.get(ServiceScmRepositoryApiResource::class).listTags(
                     projectId = projectId,
                     authRepository = AuthRepository(repo),
                     search = search,

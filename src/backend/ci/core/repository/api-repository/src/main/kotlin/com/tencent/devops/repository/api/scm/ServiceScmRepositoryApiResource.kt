@@ -67,7 +67,7 @@ interface ServiceScmRepositoryApiResource {
         repositoryType: RepositoryType?,
         @Parameter(description = "代码库ID或名称", required = true)
         @QueryParam("repoHashIdOrName")
-        repoHashIdOrName: String,
+        repoHashIdOrName: String
     ): Result<ScmServerRepository>
 
     @Operation(summary = "获取服务端仓库信息")
@@ -95,10 +95,10 @@ interface ServiceScmRepositoryApiResource {
         authRepository: AuthRepository
     ): Result<Perm>
 
-    @Operation(summary = "获取仓库分支信息")
+    @Operation(summary = "获取仓库分支列表")
     @POST
-    @Path("/findBranches")
-    fun findBranches(
+    @Path("/listBranches")
+    fun listBranches(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -129,10 +129,10 @@ interface ServiceScmRepositoryApiResource {
         branch: String
     ): Result<Reference?>
 
-    @Operation(summary = "获取目标Tag信息")
+    @Operation(summary = "获取Tag列表")
     @POST
-    @Path("/findTags")
-    fun findTags(
+    @Path("/listTags")
+    fun listTags(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
