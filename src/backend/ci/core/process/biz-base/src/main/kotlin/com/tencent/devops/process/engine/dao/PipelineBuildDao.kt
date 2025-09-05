@@ -60,6 +60,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
+import org.jooq.Record6
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
@@ -2074,6 +2075,17 @@ class PipelineBuildDao {
                     debug = true // #8164 原历史表中查出的记录均为非调试的记录
                 )
             }
+        }
+    }
+
+    fun getPipelineBuildInfo(
+        dslContext: DSLContext,
+        buildId: String
+    ): Record6<String, String, String, String, Int, Int>? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(BUILD_ID, PROJECT_ID, PIPELINE_ID, PARENT_BUILD_ID, VERSION, STATUS).from(this)
+                .where((BUILD_ID.eq(buildId)))
+                .fetchOne()
         }
     }
 }
