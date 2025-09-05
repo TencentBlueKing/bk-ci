@@ -12,7 +12,7 @@
             v-bkloading="{ isLoading }"
         >
             <h3>
-                {{ $t('templateDiffs') }}
+                {{ $t('templateVersionDiff') }}
             </h3>
             <p class="version-diff-area">
                 {{ buildVersionDiffState?.prevVersionName }}
@@ -30,7 +30,7 @@
             </p>
             <template v-if="Array.isArray(buildVersionDiffState?.buildVersionDiffs) && buildVersionDiffState.buildVersionDiffs.length > 0">
                 <h3>
-                    {{ $t('templateVersionDiff') }}
+                    {{ $t('templateDiffs') }}
                 </h3>
                 <p class="ref-template-diff-table-title">
                     {{ $t('refTemplateDiffTitle') }}
