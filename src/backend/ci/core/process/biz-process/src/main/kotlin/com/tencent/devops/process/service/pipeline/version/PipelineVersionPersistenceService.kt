@@ -45,7 +45,6 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
-import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.version.processor.PipelineVersionCreatePostProcessor
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -70,8 +69,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     @Lazy
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val versionCreateListeners: List<PipelineVersionCreatePostProcessor>,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService
+    private val versionCreateListeners: List<PipelineVersionCreatePostProcessor>
 ) {
 
     fun initializeTemplate(
@@ -190,11 +188,12 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 )
                 context.pipelineModelBasicInfo.buildNo?.let {
                     if (resetBuildNo == true) {
-                        pipelineInfoFacadeService.updateBuildNo(
-                            userId = userId,
+                        pipelineBuildSummaryDao.updateBuildNo(
+                            dslContext = dslContext,
                             projectId = projectId,
-                            pipelineId = pipelineBasicInfo.pipelineId,
-                            targetBuildNo = it.buildNo
+                            pipelineId = pipelineId,
+                            buildNo = it.buildNo,
+                            debug = false
                         )
                     }
                 }
