@@ -41,7 +41,18 @@ config = {
         max_idle_time = 30000,  -- 保留在连接池的时间
         pool_size = 10,           -- 连接池的大小
         backlog = 10,           -- 连接等待队列
-        ssl = false
+        ssl = false,
+        auto_redis = {
+            host = "__AUTO_REDIS_IP0__",
+            port = __AUTO_REDIS_PORT__,
+            pass = "__AUTO_REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
+            database = __AUTO_REDIS_DB__, -- 默认选择db0
+            max_idle_time = 30000,  -- 保留在连接池的时间
+            pool_size = 10,           -- 连接池的大小
+            backlog = 10,           -- 连接等待队列
+            ssl = false,
+            tag = "kubernetes-auto"
+        }
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__IAM_IP0__",
@@ -97,7 +108,7 @@ config = {
     docsUrl = "__BKCI_DOCS_URL__",
     apigwUrl = "__BKCI_APIGW_URL__",
     apigwHost = "__BKCI_APIGW_HOST__",
-    jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----",
+    jwtPrivateKey = "__BKCI_RSA_PRIVATE_KEY__",
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
@@ -107,7 +118,8 @@ config = {
             url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
-        special_domain = {}
+        special_domain = {},
+        auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__"
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",

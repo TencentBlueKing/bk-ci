@@ -36,11 +36,11 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Page
+import jakarta.servlet.http.HttpServletResponse
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
-import jakarta.servlet.http.HttpServletResponse
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 @Suppress("ALL")
 interface ArchiveFileService {
@@ -258,7 +258,6 @@ interface ArchiveFileService {
      * 根据文件路径获取相关文件内容
      */
     fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -268,7 +267,6 @@ interface ArchiveFileService {
      * 获取路径下的文件名称列表
      */
     fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String

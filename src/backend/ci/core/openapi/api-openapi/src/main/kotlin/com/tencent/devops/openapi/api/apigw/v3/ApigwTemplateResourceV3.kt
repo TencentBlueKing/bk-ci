@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.PTemplateOrderByType
 import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -63,6 +64,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v3")
 interface ApigwTemplateResourceV3 {
 
     @Operation(summary = "获取所有种类流水线模板列表", tags = ["v3_app_template_list_all", "v3_user_template_list_all"])

@@ -25,6 +25,11 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
+              # 生成jwt_token
+              chmod +x ./scripts/bk-ci-gen-jwt-token.sh
+              JWT_TOKEN=$(./scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-default-image")
+
+              # 调用接口
               services="store project auth"
               for service in $services
               do
@@ -37,6 +42,6 @@ spec:
               done
 
               echo "{{ include "bkci.names.fullname" . }}-store is available";
-              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST -d '{"imageRepoName":"{{ .Values.init.defaultImage.image.registry }}/{{ .Values.init.defaultImage.image.repository }}" , "imageTag":"{{ .Values.init.defaultImage.image.tag }}"}'
+              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST -d '{"imageRepoName":"{{ .Values.init.defaultImage.image.registry }}/{{ .Values.init.defaultImage.image.repository }}" , "imageTag":"{{ .Values.init.defaultImage.image.tag }}","projectCode":"demo","userId":"admin","imageCode":"bkci"}' -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
       restartPolicy: OnFailure
 {{- end -}}

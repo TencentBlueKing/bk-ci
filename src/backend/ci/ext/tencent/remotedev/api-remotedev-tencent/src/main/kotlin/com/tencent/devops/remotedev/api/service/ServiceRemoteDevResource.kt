@@ -5,10 +5,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -184,9 +186,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
-        @Parameter(description = "zoneType", required = false)
-        @QueryParam("zoneType")
-        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -913,7 +912,7 @@ interface ServiceRemoteDevResource {
         data: SyncVmData
     ): Result<SyncVmResp?>
 
-    @Operation(summary = "注册和初始化CVM", tags = ["v4_app_remotedev_create_cvm"])
+    @Operation(summary = "注册和初始化CVM")
     @POST
     @Path("/cvm/create")
     fun createCvm(
@@ -922,4 +921,33 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: CreateCvmData
     ): Result<CreateCvmResp?>
+
+    @Operation(summary = "白名单注册")
+    @POST
+    @Path("/set_whitelist")
+    fun whitelist(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "白名单类型", required = false)
+        @QueryParam("type")
+        type: WhiteListType,
+        @Parameter(description = "是否是删除", required = false)
+        @QueryParam("delete")
+        delete: Boolean,
+        body: Map<String, String>
+    ): Result<Boolean>
+
+    @Operation(summary = "白名单注册")
+    @POST
+    @Path("/get_whitelist")
+    fun whitelistGet(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "白名单类型", required = false)
+        @QueryParam("type")
+        type: WhiteListType,
+        body: Map<String, String>
+    ): Result<List<IWhiteList>>
 }

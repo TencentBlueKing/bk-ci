@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -979,4 +980,21 @@ interface ServiceBuildResource {
         @BkField(required = true)
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
     )
+
+    @Operation(summary = "获取最新构建")
+    @GET
+    @Path("projects/{projectId}/pipelines/{pipelineId}/Latest/build")
+    fun getLatestBuildInfo(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @QueryParam("debug")
+        @BkField(required = false)
+        debug: Boolean?
+    ): Result<BuildInfo?>
 }

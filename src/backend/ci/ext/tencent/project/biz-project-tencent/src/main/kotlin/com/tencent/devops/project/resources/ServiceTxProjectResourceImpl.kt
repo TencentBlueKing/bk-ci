@@ -40,6 +40,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -439,6 +440,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun listProjectProductInfos(page: Int, pageSize: Int): Result<List<ProjectProductInfo>> {
         return Result(projectTxService.listProjectProductInfos(page, pageSize))
+    }
+
+    override fun getOperationalProductsByBgName(bgName: String): Result<List<OperationalProductVO>> {
+        return Result(projectService.getOperationalProductsByBgName(bgName))
+    }
+
+    override fun getProductByProductId(productId: Int): Result<OperationalProductVO?> {
+        return Result(projectService.getProductByProductId(productId))
     }
 
     companion object {

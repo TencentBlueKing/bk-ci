@@ -42,6 +42,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
@@ -220,6 +222,26 @@ object RepositoryConfigUtils {
                     selfRepoHashId = variables[PIPELINE_PAC_REPO_HASH_ID]
                 )
                 Triple(ScmType.CODE_P4, element.data.input.eventType, repositoryConfig)
+            }
+
+            is CodeScmGitWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.data.input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                    triggerRepositoryType = element.data.input.repositoryType,
+                    selfRepoHashId = null
+                )
+                Triple(ScmType.SCM_GIT, element.data.input.eventType, repositoryConfig)
+            }
+
+            is CodeScmSvnWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.data.input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                    triggerRepositoryType = element.data.input.repositoryType,
+                    selfRepoHashId = null
+                )
+                Triple(ScmType.SCM_SVN, element.data.input.eventType, repositoryConfig)
             }
 
             else ->

@@ -20,7 +20,7 @@
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
-                build-only
+                :build-only="false"
             />
             <i
                 class="bk-icon icon-info-circle"

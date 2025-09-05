@@ -29,16 +29,15 @@ package com.tencent.devops.store.common.service.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
-import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceTGitResource
@@ -47,12 +46,12 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
-import java.io.File
-import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.io.File
+import java.net.URLEncoder
 
 @Service
 @Primary
@@ -65,6 +64,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreFileServiceImpl::class.java)
     }
+
     override fun uploadFileToPath(
         userId: String,
         result: MutableMap<String, String>,
@@ -98,7 +98,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
     ): List<String>? {
         return if (!repositoryHashId.isNullOrBlank()) {
             val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
-                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                userId = AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE,
                 repoId = repositoryHashId,
                 refName = branch,
                 path = i18nDir,
@@ -108,7 +108,6 @@ class TxStoreFileServiceImpl : StoreFileService() {
         } else {
             val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
             client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
-                userId = BKREPO_DEFAULT_USER,
                 projectId = bkrepoStoreProjectId,
                 repoName = BkRepoEnum.PLUGIN.repoName,
                 filePath = filePath
@@ -146,8 +145,8 @@ class TxStoreFileServiceImpl : StoreFileService() {
     ) {
         val serviceUrl = client.getServiceUrl(ServiceTGitResource::class)
         val url = "$serviceUrl/service/tgit/downloadGitFile?repoId=$repositoryHashId" +
-                "&filePath=$filePath&authType=${RepoAuthType.OAUTH}&ref=${branch ?: MASTER}"
-        OkhttpUtils.downloadFile(url, file)
+            "&filePath=$filePath&authType=${RepoAuthType.OAUTH}&ref=${branch ?: MASTER}"
+        CommonServiceUtils.downloadFileFromService(url, file)
     }
 
     private fun serviceUploadFile(
@@ -157,8 +156,8 @@ class TxStoreFileServiceImpl : StoreFileService() {
     ): Result<String> {
         val index = file.path.indexOf(BKREPO_STORE_PROJECT_ID)
         val serviceUrl = "$serviceUrlPrefix/service/bkrepo/statics/file/upload" +
-                "?userId=$userId&destPath=${file.path.substring(index)}"
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+            "?userId=$userId&destPath=${file.path.substring(index)}"
+        CommonServiceUtils.uploadFileToService(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 val message = I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.SYSTEM_ERROR)

@@ -52,7 +52,7 @@ class ScmWebhookApiService @Autowired constructor(
     providerRepositoryFactory = providerRepositoryFactory,
     repositoryScmConfigService = repositoryScmConfigService
 ) {
-    fun webhookParse(scmCode: String, request: HookRequest): Webhook {
+    fun webhookParse(scmCode: String, request: HookRequest): Webhook? {
         val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
         return scmProviderManager.webhookParser(properties).parse(request)
     }

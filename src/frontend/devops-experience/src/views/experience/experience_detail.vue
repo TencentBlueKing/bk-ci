@@ -1,14 +1,14 @@
 <template>
     <div
         class="release-detail-wrapper"
-        v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+        v-bkloading="{ isLoading: loading.isLoading, title: $t('experience.loading_title') }"
     >
         <content-header>
             <div slot="left">
                 <router-link :to="{ name: 'experienceList' }">
                     <i class="devops-icon icon-arrows-left"></i>
                 </router-link>
-                <span> {{ $route.meta.title }} </span>
+                <span> {{ $t(`experience.${$route.meta.title}`) }} </span>
                 <span v-if="curReleaseDetail">
                     {{ curReleaseDetail.name }}（{{ curReleaseDetail.installation_package }}）
                 </span>
@@ -37,13 +37,13 @@
 </template>
 
 <script>
-    import { DownloadData, BaseMessage } from '@/components/ExperienceDetailTabs'
+    import { BaseMessage, DownloadData } from '@/components/ExperienceDetailTabs'
+    import {
+        EXPERIENCE_TASK_RESOURCE_ACTION,
+        EXPERIENCE_TASK_RESOURCE_TYPE
+    } from '@/utils/permission'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
-    import {
-        EXPERIENCE_TASK_RESOURCE_TYPE,
-        EXPERIENCE_TASK_RESOURCE_ACTION
-    } from '@/utils/permission'
     
     export default {
         components: {
@@ -59,7 +59,7 @@
                 defaultCover: require('@/images/qrcode_app.png'),
                 loading: {
                     isLoading: false,
-                    title: ''
+                    title: this.$t('experience.loading_title')
                 },
                 codeLoading: {
                     isLoading: false
@@ -97,7 +97,7 @@
                 return [
                     {
                         name: 'baseMessage',
-                        label: '基础信息',
+                        label: this.$t('experience.basic_info'),
                         component: 'BaseMessage',
                         bindData: {
                             curReleaseDetail: this.curReleaseDetail,
@@ -106,7 +106,7 @@
                     },
                     {
                         name: 'downloadData',
-                        label: '下载数据',
+                        label: this.$t('experience.download_data'),
                         component: 'DownloadData',
                         bindData: {
                             downloadInfo: this.downloadInfo,
@@ -142,7 +142,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('experience.loading_title')
 
                 try {
                     this.requestRander()

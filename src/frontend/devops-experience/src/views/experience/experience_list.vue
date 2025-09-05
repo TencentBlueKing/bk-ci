@@ -4,7 +4,7 @@
         v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
     >
         <content-header>
-            <div slot="left">{{ $route.meta.title }}</div>
+            <div slot="left">{{ $t(`experience.${$route.meta.title}`) }}</div>
         </content-header>
         <keep-alive>
             <section class="sub-view-port">
@@ -14,16 +14,16 @@
                         :checked="getIsShowExpired"
                         @change="toggleExpired"
                     >
-                        显示已过期体验
+                        {{ $t('experience.show_expired') }}
                     </bk-checkbox>
                     <div class="date-prepend">
-                        发起时间
+                        {{ $t('experience.create_time') }}
                     </div>
                     <bk-date-picker
                         class="date-picker mr15"
                         :value="createDaterange"
                         type="datetimerange"
-                        placeholder="选择日期范围"
+                        :placeholder="$t('experience.select_date_range')"
                         :options="{
                             disabledDate: time => time.getTime() > Date.now()
                         }"
@@ -33,13 +33,13 @@
                     ></bk-date-picker>
     
                     <div class="date-prepend">
-                        结束时间
+                        {{ $t('experience.end_time') }}
                     </div>
                     <bk-date-picker
                         class="date-picker mr15"
                         :value="endDaterange"
                         type="datetimerange"
-                        placeholder="选择日期范围"
+                        :placeholder="$t('experience.select_date_range')"
                         @clear="handleClearEndDate"
                         @change="handleChangeEndDate"
                         @pick-success="handlePickSuccessEndDate"
@@ -51,7 +51,7 @@
                         class="experience-search-input"
                         :data="searchList"
                         :show-condition="false"
-                        placeholder="文件名 / 版本号 / 版本标题 / 版本描述 / 分组标识 / 应用名称 / 平台 / 发布人"
+                        :placeholder="$t('experience.search_placeholder')"
                     ></search-select>
                 </div>
                 <bk-table
@@ -62,7 +62,7 @@
                     v-bkloading="{ isLoading: isTableLoading }"
                 >
                     <bk-table-column
-                        label="文件名（版本号）"
+                        :label="$t('experience.file_name')"
                         prop="name"
                         min-width="150"
                     >
@@ -79,36 +79,40 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        label="版本描述"
+                        :label="$t('experience.version_desc')"
                         prop="remark"
                         min-width="100"
                     ></bk-table-column>
                     <bk-table-column
-                        label="平台"
+                        :label="$t('experience.platform')"
                         prop="platformLabel"
                     ></bk-table-column>
                     <bk-table-column
-                        label="来源"
+                        :label="$t('experience.source')"
                         prop="sourceLabel"
                     ></bk-table-column>
                     <bk-table-column
-                        label="发布人"
+                        :label="$t('experience.creator')"
                         prop="creator"
                     ></bk-table-column>
                     <bk-table-column
-                        label="体验结束时间"
+                        :label="$t('experience.versionCreateTime')"
+                        prop="formatRepoCreateTime"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('experience.expire_time')"
                         prop="formatExpireDate"
                     ></bk-table-column>
                     <bk-table-column
-                        label="操作"
-                        width="150"
+                        :label="$t('experience.operation')"
+                        min-width="200"
                     >
                         <template slot-scope="props">
                             <div class="operate-cell">
                                 <template v-if="!props.row.expired && props.row.online">
                                     <span
                                         v-if="!props.row.permissions.canExperience "
-                                        v-bk-tooltips="{ content: '你没有该版本的体验权限' }"
+                                        v-bk-tooltips="{ content: $t('experience.no_experience_permission') }"
                                         class="devops-icon icon-qrcode"
                                     ></span>
                                     <bk-popover
@@ -135,7 +139,7 @@
                                     </bk-popover>
                                 </template>
                                 <i
-                                    v-bk-tooltips="{ content: '该体验已过期' }"
+                                    v-bk-tooltips="{ content: $t('experience.experience_expired') }"
                                     class="devops-icon icon-qrcode expired-text"
                                     v-else
                                 ></i>
@@ -153,7 +157,7 @@
                                     text
                                     @click.stop="toEditRow(props.row)"
                                 >
-                                    编辑
+                                    {{ $t('experience.edit') }}
                                 </bk-button>
                                 <template v-if="props.row.online && !props.row.expired">
                                     <bk-button
@@ -161,7 +165,7 @@
                                         v-perm="{
                                             hasPermission: props.row.permissions.canDelete,
                                             disablePermissionApi: true,
-                                            tooltips: '没有权限',
+                                            tooltips: $t('experience.no_permission'),
                                             permissionData: {
                                                 projectId: projectId,
                                                 resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
@@ -172,24 +176,24 @@
                                         text
                                         @click.stop="toDropOff(props.row)"
                                     >
-                                        下架
+                                        {{ $t('experience.offline') }}
                                     </bk-button>
                                     <span
-                                        v-bk-tooltips="{ content: '删除之前，请先下架体验' }"
+                                        v-bk-tooltips="{ content: $t('experience.offline_before_delete') }"
                                         class="expired-text"
-                                    >删除</span>
+                                    >{{ $t('experience.delete') }}</span>
                                 </template>
                                 <template v-else>
                                     <span
-                                        v-bk-tooltips="{ content: '该体验已下架' }"
+                                        v-bk-tooltips="{ content: $t('experience.experience_offlined') }"
                                         class="expired-text"
-                                    >下架</span>
+                                    >{{ $t('experience.offline') }}</span>
                                     <bk-button
                                         class="operate-btn"
                                         v-perm="{
                                             hasPermission: props.row.permissions.canDelete,
                                             disablePermissionApi: true,
-                                            tooltips: '没有权限',
+                                            tooltips: $t('experience.no_permission'),
                                             permissionData: {
                                                 projectId: projectId,
                                                 resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
@@ -200,7 +204,7 @@
                                         text
                                         @click.stop="toDeleteRow(props.row)"
                                     >
-                                        删除
+                                        {{ $t('experience.delete') }}
                                     </bk-button>
                                 </template>
                             </div>
@@ -220,12 +224,12 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import { convertTime } from '@/utils/util'
     import qrcode from '@/components/devops/qrcode'
-    import emptyData from './empty-data'
-    import { EXPERIENCE_TASK_RESOURCE_TYPE, EXPERIENCE_TASK_RESOURCE_ACTION } from '@/utils/permission'
+    import { EXPERIENCE_TASK_RESOURCE_ACTION, EXPERIENCE_TASK_RESOURCE_TYPE } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
     import '@blueking/search-select/dist/styles/index.css'
+    import { mapGetters } from 'vuex'
+    import emptyData from './empty-data'
 
     export default {
         components: {
@@ -248,8 +252,8 @@
                     title: ''
                 },
                 emptyInfo: {
-                    title: '暂无体验',
-                    desc: '您可以在新增体验中新增一个体验任务',
+                    title: this.$t('experience.empty_title'),
+                    desc: this.$t('experience.empty_desc'),
                     permissionData: {
                         projectId: projectId,
                         resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
@@ -293,50 +297,50 @@
             searchList () {
                 const list = [
                     {
-                        name: '文件名',
+                        name: this.$t('experience.search_fields.name'),
                         default: true,
                         id: 'name'
                     },
                     {
-                        name: '版本号',
+                        name: this.$t('experience.search_fields.version'),
                         id: 'version'
                     },
                     {
-                        name: '版本标题',
+                        name: this.$t('experience.search_fields.versionTitle'),
                         id: 'versionTitle'
                     },
                     {
-                        name: '版本描述',
+                        name: this.$t('experience.search_fields.remark'),
                         id: 'remark'
                     },
                     {
-                        name: '分组标识',
+                        name: this.$t('experience.search_fields.classify'),
                         id: 'classify'
                     },
                     {
-                        name: '应用名称',
+                        name: this.$t('experience.search_fields.experienceName'),
                         id: 'experienceName'
                     },
                     {
-                        name: '平台',
+                        name: this.$t('experience.search_fields.platform'),
                         id: 'platform',
                         children: [
                             {
-                                name: 'Android',
+                                name: this.$t('experience.platform_labels.ANDROID'),
                                 id: 'ANDROID'
                             },
                             {
-                                name: 'IOS',
+                                name: this.$t('experience.platform_labels.IOS'),
                                 id: 'IOS'
                             },
                             {
-                                name: 'HarmonyOS Next',
+                                name: this.$t('experience.platform_labels.HAP'),
                                 id: 'HAP'
                             }
                         ]
                     },
                     {
-                        name: '发布人',
+                        name: this.$t('experience.search_fields.creator'),
                         id: 'creator'
                     }
                 ]
@@ -366,7 +370,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('experience.loading_title')
 
                 try {
                     await this.requestList()
@@ -406,20 +410,21 @@
                     this.isTableLoading = false
                     
                     const platformLabelMap = {
-                        ANDROID: 'Android',
-                        IOS: 'iOS',
-                        HAP: 'HarmonyOS Next'
+                        ANDROID: this.$t('experience.platform_labels.ANDROID'),
+                        IOS: this.$t('experience.platform_labels.IOS'),
+                        HAP: this.$t('experience.platform_labels.HAP')
                     }
                     const sourceLabelMap = {
-                        PIPELINE: '流水线',
-                        WEB: '手动创建'
+                        PIPELINE: this.$t('experience.source_labels.PIPELINE'),
+                        WEB: this.$t('experience.source_labels.WEB')
                     }
                     
                     this.totalList = res.map(item => ({
                         ...item,
                         platformLabel: platformLabelMap[item.platform],
                         sourceLabel: sourceLabelMap[item.source],
-                        formatExpireDate: this.localConvertTime(item.expireDate).split(' ')[0]
+                        formatExpireDate: this.localConvertTime(item.expireDate).split(' ')[0],
+                        formatRepoCreateTime: this.localConvertTime(item.repoCreateTime).split(' ')[0],
                     }))
                     this.pagination.count = this.totalList.length
                     const start = reset ? 0 : (this.pagination.current - 1) * this.pagination.limit
@@ -498,8 +503,9 @@
             async toDropOff (row) {
                 if (row.permissions.canEdit) {
                     this.$bkInfo({
-                        title: '确认',
-                        subTitle: '确认下架该体验',
+                        title: this.$t('experience.confirm'),
+                        subTitle: this.$t('experience.confirm_offline'),
+                        okText: this.$t('experience.offline'),
                         confirmFn: async () => {
                             let message, theme
 
@@ -509,7 +515,7 @@
                                     experienceHashId: row.experienceHashId
                                 })
 
-                                message = '下架成功'
+                                message = this.$t('experience.offline_success')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.data ? err.data.message : err
@@ -529,8 +535,9 @@
             async toDeleteRow (row) {
                 if (row.permissions.canDelete) {
                     this.$bkInfo({
-                        title: '确认',
-                        subTitle: '确认删除该体验',
+                        title: this.$t('experience.confirm'),
+                        subTitle: this.$t('experience.confirm_delete'),
+                        okText: this.$t('experience.delete'),
                         confirmFn: async () => {
                             let message, theme
 
@@ -540,7 +547,7 @@
                                     experienceHashId: row.experienceHashId
                                 })
 
-                                message = '删除成功'
+                                message = this.$t('experience.delete_success')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.data ? err.data.message : err

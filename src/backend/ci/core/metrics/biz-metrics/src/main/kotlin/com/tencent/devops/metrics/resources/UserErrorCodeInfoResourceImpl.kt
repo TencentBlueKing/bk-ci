@@ -30,6 +30,8 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.metrics.api.UserErrorCodeInfoResource
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
@@ -39,6 +41,8 @@ import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
 class UserErrorCodeInfoResourceImpl constructor(
     private val errorCodeInfoManageService: ErrorCodeInfoManageService
 ) : UserErrorCodeInfoResource {
+
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun getErrorCodeInfo(
         projectId: String,
         userId: String,

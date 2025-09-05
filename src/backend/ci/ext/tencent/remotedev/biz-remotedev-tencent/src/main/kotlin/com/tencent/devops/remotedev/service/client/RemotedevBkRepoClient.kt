@@ -14,6 +14,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.config.BkRepoRegion
+import com.tencent.devops.remotedev.config.BkRepoRegionConfig
 import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import okhttp3.Headers.Companion.toHeaders
@@ -46,7 +47,7 @@ class RemotedevBkRepoClient @Autowired constructor(
                     .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
             )
             .build()
-        return doRequest(request).resolveResponse<Response<String>>()?.data
+        return doRequest(config, request).resolveResponse<Response<String>>()?.data
     }
 
     fun existProject(region: BkRepoRegion, projectId: String): Boolean? {
@@ -57,7 +58,7 @@ class RemotedevBkRepoClient @Autowired constructor(
             .headers(getCommonHeaders(region, BKREPO_ROOT_USERID).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Boolean?>>()!!.data
+        return doRequest(config, request).resolveResponse<Response<Boolean?>>()!!.data
     }
 
     fun createProject(region: BkRepoRegion, userId: String, projectId: String) {
@@ -72,7 +73,7 @@ class RemotedevBkRepoClient @Autowired constructor(
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        doRequest(request).resolveResponse<Response<Void>>()
+        doRequest(config, request).resolveResponse<Response<Void>>()
     }
 
     fun pageNodeList(
@@ -92,7 +93,7 @@ class RemotedevBkRepoClient @Autowired constructor(
             .headers(getCommonHeaders(region, userId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
+        return doRequest(config, request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
     }
 
     fun nodeSearch(
@@ -107,7 +108,7 @@ class RemotedevBkRepoClient @Autowired constructor(
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(objectMapper.writeValueAsString(body).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        return doRequest(request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
+        return doRequest(config, request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
     }
 
     private fun getCommonHeaders(region: BkRepoRegion, userId: String): MutableMap<String, String> {
@@ -118,9 +119,16 @@ class RemotedevBkRepoClient @Autowired constructor(
         return headers
     }
 
-    private fun doRequest(request: Request): okhttp3.Response {
+    private fun doRequest(config: BkRepoRegionConfig, request: Request): okhttp3.Response {
         try {
-            return OkhttpUtils.doHttp(request)
+            return if (!config.dnsIp.isNullOrBlank()) {
+                val ips = config.dnsIp.split(";").filter { it.isNotBlank() }.map { it.trim() }.toSet()
+                val client =
+                    OkhttpUtils.genOkHttpClientSupDns(config.url.removePrefix("http://").removePrefix("https://"), ips)
+                client.newCall(request).execute()
+            } else {
+                OkhttpUtils.doHttp(request)
+            }
         } catch (e: IOException) {
             throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }

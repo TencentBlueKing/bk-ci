@@ -33,6 +33,7 @@ import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.BkManagerCheck
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -153,6 +154,19 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
             permissionProjectService.checkProjectManager(
                 userId = userId,
                 projectCode = projectCode
+            )
+        )
+    }
+
+    @BkManagerCheck
+    override fun checkProjectManagerAndMessage(
+        userId: String,
+        projectId: String,
+    ): Result<Boolean> {
+        return Result(
+            permissionProjectService.checkProjectManager(
+                userId = userId,
+                projectCode = projectId
             )
         )
     }

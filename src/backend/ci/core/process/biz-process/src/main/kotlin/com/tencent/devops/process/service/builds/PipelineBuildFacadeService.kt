@@ -1006,9 +1006,11 @@ class PipelineBuildFacadeService(
                     runLockType = setting.runLockType,
                     waitQueueTimeMinute = setting.waitQueueTimeMinute,
                     maxQueueSize = setting.maxQueueSize,
-                    concurrencyGroup = setting.concurrencyGroup,
+                    concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    // stage审核时暂不执行流水线并发组取消逻辑
+                    cancelAllowed = false
                 )
             )
 
@@ -1470,6 +1472,7 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        userId: String? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -1496,6 +1499,7 @@ class PipelineBuildFacadeService(
             )
         }
         return buildRecordService.getBuildRecord(
+            userId = userId,
             buildInfo = buildInfo,
             executeCount = executeCount,
             encryptedFlag = encryptedFlag,
@@ -1541,6 +1545,7 @@ class PipelineBuildFacadeService(
         }
 
         return getBuildRecord(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -2062,6 +2067,7 @@ class PipelineBuildFacadeService(
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 offset = offset,
@@ -2867,7 +2873,7 @@ class PipelineBuildFacadeService(
             }
         } else {
             subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, null
+                projectId, pipelineId, version
             ).second.model
         }
         val triggerContainer = model.getTriggerContainer()

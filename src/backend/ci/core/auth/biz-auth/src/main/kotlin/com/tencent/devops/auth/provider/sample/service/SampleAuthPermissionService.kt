@@ -10,6 +10,18 @@ class SampleAuthPermissionService : PermissionService {
         return true
     }
 
+    override fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        return true
+    }
+
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        return true
+    }
+
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -115,6 +127,14 @@ class SampleAuthPermissionService : PermissionService {
         resourceType: String
     ): Map<String, List<String>> {
         return emptyMap()
+    }
+
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        return emptyList()
     }
 
     companion object {

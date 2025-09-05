@@ -11,6 +11,9 @@ class RemoteDevBkRepoConfig {
     @Value("\${bkrepo.devx.headerUserAuth:}")
     val bkrepoDevxHeaderUserAuth: String = ""
 
+    @Value("\${bkrepo.devx.dnsIp:}")
+    val bkrepoDevxDnsIp: String = ""
+
     @Value("\${bkrepo.csig.url:}")
     val bkrepoCsigUrl: String = ""
 
@@ -22,8 +25,14 @@ class RemoteDevBkRepoConfig {
 
     fun getRegionConfig(region: BkRepoRegion): BkRepoRegionConfig {
         return when (region) {
-            BkRepoRegion.DEVX -> BkRepoRegionConfig(bkrepoDevxUrl, bkrepoDevxHeaderUserAuth, bkrepoDevxUrl)
-            BkRepoRegion.CSIG -> BkRepoRegionConfig(bkrepoCsigUrl, bkrepoCsigHeaderUserAuth, bkrepoCsigWebUrl)
+            BkRepoRegion.DEVX -> BkRepoRegionConfig(
+                url = bkrepoDevxUrl,
+                headerUserAuth = bkrepoDevxHeaderUserAuth,
+                webUrl = bkrepoDevxUrl,
+                dnsIp = bkrepoDevxDnsIp
+            )
+
+            BkRepoRegion.CSIG -> BkRepoRegionConfig(bkrepoCsigUrl, bkrepoCsigHeaderUserAuth, bkrepoCsigWebUrl, null)
         }
     }
 }
@@ -36,5 +45,6 @@ enum class BkRepoRegion {
 data class BkRepoRegionConfig(
     val url: String,
     val headerUserAuth: String,
-    val webUrl: String
+    val webUrl: String,
+    val dnsIp: String?
 )

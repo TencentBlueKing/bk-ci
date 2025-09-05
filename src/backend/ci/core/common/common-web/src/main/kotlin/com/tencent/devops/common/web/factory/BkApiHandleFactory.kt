@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImp
 import com.tencent.devops.common.web.service.impl.BkApiHandleOpenAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandlePipelineAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
+import com.tencent.devops.common.web.service.impl.BkApiHandleProjectMemberCheckServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
 object BkApiHandleFactory {
@@ -71,7 +72,12 @@ object BkApiHandleFactory {
                     bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }
-
+            BkApiHandleType.PROJECT_MEMBER_CHECK -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleProjectMemberCheckServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
             else -> {}
         }
         return bkApiHandleService

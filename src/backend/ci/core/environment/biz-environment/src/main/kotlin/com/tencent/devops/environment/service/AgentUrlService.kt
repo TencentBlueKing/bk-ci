@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 interface AgentUrlService {
@@ -51,7 +52,11 @@ interface AgentUrlService {
         os: OS,
         zoneName: String?,
         gateway: String?,
-        token: String
+        token: String,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): String
 
     /**

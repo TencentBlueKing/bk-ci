@@ -30,7 +30,9 @@ package com.tencent.devops.metrics.service.builds
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -296,17 +298,17 @@ class MetricsEventService @Autowired constructor(
                 map["${PipelineBuildStatusBroadCastEvent.Labels::stageName.name}.$it"] = stage.name ?: ""
             }
             stage.containers.forEach container@{ container ->
-                container.jobId?.ifEmpty { null }?.let {
+                container.jobId?.ifBlank { null }?.let {
                     map["${PipelineBuildStatusBroadCastEvent.Labels::jobName.name}.$it"] = container.name
                 }
                 container.containerHashId?.let {
                     map["${PipelineBuildStatusBroadCastEvent.Labels::jobName.name}.$it"] = container.name
                 }
                 container.elements.forEach { element ->
-                    element.stepId?.ifEmpty { null }?.let {
+                    element.stepId?.ifBlank { null }?.let {
                         map["${PipelineBuildStatusBroadCastEvent.Labels::stepName.name}.$it"] = element.name
                     }
-                    element.id?.let {
+                    element.id?.ifBlank { null }?.let {
                         map["${PipelineBuildStatusBroadCastEvent.Labels::stepName.name}.$it"] = element.name
                     }
                 }
@@ -401,6 +403,22 @@ class MetricsEventService @Autowired constructor(
         }
         return null
     }
+
+    private fun replaceVariable(command: String?, event: PipelineBuildStatusBroadCastEvent) = ReplacementUtils.replace(
+        command = command ?: "",
+        replacement = object : KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                return kotlin.runCatching {
+                    client.get(ServiceVarResource::class).getBuildVars(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        keys = setOf(key)
+                    ).data?.get(key)
+                }.getOrNull()
+            }
+        }
+    )
 
     private fun priority(status: String?) = when (status) {
         BuildStatus.FAILED.name, BuildStatus.CANCELED.name -> "Warning"
@@ -502,16 +520,17 @@ class MetricsEventService @Autowired constructor(
                 cache["${property.name}.${event.jobId}"] ?: cache["${property.name}.${event.containerHashId}"]
 
             PipelineBuildStatusBroadCastEvent.Labels::stepName ->
-                cache["${property.name}.${event.stepId}"] ?: cache["${property.name}.${event.taskId}"]
+                event.stepId?.ifBlank { null }?.let { cache["${property.name}.${event.stepId}"] }
+                    ?: cache["${property.name}.${event.taskId}"]
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchType ->
                 cache["${property.name}.${event.containerHashId}"]
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity ->
-                cache["${property.name}.${event.containerHashId}"]
+                replaceVariable(cache["${property.name}.${event.containerHashId}"], event)
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchName ->
-                cache["${property.name}.${event.containerHashId}"]
+                replaceVariable(cache["${property.name}.${event.containerHashId}"], event)
 
             else -> null
         } ?: ""
@@ -809,6 +828,7 @@ class MetricsEventService @Autowired constructor(
             jobName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobName),
             stepId = event.stepId ?: event.taskId ?: "",
             stepName = specialStep?.let { "DEVOPS_INNER_$it" }
+                ?: labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::stepName)
                 ?: cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stepName),
             errorCode = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::errorCode),
             errorType = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::errorType),

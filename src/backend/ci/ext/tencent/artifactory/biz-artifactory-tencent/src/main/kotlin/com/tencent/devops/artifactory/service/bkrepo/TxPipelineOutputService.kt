@@ -38,7 +38,8 @@ class TxPipelineOutputService(
                 props = mapOf(
                     "pipelineId" to pipelineId,
                     "buildId" to buildId
-                )
+                ),
+                qualityMetadata = option?.qualityMetadata ?: emptyList()
             )
             artifacts.addAll(
                 bkRepoSearchService.search(

@@ -1,7 +1,7 @@
 package com.tencent.devops.remotedev.pojo.windows
 
-import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "windows 机器状态信息")
 data class ComputerStatusResp(
@@ -11,6 +11,14 @@ data class ComputerStatusResp(
     val status: List<ComputerStatusData>,
     @Parameter(description = "机器登录信息")
     val users: List<ComputerUserData>
+)
+
+@Schema(title = "windows 机器状态信息V2")
+data class ComputerStatusRespV2(
+    @Parameter(description = "登录用户列表")
+    var loginUsers: List<String>,
+    @Parameter(description = "机器状态信息")
+    val status: ComputerStatusEnum
 )
 
 @Schema(title = "机器状态信息")
@@ -32,7 +40,7 @@ enum class ComputerStatusEnum(val status: Int, val message: String) {
 
     companion object {
         // <= 0的都是异常，然后没有定义的就是未知异常
-        fun getEnumFromStatus(status: Int): ComputerStatusEnum? {
+        fun getEnumFromStatus(status: Int): ComputerStatusEnum {
             return when (status) {
                 1 -> NORMAL
                 -1 -> DISK_IO_ERROR
@@ -41,13 +49,7 @@ enum class ComputerStatusEnum(val status: Int, val message: String) {
                 -4 -> RESTART
                 -5 -> DISK_HIGH
                 -6 -> PING_NOT_FOUND
-                else -> {
-                    if (status < 0 || status == 0) {
-                        UNKNOWN
-                    } else {
-                        null
-                    }
-                }
+                else -> UNKNOWN
             }
         }
     }

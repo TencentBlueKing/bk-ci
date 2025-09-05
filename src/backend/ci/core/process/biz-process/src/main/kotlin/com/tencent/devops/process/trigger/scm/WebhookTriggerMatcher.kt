@@ -98,6 +98,8 @@ class WebhookTriggerMatcher @Autowired constructor(
                     matchStatus = MatchStatus.EVENT_TYPE_NOT_MATCH
                 )
             }
+            // 保存代码库关联时的url
+            sourceRepoUrl = repository.url
             webhookRuleManager.evaluate(
                 projectId = projectId,
                 pipelineId = pipelineId,

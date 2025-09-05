@@ -72,6 +72,7 @@
                 <li
                     v-for="pipeline in pipelineList"
                     :key="pipeline.pipelineId"
+                    :title="pipeline.pipelineName"
                 >
                     {{ pipeline.pipelineName }}
                 </li>
@@ -236,6 +237,7 @@
     }
     .value {
       color: #313238;
+      word-break: break-all;
     }
   }
   .active-tip-block {
@@ -263,14 +265,13 @@
         max-height: 320px;
 
         >li {
-            width: 100%;
+            width: 430px;
             height: 40px;
+            line-height: 40px;
             padding: 0 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            grid-gap: 12px;
             overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             text-align: left;
             border-bottom: 1px solid #DCDEE5;
 

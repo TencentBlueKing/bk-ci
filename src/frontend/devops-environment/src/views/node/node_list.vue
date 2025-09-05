@@ -14,6 +14,7 @@
                             <bk-dropdown-menu
                                 trigger="click"
                                 class="mr10"
+                                :font-size="'medium'"
                                 @show="dropdown"
                                 @hide="dropdown"
                             >
@@ -83,8 +84,63 @@
                         >
                             {{ $t('environment.nodeInfo.importNode') }}
                         </bk-button>
+                        <bk-dropdown-menu
+                            trigger="click"
+                            ext-cls="batch-menu"
+                            :font-size="'medium'"
+                            @show="batchDropdown"
+                            @hide="batchDropdown"
+                        >
+                            <bk-button
+                                key="batchOperation"
+                                slot="dropdown-trigger"
+                            >
+                                {{ $t('environment.batchOperation') }}
+                                <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isBatchDropdownShow }]"></i>
+                            </bk-button>
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
+                                <li>
+                                    <a
+                                        href="javascript:;"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: projectId,
+                                                action: NODE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                        @click="batchSetTag"
+                                        key="thirdPartyBuildMachine"
+                                    >
+                                        {{ $t('environment.batchSetTag') }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        href="javascript:;"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: projectId,
+                                                action: NODE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                        theme="primary"
+                                        @click="batchDeleteNode"
+                                        key="idcTestMachine"
+                                    >
+                                        {{ $t('environment.batchDeleteNode') }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </bk-dropdown-menu>
                         <bk-button
-                            class="mr10"
+                            
                             @click="handleExportCSV"
                         >
                             {{ $t('environment.export') }}
@@ -141,6 +197,7 @@
                     @node="handleNode"
                     @showLogDetail="handleShowLogDetail"
                     @reImport="handleReImport"
+                    @selected-change="handleSelectedChange"
                 />
             </template>
         </section>
@@ -159,13 +216,12 @@
             :connect-node-detail="connectNodeDetail"
             :gateway-list="gatewayList"
             :loading="dialogLoading"
-            :requet-construct-node="requetConstructNode"
             :has-permission="hasPermission"
             :empty-tips-config="emptyTipsConfig"
             :confirm-fn="confirmFn"
-            :cancel-fn="cancelFn"
             :is-agent="isAgent"
             :node-ip="nodeIp"
+            :request-dev-command="requestDevCommand"
         ></third-construct>
 
         <make-mirror-dialog
@@ -200,6 +256,7 @@
     import installAgent from '@/components/devops/environment/install-agent'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
@@ -222,6 +279,8 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 curEditNodeItem: '',
                 createImageNode: '',
                 nodeIp: '',
@@ -260,7 +319,11 @@
                 constructImportForm: {
                     model: 'Linux',
                     location: '',
-                    link: ''
+                    link: '',
+                    loginName: '',
+                    loginPassword: '',
+                    installType: 'SERVICE',
+                    autoSwitchAccount: false
                 },
                 // 构建机信息
                 connectNodeDetail: {
@@ -323,7 +386,10 @@
                 currentNodeType: '',
                 currentTags: [],
                 tagSearchValue: [],
-                isDropdownShow: false
+                isDropdownShow: false,
+                isBatchDropdownShow: false,
+                selectedNodes: [],
+                reInstallId: ''
             }
         },
         computed: {
@@ -430,6 +496,9 @@
             },
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
+            },
+            installModeAsService () {
+                return this.constructImportForm.installType === 'SERVICE'
             }
         },
         watch: {
@@ -455,9 +524,27 @@
                     this.requestGateway()
                 }
             },
+            'constructImportForm.installType' (val) {
+                this.constructImportForm.link = ''
+                this.requestDevCommand()
+            },
+            'constructImportForm.autoSwitchAccount' (val) {
+                this.constructImportForm.link = ''
+                this.requestDevCommand()
+            },
             'constructImportForm.location' (val) {
-                if (val && !this.isAgent) {
+                if (val) {
                     this.requestDevCommand()
+                }
+            },
+            'constructImportForm.loginPassword' (val) {
+                if (!val) {
+                    this.constructImportForm.link = ''
+                }
+            },
+            'constructImportForm.loginName' (val) {
+                if (!val) {
+                    this.constructImportForm.link = ''
                 }
             },
             searchValue (val) {
@@ -494,6 +581,59 @@
             dropdown () {
                 this.isDropdownShow = !this.isDropdownShow
             },
+            batchDropdown () {
+                this.isBatchDropdownShow = !this.isBatchDropdownShow
+            },
+            batchSetTag () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                } else {
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
+                    this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
+                    this.$router.push({
+                        name: 'setNodeTag',
+                        params: {
+                            projectId: this.projectId
+                        }
+                    })
+                }
+            },
+            async batchDeleteNode () {
+                if (!this.selectedNodes.length) {
+                    this.$bkMessage({
+                        message: this.$t('environment.placeSelectNode'),
+                        theme: 'error'
+                    })
+                    return
+                }
+                this.$bkInfo({
+                    title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
+                    extCls: 'info-content',
+                    confirmFn: async () => {
+                        try {
+                            const params = this.selectedNodes.map(i=>i.nodeHashId)
+                            await this.$store.dispatch('environment/toDeleteNode', {
+                                projectId: this.projectId,
+                                params
+                            })
+
+                            this.$bkMessage({
+                                message: this.$t('environment.successfullyDeleted'),
+                                theme: 'success'
+                            })
+                        } catch (err) {
+                            console.log(err)
+                        } finally {
+                            this.requestList()
+                            await this.requestGetCounts(this.projectId)
+                        }
+                    }
+                })
+            },
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
@@ -521,7 +661,7 @@
             
                 const nodeType = this.$route.params.nodeType
                 if (['allNode', 'THIRDPARTY', 'CMDB'].includes(nodeType)) {
-                    this.currentNodeType = nodeType !== 'allNode' ? nodeType : ''
+                    this.currentNodeType = nodeType !== ALLNODE ? nodeType : ''
                     this.currentTags = []
                 } else {
                     this.currentTags = this.findTagByValueId(nodeType)
@@ -552,8 +692,8 @@
             handleClearTagSearch () {
                 this.tagSearchValue = []
                 this.currentTags = []
-                if (!this.currentNodeType) {
-                    this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                if (!this.currentNodeType && this.$route.params.nodeType !== ALLNODE) {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
                     this.requestList()
                 }
@@ -637,31 +777,10 @@
                     this.pagination.current -= 1
                 }
             },
-            /**
-             * 构建机信息
-             */
-            async requetConstructNode () {
-                this.dialogLoading.isLoading = true
-
-                try {
-                    const res = await this.$store.dispatch('environment/requetConstructNode', {
-                        projectId: this.projectId,
-                        agentId: this.constructImportForm.agentId
-                    })
-
-                    this.connectNodeDetail = Object.assign({}, res)
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    this.dialogLoading.isLoading = false
-                }
+            updataCurEditNodeItem (item) {
+                this.curEditNodeItem = item
             },
+            
             /**
              * 是否启动了构建机
              */
@@ -710,21 +829,19 @@
              */
             async requestGateway (gateway, node) {
                 try {
-                    const res = await this.$store.dispatch('environment/requestGateway', {
+                    this.gatewayList = await this.$store.dispatch('environment/requestGateway', {
                         projectId: this.projectId,
                         model: this.constructImportForm.model
                     })
-
-                    this.gatewayList.splice(0, this.gatewayList.length)
-                    res.forEach(item => {
-                        this.gatewayList.push(item)
-                    })
+                    this.constructImportForm.location = this.gatewayList[0]?.zoneName
 
                     if (this.gatewayList.length && gateway && gateway === 'shenzhen') {
                         this.constructImportForm.location = 'shenzhen'
                     } else if (this.gatewayList.length && gateway && gateway !== 'shenzhen') {
                         const isTarget = this.gatewayList.find(item => item.showName === gateway)
-                        this.constructImportForm.location = isTarget && isTarget.zoneName
+                        if (isTarget) {
+                            this.constructImportForm.location = isTarget.zoneName
+                        }
                     }
 
                     if (node && this.buildNodes.includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
@@ -750,20 +867,46 @@
              * 生成链接
              */
             async requestDevCommand () {
-                if (!this.constructImportForm.location && this.gatewayList.length) return
-
+                const { location, model, loginName, loginPassword, autoSwitchAccount, installType } = this.constructImportForm
+                if (!location && this.gatewayList.length) return
+                // 当OS为Windows时，生成安装命令的条件
+                // 1. 如果 installType 为 SERVICE, autoSwitchAccount 为 true 时，需填写 loginName, loginPassword 才可获取生成安装命令
+                // 2. 如果 installType 为 SERVICE, autoSwitchAccount 为 false 时, 直接获取生成安装命令
+                // 3. 如果 installType 为 TASK 时, 直接获取生成安装命令
+                if (model === 'WINDOWS') {
+                    if (this.installModeAsService && autoSwitchAccount && (!loginName || !loginPassword)) return
+                }
                 this.dialogLoading.isLoading = true
 
                 try {
                     const res = await this.$store.dispatch('environment/requestDevCommand', {
                         projectId: this.projectId,
-                        model: this.constructImportForm.model,
-                        zoneName: this.constructImportForm.location || undefined
+                        model: model,
+                        params: {
+                            zoneName: location,
+                            ...(
+                                model === 'WINDOWS' ? {
+                                    installType,
+                                } : {}
+                            ),
+                            ...(
+                                model === 'WINDOWS' && autoSwitchAccount && this.installModeAsService
+                                    ? {
+                                        loginName,
+                                        loginPassword
+                                    }
+                                    : {}
+                            ),
+                            ...(
+                                this.isAgent ? {
+                                    reInstallId: this.reInstallId
+                                }
+                                : {}
+                            )
+                        }
                     })
 
-                    this.constructImportForm.link = res.link
-                    this.constructImportForm.agentId = res.agentId
-                    this.requetConstructNode()
+                    this.constructImportForm.link = res
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -789,11 +932,9 @@
                     if (res.os === 'WINDOWS' && res.agentUrl) {
                         this.constructImportForm.link = res.agentUrl
                         this.constructImportForm.agentId = res.agentId
-                        this.requetConstructNode()
                     } else if (['MACOS', 'LINUX'].includes(res.os) && res.agentScript) {
                         this.constructImportForm.link = res.agentScript
                         this.constructImportForm.agentId = res.agentId
-                        this.requetConstructNode()
                     } else {
                         this.requestDevCommand()
                     }
@@ -809,6 +950,7 @@
             },
             installAgent (node) {
                 if (this.buildNodes.includes(node.nodeType)) {
+                    this.reInstallId = node.agentHashId
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = this.$t('environment.confirm')
@@ -836,56 +978,18 @@
              * 构建机导入节点
              */
             async confirmFn () {
-                if (!this.dialogLoading.isLoading) {
-                    this.dialogLoading.isLoading = true
-                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.confirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
-
-                    let message, theme
-
-                    try {
-                        await this.$store.dispatch('environment/importConstructNode', {
-                            projectId: this.projectId,
-                            agentId: this.constructImportForm.agentId
-                        })
-
-                        message = this.constructToolConf.importText === `${this.$t('environment.submitting')}...` ? this.$t('environment.successfullySubmited') : this.$t('environment.successfullyImported')
-                        theme = 'success'
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-                        this.constructToolConf.isShow = false
-                    } catch (e) {
-                        this.handleError(
-                            e,
-                            {
-                                projectId: this.projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
-                                resourceCode: this.projectId,
-                                action: NODE_RESOURCE_ACTION.CREATE
-                            }
-                        )
-                    } finally {
-                        this.dialogLoading.isLoading = false
-                        this.dialogLoading.isShow = false
-                        this.constructToolConf.importText = this.$t('environment.import')
-                        this.requestList()
-                        await this.requestGetCounts(this.projectId)
-                    }
-                }
-            },
-            updataCurEditNodeItem (item) {
-                this.curEditNodeItem = item
-            },
-            cancelFn () {
-                if (!this.dialogLoading.isShow) {
-                    this.isAgent = false
-                    this.constructToolConf.isShow = false
-                    this.dialogLoading.isShow = false
-                    this.constructImportForm.link = ''
-                    this.constructImportForm.location = ''
-                    this.constructToolConf.importText = this.$t('environment.import')
-                }
+                this.isAgent = false
+                this.dialogLoading.isLoading = false
+                this.dialogLoading.isShow = false
+                this.constructToolConf.isShow = false
+                this.constructImportForm.link = ''
+                this.constructImportForm.loginName = ''
+                this.constructImportForm.loginPassword = ''
+                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.installType = 'SERVICE'
+                this.constructToolConf.importText = this.$t('environment.import')
+                this.requestList()
+                await this.requestGetCounts(this.projectId)
             },
             async destoryNode (node) {
                 const h = this.$createElement
@@ -962,6 +1066,9 @@
             },
             cancelCmdbFn () {
                 this.cmdbNodeSelectConf.isShow = false
+            },
+            handleSelectedChange (selection) {
+                this.selectedNodes = selection
             },
             handlePageChange (page) {
                 this.pagination.current = page
@@ -1061,7 +1168,7 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
             },
             handleInstallEnd () {
                 this.requestList(this.requestParams)
@@ -1079,7 +1186,7 @@
     }
 
     .node-list-wrapper {
-        height: calc(100vh - 146px);
+        height: 100%;
         overflow: hidden;
 
         .sub-view-port {
@@ -1172,6 +1279,7 @@
         .search-part {
             display: flex;
             flex: 1;
+            justify-content: end;
 
             .bk-date-picker.long {
                 max-width: 170px;
@@ -1188,7 +1296,7 @@
             align-items: center;
         }
         .search-input {
-            flex: 1;
+            width: 50%;
             background: #fff;
             margin-right: 10px;
             ::placeholder {
@@ -1198,6 +1306,22 @@
         .tag-search {
             width: 140px;
             margin-right: 10px;
+        }
+    }
+
+    .batch-menu {
+        margin-right: 8px;
+    }
+
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
+        }
+    }
+    
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
         }
     }
 </style>

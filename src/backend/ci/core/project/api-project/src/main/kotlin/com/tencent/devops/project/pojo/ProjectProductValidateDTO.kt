@@ -15,5 +15,11 @@ data class ProjectProductValidateDTO(
     @Schema(title = "渠道")
     val channelCode: ProjectChannelCode? = null,
     @Schema(title = "产品ID")
-    val productId: Int? = null
+    val productId: Int? = null,
+    @Schema(title = "产品名称")
+    val productName: String? = null,
+    @Schema(title = "bgId")
+    val bgId: Long,
+    @Schema(title = "bg名称")
+    val bgName: String
 )

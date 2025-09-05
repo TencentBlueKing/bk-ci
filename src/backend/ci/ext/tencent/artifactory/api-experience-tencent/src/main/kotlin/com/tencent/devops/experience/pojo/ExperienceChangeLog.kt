@@ -43,6 +43,8 @@ data class ExperienceChangeLog(
     val changelog: String,
     @get:Schema(title = "体验名称", required = true)
     val experienceName: String,
+    @get:Schema(title = "文件名称", required = true)
+    val name: String,
     @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
     @get:Schema(title = "logo链接", required = true)

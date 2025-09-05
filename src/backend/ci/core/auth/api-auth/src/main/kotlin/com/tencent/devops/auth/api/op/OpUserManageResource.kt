@@ -20,9 +20,16 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpUserManageResource {
     @POST
+    @Path("/syncAllUserInfoData/")
+    @Operation(summary = "全量同步用户数据")
+    fun syncAllUserInfoData(): Result<Boolean>
+
+    @POST
     @Path("/syncUserInfoData/")
     @Operation(summary = "同步用户数据")
-    fun syncUserInfoData(): Result<Boolean>
+    fun syncUserInfoData(
+        userIds: List<String>
+    ): Result<Boolean>
 
     @POST
     @Path("/syncDepartmentInfoData/")

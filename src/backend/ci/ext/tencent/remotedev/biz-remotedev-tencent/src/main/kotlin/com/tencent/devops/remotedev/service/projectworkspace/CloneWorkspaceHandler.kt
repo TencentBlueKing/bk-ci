@@ -98,7 +98,7 @@ class CloneWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to clone $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
 
@@ -225,7 +225,7 @@ class CloneWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to clone $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
 

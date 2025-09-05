@@ -58,6 +58,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 @Service
 class ProjectInfoServiceImpl @Autowired constructor(
@@ -218,6 +219,10 @@ class ProjectInfoServiceImpl @Autowired constructor(
             }
         } catch (ignore: Throwable) {
             logger.warn("op ProjectInfoServiceImpl sync project atom data fail", ignore)
+        } finally {
+            thread {
+                executor.shutdown()
+            }
         }
         return true
     }

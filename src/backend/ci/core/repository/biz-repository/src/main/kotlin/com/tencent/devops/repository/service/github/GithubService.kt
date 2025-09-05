@@ -70,6 +70,7 @@ import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
+import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -80,7 +81,6 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -157,8 +157,19 @@ class GithubService @Autowired constructor(
         callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
-    override fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult {
-        val accessToken = githubTokenService.getAccessToken(userId)
+    override fun getProject(
+        projectId: String,
+        userId: String,
+        repoHashId: String?,
+        oauthUserId: String?
+    ): AuthorizeResult {
+        val accessToken = if (oauthUserId.isNullOrBlank()) {
+            // 没有指定授权用户，则以当前userId匹配token(旧数据：userId为rtx名)
+            // 匹配不到以operator进行匹配（新数据：userId为服务端用户名，operator为rtx名，获取最新授权的token）
+            githubTokenService.getAccessToken(userId) ?: githubTokenService.getAccessTokenByOperator(userId)
+        } else {
+            githubTokenService.getAccessToken(oauthUserId)
+        }
         if (accessToken == null) {
             val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
             return AuthorizeResult(HTTP_403, url)

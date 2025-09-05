@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -111,6 +112,9 @@ interface AppPipelineViewResource {
         @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @Parameter(description = "排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation? = null,
         @Parameter(description = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String?,

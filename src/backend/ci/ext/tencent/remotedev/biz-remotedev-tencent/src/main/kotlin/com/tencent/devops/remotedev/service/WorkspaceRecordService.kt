@@ -131,7 +131,7 @@ class WorkspaceRecordService @Autowired constructor(
             userId = enableUser,
             workspaceName = workspaceName,
             projectId = null,
-            expiredInSecond = 24 * 3600
+            expiredInSecond = 7 * 24 * 3600
         )
         return Pair(
             true,

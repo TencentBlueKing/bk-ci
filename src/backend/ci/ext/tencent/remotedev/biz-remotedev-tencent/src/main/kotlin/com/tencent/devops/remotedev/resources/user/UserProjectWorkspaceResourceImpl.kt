@@ -192,7 +192,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         return Result(startWorkspaceService.computerStatus(projectId))
@@ -202,7 +202,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         return Result(
@@ -214,7 +214,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         return xlsxExportService.exportProjectWorkspaceListWeb(userId, projectId, page, pageSize)
@@ -244,7 +244,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
