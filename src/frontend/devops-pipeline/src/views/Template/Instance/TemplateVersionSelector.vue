@@ -49,16 +49,33 @@
                 />
             </bk-select>
             <div class="ref-input">
-                <bk-input
-                    v-model="templateRef"
-                    :placeholder="templateRefPlaceholderMap[pullMode]"
-                    @change="handelChangeTemplateRef"
-                />
-                <i
-                    v-if="errorRefMsg"
-                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
-                    v-bk-tooltips="errorRefMsg"
-                />
+                <template v-if="isCommitPullMode">
+                    <bk-input
+                        v-model="templateRef"
+                        :placeholder="templateRefPlaceholderMap[pullMode]"
+                        @change="handelChangeTemplateRef"
+                    />
+                    <i
+                        v-if="errorRefMsg"
+                        class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                        v-bk-tooltips="errorRefMsg"
+                    />
+                </template>
+                <template v-else>
+                    <bk-select
+                        :clearable="false"
+                        searchable
+                        @change="handleChangeRefOption"
+                        :remote-method="refOptionRemoteMethod"
+                    >
+                        <bk-option
+                            v-for="option in refOptionList"
+                            :key="option.name"
+                            :id="option.name"
+                            :name="option.name"
+                        />
+                    </bk-select>
+                </template>
             </div>
         </template>
         <bk-button
@@ -144,6 +161,8 @@
     const templatePipeline = ref({})
     const errorRefMsg = ref('')
     const pullMode = ref('tag')
+    const searchKey = ref('')
+    const refOptionList = ref([])
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
@@ -166,6 +185,7 @@
             disabled: !pacEnabled.value
         }
     ]))
+    const isCommitPullMode = computed(() => pullMode.value === 'commit')
     const pullModeList = computed(() => ([
         {
             id: 'tag',
@@ -180,9 +200,14 @@
             label: proxy.$t('template.commit')
         }
     ]))
-    watch(() => pullMode.value, () => {
+    watch(() => [pullMode.value, templateRefType.value], () => {
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
         errorRefMsg.value = ''
+        if (!isCommitPullMode.value && !templateRefTypeById.value) {
+            fetchRefOptionList()
+        }
+    }, {
+        immediate: true
     })
     const templateRefPlaceholderMap = computed(() => ({
         tag: `${proxy.$t('template.Example')} tag1`,
@@ -241,6 +266,7 @@
     async function fetchTemplateDateByRef (value) {
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, value)
         try {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', true)
             const res = await proxy.$store.dispatch('templates/fetchTemplateByRef', {
                 projectId: projectId.value,
                 templateId: templateId.value,
@@ -263,9 +289,35 @@
                 theme: 'error',
                 message: errorRefMsg.value
             })
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }
     }
-    // 防抖包装
+    function refOptionRemoteMethod (keyword) {
+        searchKey.value = keyword
+        proxy.$nextTick(() => {
+            fetchRefOptionList()
+        })
+    }
+    async function fetchRefOptionList () {
+        const fn = pullMode.value === 'branch'
+            ? 'templates/getBranchesListByProjectId'
+            : 'templates/getTagsListByProjectId'
+        try {
+            const res = await proxy.$store.dispatch(fn, {
+                projectId: projectId.value,
+                searchKey: searchKey.value,
+                repoHashId: pipelineInfo.value?.yamlInfo?.repoHashId
+            })
+            refOptionList.value = res.data
+            searchKey.value = ''
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    function handleChangeRefOption (value) {
+        fetchTemplateDateByRef(value)
+    }
     const debouncedFetchTemplate = debounce(fetchTemplateDateByRef, 300)
 
     const handelChangeTemplateRef = (value) => {
@@ -304,6 +356,7 @@
         }
         .selector-prepend {
             display: inline-block;
+            width: 88px;
             height: 32px;
             line-height: 32px;
             padding: 0 8px;

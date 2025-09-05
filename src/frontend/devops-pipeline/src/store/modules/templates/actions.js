@@ -1,10 +1,11 @@
 import {
-    PROCESS_API_URL_PREFIX
-    // STORE_API_URL_PREFIX
+    PROCESS_API_URL_PREFIX,
+    REPOSITORY_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 import {
-    SET_TEMPLATE_DETAIL
+    SET_TEMPLATE_DETAIL,
+    UPDATE_INSTANCE_PAGE_LOADING
 } from './constants'
 const actions = {
     hasPipelineTemplatePermission (_, { projectId, permission }) {
@@ -134,6 +135,15 @@ const actions = {
             })
             return res.data
         })
+    },
+    getBranchesListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
+        return ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listBranches?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
+    },
+    getTagsListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
+        return ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listTags?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
+    },
+    updateInstancePageLoading ({ commit} , value) {
+        commit(UPDATE_INSTANCE_PAGE_LOADING, value)
     }
 }
 
