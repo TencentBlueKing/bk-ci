@@ -110,14 +110,14 @@ class PipelineBuildVersionDiffService(
                 val currTemplateVersionRef = pipelineYamlVersionDao.getPipelineYamlVersion(
                     dslContext = dslContext,
                     projectId = projectId,
-                    pipelineId = pipelineId,
+                    pipelineId = templateInfo.id,
                     version = currTemplatePipeline.templateVersion.toInt()
                 )!!.commitId
 
                 val prevTemplateVersionRef = pipelineYamlVersionDao.getPipelineYamlVersion(
                     dslContext = dslContext,
                     projectId = projectId,
-                    pipelineId = pipelineId,
+                    pipelineId = templateInfo.id,
                     version = prevTemplatePipeline.templateVersion.toInt()
                 )!!.commitId
 
