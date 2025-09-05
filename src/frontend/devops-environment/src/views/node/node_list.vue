@@ -673,6 +673,8 @@
                             message: this.$t('environment.successfullySaved'),
                             theme: 'success'
                         })
+                        this.requestList()
+                        await this.requestGetCounts(this.projectId)
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -705,6 +707,8 @@
                             message: this.$t('environment.successfullyModified'),
                             theme: 'success'
                         })
+                        this.requestList()
+                        await this.requestGetCounts(this.projectId)
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
