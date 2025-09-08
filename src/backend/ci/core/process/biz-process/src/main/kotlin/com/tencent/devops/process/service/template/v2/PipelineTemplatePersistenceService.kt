@@ -623,6 +623,10 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 templateId = templateId,
                 version = version
             )
+            client.get(ServiceTemplateResource::class).deleteMarketPublishedVersions(
+                templateCode = templateId,
+                versions = listOf(version)
+            )
         }
     }
 

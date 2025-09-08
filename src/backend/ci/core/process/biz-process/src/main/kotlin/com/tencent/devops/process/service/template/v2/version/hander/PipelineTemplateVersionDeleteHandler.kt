@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,6 +45,8 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenc
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,7 +63,8 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val versionDeletePostProcessor: PTemplateVersionDeletePostProcessor,
     private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val client: Client
 ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
         with(context) {
@@ -116,8 +120,10 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             templateId = templateId,
             version = version
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
+        val marketTemplateStatus = client.get(ServiceTemplateResource::class).getMarketTemplateStatus(templateId).data!!
         // 上架研发商店不允许删除
-        if (latestReleasedResource.type == TemplateType.CUSTOMIZE.name && templateInfo.storeFlag == true) {
+        if (latestReleasedResource.type == TemplateType.CUSTOMIZE.name &&
+            marketTemplateStatus == TemplateStatusEnum.RELEASED) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
             )
