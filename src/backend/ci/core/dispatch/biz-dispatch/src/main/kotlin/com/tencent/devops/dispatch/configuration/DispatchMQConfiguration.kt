@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class DispatchMQConfiguration @Autowired constructor() {
+class DispatchMQConfiguration {
     @EventConsumer
     fun thirdAgentDispatchStartConsumer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
@@ -50,7 +50,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { thirdPartyAgentListener.handleShutdownMessage(it) }
 
     @EventConsumer
-    fun startDemoteKubernetesConsumer(
+    fun startDemoteThirdAgentDispatchConsumer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
         with(it) {
@@ -85,7 +85,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     }
 
     @EventConsumer
-    fun shutdownDemoteKubernetesConsumer(
+    fun shutdownDemoteThirdAgentDispatchConsumer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
         with(it) {
