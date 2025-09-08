@@ -100,7 +100,7 @@ data class PreScriptBuildYamlParser(
             is Map<*, *> -> {
                 // 提取template数据
                 this.variableTemplates = (raw["template"] as? List<Map<String, String>>)
-                    ?.map {
+                    ?.filter { !it["name"].isNullOrBlank() }?.map {
                         VariableTemplate(it["name"]!!, it["version"])
                     }
                 val regularVariables = raw.filterKeys { it != "template" }
@@ -110,18 +110,6 @@ data class PreScriptBuildYamlParser(
                 } else {
                     this.variables = null
                 }
-            }
-
-            // 处理null
-            null -> {
-                this.variables = null
-                this.variableTemplates = null
-            }
-
-            // 其他未知类型，安全处理
-            else -> {
-                this.variables = null
-                this.variableTemplates = null
             }
         }
     }

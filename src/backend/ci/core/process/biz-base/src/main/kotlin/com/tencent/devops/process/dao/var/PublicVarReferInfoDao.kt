@@ -40,36 +40,25 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         pipelinePublicVarReferPOs: List<PipelinePublicVarReferPO>
     ) {
+        if (pipelinePublicVarReferPOs.isEmpty()) {
+            return
+        }
+        
         with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
             val insertSteps = pipelinePublicVarReferPOs.map { po ->
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    PROJECT_ID,
-                    GROUP_NAME,
-                    VAR_NAME,
-                    VERSION,
-                    REFER_ID,
-                    REFER_TYPE,
-                    REFER_VERSION_NAME,
-                    CREATOR,
-                    MODIFIER,
-                    CREATE_TIME,
-                    UPDATE_TIME
-                ).values(
-                    po.id,
-                    po.projectId,
-                    po.groupName,
-                    po.varName,
-                    po.version,
-                    po.referId,
-                    po.referType.name,
-                    po.referVersionName,
-                    po.creator,
-                    po.modifier,
-                    po.createTime,
-                    po.updateTime
-                )
+                dslContext.insertInto(this)
+                    .set(ID, po.id)
+                    .set(PROJECT_ID, po.projectId)
+                    .set(GROUP_NAME, po.groupName)
+                    .set(VAR_NAME, po.varName)
+                    .set(VERSION, po.version)
+                    .set(REFER_ID, po.referId)
+                    .set(REFER_TYPE, po.referType.name)
+                    .set(REFER_VERSION_NAME, po.referVersionName)
+                    .set(CREATOR, po.creator)
+                    .set(MODIFIER, po.modifier)
+                    .set(CREATE_TIME, po.createTime)
+                    .set(UPDATE_TIME, po.updateTime)
             }
             dslContext.batch(insertSteps).execute()
         }

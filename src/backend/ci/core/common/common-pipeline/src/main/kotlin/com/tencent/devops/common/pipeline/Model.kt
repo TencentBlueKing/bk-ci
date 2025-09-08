@@ -237,7 +237,7 @@ data class Model(
      * 处理公共变量组信息
      */
     fun handlePublicVarInfo() {
-        val triggerContainer = stages.firstOrNull()?.containers?.firstOrNull() as TriggerContainer?
+        val triggerContainer = stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
         triggerContainer ?: return
         val params = triggerContainer.params
 

@@ -139,14 +139,17 @@ class ServiceMetricsResourceImpl constructor(
         )
     }
     
-    override fun queryPipelineMonthlyExecCountByList(projectId: String, pipelineIdList: List<String>): Result<Map<String, Int>> {
+    override fun queryPipelineMonthlyExecCountByList(
+        projectId: String,
+        pipelineIdList: List<String>
+    ): Result<Map<String, Int>> {
         if (pipelineIdList.isEmpty()) {
             return Result(emptyMap())
         }
-        
-        // 日期处理逻辑保留在资源层
-        val startDate = LocalDateTime.now().minusMonths(1).withHour(0).withMinute(0).withSecond(0)
-        val endDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0)
+
+        val now = LocalDateTime.now()
+        val startDate = now.minusMonths(1).withHour(0).withMinute(0).withSecond(0)
+        val endDate = now.withHour(0).withMinute(0).withSecond(0)
         
         return Result(
             pipelineOverviewManageService.queryPipelineMonthlyExecCounts(
