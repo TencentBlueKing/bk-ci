@@ -1,38 +1,35 @@
 package com.tencent.devops.common.client
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import feign.Response
 import feign.codec.DecodeException
-import feign.codec.Decoder
+import feign.jackson.JacksonDecoder
 import java.io.IOException
 import java.lang.reflect.Type
 import jakarta.ws.rs.core.Response as JakartaResponse
 
 /**
- * 用于解析 jakarta.ws.rs.core.Response 的 Feign Decoder
+ * 自定义解析 Feign Decoder
  */
-class JakartaResponseDecoder : Decoder {
+class ClientResponseDecoder(mapper: ObjectMapper) : JacksonDecoder(mapper) {
 
-    override fun decode(response: Response, type: Type): Any? {
+    override fun decode(response: Response, type: Type): Any {
         // 检查目标类型是否为 jakarta.ws.rs.core.Response
-        if (type != JakartaResponse::class.java) {
-            throw DecodeException(
-                response.status(),
-                "JakartaResponseDecoder can only decode jakarta.ws.rs.core.Response type, but got: $type",
-                response.request()
-            )
+        if (type == JakartaResponse::class.java) {
+            return try {
+                // 构建 Jakarta Response
+                buildJakartaResponse(response)
+            } catch (e: IOException) {
+                throw DecodeException(
+                    response.status(),
+                    "Failed to decode response: ${e.message}",
+                    response.request(),
+                    e
+                )
+            }
         }
 
-        return try {
-            // 构建 Jakarta Response
-            buildJakartaResponse(response)
-        } catch (e: IOException) {
-            throw DecodeException(
-                response.status(),
-                "Failed to decode response: ${e.message}",
-                response.request(),
-                e
-            )
-        }
+        return super.decode(response, type)
     }
 
     /**

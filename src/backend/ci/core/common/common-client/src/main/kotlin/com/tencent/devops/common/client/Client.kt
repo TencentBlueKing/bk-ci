@@ -135,7 +135,7 @@ class Client @Autowired constructor(
     private val feignClient = OkHttpClient(okHttpClient)
     private val clientContract = ClientContract()
     private val springContract = SpringContract()
-    private val jakartaResponseDecoder = JakartaResponseDecoder()
+    private val clientResponseDecoder = ClientResponseDecoder(objectMapper)
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
@@ -259,7 +259,7 @@ class Client @Autowired constructor(
             .client(feignClient)
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
-            .decoder(getDecoder(clz))
+            .decoder(clientResponseDecoder)
             .contract(contract)
             .requestInterceptor(requestInterceptor)
             .retryer(HttpGetRetry()) // 优化重复创建的匿名类
@@ -286,19 +286,6 @@ class Client @Autowired constructor(
             compositeDiscoveryClient = compositeDiscoveryClient!!,
             bkTag = bkTag
         ).url()
-    }
-
-    /**
-     * 根据类型获取合适的decoder
-     * 如果是jakarta.ws.rs.core.Response类型，使用JakartaResponseDecoder
-     * 其他情况使用jacksonDecoder
-     */
-    private fun <T : Any> getDecoder(clz: KClass<T>): Decoder {
-        return if (clz.java == JakartaResponse::class.java) {
-            jakartaResponseDecoder
-        } else {
-            jacksonDecoder
-        }
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
