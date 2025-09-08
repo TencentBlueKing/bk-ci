@@ -295,18 +295,18 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, defineProps } from 'vue'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import RenderTrigger from '@/components/Template/RenderTrigger.vue'
     import UseInstance from '@/hook/useInstance'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
     import {
         SET_INSTANCE_LIST,
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { computed, defineProps, ref, watch } from 'vue'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -731,7 +731,8 @@
                         },
                         buildNo: {
                             ...curTemplateDetail.value?.buildNo,
-                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate
+                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate,
+                            isRequiredParam: curInstance.value?.buildNo?.isRequiredParam
                         }
                     }
                 })

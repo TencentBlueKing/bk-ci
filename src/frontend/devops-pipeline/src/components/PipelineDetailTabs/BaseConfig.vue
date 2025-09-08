@@ -135,7 +135,7 @@
                     ? [
                         {
                             key: 'name',
-                            value: basicInfo?.name
+                            value: basicInfo?.pipelineName
                         },
                         {
                             key: 'desc',

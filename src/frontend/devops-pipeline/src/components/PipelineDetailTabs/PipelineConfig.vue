@@ -86,7 +86,7 @@
     import ModeSwitch from '@/components/ModeSwitch'
     import { NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
     import YamlEditor from '@/components/YamlEditor'
-    import { SHOW_VERSION_HISTORY_SIDESLIDER, bus } from '@/utils/bus'
+    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'

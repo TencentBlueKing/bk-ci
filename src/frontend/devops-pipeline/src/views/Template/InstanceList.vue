@@ -204,9 +204,10 @@
                             >
                                 {{ $t('copy') }}
                             </bk-button>
+                            <!-- v-if="row.fromTemplateVersion !== currentVersion" -->
                             <version-diff-entry
-                                v-if="row.version !== currentVersion"
-                                :version="row.version"
+                                v-if="false"
+                                :version="row.pipelineVersion"
                                 :latest-version="currentVersion"
                                 :pipeline-id="row.pipelineId"
                                 type="templateInstance"
@@ -227,18 +228,18 @@
 </template>
 
 <script setup>
-    import { computed, ref, watch } from 'vue'
-    import { convertTime } from '@/utils/util'
+    import Logo from '@/components/Logo'
+    import PacTag from '@/components/PacTag'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import emptyTips from '@/components/pipelineList/imgEmptyTips'
+    import UseInstance from '@/hook/useInstance'
     import {
         SET_INSTANCE_LIST,
         TEMPLATE_INSTANCE_PIPELINE_STATUS
     } from '@/store/modules/templates/constants'
-    import PacTag from '@/components/PacTag'
-    import Logo from '@/components/Logo'
-    import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import UseInstance from '@/hook/useInstance'
+    import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
+    import { computed, ref, watch } from 'vue'
 
     const { proxy, showTips, t } = UseInstance()
     const isLoading = ref(false)
