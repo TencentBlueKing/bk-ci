@@ -155,6 +155,11 @@ class PipelineTemplateFacadeService @Autowired constructor(
         request: PipelineTemplateMarketCreateReq
     ): DeployTemplateResult {
         logger.info("$userId create template in project $projectId by market ,body is $request")
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
         return pipelineTemplateVersionManager.deployTemplate(
             userId = userId,
             projectId = projectId,
