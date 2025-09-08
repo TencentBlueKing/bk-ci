@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -36,7 +35,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
@@ -239,8 +237,8 @@ data class Model(
      * 处理公共变量组信息
      */
     fun handlePublicVarInfo() {
-        val triggerContainer = getTriggerContainer()
-        val params = triggerContainer.params
+        val triggerContainer = stages.firstOrNull()?.containers?.firstOrNull() as TriggerContainer?
+        val params = triggerContainer?.params ?:emptyList()
 
         // 从params获取varGroupName不为空的参数
         val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
@@ -257,6 +255,6 @@ data class Model(
                 .distinctBy { it.groupName }
                 .toList()
         }
-        triggerContainer.filterParamsWithVarGroupName()
+        triggerContainer?.updatePublicParamsIndex()
     }
 }

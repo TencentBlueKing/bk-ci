@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -118,7 +117,7 @@ data class TriggerContainer(
     /**
      * 筛选 params 中 varGroupName 不为空的数据，并更新 index 为参数在 params 中的下标位置。
      */
-    fun filterParamsWithVarGroupName() {
+    fun updatePublicParamsIndex() {
         val paramsIndex = mutableMapOf<String, Int?>()
         params.mapIndexed { index, property ->
             if (property.varGroupName != null) {
