@@ -733,7 +733,8 @@
                         buildNo: {
                             ...curTemplateDetail.value?.buildNo,
                             isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate,
-                            isRequiredParam: curInstance.value?.buildNo?.isRequiredParam
+                            isRequiredParam: curInstance.value?.buildNo?.isRequiredParam,
+                            currentBuildNo: curInstance.value?.buildNo?.currentBuildNo
                         }
                     }
                 })
