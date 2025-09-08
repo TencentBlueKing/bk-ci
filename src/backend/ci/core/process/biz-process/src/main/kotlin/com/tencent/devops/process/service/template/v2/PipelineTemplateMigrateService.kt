@@ -590,7 +590,8 @@ class PipelineTemplateMigrateService(
         pipelineTemplateInfoService.createOrUpdate(
             pipelineTemplateInfo = createPipelineTemplateInfo(
                 marketTemplateStatus = context.marketTemplateStatus,
-                latestTemplate = context.latestTemplate
+                latestTemplate = context.latestTemplate,
+                templateName = context.setting.pipelineName
             )
         )
         cleanupOrphanedVersions(context)
@@ -776,7 +777,8 @@ class PipelineTemplateMigrateService(
 
     fun createPipelineTemplateInfo(
         marketTemplateStatus: TemplateStatusEnum,
-        latestTemplate: TTemplateRecord
+        latestTemplate: TTemplateRecord,
+        templateName: String
     ): PipelineTemplateInfoV2 {
         val latestReleasedResource = pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = latestTemplate.projectId,
@@ -800,7 +802,7 @@ class PipelineTemplateMigrateService(
         return PipelineTemplateInfoV2(
             id = latestTemplate.id,
             projectId = latestTemplate.projectId,
-            name = latestTemplate.templateName,
+            name = templateName,
             desc = latestTemplate.desc,
             mode = TemplateType.valueOf(latestTemplate.type),
             category = latestTemplate.category,
