@@ -166,7 +166,7 @@
                     <bk-table-column
                         :label="$t('lastUpdateTime')"
                         prop="updateTime"
-                        :width="250"
+                        :width="180"
                     >
                         <template slot-scope="{ row }">
                             <span>{{ localConvertTime(row.updateTime) }}</span>
@@ -174,6 +174,7 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
+                        :width="200"
                     >
                         <template slot-scope="{ row }">
                             <bk-button
@@ -186,7 +187,7 @@
                                 {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
-                                v-else
+                                v-else-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE"
                                 class="mr10"
                                 theme="primary"
                                 text
