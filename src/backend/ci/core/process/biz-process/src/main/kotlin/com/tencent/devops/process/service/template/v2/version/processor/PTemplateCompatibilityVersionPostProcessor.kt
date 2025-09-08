@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
@@ -62,7 +63,8 @@ class PTemplateCompatibilityVersionPostProcessor(
                     )
                 }
             }
-
+            val storeFlag = v2TemplateInfo.mode == TemplateType.CONSTRAINT ||
+                v2TemplateInfo.storeStatus != TemplateStatusEnum.NEVER_PUBLISHED
             v1TemplateDao.createTemplate(
                 dslContext = transactionContext,
                 projectId = projectId,
@@ -75,7 +77,7 @@ class PTemplateCompatibilityVersionPostProcessor(
                 category = v2TemplateInfo.category,
                 logoUrl = v2TemplateInfo.logoUrl,
                 srcTemplateId = pipelineTemplateResource.srcTemplateId,
-                storeFlag = v2TemplateInfo.storeStatus != TemplateStatusEnum.NEVER_PUBLISHED,
+                storeFlag = storeFlag,
                 weight = 0,
                 version = version,
                 desc = v2TemplateInfo.desc

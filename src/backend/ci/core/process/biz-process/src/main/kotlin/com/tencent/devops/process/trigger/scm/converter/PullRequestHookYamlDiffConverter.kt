@@ -180,7 +180,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 // 源分支有，目标分支没有，新增列表或更新列表有，说明源分支新增,以源分支为主
                 // mr获取的对比文件,源分支是新增,但是在mr变更这里可能是更新
                 sourcePath !in targetFilePaths &&
-                        (sourcePath in changeFiles.addedFiles || sourcePath in changeFiles.updatedFiles) -> {
+                    (sourcePath in changeFiles.addedFiles || sourcePath in changeFiles.updatedFiles) -> {
                     val yamlDiff = baseYamlDiff.copy(actionType = YamlFileActionType.CREATE)
                     yamlDiffs.add(yamlDiff)
                 }
@@ -427,7 +427,6 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         )
         return yamlDiffs
     }
-
 
     /**
      * 计算关闭合并请求的源分支的yaml文件事件
