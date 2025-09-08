@@ -250,12 +250,7 @@ class PublicVarService @Autowired constructor(
             }
         }
 
-        // 检查所有最新版本变量是否存在同名
-        val allLatestVarNames = allLatestVars.map { it.name }
-        if (allLatestVarNames.size != allLatestVarNames.distinct().size) {
-            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
-        }
-        // 清楚版本信息，确保不会绑定到具体版本
+        // 清除版本信息，确保不会绑定到具体版本
         result.forEach {
             it.varGroupVersion = null
         }

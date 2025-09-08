@@ -694,7 +694,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                             projectId = queryReq.projectId,
                             referType = it.referType,
                             referId = it.referId,
-                            version = it.referVersionName?.toLong()
+                            version = null
                         ),
                         referType = it.referType,
                         creator = it.creator,
@@ -719,7 +719,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                             projectId = queryReq.projectId,
                             referType = it.referType,
                             referId = it.referId,
-                            version = it.referVersionName?.toLong()
+                            version = template.version
                         ),
                         referType = it.referType,
                         creator = template.creator,
@@ -728,7 +728,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                         instanceCount = countTemplateVersionInstances(
                             projectId = queryReq.projectId,
                             templateId = it.referId,
-                            version = it.referVersionName?.toLong()!!
+                            version = template.version
                         )
                     )
                 }
