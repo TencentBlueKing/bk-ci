@@ -123,19 +123,29 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
     }
-
-    override fun queryPipelineMonthlyExecCount(
+    
+    override fun queryPipelineMonthlyExecCounts(
         projectId: String,
-        pipelineId: String,
+        pipelineIds: List<String>,
         startDate: LocalDateTime,
         endDate: LocalDateTime
-    ): Int {
-        return pipelineOverviewDao.queryPipelineMonthlyExecCount(
+    ): Map<String, Int> {
+        if (pipelineIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        val result = pipelineOverviewDao.queryPipelineMonthlyExecCounts(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineIds = pipelineIds,
             startTime = startDate,
             endTime = endDate
         )
+
+        return result.associate { record ->
+            val pipelineId = record.get(0, String::class.java)
+            val count = record.get(1, BigDecimal::class.java).toInt()
+            pipelineId to count
+        }
     }
 }

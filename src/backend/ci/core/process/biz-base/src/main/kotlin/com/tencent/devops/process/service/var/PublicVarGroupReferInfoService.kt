@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.metrics.api.ServiceMetricsResource
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
@@ -684,57 +685,78 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             )
         }
 
-        val records = varGroupReferInfo.map {
-            when (it.referType) {
-                PublicVerGroupReferenceTypeEnum.PIPELINE -> {
-                    PublicGroupVarRefDO(
-                        referId = it.referId,
-                        referName = it.referName,
-                        referUrl = getVarGroupReferUrl(
-                            projectId = queryReq.projectId,
-                            referType = it.referType,
-                            referId = it.referId,
-                            version = null
-                        ),
-                        referType = it.referType,
-                        creator = it.creator,
-                        modifier = it.modifier,
-                        updateTime = it.updateTime,
-                        executeCount = client.get(ServiceMetricsResource::class).queryPipelineMonthlyExecCount(
-                            projectId = queryReq.projectId,
-                            pipelineId = it.referId
-                        ).data ?: 0
-                    )
-                }
-                PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
-                    val template = templateDao.getTemplate(
-                        dslContext = dslContext,
-                        templateId = it.referId,
-                        version = it.referVersionName?.toLong()
-                    )!!
-                    PublicGroupVarRefDO(
-                        referId = it.referId,
-                        referName = it.referName,
-                        referUrl = getVarGroupReferUrl(
-                            projectId = queryReq.projectId,
-                            referType = it.referType,
-                            referId = it.referId,
-                            version = template.version
-                        ),
-                        referType = it.referType,
-                        creator = template.creator,
-                        modifier = template.creator,
-                        updateTime = template.updateTime ?: LocalDateTime.now(),
-                        instanceCount = countTemplateVersionInstances(
-                            projectId = queryReq.projectId,
-                            templateId = it.referId,
-                            version = template.version
+        val referInfoByType = varGroupReferInfo.groupBy { it.referType }
+        val records = mutableListOf<PublicGroupVarRefDO>()
+        
+        // 处理流水线类型的引用
+        referInfoByType[PublicVerGroupReferenceTypeEnum.PIPELINE]?.let { pipelineReferInfos ->
+            if (pipelineReferInfos.isNotEmpty()) {
+                val pipelineIds = pipelineReferInfos.map { it.referId }
+                
+                // 批量查询流水线执行次数
+                val pipelineExecCounts = client.get(ServiceMetricsResource::class)
+                    .queryPipelineMonthlyExecCountByList(queryReq.projectId, pipelineIds)
+                    .data ?: emptyMap()
+                
+                // 构建流水线引用记录
+                pipelineReferInfos.forEach { referInfo ->
+                    records.add(
+                        PublicGroupVarRefDO(
+                            referId = referInfo.referId,
+                            referName = referInfo.referName,
+                            referUrl = getVarGroupReferUrl(
+                                projectId = queryReq.projectId,
+                                referType = referInfo.referType,
+                                referId = referInfo.referId,
+                                version = null
+                            ),
+                            referType = referInfo.referType,
+                            creator = referInfo.creator,
+                            modifier = referInfo.modifier,
+                            updateTime = referInfo.updateTime,
+                            executeCount = pipelineExecCounts[referInfo.referId] ?: 0
                         )
                     )
                 }
-                else -> throw IllegalArgumentException("Unsupported refer type")
             }
         }
+        
+        // 处理模板类型的引用
+        referInfoByType[PublicVerGroupReferenceTypeEnum.TEMPLATE]?.let { templateReferInfos ->
+            if (templateReferInfos.isNotEmpty()) {
+                // 构建模板引用记录
+                templateReferInfos.forEach { referInfo ->
+                    val template = templateDao.getTemplate(
+                        dslContext = dslContext,
+                        templateId = referInfo.referId,
+                        version = referInfo.referVersionName?.toLong()
+                    ) ?: return@forEach
+                    
+                    records.add(
+                        PublicGroupVarRefDO(
+                            referId = referInfo.referId,
+                            referName = referInfo.referName,
+                            referUrl = getVarGroupReferUrl(
+                                projectId = queryReq.projectId,
+                                referType = referInfo.referType,
+                                referId = referInfo.referId,
+                                version = template.version
+                            ),
+                            referType = referInfo.referType,
+                            creator = template.creator,
+                            modifier = template.creator,
+                            updateTime = template.updateTime ?: LocalDateTime.now(),
+                            instanceCount = countTemplateVersionInstances(
+                                projectId = queryReq.projectId,
+                                templateId = referInfo.referId,
+                                version = template.version
+                            )
+                        )
+                    )
+                }
+            }
+        }
+
         return Page(
             count = totalCount.toLong(),
             page = queryReq.page,

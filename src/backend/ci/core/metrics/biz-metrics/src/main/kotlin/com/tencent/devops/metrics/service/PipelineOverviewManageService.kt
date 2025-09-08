@@ -52,14 +52,19 @@ interface PipelineOverviewManageService {
     fun queryPipelineTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<PipelineTrendInfoDO>
-
+    
     /**
-     * 查询流水线最近一月执行次数
+     * 批量查询多个流水线最近一月执行次数
+     * @param projectId 项目ID
+     * @param pipelineIds 流水线ID列表
+     * @param startDate 开始时间
+     * @param endDate 结束时间
+     * @return 流水线ID到执行次数的映射
      */
-    fun queryPipelineMonthlyExecCount(
+    fun queryPipelineMonthlyExecCounts(
         projectId: String,
-        pipelineId: String,
+        pipelineIds: List<String>,
         startDate: LocalDateTime,
         endDate: LocalDateTime
-    ): Int
+    ): Map<String, Int>
 }

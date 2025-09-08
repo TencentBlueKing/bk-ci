@@ -258,15 +258,9 @@ class TemplatePipelineDao {
         deleteFlag: Boolean? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(TEMPLATE_ID.eq(templateId))
-            conditions.add(INSTANCE_TYPE.eq(instanceType))
+            val conditions = getQueryTemplatePipelineCondition(projectId, listOf(templateId), instanceType, deleteFlag)
             conditions.add(VERSION.eq(version))
-            if (deleteFlag != null) {
-                conditions.add(DELETED.eq(deleteFlag))
-            }
-            return dslContext.select(DSL.count(PIPELINE_ID)).from(this)
+            return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }

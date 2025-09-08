@@ -238,7 +238,8 @@ data class Model(
      */
     fun handlePublicVarInfo() {
         val triggerContainer = stages.firstOrNull()?.containers?.firstOrNull() as TriggerContainer?
-        val params = triggerContainer?.params ?:emptyList()
+        triggerContainer ?: return
+        val params = triggerContainer.params
 
         // 从params获取varGroupName不为空的参数
         val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
@@ -250,11 +251,13 @@ data class Model(
         } else {
             publicVarGroups = varGroupParams
                 .asSequence()
-                .filter { !it.varGroupName.isNullOrBlank() }
-                .map { PublicVarGroupRef(it.varGroupName!!, "v${it.varGroupVersion}") }
+                .map {
+                    val versionName = it.varGroupVersion?.let { version -> "v$version" }
+                    PublicVarGroupRef(it.varGroupName!!, versionName)
+                }
                 .distinctBy { it.groupName }
                 .toList()
         }
-        triggerContainer?.updatePublicParamsIndex()
+        triggerContainer.updatePublicParamsIndex()
     }
 }
