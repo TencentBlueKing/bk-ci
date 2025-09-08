@@ -21,6 +21,7 @@
                     >
                         <select-input
                             v-validate.initial="required ? 'required' : ''"
+                            :data-vv-as="$t('attributeName')"
                             :class="{ 'is-error': errors.has(`parameter-key-${index}`) }"
                             v-model="parameter.key"
                             :name="`parameter-key-${index}`"
@@ -46,16 +47,18 @@
                         :error-msg="errors.first(`parameter-value-${index}`)"
                     >
                         <select-input
-                            v-validate.initial="required ? 'required' : ''"
+                            v-validate.initial="getValueValidationRules(index)"
+                            :data-vv-as="$t('attributeValue')"
+                            :data-value-list="JSON.stringify(getValueListByIndex(index))"
                             :class="{ 'is-error': errors.has(`parameter-value-${index}`) }"
                             :value="parameter.value"
                             :name="`parameter-value-${index}`"
                             :placeholder="$t('attributeValue')"
                             :disabled="disabled"
                             type="text"
-                            :options="valueList"
+                            :options="getValueListByIndex(index)"
                             :handle-change="(name,value) => handleChangeValue(value,index)"
-                            @focus="(e) => getValueIndex(parameter.key)"
+                            @focus="(e) => setCurrentIndex(index)"
                         >
                         </select-input>
                         <span
@@ -66,7 +69,7 @@
                         </span>
                     </form-field>
                     <i
-                        v-if="!disabled"
+                        v-if="!disabled && parameters.length !== 1"
                         class="bk-icon icon-minus-circle minus-btn"
                         @click="cutParam(index)"
                     />
@@ -89,6 +92,29 @@
     import mixins from '../mixins'
     import selectorMixins from '../selectorMixins'
     import { debounce, isObject } from '@/utils/util'
+    import { Validator } from 'vee-validate'
+
+    Validator.extend('validVariable', {
+        getMessage: () => window.pipelineVue.$i18n.t('validVariableFormat'),
+        validate: function (value, params) {
+            const { valueList } = params
+            
+            if (!value) return true
+            const isInOptions = valueList.some(option => option.name === value)
+            if (isInOptions) return true
+            
+            return value.isBkVar()
+        }
+    })
+
+    Validator.extend('required', {
+        getMessage: (field) => window.pipelineVue.$i18n.t('editPage.requiredTips', [field]),
+        validate: (value) => {
+            return {
+                valid: value !== undefined && value !== null && value !== ''
+            }
+        }
+    })
 
     export default {
         name: 'metadata-normal',
@@ -112,7 +138,7 @@
                 isLoading: false,
                 parameters: [],
                 optionList: [],
-                currentKey: 0
+                currentIndex: -1
             }
         },
         computed: {
@@ -124,21 +150,6 @@
                 return listSource.map(item => ({
                     id: item.key,
                     name: item.key
-                }))
-            },
-            valueList () {
-                const listSource = this.hasUrl ? this.optionList : this.options
-                const keyValueMap = listSource.reduce((map, item) => {
-                    const values = Array.isArray(item.values) ? item.values : []
-                    map[item.key] = map[item.key] ? [...map[item.key], ...values] : values
-                    return map
-                }, {})
-
-                const valuesArray = keyValueMap[this.currentKey] || []
-
-                return valuesArray.map(item => ({
-                    id: item,
-                    name: item
                 }))
             }
         },
@@ -174,29 +185,71 @@
                 this.debounceGetOptionList = debounce(this.getOptionList)
             } else {
                 const value = typeof this.value === 'string' ? JSON.parse(this.value) : this.value
-                this.parameters = value || [{
-                    key: '',
-                    value: ''
-                }]
+                this.parameters = value
+                
+                if (this.parameters.length === 0) {
+                    this.addParam()
+                }
             }
         },
         methods: {
-            getValueIndex (key) {
-                this.currentKey = key
+            getValueListByIndex (index) {
+                const key = this.parameters[index]?.key
+                if (!key) return []
+                
+                const listSource = this.hasUrl ? this.optionList : this.options
+                const keyItem = listSource.find(item => item.key === key)
+                
+                return (keyItem?.values || []).map(item => ({
+                    id: item,
+                    name: item
+                }))
+            },
+            shouldValidateVariable (index) {
+                const valueList = this.getValueListByIndex(index)
+                return valueList.length > 0
+            },
+            getValueValidationRules (index) {
+                if (this.disabled) {
+                    return
+                }
+                const valueList = this.getValueListByIndex(index)
+                return {
+                    ...valueList.length && { validVariable: { valueList } },
+                    required: this.required
+                }
+            },
+            setCurrentIndex (index) {
+                this.currentIndex = index
             },
             addParam () {
                 this.parameters.push({
                     key: '',
                     value: ''
                 })
+                this.$nextTick(() => {
+                    const index = this.parameters.length - 1
+                    this.$validator.validate(`parameter-key-${index}`)
+                    this.$validator.validate(`parameter-value-${index}`)
+                })
             },
             handleChangeKey (value, index) {
                 this.parameters[index].key = value
+                if (this.parameters[index].value) {
+                    this.parameters[index].value = ''
+                }
+                this.$nextTick(() => {
+                    this.$validator.validate(`parameter-key-${index}`)
+                    this.$validator.validate(`parameter-value-${index}`)
+                })
                 this.updateParameters()
             },
 
             handleChangeValue (value, index) {
                 this.parameters[index].value = value
+                this.$nextTick(() => {
+                    this.$validator.validate(`parameter-value-${index}`)
+                })
                 this.updateParameters()
             },
             updateParameters () {
@@ -209,11 +262,21 @@
             },
             cutParam (index) {
                 this.parameters.splice(index, 1)
+                if (this.currentIndex === index) {
+                    this.currentIndex = -1
+                } else if (this.currentIndex > index) {
+                    this.currentIndex--
+                }
+                this.$nextTick(() => {
+                    this.$validator.validateAll()
+                })
                 this.updateParameters()
             },
             async getOptionList () {
                 if (this.isLackParam) {
-                    if (this.value) this.parameters = this.value
+                    if (this.value) {
+                        this.parameters = typeof this.value === 'string' ? JSON.parse(this.value) : this.value
+                    }
                     this.optionList = []
                     return
                 }

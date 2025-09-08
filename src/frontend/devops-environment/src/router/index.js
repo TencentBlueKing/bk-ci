@@ -39,6 +39,9 @@ const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
 
+// 批量设置节点标签
+const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/node/set_node_tag')
+
 const routes = [
     {
         path: 'environment/:projectId?',
@@ -117,7 +120,12 @@ const routes = [
                             header: 'environmentManage',
                             to: 'envList'
                         }
-                    }
+                    },
+                    {
+                        path: 'setNodeTag',
+                        name: 'setNodeTag',
+                        component: setNodeTag
+                    },
                 ]
             }
         ]

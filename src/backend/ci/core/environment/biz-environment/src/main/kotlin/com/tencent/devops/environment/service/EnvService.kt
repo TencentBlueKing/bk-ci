@@ -215,8 +215,27 @@ class EnvService @Autowired constructor(
         }
     }
 
-    override fun listEnvironment(userId: String, projectId: String): List<EnvWithPermission> {
-        val envRecordList = envDao.list(dslContext, projectId)
+    override fun listEnvironment(
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?
+    ): List<EnvWithPermission> {
+        val envIds = nodeHashId?.let {
+            envNodeDao.listNodeIds(
+                dslContext,
+                projectId,
+                listOf(HashUtil.decodeIdToLong(nodeHashId))
+            ).map { it.envId }.toSet()
+        }
+        val envRecordList = envDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envName = envName,
+            envType = envType,
+            envIds = envIds
+        )
         if (envRecordList.isEmpty()) {
             return listOf()
         }

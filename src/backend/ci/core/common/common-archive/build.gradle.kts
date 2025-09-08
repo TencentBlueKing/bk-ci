@@ -37,4 +37,5 @@ dependencies {
     api("com.tencent.bk.repo:api-generic")
     api("com.tencent.bk.repo:api-repository")
     api(project(":core:common:common-security"))
+    api("io.opentelemetry:opentelemetry-api")
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型版本")
@@ -39,6 +40,8 @@ data class PipelineModelVersion(
     val creator: String,
     @get:Schema(title = "流水线模型", required = true)
     val model: String,
+    @get:Schema(title = "流水线渠道", required = true)
+    val channelCode: ChannelCode = ChannelCode.BS,
     @get:Schema(title = "流水线模型版本", required = false)
     val version: Int? = null
 )

@@ -19,6 +19,7 @@ import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -251,6 +252,7 @@ class RbacPermissionResourceMemberService(
                 memberType = memberType,
                 expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredAt)
             )
+            BkInternalPermissionCache.invalidateProjectUserGroups(projectCode, memberId)
         }
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
@@ -381,6 +383,10 @@ class RbacPermissionResourceMemberService(
                 dslContext = dslContext,
                 groupMembers = groupMembersList
             )
+            BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                projectCode = projectCode,
+                userIds = iamMemberInfos.map { it.id }
+            )
         }
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
@@ -486,6 +492,10 @@ class RbacPermissionResourceMemberService(
             projectCode = projectCode,
             iamGroupId = iamGroupId,
             memberIds = allMemberIds
+        )
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = allMemberIds
         )
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
@@ -706,16 +716,11 @@ class RbacPermissionResourceMemberService(
         memberIds: List<String>,
         tenantId: String?
     ): Boolean {
-        val membersOfNeedToDelete = if (type == MemberType.USER.type) {
-            memberIds.filterNot { deptService.isUserDeparted(it, tenantId) }
-        } else {
-            memberIds
-        }
-        if (membersOfNeedToDelete.isNotEmpty()) {
+        if (memberIds.isNotEmpty()) {
             iamV2ManagerService.deleteRoleGroupMemberV2(
                 groupId,
                 type,
-                membersOfNeedToDelete.joinToString(","),
+                memberIds.joinToString(","),
                 tenantId
             )
         }

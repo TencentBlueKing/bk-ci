@@ -320,6 +320,7 @@
                                     ref="remarkInput"
                                     rows="3"
                                     :disabled="isChangeRemark"
+                                    :maxlength="4096"
                                     class="remark-input"
                                     v-model.trim="tempRemark"
                                 />

@@ -76,7 +76,8 @@ class BluekingAgentUrlServiceImpl constructor(
         token: String,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): String {
         val gw = fixGateway(gateway)
         if (os == OS.WINDOWS) {
@@ -100,17 +101,27 @@ class BluekingAgentUrlServiceImpl constructor(
                 sc += "${t}installType=$installType"
                 t = "&"
             }
+            if (reInstallId != null) {
+                sc += "${t}reInstallId=$reInstallId"
+                t = "&"
+            }
             sc += "\";\$webClient = New-Object System.Net.WebClient;" +
                     "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};"
             sc += "\$ps = \$webClient.DownloadString(\$uri);Invoke-Expression -Command \$ps"
             return sc
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
-                "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+                "\"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+        var t = "?"
         if (!zoneName.isNullOrBlank()) {
-            url += "?zoneName=$zoneName"
+            url += "${t}zoneName=$zoneName"
+            t = "&"
         }
-        return "$url | bash"
+        if (reInstallId != null) {
+            url += "${t}reInstallId=$reInstallId"
+            t = "&"
+        }
+        return "$url\" | bash"
     }
 
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {

@@ -66,6 +66,7 @@ class OpenArtifactoryResourceImpl(
         val projectId = nodeCreatedEventPayload.node.projectId
         val pipelineId = nodeCreatedEventPayload.node.metadata["pipelineId"]?.toString()
         val buildId = nodeCreatedEventPayload.node.metadata["buildId"]?.toString()
+            ?: nodeCreatedEventPayload.node.metadata["bk_ci_bid"]?.toString()
 
         if (pipelineId == null || buildId == null) {
             throw ErrorCodeException(

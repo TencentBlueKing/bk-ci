@@ -54,7 +54,12 @@ interface IGithubService {
         checkRuns: GithubCheckRuns
     )
 
-    fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult
+    fun getProject(
+        projectId: String,
+        userId: String,
+        repoHashId: String?,
+        oauthUserId: String?
+    ): AuthorizeResult
 
     fun getBranch(token: String, projectName: String, branch: String?): GithubBranch?
 

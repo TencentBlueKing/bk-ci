@@ -59,7 +59,7 @@ import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
-import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
+import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionReconciler
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
@@ -193,7 +193,8 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         authResourceDao: AuthResourceDao,
         resourceGroupSyncService: PermissionResourceGroupSyncService,
-        redisOperation: RedisOperation
+        redisOperation: RedisOperation,
+        deptService: DeptService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -204,7 +205,8 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         authResourceDao = authResourceDao,
         resourceGroupSyncService = resourceGroupSyncService,
-        redisOperation = redisOperation
+        redisOperation = redisOperation,
+        deptService = deptService
     )
 
     @Bean
@@ -228,7 +230,8 @@ class RbacAuthConfiguration {
         client: Client,
         config: CommonConfig,
         userManageService: UserManageService,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        permissionService: RbacPermissionService
     ) = RbacPermissionManageFacadeServiceImpl(
         permissionResourceGroupService = permissionResourceGroupService,
         groupPermissionService = groupPermissionService,
@@ -249,7 +252,8 @@ class RbacAuthConfiguration {
         client = client,
         config = config,
         userManageService = userManageService,
-        traceEventDispatcher = traceEventDispatcher
+        traceEventDispatcher = traceEventDispatcher,
+        permissionService = permissionService
     )
 
     @Bean
@@ -344,7 +348,7 @@ class RbacAuthConfiguration {
         superManagerService: SuperManagerService,
         rbacCommonService: RbacCommonService,
         client: Client,
-        bkInternalPermissionComparator: BkInternalPermissionComparator,
+        bkInternalPermissionReconciler: BkInternalPermissionReconciler,
         authProjectUserMetricsService: AuthProjectUserMetricsService
     ) = RbacPermissionService(
         authHelper = authHelper,
@@ -355,34 +359,28 @@ class RbacAuthConfiguration {
         superManagerService = superManagerService,
         rbacCommonService = rbacCommonService,
         client = client,
-        bkInternalPermissionComparator = bkInternalPermissionComparator,
+        bkInternalPermissionReconciler = bkInternalPermissionReconciler,
         authProjectUserMetricsService = authProjectUserMetricsService
     )
 
     @Bean
     @Primary
     fun rbacPermissionProjectService(
-        authHelper: AuthHelper,
-        authResourceService: AuthResourceService,
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
-        rbacCommonService: RbacCommonService,
+        permissionService: RbacPermissionService,
         resourceGroupMemberService: RbacPermissionResourceMemberService,
         client: Client,
         resourceMemberService: PermissionResourceMemberService,
-        permissionManageFacadeService: PermissionManageFacadeService,
-        bkInternalPermissionComparator: BkInternalPermissionComparator
+        permissionManageFacadeService: PermissionManageFacadeService
     ) = RbacPermissionProjectService(
-        authHelper = authHelper,
-        authResourceService = authResourceService,
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
-        rbacCommonService = rbacCommonService,
+        permissionService = permissionService,
         resourceGroupMemberService = resourceGroupMemberService,
         client = client,
         resourceMemberService = resourceMemberService,
         permissionManageFacadeService = permissionManageFacadeService,
-        bkInternalPermissionComparator = bkInternalPermissionComparator
     )
 
     @Bean

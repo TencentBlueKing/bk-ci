@@ -209,6 +209,7 @@ object PipelineTransferAspectLoader {
         return aspects
     }
 
+    // MODEL2YAML 时使用
     fun checkInvalidElement(
         invalidElement: MutableList<String>,
         invalidNameSpaceElement: MutableList<String>,

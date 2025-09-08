@@ -521,13 +521,20 @@ class NodeDao {
         }
     }
 
-    fun updateDisplayName(dslContext: DSLContext, nodeId: Long, nodeName: String, userId: String): Int {
+    fun updateDisplayName(
+        dslContext: DSLContext,
+        nodeId: Long,
+        nodeName: String,
+        userId: String,
+        projectId: String
+    ): Int {
         with(TNode.T_NODE) {
             return dslContext.update(this)
                 .set(DISPLAY_NAME, nodeName)
                 .set(LAST_MODIFY_USER, userId)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_ID.eq(nodeId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.util.ThreadPoolUtil
@@ -169,7 +170,7 @@ class WebhookGrayCompareService @Autowired constructor(
                 val oldValue = value.toString()
                 val skip = when {
                     // 前缀参数
-                    IGNORED_PARAM_PREFIX.any { key.contains(it) } -> true
+                    IGNORED_PARAM_PREFIX.any { key.startsWith(it) } -> true
                     // 时间戳参数
                     IGNORED_PARAM_SUFFIX.any { key.endsWith(it) } &&
                             oldValue == "0" && !newParams.containsKey(key) -> true
@@ -423,7 +424,8 @@ class WebhookGrayCompareService @Autowired constructor(
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP,
             BK_REPO_GIT_MANUAL_UNLOCK,
-            BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
+            BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION,
+            PIPELINE_GIT_MR_DESC
         )
         // 忽略的前缀参数
         private val IGNORED_PARAM_PREFIX = listOf(

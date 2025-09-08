@@ -39,7 +39,8 @@ data class QualityHisMetadata(
     var taskName: String,
     val msg: String,
     val value: String,
-    val extra: String?
+    val extra: String?,
+    val createTime: Long? = null
 ) {
     fun clone(): QualityHisMetadata {
         return QualityHisMetadata(
@@ -52,7 +53,8 @@ data class QualityHisMetadata(
             taskName = this.taskName,
             msg = this.msg,
             value = this.value,
-            extra = this.extra
+            extra = this.extra,
+            createTime = this.createTime
         )
     }
 }

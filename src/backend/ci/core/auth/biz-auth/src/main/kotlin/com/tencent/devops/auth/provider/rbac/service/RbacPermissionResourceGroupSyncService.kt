@@ -45,6 +45,7 @@ import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -214,6 +215,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(verifyResult.expiredAt),
                             memberId = memberId
                         )
+                        BkInternalPermissionCache.invalidateProjectUserGroups(projectCode, memberId)
                         traceEventDispatcher.dispatch(
                             AuthProjectLevelPermissionsSyncEvent(
                                 projectCode = projectCode,
@@ -593,17 +595,26 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     projectCode = projectCode,
                     iamGroupIds = resourceMemberGroupIds.map { it.toString() }
                 )
-                val unsyncGroupIds = resourceMemberGroupIds.filterNot { resourceGroupIds.contains(it) }
-                if (unsyncGroupIds.isNotEmpty()) {
+                val unSyncGroupIds = resourceMemberGroupIds.filterNot { resourceGroupIds.contains(it) }
+                if (unSyncGroupIds.isNotEmpty()) {
+                    val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        iamGroupIds = unSyncGroupIds
+                    ).map { it.memberId }.distinct()
+                    BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                        projectCode = projectCode,
+                        userIds = memberIds
+                    )
                     authResourceGroupMemberDao.deleteByIamGroupIds(
                         dslContext = dslContext,
                         projectCode = projectCode,
-                        iamGroupIds = unsyncGroupIds
+                        iamGroupIds = unSyncGroupIds
                     )
                     traceEventDispatcher.dispatch(
                         AuthProjectLevelPermissionsSyncEvent(
                             projectCode = projectCode,
-                            iamGroupIds = unsyncGroupIds
+                            iamGroupIds = unSyncGroupIds
                         )
                     )
                 }
@@ -709,6 +720,12 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             authResourceGroupMemberDao.batchCreate(transactionContext, toAddMembers)
             authResourceGroupMemberDao.batchUpdate(transactionContext, toUpdateMembers)
         }
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = listOf(toAddMembers, toDeleteMembers, toUpdateMembers)
+                .flatMap { list -> list.map { it.memberId } }
+                .distinct()
+        )
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
                 projectCode = projectCode,

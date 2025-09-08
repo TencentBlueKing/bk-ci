@@ -11,17 +11,19 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
             @sort-change="handleSortChange"
+            @selection-change="handleSelectionChange"
         >
-            <!-- <bk-table-column
-            type="selection"
-            fixed="left"
-            width="40"
-        ></bk-table-column> -->
+            <bk-table-column
+                type="selection"
+                fixed="left"
+                width="40"
+            ></bk-table-column>
             <bk-table-column
                 :label="$t('environment.nodeInfo.displayName')"
                 sortable="custom"
                 prop="displayName"
-                min-width="160"
+                fixed="left"
+                min-width="200"
             >
                 <template slot-scope="props">
                     <div
@@ -108,7 +110,7 @@
                 v-if="allRenderColumnMap.label"
                 :label="$t('environment.tag')"
                 prop="label"
-                :width="200"
+                min-width="200"
                 show-overflow-tooltip
             >
                 <div
@@ -171,7 +173,7 @@
                 v-if="allRenderColumnMap.nodeStatus"
                 :label="`${$t('environment.status')}(${$t('environment.version')})`"
                 sortable="custom"
-                width="180"
+                min-width="180"
                 prop="nodeStatus"
             >
                 <template slot-scope="props">
@@ -262,10 +264,9 @@
             <bk-table-column
                 v-if="allRenderColumnMap.lastModifyTime"
                 :label="$t('environment.nodeInfo.lastModifyTime')"
-                :width="180"
                 sortable="custom"
                 prop="lastModifiedTime"
-                min-width="80"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -275,7 +276,7 @@
             <bk-table-column
                 v-if="allRenderColumnMap.latestBuildPipeline"
                 :label="$t('environment.nodeInfo.lastRunPipeline')"
-                :width="180"
+                min-width="180"
                 sortable="custom"
                 prop="latestBuildPipelineId"
                 show-overflow-tooltip
@@ -291,11 +292,10 @@
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.latestBuildTime"
-                :width="180"
                 :label="$t('environment.nodeInfo.lastRunAs')"
                 prop="latestBuildTime"
                 sortable="custom"
-                min-width="80"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -395,13 +395,14 @@
                             searchable
                             :name="`key_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`key_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`key_${index}`) || getDuplicateTagKeyFlags()[index] }"
                             @change="handleTagKeyChang(index)"
                         >
                             <bk-option
                                 v-for="option in tagKeyIdList"
                                 :key="option.tagKeyId"
                                 :id="option.tagKeyId"
+                                :disabled="setTagForm.some(item => item.tagKeyId === option.tagKeyId)"
                                 :name="option.tagKeyName"
                             >
                             </bk-option>
@@ -413,7 +414,7 @@
                             searchable
                             :name="`value_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`value_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`value_${index}`) || getDuplicateTagKeyFlags()[index] }"
                         >
                             <bk-option
                                 v-for="option in getTagValueIdList(item.tagKeyId)"
@@ -462,6 +463,7 @@
     import EmptyTableStatus from '@/components/empty-table-status'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         components: {
@@ -501,6 +503,8 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: localStorage.getItem('node_table_size') || 'small',
@@ -537,7 +541,7 @@
                     },
                     {
                         id: 'lastModifyBy',
-                        label: this.$t('environment.nodeInfo.lastModifyBy')
+                        label: this.$t('environment.lastModifier')
                     },
                     {
                         id: 'lastModifyTime',
@@ -666,6 +670,9 @@
             handleSortChange (sort) {
                 this.$emit('sort-change', sort)
             },
+            handleSelectionChange (list) {
+                this.$emit('selected-change', list)
+            },
             async saveEdit (node) {
                 const valid = await this.$validator.validate()
                 const displayName = this.curEditNodeDisplayName.trim()
@@ -726,6 +733,8 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                     this.$router.push({
                         name: 'nodeDetail',
                         params: {
@@ -833,8 +842,28 @@
                     })
                 })
             },
+            hasDuplicateTagKeys () {
+                const tagKeys = this.setTagForm.map(item => item.tagKeyId)
+                    .filter(key => key !== "")
+
+                return new Set(tagKeys).size !== tagKeys.length
+            },
+            getDuplicateTagKeyFlags () {
+                const tagKeys = this.setTagForm.map(item => item.tagKeyId)
+                return tagKeys.map((key, index) => {
+                    if (key === "") return false
+                    return tagKeys.indexOf(key) !== index
+                })
+            },
             async handleSetConfirm () {
                 try {
+                    if (this.hasDuplicateTagKeys()) {
+                        this.$bkMessage({
+                            message: this.$t('environment.noMultipleValuesPerNode'),
+                            theme: 'error'
+                        })
+                        return
+                    }
                     const isValid = await this.$validator.validateAll()
                     if (isValid) {
                         const params = {
@@ -901,14 +930,9 @@
 <style lang="scss">
   @import '@/scss/conf';
 
-  %flex {
-      display: flex;
-      align-items: center;
-  }
-
   .node-table-wrapper {
       margin-top: 20px;
-      td:nth-child(1) {
+      td:nth-child(2) {
           position: relative;
           color: $primaryColor;
           .node-name {
@@ -988,7 +1012,6 @@
           top: 6px;
           display: flex;
           width: 90%;
-          min-width: 280px;
           margin-right: 12px;
           z-index: 2;
           .edit-content {
@@ -998,7 +1021,7 @@
           .bk-form-input {
               height: 30px;
               font-size: 12px;
-              min-width: 280px;
+              width: 100%;
               padding-right: 74px;
           }
           .error-tips {

@@ -37,6 +37,17 @@ interface PermissionService {
         tenantId: String?
     ): Boolean
 
+    fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean
+
+    fun checkProjectManager(
+        userId: String,
+        projectCode: String
+    ): Boolean
+
     fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -118,4 +129,11 @@ interface PermissionService {
         projectCode: String,
         resourceType: String
     ): Map<String /*resourceType*/, List<String> /*resources*/>
+
+    fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String? = null,
+        tenantId: String?
+    ): List<String>
 }

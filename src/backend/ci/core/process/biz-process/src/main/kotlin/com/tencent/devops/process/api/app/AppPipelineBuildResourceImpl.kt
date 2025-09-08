@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
@@ -236,6 +237,28 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             triggerUser = triggerUser
         )
         return Result(result)
+    }
+
+    override fun getBuildParameters(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        archiveFlag: Boolean?
+    ): Result<List<BuildParameters>> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildParameters(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                archiveFlag = archiveFlag
+            )
+        )
     }
 
     override fun goToReview(

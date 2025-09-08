@@ -54,6 +54,8 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.service.BkInternalPermissionCache
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -87,7 +89,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val authResourceDao: AuthResourceDao,
     private val resourceGroupSyncService: PermissionResourceGroupSyncService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val deptService: DeptService
 ) : PermissionResourceGroupService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
@@ -145,7 +148,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 val groupName =
                     if ((resourceType == ResourceTypeId.PROJECT && defaultGroup) ||
                         resourceType != ResourceTypeId.PROJECT
-                                ) {
+                    ) {
                         getI18nGroupName(resourceGroup!!)
                     } else {
                         it.name
@@ -326,6 +329,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 authResourceGroupDao.deleteByIds(
                     dslContext = context,
                     ids = listOf(authResourceGroup.id)
+                )
+                val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                    dslContext = dslContext,
+                    projectCode = projectId,
+                    iamGroupId = groupId
+                ).map { it.memberId }
+                BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                    projectCode = projectId,
+                    userIds = memberIds
                 )
                 authResourceGroupMemberDao.deleteByIamGroupId(
                     dslContext = context,
@@ -625,6 +637,35 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         )
     }
 
+    override fun listProjectMemberGroupTemplateIds(
+        projectCode: String,
+        memberId: String
+    ): List<String> {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        // 获取用户的所属组织
+        val memberDeptInfos = deptService.getUserInfo(memberId, tenantId)?.deptInfo?.let {
+            if (it.isNotEmpty()) {
+                deptService.getUserDeptInfo(memberId, tenantId).toList()
+            } else {
+                emptyList()
+            }
+        } ?: emptyList()
+        // 查询项目下包含该成员及所属组织的用户组列表
+        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            memberIds = memberDeptInfos + memberId
+        ).map { it.iamGroupId.toString() }
+        // 通过项目组ID获取人员模板ID
+        return authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = projectGroupIds
+        ).filter { it.iamTemplateId != null }
+            .map { it.iamTemplateId.toString() }
+    }
+
     override fun syncManagerGroup(
         projectCode: String,
         managerId: Int,
@@ -720,6 +761,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             authResourceGroupDao.deleteByIds(
                 dslContext = transactionContext,
                 ids = records.map { it.id!! }
+            )
+            val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = records.map { it.relationId }
+            ).map { it.memberId }.distinct()
+            BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                projectCode = projectCode,
+                userIds = memberIds
             )
             authResourceGroupMemberDao.deleteByIamGroupIds(
                 dslContext = dslContext,

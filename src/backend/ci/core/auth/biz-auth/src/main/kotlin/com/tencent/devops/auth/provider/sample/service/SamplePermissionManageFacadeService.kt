@@ -65,11 +65,6 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         condition: IamGroupIdsQueryConditionDTO
     ): List<Int> = emptyList()
 
-    override fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int> = emptyList()
-
     override fun listResourceGroupMembers(
         projectCode: String,
         memberId: String,

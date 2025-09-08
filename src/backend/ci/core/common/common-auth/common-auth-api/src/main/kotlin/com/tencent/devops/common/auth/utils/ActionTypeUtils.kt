@@ -117,6 +117,7 @@ object ActionTypeUtils {
         override fun permissionSet(): Set<AuthPermission> {
             val actions = mutableSetOf<AuthPermission>()
             actions.add(AuthPermission.VIEW)
+            actions.add(AuthPermission.VISIT)
             actions.add(AuthPermission.SHARE)
             actions.add(AuthPermission.LIST)
             return actions

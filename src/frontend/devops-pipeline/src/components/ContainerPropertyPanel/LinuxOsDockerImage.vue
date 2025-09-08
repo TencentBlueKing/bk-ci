@@ -232,7 +232,7 @@
                 return this.container.dispatchType?.dockerInfo?.credential?.credentialId ?? ''
             },
             buildImagePullPolicy () {
-                return this.container.dispatchType?.dockerInfo?.imagePullPolicy ?? 'always'
+                return this.container.dispatchType?.dockerInfo?.imagePullPolicy ?? 'if-not-present'
             },
             buildImage () {
                 return this.container.dispatchType?.dockerInfo?.image ?? ''
@@ -283,7 +283,8 @@
                         ...dispatchType,
                         dockerInfo: {
                             ...dispatchType.dockerInfo,
-                            imageType: 'THIRD'
+                            imageType: 'THIRD',
+                            imagePullPolicy: 'if-not-present'
                         }
                     }
                     : {

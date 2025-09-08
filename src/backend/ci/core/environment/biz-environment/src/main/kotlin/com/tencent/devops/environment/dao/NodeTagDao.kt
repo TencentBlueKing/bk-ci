@@ -220,27 +220,28 @@ class NodeTagDao {
         return resM.map { it.key to it.value.values.toMutableList() }.toMap()
     }
 
-    fun deleteNodesTags(dslContext: DSLContext, projectId: String, nodeId: Long) {
+    fun deleteNodesTags(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>) {
         with(TNodeTags.T_NODE_TAGS) {
-            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(NODE_ID.eq(nodeId)).execute()
+            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(NODE_ID.`in`(nodeIds)).execute()
         }
     }
 
     fun batchAddNodeTags(
         dslContext: DSLContext,
         projectId: String,
-        nodeId: Long,
-        valueAndKeyIds: Map<Long, Long>
+        nodeAndValueAndKeyIds: Map<Long, Map<Long, Long>>
     ) {
         with(TNodeTags.T_NODE_TAGS) {
-            val records = valueAndKeyIds.map { (v, k) ->
-                dslContext.newRecord(this).apply {
-                    this.projectId = projectId
-                    this.nodeId = nodeId
-                    this.tagValueId = v
-                    this.tagKeyId = k
+            val records = nodeAndValueAndKeyIds.map { (nodeId, valueAndKeyIds) ->
+                valueAndKeyIds.map { (valueId, keyId) ->
+                    dslContext.newRecord(this).apply {
+                        this.projectId = projectId
+                        this.nodeId = nodeId
+                        this.tagValueId = valueId
+                        this.tagKeyId = keyId
+                    }
                 }
-            }
+            }.flatten()
             dslContext.batchInsert(records).execute()
         }
     }

@@ -55,7 +55,8 @@ interface AgentUrlService {
         token: String,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): String
 
     /**

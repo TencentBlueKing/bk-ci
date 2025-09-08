@@ -216,6 +216,7 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
+    import Vue from 'vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
@@ -236,7 +237,7 @@
                     return this.pipelineSetting.failIfVariableInvalid ?? false
                 },
                 set (val) {
-                    this.pipelineSetting.failIfVariableInvalid = val
+                    Vue.set(this.pipelineSetting, 'failIfVariableInvalid', val)
                 }
             },
             runTypeMap () {

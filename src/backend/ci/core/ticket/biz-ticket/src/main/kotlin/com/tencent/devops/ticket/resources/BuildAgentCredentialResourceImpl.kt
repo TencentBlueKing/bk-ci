@@ -46,7 +46,8 @@ class BuildAgentCredentialResourceImpl @Autowired constructor(
         agentId: String,
         secretKey: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -57,6 +58,14 @@ class BuildAgentCredentialResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
+        return Result(
+            credentialService.buildGet(
+                projectId = projectId,
+                buildId = buildId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 }

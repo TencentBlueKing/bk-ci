@@ -76,6 +76,7 @@ object OpenAPIMessageCode {
     const val BK_HTTP_CODE = "bkHttpCode" // HTTP代码
     const val BK_REQUEST_SAMPLE = "bkRequestSample" // 请求样例
     const val BK_ALL_MODEL_DATA = "bkAllModelData" // 相关模型数据
+    const val BK_STATEMENT = "bkStatement" // 该文档由工具自动生成
     const val BK_YES = "bkYes" // 是
     const val BK_NO = "bkNo" // 否
     const val BK_DISCRIMINATOR_ILLUSTRATE = "bkDiscriminatorIllustrate" // 用于指定实现某一多态类, 可选{0},具体实现见下方

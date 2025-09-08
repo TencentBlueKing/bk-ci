@@ -43,8 +43,20 @@ class UserGithubResourceImpl @Autowired constructor(
     private val githubOAuthService: GithubOAuthService,
     private val githubTokenService: GithubTokenService
 ) : UserGithubResource {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(githubService.getProject(projectId, userId, repoHashId))
+    override fun getProject(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        oauthUserId: String?
+    ): Result<AuthorizeResult> {
+        return Result(
+            githubService.getProject(
+                projectId = projectId,
+                userId = userId,
+                repoHashId = repoHashId,
+                oauthUserId = oauthUserId
+            )
+        )
     }
 
     override fun deleteToken(userId: String): Result<Boolean> {

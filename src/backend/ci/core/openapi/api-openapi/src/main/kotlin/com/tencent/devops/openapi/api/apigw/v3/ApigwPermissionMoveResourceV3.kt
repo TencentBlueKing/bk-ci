@@ -3,6 +3,7 @@ package com.tencent.devops.openapi.api.apigw.v3
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -21,6 +22,7 @@ import jakarta.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/permission/move")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@BkApigwApi(version = "v3")
 interface ApigwPermissionMoveResourceV3 {
 
     @Operation(summary = "获取项目下pipelineId+自增id", tags = ["v3_app_pipeline_id_info", "v3_user_pipeline_id_info"])

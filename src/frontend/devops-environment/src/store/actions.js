@@ -26,8 +26,9 @@ const actions = {
     /**
      * 环境列表
      */
-    requestEnvList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}`).then(response => {
+    requestEnvList ({ commit }, { projectId, params }) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}?${query}`).then(response => {
             return response
         })
     },
@@ -127,6 +128,11 @@ const actions = {
     },
     setNodeTag ({ commit }, { projectId, params }) {
         return vue.$ajax.post(`${prefix}/user/nodetag/editTag?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    batchEditTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/batchEditTag?projectId=${projectId}`, params).then(response => {
             return response
         })
     },

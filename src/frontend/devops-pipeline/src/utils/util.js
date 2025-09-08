@@ -22,6 +22,7 @@ import {
 } from '@/store/constants'
 import { v4 as uuidv4 } from 'uuid'
 import { isFileParam } from '@/store/modules/atom/paramsConfig'
+import { VAR_MAX_LENGTH } from '@/store/constants'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')

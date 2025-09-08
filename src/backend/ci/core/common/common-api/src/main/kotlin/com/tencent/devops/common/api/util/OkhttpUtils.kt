@@ -57,6 +57,7 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.util.FileCopyUtils
 import java.net.InetAddress
+import java.net.URL
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
@@ -207,7 +208,7 @@ object OkhttpUtils {
             if (
                 request.method == "POST" &&
                 (response.code == HttpURLConnection.HTTP_MOVED_PERM ||
-                    response.code == HttpURLConnection.HTTP_MOVED_TEMP)
+                        response.code == HttpURLConnection.HTTP_MOVED_TEMP)
             ) {
                 val location = response.header("Location")
                 if (location != null) {
@@ -427,6 +428,17 @@ object OkhttpUtils {
         } catch (e: IllegalArgumentException) {
             logger.warn("url Invalid: ${e.message}")
             false
+        }
+    }
+
+    fun getPort(urlStr: String): Int? {
+        return try {
+            val url = URL(urlStr)
+            return url.port
+        } catch (ignored: Exception) {
+            logger.warn("url[] Invalid", ignored)
+            // 处理无效URL格式的异常
+            null
         }
     }
 }

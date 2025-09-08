@@ -1,4 +1,4 @@
-//go:build linux || darwin
+//go:build darwin
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -72,14 +72,6 @@ func DoUpgradeAgent() error {
 	defer func() { totalLock.Unlock() }()
 
 	daemonChange, _ := checkUpgradeFileChange(config.GetClientDaemonFile())
-	/*
-		#4686
-		 1、kill devopsDaemon进程的行为在 macos 下， 如果当前是由 launchd 启动的（比如mac重启之后，devopsDaemon会由launchd接管启动）
-			当upgrader进程触发kill devopsDaemon时，会导致当前upgrader进程也被系统一并停掉，所以要排除macos的进程停止操作，否则会导致升级中断
-	*/
-	if daemonChange && systemutil.IsLinux() {
-		tryKillAgentProcess(daemonProcess) // macos 在升级后只能使用手动重启
-	}
 
 	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
 	if agentChange {
@@ -105,13 +97,6 @@ func DoUpgradeAgent() error {
 		err = replaceAgentFile(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
-		}
-		if systemutil.IsLinux() { // #4686 如上，上面仅停止Linux的devopsDaemon进程，则也只重启动Linux的
-			if startErr := StartDaemon(); startErr != nil {
-				logs.WithError(startErr).Error("start daemon failed")
-				return startErr
-			}
-			logs.Info("agent start done")
 		}
 	}
 	logs.Info("agent upgrade done, upgrade process exiting")

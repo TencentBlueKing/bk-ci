@@ -137,7 +137,7 @@
                 const type = this.$route.params.type
                 const id = this.commentData.commentId
 
-                if (Object.hasOwnProperty.call(this.funObj.expandReplys, type) === false) {
+                if (!Object.keys(this.funObj.expandReplys).includes(type) || typeof this.funObj.expandReplys[type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return Promise.reject(new Error(this.$t('store.typeError')))
                 }
@@ -152,7 +152,7 @@
                 const type = this.$route.params.type
                 const id = this.commentData.commentId
 
-                if (Object.hasOwnProperty.call(this.funObj.priase, type) === false) {
+                if (!Object.keys(this.funObj.priase).includes(type) || typeof this.funObj.priase[type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }

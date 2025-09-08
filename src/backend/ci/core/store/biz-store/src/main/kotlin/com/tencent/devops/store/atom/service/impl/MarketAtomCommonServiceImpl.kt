@@ -765,7 +765,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
             atomStatus = atom.atomStatus,
-            sensitiveParams = params?.joinToString(",")
+            sensitiveParams = params?.joinToString(","),
+            canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props)
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -821,6 +822,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
             val params = getAtomSensitiveParams(props ?: atomRecord.props)
             atomRunInfo.sensitiveParams = params?.joinToString(",")
+            atomRunInfo.canPauseBeforeRun = getAtomCanPauseBeforeRun(atomRecord.props)
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,
@@ -939,6 +941,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
     }
 
+    override fun getAtomCanPauseBeforeRun(props: String): Boolean {
+        return try {
+            val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
+            propsMap["config"]?.let { config ->
+                config as Map<*, *>
+                config["canPauseBeforeRun"]?.toString()?.toBooleanStrictOrNull()
+            }
+        } catch (e: Exception) {
+            logger.warn("Parse atom props failed, props: $props", e)
+            false
+        } ?: false
+    }
+
     override fun getAtomSensitiveParams(props: String): List<String>? {
         return try {
             val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
@@ -947,6 +962,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     when {
                         value is Map<*, *> && value["isSensitive"] as? Boolean == true ->
                             listOf(key.toString())
+
                         else -> emptyList()
                     }
                 }

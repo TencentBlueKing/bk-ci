@@ -352,6 +352,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     tenantId = projectCreateInfo.tenantId
                 )
             }
+            validateProjectOrganization(
+                projectChannel = projectChannel,
+                bgId = bgId,
+                bgName = bgName,
+                deptId = deptId,
+                deptName = deptName
+            )
             validateProjectRelateProduct(
                 ProjectProductValidateDTO(
                     englishName = englishName,
@@ -361,14 +368,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     productId = productId,
                     productName = productName,
                     bgId = bgId,
+                    bgName = bgName
                 )
-            )
-            validateProjectOrganization(
-                projectChannel = projectChannel,
-                bgId = bgId,
-                bgName = bgName,
-                deptId = deptId,
-                deptName = deptName
             )
             validateProperties(properties)
         }
@@ -704,7 +705,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectOperation = ProjectOperation.UPDATE,
                     productId = productId,
                     productName = productName,
-                    bgId = bgId
+                    bgId = bgId,
+                    bgName = bgName
                 )
             )
             validateProjectOrganization(
@@ -1330,7 +1332,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         userId = userId,
                         projectOperation = ProjectOperation.ENABLE,
                         productId = projectInfo.productId,
-                        bgId = projectInfo.bgId
+                        bgId = projectInfo.bgId,
+                        bgName = projectInfo.bgName
                     )
                 )
             }

@@ -174,7 +174,11 @@ class OpAtomResourceImpl @Autowired constructor(
         return Result(opAtomService.setDefault(userId = userId, atomCode = atomCode))
     }
 
-    override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
-        return opAtomService.updateAtomSensitiveCacheConfig(userId, atomCode)
+    override fun updateAtomConfigCache(
+        userId: String,
+        kProperty: String,
+        atomCode: String?
+    ): Result<Boolean> {
+        return opAtomService.updateAtomConfigCache(userId, kProperty, atomCode)
     }
 }

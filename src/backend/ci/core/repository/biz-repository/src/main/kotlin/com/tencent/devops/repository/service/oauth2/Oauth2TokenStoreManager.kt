@@ -45,8 +45,16 @@ class Oauth2TokenStoreManager @Autowired constructor(
         getTokenStoreService(scmCode).store(scmCode = scmCode, oauthTokenInfo = oauthTokenInfo)
     }
 
-    fun delete(userId: String, scmCode: String) {
-        getTokenStoreService(scmCode).delete(userId, scmCode)
+    fun delete(userId: String, scmCode: String, username: String) {
+        getTokenStoreService(scmCode).delete(
+            username = username,
+            scmCode = scmCode,
+            userId = userId
+        )
+    }
+
+    fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return getTokenStoreService(scmCode).list(userId, scmCode)
     }
 
     private fun getTokenStoreService(scmCode: String): IOauth2TokenStoreService {

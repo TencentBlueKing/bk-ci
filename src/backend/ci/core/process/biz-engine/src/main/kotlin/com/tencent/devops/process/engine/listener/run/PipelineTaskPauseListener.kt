@@ -234,7 +234,11 @@ class PipelineTaskPauseListener @Autowired constructor(
                 atomCode = task.atomCode,
                 executeCount = task.executeCount,
                 buildStatus = BuildStatus.CANCELED.name,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::stepName.name to
+                        task.taskName
+                )
             )
         )
     }

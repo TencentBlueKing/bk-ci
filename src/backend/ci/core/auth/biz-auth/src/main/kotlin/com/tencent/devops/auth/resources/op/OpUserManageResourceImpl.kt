@@ -14,8 +14,13 @@ class OpUserManageResourceImpl(
     private val userManageService: UserManageService,
     private val permissionAuthorizationService: PermissionAuthorizationService
 ) : OpUserManageResource {
-    override fun syncUserInfoData(): Result<Boolean> {
-        userManageService.syncUserInfoData()
+    override fun syncAllUserInfoData(): Result<Boolean> {
+        userManageService.syncAllUserInfoData()
+        return Result(true)
+    }
+
+    override fun syncUserInfoData(userIds: List<String>): Result<Boolean> {
+        userManageService.syncUserInfoData(userIds)
         return Result(true)
     }
 
