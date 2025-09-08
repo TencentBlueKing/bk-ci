@@ -216,7 +216,7 @@ class PipelineBuildService(
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
 
-            resource.model.getTriggerContainer().params = publicVarService.updatePublicVarToLatest(
+            resource.model.getTriggerContainer().params = publicVarService.listPublicVarByLatest(
                 projectId = resource.projectId,
                 params = resource.model.getTriggerContainer().params
             )

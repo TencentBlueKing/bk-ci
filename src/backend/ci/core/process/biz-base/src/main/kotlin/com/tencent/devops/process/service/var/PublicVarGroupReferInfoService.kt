@@ -674,10 +674,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      * @return 分页结果
      */
     fun listVarReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicGroupVarRefDO> {
-        return getReferInfoByType(queryReq)
-    }
-
-    private fun getReferInfoByType(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicGroupVarRefDO> {
         val (totalCount, varGroupReferInfo) = queryVarGroupReferInfo(queryReq)
         if (totalCount == 0) {
             return Page(
@@ -689,7 +685,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         }
 
         val records = varGroupReferInfo.map {
-            when (queryReq.referType) {
+            when (it.referType) {
                 PublicVerGroupReferenceTypeEnum.PIPELINE -> {
                     PublicGroupVarRefDO(
                         referId = it.referId,

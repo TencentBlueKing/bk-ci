@@ -186,13 +186,7 @@ class PublicVarService @Autowired constructor(
         }
     }
 
-    /**
-     * 更新公共变量组引用列表，将varGroupName非空且varGroupVersion为空的变量更新为最新版本
-     * @param projectId 项目ID
-     * @param params 变量列表
-     * @return 更新后的BuildFormProperty列表
-     */
-    fun updatePublicVarToLatest(
+    fun listPublicVarByLatest(
         projectId: String,
         params: List<BuildFormProperty>
     ): List<BuildFormProperty> {
@@ -260,6 +254,10 @@ class PublicVarService @Autowired constructor(
         val allLatestVarNames = allLatestVars.map { it.name }
         if (allLatestVarNames.size != allLatestVarNames.distinct().size) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
+        }
+        // 清楚版本信息，确保不会绑定到具体版本
+        result.forEach {
+            it.varGroupVersion = null
         }
 
         return result

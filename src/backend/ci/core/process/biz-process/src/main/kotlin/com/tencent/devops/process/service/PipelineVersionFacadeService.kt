@@ -762,7 +762,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         model.desc = setting.desc
         // 更新触发器容器中的公共变量到最新版本
         val triggerContainer = model.getTriggerContainer()
-        triggerContainer.params = publicVarService.updatePublicVarToLatest(projectId, triggerContainer.params)
+        triggerContainer.params = publicVarService.listPublicVarByLatest(projectId, triggerContainer.params)
         // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
