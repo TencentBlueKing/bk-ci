@@ -127,6 +127,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         val successPipelines = mutableListOf<String>()
         val failurePipelines = mutableListOf<String>()
         val totalPages = PageUtil.calTotalPage(PageUtil.MAX_PAGE_SIZE, itemCount)
+        var pullRequestId: Long? = null
         var pullRequestUrl: String? = null
         for (page in 1..totalPages) {
             val templateInstanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
@@ -146,6 +147,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                     successPipelines = successPipelines,
                     failurePipelines = failurePipelines
                 )
+                pullRequestId = deployPipelineResult?.pullRequestId
                 pullRequestUrl = deployPipelineResult?.targetUrl
             }
         }
@@ -161,6 +163,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
             status = baseStatus.name,
             successItemNum = successPipelines.size,
             failItemNum = failurePipelines.size,
+            pullRequestId = pullRequestId,
             pullRequestUrl = pullRequestUrl,
             userId = "system"
         )

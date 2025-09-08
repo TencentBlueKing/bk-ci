@@ -421,7 +421,8 @@ class PipelineYamlFileManager @Autowired constructor(
                     repoHashId = repoHashId,
                     filePath = filePath,
                     branch = ref,
-                    pullRequestUrl = pullRequest?.link
+                    pullRequestUrl = pullRequest?.link,
+                    pullRequestId = pullRequest?.id,
                 )
             } catch (ignored: RemoteServiceException) {
                 throw when (ignored.errorCode) {

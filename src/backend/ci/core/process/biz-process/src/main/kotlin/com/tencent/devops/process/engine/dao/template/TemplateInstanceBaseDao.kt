@@ -135,6 +135,7 @@ class TemplateInstanceBaseDao {
         successItemNum: Int? = null,
         failItemNum: Int? = null,
         status: String? = null,
+        pullRequestId: Long? = null,
         pullRequestUrl: String? = null,
         userId: String
     ) {
@@ -151,6 +152,9 @@ class TemplateInstanceBaseDao {
             }
             if (pullRequestUrl != null) {
                 baseStep.set(PULL_REQUEST_URL, pullRequestUrl)
+            }
+            if (pullRequestId != null) {
+                baseStep.set(PULL_REQUEST_ID, pullRequestId)
             }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)

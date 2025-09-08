@@ -197,6 +197,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             versionName = resourceOnlyVersion.versionName,
             yamlInfo = yamlInfo,
             targetUrl = yamlFileReleaseResult?.pullRequestUrl,
+            pullRequestId = yamlFileReleaseResult?.pullRequestId,
             updateBuildNo = updateBuildNo
         )
     }

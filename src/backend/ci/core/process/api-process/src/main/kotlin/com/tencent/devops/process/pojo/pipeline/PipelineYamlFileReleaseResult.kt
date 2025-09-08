@@ -41,5 +41,7 @@ data class PipelineYamlFileReleaseResult(
     @get:Schema(title = "分支名")
     val branch: String,
     @get:Schema(title = "合并请求链接")
-    val pullRequestUrl: String?
+    val pullRequestUrl: String?,
+    @get:Schema(title = "合并请求ID")
+    val pullRequestId: Long?
 )
