@@ -119,7 +119,7 @@ data class TriggerContainer(
      */
     fun updatePublicParamsIndex() {
         val paramsIndex = mutableMapOf<String, Int?>()
-        params.mapIndexed { index, property ->
+        params.forEachIndexed { index, property ->
             if (property.varGroupName != null) {
                 property.index = index
             }
