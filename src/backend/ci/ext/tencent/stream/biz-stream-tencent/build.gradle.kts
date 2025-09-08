@@ -26,8 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:stream:biz-stream"))
-
     api(project(":ext:tencent:common:common-pipeline-yaml-tencent"))
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
@@ -44,6 +42,41 @@ dependencies {
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
     api(project(":ext:tencent:common:common-notify-tencent"))
+
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-redis"))
+    api(project(":core:common:common-auth"))
+    api(project(":core:common:common-archive"))
+    api(project(":core:common:common-db"))
+    api(project(":core:common:common-scm"))
+    api(project(":core:common:common-audit"))
+    api(project(":core:common:common-websocket"))
+    api(project(":core:common:common-webhook:biz-common-webhook"))
+    api(project(":core:store:api-store"))
+    api(project(":core:project:api-project"))
+    api(project(":core:misc:api-plugin"))
+    api(project(":core:quality:api-quality"))
+    api(project(":core:auth:api-auth"))
+    api(project(":core:common:common-codecc"))
+    api(project(":core:common:common-pipeline-yaml"))
+    api(project(":core:notify:api-notify"))
+
+    api("com.zaxxer:HikariCP")
+    api("com.mysql:mysql-connector-j")
+    api("org.apache.commons:commons-exec")
+    api("org.quartz-scheduler:quartz")
+    api("org.springframework.boot:spring-boot-starter-websocket")
+    api("com.github.ben-manes.caffeine:caffeine")
+    api("jakarta.websocket:jakarta.websocket-api")
+    api("io.undertow:undertow-servlet")
+    api("io.undertow:undertow-websockets-jsr")
+    api("org.json:json")
+    api("org.apache.ant:ant")
+
+    // jsonschema
+    api("com.networknt:json-schema-validator")
 
     testImplementation(project(":core:common:common-test"))
 }

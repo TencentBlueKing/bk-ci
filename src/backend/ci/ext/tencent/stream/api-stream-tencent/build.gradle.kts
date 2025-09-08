@@ -26,7 +26,14 @@
  */
 
 dependencies {
-    api(project(":core:stream:api-stream"))
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-event"))
+    api(project(":core:store:api-store"))
+    api(project(":core:log:api-log"))
+    api(project(":core:common:common-webhook:api-common-webhook"))
+    api(project(":core:process:api-process"))
+    api(project(":core:project:api-project"))
 
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
