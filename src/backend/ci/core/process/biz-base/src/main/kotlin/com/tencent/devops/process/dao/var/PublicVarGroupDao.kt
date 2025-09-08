@@ -34,7 +34,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import org.tmatesoft.svn.core.internal.io.dav.DAVElement.VERSION_NAME
 
 @Repository
 class PublicVarGroupDao {

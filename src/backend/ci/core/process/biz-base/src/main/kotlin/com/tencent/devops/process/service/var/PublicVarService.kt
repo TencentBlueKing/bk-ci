@@ -199,9 +199,6 @@ class PublicVarService @Autowired constructor(
             !it.varGroupName.isNullOrBlank() && it.varGroupVersion == null
         }.groupBy { it.varGroupName }
 
-        // 收集所有最新版本变量用于检查同名
-        val allLatestVars = mutableListOf<BuildFormProperty>()
-
         groupedVars.forEach { (groupName, vars) ->
 
             // 获取该组的最新版本
@@ -223,9 +220,6 @@ class PublicVarService @Autowired constructor(
             val latestVars = latestVarPOs.map { publicVarPO ->
                 JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
             }
-
-            // 收集最新版本变量
-            allLatestVars.addAll(latestVars)
 
             // 1. 先对相同ID的变量进行替换
             val replacedIds = mutableSetOf<String>()

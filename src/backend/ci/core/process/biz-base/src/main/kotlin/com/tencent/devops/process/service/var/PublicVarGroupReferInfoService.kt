@@ -35,7 +35,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.metrics.api.ServiceMetricsResource
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
@@ -120,8 +121,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         
         if (duplicateGroupNames.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf("变量组引用中存在重复的组名: ${duplicateGroupNames.joinToString(", ")}")
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE,
+                params = arrayOf(duplicateGroupNames.joinToString(", "))
             )
         }
     }
@@ -301,8 +302,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 publicVarGroupReferInfo = publicVarGroupReferInfo
             )
         } catch (t: Throwable) {
-            logger.error("Failed to add pipeline group refer for ${publicVarGroupReferInfo.referId}", t)
-            throw RuntimeException("更新变量组引用失败: ${t.message}", t)
+            logger.warn("Failed to add pipeline group refer for ${publicVarGroupReferInfo.referId}", t)
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
         }
         return true
     }
@@ -520,8 +521,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum
     ) {
-        require(projectId.isNotBlank()) { "项目ID不能为空" }
-        require(referId.isNotBlank()) { "引用ID不能为空" }
         
         try {
             dslContext.transaction { configuration ->
@@ -566,8 +565,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 logger.info("Successfully deleted ${referInfosToDelete.size} references for referId: $referId")
             }
         } catch (t: Throwable) {
-            logger.error("Failed to delete refer info for referId: $referId", t)
-            throw RuntimeException("删除变量组引用失败: ${t.message}", t)
+            logger.warn("Failed to delete refer info for referId: $referId", t)
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
         }
     }
 
@@ -583,64 +582,44 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         referIds: List<String>,
         referType: PublicVerGroupReferenceTypeEnum
     ): Boolean {
-        require(projectId.isNotBlank()) { "项目ID不能为空" }
         
         if (referIds.isEmpty()) {
-            logger.info("ReferIds list is empty, skip deletion")
             return false
         }
-        
-        val validReferIds = referIds.filter { it.isNotBlank() }
-        if (validReferIds.isEmpty()) {
-            logger.warn("All referIds are blank, skip deletion")
-            return false
-        }
-        
-        try {
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                
-                // 先获取所有要删除的引用记录，用于减少referCount
-                val allReferInfosToDelete = collectReferInfosToDelete(
-                    context = context,
-                    projectId = projectId,
-                    referIds = validReferIds,
-                    referType = referType
-                )
-                
-                if (allReferInfosToDelete.isEmpty()) {
-                    logger.info("No references found for referIds: $validReferIds, skip deletion")
-                    return@transaction
-                }
-                
-                // 批量删除变量组引用记录
-                publicVarGroupReferInfoDao.deleteByReferIds(
-                    dslContext = context,
-                    projectId = projectId,
-                    referIds = validReferIds,
-                    referType = referType
-                )
-                
-                // 批量删除对应的变量引用记录
-                publicVarReferInfoDao.deleteByReferIdsWithoutVersion(
-                    dslContext = context,
-                    projectId = projectId,
-                    referIds = validReferIds,
-                    referType = referType
-                )
-                
-                // 为每个被删除的变量组引用减少referCount计数
-                updateReferenceCountsForDeletedRefs(
-                    context = context,
-                    projectId = projectId,
-                    deletedReferInfos = allReferInfosToDelete
-                )
-                
-                logger.info("Successfully deleted ${allReferInfosToDelete.size} references for ${validReferIds.size} referIds")
-            }
-        } catch (t: Throwable) {
-            logger.error("Failed to delete refer info for referIds: $validReferIds", t)
-            throw RuntimeException("批量删除变量组引用失败: ${t.message}", t)
+
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+
+            // 先获取所有要删除的引用记录，用于减少referCount
+            val allReferInfosToDelete = collectReferInfosToDelete(
+                context = context,
+                projectId = projectId,
+                referIds = referIds,
+                referType = referType
+            )
+
+            // 批量删除变量组引用记录
+            publicVarGroupReferInfoDao.deleteByReferIds(
+                dslContext = context,
+                projectId = projectId,
+                referIds = referIds,
+                referType = referType
+            )
+
+            // 批量删除对应的变量引用记录
+            publicVarReferInfoDao.deleteByReferIdsWithoutVersion(
+                dslContext = context,
+                projectId = projectId,
+                referIds = referIds,
+                referType = referType
+            )
+
+            // 为每个被删除的变量组引用减少referCount计数
+            updateReferenceCountsForDeletedRefs(
+                context = context,
+                projectId = projectId,
+                deletedReferInfos = allReferInfosToDelete
+            )
         }
         return true
     }
