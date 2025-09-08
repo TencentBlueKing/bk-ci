@@ -44,6 +44,7 @@ import feign.Request
 import feign.RequestInterceptor
 import feign.RetryableException
 import feign.Retryer
+import feign.codec.Decoder
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs3.JAXRS3Contract
@@ -56,13 +57,14 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import kotlin.reflect.KClass
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Component
-import kotlin.reflect.KClass
+import jakarta.ws.rs.core.Response as JakartaResponse
 
 /**
  *
@@ -133,6 +135,7 @@ class Client @Autowired constructor(
     private val feignClient = OkHttpClient(okHttpClient)
     private val clientContract = ClientContract()
     private val springContract = SpringContract()
+    private val jakartaResponseDecoder = JakartaResponseDecoder()
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
@@ -256,7 +259,7 @@ class Client @Autowired constructor(
             .client(feignClient)
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
-            .decoder(jacksonDecoder)
+            .decoder(getDecoder(clz))
             .contract(contract)
             .requestInterceptor(requestInterceptor)
             .retryer(HttpGetRetry()) // 优化重复创建的匿名类
@@ -283,6 +286,19 @@ class Client @Autowired constructor(
             compositeDiscoveryClient = compositeDiscoveryClient!!,
             bkTag = bkTag
         ).url()
+    }
+
+    /**
+     * 根据类型获取合适的decoder
+     * 如果是jakarta.ws.rs.core.Response类型，使用JakartaResponseDecoder
+     * 其他情况使用jacksonDecoder
+     */
+    private fun <T : Any> getDecoder(clz: KClass<T>): Decoder {
+        return if (clz.java == JakartaResponse::class.java) {
+            jakartaResponseDecoder
+        } else {
+            jacksonDecoder
+        }
     }
 
     private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
