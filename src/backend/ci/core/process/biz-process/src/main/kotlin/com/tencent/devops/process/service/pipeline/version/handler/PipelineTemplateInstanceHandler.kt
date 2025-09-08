@@ -163,7 +163,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
             version = resourceOnlyVersion.version,
             versionNum = resourceOnlyVersion.versionNum,
             versionName = resourceOnlyVersion.versionName,
-            targetUrl = yamlFileReleaseResult?.pullRequestUrl
+            targetUrl = yamlFileReleaseResult?.pullRequestUrl,
+            pullRequestId = yamlFileReleaseResult?.pullRequestId
         )
     }
 

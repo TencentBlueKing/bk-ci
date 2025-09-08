@@ -309,6 +309,9 @@ class PipelineTemplateRelatedDao {
                 if (!pipelineIds.isNullOrEmpty()) {
                     conditions.add(PIPELINE_ID.`in`(pipelineIds))
                 }
+                if (pullRequestId != null) {
+                    conditions.add(PULL_REQUEST_ID.eq(pullRequestId))
+                }
                 conditions
             }
         }

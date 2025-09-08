@@ -412,6 +412,34 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         repository: Repository,
         hook: PullRequestHook
     ): List<PipelineYamlDiff> {
+        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
+        computeClosedDefaultYamlDiff(
+            eventId = eventId,
+            repository = repository,
+            hook = hook,
+            yamlDiffs = yamlDiffs
+        )
+        computeClosedSourceYamlDiff(
+            eventId = eventId,
+            repository = repository,
+            hook = hook,
+            yamlDiffs = yamlDiffs
+        )
+        return yamlDiffs
+    }
+
+
+    /**
+     * 计算关闭合并请求的源分支的yaml文件事件
+     *
+     * 源分支上如果有创建和更新,需要对yaml文件进行关闭操作
+     */
+    private fun computeClosedSourceYamlDiff(
+        eventId: Long,
+        repository: Repository,
+        hook: PullRequestHook,
+        yamlDiffs: MutableList<PipelineYamlDiff>
+    ) {
         val projectId = repository.projectId!!
         val repoHashId = repository.repoHashId!!
         val serverRepo = hook.repository()
@@ -424,7 +452,87 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         val sourceBranch = pullRequest.sourceRef.name
         val targetBranch = pullRequest.targetRef.name
 
-        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
+        // 如果不是fork仓库,并且是默认分支,那么不需要触发
+        if (!fork && defaultBranch == sourceBranch) {
+            return
+        }
+        val sourceFileTrees = pipelineYamlFileService.listFileTree(
+            projectId = projectId,
+            ref = pullRequest.sourceRef.name,
+            authRepository = if (fork) {
+                // fork仓库,需要获取pr触发人的oauth获取文件信息
+                AuthRepository(
+                    scmCode = repository.scmCode,
+                    url = sourceRepo.httpUrl,
+                    userName = repository.userName,
+                    auth = UserOauthTokenAuthCred(hook.sender.name)
+                )
+            } else {
+                AuthRepository(repository)
+            }
+        )
+        val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
+
+        sourceFileTrees.forEach { sourceTree ->
+            val sourcePath = GitActionCommon.getCiFilePath(sourceTree.path)
+            val yamlDiff = PipelineYamlDiff(
+                projectId = projectId,
+                eventId = eventId,
+                eventType = hook.eventType,
+                repoHashId = repoHashId,
+                actionType = YamlFileActionType.CLOSE,
+                defaultBranch = defaultBranch,
+                filePath = sourcePath,
+                fileType = YamlFileType.getFileType(sourcePath),
+                triggerUser = hook.userName,
+                ref = GitActionCommon.getSourceRef(
+                    fork = fork,
+                    sourceFullName = sourceRepo.fullName,
+                    sourceBranch = sourceBranch
+                ),
+                commitId = hook.commit.sha,
+                commitMsg = hook.commit.message,
+                commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                committer = hook.commit.committer?.name ?: "",
+                blobId = sourceTree.blobId,
+                fork = fork,
+                useForkToken = true,
+                pullRequestId = pullRequest.id,
+                pullRequestNumber = pullRequest.number,
+                pullRequestUrl = pullRequest.link,
+                sourceBranch = sourceBranch,
+                targetBranch = targetBranch,
+                sourceRepoUrl = sourceRepo.httpUrl,
+                sourceFullName = sourceRepo.fullName,
+                targetRepoUrl = targetRepo.httpUrl,
+                targetFullName = targetRepo.fullName
+            )
+            if (changeFiles.addedFiles.contains(sourcePath) ||
+                changeFiles.updatedFiles.contains(sourcePath)
+            ) {
+                yamlDiffs.add(yamlDiff)
+            }
+        }
+    }
+
+    private fun computeClosedDefaultYamlDiff(
+        eventId: Long,
+        repository: Repository,
+        hook: PullRequestHook,
+        yamlDiffs: MutableList<PipelineYamlDiff>
+    ) {
+        val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
+        val serverRepo = hook.repository()
+        val pullRequest = hook.pullRequest
+
+        val sourceRepo = pullRequest.sourceRepo
+        val targetRepo = pullRequest.targetRepo
+        val fork = sourceRepo.id != targetRepo.id
+        val defaultBranch = serverRepo.defaultBranch!!
+        val sourceBranch = pullRequest.sourceRef.name
+        val targetBranch = pullRequest.targetRef.name
+
         // 关闭合并请求,需要触发默认分支的yaml文件
         val defaultFileTrees = pipelineYamlFileService.listFileTree(
             projectId = projectId,
@@ -457,61 +565,5 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             )
             yamlDiffs.add(yamlDiff)
         }
-
-        // 关闭合并请求,需要对源分支的yaml文件进行关闭操作
-        if (sourceBranch != defaultBranch) {
-            val sourceFileTrees = pipelineYamlFileService.listFileTree(
-                projectId = projectId,
-                ref = pullRequest.sourceRef.name,
-                authRepository = if (fork) {
-                    // fork仓库,需要获取pr触发人的oauth获取文件信息
-                    AuthRepository(
-                        scmCode = repository.scmCode,
-                        url = sourceRepo.httpUrl,
-                        userName = repository.userName,
-                        auth = UserOauthTokenAuthCred(hook.sender.name)
-                    )
-                } else {
-                    AuthRepository(repository)
-                }
-            )
-            sourceFileTrees.forEach { sourceTree ->
-                val sourcePath = GitActionCommon.getCiFilePath(sourceTree.path)
-                val yamlDiff = PipelineYamlDiff(
-                    projectId = projectId,
-                    eventId = eventId,
-                    eventType = hook.eventType,
-                    repoHashId = repoHashId,
-                    actionType = YamlFileActionType.CLOSE,
-                    defaultBranch = defaultBranch,
-                    filePath = sourcePath,
-                    fileType = YamlFileType.getFileType(sourcePath),
-                    triggerUser = hook.userName,
-                    ref = GitActionCommon.getSourceRef(
-                        fork = fork,
-                        sourceFullName = sourceRepo.fullName,
-                        sourceBranch = sourceBranch
-                    ),
-                    commitId = hook.commit.sha,
-                    commitMsg = hook.commit.message,
-                    commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
-                    committer = hook.commit.committer?.name ?: "",
-                    blobId = sourceTree.blobId,
-                    fork = fork,
-                    useForkToken = true,
-                    pullRequestId = pullRequest.id,
-                    pullRequestNumber = pullRequest.number,
-                    pullRequestUrl = pullRequest.link,
-                    sourceBranch = sourceBranch,
-                    targetBranch = targetBranch,
-                    sourceRepoUrl = sourceRepo.httpUrl,
-                    sourceFullName = sourceRepo.fullName,
-                    targetRepoUrl = targetRepo.httpUrl,
-                    targetFullName = targetRepo.fullName
-                )
-                yamlDiffs.add(yamlDiff)
-            }
-        }
-        return yamlDiffs
     }
 }
