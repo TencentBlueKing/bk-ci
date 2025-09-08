@@ -63,8 +63,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             newVarPOs.none { it.varName == oldVar.varName }
         }
         deletedVars.forEach {
-            val typeDesc = PublicVarTypeEnum.getTypeDescription(it.type)
-
             records.add(
                 PipelinePublicVarGroupReleaseRecordPO(
                     id = client.get(ServiceAllocIdResource::class)

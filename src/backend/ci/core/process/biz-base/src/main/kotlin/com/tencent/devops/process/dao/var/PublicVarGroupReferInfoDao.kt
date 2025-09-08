@@ -256,11 +256,13 @@ class PublicVarGroupReferInfoDao {
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
             if (referType != null) {
                 conditions.add(REFER_TYPE.eq(referType.name))
             }
-            conditions.add(GROUP_NAME.eq(groupName))
-            conditions.add(VERSION.eq(version))
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
             return dslContext.select(DSL.countDistinct(REFER_ID))
                 .from(this)
                 .where(conditions)
