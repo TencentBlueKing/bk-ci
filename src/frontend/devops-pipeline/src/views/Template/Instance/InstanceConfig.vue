@@ -4,7 +4,7 @@
             'instance-config-wrapper': true,
             'has-ref-tips': !templateRefTypeById
         }"
-        v-bkloading="{ isLoading }"
+        v-bkloading="{ isLoading: isLoading || instancePageLoading }"
     >
         <bk-alert
             v-if="!templateRefTypeById"
@@ -282,7 +282,7 @@
             </div>
         </section>
         <footer
-            v-if="!isLoading"
+            v-if="!isLoading && !instancePageLoading"
             class="config-footer"
         >
             <bk-button
@@ -295,18 +295,18 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, defineProps } from 'vue'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import RenderTrigger from '@/components/Template/RenderTrigger.vue'
     import UseInstance from '@/hook/useInstance'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
     import {
         SET_INSTANCE_LIST,
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { computed, defineProps, ref, watch } from 'vue'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -323,6 +323,7 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
+    const instancePageLoading = computed(() => proxy.$store?.state?.templates?.instancePageLoading)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
@@ -469,7 +470,7 @@
     }, {
         deep: true
     })
-    watch(() => [curTemplateVersion.value, templateRef.value], () => {
+    watch(() => [curTemplateVersion.value], () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
@@ -731,7 +732,8 @@
                         },
                         buildNo: {
                             ...curTemplateDetail.value?.buildNo,
-                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate
+                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate,
+                            isRequiredParam: curInstance.value?.buildNo?.isRequiredParam
                         }
                     }
                 })

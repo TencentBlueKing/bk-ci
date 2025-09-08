@@ -10,7 +10,8 @@ import {
     SHOW_TASK_DETAIL,
     SET_TASK_DETAIL,
     UPDATE_TEMPLATE_REF_TYPE,
-    UPDATE_TEMPLATE_REF
+    UPDATE_TEMPLATE_REF,
+    UPDATE_INSTANCE_PAGE_LOADING
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
@@ -46,5 +47,8 @@ export default {
     },
     [UPDATE_TEMPLATE_REF]: (state, value) => {
         Vue.set(state, 'templateRef', value)
+    },
+    [UPDATE_INSTANCE_PAGE_LOADING]: (state, value) => {
+        Vue.set(state, 'instancePageLoading', value)
     }
 }

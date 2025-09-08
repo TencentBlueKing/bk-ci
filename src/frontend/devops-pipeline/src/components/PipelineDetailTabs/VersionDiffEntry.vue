@@ -38,8 +38,7 @@
                         :show-extension="false"
                         v-model="activeVersion"
                         @change="diffActiveVersion"
-                        :is-template="isTemplateDiff"
-                        :unique-id="uniqueId"
+                        v-bind="baseVersionSelectorConf"
                     />
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
@@ -49,8 +48,7 @@
                         :show-extension="false"
                         v-model="currentVersion"
                         @change="diffCurrentVersion"
-                        :is-template="isTemplateDiff"
-                        :unique-id="uniqueId"
+                        v-bind="versionSelectorConf"
                     />
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">
@@ -151,12 +149,22 @@
             },
             uniqueId () {
                 const { pipelineId, templateId } = this.$route.params
-                if (this.isTemplateInstance) {
-                    return templateId
-                } else if (this.isTemplateDiff) {
+                if (this.isTemplateDiff) {
                     return this.templateId || templateId
                 }
                 return this.pipelineId || pipelineId
+            },
+            versionSelectorConf () {
+                return {
+                    isTemplate: this.isTemplateDiff,
+                    uniqueId: this.uniqueId
+                }
+            },
+            baseVersionSelectorConf () {
+                return this.isTemplateInstance ? {
+                    isTemplate: false,
+                    uniqueId: this.pipelineId
+                } : this.versionSelectorConf
             }
         },
 
@@ -215,8 +223,8 @@
                         pipelineId: this.pipelineId,
                         comparedVersion: this.currentVersion
                     })
-                    this.activeYaml = comparedVersionYaml
-                    this.currentYaml = baseVersionYaml
+                    this.activeYaml = baseVersionYaml
+                    this.currentYaml = comparedVersionYaml
                 } else {
                     const [activeYaml, currentYaml] = await Promise.all([
                         this.fetchPipelineYaml(this.activeVersion),

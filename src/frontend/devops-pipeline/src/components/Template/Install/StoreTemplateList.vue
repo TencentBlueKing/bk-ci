@@ -74,9 +74,9 @@
 </template>
 
 <script setup name='StoreTemplateList'>
-    import { ref, computed, onMounted } from 'vue'
-    import UseInstance from '@/hook/useInstance'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
+    import UseInstance from '@/hook/useInstance'
+    import { computed, onMounted, ref } from 'vue'
 
     const emit = defineEmits(['change'])
     const { proxy, bkMessage } = UseInstance()
@@ -102,7 +102,8 @@
                 page: page.value,
                 pageSize: pageSize.value,
                 projectCode: projectId.value,
-                keyword: searchValue.value
+                keyword: searchValue.value,
+                excludeProjectCode: projectId.value
             }
             const res = await proxy.$store.dispatch('common/requestStoreTemplate', param)
             page.value++

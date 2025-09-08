@@ -77,11 +77,6 @@ const actions = {
             return response.data
         })
     },
-    requestVersionCompare (_, { projectId, templateId, versionId, pipelineId }) {
-        return ajax.post(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}/pipelines/${pipelineId}/compare?version=${versionId}`).then(response => {
-            return response.data
-        })
-    },
     requestTemplateList (_, params) {
         return ajax.post(`${prefix}/pipeline/template/v2/${params.projectId}/list`, params).then(response => {
             return response.data
