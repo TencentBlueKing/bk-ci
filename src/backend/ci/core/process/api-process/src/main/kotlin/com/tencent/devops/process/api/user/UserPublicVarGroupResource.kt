@@ -277,4 +277,26 @@ interface UserPublicVarGroupResource {
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<List<PipelinePublicVarGroupDO>>
+
+    @Operation(summary = "获取公共变量组版本历史")
+    @GET
+    @Path("/{groupName}/releaseHistory")
+    fun getReleaseHistory(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "变量组名称", required = true)
+        @PathParam("groupName")
+        groupName: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<PublicVarReleaseDO>>
+
 }

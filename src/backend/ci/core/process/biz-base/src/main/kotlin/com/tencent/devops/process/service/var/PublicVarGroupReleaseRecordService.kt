@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
@@ -204,6 +205,29 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         if (records.isNotEmpty()) {
             pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
         }
+    }
+
+    /**
+     * 获取公共变量组版本历史
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return 版本历史列表
+     */
+    fun getReleaseHistory(
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): List<PublicVarReleaseDO> {
+        return pipelinePublicVarGroupReleaseRecordDao.listGroupReleaseHistory(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     companion object {

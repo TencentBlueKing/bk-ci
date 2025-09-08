@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEn
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +50,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
     val publicVarGroupService: PublicVarGroupService,
-    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
+    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) : UserPublicVarGroupResource {
 
     override fun addGroup(
@@ -211,5 +213,20 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId
         )
+    }
+
+    override fun getReleaseHistory(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<List<PublicVarReleaseDO>> {
+        return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        ))
     }
 }
