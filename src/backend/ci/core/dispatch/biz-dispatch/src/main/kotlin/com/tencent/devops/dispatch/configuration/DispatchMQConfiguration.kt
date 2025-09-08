@@ -30,7 +30,9 @@ package com.tencent.devops.dispatch.configuration
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.dispatch.listener.ThirdPartyBuildListener
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupDemoteEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
@@ -46,4 +48,64 @@ class DispatchMQConfiguration @Autowired constructor() {
     fun thirdAgentDispatchShutdownConsumer(
         @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ) = ScsConsumerBuilder.build<PipelineAgentShutdownEvent> { thirdPartyAgentListener.handleShutdownMessage(it) }
+
+    @EventConsumer
+    fun startDemoteKubernetesConsumer(
+        @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
+    ) = ScsConsumerBuilder.build<PipelineAgentStartupDemoteEvent> {
+        with(it) {
+            thirdPartyAgentListener.handleStartup(
+                PipelineAgentStartupEvent(
+                    source = source,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    pipelineName = pipelineName,
+                    buildId = buildId,
+                    buildNo = buildNo,
+                    vmSeqId = vmSeqId,
+                    taskName = taskName,
+                    os = os,
+                    vmNames = vmNames,
+                    channelCode = channelCode,
+                    dispatchType = dispatchType,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    queueTimeoutMinutes = queueTimeoutMinutes,
+                    atoms = atoms,
+                    executeCount = executeCount,
+                    customBuildEnv = customBuildEnv,
+                    dockerRoutingType = dockerRoutingType,
+                    routeKeySuffix = routeKeySuffix,
+                    actionType = actionType,
+                    delayMills = delayMills
+                )
+            )
+        }
+    }
+
+    @EventConsumer
+    fun shutdownDemoteKubernetesConsumer(
+        @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
+    ) = ScsConsumerBuilder.build<PipelineAgentShutdownDemoteEvent> {
+        with(it) {
+            thirdPartyAgentListener.handleShutdownMessage(
+                PipelineAgentShutdownEvent(
+                    source = source,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    buildResult = buildResult,
+                    executeCount = executeCount,
+                    dockerRoutingType = dockerRoutingType,
+                    dispatchType = dispatchType,
+                    routeKeySuffix = routeKeySuffix,
+                    actionType = actionType,
+                    delayMills = delayMills
+                )
+            )
+        }
+    }
 }
