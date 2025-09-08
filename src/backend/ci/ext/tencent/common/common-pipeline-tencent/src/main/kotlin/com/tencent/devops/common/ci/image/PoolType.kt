@@ -239,7 +239,7 @@ enum class PoolType {
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
-                    displayName = pool.agentId!!,
+                    displayName = pool.agentId,
                     workspace = pool.workspace,
                     agentType = AgentType.ID,
                     dockerInfo = ThirdPartyAgentDockerInfo(
