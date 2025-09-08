@@ -129,6 +129,5 @@ data class TriggerContainer(
         publicParamsIndex = paramsIndex
     }
 
-    @JsonIgnore
-    fun getPublicParamsIndex() = publicParamsIndex
+    fun fetchPublicParamsIndex() = publicParamsIndex
 }

@@ -250,8 +250,12 @@ data class Model(
             publicVarGroups = emptyList()
             return
         } else {
-            publicVarGroups =
-                varGroupParams.map { PublicVarGroupRef(it.varGroupName!!, "v${it.varGroupVersion}") }
+            publicVarGroups = varGroupParams
+                .asSequence()
+                .filter { !it.varGroupName.isNullOrBlank() }
+                .map { PublicVarGroupRef(it.varGroupName!!, "v${it.varGroupVersion}") }
+                .distinctBy { it.groupName }
+                .toList()
         }
         triggerContainer.filterParamsWithVarGroupName()
     }

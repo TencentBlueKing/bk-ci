@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -57,6 +58,10 @@ class PublicVarService @Autowired constructor(
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(PublicVarService::class.java)
+    }
+
     fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
         val projectId = publicVarDTO.projectId
         val userId = publicVarDTO.userId
@@ -64,6 +69,7 @@ class PublicVarService @Autowired constructor(
         val publicVarPOs = publicVarDTO.publicVars.map {
             it.buildFormProperty.varGroupName = groupName
             it.buildFormProperty.varGroupVersion= publicVarDTO.version
+            logger.info("buildFormProperty.varGroupName:${it.buildFormProperty.varGroupName}")
             PublicVarPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_PUBLIC_VAR").data ?: 0,

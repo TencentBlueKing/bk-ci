@@ -826,7 +826,7 @@ class PipelineRepositoryService constructor(
                         // 分支版本直接使用版本名称进行记录
                         referVersionName = getPublicVarReferVersionName(versionName, versionStatus),
                         publicVarGroupRefs = model.publicVarGroups,
-                        positionInfo = model.getTriggerContainer().getPublicParamsIndex()
+                        positionInfo = model.getTriggerContainer().fetchPublicParamsIndex()
                     )
                 )
 
@@ -1277,7 +1277,7 @@ class PipelineRepositoryService constructor(
                             referName = model.name,
                             referVersionName = it,
                             publicVarGroupRefs = model.publicVarGroups,
-                            positionInfo = model.getTriggerContainer().getPublicParamsIndex()
+                            positionInfo = model.getTriggerContainer().fetchPublicParamsIndex()
                         )
                     )
                 }

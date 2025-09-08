@@ -55,6 +55,7 @@ import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
@@ -283,7 +284,9 @@ class ModelTransfer @Autowired constructor(
         modelInput.model.handlePublicVarInfo()
         val publicVarGroupNames = modelInput.model.publicVarGroups
         if (publicVarGroupNames.isNotEmpty()) {
-            variables[BK_PIPELINE_YAML_PUB_VAR_GROUP_ID] = publicVarGroupNames
+            variables[BK_PIPELINE_YAML_PUB_VAR_GROUP_ID] = publicVarGroupNames.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
         }
         variableTransfer.makeVariableFromModel(modelInput.model)?.let { variables.putAll(it) }
         yaml.variables = if (variables.isEmpty()) null else variables
