@@ -35,14 +35,14 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_CAN_NOT_DELETE
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
-import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -61,10 +61,11 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplatePersistenceService: PipelineTemplatePersistenceService,
     private val versionDeletePostProcessor: PTemplateVersionDeletePostProcessor,
-    private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val dslContext: DSLContext,
-    private val client: Client
+    private val client: Client,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService
 ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
         with(context) {
@@ -106,24 +107,17 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
         if (version == null) {
             throw IllegalArgumentException("version is null")
         }
-        // TODO pac模板 待稳定后，获取新表数据
-        val latestReleasedResource = templateDao.getTemplate(
-            dslContext = dslContext,
+        val latestReleasedResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
             templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST)
         // 最新版本不能删除
         if (latestReleasedResource.version == version) {
             throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_CAN_NOT_DELETE)
         }
-        val templateInfo = templateDao.getTemplate(
-            dslContext = dslContext,
-            templateId = templateId,
-            version = version
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
         val marketTemplateStatus = client.get(ServiceTemplateResource::class).getMarketTemplateStatus(templateId).data!!
         // 上架研发商店不允许删除
-        if (latestReleasedResource.type == TemplateType.CUSTOMIZE.name &&
-            marketTemplateStatus == TemplateStatusEnum.RELEASED) {
+        if (marketTemplateStatus == TemplateStatusEnum.RELEASED) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
             )
@@ -150,12 +144,11 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     }
 
     private fun PipelineTemplateVersionDeleteContext.deleteAllVersions() {
-        logger.info("Start to delete all template versions $projectId|$templateId|$userId")
-        // TODO pac模板 待稳定后，获取新表数据
-        val templateInfo = templateDao.getTemplate(
-            dslContext = dslContext,
+        logger.info("Start to delete all template versions $projectId|$templateId")
+        val templateInfo = pipelineTemplateInfoService.get(
+            projectId = projectId,
             templateId = templateId
-        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+        )
         val isTemplateExistInstances = pipelineTemplateRelatedService.isTemplateExistInstances(
             projectId = projectId,
             templateId = templateId
@@ -167,9 +160,21 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             )
         }
 
-        if (templateInfo.type == TemplateType.CUSTOMIZE.name && templateInfo.storeFlag == true) {
+        if (templateInfo.mode == TemplateType.CUSTOMIZE && templateInfo.storeStatus == TemplateStatusEnum.RELEASED) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
+            )
+        }
+        val isExistInstalledTemplate = pipelineTemplateInfoService.count(
+            PipelineTemplateCommonCondition(
+                mode = TemplateType.CONSTRAINT,
+                srcTemplateProjectId = projectId,
+                srcTemplateId = templateId
+            )
+        ) > 0
+        if (templateInfo.mode == TemplateType.CUSTOMIZE && isExistInstalledTemplate) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL
             )
         }
         pipelineTemplatePersistenceService.deleteTemplateAllVersions(
