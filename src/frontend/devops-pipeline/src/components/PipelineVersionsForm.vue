@@ -12,7 +12,7 @@
                 <span
                     class="execute-build-version-input"
                     v-for="v in renderVersionParamList"
-                    :key="v"
+                    :key="v.id"
                 >
                     <vuex-input
                         :disabled="disabled || isFollowTemplate"
