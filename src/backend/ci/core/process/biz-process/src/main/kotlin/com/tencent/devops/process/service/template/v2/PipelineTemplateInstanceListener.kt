@@ -296,7 +296,8 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 projectId = projectId,
                 pipelineIds = listOf(pipelineId),
                 status = status,
-                pullRequestUrl = deployPipelineResult.targetUrl
+                pullRequestUrl = deployPipelineResult.targetUrl,
+                pullRequestId = deployPipelineResult.pullRequestId
             )
         }
     }

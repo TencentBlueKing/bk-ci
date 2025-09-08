@@ -8,7 +8,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.dao.template.PipelineTemplatePipelineVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionUpdateInfo
@@ -176,8 +175,6 @@ class PipelineTemplatePipelineVersionService @Autowired constructor(
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param pipelineVersion 流水线版本
-     * @param status 新的状态
-     * @param instanceErrorInfo 可选的实例化错误信息
      * @param updater 更新人
      */
     fun updateStatus(
@@ -185,15 +182,11 @@ class PipelineTemplatePipelineVersionService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipelineVersion: Int,
-        status: TemplatePipelineStatus,
-        instanceErrorInfo: String?,
         updater: String
     ) {
         update(
             transactionContext = transactionContext,
             updateInfo = PTemplatePipelineVersionUpdateInfo(
-                status = status,
-                instanceErrorInfo = instanceErrorInfo,
                 updater = updater,
                 buildNo = null,
                 params = null

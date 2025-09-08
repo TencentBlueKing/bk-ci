@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version.processor
 
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -59,8 +60,8 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
         pipelineSetting: PipelineSetting
     ) = with(context) {
         templateInstanceBasicInfo?.let {
-            if (pipelineInfo == null || pipelineResourceVersion.status == VersionStatus.RELEASED) {
-                // 只有在【创建新流水线】或【版本是正式发布版】的情况下，T_TEMPLATE_PIPELINE 关联才存储数据
+            if (pipelineInfo == null || context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE) {
+                // 只有在【创建新流水线】或【实例化时】的情况下，T_TEMPLATE_PIPELINE 关联才存储数据
                 createOrUpdateRelation(transactionContext)
             }
             createOrUpdatePTemplatePipelineVersion(
@@ -95,9 +96,7 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 instanceType = templateInstanceBasicInfo.instanceType.type,
                 buildNo = pipelineModelBasicInfo.buildNo,
                 param = pipelineModelBasicInfo.param,
-                fixTemplateVersion = templateInstanceBasicInfo.templateVersion,
-                status = templateInstanceBasicInfo.status,
-                pullRequestUrl = pullRequestUrl
+                fixTemplateVersion = templateInstanceBasicInfo.templateVersion
             )
         } else {
             templatePipelineDao.update(
@@ -111,9 +110,7 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                     pipelineName = pipelineBasicInfo.pipelineName,
                     buildNo = pipelineModelBasicInfo.buildNo,
                     param = pipelineModelBasicInfo.param
-                ),
-                status = templateInstanceBasicInfo.status,
-                pullRequestUrl = pullRequestUrl
+                )
             )
         }
     }
@@ -166,7 +163,6 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 templateId = templateInstanceBasicInfo.templateId,
                 templateVersion = templateInstanceBasicInfo.templateVersion,
                 templateVersionName = templateInstanceBasicInfo.templateVersionName ?: "",
-                pullRequestUrl = pullRequestUrl,
                 creator = userId,
                 updater = userId
             )

@@ -27,14 +27,21 @@
 
 package com.tencent.devops.process.yaml.resource
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
+import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +52,8 @@ import org.springframework.stereotype.Service
 class PipelineYamlResourceService @Autowired constructor(
     @Lazy private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineVersionManager: PipelineVersionManager
+    private val pipelineVersionManager: PipelineVersionManager,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) : IPipelineYamlResourceService {
     override fun createYamlPipeline(
         userId: String,
@@ -64,6 +72,7 @@ class PipelineYamlResourceService @Autowired constructor(
                 isDefaultBranch = isDefaultBranch,
                 description = commit!!.commitMsg,
                 yamlFileInfo = yamlFileInfo,
+                pullRequestId = pullRequestId,
                 pullRequestUrl = pullRequestUrl
             )
             return pipelineVersionManager.deployPipeline(
@@ -79,13 +88,14 @@ class PipelineYamlResourceService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
-        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult {
         with(event) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = GitActionCommon.getCiFileName(filePath)
+            val dependencyUpgrade = event.actionType == YamlFileActionType.DEPENDENCY_UPGRADE ||
+                    event.actionType == YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER
             val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
                 yaml = yaml,
                 yamlFileName = yamlFileName,
@@ -93,6 +103,7 @@ class PipelineYamlResourceService @Autowired constructor(
                 isDefaultBranch = isDefaultBranch,
                 description = commit!!.commitMsg,
                 yamlFileInfo = yamlFileInfo,
+                pullRequestId = pullRequestId,
                 pullRequestUrl = pullRequestUrl,
                 dependencyUpgrade = dependencyUpgrade
             )
@@ -105,21 +116,19 @@ class PipelineYamlResourceService @Autowired constructor(
         }
     }
 
-    override fun updateBranchVersion(
+    override fun updateBranchAction(
         userId: String,
         projectId: String,
         pipelineId: String,
         branchName: String,
-        branchVersionAction: BranchVersionAction,
-        releaseBranch: Boolean?,
-        pullRequestId: Long?
+        branchVersionAction: BranchVersionAction
     ) {
         pipelineInfoFacadeService.updateBranchVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             branchName = branchName,
-            releaseBranch = releaseBranch,
+            releaseBranch = true,
             branchVersionAction = branchVersionAction
         )
     }
@@ -144,5 +153,31 @@ class PipelineYamlResourceService @Autowired constructor(
         return pipelineRepositoryService.getReleaseVersionRecord(
             projectId = projectId, pipelineId = pipelineId
         ) != null
+    }
+
+    override fun completePullRequest(
+        projectId: String,
+        pipelineId: String,
+        pullRequestId: Long,
+        pullRequestUrl: String,
+        pullRequestNumber: Int,
+        merged: Boolean
+    ) {
+        val (status, instanceErrorInfo) = if (merged) {
+            Pair(TemplatePipelineStatus.UPDATED, null)
+        } else {
+            val message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_YAML_INSTANCE_PULL_REQUEST_CLOSED,
+                params = arrayOf(pullRequestUrl, pullRequestNumber.toString())
+            )
+            Pair(TemplatePipelineStatus.FAILED, PipelineCheckFailedMsg(message))
+        }
+        pipelineTemplateRelatedService.updateStatusByPullRequestId(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            status = status,
+            instanceErrorInfo = instanceErrorInfo?.let { JsonUtil.toJson(it, false) },
+            pullRequestId = pullRequestId
+        )
     }
 }

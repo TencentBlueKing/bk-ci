@@ -43,9 +43,7 @@ class PipelineTemplateRelatedDao {
                     CREATED_TIME,
                     UPDATED_TIME,
                     BUILD_NO,
-                    PARAM,
-                    STATUS,
-                    PULL_REQUEST_URL
+                    PARAM
                 ).values(
                     projectId,
                     pipelineId,
@@ -59,9 +57,7 @@ class PipelineTemplateRelatedDao {
                     now,
                     now,
                     buildNo?.let { JsonUtil.toJson(it) },
-                    params?.let { JsonUtil.toJson(it) },
-                    status?.name,
-                    pullRequestUrl
+                    params?.let { JsonUtil.toJson(it) }
                 ).execute()
             }
         }
@@ -333,6 +329,7 @@ class PipelineTemplateRelatedDao {
                     updateInfo.updater?.let { set(UPDATOR, it) }
                     updateInfo.status?.let { set(STATUS, it.name) }
                     updateInfo.pullRequestUrl?.let { set(PULL_REQUEST_URL, it) }
+                    updateInfo.pullRequestId?.let { set(PULL_REQUEST_ID, it) }
                 }
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(buildQueryCondition(condition))

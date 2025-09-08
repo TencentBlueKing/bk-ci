@@ -7,7 +7,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.tables.TTemplatePipelineVersion
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineVersionRecord
-import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionCommonCondition
@@ -50,9 +49,6 @@ class PipelineTemplatePipelineVersionDao {
                     TEMPLATE_ID,
                     TEMPLATE_VERSION,
                     TEMPLATE_VERSION_NAME,
-                    INSTANCE_ERROR_INFO,
-                    STATUS,
-                    PULL_REQUEST_URL,
                     CREATE_TIME,
                     UPDATE_TIME,
                     CREATOR,
@@ -73,9 +69,6 @@ class PipelineTemplatePipelineVersionDao {
                     record.templateId,
                     record.templateVersion,
                     record.templateVersionName,
-                    record.instanceErrorInfo,
-                    record.status.name,
-                    record.pullRequestUrl,
                     now, // 创建时间
                     now, // 更新时间（在创建时与创建时间一致）
                     record.creator,
@@ -94,9 +87,6 @@ class PipelineTemplatePipelineVersionDao {
                     .set(TEMPLATE_ID, record.templateId)
                     .set(TEMPLATE_VERSION, record.templateVersion)
                     .set(TEMPLATE_VERSION_NAME, record.templateVersionName)
-                    .set(INSTANCE_ERROR_INFO, record.instanceErrorInfo)
-                    .set(STATUS, record.status.name)
-                    .set(PULL_REQUEST_URL, record.pullRequestUrl)
                     .set(UPDATER, record.updater) // 更新操作者
                     .set(UPDATE_TIME, now) // 更新时间戳
                     .execute()
@@ -195,9 +185,6 @@ class PipelineTemplatePipelineVersionDao {
                     if (!updateInfo.params.isNullOrEmpty()) {
                         set(PARAM, JsonUtil.toJson(updateInfo.params!!))
                     }
-                    updateInfo.instanceErrorInfo?.let { set(INSTANCE_ERROR_INFO, it) }
-                    updateInfo.status?.let { set(STATUS, it.name) }
-                    updateInfo.pullRequestUrl?.let { set(PULL_REQUEST_URL, it) }
                     updateInfo.updater?.let { set(UPDATER, it) }
                 }
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -272,9 +259,6 @@ class PipelineTemplatePipelineVersionDao {
             templateId = templateId,
             templateVersion = templateVersion,
             templateVersionName = templateVersionName,
-            instanceErrorInfo = instanceErrorInfo,
-            status = TemplatePipelineStatus.valueOf(status),
-            pullRequestUrl = pullRequestUrl,
             creator = creator,
             updater = updater
         )

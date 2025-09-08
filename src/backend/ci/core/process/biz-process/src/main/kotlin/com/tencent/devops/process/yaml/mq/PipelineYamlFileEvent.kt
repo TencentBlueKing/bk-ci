@@ -97,6 +97,8 @@ data class PipelineYamlFileEvent(
     val pullRequestId: Long? = null,
     @get:Schema(title = "合并请求连接", required = false)
     val pullRequestUrl: String? = null,
+    @get:Schema(title = "合并请求编号", required = false)
+    val pullRequestNumber: Int? = null,
     @get:Schema(title = "mr是否已合并", required = false)
     val merged: Boolean = false,
     @get:Schema(title = "源分支", required = false)
@@ -176,6 +178,7 @@ data class PipelineYamlFileEvent(
         committer = yamlDiff.committer,
         fork = yamlDiff.fork,
         pullRequestId = yamlDiff.pullRequestId,
+        pullRequestNumber = yamlDiff.pullRequestNumber,
         pullRequestUrl = yamlDiff.pullRequestUrl,
         merged = yamlDiff.merged,
         sourceBranch = yamlDiff.sourceBranch,

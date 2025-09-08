@@ -155,18 +155,41 @@ class PipelineTemplateRelatedService @Autowired constructor(
         pipelineIds: List<String>,
         status: TemplatePipelineStatus,
         instanceErrorInfo: String? = null,
-        pullRequestUrl: String? = null
+        pullRequestUrl: String? = null,
+        pullRequestId: Long? = null
     ) {
         pipelineTemplateRelatedDao.update(
             dslContext = transactionContext ?: dslContext,
             updateInfo = PipelineTemplateRelatedUpdateInfo(
                 status = status,
                 instanceErrorInfo = instanceErrorInfo,
-                pullRequestUrl = pullRequestUrl
+                pullRequestUrl = pullRequestUrl,
+                pullRequestId = pullRequestId
             ),
             condition = PipelineTemplateRelatedCommonCondition(
                 projectId = projectId,
                 pipelineIds = pipelineIds
+            )
+        )
+    }
+
+    fun updateStatusByPullRequestId(
+        projectId: String,
+        pipelineId: String,
+        pullRequestId: Long,
+        status: TemplatePipelineStatus,
+        instanceErrorInfo: String? = null
+    ) {
+        pipelineTemplateRelatedDao.update(
+            dslContext = dslContext,
+            updateInfo = PipelineTemplateRelatedUpdateInfo(
+                status = status,
+                instanceErrorInfo = instanceErrorInfo
+            ),
+            condition = PipelineTemplateRelatedCommonCondition(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pullRequestId = pullRequestId
             )
         )
     }
@@ -193,9 +216,7 @@ class PipelineTemplateRelatedService @Autowired constructor(
         instanceType: String,
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
-        fixTemplateVersion: Long? = null,
-        status: TemplatePipelineStatus? = TemplatePipelineStatus.UPDATED,
-        pullRequestUrl: String? = null
+        fixTemplateVersion: Long? = null
     ): Pair<Long, String> {
         logger.info(
             "Start creating relation between template and pipeline|userId=$userId|" +
@@ -248,9 +269,7 @@ class PipelineTemplateRelatedService @Autowired constructor(
                 buildNo = buildNo,
                 params = param,
                 instanceErrorInfo = null,
-                deleted = false,
-                status = status,
-                pullRequestUrl = pullRequestUrl
+                deleted = false
             )
         )
         logger.info(

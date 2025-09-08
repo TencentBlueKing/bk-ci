@@ -30,5 +30,7 @@ data class PipelineTemplateRelatedCommonCondition(
     @get:Schema(title = "limit", required = false)
     val limit: Int? = null,
     @get:Schema(title = "offset", required = false)
-    val offset: Int? = null
+    val offset: Int? = null,
+    @get:Schema(title = "合并请求ID", required = false)
+    val pullRequestId: Long? = null
 )

@@ -132,7 +132,9 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             ).copy(
                 enablePac = true,
                 yamlFileInfo = yamlFileInfo,
-                branchName = branchName
+                branchName = branchName,
+                pullRequestUrl = pullRequestUrl,
+                pullRequestId = pullRequestId
             )
         }
     }

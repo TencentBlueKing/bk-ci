@@ -678,6 +678,9 @@ object ProcessMessageCode {
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
 
+    // MR [<a href={0}>{1}</a>]已关闭，变更未发布到默认分支
+    const val BK_YAML_INSTANCE_PULL_REQUEST_CLOSED = "bkYamlInstancePullRequestClosed"
+
     // 自定义模板名称
     const val BK_CUSTOM_PIPELINE_TEMPLATE_NAME = "bkCustomPipelineTemplateName"
 

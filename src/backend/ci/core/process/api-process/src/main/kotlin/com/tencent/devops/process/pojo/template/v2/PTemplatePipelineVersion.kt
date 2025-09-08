@@ -3,7 +3,6 @@ package com.tencent.devops.process.pojo.template.v2
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateRefType
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -41,12 +40,6 @@ data class PTemplatePipelineVersion(
     val templateVersion: Long,
     @get:Schema(title = "模板版本名称", required = true)
     val templateVersionName: String,
-    @get:Schema(title = "实例化错误信息", required = false)
-    val instanceErrorInfo: String? = null,
-    @get:Schema(title = "状态", required = true)
-    val status: TemplatePipelineStatus = TemplatePipelineStatus.UPDATED,
-    @get:Schema(title = "合并请求链接", required = true)
-    val pullRequestUrl: String? = null,
 
     @get:Schema(title = "创建人", required = false)
     val creator: String? = null,

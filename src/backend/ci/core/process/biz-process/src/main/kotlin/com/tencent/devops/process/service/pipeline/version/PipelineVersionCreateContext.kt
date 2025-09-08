@@ -82,6 +82,8 @@ data class PipelineVersionCreateContext(
     val branchName: String? = null,
     @get:Schema(title = "合并请求连接", required = false)
     val pullRequestUrl: String? = null,
+    @get:Schema(title = "合并请求ID", required = false)
+    val pullRequestId: Long? = null,
 
     @get:Schema(title = "操作日志类型", required = false)
     var operationLogType: OperationLogType = OperationLogType.NORMAL_SAVE_OPERATION,

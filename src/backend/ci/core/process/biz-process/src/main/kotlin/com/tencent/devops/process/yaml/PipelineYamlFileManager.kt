@@ -524,6 +524,16 @@ class PipelineYamlFileManager @Autowired constructor(
             // 如果合并到目标分支或者fork仓库合并,需要将源分支的分支版本删除
             if (merged && (ref == defaultBranch || fork)) {
                 deleteSourceWhenMerged(pipelineId = pipelineId)
+                // pr合并后,通知资源更新状态
+                pipelineYamlResourceManager.completePullRequest(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pullRequestId = pullRequestId!!,
+                    pullRequestUrl = pullRequestUrl!!,
+                    pullRequestNumber = pullRequestNumber!!,
+                    merged = true,
+                    isTemplate = isTemplate
+                )
             }
         }
     }
@@ -807,8 +817,7 @@ class PipelineYamlFileManager @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.updateYamlPipeline(
-        pipelineId: String,
-        dependencyUpgrade: Boolean = false
+        pipelineId: String
     ): DeployPipelineResult {
         val content = pipelineYamlFileService.getFileContent(
             projectId = projectId,
@@ -821,7 +830,6 @@ class PipelineYamlFileManager @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = content.content,
-            dependencyUpgrade = dependencyUpgrade,
             event = this
         )
         pipelineYamlService.update(
@@ -983,14 +991,12 @@ class PipelineYamlFileManager @Autowired constructor(
             ref = ref,
             branchAction = BranchVersionAction.INACTIVE.name
         )
-        pipelineYamlResourceManager.updateBranchVersion(
+        pipelineYamlResourceManager.updateBranchAction(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             branchName = ref,
-            releaseBranch = true,
             branchVersionAction = BranchVersionAction.INACTIVE,
-            pullRequestId = pullRequestId,
             isTemplate = isTemplate
         )
         pipelineYamlService.refreshPipelineYamlStatus(
@@ -1072,7 +1078,7 @@ class PipelineYamlFileManager @Autowired constructor(
             )
             return
         }
-        updateYamlPipeline(pipelineId = pipelineYamlInfo.pipelineId, dependencyUpgrade = true)
+        updateYamlPipeline(pipelineId = pipelineYamlInfo.pipelineId)
     }
 
     private fun PipelineYamlFileReleaseReq.getPullRequestTitle(

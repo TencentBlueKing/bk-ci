@@ -85,6 +85,8 @@ data class PipelineYamlDiff(
     val merged: Boolean = false,
     @get:Schema(title = "合并请求ID", required = false)
     val pullRequestId: Long? = null,
+    @get:Schema(title = "合并请求编号", required = false)
+    val pullRequestNumber: Int? = null,
     @get:Schema(title = "合并请求连接", required = false)
     val pullRequestUrl: String? = null,
     @get:Schema(title = "源分支", required = false)

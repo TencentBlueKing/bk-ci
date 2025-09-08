@@ -86,7 +86,6 @@ class PTemplateYamlResourceService(
         projectId: String,
         pipelineId: String,
         yaml: String,
-        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult {
         with(event) {
@@ -119,14 +118,12 @@ class PTemplateYamlResourceService(
         }
     }
 
-    override fun updateBranchVersion(
+    override fun updateBranchAction(
         userId: String,
         projectId: String,
         pipelineId: String,
         branchName: String,
-        branchVersionAction: BranchVersionAction,
-        releaseBranch: Boolean?,
-        pullRequestId: Long?
+        branchVersionAction: BranchVersionAction
     ) {
         pipelineTemplateFacadeService.inactiveBranch(
             userId = userId,

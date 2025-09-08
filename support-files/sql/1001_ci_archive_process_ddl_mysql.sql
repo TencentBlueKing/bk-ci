@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_PIPELINE` (
   `INSTANCE_ERROR_INFO` text null comment '实例化错误信息',
   `STATUS` varchar(32) default 'UPDATED' not null comment '状态',
   `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接',
+  `PULL_REQUEST_ID` bigint null comment '合并请求ID',
   PRIMARY KEY (`PIPELINE_ID`),
   KEY `TEMPLATE_ID` (`TEMPLATE_ID`),
   KEY `ROOT_TEMPLATE_ID` (`ROOT_TEMPLATE_ID`),

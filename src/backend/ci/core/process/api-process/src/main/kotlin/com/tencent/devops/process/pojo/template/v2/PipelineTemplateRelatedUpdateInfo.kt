@@ -20,5 +20,7 @@ data class PipelineTemplateRelatedUpdateInfo(
     @get:Schema(title = "状态", required = true)
     val status: TemplatePipelineStatus? = null,
     @get:Schema(title = "合并请求URL", required = false)
-    val pullRequestUrl: String? = null
+    val pullRequestUrl: String? = null,
+    @get:Schema(title = "合并请求ID", required = false)
+    val pullRequestId: Long? = null
 )

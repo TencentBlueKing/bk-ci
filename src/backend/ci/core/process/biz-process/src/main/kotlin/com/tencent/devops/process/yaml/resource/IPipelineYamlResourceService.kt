@@ -35,6 +35,9 @@ import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
  * yaml文件对应的资源操作服务类
  */
 interface IPipelineYamlResourceService {
+    /**
+     * 创建yaml流水线
+     */
     fun createYamlPipeline(
         userId: String,
         projectId: String,
@@ -42,38 +45,62 @@ interface IPipelineYamlResourceService {
         event: PipelineYamlFileEvent
     ): DeployPipelineResult
 
+    /**
+     * 更新yaml流水线
+     */
     fun updateYamlPipeline(
         userId: String,
         projectId: String,
         pipelineId: String,
         yaml: String,
-        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult
 
-    fun updateBranchVersion(
+    /**
+     * 更新分支版本有效性
+     */
+    fun updateBranchAction(
         userId: String,
         projectId: String,
         pipelineId: String,
         branchName: String,
-        branchVersionAction: BranchVersionAction,
-        releaseBranch: Boolean? = false,
-        pullRequestId: Long?
+        branchVersionAction: BranchVersionAction
     )
 
+    /**
+     * 删除资源
+     */
     fun deletePipeline(
         userId: String,
         projectId: String,
         pipelineId: String
     )
 
+    /**
+     * 获取资源名称
+     */
     fun getPipelineName(
         projectId: String,
         pipelineId: String
     ): String?
 
+    /**
+     * 判断是否已经存在正式版本
+     */
     fun existsReleaseVersion(
         projectId: String,
         pipelineId: String
     ): Boolean
+
+    /**
+     * 合并请求完成
+     */
+    fun completePullRequest(
+        projectId: String,
+        pipelineId: String,
+        pullRequestId: Long,
+        pullRequestUrl: String,
+        pullRequestNumber: Int,
+        merged: Boolean
+    ) = Unit
 }

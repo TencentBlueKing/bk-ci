@@ -58,7 +58,6 @@ class PipelineYamlResourceManager @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
-        dependencyUpgrade: Boolean,
         event: PipelineYamlFileEvent
     ): DeployPipelineResult {
         return getService(event.isTemplate).updateYamlPipeline(
@@ -66,29 +65,24 @@ class PipelineYamlResourceManager @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = yaml,
-            dependencyUpgrade = dependencyUpgrade,
             event = event
         )
     }
 
-    fun updateBranchVersion(
+    fun updateBranchAction(
         userId: String,
         projectId: String,
         pipelineId: String,
         branchName: String,
         branchVersionAction: BranchVersionAction,
-        releaseBranch: Boolean? = false,
-        pullRequestId: Long?,
         isTemplate: Boolean
     ) {
-        return getService(isTemplate).updateBranchVersion(
+        return getService(isTemplate).updateBranchAction(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             branchName = branchName,
-            releaseBranch = releaseBranch,
-            branchVersionAction = branchVersionAction,
-            pullRequestId = pullRequestId
+            branchVersionAction = branchVersionAction
         )
     }
 
@@ -124,6 +118,28 @@ class PipelineYamlResourceManager @Autowired constructor(
         return getService(isTemplate).existsReleaseVersion(
             projectId = projectId,
             pipelineId = pipelineId
+        )
+    }
+
+    /**
+     * 合并请求完成
+     */
+    fun completePullRequest(
+        projectId: String,
+        pipelineId: String,
+        pullRequestId: Long,
+        pullRequestUrl: String,
+        pullRequestNumber: Int,
+        merged: Boolean,
+        isTemplate: Boolean
+    ) {
+        getService(isTemplate).completePullRequest(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pullRequestId = pullRequestId,
+            pullRequestUrl = pullRequestUrl,
+            pullRequestNumber = pullRequestNumber,
+            merged = merged
         )
     }
 
