@@ -340,6 +340,54 @@ class PipelineYamlFileManager @Autowired constructor(
     }
 
     /**
+     * 合并请求关闭操作
+     */
+    fun closeYamlFile(event: PipelineYamlFileEvent) {
+        with(event) {
+            logger.info(
+                "[PAC_PIPELINE]|close pipeline yaml|$eventId|$projectId|$repoHashId|$filePath"
+            )
+            if (pullRequestId == null || pullRequestUrl == null || pullRequestNumber == null) {
+                logger.info(
+                    "[PAC_PIPELINE]|close yaml file|pull request is null|" +
+                            "$eventId|$projectId|$repoHashId|$filePath|$ref"
+                )
+                return
+            }
+            val lock = PipelineYamlTriggerLock(
+                redisOperation = redisOperation,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath
+            )
+            try {
+                lock.lock()
+                val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath
+                ) ?: run {
+                    logger.info("[PAC_PIPELINE]|yaml pipeline not found|$projectId|$repoHashId|$filePath")
+                    return
+                }
+                pipelineYamlResourceManager.completePullRequest(
+                    projectId = projectId,
+                    pipelineId = pipelineYamlInfo.pipelineId,
+                    pullRequestId = pullRequestId,
+                    pullRequestUrl = pullRequestUrl,
+                    pullRequestNumber = pullRequestNumber,
+                    merged = merged,
+                    isTemplate = isTemplate
+                )
+            } catch (ignored: Exception) {
+                throw ignored
+            } finally {
+                lock.unlock()
+            }
+        }
+    }
+
+    /**
      * 发布流水线
      *
      */

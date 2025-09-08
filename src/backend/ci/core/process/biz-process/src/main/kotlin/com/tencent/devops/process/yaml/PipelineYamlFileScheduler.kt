@@ -78,22 +78,20 @@ class PipelineYamlFileScheduler @Autowired constructor(
                 return@forEach
             }
             val canDispatch = when (yamlDiff.actionType) {
-                // 删除不需要判断是否有依赖
-                YamlFileActionType.TRIGGER, YamlFileActionType.DELETE -> {
-                    true
+                // 当新增和修改时,这里还无法判断依赖了哪些文件,所以需要等待所有依赖的文件类型都执行完成后,才执行
+                YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
+                    isDependencyTypeAllFinished(
+                        fileType = yamlDiff.fileType,
+                        dependencyTypeStatusMap = dependencyTypeStatusMap
+                    )
                 }
-
                 // 依赖更新,需要判断依赖的文件是否已经执行完成
                 YamlFileActionType.DEPENDENCY_UPGRADE, YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER -> {
                     yamlDiff.dependentFilePath?.let { dependencyFileStatusMap[it] ?: true } ?: true
                 }
 
-                // 当新增和修改时,这里还无法判断依赖了哪些文件,所以需要等待所有依赖的文件类型都执行完成后,才执行
                 else -> {
-                    isDependencyTypeAllFinished(
-                        fileType = yamlDiff.fileType,
-                        dependencyTypeStatusMap = dependencyTypeStatusMap
-                    )
+                    true
                 }
             }
             if (canDispatch) {

@@ -39,7 +39,6 @@ import com.tencent.devops.scm.api.enums.EventAction
 import com.tencent.devops.scm.api.pojo.Tree
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.PullRequestHook
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -58,10 +57,18 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         webhook: Webhook
     ): List<PipelineYamlDiff> {
         webhook as PullRequestHook
-        return if (webhook.action == EventAction.MERGE) {
-            getMergedYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
-        } else {
-            getNotMergeYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
+        return when (webhook.action) {
+            EventAction.MERGE -> {
+                getMergedYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
+            }
+
+            EventAction.CLOSE -> {
+                getClosedYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
+            }
+
+            else -> {
+                getNotMergeYamlDiffs(eventId = eventId, repository = repository, hook = webhook)
+            }
         }
     }
 
@@ -400,7 +407,111 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         return yamlDiffs
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PullRequestHookYamlDiffConverter::class.java)
+    private fun getClosedYamlDiffs(
+        eventId: Long,
+        repository: Repository,
+        hook: PullRequestHook
+    ): List<PipelineYamlDiff> {
+        val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
+        val serverRepo = hook.repository()
+        val pullRequest = hook.pullRequest
+
+        val sourceRepo = pullRequest.sourceRepo
+        val targetRepo = pullRequest.targetRepo
+        val fork = sourceRepo.id != targetRepo.id
+        val defaultBranch = serverRepo.defaultBranch!!
+        val sourceBranch = pullRequest.sourceRef.name
+        val targetBranch = pullRequest.targetRef.name
+
+        val yamlDiffs = mutableListOf<PipelineYamlDiff>()
+        // 关闭合并请求,需要触发默认分支的yaml文件
+        val defaultFileTrees = pipelineYamlFileService.listFileTree(
+            projectId = projectId,
+            ref = defaultBranch,
+            authRepository = AuthRepository(repository)
+        )
+        defaultFileTrees.forEach { tree ->
+            val filePath = GitActionCommon.getCiFilePath(tree.path)
+            val yamlDiff = PipelineYamlDiff(
+                projectId = projectId,
+                eventId = eventId,
+                eventType = hook.eventType,
+                repoHashId = repoHashId,
+                defaultBranch = defaultBranch,
+                filePath = filePath,
+                fileType = YamlFileType.getFileType(filePath),
+                actionType = YamlFileActionType.TRIGGER,
+                triggerUser = hook.userName,
+                ref = defaultBranch,
+                blobId = tree.blobId,
+                fork = fork,
+                pullRequestId = pullRequest.id,
+                pullRequestNumber = pullRequest.number,
+                pullRequestUrl = pullRequest.link,
+                merged = true,
+                sourceBranch = sourceBranch,
+                targetBranch = targetBranch,
+                sourceRepoUrl = sourceRepo.httpUrl,
+                sourceFullName = sourceRepo.fullName
+            )
+            yamlDiffs.add(yamlDiff)
+        }
+
+        // 关闭合并请求,需要对源分支的yaml文件进行关闭操作
+        if (sourceBranch != defaultBranch) {
+            val sourceFileTrees = pipelineYamlFileService.listFileTree(
+                projectId = projectId,
+                ref = pullRequest.sourceRef.name,
+                authRepository = if (fork) {
+                    // fork仓库,需要获取pr触发人的oauth获取文件信息
+                    AuthRepository(
+                        scmCode = repository.scmCode,
+                        url = sourceRepo.httpUrl,
+                        userName = repository.userName,
+                        auth = UserOauthTokenAuthCred(hook.sender.name)
+                    )
+                } else {
+                    AuthRepository(repository)
+                }
+            )
+            sourceFileTrees.forEach { sourceTree ->
+                val sourcePath = GitActionCommon.getCiFilePath(sourceTree.path)
+                val yamlDiff = PipelineYamlDiff(
+                    projectId = projectId,
+                    eventId = eventId,
+                    eventType = hook.eventType,
+                    repoHashId = repoHashId,
+                    actionType = YamlFileActionType.CLOSE,
+                    defaultBranch = defaultBranch,
+                    filePath = sourcePath,
+                    fileType = YamlFileType.getFileType(sourcePath),
+                    triggerUser = hook.userName,
+                    ref = GitActionCommon.getSourceRef(
+                        fork = fork,
+                        sourceFullName = sourceRepo.fullName,
+                        sourceBranch = sourceBranch
+                    ),
+                    commitId = hook.commit.sha,
+                    commitMsg = hook.commit.message,
+                    commitTime = hook.commit.commitTime ?: LocalDateTime.now(),
+                    committer = hook.commit.committer?.name ?: "",
+                    blobId = sourceTree.blobId,
+                    fork = fork,
+                    useForkToken = true,
+                    pullRequestId = pullRequest.id,
+                    pullRequestNumber = pullRequest.number,
+                    pullRequestUrl = pullRequest.link,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    sourceRepoUrl = sourceRepo.httpUrl,
+                    sourceFullName = sourceRepo.fullName,
+                    targetRepoUrl = targetRepo.httpUrl,
+                    targetFullName = targetRepo.fullName
+                )
+                yamlDiffs.add(yamlDiff)
+            }
+        }
+        return yamlDiffs
     }
 }

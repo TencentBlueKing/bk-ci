@@ -126,6 +126,10 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 dependencyUpgradeAndTriggerYamlFile()
             }
 
+            YamlFileActionType.CLOSE -> {
+                closeYamlFile()
+            }
+
             else -> Unit
         }
     }
@@ -317,6 +321,32 @@ class PipelineYamlFileExecutor @Autowired constructor(
     private fun PipelineYamlFileEvent.dependencyUpgradeYamlFile() {
         try {
             pipelineYamlFileManager.dependencyUpgradeYamlFile(this)
+            pipelineYamlDiffService.updateStatus(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                ref = ref,
+                status = YamDiffFileStatus.SUCCESS
+            )
+        } catch (ignored: Exception) {
+            handleException(
+                projectId = projectId,
+                eventId = eventId,
+                filePath = filePath,
+                ref = ref,
+                exception = ignored
+            )
+            logger.error(
+                "[PAC_PIPELINE]|Failed to dependency upgrade yaml|eventId:$eventId|" +
+                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref",
+                ignored
+            )
+        }
+    }
+
+    private fun PipelineYamlFileEvent.closeYamlFile() {
+        try {
+            pipelineYamlFileManager.closeYamlFile(this)
             pipelineYamlDiffService.updateStatus(
                 projectId = projectId,
                 eventId = eventId,
