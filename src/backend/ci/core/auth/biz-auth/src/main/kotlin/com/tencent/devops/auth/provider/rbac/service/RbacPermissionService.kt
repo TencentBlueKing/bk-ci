@@ -118,7 +118,8 @@ class RbacPermissionService(
                 .resources(listOf(resourceNode))
                 .build()
 
-            val result = policyService.verifyPermissions(queryPolicyDTO)
+            val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+            val result = policyService.verifyPermissions(queryPolicyDTO, tenantId)
             if (result) {
                 authProjectUserMetricsService.save(
                     projectId = projectCode,
