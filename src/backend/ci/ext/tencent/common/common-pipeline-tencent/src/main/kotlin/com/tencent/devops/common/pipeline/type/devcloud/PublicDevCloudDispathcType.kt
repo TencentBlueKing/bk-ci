@@ -56,7 +56,10 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
  */
 data class PublicDevCloudDispathcType(
     @JsonProperty("value") var image: String?,
+    // 蓝盾性能配置ID
     var performanceConfigId: String?,
+    // DevCloud性能配置ID
+    var performanceUid: String? = "",
     var persistence: Boolean? = false,
     override var imageType: ImageType? = ImageType.BKDEVOPS,
     override var credentialId: String? = "",

@@ -635,21 +635,6 @@ class DispatchDevCloudClient {
         }
     }
 
-    private fun formatDevcloudLogList(jsonArray: JSONArray): String {
-        return try {
-            val logFormat = StringBuilder("\n")
-            for (i in 0 until jsonArray.length()) {
-                val log = jsonArray.get(i) as String
-                logFormat.append(log + "\n")
-            }
-
-            logFormat.toString()
-        } catch (e: Exception) {
-            logger.error("formatDevcloudLogList error.", e)
-            jsonArray.toString()
-        }
-    }
-
     /**
      * first： 成功or失败
      */
@@ -692,6 +677,21 @@ class DispatchDevCloudClient {
                 }
                 else -> DevCloudContainerStatus.RUNNING
             }
+        }
+    }
+
+    private fun formatDevcloudLogList(jsonArray: JSONArray): String {
+        return try {
+            val logFormat = StringBuilder("\n")
+            for (i in 0 until jsonArray.length()) {
+                val log = jsonArray.get(i) as String
+                logFormat.append(log + "\n")
+            }
+
+            logFormat.toString()
+        } catch (e: Exception) {
+            logger.error("formatDevcloudLogList error.", e)
+            jsonArray.toString()
         }
     }
 

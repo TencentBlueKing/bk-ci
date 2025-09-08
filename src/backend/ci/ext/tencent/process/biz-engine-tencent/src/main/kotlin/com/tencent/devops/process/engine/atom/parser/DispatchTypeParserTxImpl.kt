@@ -118,6 +118,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                             macOS = null,
                             third = false,
                             performanceConfigId = dispatchType.performanceConfigId,
+                            performanceUid = dispatchType.performanceUid,
                             persistence = dispatchType.persistence
                         )
                         dispatchType.image = JsonUtil.toJson(pool)
@@ -150,6 +151,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                             macOS = null,
                             third = false,
                             performanceConfigId = dispatchType.performanceConfigId,
+                            performanceUid = dispatchType.performanceUid,
                             persistence = dispatchType.persistence
                         )
                         dispatchType.image = JsonUtil.toJson(pool)
@@ -268,6 +270,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             macOS = null,
             third = true,
             performanceConfigId = dispatchType.performanceConfigId,
+            performanceUid = dispatchType.performanceUid,
             persistence = dispatchType.persistence
         )
         dispatchType.image = JsonUtil.toJson(pool)

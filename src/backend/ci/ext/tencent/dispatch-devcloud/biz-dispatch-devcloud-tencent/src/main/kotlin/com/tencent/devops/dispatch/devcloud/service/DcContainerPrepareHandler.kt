@@ -122,7 +122,11 @@ class DcContainerPrepareHandler @Autowired constructor(
                 )
 
                 // 根据项目负载配置设置当前构建容器负载
-                setContainerPerformance(containerPool?.performanceConfigId ?: "0", this)
+                setContainerPerformance(
+                    performanceConfigId = containerPool?.performanceConfigId ?: "0",
+                    performanceUid = containerPool?.performanceUid ?: "",
+                    handlerContext = this
+                )
 
                 // 获取容器池空闲poolNo，如果poolNo绑定了container，则设置对应containerName
                 // 对poolNo, containerName, containerChanged赋值
@@ -224,7 +228,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         if (containerPool.third != null && !containerPool.third!!) {
             val containerPoolFixed = if (containerPool.container!!.startsWith(registryHost!!)) {
                 Pool(
-                    containerPool.container,
+                    container = containerPool.container,
                     Credential(registryUser!!, registryPwd!!),
                     containerPool.performanceConfigId,
                     containerPool.third
@@ -246,8 +250,14 @@ class DcContainerPrepareHandler @Autowired constructor(
 
     private fun setContainerPerformance(
         performanceConfigId: String?,
+        performanceUid: String,
         handlerContext: DcStartupHandlerContext
     ) {
+        if (performanceUid.isNotBlank()) {
+            handlerContext.performanceUid = performanceUid
+            return
+        }
+
         if (!performanceConfigId.isNullOrBlank() && performanceConfigId != "0") {
             val performanceOption =
                 dcPerformanceOptionsDao.get(dslContext, performanceConfigId.toLong())
@@ -260,6 +270,18 @@ class DcContainerPrepareHandler @Autowired constructor(
             handlerContext.cpu = cpu
             handlerContext.memory = memory
             handlerContext.disk = disk
+        }
+
+        when (performanceConfigId) {
+            "2" -> {
+                handlerContext.performanceUid = ""
+            }
+            "10000" -> {
+                handlerContext.performanceUid = ""
+            }
+            else -> {
+                handlerContext.performanceUid = performanceUid
+            }
         }
     }
 
