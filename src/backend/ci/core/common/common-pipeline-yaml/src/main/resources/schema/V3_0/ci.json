@@ -1875,7 +1875,13 @@
                     "additionalProperties" : false,
                     "properties" : {
                       "value" : {
-                        "type" : "string"
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
                       },
                       "allow-modify-at-startup" : {
                         "type" : "boolean"
@@ -1883,6 +1889,10 @@
                     }
                   }, {
                     "type" : "string"
+                  }, {
+                    "type" : "number"
+                  }, {
+                    "type" : "boolean"
                   } ]
                 }
               },
