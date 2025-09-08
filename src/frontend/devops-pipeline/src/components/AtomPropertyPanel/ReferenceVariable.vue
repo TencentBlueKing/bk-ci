@@ -211,7 +211,6 @@
                 transition: all .3s ease;
                 max-height: calc(100vh - 90px);
                 overflow-y: auto;
-
                 ::v-deep .bk-table-row {
                     line-height: 42px;
                 }
