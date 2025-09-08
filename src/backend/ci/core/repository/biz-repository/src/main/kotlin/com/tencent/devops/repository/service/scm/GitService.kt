@@ -119,7 +119,7 @@ import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Base64
 import java.util.concurrent.Executors
 
 @Service
@@ -146,6 +146,12 @@ class GitService @Autowired constructor(
 
     @Value("\${scm.git.public.secret}")
     private lateinit var gitPublicSecret: String
+
+    @Value("\${git.minCommitNumber:1}")
+    private var minCommitNumber: Int = 1
+
+    @Value("\${git.maxCommitNumber:10}")
+    private var maxCommitNumber: Int = 10
 
     private val redirectUrl = gitConfig.redirectUrl
 
@@ -2123,15 +2129,15 @@ class GitService @Autowired constructor(
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {
-        if (commitNumber !in MIN_COMMIT_NUMBER..MAX_COMMIT_NUMBER) {
+        if (commitNumber !in minCommitNumber..maxCommitNumber) {
             throw ErrorCodeException(
                 errorCode = PARAMETER_VALIDATE_ERROR,
                 params = arrayOf(
                     "commitNumber", "value is $commitNumber," +
-                            " must be between $MIN_COMMIT_NUMBER and $MAX_COMMIT_NUMBER"
+                            " must be between $minCommitNumber and $maxCommitNumber"
                 ),
                 defaultMessage = "commitNumber must be" +
-                        " between $MIN_COMMIT_NUMBER and $MAX_COMMIT_NUMBER, but got $commitNumber"
+                        " between $minCommitNumber and $maxCommitNumber, but got $commitNumber"
             )
         }
         val accessToken = gitOauthService.getAccessToken(userId)?.accessToken
