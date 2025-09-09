@@ -27,6 +27,7 @@ class TencentGithubExtService @Autowired constructor(
         threadPool.execute {
             try {
                 MDC.put(BIZID, bizId)
+                logger.info("sync github webhook to bkcode")
                 client.getScm(ServiceGithubExtResource::class).webhookCommit(
                     event = event,
                     guid = guid,
