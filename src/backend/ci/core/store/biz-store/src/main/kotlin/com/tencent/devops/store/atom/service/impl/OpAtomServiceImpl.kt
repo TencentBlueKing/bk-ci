@@ -328,21 +328,13 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
-        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE || atom.version == INIT_VERSION) {
-            // 历史大版本下的小版本更新或者插件首个版本上架审核时不更新latestFlag
-            null
-        } else {
-            approveReq.result == PASS
-        }
-        // 入库信息，并设置当前版本的LATEST_FLAG
+        // 入库信息
         marketAtomDao.approveAtomFromOp(
             dslContext = dslContext,
             userId = userId,
             atomId = atomId,
             atomStatus = atomStatus,
-            approveReq = approveReq,
-            latestFlag = latestFlag,
-            pubTime = LocalDateTime.now()
+            approveReq = approveReq
         )
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
