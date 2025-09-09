@@ -157,7 +157,7 @@
             </template>
             <release-failed-message
                 class="mt20"
-                v-if="Object.keys(releaseRes?.errorMessages)?.length"
+                v-if="releaseRes?.errorMessages && Object.keys(releaseRes?.errorMessages)?.length"
                 :data="releaseRes?.errorMessages"
             />
         </section>
