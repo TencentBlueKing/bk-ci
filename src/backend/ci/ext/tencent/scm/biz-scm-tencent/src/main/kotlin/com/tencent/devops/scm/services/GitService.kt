@@ -159,8 +159,6 @@ class GitService @Autowired constructor(
         private val gitOauthApi = GitOauthApi()
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
         private const val SLEEP_MILLS_FOR_RETRY = 3000L
-        private const val MAX_COMMIT_NUMBER = 10
-        private const val MIN_COMMIT_NUMBER = 1
     }
 
     @Value("\${gitCI.clientId}")
@@ -175,11 +173,11 @@ class GitService @Autowired constructor(
     @Value("\${gitCI.tokenExpiresIn:#{null}}")
     private val tokenExpiresIn: Int? = 86400
 
-    @Value("\${git.minCommitNumber:1}")
-    private var minCommitNumber: Int = 1
+    @Value("\${git.queryCommitNumLimit.min:1}")
+    private var min: Int = 1
 
-    @Value("\${git.maxCommitNumber:10}")
-    private var maxCommitNumber: Int = 10
+    @Value("\${git.queryCommitNumLimit.max:10}")
+    private var max: Int = 10
 
     private val clientId: String = gitConfig.clientId
     private val clientSecret: String = gitConfig.clientSecret
@@ -2715,15 +2713,15 @@ class GitService @Autowired constructor(
         gitProjectId: Long?,
         commitNumber: Int
     ): Result<String> {
-        if (commitNumber !in minCommitNumber..maxCommitNumber) {
+        if (commitNumber !in min..max) {
             throw ErrorCodeException(
                 errorCode = PARAMETER_VALIDATE_ERROR,
                 params = arrayOf(
                     "commitNumber", "value is $commitNumber," +
-                            " must be between $minCommitNumber and $maxCommitNumber"
+                            " must be between $min and $max"
                 ),
                 defaultMessage = "commitNumber must be" +
-                        " between $minCommitNumber and $maxCommitNumber, but got $commitNumber"
+                        " between $min and $max, but got $commitNumber"
             )
         }
         val projectId = gitProjectId ?: run {
