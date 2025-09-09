@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 @RestResource
@@ -53,15 +54,20 @@ class UserArtifactQualityMetadataResourceImpl(
         userId: String,
         projectId: String
     ): Result<List<MetadataLabelDetail>> {
-        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
-        val approved = projectInfo?.approvalStatus == ProjectApproveStatus.APPROVED.status
         return Result(
-            if (approved) {
-                bkRepoClient.listArtifactQualityMetadataLabels(
-                    userId = userId,
-                    projectId = projectId
-                )
-            } else {
+            try {
+                val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+                val approved = projectInfo?.approvalStatus == ProjectApproveStatus.APPROVED.status
+                if (approved) {
+                    bkRepoClient.listArtifactQualityMetadataLabels(
+                        userId = userId,
+                        projectId = projectId
+                    )
+                } else {
+                    emptyList()
+                }
+            } catch (ex: Exception) {
+                logger.warn("list Artifact Quality Metadata Labels failed .userId={},project={}", userId, projectId, ex)
                 emptyList()
             }
         )
@@ -77,7 +83,11 @@ class UserArtifactQualityMetadataResourceImpl(
         ).map {
             MetadataLabelSimpleInfo(
                 key = it.labelKey,
-                values = it.labelColorMap.keys.toList()
+                values = if (it.enumType) {
+                    it.labelColorMap.keys.toList()
+                } else {
+                    emptyList()
+                }
             )
         }
         return Result(result)
@@ -214,5 +224,9 @@ class UserArtifactQualityMetadataResourceImpl(
             metadataLabel = metadataLabel
         )
         return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserArtifactQualityMetadataResourceImpl::class.java)
     }
 }

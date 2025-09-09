@@ -350,7 +350,7 @@ class AuthDeptServiceImpl(
         }
     }
 
-    private fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+    override fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
         return try {
             val url = getAuthRequestUrl(String.format(USER_INFO, userId))
             val searchEntity = SearchUserAndDeptEntity(

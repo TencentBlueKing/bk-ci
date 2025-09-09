@@ -1045,7 +1045,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (isPipelineExist(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    name = model.name,
+                    // 对于约束模式的流水线，其model中的name是其对应模板的名称，
+                    // 这里若直接使用model中的名称，其名称是模板名称，可能会出现重复，故以setting为准
+                    name = savedSetting?.pipelineName ?: model.name,
                     channelCode = channelCode
                 )
             ) {
