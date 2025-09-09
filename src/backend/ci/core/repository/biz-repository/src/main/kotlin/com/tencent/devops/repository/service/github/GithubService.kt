@@ -92,7 +92,7 @@ class GithubService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
     private val client: Client,
-    private val githubExtService: GithubExtService
+    private val githubExtService: IGithubExtService
 ) : IGithubService {
 
     override fun webhookCommit(event: String, guid: String, signature: String, body: String) {
