@@ -155,7 +155,7 @@
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
     import { debounce } from '@/utils/util'
-    import { computed, defineProps, ref, watch } from 'vue'
+    import { computed, defineProps, onMounted, ref, watch } from 'vue'
     defineProps({
         isInstanceCreateType: Boolean
     })
@@ -173,7 +173,7 @@
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
-    const versionValue = ref(proxy?.$route.params?.version ?? pipelineInfo.value?.version)
+    const versionValue = ref()
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const templateRefTypeList = computed(() => ([
         {
@@ -202,6 +202,17 @@
             label: proxy.$t('template.commit')
         }
     ]))
+    onMounted(() => {
+        if (proxy?.$route.params?.version) {
+            versionValue.value = parseInt(proxy.$route.params.version)
+        } else {
+            versionValue.value = pipelineInfo.value?.version
+        }
+    })
+
+    watch(() => pipelineInfo.value?.version, () => {
+        versionValue.value = pipelineInfo.value?.version
+    })
     watch(() => [pullMode.value, templateRefType.value], () => {
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
         errorRefMsg.value = ''
