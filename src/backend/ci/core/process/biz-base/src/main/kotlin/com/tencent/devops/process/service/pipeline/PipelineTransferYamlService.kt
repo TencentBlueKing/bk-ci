@@ -117,7 +117,7 @@ class PipelineTransferYamlService @Autowired constructor(
         val pipeline_key = listOf("stages", "jobs", "steps", "finally")
         val trigger_key = listOf("on")
         val notice_key = listOf("notices")
-        val setting_key = listOf("concurrency", "name", "version", "label")
+        val setting_key = listOf("concurrency", "name", "version", "label", "desc", "syntax-dialect")
         private const val DEFAULT_REPO_ALIAS_NAME = "self"
     }
 
