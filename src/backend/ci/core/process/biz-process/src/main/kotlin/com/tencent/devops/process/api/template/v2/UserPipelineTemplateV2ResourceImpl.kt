@@ -232,12 +232,6 @@ class UserPipelineTemplateV2ResourceImpl(
         templateId: String
     ): Result<PipelineTemplateDetailsResponse> {
         logger.info("get latest template details {}|{}|{}", userId, projectId, templateId)
-        permissionService.checkPipelineTemplatePermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.VIEW,
-            templateId = templateId
-        )
         return Result(
             templateFacadeService.getTemplateDetails(
                 projectId = projectId,
