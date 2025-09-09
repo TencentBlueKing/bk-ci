@@ -148,7 +148,7 @@ class GitService @Autowired constructor(
     @Value("\${git.queryCommitNumLimit.min:1}")
     private var min: Int = 1
 
-    @Value("\${ git.queryCommitNumLimit.max:10}")
+    @Value("\${git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
 
     private val redirectUrl = gitConfig.redirectUrl
