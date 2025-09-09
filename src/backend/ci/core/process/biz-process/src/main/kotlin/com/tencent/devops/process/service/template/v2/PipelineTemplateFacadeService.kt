@@ -1012,7 +1012,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
             permissions = setOf(
                 AuthPermission.VIEW,
                 AuthPermission.DELETE,
-                AuthPermission.EDIT
+                AuthPermission.EDIT,
+                AuthPermission.MANAGE,
             )
         )
         val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(
@@ -1087,9 +1088,12 @@ class PipelineTemplateFacadeService @Autowired constructor(
             updater = basicInfo.updater,
             createTime = basicInfo.createdTime,
             updateTime = basicInfo.updateTime,
-            canView = permission2TemplatesMap[AuthPermission.VIEW]?.contains(basicInfo.id) ?: false,
-            canEdit = permission2TemplatesMap[AuthPermission.EDIT]?.contains(basicInfo.id) ?: false,
-            canDelete = permission2TemplatesMap[AuthPermission.DELETE]?.contains(basicInfo.id) ?: false,
+            permissions = PipelinePermissions(
+                canView = permission2TemplatesMap[AuthPermission.VIEW]?.contains(basicInfo.id) ?: false,
+                canEdit = permission2TemplatesMap[AuthPermission.EDIT]?.contains(basicInfo.id) ?: false,
+                canDelete = permission2TemplatesMap[AuthPermission.DELETE]?.contains(basicInfo.id) ?: false,
+                canManage = permission2TemplatesMap[AuthPermission.MANAGE]?.contains(basicInfo.id) ?: false,
+            ),
             canRelease = draftResource?.model != null,
             version = version,
             versionName = versionName,

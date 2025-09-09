@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
+import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.v3.oas.annotations.media.Schema
@@ -52,12 +53,8 @@ data class PipelineTemplateInfoResponse(
     @get:Schema(title = "更新时间", required = false)
     val updateTime: Long? = null,
     /*权限相关*/
-    @get:Schema(title = "是否有模版查看权限", required = true)
-    val canView: Boolean? = null,
-    @get:Schema(title = "是否有模版编辑权限", required = true)
-    val canEdit: Boolean? = null,
-    @get:Schema(title = "是否有模版删除权限", required = true)
-    val canDelete: Boolean? = null,
+    @get:Schema(title = "权限", required = false)
+    val permissions: PipelinePermissions? = null,
     /*版本状态相关*/
     @get:Schema(title = "是否可以发布")
     val canRelease: Boolean,
