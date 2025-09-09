@@ -76,7 +76,7 @@ interface UserDispatchDcResource {
     ): Result<UserPerformanceOptionsVO>
 
     @GET
-    @Path("v2/project/{projectId}/pipeline/{pipelineId}performanceConfig/list")
+    @Path("v2/project/{projectId}/pipeline/{pipelineId}/performanceConfig/list")
     @Operation(summary = "获取devcloud性能配置列表")
     fun getDcPerformanceConfigListV2(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
