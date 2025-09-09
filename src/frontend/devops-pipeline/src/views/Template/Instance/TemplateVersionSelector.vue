@@ -53,7 +53,7 @@
             <div class="ref-input">
                 <template v-if="isCommitPullMode">
                     <bk-input
-                        v-model="templateRef"
+                        :value="templateRef"
                         :placeholder="templateRefPlaceholderMap[pullMode]"
                         @change="handelChangeTemplateRef"
                     />
@@ -170,7 +170,7 @@
     const templateId = computed(() => proxy.$route.params?.templateId)
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
-    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
+    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef?.value ?? '')
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const versionValue = ref()
@@ -214,7 +214,7 @@
         versionValue.value = pipelineInfo.value?.version
     })
     watch(() => [pullMode.value, templateRefType.value], () => {
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
         errorRefMsg.value = ''
         if (!isCommitPullMode.value && !templateRefTypeById.value) {
             fetchRefOptionList()
@@ -268,7 +268,7 @@
 
     function handleChangeTemplateRefType (value) {
         errorRefMsg.value = ''
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, value)
         proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
             templateVersion: '',
@@ -277,13 +277,17 @@
         templatePipeline.value = {}
     }
     async function fetchTemplateDateByRef (value) {
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, value)
+        const refAlias = getRefByPullMode(value)
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, {
+            value,
+            alias: refAlias
+        })
         try {
             proxy.$store.dispatch('templates/updateInstancePageLoading', true)
             const res = await proxy.$store.dispatch('templates/fetchTemplateByRef', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                ref: getRefByPullMode(templateRef.value)
+                ref: refAlias
             })
             if (!res.resource) return
             templatePipeline.value = {
@@ -314,10 +318,10 @@
     }
     async function fetchRefOptionList () {
         const fn = pullMode.value === 'branch'
-            ? 'templates/getBranchesListByProjectId'
-            : 'templates/getTagsListByProjectId'
+            ? 'getBranchesListByProjectId'
+            : 'getTagsListByProjectId'
         try {
-            const res = await proxy.$store.dispatch(fn, {
+            const res = await proxy.$store.dispatch(`templates/${fn}`, {
                 projectId: projectId.value,
                 searchKey: searchKey.value,
                 repoHashId: pipelineInfo.value?.yamlInfo?.repoHashId

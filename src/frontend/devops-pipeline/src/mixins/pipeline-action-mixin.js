@@ -23,9 +23,9 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
 import {
     ALL_PIPELINE_VIEW_ID,
+    ARCHIVE_VIEW_ID,
     COLLECT_VIEW_ID,
     DELETED_VIEW_ID,
-    ARCHIVE_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
@@ -583,7 +583,7 @@ export default {
         copyAsTemplateInstance (pipeline) {
             const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
             const { templateId, pipelineId, projectId, version } = pipeline
-            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}?pipelineId=${pipelineId}`
+            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${version}/instance/create?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
         }
     }
 }

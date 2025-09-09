@@ -178,7 +178,7 @@
                     >
                         <template slot-scope="{ row }">
                             <bk-button
-                                v-if="row.pullRequestUrl"
+                                v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING && row.pullRequestUrl"
                                 class="mr10"
                                 theme="primary"
                                 text
