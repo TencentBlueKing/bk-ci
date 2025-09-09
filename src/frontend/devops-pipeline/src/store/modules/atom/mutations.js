@@ -526,7 +526,6 @@ export default {
         })
     },
     [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {
-       
         Object.assign(state.pipeline, { overrideTemplateField: {
             ...state.pipeline.overrideTemplateField,
             [classify]: constraintList

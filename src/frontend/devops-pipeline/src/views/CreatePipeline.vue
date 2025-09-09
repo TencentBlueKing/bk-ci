@@ -212,7 +212,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: $route.params.projectId,
-                                        resourceType: 'pipeline_template',
+                                        resourceType: RESOURCE_TYPE.TEMPLATE,
                                         resourceCode: $route.params.projectId,
                                         action: TEMPLATE_RESOURCE_ACTION.CREATE
                                     }
@@ -244,7 +244,7 @@
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import pipelineHeader from '@/components/devops/pipeline-header'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
@@ -261,6 +261,7 @@
         data () {
             return {
                 TEMPLATE_RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 activePanel: 'projected',
                 isDisabled: false,
                 activeTempIndex: 0,
