@@ -17,7 +17,7 @@ enum class RoutingMode {
     /**
      * 本地缓存模式
      */
-    INTERNAl,
+    INTERNAL,
 
     /**
      * 熔断模式: 使用断路器包装对外部服务的调用，在故障时自动降级到内部缓存服务。
