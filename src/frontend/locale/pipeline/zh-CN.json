@@ -1894,6 +1894,7 @@
   "deleteDraft": "删除草稿",
   "sureDeleteDraft": "确认删除该草稿？",
   "deleteDraftPipeline": "当前流水线尚未发布，删除草稿等同于删除流水线，确认删除吗？",
+  "deleteDraftTemplate": "当前模板尚未发布，删除草稿等同于删除模板，确认删除吗？",
   "noDraft": "暂无可删除的草稿",
   "isTaskTermination": "确认中止任务执行吗？",
   "pipelineNameConventions": "流水线命名规范：",

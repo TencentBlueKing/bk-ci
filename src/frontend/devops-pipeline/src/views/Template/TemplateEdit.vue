@@ -32,6 +32,11 @@
                     >
                         {{ $t('saveDraft') }}
                     </bk-button>
+                    <PipelineEditMoreAction
+                        is-template
+                        :project-id="projectId"
+                        :unique-id="templateId"
+                    />
                     <ReleaseButton
                         :can-release="canRelease && !isEditing"
                         :project-id="projectId"
@@ -49,6 +54,7 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
+    import PipelineEditMoreAction from '@/components/PipelineEditMoreAction'
     import ReleaseButton from '@/components/PipelineHeader/ReleaseButton.vue'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import {
@@ -66,7 +72,8 @@
             TemplateBreadCrumb,
             ReleaseButton,
             ModeSwitch,
-            Edit
+            Edit,
+            PipelineEditMoreAction
         },
         data () {
             return {

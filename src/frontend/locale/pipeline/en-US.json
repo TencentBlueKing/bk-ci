@@ -1892,6 +1892,7 @@
   "deleteDraft": "Delete Draft",
   "sureDeleteDraft": "Are you sure you want to delete this draft?",
   "deleteDraftPipeline": "The current pipeline has not been published yet. Deleting the draft is equivalent to deleting the pipeline. Are you sure you want to proceed?",
+  "deleteDraftTemplate": "The current template has not been published yet. Deleting the draft is equivalent to deleting the template. Are you sure you want to proceed?",
   "noDraft": "No drafts available for deletion",
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
