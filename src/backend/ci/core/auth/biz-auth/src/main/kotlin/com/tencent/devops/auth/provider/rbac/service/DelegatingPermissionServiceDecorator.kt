@@ -348,8 +348,8 @@ class DelegatingPermissionServiceDecorator(
     ): T {
         val mode = projectCode?.let { routingStrategy.getModeForProject(it) } ?: routingStrategy.getDefaultMode()
         logger.debug(
-            "execute with routing ,projectCode={},context={},externalCall={},internalCall={}",
-            projectCode, context, externalCall, internalCall
+            "execute with routing ,projectCode={},mode={},context={},externalCall={},internalCall={}",
+            projectCode, context, mode, externalCall, internalCall
         )
         return when (mode) {
             RoutingMode.NORMAL -> externalCall()
