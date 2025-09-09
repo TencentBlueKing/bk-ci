@@ -1454,7 +1454,7 @@
     "variables" : {
       "type" : "object",
       "patternProperties" : {
-        "^(?!^[A-Z][A-Z0-9_]*$).+$" : {
+        "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
           "anyOf" : [ {
             "type" : "string"
           }, {
@@ -1610,6 +1610,23 @@
               }
             }
           } ]
+        },
+        "^template$" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "name" ],
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "version" : {
+                "type" : "string",
+                "pattern" : "v.+"
+              }
+            }
+          }
         },
         "^[A-Z][A-Z0-9_]{0,63}$" : {
           "type" : "object",
@@ -1831,9 +1848,6 @@
           "properties" : {
             "template" : {
               "type" : "string"
-            },
-            "parameters" : {
-              "$ref" : "#/definitions/parameters"
             }
           }
         } ]
@@ -2448,49 +2462,6 @@
             }
           }
         },
-        "gates" : {
-          "type" : "array",
-          "items" : {
-            "type" : "object",
-            "additionalProperties" : false,
-            "required" : [ "template" ],
-            "properties" : {
-              "template" : {
-                "type" : "string"
-              },
-              "parameters" : {
-                "$ref" : "#/definitions/parameters"
-              }
-            }
-          }
-        },
-        "timeout-hours" : {
-          "minimum" : 1,
-          "maximum" : 720,
-          "type" : "integer"
-        }
-      }
-    },
-    "check-out" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "gates" : {
-          "type" : "array",
-          "items" : {
-            "type" : "object",
-            "additionalProperties" : false,
-            "required" : [ "template" ],
-            "properties" : {
-              "template" : {
-                "type" : "string"
-              },
-              "parameters" : {
-                "$ref" : "#/definitions/parameters"
-              }
-            }
-          }
-        },
         "timeout-hours" : {
           "minimum" : 1,
           "maximum" : 720,
@@ -2907,9 +2878,6 @@
           "properties" : {
             "template" : {
               "type" : "string"
-            },
-            "parameters" : {
-              "$ref" : "#/definitions/parameters"
             }
           }
         } ]
@@ -2923,20 +2891,6 @@
       "anyOf" : [ {
         "type" : "string"
       } ]
-    },
-    "parameters" : {
-      "type" : "object",
-      "additionalProperties" : {
-        "anyOf" : [ {
-          "type" : "string"
-        }, {
-          "type" : "number"
-        }, {
-          "type" : "boolean"
-        }, {
-          "type" : "array"
-        } ]
-      }
     },
     "buildEnv" : {
       "type" : "object"
