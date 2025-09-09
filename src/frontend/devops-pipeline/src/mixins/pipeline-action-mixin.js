@@ -17,13 +17,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {
-    handleProjectNoPermission,
-    PROJECT_RESOURCE_ACTION,
-    RESOURCE_ACTION,
-    TEMPLATE_RESOURCE_ACTION
-} from '@/utils/permission'
-
 import { statusAlias } from '@/utils/pipelineStatus'
 import { convertMStoStringByRule, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
@@ -37,6 +30,14 @@ import {
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import {
+    handleProjectNoPermission,
+    PROJECT_RESOURCE_ACTION,
+    RESOURCE_ACTION,
+    TEMPLATE_RESOURCE_ACTION
+} from '@/utils/permission'
+
+
 import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 
 
@@ -584,7 +585,7 @@ export default {
         copyAsTemplateInstance (pipeline) {
             const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
             const { templateId, pipelineId, projectId, version } = pipeline
-            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}?pipelineId=${pipelineId}`
+            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${version}/instance/create?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
         }
     }
 }

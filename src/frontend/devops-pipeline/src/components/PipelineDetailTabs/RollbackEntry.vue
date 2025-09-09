@@ -180,11 +180,12 @@
                             subTitle: this.$t('templateRollbackBackTips'),
                             confirmFn: () => {
                                 this.$router.push({
-                                    name: 'createInstance',
+                                    name: 'instanceEntry',
                                     params: {
+                                        type: 'upgrade',
                                         projectId: this.projectId,
                                         templateId: this.pipelineInfo?.templateId,
-                                        curVersionId: this.pipelineInfo?.templateVersion
+                                        version: this.pipelineInfo?.templateVersion
                                     },
                                     hash: `#${this.rollbackId}`
                                 })

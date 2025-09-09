@@ -164,13 +164,13 @@
     </div>
 </template>
 <script setup>
-    import { ref, computed, watch, onUnmounted } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import {
         RELEASE_STATUS,
         SET_RELEASE_BASE_ID,
         SET_RELEASE_ING
     } from '@/store/modules/templates/constants'
+    import { computed, onUnmounted, ref, watch } from 'vue'
     import ReleaseFailedMessage from './ReleaseFailedMessage'
     defineProps({
         instanceNum: Boolean
@@ -188,6 +188,7 @@
     const showPartOfMrPage = computed(() => !!(releaseRes.value?.pullRequestUrl))
     const currentVersionId = computed(() => proxy?.$route.params?.version)
     const timer = ref(null)
+    
     watch(() => releaseBaseId.value, (val) => {
         if (val && showReleasePage.value) {
             fetchReleaseTaskStatus()
@@ -195,6 +196,13 @@
     }, {
         immediate: true
     })
+
+    onUnmounted(() => {
+        proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
+        proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
+        clearTimeout(timer.value)
+    })
+
     function handleToInstanceList () {
         proxy.$router.push({
             name: 'TemplateOverview',
@@ -254,11 +262,13 @@
             console.error(e)
         }
     }
-    onUnmounted(() => {
-        proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
-        proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
-        clearTimeout(timer.value)
-    })
+
+    async function handleClick () {
+        if (releaseRes.value?.pullRequestUrl) {
+            window.open(releaseRes.value?.pullRequestUrl, '_blank')
+        }
+    }
+    
 </script>
 <style lang="scss">
 .release-status-main {
