@@ -1227,9 +1227,9 @@ class WorkspaceService @Autowired constructor(
         val userAll = kotlin.runCatching {
             client.get(ServiceTxProjectResource::class).list(userId, null).data
         }.onFailure {
-            logger.error("error in ServiceTxProjectResource::list|$userId", it)
+            logger.warn("error in ServiceTxProjectResource::list|$userId", it)
         }.getOrNull()?.map { it.englishName }?.toSet() ?: kotlin.run {
-            logger.error("fail to get user projects|$userId")
+            logger.warn("fail to get user projects|$userId")
             return emptyList()
         }
         val userHas = all.intersect(userAll)
@@ -1238,7 +1238,7 @@ class WorkspaceService @Autowired constructor(
         }.onFailure {
             logger.warn("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
         }.getOrNull() ?: kotlin.run {
-            logger.error("fail to get user env|$userId|$userHas")
+            logger.warn("fail to get user env|$userId|$userHas")
             emptyList()
         }
     }
