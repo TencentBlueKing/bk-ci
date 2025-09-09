@@ -37,14 +37,17 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "OPENAPI_SIGN_V4", description = "OPENAPI-构建资源")
+@Tag(name = "OPENAPI_NOTIFY_V4", description = "OPENAPI-通知资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/notify")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwNotifyResourceV4 {
 
-    @Operation(summary = "发送企微机器人信息")
+    @Operation(
+        summary = "发送企微机器人信息",
+        tags = ["v4_app_wework_robot_notify"]
+    )
     @POST
     @Path("/wework_robot")
     fun sendWeworkRobotNotify(
