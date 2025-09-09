@@ -368,6 +368,7 @@ class TemplateFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
         val templateModel: Model = PipelineUtils.fixedTemplateParam(objectMapper.readValue(template))
+        templateModel.name = saveAsTemplateReq.templateName
         checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         templateCommonService.checkTemplateName(

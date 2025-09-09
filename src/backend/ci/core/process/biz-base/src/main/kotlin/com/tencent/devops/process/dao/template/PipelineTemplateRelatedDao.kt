@@ -112,7 +112,8 @@ class PipelineTemplateRelatedDao {
             templatePipelineTable.UPDATED_TIME,
             pipelineInfoTable.VERSION,
             templatePipelineTable.STATUS,
-            templatePipelineTable.PULL_REQUEST_URL
+            templatePipelineTable.PULL_REQUEST_URL,
+            pipelineTemplateInfoTable.RELEASED_VERSION
         )
             .from(templatePipelineTable)
             .join(pipelineInfoTable)
@@ -153,7 +154,8 @@ class PipelineTemplateRelatedDao {
                     updatedTime = it.value12().timestampmilli(),
                     pipelineVersion = it.value13(),
                     status = it.value14()?.let { status -> TemplatePipelineStatus.valueOf(status) },
-                    pullRequestUrl = it.value15()
+                    pullRequestUrl = it.value15(),
+                    releasedVersion = it.value16()
                 )
             }
     }

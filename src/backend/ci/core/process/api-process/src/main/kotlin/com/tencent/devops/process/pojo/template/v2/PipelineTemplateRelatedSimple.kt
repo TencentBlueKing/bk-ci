@@ -14,6 +14,8 @@ data class PipelineTemplateRelatedSimple(
     val version: Long,
     @get:Schema(title = "模板版本名称", required = true)
     val versionName: String,
+    @get:Schema(title = "模板最新版本", required = true)
+    val releasedVersion: Long,
     @get:Schema(title = "流水线Id", required = true)
     val pipelineId: String,
     @get:Schema(title = "流水线Id", required = true)
