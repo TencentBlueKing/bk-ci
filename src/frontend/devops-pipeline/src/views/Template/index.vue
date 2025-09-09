@@ -42,5 +42,6 @@
         flex: 1;
         display: flex;
         overflow: hidden;
+        border-top: 0;
     }
 </style>
