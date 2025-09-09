@@ -108,7 +108,9 @@ data class BuildFormProperty(
     @get:Schema(title = "所属公共变量组版本", required = false)
     var varGroupVersion: Int? = null,
     @get:Schema(title = "元素序号", required = false)
-    var index: Int? = null
+    var index: Int? = null,
+    @get:Schema(title = "是否已删除", required = false)
+    var delete: Boolean? = false
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")

@@ -218,7 +218,8 @@ class PipelineBuildService(
 
             resource.model.getTriggerContainer().params = publicVarService.listPublicVarByLatest(
                 projectId = resource.projectId,
-                params = resource.model.getTriggerContainer().params
+                params = resource.model.getTriggerContainer().params,
+                maintainOrder = false
             )
             initPipelineParamMap(
                 buildId = buildId,
@@ -239,8 +240,7 @@ class PipelineBuildService(
                     null
                 },
                 pipelineDialectType = pipelineDialectType.name,
-                failIfVariableInvalid = setting.failIfVariableInvalid,
-                publicVarParams = resource.model.getTriggerContainer().params
+                failIfVariableInvalid = setting.failIfVariableInvalid
             )
 
             val context = StartBuildContext.init(
@@ -307,8 +307,7 @@ class PipelineBuildService(
         debug: Boolean? = false,
         pipelineAuthorizer: String? = null,
         pipelineDialectType: String,
-        failIfVariableInvalid: Boolean? = false,
-        publicVarParams: List<BuildFormProperty>
+        failIfVariableInvalid: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -352,20 +351,6 @@ class PipelineBuildService(
 //            }
 //        }
 //        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
-
-        // 更新未指定具体版本的公共变量
-        publicVarParams.forEach { param ->
-            if (param.varGroupVersion == null) return@forEach
-            pipelineParamMap[param.id] = BuildParameters(
-                key = param.id,
-                value = param.name ?: "",
-                valueType = param.type,
-                readOnly = param.readOnly,
-                desc = param.desc,
-                defaultValue = param.defaultValue,
-                latestRandomStringInPath = param.latestRandomStringInPath
-            )
-        }
 
         if (debug != true) pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,

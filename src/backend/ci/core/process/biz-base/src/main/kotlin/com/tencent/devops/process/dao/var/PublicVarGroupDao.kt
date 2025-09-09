@@ -74,6 +74,28 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 批量获取多个组的最新版本
+     */
+    fun getLatestVersionsByGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(GROUP_NAME, VERSION).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+                .associate { record ->
+                    record.getValue(GROUP_NAME) to record.getValue(VERSION)
+                }
+        }
+    }
+
     fun listGroupsByProjectId(
         dslContext: DSLContext,
         projectId: String
