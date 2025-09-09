@@ -91,7 +91,8 @@ class GithubService @Autowired constructor(
     private val githubUserService: GithubUserService,
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
-    private val client: Client
+    private val client: Client,
+    private val githubExtService: GithubExtService
 ) : IGithubService {
 
     override fun webhookCommit(event: String, guid: String, signature: String, body: String) {
@@ -106,6 +107,7 @@ class GithubService @Autowired constructor(
 
             client.get(ServiceScmWebhookResource::class)
                 .webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
+            githubExtService.webhookCommit(event = event, guid = guid, signature = signature, body = body)
         } catch (t: Throwable) {
             logger.info("Github webhook exception", t)
         }
