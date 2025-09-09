@@ -167,7 +167,7 @@ class UserManageService @Autowired constructor(
 
             // 二次校验用户是否离职，防止误操作。
             departedUsers.forEach {
-                val userInfo = deptService.getUserInfo(it)
+                val userInfo = deptService.getUserInfoFromExternal(it)
                 if (userInfo != null) {
                     val deptInfoDTO = extractDeptInfo(userInfo.name)
                     userInfoDao.create(
@@ -202,7 +202,7 @@ class UserManageService @Autowired constructor(
 
     fun syncUserInfoData(userIds: List<String>) {
         userIds.forEach {
-            val bkUserInfo = deptService.getUserInfo(it)!!
+            val bkUserInfo = deptService.getUserInfoFromExternal(it)!!
             try {
                 val deptInfoDTO = extractDeptInfo(it)
                 userInfoDao.create(
