@@ -96,6 +96,7 @@
     import { getTemplateCacheViewId } from '@/utils/util'
     import Instance from '@/views/Template/InstanceList'
     import { computed } from 'vue'
+    import { RESOURCE_TYPE } from '../../utils/permission'
     import ExtMenu from './List/extMenu'
 
     const {
@@ -202,7 +203,7 @@
             isShow: true,
             permissionData: {
                 projectId: projectId.value,
-                resourceType: 'pipeline_template',
+                resourceType: RESOURCE_TYPE.TEMPLATE,
                 resourceCode: templateId,
                 action: TEMPLATE_RESOURCE_ACTION.EDIT
             }
@@ -215,7 +216,7 @@
             isShow: true,
             permissionData: {
                 projectId: projectId.value,
-                resourceType: 'pipeline_template',
+                resourceType: RESOURCE_TYPE.TEMPLATE,
                 resourceCode: projectId.value,
                 action: RESOURCE_ACTION.CREATE
             }
@@ -228,7 +229,7 @@
             isShow: true,
             permissionData: {
                 projectId: projectId.value,
-                resourceType: 'pipeline_template',
+                resourceType: RESOURCE_TYPE.TEMPLATE,
                 resourceCode: templateId,
                 action: TEMPLATE_RESOURCE_ACTION.EDIT
             }

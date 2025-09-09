@@ -186,7 +186,7 @@
                 return this.pipelineInfo?.releaseVersion
             },
             canEdit () {
-                return this.pipelineInfo?.permissions?.canEdit ?? this.pipelineInfo?.canEdit
+                return this.pipelineInfo?.permissions?.canEdit
             },
             columns () {
                 return [{

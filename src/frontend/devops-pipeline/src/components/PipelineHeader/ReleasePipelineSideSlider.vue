@@ -455,6 +455,7 @@
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
+    import { RESOURCE_TYPE } from '@/utils/permission'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
@@ -790,7 +791,7 @@
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             errorHandler (error) {
-                const resourceType = this.isTemplate ? 'template' : 'pipeline'
+                const resourceType = this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
                 this.handleError(error, {
                     projectId: this.$route.params.projectId,
                     resourceCode: this.$route.params[`${resourceType}Id`],

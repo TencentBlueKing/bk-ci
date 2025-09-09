@@ -11,7 +11,8 @@
 
 <script>
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import { mapState, mapGetters } from 'vuex'
+    import { RESOURCE_TYPE } from '@/utils/permission'
+    import { mapGetters, mapState } from 'vuex'
 
     export default {
         name: 'auth-tab',
@@ -29,7 +30,7 @@
                 return (this.isTemplate ? this.pipelineInfo?.name : this.pipelineInfo?.pipelineName) ?? ''
             },
             resourceType () {
-                return this.isTemplate ? 'pipeline_template' : 'pipeline'
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
             }
         }
     }
