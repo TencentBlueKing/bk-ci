@@ -1,6 +1,5 @@
 package com.tencent.devops.scm.api
 
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -31,5 +30,5 @@ interface ServiceGithubExtResource {
         @HeaderParam("X-Hub-Signature")
         signature: String,
         body: String
-    ): Result<Boolean>
+    )
 }
