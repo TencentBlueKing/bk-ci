@@ -1,7 +1,7 @@
 <template>
     <div class="template-detail-entry">
         <header>
-            <HistoryHeader />
+            <HistoryHeader class="template-detail-entry-history-header" />
             <ext-menu
                 type="template"
                 :data="pipelineInfo"
@@ -299,7 +299,7 @@
         background: white;
         display: flex;
         align-items: center;
-        padding: 0 24px;
+        padding-right: 24px;
         box-shadow: 0 2px 5px 0 #333c4808;
         border-bottom: 1px solid #eaebf0;
 
@@ -315,6 +315,9 @@
         .template-operate-area {
             margin-left: auto;
             justify-self: flex-end;
+        }
+        .template-detail-entry-history-header {
+            padding-right: 10px;
         }
     }
     .template-detail-entry-aside {

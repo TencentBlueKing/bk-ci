@@ -92,7 +92,7 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
-                        :width="320"
+                        :width="250"
                         prop="operate"
                         fixed="right"
                     >
@@ -210,7 +210,7 @@
                 }, {
                     prop: 'creator',
                     width: 120,
-                    label: this.$t('creator')
+                    label: this.$t('template.lastModifiedBy')
                 }, {
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),
@@ -231,6 +231,7 @@
             filterData () {
                 return [{
                     name: this.$t('version'),
+                    default: true,
                     id: 'versionName'
                 }, {
                     name: this.$t('versionDesc'),

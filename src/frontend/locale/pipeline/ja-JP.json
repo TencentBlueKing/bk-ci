@@ -1920,6 +1920,7 @@
   "deleteDraft": "ドラフトを削除",
   "sureDeleteDraft": "このドラフトを削除しますか？",
   "deleteDraftPipeline": "現在のパイプラインはまだ公開されていません。ドラフトを削除するとパイプラインが削除されます。削除しますか？",
+  "deleteDraftTemplate": "現在的テンプレート是未だリリースされていません。ドラフトを削除するとテンプレートの削除と同等です。削除してもよろしいですか？",
   "noDraft": "削除可能なドラフトがありません",
   "isTaskTermination": "タスク実行を中止しますか？",
   "pipelineNameConventions": "パイプライン命名規則：",

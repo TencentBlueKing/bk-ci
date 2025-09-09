@@ -157,8 +157,8 @@
             </template>
             <release-failed-message
                 class="mt20"
-                v-if="releaseRes?.errorMessages && Object.keys(releaseRes?.errorMessages)?.length"
-                :data="releaseRes?.errorMessages"
+                v-if="Object.keys(errorMessages)?.length"
+                :data="errorMessages"
             />
         </section>
     </div>
@@ -188,6 +188,7 @@
     const showPartOfMrPage = computed(() => !!(releaseRes.value?.pullRequestUrl))
     const currentVersionId = computed(() => proxy?.$route.params?.version)
     const timer = ref(null)
+    const errorMessages = computed(() => releaseRes.value?.errorMessages || {})
     
     watch(() => releaseBaseId.value, (val) => {
         if (val && showReleasePage.value) {

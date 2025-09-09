@@ -228,7 +228,7 @@
                 version: templateVersion.value,
                 params: {
                     templateRefType: templateRefType.value,
-                    templateRef: templateRef.value.alias,
+                    templateRef: templateRef.value?.alias ?? '',
                     useTemplateSettings: useTemplateSettings.value,
                     instanceReleaseInfos,
                     ...value

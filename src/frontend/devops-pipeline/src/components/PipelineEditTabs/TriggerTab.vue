@@ -1,6 +1,7 @@
 <template>
     <div>
         <span
+            v-if="$route.meta.edit"
             v-bk-tooltips="{
                 disabled: !pipeline?.instanceFromTemplate,
                 content: $t('constraintTriggerTips')
