@@ -337,8 +337,8 @@ class DelegatingPermissionServiceDecorator(
      * 根据路由模式执行权限调用。
      * @param projectCode 项目ID，用于决定路由模式。
      * @param context 调用上下文（如方法名），用于日志记录。
-     * @param externalCall 外部（新系统，如RBAC）的调用逻辑，作为“真理之源”。
-     * @param internalCall 内部（旧系统，如IAM）的调用逻辑，用于后台验证。
+     * @param externalCall 外部（新系统，如RBAC）的调用逻辑。
+     * @param internalCall 内部调用逻辑，用于后台验证。
      */
     private fun <T> executeWithRouting(
         projectCode: String? = null,
@@ -347,6 +347,10 @@ class DelegatingPermissionServiceDecorator(
         internalCall: () -> T
     ): T {
         val mode = projectCode?.let { routingStrategy.getModeForProject(it) } ?: routingStrategy.getDefaultMode()
+        logger.debug(
+            "execute with routing ,projectCode={},context={},externalCall={},internalCall={}",
+            projectCode, context, externalCall, internalCall
+        )
         return when (mode) {
             RoutingMode.NORMAL -> externalCall()
             RoutingMode.INTERNAl -> internalCall()
@@ -437,6 +441,15 @@ class DelegatingPermissionServiceDecorator(
                 e.causingCircuitBreakerName,
                 context,
                 e.message
+            )
+            fallbackCall()
+        } catch (e: Exception) {
+            logger.error(
+                "[AUTH_CALL_FAILED] Failed to execute external call for context '{}'. " +
+                    "Falling back to internal call. Error: {}",
+                context,
+                e.message,
+                e
             )
             fallbackCall()
         }
