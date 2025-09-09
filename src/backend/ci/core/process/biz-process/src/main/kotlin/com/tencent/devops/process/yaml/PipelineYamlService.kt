@@ -189,17 +189,15 @@ class PipelineYamlService(
                 blobId = blobId,
                 commitTime = commitTime
             )
-            dependencyResult?.let {
-                pipelineYamlDependencyService.save(
-                    transactionContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    blobId = blobId,
-                    ref = ref,
-                    dependencyResult = dependencyResult
-                )
-            }
+            pipelineYamlDependencyService.save(
+                transactionContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                blobId = blobId,
+                ref = ref,
+                dependencyResult = dependencyResult
+            )
         }
     }
 
@@ -322,17 +320,15 @@ class PipelineYamlService(
                 blobId = blobId,
                 commitTime = commitTime
             )
-            dependencyResult?.let {
-                pipelineYamlDependencyService.save(
-                    transactionContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    blobId = blobId,
-                    ref = ref,
-                    dependencyResult = dependencyResult
-                )
-            }
+            pipelineYamlDependencyService.save(
+                transactionContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                blobId = blobId,
+                ref = ref,
+                dependencyResult = dependencyResult
+            )
         }
         if (!defaultBranch.isNullOrBlank()) {
             refreshPipelineYamlStatus(

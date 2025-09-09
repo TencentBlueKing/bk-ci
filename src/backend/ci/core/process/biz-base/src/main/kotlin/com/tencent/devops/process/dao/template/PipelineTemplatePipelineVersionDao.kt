@@ -227,7 +227,6 @@ class PipelineTemplatePipelineVersionDao {
                 templateId?.let { conditions.add(TEMPLATE_ID.eq(it)) }
                 templateVersion?.let { conditions.add(TEMPLATE_VERSION.eq(it)) }
                 templateVersionName?.let { conditions.add(TEMPLATE_VERSION_NAME.eq(it)) }
-                status?.let { conditions.add(STATUS.eq(it.name)) }
                 creator?.let { conditions.add(CREATOR.eq(it)) }
                 updater?.let { conditions.add(UPDATER.eq(it)) }
                 return conditions

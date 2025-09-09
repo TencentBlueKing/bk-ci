@@ -840,7 +840,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable).apply {
-                    version = "2.*"
+                    version = "1.*"
                 }
             )
         }

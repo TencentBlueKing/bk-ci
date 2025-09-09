@@ -89,45 +89,65 @@ class PipelineYamlDependencyService @Autowired constructor(
         filePath: String,
         blobId: String,
         ref: String,
-        dependencyResult: PipelineYamlDependencyResult
+        dependencyResult: PipelineYamlDependencyResult?
     ) {
-        with(dependencyResult) {
-            // 文件内容的依赖
-            val blobDependency = PipelineYamlDependency(
+        if (dependencyResult == null) {
+            // 当从PATH引用切换回ID引用时,需要删除分支的动态引用
+            val dependency = pipelineYamlDependencyDao.getDependency(
+                dslContext = transactionContext ?: dslContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                fileType = YamlFileType.PIPELINE,
-                ref = blobId,
-                refValueType = YamlRefValueType.BLOB_ID,
-                dependentFilePath = dependencyResult.dependentFilePath,
-                dependentFileType = dependencyResult.dependentFileType,
-                dependentRef = dependencyResult.dependentRef,
+                ref = ref
             )
-            pipelineYamlDependencyDao.save(
-                dslContext = transactionContext ?: dslContext,
-                record = blobDependency
-            )
-            // 记录当前流水线活跃的版本(最新的分支版本和最新的正式版本),跨分支引用的情况
-            if (pipelineVersionStatus == VersionStatus.RELEASED ||
-                (pipelineVersionStatus == VersionStatus.BRANCH && branchAction == BranchVersionAction.ACTIVE)
-            ) {
-                // 流水线活跃版本依赖
-                val branchDependency = PipelineYamlDependency(
+            if (dependency != null) {
+                pipelineYamlDependencyDao.delete(
+                    dslContext = transactionContext ?: dslContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    ref = ref
+                )
+            }
+        } else {
+            with(dependencyResult) {
+                // 文件内容的依赖
+                val blobDependency = PipelineYamlDependency(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
                     fileType = YamlFileType.PIPELINE,
-                    ref = ref,
-                    refValueType = YamlRefValueType.BRANCH,
+                    ref = blobId,
+                    refValueType = YamlRefValueType.BLOB_ID,
                     dependentFilePath = dependencyResult.dependentFilePath,
                     dependentFileType = dependencyResult.dependentFileType,
                     dependentRef = dependencyResult.dependentRef,
                 )
                 pipelineYamlDependencyDao.save(
                     dslContext = transactionContext ?: dslContext,
-                    record = branchDependency
+                    record = blobDependency
                 )
+                // 记录当前流水线活跃的版本(最新的分支版本和最新的正式版本),跨分支引用的情况
+                if (pipelineVersionStatus == VersionStatus.RELEASED ||
+                    (pipelineVersionStatus == VersionStatus.BRANCH && branchAction == BranchVersionAction.ACTIVE)
+                ) {
+                    // 流水线活跃版本依赖
+                    val branchDependency = PipelineYamlDependency(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        filePath = filePath,
+                        fileType = YamlFileType.PIPELINE,
+                        ref = ref,
+                        refValueType = YamlRefValueType.BRANCH,
+                        dependentFilePath = dependencyResult.dependentFilePath,
+                        dependentFileType = dependencyResult.dependentFileType,
+                        dependentRef = dependencyResult.dependentRef,
+                    )
+                    pipelineYamlDependencyDao.save(
+                        dslContext = transactionContext ?: dslContext,
+                        record = branchDependency
+                    )
+                }
             }
         }
     }

@@ -60,7 +60,7 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
         pipelineSetting: PipelineSetting
     ) = with(context) {
         templateInstanceBasicInfo?.let {
-            if (pipelineInfo == null || context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE) {
+            if (pipelineInfo == null || pipelineResourceVersion.status == VersionStatus.RELEASED) {
                 // 只有在【创建新流水线】或【实例化时】的情况下，T_TEMPLATE_PIPELINE 关联才存储数据
                 createOrUpdateRelation(transactionContext)
             }

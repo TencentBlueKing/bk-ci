@@ -1,7 +1,6 @@
 package com.tencent.devops.process.pojo.template.v2
 
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateRefType
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -35,8 +34,6 @@ data class PTemplatePipelineVersionCommonCondition(
     val templateVersion: Long? = null,
     @get:Schema(title = "模板版本名称", required = false)
     val templateVersionName: String? = null,
-    @get:Schema(title = "状态", required = false)
-    val status: TemplatePipelineStatus? = null,
     @get:Schema(title = "创建人", required = false)
     val creator: String? = null,
     @get:Schema(title = "更新人", required = false)
