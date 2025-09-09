@@ -353,7 +353,7 @@ class DelegatingPermissionServiceDecorator(
         )
         return when (mode) {
             RoutingMode.NORMAL -> externalCall()
-            RoutingMode.INTERNAl -> internalCall()
+            RoutingMode.INTERNAL -> internalCall()
             RoutingMode.VALIDATION -> {
                 val externalResult = externalCall()
                 compareAndLogDifference(projectCode, context, externalResult, internalCall)
@@ -418,7 +418,7 @@ class DelegatingPermissionServiceDecorator(
         }
     }
 
-    private fun resolveInternalAction(action: String, resourceType: String): String {
+    fun resolveInternalAction(action: String, resourceType: String): String {
         return if (!action.contains("_")) {
             RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
         } else {
