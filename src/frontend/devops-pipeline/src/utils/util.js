@@ -20,12 +20,12 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import { isBooleanParam, isFileParam } from '@/store/modules/atom/paramsConfig'
 import {
     ALL_TEMPLATE_VIEW_ID,
     TEMPLATE_VIEW_ID_CACHE
 } from '@/store/modules/templates/constants'
 import { v4 as uuidv4 } from 'uuid'
-import { isFileParam } from '@/store/modules/atom/paramsConfig'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -646,7 +646,13 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
                 latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
             }
         } else {
-            values[param.id] = initValues[param.id] ?? param[valueKey]
+            const val = initValues[param.id] ?? param[valueKey]
+            if (isBooleanParam(param.type)) {
+                values[param.id] = val === 'true' || val === true
+            } else {
+                values[param.id] = val
+            }
+            
         }
         return values
     }, {})
