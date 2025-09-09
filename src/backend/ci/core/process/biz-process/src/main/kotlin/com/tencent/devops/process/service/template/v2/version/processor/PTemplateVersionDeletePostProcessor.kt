@@ -28,12 +28,11 @@ class PTemplateVersionDeletePostProcessor(
         with(context) {
             when (versionAction) {
                 PipelineVersionAction.DELETE_VERSION -> {
-                    // TODO pac模板 待稳定后，获取新表数据
-                    val resource = templateDao.getTemplate(
-                        dslContext = dslContext,
+                    val resource = pipelineTemplateResourceService.get(
+                        projectId = projectId,
                         templateId = templateId,
                         version = version!!
-                    ) ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS)
+                    )
                     operationLogService.addOperationLog(
                         userId = userId,
                         projectId = projectId,
