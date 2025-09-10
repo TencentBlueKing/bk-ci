@@ -128,7 +128,7 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
 
         when {
             pipelineInfo == null -> {
-                pipelineVersionPersistenceService.initializeTemplate(
+                pipelineVersionPersistenceService.initializePipeline(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion
                 )

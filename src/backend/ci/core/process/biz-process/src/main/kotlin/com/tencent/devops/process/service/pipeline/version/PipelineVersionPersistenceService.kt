@@ -73,7 +73,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
     private val versionCreateListeners: List<PipelineVersionCreatePostProcessor>
 ) {
 
-    fun initializeTemplate(
+    fun initializePipeline(
         context: PipelineVersionCreateContext,
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {

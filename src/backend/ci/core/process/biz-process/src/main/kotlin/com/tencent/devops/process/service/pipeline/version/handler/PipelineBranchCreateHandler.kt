@@ -99,7 +99,7 @@ class PipelineBranchCreateHandler @Autowired constructor(
                 versionStatus = pipelineResourceWithoutVersion.status,
                 branchName = branchName
             )
-            pipelineVersionPersistenceService.initializeTemplate(
+            pipelineVersionPersistenceService.initializePipeline(
                 context = this, resourceOnlyVersion = resourceOnlyVersion
             )
             resourceOnlyVersion

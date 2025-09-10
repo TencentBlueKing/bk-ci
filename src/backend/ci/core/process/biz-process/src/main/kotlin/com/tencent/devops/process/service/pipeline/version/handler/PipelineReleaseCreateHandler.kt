@@ -79,7 +79,7 @@ class PipelineReleaseCreateHandler @Autowired constructor(
             val resourceOnlyVersion = pipelineVersionGenerator.getDefaultVersion(
                 versionStatus = pipelineResourceWithoutVersion.status
             )
-            pipelineVersionPersistenceService.initializeTemplate(
+            pipelineVersionPersistenceService.initializePipeline(
                 context = this, resourceOnlyVersion = resourceOnlyVersion
             )
             resourceOnlyVersion

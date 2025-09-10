@@ -84,7 +84,8 @@ class PTemplateCompatibilityVersionPostProcessor(
             )
             v1TemplateSettingService.saveSetting(
                 dslContext = transactionContext,
-                setting = pipelineTemplateSetting
+                setting = pipelineTemplateSetting,
+                isTemplate = true
             )
         }
     }
