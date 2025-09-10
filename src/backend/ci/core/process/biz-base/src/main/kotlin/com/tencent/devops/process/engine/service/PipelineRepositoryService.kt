@@ -815,7 +815,6 @@ class PipelineRepositoryService constructor(
                         versionNum, pipelineVersion, triggerVersion, settingVersion
                     )
                 }
-                model.handlePublicVarInfo()
                 publicVarGroupReferInfoService.updatePublicGroupRefer(
                     userId = userId,
                     projectId = projectId,
@@ -825,8 +824,7 @@ class PipelineRepositoryService constructor(
                         referName = model.name,
                         // 分支版本直接使用版本名称进行记录
                         referVersionName = getPublicVarReferVersionName(versionName, versionStatus),
-                        publicVarGroupRefs = model.publicVarGroups,
-                        positionInfo = model.getTriggerContainer().fetchPublicParamsIndex()
+                        params = model.getTriggerContainer().params
                     )
                 )
 
@@ -1267,7 +1265,6 @@ class PipelineRepositoryService constructor(
                     )
                 }
                 referVersionName?.let {
-                    model.handlePublicVarInfo()
                     publicVarGroupReferInfoService.updatePublicGroupRefer(
                         userId = userId,
                         projectId = projectId,
@@ -1276,8 +1273,7 @@ class PipelineRepositoryService constructor(
                             referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
                             referName = model.name,
                             referVersionName = it,
-                            publicVarGroupRefs = model.publicVarGroups,
-                            positionInfo = model.getTriggerContainer().fetchPublicParamsIndex()
+                            params = model.getTriggerContainer().params
                         )
                     )
                 }

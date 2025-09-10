@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
@@ -86,6 +87,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         projectId: String,
         publicVarGroupReferInfo: PublicVarGroupReferDTO
     ): Boolean {
+        handlePublicVarInfo(publicVarGroupReferInfo)
+        logger.info("updatePublicGroupRefer: $publicVarGroupReferInfo")
         validateParameters(publicVarGroupReferInfo)
         
         // 处理空变量组引用的情况
@@ -94,7 +97,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         }
 
         // 验证变量组存在性并构建数据对象
-        val publicVarGroupReferPOs = buildDataObjects(
+        val (newReferPOs, updateReferPOs) = buildDataObjects(
             userId = userId,
             projectId = projectId,
             publicVarGroupReferInfo = publicVarGroupReferInfo
@@ -105,10 +108,41 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             publicVarGroupReferInfo = publicVarGroupReferInfo,
-            publicVarGroupReferPOs = publicVarGroupReferPOs
+            newReferPOs = newReferPOs,
+            updateReferPOs = updateReferPOs
         )
     }
-    
+
+    /**
+     * 处理公共变量组信息
+     */
+    fun handlePublicVarInfo(publicVarGroupReferInfo: PublicVarGroupReferDTO) {
+        val params = publicVarGroupReferInfo.params
+        if(params.isNullOrEmpty()) {
+            return
+        }
+        // 从params获取varGroupName不为空的参数
+        val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
+
+        if (varGroupParams.isEmpty()) {
+            return
+        } else {
+            publicVarGroupReferInfo.publicVarGroupRefs =
+                varGroupParams.associate { it.varGroupName!! to it.varGroupVersion }
+            publicVarGroupReferInfo.positionInfo = getGroupVarPositionInfo(params)
+        }
+    }
+
+    private fun getGroupVarPositionInfo(params: List<BuildFormProperty>): Map<String, Int> {
+        val positionInfo = mutableMapOf<String, Int>()
+        params.forEachIndexed { index, property ->
+            if (property.varGroupName != null) {
+                positionInfo[property.id] = index
+            }
+        }
+        return positionInfo
+    }
+
     /**
      * 验证输入参数
      */
@@ -116,7 +150,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         publicVarGroupReferInfo: PublicVarGroupReferDTO
     ) {
         // 检查变量组引用中是否存在重复的groupName
-        val groupNames = publicVarGroupReferInfo.publicVarGroupRefs.map { it.groupName }
+        val groupNames = publicVarGroupReferInfo.publicVarGroupRefs!!.keys
         val duplicateGroupNames = groupNames.groupBy { it }.filter { it.value.size > 1 }.keys
         
         if (duplicateGroupNames.isNotEmpty()) {
@@ -159,34 +193,44 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         userId: String,
         projectId: String,
         publicVarGroupReferInfo: PublicVarGroupReferDTO
-    ): List<PipelinePublicVarGroupReferPO> {
-        val publicVarGroupReferPOs = mutableListOf<PipelinePublicVarGroupReferPO>()
+    ): Pair<List<PipelinePublicVarGroupReferPO>, List<PipelinePublicVarGroupReferPO>> {
+        val newReferPOs = mutableListOf<PipelinePublicVarGroupReferPO>()
+        val updateReferPOs = mutableListOf<PipelinePublicVarGroupReferPO>()
         
-        publicVarGroupReferInfo.publicVarGroupRefs.forEach { ref ->
-            val groupName = ref.groupName
-            val version = ref.versionName?.substring(1)?.toIntOrNull()
+        publicVarGroupReferInfo.publicVarGroupRefs!!.forEach { ref ->
+            val groupName = ref.key
+            val version = ref.value
             
             // 验证变量组是否存在
             validateVarGroupExists(projectId, groupName, version)
             
             // 检查是否已存在引用
             if (isVarGroupRefExists(projectId, publicVarGroupReferInfo, groupName)) {
-                return@forEach
-            }
-            
-            // 构建引用对象
-            publicVarGroupReferPOs.add(
-                createVarGroupReferPO(
-                    userId = userId,
-                    projectId = projectId,
-                    publicVarGroupReferInfo = publicVarGroupReferInfo,
-                    groupName = groupName,
-                    version = version
+                // 已存在，添加到更新列表
+                updateReferPOs.add(
+                    createVarGroupReferPO(
+                        userId = userId,
+                        projectId = projectId,
+                        publicVarGroupReferInfo = publicVarGroupReferInfo,
+                        groupName = groupName,
+                        version = version
+                    )
                 )
-            )
+            } else {
+                // 不存在，添加到新增列表
+                newReferPOs.add(
+                    createVarGroupReferPO(
+                        userId = userId,
+                        projectId = projectId,
+                        publicVarGroupReferInfo = publicVarGroupReferInfo,
+                        groupName = groupName,
+                        version = version
+                    )
+                )
+            }
         }
         
-        return publicVarGroupReferPOs
+        return Pair(newReferPOs, updateReferPOs)
     }
 
     /**
@@ -265,12 +309,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         userId: String,
         projectId: String,
         publicVarGroupReferInfo: PublicVarGroupReferDTO,
-        publicVarGroupReferPOs: List<PipelinePublicVarGroupReferPO>
+        newReferPOs: List<PipelinePublicVarGroupReferPO>,
+        updateReferPOs: List<PipelinePublicVarGroupReferPO>
     ): Boolean {
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                val newGroupNames = publicVarGroupReferInfo.publicVarGroupRefs.map { it.groupName }.toSet()
+                val newGroupNames = publicVarGroupReferInfo.publicVarGroupRefs!!.keys
 
                 // 处理需要删除的旧引用
                 if (newGroupNames.isNotEmpty()) {
@@ -283,15 +328,26 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 }
 
                 // 批量保存新的引用记录
-                if (publicVarGroupReferPOs.isNotEmpty()) {
-                    publicVarGroupReferInfoDao.batchSave(context, publicVarGroupReferPOs)
+                if (newReferPOs.isNotEmpty()) {
+                    publicVarGroupReferInfoDao.batchSave(context, newReferPOs)
+                }
+
+                // 批量更新已存在的引用记录
+                if (updateReferPOs.isNotEmpty()) {
+                    updateExistingReferenceRecords(
+                        context = context,
+                        projectId = projectId,
+                        publicVarGroupReferInfo = publicVarGroupReferInfo,
+                        updateReferPOs = updateReferPOs,
+                        userId = userId
+                    )
                 }
                 
                 // 更新新增引用的计数
                 updateReferenceCountsForNewRefs(
                     context = context,
                     projectId = projectId,
-                    newReferPOs = publicVarGroupReferPOs
+                    newReferPOs = newReferPOs
                 )
             }
             
@@ -477,12 +533,20 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             } else {
                 maxOf(0, record.referCount + countChange) // countChange为负数时
             }
-            
+
+            // 更新 T_PIPELINE_PUBLIC_VAR_GROUP 表的引用计数
             publicVarGroupDao.updateReferCount(
                 dslContext = context,
                 projectId = projectId,
                 groupName = groupName,
                 version = record.version,
+                referCount = newReferCount
+            )
+
+            publicVarGroupDao.updateVarGroupNameReferCount(
+                dslContext = context,
+                projectId = projectId,
+                groupName = groupName,
                 referCount = newReferCount
             )
         }
@@ -508,6 +572,46 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         newReferPOs: List<PipelinePublicVarGroupReferPO>
     ) {
         updateReferenceCounts(context, projectId, newReferPOs, true)
+    }
+
+    /**
+     * 更新已存在的引用记录
+     */
+    private fun updateExistingReferenceRecords(
+        context: DSLContext,
+        projectId: String,
+        publicVarGroupReferInfo: PublicVarGroupReferDTO,
+        updateReferPOs: List<PipelinePublicVarGroupReferPO>,
+        userId: String
+    ) {
+        updateReferPOs.forEach { referPO ->
+            val updateCount = publicVarGroupReferInfoDao.updateVarGroupReferInfo(
+                dslContext = context,
+                projectId = projectId,
+                referId = publicVarGroupReferInfo.referId,
+                referType = publicVarGroupReferInfo.referType,
+                groupName = referPO.groupName,
+                referVersionName = publicVarGroupReferInfo.referVersionName,
+                version = referPO.version,
+                positionInfo = referPO.positionInfo,
+                modifier = userId,
+                updateTime = java.time.LocalDateTime.now()
+            )
+
+            if (updateCount > 0) {
+                logger.info(
+                    "Successfully updated var group reference: projectId=$projectId, " +
+                    "referId=${publicVarGroupReferInfo.referId}, groupName=${referPO.groupName}, " +
+                    "version=${referPO.version}"
+                )
+            } else {
+                logger.warn(
+                    "Failed to update var group reference: projectId=$projectId, " +
+                    "referId=${publicVarGroupReferInfo.referId}, groupName=${referPO.groupName}, " +
+                    "version=${referPO.version}"
+                )
+            }
+        }
     }
 
     /**

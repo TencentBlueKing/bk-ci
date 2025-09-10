@@ -71,7 +71,7 @@ class PublicVarDao {
                     it.varName,
                     it.alias,
                     it.type.name,
-                    it.valueType.value,
+                    it.valueType.name,
                     it.defaultValue?.toString(),
                     it.desc,
                     it.referCount,

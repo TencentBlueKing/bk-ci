@@ -157,6 +157,8 @@ class PublicVarService @Autowired constructor(
             groupName = groupName,
             version = targetVersion
         ).map { publicVarPO ->
+            val buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+            buildFormProperty.varGroupVersion = version
             PublicVarDO(
                 varName = publicVarPO.varName,
                 alias = publicVarPO.alias,
@@ -165,7 +167,7 @@ class PublicVarService @Autowired constructor(
                 defaultValue = publicVarPO.defaultValue,
                 desc = publicVarPO.desc,
                 referCount = publicVarPO.referCount,
-                buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+                buildFormProperty = buildFormProperty
             )
         }
     }

@@ -269,4 +269,38 @@ class PublicVarGroupReferInfoDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
+
+    /**
+     * 更新变量组引用信息
+     */
+    fun updateVarGroupReferInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        groupName: String,
+        referVersionName: String?,
+        version: Int?,
+        positionInfo: String?,
+        modifier: String,
+        updateTime: java.time.LocalDateTime
+    ): Int {
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(REFER_ID.eq(referId))
+            conditions.add(REFER_TYPE.eq(referType.name))
+            conditions.add(GROUP_NAME.eq(groupName))
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
+            
+            return dslContext.update(this)
+                .set(VERSION, version)
+                .set(POSITION_INFO, positionInfo)
+                .set(MODIFIER, modifier)
+                .set(UPDATE_TIME, updateTime)
+                .where(conditions)
+                .execute()
+        }
+    }
 }

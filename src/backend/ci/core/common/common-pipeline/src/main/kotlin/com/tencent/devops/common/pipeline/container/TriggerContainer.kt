@@ -114,19 +114,5 @@ data class TriggerContainer(
         super.transformCompatibility()
     }
 
-    /**
-     * 筛选 params 中 varGroupName 不为空的数据，并更新 index 为参数在 params 中的下标位置。
-     */
-    fun updatePublicParamsIndex() {
-        val paramsIndex = mutableMapOf<String, Int?>()
-        params.forEachIndexed { index, property ->
-            if (property.varGroupName != null) {
-                property.index = index
-            }
-            paramsIndex[property.id] = property.index
-        }
-        publicParamsIndex = paramsIndex
-    }
-
     fun fetchPublicParamsIndex() = publicParamsIndex
 }

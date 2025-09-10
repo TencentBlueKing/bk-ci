@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -41,8 +42,10 @@ data class PublicVarGroupReferDTO(
     val referName: String,
     @get:Schema(title = "流水线/模板版本名称")
     val referVersionName: String,
+    @get:Schema(title = "编排参数", required = false)
+    val params: List<BuildFormProperty>? = emptyList(),
     @get:Schema(title = "流水线/模板公共变量位置信息,key为变量名，value为变量序号")
-    val positionInfo: Map<String, Int?>? = null,
-    @get:Schema(title = "变量组引用列表")
-    val publicVarGroupRefs: List<PublicVarGroupRef> = emptyList(),
+    var positionInfo: Map<String, Int?>? = null,
+    @get:Schema(title = "变量组引用列表,key为变量名，value为变量组版本号")
+    var publicVarGroupRefs: Map<String, Int?> = emptyMap()
 )

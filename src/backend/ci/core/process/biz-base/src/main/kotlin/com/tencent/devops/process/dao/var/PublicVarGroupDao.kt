@@ -327,4 +327,20 @@ class PublicVarGroupDao {
                 .execute()
         }
     }
+
+    fun updateVarGroupNameReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        referCount: Int
+    ) {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .execute()
+        }
+    }
 }

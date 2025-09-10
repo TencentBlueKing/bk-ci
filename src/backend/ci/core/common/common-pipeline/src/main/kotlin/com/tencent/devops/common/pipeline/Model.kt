@@ -258,6 +258,5 @@ data class Model(
                 .distinctBy { it.groupName }
                 .toList()
         }
-        triggerContainer.updatePublicParamsIndex()
     }
 }
