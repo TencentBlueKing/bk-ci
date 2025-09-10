@@ -163,6 +163,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 srcTemplateVersion = marketTemplateResource.version,
                 model = marketTemplateResource.model,
                 yaml = marketTemplateResource.yaml,
+                params = marketTemplateResource.params,
                 creator = userId,
                 status = VersionStatus.RELEASED
             )
