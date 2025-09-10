@@ -255,7 +255,6 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 templateName = template.name
             )
-            template.handlePublicVarInfo()
             publicVarGroupReferInfoService.updatePublicGroupRefer(
                 userId = userId,
                 projectId = projectId,
@@ -264,8 +263,7 @@ class TemplateFacadeService @Autowired constructor(
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = template.name,
                     referVersionName = version.toString(),
-                    publicVarGroupRefs = template.publicVarGroups,
-                    positionInfo = template.getTriggerContainer().getPublicParamsIndex()
+                    params = template.getTriggerContainer().params
                 )
             )
             logger.info("Get the template version $version")
@@ -569,8 +567,7 @@ class TemplateFacadeService @Autowired constructor(
                     referId = templateId,
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = "",
-                    referVersionName = version.toString(),
-                    publicVarGroupRefs = emptyList()
+                    referVersionName = version.toString()
                 )
             )
             templateDao.delete(dslContext, projectId, templateId, setOf(version)) == 1
@@ -636,8 +633,7 @@ class TemplateFacadeService @Autowired constructor(
                     referId = templateId,
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = template.templateName,
-                    referVersionName = template.version.toString(),
-                    publicVarGroupRefs = emptyList()
+                    referVersionName = template.version.toString()
                 )
             )
         }
@@ -744,8 +740,7 @@ class TemplateFacadeService @Autowired constructor(
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = template.name,
                     referVersionName = version.toString(),
-                    publicVarGroupRefs = template.publicVarGroups,
-                    positionInfo = template.getTriggerContainer().getPublicParamsIndex()
+                    params = template.getTriggerContainer().params
                 )
             )
             logger.info("Get the update template version $version")
