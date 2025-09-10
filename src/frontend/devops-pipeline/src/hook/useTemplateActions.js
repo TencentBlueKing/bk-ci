@@ -24,7 +24,7 @@ export default function useTemplateActions () {
      * @param row
      */
     function copyTemplate (row) {
-        if (!row.permissions.canEdit) return
+        if (!row.canEdit) return
         copyTemp.value.templateName = `${row.name}_copy`
         copyTemp.value.isShow = true
         copyTemp.value.srcTemplateId = row.id
@@ -101,7 +101,7 @@ export default function useTemplateActions () {
      * @param row
      */
     function deleteTemplate (row, fetchTableData) {
-        if (!row.permissions.canEdit) return
+        if (!row.canEdit) return
         const title = row.mode === TEMPLATE_MODE.CONSTRAINT ? t('template.deleteStore') : t('template.deleteCustom')
 
         bkInfo({
@@ -167,7 +167,7 @@ export default function useTemplateActions () {
      * @param row
      */
     function toRelativeStore (row, storeStatus) {
-        if (!row.permissions.canEdit) return
+        if (!row.canEdit) return
         let href = `${WEB_URL_PREFIX}/store/editTemplate/${row.id}?hasSourceInfo=true`
         if (storeStatus === 'NEVER_PUBLISHED') {
             href += `&projectCode=${encodeURIComponent(row.projectId)}`
@@ -188,7 +188,7 @@ export default function useTemplateActions () {
    * @param row
    */
     async function convertToCustom (row, fetchTableData) {
-        if (!row.permissions.canEdit) return
+        if (!row.canEdit) return
         nextTick(() => {
             bkInfo({
                 width: 480,

@@ -210,7 +210,10 @@
         },
         {
             text: t('copy'), // 复制
-            handler: () => copyTemplate(pipelineInfo.value),
+            handler: () => copyTemplate({
+                ...pipelineInfo.value,
+                ...pipelineInfo.value?.permissions
+            }),
             hasPermission: canEdit.value,
             disablePermissionApi: true,
             isShow: true,
@@ -223,7 +226,10 @@
         },
         {
             text: t('delete'),
-            handler: () => deleteTemplate(pipelineInfo.value, goTemplateManageList),
+            handler: () => deleteTemplate({
+                ...pipelineInfo.value,
+                ...pipelineInfo.value?.permissions
+            }, goTemplateManageList),
             hasPermission: canDelete.value,
             disablePermissionApi: true,
             isShow: true,
