@@ -5,6 +5,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
@@ -15,6 +16,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.utils.PipelineUtils.getFixedStages
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
@@ -211,10 +213,19 @@ object TemplateInstanceUtil {
         val templateVariableMap = templateVariables.associateBy { it.key }
         return templateParams.map { templateParam ->
             val templateVariable = templateVariableMap[templateParam.id]
+
             val pipelineParams = if (templateVariable != null) {
                 // templateVariable 会覆盖模板的默认值
                 templateParam.copy(
-                    defaultValue = templateVariable.value,
+                    defaultValue = when {
+                        templateParam.type == BuildFormPropertyType.BOOLEAN ->
+                            (templateParam.value as String?)?.toBoolean() ?: false
+
+                        CascadePropertyUtils.supportCascadeParam(templateParam.type) ->
+                            templateParam.value ?: mapOf<String, String>()
+
+                        else -> templateParam.value ?: ""
+                    },
                     required = templateVariable.allowModifyAtStartup ?: templateParam.required
                 )
             } else {
@@ -222,29 +233,6 @@ object TemplateInstanceUtil {
             }
             PipelineUtils.cleanOptions(pipelineParams)
         }
-    }
-
-    private fun overrideParam(
-        templateParam: BuildFormProperty,
-        overrideParamIds: List<String>?,
-        templateVariable: TemplateVariable?,
-    ): Boolean {
-        // 覆盖的key存在且变量值类型与模板参数类型一致,则流水线的变量覆盖模版的
-        return overrideParamIds != null &&
-            overrideParamIds.contains(templateParam.id) &&
-            templateVariable != null &&
-            templateVariable.value.javaClass == templateParam.defaultValue.javaClass
-    }
-
-    private fun overrideTrigger(
-        templateTriggerElement: Element,
-        overrideTriggerStepIds: List<String>?,
-        triggerConfig: TemplateInstanceTriggerConfig?
-    ): Boolean {
-        return !templateTriggerElement.stepId.isNullOrEmpty() &&
-            overrideTriggerStepIds != null &&
-            overrideTriggerStepIds.contains(templateTriggerElement.stepId) &&
-            triggerConfig != null
     }
 
     private fun copyTriggerElement(
