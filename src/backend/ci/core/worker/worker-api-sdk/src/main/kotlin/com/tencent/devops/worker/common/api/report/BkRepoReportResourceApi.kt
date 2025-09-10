@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.plugin.worker.task.archive.ReportArchiveTask
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -150,47 +151,97 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         file: File,
         token: String,
         relativePath: String,
-        buildVariables: BuildVariables
+        buildVariables: BuildVariables,
+        shouldArchiveToParentPipeline: Boolean = false
     ) {
-        val pipelineId = buildVariables.pipelineId
-        val buildId = buildVariables.buildId
-        bkrepoResourceApi.uploadFileByToken(
-            file = file,
-            projectId = buildVariables.projectId,
-            repoName = "report",
-            destFullPath = "/$pipelineId/$buildId/$elementId/${relativePath.removePrefix("/")}",
-            token = token,
-            buildVariables = buildVariables,
-            parseAppMetadata = false,
-            parsePipelineMetadata = false
-        )
-    }
-
-    private fun uploadBkRepoReport(file: File, relativePath: String, buildVariables: BuildVariables) {
-        val projectId = buildVariables.projectId
-        val pipelineId = buildVariables.pipelineId
-        val buildId = buildVariables.buildId
-        val path = relativePath.removePrefix("/")
-        val url = "/bkrepo/api/build/generic/$projectId/report/$pipelineId/$buildId/$elementId/$path"
-
-        val request = buildPut(
-            path = url,
-            requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            headers = bkrepoResourceApi.getUploadHeader(
+        if (shouldArchiveToParentPipeline) {
+            val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
+            bkrepoResourceApi.uploadFileByToken(
                 file = file,
+                projectId = result.projectId,
+                repoName = "report",
+                destFullPath = "/${result.pipelineId}/${result.buildId}/$elementId/${relativePath.removePrefix("/")}",
+                token = token,
                 buildVariables = buildVariables,
                 parseAppMetadata = false,
                 parsePipelineMetadata = false
             )
-        )
-        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage())
-        val responseContent = request(request, message)
-        try {
-            val obj = objectMapper.readTree(responseContent)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
-        } catch (e: Exception) {
-            LoggerService.addNormalLine(e.message ?: "")
-            throw RemoteServiceException("report archive fail: $responseContent")
+        } else {
+            val pipelineId = buildVariables.pipelineId
+            val buildId = buildVariables.buildId
+            bkrepoResourceApi.uploadFileByToken(
+                file = file,
+                projectId = buildVariables.projectId,
+                repoName = "report",
+                destFullPath = "/$pipelineId/$buildId/$elementId/${relativePath.removePrefix("/")}",
+                token = token,
+                buildVariables = buildVariables,
+                parseAppMetadata = false,
+                parsePipelineMetadata = false
+            )
+        }
+    }
+
+    private fun uploadBkRepoReport(
+        file: File,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        shouldArchiveToParentPipeline: Boolean = false
+    ) {
+        //  新增：父流水线逻辑
+        if (shouldArchiveToParentPipeline) {
+            val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
+            val path = relativePath.removePrefix("/")
+            val parentUrl =
+                "/bkrepo/api/build/generic/${result.projectId}/" +
+                        "report/${result.pipelineId}/${result.buildId}/$elementId/$path"
+            val parentRequest = buildPut(
+                path = parentUrl,
+                requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
+                headers = bkrepoResourceApi.getUploadHeader(
+                    file = file,
+                    buildVariables = buildVariables,
+                    parseAppMetadata = false,
+                    parsePipelineMetadata = false
+                )
+            )
+            val parentMessage = "parent pipeline uploadBkRepoReport error"
+            val parentResponse = request(parentRequest, parentMessage)
+            try {
+                val parentObj = objectMapper.readTree(parentResponse)
+                if (parentObj.has("code") && parentObj["code"].asText() != "0") {
+                    throw RemoteServiceException(parentMessage)
+                }
+            } catch (e: Exception) {
+                LoggerService.addNormalLine("parent pipeline uploadBkRepoReport error: ${e.message ?: ""}")
+                throw RemoteServiceException("report archive to parent pipeline fail: $parentResponse")
+            }
+        } else {
+            val projectId = buildVariables.projectId
+            val pipelineId = buildVariables.pipelineId
+            val buildId = buildVariables.buildId
+            val path = relativePath.removePrefix("/")
+            val url = "/bkrepo/api/build/generic/$projectId/report/$pipelineId/$buildId/$elementId/$path"
+
+            val request = buildPut(
+                path = url,
+                requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
+                headers = bkrepoResourceApi.getUploadHeader(
+                    file = file,
+                    buildVariables = buildVariables,
+                    parseAppMetadata = false,
+                    parsePipelineMetadata = false
+                )
+            )
+            val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage())
+            val responseContent = request(request, message)
+            try {
+                val obj = objectMapper.readTree(responseContent)
+                if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
+            } catch (e: Exception) {
+                LoggerService.addNormalLine(e.message ?: "")
+                throw RemoteServiceException("report archive fail: $responseContent")
+            }
         }
     }
 
@@ -207,6 +258,47 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             uploadBkRepoReport(file, relativePath, buildVariables)
         }
         bkrepoResourceApi.setPipelineMetadata("report", buildVariables)
+    }
+
+    override fun uploadReportFileToParentPipeline(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        if (bkrepoResourceApi.tokenAccess()) {
+            uploadBkRepoReportByToken(file, token!!, relativePath, buildVariables, true)
+        } else {
+            uploadBkRepoReport(file, relativePath, buildVariables, true)
+        }
+    }
+
+    override fun createParentReportRecord(
+        buildVariables: BuildVariables,
+        taskId: String,
+        indexFile: String,
+        name: String,
+        reportType: String?,
+        token: String?
+    ): Result<Boolean> {
+        val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
+        val path =
+            "/ms/process/api/build/reports/${result.projectId}/${result.pipelineId}/${result.buildId}/$taskId?indexFile=${
+                encode(
+                    indexFile
+                )
+            }&name=${
+                encode(
+                    name
+                )
+            }&reportType=$reportType"
+        val request = buildPost(path)
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, AgentEnv.getLocaleLanguage())
+        )
+        return objectMapper.readValue(responseContent)
     }
 
     override fun getRepoToken(
@@ -231,6 +323,16 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         } else {
             null
         }
+    }
+
+    override fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
+        val path = "/ms/process/api/service/builds/$buildId/topParent/get"
+        val request = buildGet(path)
+        val responseContent = request(
+            request,
+            "getParentPipelineBuildInfo error "
+        )
+        return objectMapper.readValue(responseContent)
     }
 
 
