@@ -177,7 +177,7 @@ class ProcessDao {
         }
     }
 
-    fun getTotalBuildCount(
+    fun getMaxPipelineBuildNum(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
