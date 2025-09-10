@@ -119,8 +119,8 @@
     const projectId = computed(() => proxy.$route.params.projectId)
     const activeMenuItem = computed(() => proxy.$route.params.type || 'instanceList')
     const activeChild = computed(() => getNavComponent(activeMenuItem.value))
-    const canEdit = computed(() => pipelineInfo.value?.permissions?.canEdit)
-    const canDelete = computed(() => pipelineInfo.value?.permissions?.canDelete)
+    const canEdit = computed(() => pipelineInfo.value?.permissions?.canEdit ?? false)
+    const canDelete = computed(() => pipelineInfo.value?.permissions?.canDelete ?? false)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
     const isFromStoreTemplate = computed(() => !!pipelineInfo.value?.pipelineTemplateMarketRelatedInfo)
@@ -210,7 +210,10 @@
         },
         {
             text: t('copy'), // 复制
-            handler: () => copyTemplate(pipelineInfo.value),
+            handler: () => copyTemplate({
+                ...pipelineInfo.value,
+                ...pipelineInfo.value?.permissions
+            }),
             hasPermission: canEdit.value,
             disablePermissionApi: true,
             isShow: true,
@@ -223,7 +226,10 @@
         },
         {
             text: t('delete'),
-            handler: () => deleteTemplate(pipelineInfo.value, goTemplateManageList),
+            handler: () => deleteTemplate({
+                ...pipelineInfo.value,
+                ...pipelineInfo.value?.permissions
+            }, goTemplateManageList),
             hasPermission: canDelete.value,
             disablePermissionApi: true,
             isShow: true,
