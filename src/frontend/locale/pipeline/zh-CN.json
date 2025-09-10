@@ -719,6 +719,7 @@
     "templateList": "模版列表",
     "store": "商店",
     "installed": "已安装",
+    "atomExistedTips": "同一流水线仅需一个{0}器，无需重复添加",
     "noInstallPerm": "无权限安装",
     "closePreview": "关闭预览",
     "tempDetail": "查看模板详情",

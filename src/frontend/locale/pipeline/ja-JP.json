@@ -719,6 +719,7 @@
     "templateList": "テンプレートリスト",
     "store": "ストア",
     "installed": "インストール済み",
+    "atomExistedTips": "{0} は既存",
     "noInstallPerm": "インストール権限がありません",
     "closePreview": "プレビューを閉じる",
     "tempDetail": "テンプレート詳細を表示",

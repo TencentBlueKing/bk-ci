@@ -716,6 +716,7 @@
     "templateList": "Template List",
     "store": "Store",
     "installed": "Installed",
+    "atomExistedTips": "Plugin {0} has already exists",
     "noInstallPerm": "No permission to install",
     "closePreview": "Close preview",
     "tempDetail": "Preview",

@@ -24,6 +24,7 @@
             :show-overflow-tooltip="col.showOverflowTooltip"
             :sortable="col.sortable"
             :formatter="col.formatter"
+            :fixed="col.id === 'operate' ? 'right' : false"
         >
             <template slot-scope="{ row }">
                 <div
@@ -334,6 +335,7 @@
     display: flex;
     align-items: center;
     height: 40px;
+    grid-gap: 12px;
 }
 
 .select-text {
