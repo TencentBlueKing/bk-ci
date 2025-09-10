@@ -12,10 +12,10 @@
                 <span
                     class="execute-build-version-input"
                     v-for="v in renderVersionParamList"
-                    :key="v"
+                    :key="v.id"
                 >
                     <vuex-input
-                        :disabled="disabled"
+                        :disabled="disabled || isFollowTemplate"
                         input-type="number"
                         :name="v.id"
                         :class="{
@@ -96,6 +96,7 @@
                 <bk-checkbox
                     v-if="isInstance && !isInitInstance"
                     class="instance_reset"
+                    :disabled="disabled"
                     :value="resetBuildNo"
                     @change="handleCheckChange"
                 >
@@ -116,7 +117,7 @@
                         v-else
                     >
                         <vuex-input
-                            :disabled="isPreviewAndLockedNo"
+                            :disabled="isPreviewAndLockedNo || isFollowTemplate || disabled"
                             input-type="number"
                             name="buildNo"
                             placeholder="BK_CI_BUILD_NO"
@@ -152,19 +153,10 @@
                             :handle-change="handleBuildNoChange"
                             :class="{
                                 'is-diff-param': highlightChangedParam && buildNo.isChanged,
-                                'is-change-param': isResetBuildNo
+                                'is-change-param': resetBuildNo
                             }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
-                        <span
-                            v-if="resetBuildNo && isInstance"
-                            class="reset-build-no"
-                        >
-                            <Logo
-                                size="14"
-                                name="arrow-right"
-                            />
-                        </span>
                     </p>
                 </div>
             </div>
@@ -219,7 +211,7 @@
             isInitInstance: Boolean,
             resetBuildNo: Boolean,
             highlightChangedParam: Boolean,
-            isResetBuildNo: Boolean,
+            isFollowTemplate: Boolean,
             versionParamList: {
                 type: Array,
                 default: () => []

@@ -39,7 +39,7 @@ const mutations = {
 
 const actions = {
     installPipelineTemplate (_, params) {
-        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install/v2`, params).then(response => {
         })
     },
     requestInstallTemplate (_, params) {
@@ -74,11 +74,6 @@ const actions = {
     },
     updateTemplateInstance (_, { projectId, templateId, versionId, useTemplateSettings, params }) {
         return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}/async/update?version=${versionId}&useTemplateSettings=${useTemplateSettings}`, params).then(response => {
-            return response.data
-        })
-    },
-    requestVersionCompare (_, { projectId, templateId, versionId, pipelineId }) {
-        return ajax.post(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}/pipelines/${pipelineId}/compare?version=${versionId}`).then(response => {
             return response.data
         })
     },

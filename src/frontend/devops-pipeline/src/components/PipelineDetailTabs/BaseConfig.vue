@@ -63,7 +63,7 @@
                                         class="base-info-block-row-value-label"
                                         @click="goPipelineManageList(row.key, label.id)"
                                     >
-                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
+                                        {{ label.name || label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>
@@ -129,11 +129,13 @@
                 const { basicInfo } = this
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
+                const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
+                const viewNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
                 return this.isTemplate
                     ? [
                         {
                             key: 'name',
-                            value: basicInfo?.name
+                            value: basicInfo?.pipelineName
                         },
                         {
                             key: 'desc',
@@ -167,7 +169,7 @@
                         },
                         {
                             key: 'pipelineGroup',
-                            value: basicInfo?.viewNames ?? []
+                            value: viewNameList ?? []
                         },
                         {
                             key: 'desc',

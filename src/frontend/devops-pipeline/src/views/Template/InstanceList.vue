@@ -99,13 +99,27 @@
                                 >
                                     <span class="template-version">
                                         {{ $t('template.Upgrading') }}
-                                        <bk-loading
-                                            class="loading-icon"
-                                            theme="primary"
-                                            mode="spin"
-                                            size="mini"
-                                            is-loading
-                                        />
+                                        <bk-popover
+                                            ext-cls="pull-url-popover"
+                                            :disabled="!row.pullRequestUrl"
+                                        >
+                                            <bk-loading
+                                                class="loading-icon"
+                                                theme="primary"
+                                                mode="spin"
+                                                size="mini"
+                                                is-loading
+                                            />
+                                            <div slot="content">
+                                                <span>{{ $t('template.pleaseMergePullUrl') }}</span>
+                                                <span
+                                                    class="btn-text"
+                                                    @click="HandleMR(row)"
+                                                >
+                                                    {{ $t('template.toHandle') }}
+                                                </span>
+                                            </div>
+                                        </bk-popover>
                                     </span>
                                 </template>
 
@@ -152,7 +166,7 @@
                     <bk-table-column
                         :label="$t('lastUpdateTime')"
                         prop="updateTime"
-                        :width="250"
+                        :width="180"
                     >
                         <template slot-scope="{ row }">
                             <span>{{ localConvertTime(row.updateTime) }}</span>
@@ -160,10 +174,20 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
-                        :width="250"
+                        :width="200"
                     >
                         <template slot-scope="{ row }">
                             <bk-button
+                                v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING && row.pullRequestUrl"
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="HandleMR(row)"
+                            >
+                                {{ $t('template.handleMR') }}
+                            </bk-button>
+                            <bk-button
+                                v-else-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -171,15 +195,6 @@
                                 @click="updateInstance(row)"
                             >
                                 {{ $t('template.updateInstance') }}
-                            </bk-button>
-                            <bk-button
-                                v-if="row.pullRequestUrl"
-                                class="mr10"
-                                theme="primary"
-                                text
-                                @click="HandleMR(row)"
-                            >
-                                {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
                                 class="mr10"
@@ -190,9 +205,10 @@
                             >
                                 {{ $t('copy') }}
                             </bk-button>
+                            <!-- v-if="row.fromTemplateVersion !== currentVersion" -->
                             <version-diff-entry
-                                v-if="row.version !== currentVersion"
-                                :version="row.version"
+                                v-if="false"
+                                :version="row.pipelineVersion"
                                 :latest-version="currentVersion"
                                 :pipeline-id="row.pipelineId"
                                 type="templateInstance"
@@ -213,18 +229,18 @@
 </template>
 
 <script setup>
-    import { computed, ref, watch } from 'vue'
-    import { convertTime } from '@/utils/util'
+    import Logo from '@/components/Logo'
+    import PacTag from '@/components/PacTag'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import emptyTips from '@/components/pipelineList/imgEmptyTips'
+    import UseInstance from '@/hook/useInstance'
     import {
         SET_INSTANCE_LIST,
         TEMPLATE_INSTANCE_PIPELINE_STATUS
     } from '@/store/modules/templates/constants'
-    import PacTag from '@/components/PacTag'
-    import Logo from '@/components/Logo'
-    import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import UseInstance from '@/hook/useInstance'
+    import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
+    import { computed, ref, watch } from 'vue'
 
     const { proxy, showTips, t } = UseInstance()
     const isLoading = ref(false)
@@ -570,6 +586,13 @@
         .batch-update {
             padding: 0 11px;
             font-size: 12px;
+        }
+    }
+    .pull-url-popover {
+        .btn-text {
+            font-size: 12px;
+            color: $primaryColor;
+            cursor: pointer;
         }
     }
 </style>

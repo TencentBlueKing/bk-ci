@@ -141,11 +141,11 @@
     import {
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
-    import { defineProps, onBeforeMount, ref } from 'vue'
-    import ExtMenu from './extMenu'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { computed, defineProps, onBeforeMount, ref } from 'vue'
+    import ExtMenu from './extMenu'
     const { proxy, t } = UseInstance()
     const {
         goTemplateOverview
@@ -235,6 +235,7 @@
         return acc
     }, {})
     const selectedTableColumn = ref([])
+    const projectId = computed(() => proxy.$route.params.projectId)
 
     onBeforeMount(() => {
         try {

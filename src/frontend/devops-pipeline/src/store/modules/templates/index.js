@@ -15,7 +15,8 @@ export default {
         showTaskDetail: false,
         instanceTaskDetail: {},
         templateRefType: 'ID',
-        templateRef: ''
+        templateRef: null,
+        instancePageLoading: false
     },
     mutations,
     actions,

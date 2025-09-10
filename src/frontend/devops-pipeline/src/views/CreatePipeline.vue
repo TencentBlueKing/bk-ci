@@ -212,7 +212,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: $route.params.projectId,
-                                        resourceType: 'pipeline_template',
+                                        resourceType: RESOURCE_TYPE.TEMPLATE,
                                         resourceCode: $route.params.projectId,
                                         action: TEMPLATE_RESOURCE_ACTION.CREATE
                                     }
@@ -244,7 +244,7 @@
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import pipelineHeader from '@/components/devops/pipeline-header'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
@@ -261,6 +261,7 @@
         data () {
             return {
                 TEMPLATE_RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 activePanel: 'projected',
                 isDisabled: false,
                 activeTempIndex: 0,
@@ -472,7 +473,8 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     projectCode: this.$route.params.projectId,
-                    keyword: this.searchName
+                    keyword: this.searchName,
+                    excludeProjectCode: this.$route.params.projectId
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++
@@ -514,7 +516,7 @@
             },
             async selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
-                if (target?.templateType !== 'PUBLIC') {
+                if (target?.templateType !== 'PUBLIC' && target.templateId) {
                     await this.requestTemplateSetting({
                         projectId: this.$route.params.projectId,
                         templateId: target.templateId
@@ -573,14 +575,15 @@
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
                         this.$router.push({
-                            name: 'createInstance',
+                            name: 'instanceEntry',
                             params: {
+                                ...this.$route.params,
                                 templateId: this.activeTemp.templateId,
-                                curVersionId: this.activeTemp.version,
-                                pipelineName: this.newPipelineName
-
+                                version: this.activeTemp.version,
+                                type: 'create'
                             },
                             query: {
+                                pipelineName: this.newPipelineName,
                                 useTemplateSettings: true
                             }
                         })

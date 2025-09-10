@@ -27,12 +27,14 @@
             </span>
             <VersionSelector
                 v-if="templateRefTypeById"
+                is-template
                 class="version-selector"
                 :value="versionValue"
                 @change="handleVersionChange"
                 :include-draft="false"
                 refresh-list-on-expand
                 :show-extension="false"
+                :unique-id="templateId"
             />
         </template>
         <template v-else>
@@ -49,16 +51,33 @@
                 />
             </bk-select>
             <div class="ref-input">
-                <bk-input
-                    v-model="templateRef"
-                    :placeholder="templateRefPlaceholderMap[pullMode]"
-                    @change="handelChangeTemplateRef"
-                />
-                <i
-                    v-if="errorRefMsg"
-                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
-                    v-bk-tooltips="errorRefMsg"
-                />
+                <template v-if="isCommitPullMode">
+                    <bk-input
+                        :value="templateRef"
+                        :placeholder="templateRefPlaceholderMap[pullMode]"
+                        @change="handelChangeTemplateRef"
+                    />
+                    <i
+                        v-if="errorRefMsg"
+                        class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                        v-bk-tooltips="errorRefMsg"
+                    />
+                </template>
+                <template v-else>
+                    <bk-select
+                        :clearable="false"
+                        searchable
+                        @change="handleChangeRefOption"
+                        :remote-method="refOptionRemoteMethod"
+                    >
+                        <bk-option
+                            v-for="option in refOptionList"
+                            :key="option.name"
+                            :id="option.name"
+                            :name="option.name"
+                        />
+                    </bk-select>
+                </template>
             </div>
         </template>
         <bk-button
@@ -125,17 +144,18 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, watch } from 'vue'
     import Logo from '@/components/Logo'
-    import UseInstance from '@/hook/useInstance'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
+    import UseInstance from '@/hook/useInstance'
     import {
-        UPDATE_USE_TEMPLATE_SETTING,
-        UPDATE_TEMPLATE_REF_TYPE,
+        SET_TEMPLATE_DETAIL,
         UPDATE_TEMPLATE_REF,
-        SET_TEMPLATE_DETAIL
+        UPDATE_TEMPLATE_REF_TYPE,
+        UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
+    import { debounce } from '@/utils/util'
+    import { computed, defineProps, onMounted, ref, watch } from 'vue'
     defineProps({
         isInstanceCreateType: Boolean
     })
@@ -143,15 +163,17 @@
     const templatePipeline = ref({})
     const errorRefMsg = ref('')
     const pullMode = ref('tag')
+    const searchKey = ref('')
+    const refOptionList = ref([])
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
-    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
+    const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef?.value ?? '')
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
-    const versionValue = ref(proxy?.$route.params?.version ?? pipelineInfo.value?.version)
+    const versionValue = ref()
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const templateRefTypeList = computed(() => ([
         {
@@ -165,6 +187,7 @@
             disabled: !pacEnabled.value
         }
     ]))
+    const isCommitPullMode = computed(() => pullMode.value === 'commit')
     const pullModeList = computed(() => ([
         {
             id: 'tag',
@@ -179,9 +202,25 @@
             label: proxy.$t('template.commit')
         }
     ]))
-    watch(() => pullMode.value, () => {
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
+    onMounted(() => {
+        if (proxy?.$route.params?.version) {
+            versionValue.value = parseInt(proxy.$route.params.version)
+        } else {
+            versionValue.value = pipelineInfo.value?.version
+        }
+    })
+
+    watch(() => pipelineInfo.value?.version, () => {
+        versionValue.value = pipelineInfo.value?.version
+    })
+    watch(() => [pullMode.value, templateRefType.value], () => {
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
         errorRefMsg.value = ''
+        if (!isCommitPullMode.value && !templateRefTypeById.value) {
+            fetchRefOptionList()
+        }
+    }, {
+        immediate: true
     })
     const templateRefPlaceholderMap = computed(() => ({
         tag: `${proxy.$t('template.Example')} tag1`,
@@ -209,7 +248,8 @@
             templatePipeline.value = {
                 templateId: res.resource.templateId,
                 projectId: res.resource.projectId,
-                stages: res.resource.model.stages
+                stages: res.resource.model.stages,
+                name: res.setting.pipelineName
             }
         } catch (e) {
             console.error(e)
@@ -228,7 +268,7 @@
 
     function handleChangeTemplateRefType (value) {
         errorRefMsg.value = ''
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, value)
         proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
             templateVersion: '',
@@ -236,14 +276,18 @@
         })
         templatePipeline.value = {}
     }
-
-    async function handelChangeTemplateRef (value) {
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, value)
+    async function fetchTemplateDateByRef (value) {
+        const refAlias = getRefByPullMode(value)
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, {
+            value,
+            alias: refAlias
+        })
         try {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', true)
             const res = await proxy.$store.dispatch('templates/fetchTemplateByRef', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                ref: getRefByPullMode(templateRef.value)
+                ref: refAlias
             })
             if (!res.resource) return
             templatePipeline.value = {
@@ -258,9 +302,45 @@
                 templateVersion: '',
                 templateDetail: {}
             })
+            proxy.$bkMessage({
+                theme: 'error',
+                message: errorRefMsg.value
+            })
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
+        }
+    }
+    function refOptionRemoteMethod (keyword) {
+        searchKey.value = keyword
+        proxy.$nextTick(() => {
+            fetchRefOptionList()
+        })
+    }
+    async function fetchRefOptionList () {
+        const fn = pullMode.value === 'branch'
+            ? 'getBranchesListByProjectId'
+            : 'getTagsListByProjectId'
+        try {
+            const res = await proxy.$store.dispatch(`templates/${fn}`, {
+                projectId: projectId.value,
+                searchKey: searchKey.value,
+                repoHashId: pipelineInfo.value?.yamlInfo?.repoHashId
+            })
+            refOptionList.value = res.data
+            searchKey.value = ''
+        } catch (e) {
             console.error(e)
         }
     }
+    function handleChangeRefOption (value) {
+        fetchTemplateDateByRef(value)
+    }
+    const debouncedFetchTemplate = debounce(fetchTemplateDateByRef, 300)
+
+    const handelChangeTemplateRef = (value) => {
+        debouncedFetchTemplate(value)
+    }
+  
 </script>
 
 <style lang="scss">
@@ -293,6 +373,7 @@
         }
         .selector-prepend {
             display: inline-block;
+            width: 88px;
             height: 32px;
             line-height: 32px;
             padding: 0 8px;

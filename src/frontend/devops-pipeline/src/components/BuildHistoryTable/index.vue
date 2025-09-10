@@ -365,7 +365,7 @@
                         <div>
                             <span>{{ props.row.pipelineVersionName ?? '--' }}</span>
                             <span
-                                v-if="!props.row.versionChange"
+                                v-if="props.row.versionChange"
                                 @click.stop="showVersionDiffDialog(props.row.index)"
                             >
                                 <logo
@@ -604,6 +604,7 @@
         <VersionDiffDialog
             :visible.sync="isShowVersionDiffDialog"
             :build-num="`#${activeBuild?.buildNum}`"
+            :build-id="activeBuild?.id"
         />
     </div>
 </template>

@@ -4,7 +4,7 @@
             'instance-config-wrapper': true,
             'has-ref-tips': !templateRefTypeById
         }"
-        v-bkloading="{ isLoading: isLoading }"
+        v-bkloading="{ isLoading: isLoading || instancePageLoading }"
     >
         <bk-alert
             v-if="!templateRefTypeById"
@@ -14,9 +14,21 @@
             <div slot="title">
                 <p>
                     {{ $t('template.notSpecifiedRef.tips1') }}
-                    <span class="doc-btn">
-                        {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
-                    </span>
+                    <bk-popover
+                        placement="top"
+                        width="620"
+                    >
+                        <span class="doc-btn">
+                            {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
+                        </span>
+                        <div slot="content">
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips1') }}</p>
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips2') }}</p>
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips3') }}</p>
+                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips4') }}</p>
+                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips5') }}</p>
+                        </div>
+                    </bk-popover>
                 </p>
                 <p>
                     {{ $t('template.notSpecifiedRef.tips2') }}
@@ -105,9 +117,9 @@
                                         v-bind="versionParams"
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
-                                        :handle-set-build-no-required="handleSetBuildNoRequired"
-                                        :is-required-param="curInstance.buildNo.isRequiredParam"
-                                        :is-follow-template="curInstance.buildNo.isFollowTemplate"
+                                        :handle-set-required="handleSetBuildNoRequired"
+                                        :is-required-param="curInstance.buildNo?.isRequiredParam"
+                                        :is-follow-template="curInstance.buildNo?.isFollowTemplate"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -115,7 +127,8 @@
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
                                                 is-instance
-                                                :is-reset-build-no="isResetBuildNo"
+                                                :is-follow-template="curInstance.buildNo?.isFollowTemplate"
+                                                :reset-build-no="curInstance.resetBuildNo"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
@@ -269,7 +282,7 @@
             </div>
         </section>
         <footer
-            v-if="!isLoading"
+            v-if="!isLoading && !instancePageLoading"
             class="config-footer"
         >
             <bk-button
@@ -282,18 +295,18 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, defineProps } from 'vue'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import RenderTrigger from '@/components/Template/RenderTrigger.vue'
     import UseInstance from '@/hook/useInstance'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
     import {
         SET_INSTANCE_LIST,
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { computed, defineProps, ref, watch } from 'vue'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -310,7 +323,7 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
-    const isResetBuildNo = ref(false)
+    const instancePageLoading = computed(() => proxy.$store?.state?.templates?.instancePageLoading)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
@@ -438,6 +451,7 @@
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
+            id: i.id,
             stepId: i.stepId ?? '',
             disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
@@ -456,15 +470,21 @@
     }, {
         deep: true
     })
-    watch(() => [curTemplateVersion.value, templateRef.value], () => {
+    watch(() => [curTemplateVersion.value], () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
+            if (!curTemplateVersion.value) {
+                isLoading.value = false
+            }
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
                 return {
                     ...instance,
-                    param: curTemplateDetail.value.params,
-                    buildNo: curTemplateDetail.value.buildNo
+                    param: curTemplateDetail.value?.params?.map(i => ({
+                        ...i,
+                        isRequiredParam: true
+                    })),
+                    buildNo: curTemplateDetail.value?.buildNo
                 }
             }))
         } else {
@@ -501,13 +521,18 @@
         }, {})
         for (const item of instanceParams) {
             const templateParamItem = templateParamsMap[item.id]
-
             if (!templateParamItem) {
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 item.isDelete = true
             } else {
                 // 对比 defaultValue, 如果不同则标记为isChange
-                item.isChange = item.defaultValue !== templateParamItem.defaultValue
+                // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
+                if (item.isFollowTemplate) {
+                    item.defaultValue = templateParamItem.defaultValue
+                } else {
+                    item.isChange = item.defaultValue !== templateParamItem.defaultValue
+                }
+                item.required = templateParamItem.required
             }
         }
 
@@ -525,39 +550,46 @@
     }
 
     function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
-        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.stepId, item]))
+        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.id, item]))
+        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.id, item]))
+
         const result = templateTriggerConfigs.map(item => {
-            if (!instanceTriggerMap.has(item.stepId)) {
+            if (!instanceTriggerMap.has(item.id)) {
                 return { ...item, isNew: true }
             }
-            const instanceTrigger = instanceTriggerMap.get(item.stepId)
-            return { ...item, ...instanceTrigger }
+            const instanceTrigger = instanceTriggerMap.get(item.id)
+            return  instanceTrigger.isFollowTemplate ? item : instanceTrigger
         })
 
-        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.stepId, item]))
-
         instanceTriggerConfigs.forEach(item => {
-            if (!templateTriggerMap.has(item.stepId)) {
+            if (!templateTriggerMap.has(item.id)) {
                 result.push({ ...item, isDelete: true })
             }
         })
         return result
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
-        if (!instanceBuildNo && !!templateBuildNo) {
-            // 将模板的推荐版本号配置覆盖实例推荐版本号
+        if (instanceBuildNo?.isFollowTemplate) {
             return {
                 ...instanceBuildNo,
                 ...templateBuildNo
             }
-        }
-        if (instanceBuildNo && templateBuildNo) {
-            return {
-                ...instanceBuildNo,
-                required: templateBuildNo.required
+        } else {
+            if (!instanceBuildNo && !!templateBuildNo) {
+                // 将模板的推荐版本号配置覆盖实例推荐版本号
+                return {
+                    ...instanceBuildNo,
+                    ...templateBuildNo
+                }
             }
+            if (instanceBuildNo && templateBuildNo) {
+                return {
+                    ...instanceBuildNo,
+                    required: templateBuildNo.required
+                }
+            }
+            return instanceBuildNo
         }
-        return instanceBuildNo
     }
     
     function handleSetParmaRequired (id) {
@@ -635,16 +667,15 @@
         })
     }
     function handleCheckChange (value) {
-        isResetBuildNo.value = value
-        if (!value) return
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
                 ...curInstance.value,
                 buildNo: {
                     ...curInstance.value?.buildNo,
-                    currentBuildNo: curInstance.value.buildNo?.buildNo
-                }
+                    currentBuildNo: value ? curInstance.value.buildNo?.buildNo : curInstance.value.buildNo?.currentBuildNo
+                },
+                resetBuildNo: value
             }
         })
     }
@@ -687,6 +718,7 @@
         let target = id, index
         switch (key) {
             case 'introVersion':
+                // 推荐版本号-取消跟随模板，存入overrideTemplateField字段为BK_CI_BUILD_NO
                 target = 'BK_CI_BUILD_NO'
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
@@ -699,11 +731,29 @@
                             paramIds
                         },
                         buildNo: {
-                            ...curInstance.value?.buildNo,
-                            isFollowTemplate: !curInstance.value.buildNo.isFollowTemplate
+                            ...curTemplateDetail.value?.buildNo,
+                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate,
+                            isRequiredParam: curInstance.value?.buildNo?.isRequiredParam,
+                            currentBuildNo: curInstance.value?.buildNo?.currentBuildNo
                         }
                     }
                 })
+                if (curInstance.value?.buildNo?.isFollowTemplate) {
+                    proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                        index: activeIndex.value - 1,
+                        value: {
+                            ...curInstance.value,
+                            param: curInstance.value?.param.map(p => {
+                                return {
+                                    ...p,
+                                    defaultValue: allVersionKeyList.includes(p.id)
+                                        ? curTemplateDetail.value.params?.find(t => t.id === p.id)?.defaultValue
+                                        : p.defaultValue
+                                }
+                            })
+                        }
+                    })
+                }
                 break
 
             case 'trigger':

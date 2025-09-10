@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, onMounted, onBeforeUnmount } from 'vue'
+    import { ref, defineProps, computed, watch, onMounted, onBeforeUnmount } from 'vue'
     import {
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
@@ -142,6 +142,8 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
+    const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
+    const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
     const templateTriggerConfigs = computed(() => {
         return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
             atomCode: i.atomCode,
@@ -155,7 +157,17 @@
         }))
     })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    watch(() => curTemplateDetail.value, (val) => {
+        if (pipelineName.value) {
+            handleAddInstance()
+            proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, useTemplateSettings.value)
+        }
+    })
     async function checkPipelineName (val) {
+        if (renderInstanceList.value.find(i => i.pipelineName === val)) {
+            isErrorName.value = true
+            return
+        }
         try {
             isErrorName.value = await proxy.$store.dispatch('pipelines/checkPipelineName', {
                 projectId: projectId.value,
@@ -232,9 +244,10 @@
                         triggerElements?.length ? {
                             triggerConfigs: triggerElements.map(trigger => {
                                 return {
+                                    id: trigger.id,
                                     atomCode: trigger.atomCode,
                                     stepId: trigger.stepId ?? '',
-                                    disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
+                                    disabled: Object.hasOwnProperty.call(trigger?.additionalOptions ?? {}, 'enable') ? !trigger?.additionalOptions?.enable : false,
                                     cron: trigger.advanceExpression,
                                     variables: trigger.startParams,
                                     name: trigger.name,
@@ -255,6 +268,7 @@
                 })
                 if (item.buildNo) {
                     proxy.$set(item.buildNo, 'isRequiredParam', item?.buildNo?.required)
+                    proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
@@ -267,6 +281,7 @@
         const { params, buildNo } = deepClone(curTemplateDetail.value)
         const newInstance = {
             enablePac: false,
+            pipelineName: pipelineName.value ?? '',
             param: params.map(p => {
                 return {
                     ...p,

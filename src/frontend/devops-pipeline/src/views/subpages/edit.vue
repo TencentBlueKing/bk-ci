@@ -13,12 +13,12 @@
         </empty-tips>
         <YamlPipelineEditor
             v-else-if="isCodeMode"
-            :editable="!instanceFromTemplate"
+            :editable="editable"
         />
         <template v-else>
             <show-variable
                 v-if="currentTab === 'pipeline' && pipeline"
-                :editable="!instanceFromTemplate"
+                :editable="editable"
                 :pipeline="pipeline"
             />
             <header
@@ -131,6 +131,9 @@
                 'editfromImport',
                 'showVariable'
             ]),
+            editable () {
+                return !(this.instanceFromTemplate || this.pipelineInfo.mode === 'CONSTRAINT')
+            },
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
@@ -159,7 +162,7 @@
                         label: this.$t('pipeline'),
                         component: 'PipelineEditTab',
                         bindData: {
-                            editable: !this.instanceFromTemplate,
+                            editable: this.editable,
                             pipeline: this.pipelineWithoutTrigger,
                             isLoading: !this.pipelineWithoutTrigger
                         }
@@ -169,7 +172,7 @@
                         label: this.$t('settings.trigger'),
                         component: 'TriggerTab',
                         bindData: {
-                            editable: !this.instanceFromTemplate,
+                            editable: this.editable,
                             pipeline: this.pipeline
                         }
                     },

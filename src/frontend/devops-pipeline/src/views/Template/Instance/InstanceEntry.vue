@@ -85,21 +85,21 @@
 </template>
 
 <script setup name="InstanceEntry">
+    import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
-    import BatchEditConfig from './BatchEditConfig'
     import UseInstance from '@/hook/useInstance'
-    import { computed, onMounted, ref, watch, onBeforeUnmount } from 'vue'
     import {
         SET_INSTANCE_LIST,
-        SET_RELEASE_ING,
         SET_RELEASE_BASE_ID,
+        SET_RELEASE_ING,
         UPDATE_TEMPLATE_REF,
         UPDATE_TEMPLATE_REF_TYPE
     } from '@/store/modules/templates/constants'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+    import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
     import TemplateVersionSelector from './TemplateVersionSelector'
-    import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
 
     const { proxy } = UseInstance()
     const isLoading = ref(false)
@@ -120,13 +120,13 @@
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
 
     const releaseBtnText = computed(() => {
-        const type = proxy.$route.params?.type ?? 'create'
+        const type = proxy.$route.params?.type
         const textMap = {
             copy: proxy.$t('release'),
             create: proxy.$t('release'),
             upgrade: proxy.$t('template.batchUpgrade')
         }
-        return textMap[type]
+        return textMap[type] || proxy.$t('release')
     })
     watch(() => pipeline.value, () => {
         isLoading.value = false
@@ -143,6 +143,15 @@
     }, {
         immediate: true
     })
+
+    onMounted(() => {
+        requestTemplateByVersion()
+    })
+    onBeforeUnmount(() => {
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, 'ID')
+    })
+
     async function requestTemplateByVersion (version = currentVersionId.value) {
         try {
             await proxy.$store.dispatch('atom/requestPipeline', {
@@ -179,11 +188,18 @@
     async function handleReleaseInstance (value) {
         const type = proxy.$route.params?.type
         const fnMap = {
-            create: 'templates/releaseInstance',
-            copy: 'templates/releaseInstance',
-            upgrade: 'templates/updateInstance'
+            create: 'releaseInstance',
+            copy: 'releaseInstance',
+            upgrade: 'updateInstance'
         }
         const fn = fnMap[type]
+        if (!fn) {
+            proxy.$showTips({
+                theme: 'error',
+                message: proxy.$t(`unknown type, ${type}`)
+            })
+            return
+        }
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
@@ -199,19 +215,20 @@
                         ...i,
                         required: i.isRequiredParam
                     })),
+                    resetBuildNo: item?.resetBuildNo ?? false,
                     timerTrigger: item.timerTrigger,
                     filePath: item.filePath,
                     overrideTemplateField: item.overrideTemplateField,
                     triggerConfigs: item.triggerConfigs
                 }
             })
-            const res = await proxy.$store.dispatch(fn, {
+            const res = await proxy.$store.dispatch(`templates/${fn}`, {
                 projectId: projectId.value,
                 templateId: templateId.value,
                 version: templateVersion.value,
                 params: {
                     templateRefType: templateRefType.value,
-                    templateRef: templateRef.value,
+                    templateRef: templateRef.value?.alias ?? '',
                     useTemplateSettings: useTemplateSettings.value,
                     instanceReleaseInfos,
                     ...value
@@ -238,13 +255,7 @@
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
     }
-    onMounted(() => {
-        requestTemplateByVersion()
-    })
-    onBeforeUnmount(() => {
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, 'ID')
-    })
+   
 </script>
 
 <style lang="scss">
