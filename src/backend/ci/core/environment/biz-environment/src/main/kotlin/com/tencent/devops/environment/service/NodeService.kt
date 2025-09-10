@@ -759,8 +759,11 @@ class NodeService @Autowired constructor(
         checkNodesTypeCmdb(nodeList)
         checkNodesImportPermission(userId, nodeList)
 
-        nodeList.forEach { it ->
-            nodeDao.updateCreatedUser(dslContext, it.nodeId, userId)
+        val toChangeNodeIds = nodeList.map { it.nodeId }
+        // 分批更新，以免单次where in 大列表
+        val nodeIdsInBatch = toChangeNodeIds.chunked(2000)
+        nodeIdsInBatch.forEach { it ->
+            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId)
         }
 
         return nodeList.map { Pair(it.nodeHashId, it.displayName) }
@@ -778,33 +781,34 @@ class NodeService @Autowired constructor(
     }
 
     private fun checkNodesTypeCmdb(nodeList: List<TNodeRecord>) {
-        val invalidTypeNodeHashIds: MutableList<String> = mutableListOf()
+        val invalidTypeNodeIps: MutableList<String> = mutableListOf()
         nodeList.forEach { it ->
             if (it.nodeType != NodeType.CMDB.name) {
-                invalidTypeNodeHashIds.add(it.nodeHashId)
+                invalidTypeNodeIps.add(it.nodeIp)
             }
         }
-        if (invalidTypeNodeHashIds.isNotEmpty()) {
+        if (invalidTypeNodeIps.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
+                errorCode = ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB,
+                params = arrayOf(invalidTypeNodeIps.joinToString(","))
             )
         }
     }
 
     private fun checkNodesImportPermission(userId: String, nodeList: List<TNodeRecord>) {
-        val noPermissionNodeHashIds: MutableList<String> = mutableListOf()
+        val noPermissionNodeIps: MutableList<String> = mutableListOf()
         nodeList.forEach { it ->
             if (!(it.bakOperator.split(";").contains(userId) || it.operator == userId)) {
-                noPermissionNodeHashIds.add(it.nodeHashId)
+                noPermissionNodeIps.add(it.nodeIp)
             }
         }
-        if (noPermissionNodeHashIds.isNotEmpty()) {
+        if (noPermissionNodeIps.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
-                params = arrayOf(noPermissionNodeHashIds.joinToString(",")),
+                params = arrayOf(noPermissionNodeIps.joinToString(",")),
                 defaultMessage = MessageUtil.getMessageByLocale(
                     messageCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
-                    params = arrayOf(noPermissionNodeHashIds.joinToString(",")),
+                    params = arrayOf(noPermissionNodeIps.joinToString(",")),
                     language = I18nUtil.getLanguage(userId)
                 )
             )
