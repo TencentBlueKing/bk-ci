@@ -132,7 +132,7 @@
                 'showVariable'
             ]),
             editable () {
-                return !(this.instanceFromTemplate || this.pipelineInfo.mode === 'CONSTRAINT')
+                return !(this.instanceFromTemplate || this.pipelineInfo?.mode === 'CONSTRAINT')
             },
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
