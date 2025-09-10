@@ -192,6 +192,7 @@ object CommonMessageCode {
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
+    const val BK_JOB_MATRIX_STR_ERROR = "bkJobMatrixStrError" // 当前矩阵YAML/JSON配置有误，请仔细检查格式、语法是否符合要求。当前配置为: {0}
     const val BK_FILE_NAME = "bkFileName" // 文件名
     const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" // 所属项目
     const val BK_OPERATING = "bkOperating" // 操作
