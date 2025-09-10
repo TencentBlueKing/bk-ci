@@ -173,7 +173,7 @@
                                 disabled: !needManage
                             },
                             sortPos,
-                            desc: this.$t(desc),
+                            desc: desc && this.$t(desc),
                             isDynamicGroup
                         })
                     }
