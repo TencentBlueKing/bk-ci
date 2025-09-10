@@ -7,7 +7,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.tables.TTemplatePipelineVersion
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineVersionRecord
-import com.tencent.devops.process.pojo.template.TemplateRefType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionUpdateInfo

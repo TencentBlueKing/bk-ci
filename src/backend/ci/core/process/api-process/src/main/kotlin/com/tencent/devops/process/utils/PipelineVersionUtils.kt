@@ -85,13 +85,13 @@ object PipelineVersionUtils {
     ): Int {
         return when {
             // 流水线从非模板变成模版实例化
-            (originModel.fromTemplate != true && newModel.fromTemplate == true) ||
-                (originModel.fromTemplate == true && newModel.fromTemplate != true) -> {
+            (originModel.template == null && newModel.template != null) ||
+                    (originModel.template != null && newModel.template == null) -> {
                 currVersion + 1
             }
             // 都是模版实例化,则对比触发器配置
-            originModel.fromTemplate == true && newModel.fromTemplate == true -> {
-                if (originModel.triggerConfigs == newModel.triggerConfigs) {
+            originModel.template != null && newModel.template != null -> {
+                if (originModel.template!!.triggerConfigs == newModel.template!!.triggerConfigs) {
                     currVersion
                 } else {
                     currVersion + 1
@@ -132,13 +132,13 @@ object PipelineVersionUtils {
     ): Int {
         return when {
             // 流水线从非模板变成模版实例化
-            (originModel.fromTemplate != true && newModel.fromTemplate == true) ||
-                (originModel.fromTemplate == true && newModel.fromTemplate != true) -> {
+            (originModel.template == null && newModel.template != null) ||
+                (originModel.template != null && newModel.template == null) -> {
                 currVersion + 1
             }
             // 都是模版实例化,则对比参数
-            originModel.fromTemplate == true && newModel.fromTemplate == true -> {
-                if (originModel.templateVariables == newModel.templateVariables) {
+            originModel.template != null && newModel.template != null -> {
+                if (originModel.template!!.templateVariables == newModel.template!!.templateVariables) {
                     currVersion
                 } else {
                     currVersion + 1

@@ -70,7 +70,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         repoHashId: String? = null,
         branchName: String? = null
     ): PipelineVersionCreateContext {
-        return if (model.fromTemplate == true) {
+        return if (model.template != null) {
             convertFromTemplate(
                 userId = userId,
                 projectId = projectId,

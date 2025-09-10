@@ -103,7 +103,7 @@ class PipelineVersionValidator @Autowired constructor(
         if (pipelineInfo != null) {
             val model = pipelineResourceWithoutVersion.model
             // 只在更新操作时检查stage数量不为1
-            if (model.fromTemplate != true && model.stages.size <= 1) throw ErrorCodeException(
+            if (model.stages.size <= 1) throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE, params = arrayOf()
             )
         }

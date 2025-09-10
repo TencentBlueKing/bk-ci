@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
@@ -44,7 +45,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
-import com.tencent.devops.process.pojo.template.TemplateRefType
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -173,25 +173,21 @@ class PipelineDraftSaveReqConvert(
             overrideTemplateField = overrideTemplateField
         )
 
-        return if (model.fromTemplate == true) {
-            val refType = when {
-                !model.templateId.isNullOrEmpty() -> TemplateRefType.ID
-                !model.templatePath.isNullOrEmpty() -> TemplateRefType.PATH
-                else -> TemplateRefType.ID
-            }
+        return if (model.template != null) {
+            val template = model.template!!
 
             pipelineResourceFactory.createPipelineModelRef(
                 name = model.name,
                 desc = model.desc,
-                refType = refType,
-                templatePath = model.templatePath,
-                templateRef = model.templateRef,
-                templateId = model.templateId,
-                templateVersionName = model.templateVersionName,
+                refType = template.templateRefType,
+                templatePath = template.templatePath,
+                templateRef = template.templateRef,
+                templateId = template.templateId,
+                templateVersionName = template.templateVersionName,
                 templateVariables = templateVariables,
                 triggerConfigs = triggerConfigs,
                 recommendedVersion = recommendedVersion,
-                overrideTemplateField = model.overrideTemplateField
+                overrideTemplateField = overrideTemplateField
             )
         } else {
             val pipelineTemplateRelated = pipelineId?.let {
@@ -221,7 +217,7 @@ class PipelineDraftSaveReqConvert(
                     templateVariables = templateVariables,
                     triggerConfigs = triggerConfigs,
                     recommendedVersion = recommendedVersion,
-                    overrideTemplateField = model.overrideTemplateField
+                    overrideTemplateField = overrideTemplateField
                 )
             } else {
                 model

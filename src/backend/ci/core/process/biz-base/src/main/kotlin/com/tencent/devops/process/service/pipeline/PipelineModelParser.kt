@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.TemplateDescriptor
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -67,10 +68,10 @@ class PipelineModelParser @Autowired constructor(
         model: Model,
         branchName: String? = null
     ): Model {
-        return if (model.fromTemplate == true) {
+        return if (model.template != null) {
             val templateResource = parseTemplateDescriptor(
                 projectId = projectId,
-                descriptor = model,
+                descriptor = model.template!!,
                 pipelineId = pipelineId,
                 branchName = branchName
             )
@@ -90,10 +91,10 @@ class PipelineModelParser @Autowired constructor(
         setting: PipelineSetting,
         branchName: String? = null
     ): PipelineModelAndSetting {
-        return if (model.fromTemplate == true) {
+        return if (model.template != null) {
             val templateResource = parseTemplateDescriptor(
                 projectId = projectId,
-                descriptor = model,
+                descriptor = model.template!!,
                 pipelineId = pipelineId,
                 branchName = branchName
             )
@@ -273,9 +274,9 @@ class PipelineModelParser @Autowired constructor(
         branchName: String? = null
     ): PipelineTemplateResource {
         with(descriptor) {
-            return when {
+            return when (templateRefType) {
                 // 通过模版ID方式引用
-                !templateId.isNullOrEmpty() -> {
+                TemplateRefType.ID -> {
                     if (templateVersionName.isNullOrEmpty()) {
                         throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_NOT_EMPTY
@@ -304,7 +305,7 @@ class PipelineModelParser @Autowired constructor(
                 }
 
                 // 通过模版路径方式引用
-                !templatePath.isNullOrEmpty() -> {
+                TemplateRefType.PATH -> {
                     val finalRepoHashId = when {
                         !repoHashId.isNullOrEmpty() -> repoHashId
                         !pipelineId.isNullOrEmpty() -> {

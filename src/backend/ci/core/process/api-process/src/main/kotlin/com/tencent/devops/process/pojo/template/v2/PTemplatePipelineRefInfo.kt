@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.template.v2
 
-import com.tencent.devops.process.pojo.template.TemplateRefType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模版详情")

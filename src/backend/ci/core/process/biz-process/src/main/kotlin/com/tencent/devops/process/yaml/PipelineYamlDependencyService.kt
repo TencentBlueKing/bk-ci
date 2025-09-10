@@ -11,7 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlRefValueType
-import com.tencent.devops.process.pojo.template.TemplateRefType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts

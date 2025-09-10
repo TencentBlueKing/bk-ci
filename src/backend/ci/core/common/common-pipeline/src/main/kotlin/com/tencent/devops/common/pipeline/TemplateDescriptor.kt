@@ -27,26 +27,26 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模版描述器")
-interface TemplateDescriptor {
-    @get:Schema(title = "是否来源于模版", required = false)
-    var fromTemplate: Boolean?
-
+open class TemplateDescriptor(
+    @get:Schema(title = "模版引用方式", required = false)
+    open val templateRefType: TemplateRefType,
     @get:Schema(title = "模板路径", required = false)
-    var templatePath: String?
+    open val templatePath: String?,
 
     @get:Schema(title = "模板版本引用,分支/tag/commit", required = false)
-    var templateRef: String?
+    open val templateRef: String?,
 
     @get:Schema(title = "模板ID", required = false)
-    var templateId: String?
+    open val templateId: String?,
 
     @get:Schema(title = "模版版本名称", required = false)
-    var templateVersionName: String?
+    open val templateVersionName: String?,
 
     @get:Schema(title = "模板参数值", required = false)
-    var templateVariables: List<TemplateVariable>?
-}
+    open val templateVariables: List<TemplateVariable>?
+)

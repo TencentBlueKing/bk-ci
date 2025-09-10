@@ -30,12 +30,14 @@ package com.tencent.devops.process.utils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
@@ -270,14 +272,22 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1"
+            ),
             pipelineCreator = "userId"
         )
         val sameModel = Model(
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1"
+            ),
             pipelineCreator = "userId"
         )
         val diffModel1 = Model(
@@ -312,11 +322,15 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
-            templateVariables = listOf(
-                TemplateVariable(
-                    "key1",
-                    value = "value1"
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value1"
+                    )
                 )
             ),
             pipelineCreator = "userId"
@@ -325,11 +339,15 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
-            templateVariables = listOf(
-                TemplateVariable(
-                    "key1",
-                    value = "value2"
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value2"
+                    )
                 )
             ),
             pipelineCreator = "userId"
@@ -338,11 +356,15 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
-            triggerConfigs = listOf(
-                TemplateInstanceTriggerConfig(
-                    stepId = "step1",
-                    disabled = false
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = false
+                    )
                 )
             ),
             pipelineCreator = "userId"
@@ -351,11 +373,15 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
-            triggerConfigs = listOf(
-                TemplateInstanceTriggerConfig(
-                    stepId = "step1",
-                    disabled = true
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = true
+                    )
                 )
             ),
             pipelineCreator = "userId"
@@ -364,17 +390,21 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
-            templateVariables = listOf(
-                TemplateVariable(
-                    "key1",
-                    value = "value1"
-                )
-            ),
-            triggerConfigs = listOf(
-                TemplateInstanceTriggerConfig(
-                    stepId = "step1",
-                    disabled = true
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value1"
+                    )
+                ),
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = true
+                    )
                 )
             ),
             pipelineCreator = "userId"
@@ -383,17 +413,21 @@ class PipelineYamlVersionUtilsTest {
             name = "name1",
             desc = "",
             stages = emptyList(),
-            fromTemplate = true,
-            templateVariables = listOf(
-                TemplateVariable(
-                    "key1",
-                    value = "value1"
-                )
-            ),
-            triggerConfigs = listOf(
-                TemplateInstanceTriggerConfig(
-                    stepId = "step1",
-                    disabled = true
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value1"
+                    )
+                ),
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = true
+                    )
                 )
             ),
             pipelineCreator = "userId"

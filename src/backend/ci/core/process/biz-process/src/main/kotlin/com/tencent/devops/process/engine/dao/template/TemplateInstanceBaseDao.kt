@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.model.process.tables.TTemplateInstanceBase
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceBaseRecord
-import com.tencent.devops.process.pojo.template.TemplateRefType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType

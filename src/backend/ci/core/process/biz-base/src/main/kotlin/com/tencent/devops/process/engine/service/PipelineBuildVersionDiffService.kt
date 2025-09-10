@@ -11,7 +11,7 @@ import com.tencent.devops.process.dao.template.PipelineTemplateRelatedDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVersionDiffDao
 import com.tencent.devops.process.pojo.BuildVersionDiffInfo
-import com.tencent.devops.process.pojo.template.TemplateRefType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersionCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import jakarta.ws.rs.core.Response

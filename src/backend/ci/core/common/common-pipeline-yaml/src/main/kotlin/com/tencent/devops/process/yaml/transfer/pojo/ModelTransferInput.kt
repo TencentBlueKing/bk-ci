@@ -17,7 +17,7 @@ data class ModelTransferInput(
     val aspectWrapper: PipelineTransferAspectWrapper,
     val defaultScmType: ScmType = ScmType.CODE_GIT
 ) {
-    fun fromTemplate() = model.fromTemplate == true
+    fun fromTemplate() = model.template != null
 
     fun overrideTemplateSettingGroups(type: PipelineSettingGroupType) =
         model.overrideTemplateField?.overrideSetting(type) ?: true

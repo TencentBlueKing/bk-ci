@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.JobTemplateContainer
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -39,6 +40,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
@@ -255,18 +257,24 @@ class StageTransfer @Autowired(required = false) constructor(
                 is JobTemplate -> {
                     containerList.add(
                         JobTemplateContainer(
-                            fromTemplate = true,
-                            templatePath = job.templatePath,
-                            templateRef = job.templateRef,
-                            templateId = job.templateId,
-                            templateVersionName = job.templateVersionName,
-                            templateVariables = job.variables?.map {
-                                TemplateVariable(
-                                    key = it.key,
-                                    value = it.value.value,
-                                    allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
-                                )
-                            }
+                            template = TemplateDescriptor(
+                                templateRefType = if (job.templateId != null) {
+                                    TemplateRefType.ID
+                                } else {
+                                    TemplateRefType.PATH
+                                },
+                                templatePath = job.templatePath,
+                                templateRef = job.templateRef,
+                                templateId = job.templateId,
+                                templateVersionName = job.templateVersionName,
+                                templateVariables = job.variables?.map {
+                                    TemplateVariable(
+                                        key = it.key,
+                                        value = it.value.value,
+                                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                                    )
+                                }
+                            )
                         )
                     )
                 }
@@ -338,18 +346,24 @@ class StageTransfer @Autowired(required = false) constructor(
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
             id = stageId,
-            fromTemplate = true,
-            templatePath = stage.templatePath,
-            templateRef = stage.templateRef,
-            templateId = stage.templateId,
-            templateVersionName = stage.templateVersionName,
-            templateVariables = stage.variables?.map {
-                TemplateVariable(
-                    key = it.key,
-                    value = it.value.value,
-                    allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
-                )
-            }
+            template = TemplateDescriptor(
+                templateRefType = if (stage.templateId != null) {
+                    TemplateRefType.ID
+                } else {
+                    TemplateRefType.PATH
+                },
+                templatePath = stage.templatePath,
+                templateRef = stage.templateRef,
+                templateId = stage.templateId,
+                templateVersionName = stage.templateVersionName,
+                templateVariables = stage.variables?.map {
+                    TemplateVariable(
+                        key = it.key,
+                        value = it.value.value,
+                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                    )
+                }
+            )
         )
     }
 

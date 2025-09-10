@@ -52,7 +52,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInf
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
-import com.tencent.devops.process.pojo.template.TemplateRefType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
@@ -195,7 +195,7 @@ class PipelineTemplateInstanceReqConverter(
             }
 
             // 前端会把所有的参数都传过来，这里只需要保留流水线自定义的参数,ui方式实例化,参数默认都是自定义
-            // 以下变量为流水线自身的，不跟谁模板，会对模板的变量默认值，进行覆盖。
+            // 以下变量为流水线自身的，不跟随模板，会对模板的变量默认值，进行覆盖。
             val templateVariables = params?.filter {
                 overrideTemplateField?.overrideParam(it.id) ?: true
             }?.map { TemplateVariable(it) }
@@ -213,7 +213,7 @@ class PipelineTemplateInstanceReqConverter(
                 overrideTemplateField = overrideTemplateField
             )
 
-            val pipelineModel = pipelineResourceFactory.createPipelineModelRef(
+            val pipelineModelRef = pipelineResourceFactory.createPipelineModelRef(
                 name = pipelineName,
                 desc = null,
                 refType = templateRefType,
@@ -239,7 +239,7 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 modelAndSetting = PipelineModelAndSetting(
-                    model = pipelineModel,
+                    model = pipelineModelRef,
                     setting = pipelineSettingWithoutVersion
                 ),
                 oldYaml = null
@@ -256,8 +256,7 @@ class PipelineTemplateInstanceReqConverter(
                 overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
                 recommendedVersion = recommendedVersion,
                 overrideTemplateField = overrideTemplateField,
-                templatePath = pipelineModel.templatePath,
-                templateRef = pipelineModel.templateRef
+                template = pipelineModelRef.template
             )
 
             val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(

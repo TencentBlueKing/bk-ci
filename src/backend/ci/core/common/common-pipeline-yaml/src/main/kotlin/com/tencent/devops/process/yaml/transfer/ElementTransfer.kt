@@ -33,9 +33,11 @@ import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -371,18 +373,24 @@ class ElementTransfer @Autowired(required = false) constructor(
                 is StepTemplate -> {
                     elementList.add(
                         StepTemplateElement(
-                            fromTemplate = true,
-                            templatePath = step.templatePath,
-                            templateRef = step.templateRef,
-                            templateId = step.templateId,
-                            templateVersionName = step.templateVersionName,
-                            templateVariables = step.variables?.map {
-                                TemplateVariable(
-                                    key = it.key,
-                                    value = it.value.value,
-                                    allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
-                                )
-                            }
+                            template = TemplateDescriptor(
+                                templateRefType = if (step.templateId != null) {
+                                    TemplateRefType.ID
+                                } else {
+                                    TemplateRefType.PATH
+                                },
+                                templatePath = step.templatePath,
+                                templateRef = step.templateRef,
+                                templateId = step.templateId,
+                                templateVersionName = step.templateVersionName,
+                                templateVariables = step.variables?.map {
+                                    TemplateVariable(
+                                        key = it.key,
+                                        value = it.value.value,
+                                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                                    )
+                                }
+                            )
                         )
                     )
                 }

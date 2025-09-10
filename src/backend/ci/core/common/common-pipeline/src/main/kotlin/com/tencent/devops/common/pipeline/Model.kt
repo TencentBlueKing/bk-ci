@@ -38,9 +38,6 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
-import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
-import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
-import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
@@ -67,6 +64,8 @@ data class Model(
     var pipelineCreator: String? = null,
     @get:Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
+    @get:Schema(title = "当前模板的ID", required = false)
+    var templateId: String? = null,
     @get:Schema(title = "提示", required = false)
     var tips: String? = null,
     @get:Schema(title = "流水线事件回调", required = false)
@@ -77,29 +76,11 @@ data class Model(
     var timeCost: BuildRecordTimeCost? = null,
     @get:Schema(title = "模板资源", required = true)
     val resources: Resources? = null,
-    @get:Schema(title = "来源于模版", required = false)
-    override var fromTemplate: Boolean? = null,
-    @get:Schema(title = "模板路径", required = false)
-    override var templatePath: String? = null,
-    @get:Schema(title = "模板版本引用,分支/tag/commit", required = false)
-    override var templateRef: String? = null,
-    @get:Schema(title = "模板ID", required = false)
-    override var templateId: String? = null,
-    @get:Schema(title = "模版版本名称", required = false)
-    override var templateVersionName: String? = null,
-    @get:Schema(title = "实例化-流水线自定义-流水线参数", required = false)
-    override var templateVariables: List<TemplateVariable>? = null,
-    /* 模版实例化时触发器变量 */
-    @get:Schema(title = "实例化-流水线自定义-触发器配置", required = false)
-    var triggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
-    @get:Schema(title = "实例化-流水线自定义-推荐版本号", required = false)
-    var recommendedVersion: TemplateInstanceRecommendedVersion? = null,
-    /**
-     * 流水线覆盖模版字段
-     */
-    @get:Schema(title = "覆盖模版字段", required = false)
+    @get:Schema(title = "实例化模版信息", required = true)
+    var template: TemplateInstanceDescriptor? = null,
+    @get:Schema(title = "流水线覆盖模版的字段", required = false)
     var overrideTemplateField: TemplateInstanceField? = null
-) : ITemplateModel, TemplateDescriptor {
+) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 

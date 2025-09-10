@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
@@ -201,44 +203,51 @@ class ModelTransfer @Autowired constructor(
     ) {
         val template = input.yaml.formatExtends()?.template
         if (template != null) {
+            model.templateId = template.templateId
+            model.template = TemplateInstanceDescriptor(
+                templateRefType = if (template.templateId != null) {
+                    TemplateRefType.ID
+                } else {
+                    TemplateRefType.PATH
+                },
+                templatePath = template.templatePath,
+                templateRef = template.templateRef,
+                templateId = template.templateId,
+                templateVersionName = template.templateVersionName,
+                templateVariables = template.variables?.map {
+                    TemplateVariable(
+                        key = it.key,
+                        value = it.value.value,
+                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                    )
+                },
+                triggerConfigs = template.triggerConfig?.map {
+                    TemplateInstanceTriggerConfig(
+                        stepId = it.key,
+                        disabled = it.value.disabled,
+                        cron = it.value.cron?.let { c -> listOf(c) },
+                        variables = it.value.variables
+                    )
+                },
+                recommendedVersion = template.recommendedVersion?.let {
+                    TemplateInstanceRecommendedVersion(
+                        enabled = it.enabled,
+                        major = it.major,
+                        minor = it.minor,
+                        fix = it.fix,
+                        buildNo = BuildNo(
+                            it.buildNo.initialValue,
+                            RecommendedVersion.Strategy.parse(it.buildNo.strategy).toBuildNoType(),
+                            required = it.allowModifyAtStartup
+                        )
+                    )
+                }
+            )
             model.overrideTemplateField = TemplateInstanceField(
                 paramIds = template.variables?.keys?.toList(),
                 triggerStepIds = template.triggerConfig?.keys?.toList(),
                 settingGroups = input.yaml.settingGroups(),
             )
-            model.fromTemplate = true
-            model.templatePath = template.templatePath
-            model.templateRef = template.templateRef
-            model.templateId = template.templateId
-            model.templateVersionName = template.templateVersionName
-            model.templateVariables = template.variables?.map {
-                TemplateVariable(
-                    key = it.key,
-                    value = it.value.value,
-                    allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
-                )
-            }
-            model.triggerConfigs = template.triggerConfig?.map {
-                TemplateInstanceTriggerConfig(
-                    stepId = it.key,
-                    disabled = it.value.disabled,
-                    cron = it.value.cron?.let { c -> listOf(c) },
-                    variables = it.value.variables
-                )
-            }
-            model.recommendedVersion = template.recommendedVersion?.let {
-                TemplateInstanceRecommendedVersion(
-                    enabled = it.enabled,
-                    major = it.major,
-                    minor = it.minor,
-                    fix = it.fix,
-                    buildNo = BuildNo(
-                        it.buildNo.initialValue,
-                        RecommendedVersion.Strategy.parse(it.buildNo.strategy).toBuildNoType(),
-                        required = it.allowModifyAtStartup
-                    )
-                )
-            }
         }
     }
 
@@ -362,8 +371,8 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeExtend(templateInfo: Model): PreExtends? {
-        if (templateInfo.fromTemplate != true) return null
-        with(templateInfo) {
+        if (templateInfo.template == null) return null
+        with(templateInfo.template!!) {
             return PreExtends(
                 template = ExtendsTemplate(
                     templatePath = templatePath,

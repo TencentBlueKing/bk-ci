@@ -144,6 +144,7 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
         pipelineResourceVersion: PipelineResourceVersion,
     ) {
         val model = pipelineResourceWithoutVersion.model
+        val template = model.template ?: return
         pipelineTemplatePipelineVersionService.createOrUpdate(
             transactionContext = transactionContext,
             record = PTemplatePipelineVersion(
@@ -155,10 +156,10 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 buildNo = pipelineModelBasicInfo.buildNo,
                 params = pipelineModelBasicInfo.param,
                 refType = templateInstanceBasicInfo!!.refType,
-                inputTemplateId = model.templateId,
-                inputTemplateVersionName = model.templateVersionName,
-                inputTemplateFilePath = model.templatePath,
-                inputTemplateRef = model.templateRef,
+                inputTemplateId = template.templateId,
+                inputTemplateVersionName = template.templateVersionName,
+                inputTemplateFilePath = template.templatePath,
+                inputTemplateRef = template.templateRef,
                 templateId = templateInstanceBasicInfo.templateId,
                 templateVersion = templateInstanceBasicInfo.templateVersion,
                 templateVersionName = templateInstanceBasicInfo.templateVersionName ?: "",

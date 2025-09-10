@@ -2,6 +2,7 @@ package com.tencent.devops.process.engine.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -39,8 +40,7 @@ object TemplateInstanceUtil {
         overrideTemplateTriggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
         recommendedVersion: TemplateInstanceRecommendedVersion? = null,
         overrideTemplateField: TemplateInstanceField? = null,
-        templatePath: String? = null,
-        templateRef: String? = null
+        template: TemplateInstanceDescriptor? = null
     ): Model {
         if (templateResource.model !is Model) {
             throw ErrorCodeException(
@@ -74,12 +74,9 @@ object TemplateInstanceUtil {
             stages = getFixedStages(templateModel, triggerContainer, defaultStageTagId),
             labels = labels ?: templateModel.labels,
             instanceFromTemplate = true,
-            fromTemplate = true,
-            templateId = templateResource.templateId,
-            templateVersionName = templateResource.versionName,
-            templatePath = templatePath,
-            templateRef = templateRef,
             staticViews = staticViews,
+            templateId = templateResource.templateId,
+            template = template,
             overrideTemplateField = overrideTemplateField
         )
     }
@@ -160,16 +157,16 @@ object TemplateInstanceUtil {
     ): TriggerContainer {
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateModel.getTriggerContainer().elements,
-            overrideTemplateTriggerConfigs = model.triggerConfigs
+            overrideTemplateTriggerConfigs = model.template?.triggerConfigs
         )
         val pipelineParams = mergeParams(
             templateParams = templateModel.getTriggerContainer().params,
-            templateVariables = model.templateVariables
+            templateVariables = model.template?.templateVariables
         )
         val buildNo = mergeRecommendedVersion(
             pipelineParams = pipelineParams,
             templateBuildNo = templateModel.getTriggerContainer().buildNo,
-            recommendedVersion = model.recommendedVersion
+            recommendedVersion = model.template?.recommendedVersion
         )
         return templateModel.getTriggerContainer().copy(
             buildNo = buildNo,
