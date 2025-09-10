@@ -509,6 +509,8 @@
     display: flex;
     box-sizing: border-box;
     border: 1px solid #dcdee5;
+    border-top: 0;
+    border-left: 0;
 
    .template-main {
         width: 100%;
