@@ -745,9 +745,11 @@ class NodeService @Autowired constructor(
         return node.displayName
     }
 
-    fun batchChangeCreateUser(userId: String,
-                              projectId: String,
-                              nodeHashIds: List<String>): List<Pair<String, String>> {
+    fun batchChangeCreateUser(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): List<Pair<String, String>> {
         val nodeList = nodeDao.listAllByIds(
             dslContext,
             projectId,
