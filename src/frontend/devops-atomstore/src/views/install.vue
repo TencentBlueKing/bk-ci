@@ -148,7 +148,7 @@
                 type: this.$route.query.type,
                 code: this.$route.query.code,
                 from: this.$route.query.from,
-                name: '',
+                name: this.$route.query.name || '',
                 id: '',
                 installError: false,
                 projectListLoading: false,
@@ -233,7 +233,7 @@
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
-                return methods[this.type]()
+                return methods[this.type](this.code)
             },
 
             async fetchRelativeProject () {
