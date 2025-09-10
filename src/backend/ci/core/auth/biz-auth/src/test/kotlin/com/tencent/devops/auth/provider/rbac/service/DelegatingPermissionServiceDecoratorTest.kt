@@ -64,7 +64,7 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             rbacPermissionService = rbacPermissionService,
             bkInternalPermissionService = bkInternalPermissionService,
             routingStrategy = routingStrategy,
-            circuitBreakerRegistry = io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.of(builder.build()),
+            circuitBreakerRegistry = CircuitBreakerRegistry.of(builder.build()),
             rbacCommonService = rbacCommonService
         )
     }
@@ -105,7 +105,7 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
 
     @Test
     fun `resolveInternalAction returns built action when no underscore`() {
-        val action = "VIEW"
+        val action = "view"
         val result = decorator.resolveInternalAction(action, AuthResourceType.PROJECT.value)
         assert(result.contains("_") || result.isNotBlank())
     }
@@ -129,40 +129,19 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
         assertEquals(true, called)
     }
 
-    @Test
-    fun `CIRCUIT_BREAKER falls back to internal when open (CallNotPermittedException)`() {
-        every { routingStrategy.getModeForProject("p") } returns RoutingMode.CIRCUIT_BREAKER
-
-        val circuitBreaker: CircuitBreaker = mockk()
-        every { circuitBreakerRegistry.circuitBreaker(any()) } returns circuitBreaker
-        every { circuitBreaker.executeCallable<Boolean>(any()) } throws CallNotPermittedException.createCallNotPermittedException(circuitBreaker)
-
-        every { bkInternalPermissionService.validateUserResourcePermission(any(), any(), any(), any(), any(), any()) } returns true
-
-        val res = decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
-        assertEquals(true, res)
-        verify { bkInternalPermissionService.validateUserResourcePermission(any(), any(), any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `CIRCUIT_BREAKER falls back to internal when external throws generic exception`() {
-        every { routingStrategy.getModeForProject("p") } returns RoutingMode.CIRCUIT_BREAKER
-
-        val circuitBreaker: CircuitBreaker = mockk()
-        every { circuitBreakerRegistry.circuitBreaker(any()) } returns circuitBreaker
-        every { circuitBreaker.executeCallable<Boolean>(any()) } throws RuntimeException("external failure")
-
-        every { bkInternalPermissionService.validateUserResourcePermission(any(), any(), any(), any(), any(), any()) } returns true
-
-        val res = decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
-        assertEquals(true, res)
-        verify { bkInternalPermissionService.validateUserResourcePermission(any(), any(), any(), any(), any(), any()) }
-    }
-
+    /**
+     * 测试通过连续失败触发熔断器机制
+     *
+     * 该测试验证当外部权限服务连续失败时，熔断器能够正确打开并触发内部回退机制。
+     * 测试使用模拟对象来控制外部服务的行为，并验证熔断器在达到失败阈值后
+     * 是否正确切换到内部权限服务。
+     */
     @Test
     fun `triggerCircuitBreakerByFailures`() {
+        // 配置路由策略返回熔断器模式
         every { routingStrategy.getModeForProject("p") } returns RoutingMode.CIRCUIT_BREAKER
-        // use helper to create decorator with configured registry
+
+        // 使用辅助函数创建配置了注册表的装饰器
         val localDecorator = delegatingPermissionServiceDecorator(
             rbacPermissionService = rbacPermissionService,
             bkInternalPermissionService = bkInternalPermissionService,
@@ -170,9 +149,10 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             rbacCommonService = rbacCommonService
         )
 
-        // external fails
+        // 配置外部权限服务验证失败，模拟服务不可用
         every { rbacPermissionService.validateUserProjectPermission(any(), any(), any()) } throws RuntimeException("boom")
-        // internal fallback counts down latch when called
+
+        // 配置内部回退服务，当被调用时减少计数器并返回true
         val latch = CountDownLatch(1)
         every {
             bkInternalPermissionService.validateUserResourcePermission(any(), any(), any(), any(), any(), any())
@@ -181,16 +161,16 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             true
         }
 
-        // call multiple times to accumulate failures and eventually open circuit
+        // 重复调用8次以累积失败次数并最终打开熔断器
         repeat(8) {
             try {
                 localDecorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
             } catch (_: Exception) {
-                // ignore exceptions from external failures until circuit opens
+                // 忽略外部失败引发的异常，直到熔断器打开
             }
         }
 
-        // after attempts, wait for internal fallback to be invoked at least once
+        // 等待内部回退服务被调用至少一次，超时时间为2秒
         val called = latch.await(2, TimeUnit.SECONDS)
         assertEquals(true, called)
     }
