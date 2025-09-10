@@ -1831,9 +1831,6 @@
             "check-in" : {
               "$ref" : "#/definitions/check-in"
             },
-            "check-out" : {
-              "$ref" : "#/definitions/check-out"
-            },
             "fast-kill" : {
               "type" : "boolean"
             },
@@ -1964,6 +1961,9 @@
                   }
                 }
               }
+            },
+            "dependencies" : {
+              "template-id" : [ "version" ]
             }
           }
         }

@@ -55,7 +55,6 @@ class CodeSchemaCheck @Autowired constructor(
         LoggerFactory.getLogger(CodeSchemaCheck::class.java)
 
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-        .objectMapper(YamlUtil.getObjectMapper())
         .build()
 
     private val objectMapperFactory = ThreadLocal.withInitial(
