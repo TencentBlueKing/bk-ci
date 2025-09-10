@@ -146,6 +146,28 @@ class PipelineTriggerEventDao {
         }
     }
 
+    fun batchSaveDetail(
+        dslContext: DSLContext,
+        triggerDetailList: List<PipelineTriggerDetail>
+    ) {
+        val now = LocalDateTime.now()
+        val records = triggerDetailList.map {
+            TPipelineTriggerDetailRecord()
+                    .setDetailId(it.detailId!!)
+                    .setEventId(it.eventId)
+                    .setProjectId(it.projectId)
+                    .setPipelineId(it.pipelineId)
+                    .setPipelineName(it.pipelineName)
+                    .setBuildId(it.buildId)
+                    .setBuildNum(it.buildNum)
+                    .setStatus(it.status)
+                    .setReason(it.reason)
+                    .setReasonDetail(it.reasonDetail?.let { JsonUtil.toJson(it, false) })
+                    .setCreateTime(now)
+        }
+        dslContext.batchInsert(records).execute()
+    }
+
     fun listTriggerDetail(
         dslContext: DSLContext,
         projectId: String,

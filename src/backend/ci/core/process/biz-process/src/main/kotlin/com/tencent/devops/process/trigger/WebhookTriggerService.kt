@@ -78,7 +78,8 @@ class WebhookTriggerService(
             name = matcher.getRepoName(),
             repositoryType = scmType,
             yamlPipelineIds = yamlPipelineIds,
-            compatibilityRepoNames = matcher.getCompatibilityRepoName()
+            compatibilityRepoNames = matcher.getCompatibilityRepoName(),
+            eventType = matcher.getEventType().name
         )
         pipelineBuildWebhookService.dispatchTriggerPipelines(
             matcher = matcher,
