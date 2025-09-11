@@ -33,7 +33,7 @@ import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量视图")
-data class  PublicVarVO(
+data class PublicVarVO(
     @get:Schema(title = "变量名称")
     val varName: String,
     @get:Schema(title = "别名")
