@@ -110,7 +110,7 @@ class TenantAuthDeptServiceImpl : DeptService {
         try {
             return TenantUtils.callApigw(
                 apigwHost = bkApigwUserHost!!,
-                path = BATCH_LOOKUP_DEPARTMENT,
+                path = LIST_USER,
                 params = mapOf(
                     "page" to (searchUserEntity.page ?: 0),
                     "page_size" to (searchUserEntity.pageSize ?: 100),
