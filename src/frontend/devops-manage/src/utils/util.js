@@ -57,5 +57,5 @@ export async function copyToClipboard(text) {
   
 export function validProjectCode(code) {
     if (typeof code !== 'string') return false;
-    return /^[a-z0-9-]+$/.test(code);
+    return /^[\w.-]+$/.test(code);
   }
