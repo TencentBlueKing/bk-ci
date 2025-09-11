@@ -65,8 +65,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarReferInfoService: PublicVarReferInfoService,
-    private val templatePipelineDao: TemplatePipelineDao,
-    private val objectMapper: ObjectMapper
+    private val templatePipelineDao: TemplatePipelineDao
 ) {
 
     companion object {

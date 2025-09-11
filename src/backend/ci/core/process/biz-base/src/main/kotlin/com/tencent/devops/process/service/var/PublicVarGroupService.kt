@@ -114,12 +114,14 @@ class PublicVarGroupService @Autowired constructor(
                     params = arrayOf(groupName)
                 )
             }
+            val newVersion = version + 1
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP").data ?: 0,
                 projectId = projectId,
                 groupName = groupName,
-                version = version + 1,
+                version = newVersion,
+                versionName = "v$newVersion",
                 latestFlag = true,
                 varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
                 referCount = 0,
