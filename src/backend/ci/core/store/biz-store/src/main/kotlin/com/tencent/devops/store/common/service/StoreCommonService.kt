@@ -138,7 +138,8 @@ interface StoreCommonService {
         storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
-        version: String?
+        version: String?,
+        lastVersionContent: String? = null
     ): StoreShowVersionInfo
 
     /**
