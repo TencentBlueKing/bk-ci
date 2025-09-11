@@ -305,6 +305,20 @@ interface UserNodeResource {
         nodeHashId: String
     ): Result<Boolean>
 
+    @Operation(summary = "批量修改节点导入人(重新授权)")
+    @POST
+    @Path("/{projectId}/batchChangeImportUser")
+    fun batchChangeImportUser(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 HashId 列表", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
     @Operation(summary = "修改节点名称")
     @POST
     @Path("/{projectId}/{nodeHashId}/updateDisplayName")
