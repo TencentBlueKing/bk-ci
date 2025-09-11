@@ -1023,6 +1023,15 @@ class ProjectDao {
 
     private fun useTenantCondition(tenantId: String?) = TenantUtils.isMultiTenantMode() && null != tenantId
 
+    fun listAllTenantIds(dslContext: DSLContext): List<String> {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(TENANT_ID)
+                .from(this)
+                .where(TENANT_ID.isNotNull)
+                .fetch(TENANT_ID, String::class.java)
+        }
+    }
+
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
             ProjectApproveStatus.CREATE_PENDING.status,

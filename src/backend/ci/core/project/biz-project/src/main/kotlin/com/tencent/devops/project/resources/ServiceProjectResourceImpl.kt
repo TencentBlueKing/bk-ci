@@ -328,4 +328,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun listAllTenantIds(): Result<List<String>> {
+        return Result(projectService.listAllTenantIds())
+    }
 }

@@ -204,6 +204,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listAllTenantIds(): List<String> {
+       return projectDao.listAllTenantIds(dslContext)
+    }
+
     /**
      * 创建项目信息
      */

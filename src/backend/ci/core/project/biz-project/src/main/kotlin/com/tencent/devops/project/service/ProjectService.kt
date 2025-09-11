@@ -308,4 +308,6 @@ interface ProjectService {
     ): Boolean
 
     fun getPipelineDialect(projectId: String): String
+
+    fun listAllTenantIds(): List<String>
 }

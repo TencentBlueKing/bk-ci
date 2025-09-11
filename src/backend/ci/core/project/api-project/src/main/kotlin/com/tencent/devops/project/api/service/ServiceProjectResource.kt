@@ -425,4 +425,9 @@ interface ServiceProjectResource {
         @Parameter(description = "插件展示顺序", required = true)
         pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
     ): Result<Boolean>
+
+    @GET
+    @Path("/listAllTenantIds")
+    @Operation(summary = "获取所有项目的租户ID列表")
+    fun listAllTenantIds(): Result<List<String>>
 }

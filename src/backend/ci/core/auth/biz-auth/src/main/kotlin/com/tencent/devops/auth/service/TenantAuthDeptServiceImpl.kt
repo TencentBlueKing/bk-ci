@@ -10,7 +10,6 @@ import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.tenant.TenantUtils
 import jakarta.ws.rs.HttpMethod
 import org.slf4j.LoggerFactory
