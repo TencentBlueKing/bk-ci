@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.service.tcloud
 
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
@@ -181,9 +180,6 @@ class TCloudCfsService @Autowired constructor(
         region: String,
         delete: Boolean
     ) {
-        val key = "$TCLOUD_PGID_REDIS_KEY_PREFIX:$pgId"
-        val redisLock = RedisLock(redisOperation, key, 76)
-        redisLock.lock()
 
         val client = buildCfsClient(region)
         if (delete) {
