@@ -2,7 +2,7 @@
     <bk-dialog
         v-model="value"
         width="1080"
-        ext-class="install-template-dialog"
+        class="install-template-dialog"
         header-position="left"
         :title="$t('template.installOrImportTemplate')"
         :position="dialogPosition"
@@ -156,5 +156,8 @@
         .bk-tab-section {
             padding: 0;
         }
+    }
+    .install-template-dialog .bk-dialog-wrapper .bk-dialog-header {
+        padding: 0 24px !important;
     }
 </style>

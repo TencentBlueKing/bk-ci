@@ -146,6 +146,9 @@
         .active{
             background-color: #E1ECFF;
             color: #3A84FF;
+            svg {
+                color: #3A84FF;
+            }
         }
         .item-border {
             border-bottom: 1px solid #DCDEE5;

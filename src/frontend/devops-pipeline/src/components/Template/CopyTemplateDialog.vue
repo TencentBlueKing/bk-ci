@@ -12,7 +12,9 @@
         <template>
             <section class="copy-pipeline bk-form">
                 <div class="bk-form-item">
-                    <label class="bk-label">{{ $t('template.name') }}：</label>
+                    <label class="bk-label template-name-copy">
+                        {{ $t('template.name') }}
+                    </label>
                     <div class="bk-form-content">
                         <input
                             type="text"
@@ -106,6 +108,10 @@
     }
     .form-radio {
         margin-right: 30px;
+    }
+    .copy-pipeline .template-name-copy {
+        text-align: right;
+        padding-right: 36px;
     }
 }
 </style>
