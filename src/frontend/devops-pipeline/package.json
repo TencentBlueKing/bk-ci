@@ -93,7 +93,7 @@
         "terser-webpack-plugin": "^5.3.6",
         "vue-loader": "~15.10.0",
         "vue-style-loader": "^3.0.3",
-        "webpack": "~5.76.1"
+        "webpack": "~5.101.3"
     },
     "nx": {
         "targets": {
