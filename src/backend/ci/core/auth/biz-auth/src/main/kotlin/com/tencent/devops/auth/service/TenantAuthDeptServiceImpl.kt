@@ -130,7 +130,7 @@ class TenantAuthDeptServiceImpl : DeptService {
 
     override fun getUserDeptDetails(userId: String, tenantId: String?): BkDeptDetailsVo? {
         val departmentInfos = listUserDepartment(userId, true, tenantId).data
-        if (departmentInfos.isEmpty()) {
+        if (departmentInfos.isNotEmpty()) {
             val department = departmentInfos[0]
             return BkDeptDetailsVo(
                 id = department.id,
