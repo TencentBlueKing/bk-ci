@@ -5,6 +5,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.listener.AsyncExecuteListener
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
@@ -15,8 +16,10 @@ import com.tencentcloudapi.cfs.v20190719.models.DeleteCfsRuleRequest
 import com.tencentcloudapi.cfs.v20190719.models.DescribeCfsFileSystemsRequest
 import com.tencentcloudapi.cfs.v20190719.models.DescribeCfsRulesRequest
 import com.tencentcloudapi.common.Credential
+import com.tencentcloudapi.common.exception.TencentCloudSDKException
 import com.tencentcloudapi.common.profile.ClientProfile
 import com.tencentcloudapi.common.profile.HttpProfile
+import kotlin.random.Random
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -190,6 +193,12 @@ class TCloudCfsService @Autowired constructor(
                         this.ruleId = ruleId
                     }
                 )
+            } catch (e: TencentCloudSDKException) {
+                if (e.message?.contains("permission group is updating") == true) {
+                    throw AsyncExecuteListener.RetryEventException(delayMills = Random.nextInt(76, 86) * 1000)
+                }
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
+                return
             } catch (e: Exception) {
                 logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
                 return
@@ -205,6 +214,12 @@ class TCloudCfsService @Autowired constructor(
                         this.userPermission = "no_root_squash"
                     }
                 )
+            } catch (e: TencentCloudSDKException) {
+                if (e.message?.contains("permission group is updating") == true) {
+                    throw AsyncExecuteListener.RetryEventException(delayMills = Random.nextInt(76, 86) * 1000)
+                }
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
+                return
             } catch (e: Exception) {
                 logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|CreateCfsRule error", e)
                 return
