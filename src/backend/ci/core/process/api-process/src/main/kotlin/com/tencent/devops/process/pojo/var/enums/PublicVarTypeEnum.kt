@@ -27,7 +27,14 @@
 
 package com.tencent.devops.process.pojo.`var`.enums
 
+import com.tencent.devops.common.web.utils.I18nUtil
+
 enum class PublicVarTypeEnum {
     CONSTANT, // 常量
-    VARIABLE // 变量
+    VARIABLE; // 变量
+
+    companion object {
+        fun getTypeDescription(type: PublicVarTypeEnum)
+        = I18nUtil.getCodeLanMessage("PUBLIC_VAR_TYPE_$type")
+    }
 }

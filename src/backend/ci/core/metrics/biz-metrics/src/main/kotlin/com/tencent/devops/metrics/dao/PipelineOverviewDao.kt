@@ -44,6 +44,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
@@ -136,5 +137,43 @@ class PipelineOverviewDao {
             )
         }
         return conditions
+    }
+
+    fun queryPipelineMonthlyExecCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Int {
+        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
+            return dslContext.select(sum(TOTAL_EXECUTE_COUNT))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                .and(STATISTICS_TIME.between(startTime, endTime))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+    
+    /**
+     * 批量查询多个流水线近一月内执行次数
+     */
+    fun queryPipelineMonthlyExecCounts(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Result<Record2<String, BigDecimal>> {
+        
+        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
+            return dslContext.select(PIPELINE_ID, sum(TOTAL_EXECUTE_COUNT))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .and(STATISTICS_TIME.between(startTime, endTime))
+                .groupBy(PIPELINE_ID)
+                .fetch()
+        }
     }
 }

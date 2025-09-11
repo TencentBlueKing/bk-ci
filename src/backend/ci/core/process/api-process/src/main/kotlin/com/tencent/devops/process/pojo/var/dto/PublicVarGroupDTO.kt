@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
+import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -37,5 +38,7 @@ data class PublicVarGroupDTO(
     @get:Schema(title = "userId")
     val userId: String,
     @get:Schema(title = "公共变量组对象")
-    val publicVarGroup: PublicVarGroupVO
+    val publicVarGroup: PublicVarGroupVO,
+    @get:Schema(title = "操作类型")
+    val operateType: OperateTypeEnum
 )

@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import io.swagger.v3.oas.annotations.media.Schema
@@ -74,7 +75,9 @@ data class Model(
     @get:Schema(title = "模板入参", required = true)
     override var variables: Map<String, String>? = null,
     @get:Schema(title = "模板资源", required = true)
-    val resources: Resources? = null
+    val resources: Resources? = null,
+    @get:Schema(title = "公共变量组引用", required = false)
+    var publicVarGroups: List<PublicVarGroupRef> = emptyList()
 ) : IModelTemplate {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -229,4 +232,31 @@ data class Model(
     }
 
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    /**
+     * 处理公共变量组信息
+     */
+    fun handlePublicVarInfo() {
+        val triggerContainer = stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
+        triggerContainer ?: return
+        val params = triggerContainer.params
+
+        // 从params获取varGroupName不为空的参数
+        val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
+
+        if (varGroupParams.isEmpty()) {
+            // 如果没有公共变量组参数，清空publicVarGroups
+            publicVarGroups = emptyList()
+            return
+        } else {
+            publicVarGroups = varGroupParams
+                .asSequence()
+                .map {
+                    val versionName = it.varGroupVersion?.let { version -> "v$version" }
+                    PublicVarGroupRef(it.varGroupName!!, versionName)
+                }
+                .distinctBy { it.groupName }
+                .toList()
+        }
+    }
 }

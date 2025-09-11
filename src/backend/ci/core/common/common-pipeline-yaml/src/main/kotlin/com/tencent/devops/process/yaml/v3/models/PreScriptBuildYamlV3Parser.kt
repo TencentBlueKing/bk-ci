@@ -30,12 +30,12 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
+import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 
 /**
  * model
@@ -51,6 +51,7 @@ data class PreScriptBuildYamlV3Parser(
     @JsonProperty("on")
     var triggerOn: List<PreTriggerOnV3>?,
     override var variables: Map<String, Variable>? = null,
+    override var variableTemplates: List<VariableTemplate>? = null,
     override var stages: List<PreStage>? = null,
     override var jobs: LinkedHashMap<String, PreJob>? = null,
     override var steps: List<PreStep>? = null,

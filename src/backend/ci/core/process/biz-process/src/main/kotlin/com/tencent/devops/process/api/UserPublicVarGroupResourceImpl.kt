@@ -31,30 +31,202 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
+import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
+import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
+import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService
+    val publicVarGroupService: PublicVarGroupService,
+    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
+    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) : UserPublicVarGroupResource {
 
-    override fun addGroup(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<Boolean> {
+    override fun addGroup(
+        userId: String,
+        projectId: String,
+        operateType: OperateTypeEnum,
+        publicVarGroup: PublicVarGroupVO
+    ): Result<String> {
         return Result(
             publicVarGroupService.addGroup(
                 PublicVarGroupDTO(
                     projectId = projectId,
                     userId = userId,
-                    publicVarGroup = publicVarGroup
+                    publicVarGroup = publicVarGroup,
+                    operateType = operateType
                 )
             )
         )
     }
 
-    override fun getGroups(userId: String, projectId: String): Result<Page<PublicVarGroupDO>> {
-        TODO("Not yet implemented")
+    override fun getGroups(
+        userId: String,
+        projectId: String,
+        filterByGroupName: String?,
+        filterByGroupDesc: String?,
+        filterByUpdater: String?,
+        filterByVarName: String?,
+        filterByVarAlias: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarGroupDO>> {
+        return Result(publicVarGroupService.getGroups(
+            userId = userId,
+            queryReq = PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                filterByGroupName = filterByGroupName,
+                filterByGroupDesc = filterByGroupDesc,
+                filterByUpdater = filterByUpdater,
+                filterByVarName = filterByVarName,
+                filterByVarAlias = filterByVarAlias,
+                page = page,
+                pageSize = pageSize
+            )
+        ))
+    }
+
+    override fun getGroupNames(userId: String, projectId: String): Result<List<String>> {
+        return Result(publicVarGroupService.listGroupNames(projectId))
+    }
+
+    override fun importGroup(
+        userId: String,
+        projectId: String,
+        operateType: OperateTypeEnum,
+        yaml: PublicVarGroupYamlStringVO
+    ): Result<String> {
+        return Result(publicVarGroupService.importGroup(
+            userId = userId,
+            projectId = projectId,
+            operateType = operateType,
+            yaml = yaml
+        ))
+    }
+
+    override fun exportGroup(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): Response {
+        return publicVarGroupService.exportGroup(
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        )
+    }
+
+    override fun deleteGroup(userId: String, projectId: String, groupName: String): Result<Boolean> {
+        return Result(publicVarGroupService.deleteGroup(
+            userId = userId,
+            projectId = projectId,
+            groupName = groupName
+        ))
+    }
+
+    override fun listVarReferInfo(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        varName: String?,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        version: Int?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicGroupVarRefDO>> {
+        return Result(publicVarGroupReferInfoService.listVarReferInfo(
+            PublicVarGroupInfoQueryReqDTO(
+                projectId = projectId,
+                groupName = groupName,
+                varName = varName,
+                referType = referType,
+                version = version,
+                page = page,
+                pageSize = pageSize
+            )
+        ))
+    }
+
+    override fun getChangePreview(
+        userId: String,
+        projectId: String,
+        publicVarGroup: PublicVarGroupVO
+    ): Result<List<PublicVarReleaseDO>> {
+        return Result(publicVarGroupService.getChangePreview(
+            userId = userId,
+            projectId = projectId,
+            publicVarGroup = publicVarGroup
+        ))
+    }
+
+    override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
+        return Result(publicVarGroupService.convertGroupYaml(
+            userId = userId,
+            projectId = projectId,
+            publicVarGroup = publicVarGroup
+        ))
+    }
+
+    override fun convertYamlToGroup(
+        userId: String,
+        projectId: String,
+        yaml: PublicVarGroupYamlStringVO
+    ): Result<PublicVarGroupVO> {
+        return Result(publicVarGroupService.convertYamlToGroup(
+            userId = userId,
+            projectId = projectId,
+            yaml = yaml
+        ))
+    }
+
+    override fun listPipelineVarGroupInfo(
+        userId: String,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String?
+    ): Result<List<PipelinePublicVarGroupDO>> {
+        return publicVarGroupService.listPipelineVariables(
+            userId = userId,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referVersionName = referVersionName
+        )
+    }
+
+    override fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
+        return publicVarGroupService.listProjectVarGroupInfo(
+            userId = userId,
+            projectId = projectId
+        )
+    }
+
+    override fun getReleaseHistory(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<List<PublicVarReleaseDO>> {
+        return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        ))
     }
 }

@@ -249,6 +249,23 @@ class TemplatePipelineDao {
         }
     }
 
+    fun countByTemplateByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        instanceType: String,
+        templateId: String,
+        version: Long,
+        deleteFlag: Boolean? = null
+    ): Int {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(projectId, listOf(templateId), instanceType, deleteFlag)
+            conditions.add(VERSION.eq(version))
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun listPipelineInPage(
         dslContext: DSLContext,
         projectId: String,

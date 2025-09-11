@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.v3.parsers.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -54,6 +53,7 @@ import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.Variable
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -292,17 +292,16 @@ class YamlTemplate<T>(
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
             if (key == Constants.TEMPLATE_KEY) {
-                throw YamlFormatException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ERROR_YAML_FORMAT_EXCEPTION,
-                        params = arrayOf(
-                            "variables",
-                            "变量名",
-                            "除了template关键字的其他字符串",
-                            "template作为关键字保留"
-                        )
-                    )
-                )
+                val templateList = when (value) {
+                    is List<*> -> value.filterIsInstance<Map<String, String>>()
+                    else -> emptyList()
+                }
+                if (templateList.isNotEmpty()) {
+                    preYamlObject.variableTemplates = templateList.filter { it["name"] != null }.map {
+                        VariableTemplate(it["name"]!!, it["version"])
+                    }
+                }
+                return@forEach
             }
             if (value !is Map<*, *>) {
                 variableMap[key] = Variable(value.toString())
