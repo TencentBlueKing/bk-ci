@@ -347,6 +347,7 @@
         height: 100%;
         font-size: 12px;
         padding: 24px;
+        background-color: #fff;
         .operate {
             display: flex;
             align-items: center;
@@ -411,7 +412,7 @@
             }
         }
         .pipeline-name {
-            max-width: 55%;
+            max-width: 75%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;

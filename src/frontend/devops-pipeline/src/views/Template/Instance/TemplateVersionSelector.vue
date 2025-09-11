@@ -376,10 +376,12 @@
             width: 88px;
             height: 32px;
             line-height: 32px;
+            text-align: center;
             padding: 0 8px;
             border: 1px solid #c4c6cc;
             border-right: none;
             border-left: none;
+            background-color: #FAFBFD;
         }
         .version-selector {
             width: 260px;

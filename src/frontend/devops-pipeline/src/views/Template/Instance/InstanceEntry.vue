@@ -27,7 +27,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="templateRefTypeById ? !templateVersion : !templateRef"
+                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length)"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}

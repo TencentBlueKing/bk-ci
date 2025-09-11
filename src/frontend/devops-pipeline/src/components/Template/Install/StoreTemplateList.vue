@@ -171,11 +171,10 @@
                 grid-gap: 12px;
                 cursor: pointer;
                 transition: all .3s ease;
-                box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
                 overflow: hidden;
 
                 &:hover {
-                    box-shadow: 0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
                     .pipeline-template-status {
                         display: block;
                     }

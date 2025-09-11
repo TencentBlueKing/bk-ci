@@ -353,6 +353,7 @@
         .template-edit-wrapper {
             overflow: hidden;
             height: calc(100% - 48px);
+            background-color: #F5F7FA;
         }
     }
 

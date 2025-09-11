@@ -1,13 +1,13 @@
 <template>
     <div
-        class="biz-container pipeline-subpages instance-manage-wrapper"
+        class="pipeline-subpages instance-manage-wrapper"
         v-bkloading="{
             isLoading: isLoading
         }"
     >
         <div
             class="sub-view-port"
-            v-if="showContent && showInstanceList"
+            v-if="showInstanceList"
         >
             <section class="info-header">
                 <bk-popover
@@ -38,10 +38,15 @@
                     @change="handleChange"
                 />
             </section>
-            <section class="instance-table">
+            <section
+                class="instance-table"
+                ref="tableBox"
+            >
                 <bk-table
                     :data="instanceList"
                     size="small"
+                    ext-cls="instance-list"
+                    :max-height="tableHeight"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="pageLimitChange"
@@ -57,6 +62,7 @@
                     <bk-table-column
                         :label="$t('template.pipelineInstanceName')"
                         prop="pipelineName"
+                        :width="400"
                     >
                         <template slot-scope="{ row }">
                             <span
@@ -152,6 +158,7 @@
                     <bk-table-column
                         :label="$t('template.codeRepo')"
                         prop="repoAliasName"
+                        :width="150"
                     >
                         <template slot-scope="{ row }">
                             {{ row.repoAliasName || '--' }}
@@ -175,6 +182,7 @@
                     <bk-table-column
                         :label="$t('operate')"
                         :width="200"
+                        fixed="right"
                     >
                         <template slot-scope="{ row }">
                             <bk-button
@@ -219,7 +227,7 @@
             </section>
         </div>
         <empty-tips
-            v-if="showContent && !showInstanceList"
+            v-else
             :title="emptyTipsConfig.title"
             :desc="emptyTipsConfig.desc"
             :btns="emptyTipsConfig.btns"
@@ -240,7 +248,7 @@
     } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
-    import { computed, ref, watch } from 'vue'
+    import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
     const { proxy, showTips, t } = UseInstance()
     const isLoading = ref(false)
@@ -283,7 +291,8 @@
         const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
         return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
     })
-
+    const tableHeight = ref('auto')
+    const tableBox = ref(null)
     const searchList = computed(() => {
         const list = [
             {
@@ -360,6 +369,23 @@
     }, {
         immediate: true
     })
+    watch(() => showInstanceList.value, (nv) => {
+        if (nv) {
+            nextTick(() => {
+                updateTableHeight()
+                window.addEventListener('resize', updateTableHeight)
+            })
+        }
+    }, {
+        immediate: true
+    })
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', updateTableHeight)
+    })
+
+    function updateTableHeight () {
+        tableHeight.value = tableBox.value?.offsetHeight
+    }
 
     async function requestInstanceList () {
         isLoading.value = true
@@ -483,7 +509,8 @@
         min-height: 100%;
     }
     .instance-manage-wrapper {
-        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
         .instance-header {
             .bk-button-normal {
                 margin-top: -6px;
@@ -492,9 +519,11 @@
             }
         }
         .sub-view-port {
+            display: flex;
+            flex-direction: column;
             padding: 20px;
-            height: calc(100% - 60px);
-            overflow: auto;
+            height: 100%;
+            overflow: hidden;
         }
         .info-header {
             display: flex;
@@ -526,6 +555,9 @@
             }
         }
         .instance-table {
+            flex: 1;
+            max-height: calc(100% - 52px);
+            overflow: hidden;
             .pipeline-name {
                 color: $primaryColor;
                 cursor: pointer;
@@ -594,5 +626,8 @@
             color: $primaryColor;
             cursor: pointer;
         }
+    }
+    .instance-list.bk-table-enable-row-transition .bk-table-body td {
+        transition: none;
     }
 </style>

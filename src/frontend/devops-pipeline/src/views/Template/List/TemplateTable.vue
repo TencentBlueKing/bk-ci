@@ -3,7 +3,8 @@
         v-bkloading="{ isLoading }"
         :data="data"
         :size="tableSize"
-        height="100%"
+        :max-height="maxHeight"
+        ext-cls="template-table"
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
@@ -171,7 +172,11 @@
         hasCreatePermission: {
             type: Boolean,
             default: false
-        }
+        },
+        maxHeight: {
+            type: [Number, String],
+            default: 'auto'
+        },
     })
     const emit = defineEmits(['limit-change', 'page-change', 'clear'])
     const tableSize = ref('small')
@@ -336,6 +341,10 @@
     align-items: center;
     height: 40px;
     grid-gap: 12px;
+}
+
+.template-table.bk-table-enable-row-transition .bk-table-body td {
+    transition: none;
 }
 
 .select-text {

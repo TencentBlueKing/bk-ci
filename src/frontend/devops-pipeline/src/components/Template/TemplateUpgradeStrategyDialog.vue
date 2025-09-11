@@ -20,23 +20,32 @@
                     :disabled="isLoading"
                 >
                     <bk-radio
-                        v-for="item in STRATEGY_ENUM"
                         class="strategy-block-radio"
-                        :key="item"
-                        :value="item"
+                        value="AUTO"
                     >
-                        {{ $t(`template.${item}-UPGRADE`) }}
+                        {{ $t(`template.AUTO-UPGRADE`) }}
                         <span class="strategy-gray-desc">
-                            ({{ $t(`template.${item}-upgradeStrategyDesc`) }})
+                            ({{ $t(`template.AUTO-upgradeStrategyDesc`) }})
+                        </span>
+                    </bk-radio>
+
+                    <bk-alert
+                        v-if="showAutoUpgradeStrategyTips"
+                        type="info"
+                        :title="$t('template.autoUpgradeStrategyTips', [relatedInfo.srcMarketTemplateLatestVersionName ?? 'V1.8.0'])"
+                    ></bk-alert>
+
+                    <bk-radio
+                        class="strategy-block-radio"
+                        value="MANUAL"
+                    >
+                        {{ $t(`template.MANUAL-UPGRADE`) }}
+                        <span class="strategy-gray-desc">
+                            ({{ $t(`template.MANUAL-upgradeStrategyDesc`) }})
                         </span>
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
-            <bk-alert
-                v-if="showAutoUpgradeStrategyTips"
-                type="info"
-                :title="$t('template.autoUpgradeStrategyTips', [relatedInfo.srcMarketTemplateLatestVersionName ?? 'V1.8.0'])"
-            ></bk-alert>
             <bk-form-item
                 v-if="isAutoUpgrade"
                 :label="$t('template.settingSyncStrategy')"
@@ -58,20 +67,28 @@
 <script>
     import useInstance from '@/hook/useInstance'
     import { STRATEGY_ENUM } from '@/utils/pipelineConst'
-    import { computed, defineComponent, nextTick, ref } from 'vue'
+    import { computed, defineComponent, nextTick, ref, watch } from 'vue'
     export default defineComponent({
         setup (props, ctx) {
             const isLoading = ref(false)
             const isShow = ref(false)
             const { proxy } = useInstance()
             const relatedInfo = computed(() => proxy.$store.state.atom.pipelineInfo?.pipelineTemplateMarketRelatedInfo ?? {})
-            const showAutoUpgradeStrategyTips = ref(relatedInfo.value.upgradeStrategy === STRATEGY_ENUM.AUTO)
+            const showAutoUpgradeStrategyTips = computed(()=> strategyConf.value.upgradeStrategy === STRATEGY_ENUM.AUTO)
             const strategyConf = ref({
                 upgradeStrategy: relatedInfo.value.upgradeStrategy,
                 syncSettingStrategy: relatedInfo.value.settingSyncStrategy === STRATEGY_ENUM.AUTO
             })
             const isAutoUpgrade = computed(() => {
                 return strategyConf.value.upgradeStrategy === STRATEGY_ENUM.AUTO
+            })
+
+            watch(() => isShow.value, (nv) => {
+                if (nv) {
+                    strategyConf.value.upgradeStrategy = relatedInfo.value.upgradeStrategy
+                }
+            }, {
+                immediate: true
             })
 
             ctx.expose({
@@ -123,7 +140,6 @@
             }
 
             function handleUpgradeStrategyChange (value) {
-                showAutoUpgradeStrategyTips.value = value === STRATEGY_ENUM.AUTO
                 strategyConf.value.syncSettingStrategy = false
             }
 
@@ -154,6 +170,9 @@
         display: flex;
         align-items: center;
         margin-bottom: 12px !important;
+    }
+    .bk-alert {
+        margin-bottom: 12px;
     }
 }
 </style>
