@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
@@ -52,14 +53,12 @@ import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInf
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
-import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceSettingService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.yaml.PipelineYamlService
@@ -76,7 +75,6 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val stageTagService: StageTagService,
-    private val pipelineTemplateInstanceSettingService: PipelineTemplateInstanceSettingService,
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val pipelineResourceFactory: PipelineResourceFactory,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
@@ -351,10 +349,11 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = pipelineId
             )?.copy(
                 pipelineName = pipelineName
-            ) ?: pipelineTemplateInstanceSettingService.getTemplateInstanceDefaultSetting(
+            ) ?: pipelineRepositoryService.createDefaultSetting(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                pipelineName = pipelineName
+                pipelineName = pipelineName,
+                channelCode = ChannelCode.BS
             )
             TemplateInstanceUtil.instanceSetting(
                 templateSetting = templateSetting,

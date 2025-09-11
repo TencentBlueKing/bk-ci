@@ -433,6 +433,7 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_LATEST_PUBLISHED_VERSION_NOT_EXIST = "2101317" // 模板的最新上架研发商店版本不存在
     const val ERROR_PARENTS_TEMPLATE_NOT_EXISTS = "2101318" // 父模板{0}不存在
     const val ERROR_TEMPLATE_VERSION_NAME_DUPLICATION = "2101330" // 版本名称[{0}]已存在，不允许重复
+    const val ERROR_TEMPLATE_VERSION_HAS_PUBLISHED = "2101331" // 模板{0}的最新版本已发布
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

@@ -39,6 +39,8 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
@@ -53,6 +55,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
+import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
@@ -65,6 +68,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.C
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.trigger_key
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.transfer.TransferMapper
+import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
@@ -80,7 +84,8 @@ class PipelineTemplateGenerator @Autowired constructor(
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineTemplateSettingService: PipelineTemplateSettingService
+    private val pipelineTemplateSettingService: PipelineTemplateSettingService,
+    private val pipelineInfoExtService: PipelineInfoExtService
 ) {
 
     fun getDefaultTemplateModel(
@@ -108,11 +113,21 @@ class PipelineTemplateGenerator @Autowired constructor(
         creator: String
     ): PipelineSetting {
         return if (type == PipelineTemplateType.PIPELINE) {
+            val failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
+            val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
+                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+            val failSubscription = Subscription(
+                types = failType,
+                groups = emptySet(),
+                users = "\${{ci.actor}}",
+                content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+            )
             PipelineSetting.defaultSetting(
                 projectId = projectId,
                 pipelineId = templateId,
                 pipelineName = templateName,
                 desc = desc,
+                failSubscription = failSubscription,
                 creator = creator,
                 updater = creator
             )

@@ -60,7 +60,8 @@ class PipelineTemplateVersionValidator @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 templateModel = pTemplateResourceWithoutVersion.model,
-                pipelineAsCodeSettings = pTemplateSettingWithoutVersion.pipelineAsCodeSettings
+                pipelineAsCodeSettings = pTemplateSettingWithoutVersion.pipelineAsCodeSettings,
+                newTemplate = newTemplate
             )
         }
     }
@@ -83,7 +84,8 @@ class PipelineTemplateVersionValidator @Autowired constructor(
         userId: String,
         projectId: String,
         templateModel: ITemplateModel,
-        pipelineAsCodeSettings: PipelineAsCodeSettings?
+        pipelineAsCodeSettings: PipelineAsCodeSettings?,
+        newTemplate: Boolean = false
     ) {
         if (templateModel is Model) {
             val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
@@ -96,6 +98,10 @@ class PipelineTemplateVersionValidator @Autowired constructor(
                 userId = userId,
                 isTemplate = true,
                 pipelineDialect = pipelineDialect
+            )
+            // 只在更新操作时检查stage数量不为1
+            if (!newTemplate && templateModel.stages.size <= 1) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE, params = arrayOf()
             )
         }
         checkTemplateAtomsForExplicitVersion(templateModel = templateModel, userId = userId)

@@ -383,7 +383,13 @@ class UserPipelineTemplateV2ResourceImpl(
             permission = AuthPermission.VIEW,
             templateId = templateId
         )
-        return Result(templateFacadeService.getTemplateVersions(request))
+        return Result(
+            templateFacadeService.getTemplateVersions(
+                projectId = projectId,
+                templateId = templateId,
+                commonCondition = request
+            )
+        )
     }
 
     override fun compare(

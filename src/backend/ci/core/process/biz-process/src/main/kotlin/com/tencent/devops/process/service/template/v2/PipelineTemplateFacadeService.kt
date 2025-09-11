@@ -1113,18 +1113,14 @@ class PipelineTemplateFacadeService @Autowired constructor(
     }
 
     fun getTemplateVersions(
+        projectId: String,
+        templateId: String,
         commonCondition: PipelineTemplateResourceCommonCondition
     ): Page<PipelineVersionSimple> {
         with(commonCondition) {
             val finCondition = upgradableVersionsQuery?.takeIf { it }?.let {
-                if (templateId == null) {
-                    throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                        params = arrayOf(PipelineTemplateResourceCommonCondition::templateId.name)
-                    )
-                }
                 client.get(ServiceTemplateResource::class).getLatestInstalledVersion(
-                    templateCode = templateId!!
+                    templateCode = templateId
                 ).data?.let { latestInstalled ->
                     PipelineTemplateResourceCommonCondition(
                         projectId = latestInstalled.srcMarketTemplateProjectCode,
@@ -1135,7 +1131,13 @@ class PipelineTemplateFacadeService @Autowired constructor(
                     )
                 } ?: return Page(page = -1, pageSize = -1, records = emptyList(), count = 0)
             } ?: commonCondition  // 默认使用原始条件
-            val records = pipelineTemplateResourceService.getTemplateVersions(finCondition)
+            val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
+            val records = pipelineTemplateResourceService.getTemplateVersions(finCondition).map {
+                if (it.version == templateInfo.releasedVersion.toInt()) {
+                    it.latestReleasedFlag = true
+                }
+                it
+            }
             val count = pipelineTemplateResourceService.count(finCondition)
             return Page(
                 page = commonCondition.page ?: -1,
@@ -1370,7 +1372,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
             settingVersion = templateResource.settingVersion
         )
         if (templateResource.storeStatus == TemplateStatusEnum.RELEASED) {
-            throw ErrorCodeException(errorCode = "该版本已经发布")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_HAS_PUBLISHED,
+                params = arrayOf(templateResource.versionName ?: templateResource.version.toString())
+            )
         }
         pipelineTemplateVersionValidator.validateModelInfo(
             userId = userId,

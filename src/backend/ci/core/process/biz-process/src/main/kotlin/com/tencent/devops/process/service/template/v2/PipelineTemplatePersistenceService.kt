@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.PipelineTemplateConstant
-import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
@@ -71,7 +70,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val client: Client,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val templateDao: TemplateDao,
     private val versionCreateListeners: List<PTemplateVersionCreatePostProcessor>
 ) {
 
