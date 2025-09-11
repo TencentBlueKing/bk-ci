@@ -84,7 +84,10 @@ interface ServiceCredentialResource {
         credentialId: String,
         @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
-        publicKey: String
+        publicKey: String,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CredentialInfo?>
 
     @Operation(summary = "其他服务获取凭据值")
@@ -99,7 +102,10 @@ interface ServiceCredentialResource {
         credentialId: String,
         @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
-        publicKey: String
+        publicKey: String,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CredentialItemVo?>
 
     @Operation(summary = "检查凭据是否存在")

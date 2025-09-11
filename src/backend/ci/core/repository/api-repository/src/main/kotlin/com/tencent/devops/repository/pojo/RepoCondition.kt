@@ -45,5 +45,7 @@ data class RepoCondition(
     // 授权类型
     var authType: RepoAuthType? = null,
     var scmCode: String? = null,
-    var enablePac: Boolean? = null
+    var enablePac: Boolean? = null,
+    // SVN授权类型
+    var svnType: String? = null
 )

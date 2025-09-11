@@ -57,7 +57,7 @@ interface ServiceRepositoryWebhookResource {
         scmCode: String,
         @Parameter(description = "代码库触发请求", required = true)
         request: WebhookParseRequest
-    ): Result<WebhookData>
+    ): Result<WebhookData?>
 
     @Operation(summary = "保存代码库触发事件")
     @POST

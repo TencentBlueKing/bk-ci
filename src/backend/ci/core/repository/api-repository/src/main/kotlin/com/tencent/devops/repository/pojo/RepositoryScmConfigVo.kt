@@ -51,6 +51,8 @@ data class RepositoryScmConfigVo(
     @get:Schema(title = "支持的授权类型", required = true)
     val credentialTypeList: List<RepoCredentialTypeVo>,
     @get:Schema(title = "授权类型支持的凭证类型", required = true)
+    val oauth2Enabled: Boolean? = false,
+    @get:Schema(title = "授权类型支持的凭证类型", required = true)
     val oauthType: ScmConfigOauthType,
     @get:Schema(title = "oauth关联的代码库标识, oauthType为reuse时使用", required = true)
     val oauthScmCode: String? = null,

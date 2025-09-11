@@ -51,7 +51,8 @@ config = {
         max_idle_time = 600000,            -- 保留在连接池的时间
         pool_size = 5,                     -- 连接池的大小
         backlog = 100,                     -- 连接等待队列
-        ssl = __BK_CI_REDIS_SSL__
+        ssl = __BK_CI_REDIS_SSL__,
+        auto_redis = nil
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__BK_SSM_HOST__",
@@ -87,6 +88,7 @@ config = {
         domain = "__BK_REPO_FQDN__",
         authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
     },
+    jwtPrivateKey = "__BK_CI_JWT_RSA_PRIVATE_KEY__",
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "kubernetes.demo.com",
@@ -96,7 +98,8 @@ config = {
             url = "https://127.0.0.1/api/v1/nodes",
             token = ""
         },
-        special_domain = {}
+        special_domain = {},
+        auto_prefix = ""
     }
 }
 

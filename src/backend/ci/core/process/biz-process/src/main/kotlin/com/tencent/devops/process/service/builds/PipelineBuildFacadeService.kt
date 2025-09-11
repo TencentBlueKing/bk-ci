@@ -245,12 +245,14 @@ class PipelineBuildFacadeService(
         var canManualStartup = false
         var canElementSkip = false
         var useLatestParameters = false
+        var manualBuildMsg: String? = null
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
+                    manualBuildMsg = it.buildMsg
                     return@lit
                 }
             }
@@ -301,7 +303,8 @@ class PipelineBuildFacadeService(
             userId = userId,
             triggerParams = triggerContainer.params,
             checkPermission = false, // 已校验权限
-            debug = debug
+            debug = debug,
+            manualBuildMsg = manualBuildMsg
         )
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
@@ -1006,9 +1009,11 @@ class PipelineBuildFacadeService(
                     runLockType = setting.runLockType,
                     waitQueueTimeMinute = setting.waitQueueTimeMinute,
                     maxQueueSize = setting.maxQueueSize,
-                    concurrencyGroup = setting.concurrencyGroup,
+                    concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    // stage审核时暂不执行流水线并发组取消逻辑
+                    cancelAllowed = false
                 )
             )
 
@@ -1470,6 +1475,7 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        userId: String? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -1496,6 +1502,7 @@ class PipelineBuildFacadeService(
             )
         }
         return buildRecordService.getBuildRecord(
+            userId = userId,
             buildInfo = buildInfo,
             executeCount = executeCount,
             encryptedFlag = encryptedFlag,
@@ -1541,6 +1548,7 @@ class PipelineBuildFacadeService(
         }
 
         return getBuildRecord(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -2062,6 +2070,7 @@ class PipelineBuildFacadeService(
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 offset = offset,
@@ -2867,7 +2876,7 @@ class PipelineBuildFacadeService(
             }
         } else {
             subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, null
+                projectId, pipelineId, version
             ).second.model
         }
         val triggerContainer = model.getTriggerContainer()
@@ -2970,7 +2979,8 @@ class PipelineBuildFacadeService(
         userId: String?,
         debug: Boolean,
         checkPermission: Boolean,
-        triggerParams: List<BuildFormProperty>
+        triggerParams: List<BuildFormProperty>,
+        manualBuildMsg: String? = null
     ): List<BuildFormProperty> {
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
             val permission = AuthPermission.EXECUTE
@@ -2995,8 +3005,8 @@ class PipelineBuildFacadeService(
                 id = PIPELINE_BUILD_MSG,
                 required = true,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "",
-                value = "",
+                defaultValue = manualBuildMsg ?: "",
+                value = manualBuildMsg ?: "",
                 options = null,
                 desc = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_DESC,

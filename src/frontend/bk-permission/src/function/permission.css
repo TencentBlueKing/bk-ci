@@ -26,6 +26,7 @@
 }
 
 .permission-footer {
+    width: 100%;
     height: 48px;
     display: flex;
     align-items: center;
@@ -107,8 +108,11 @@
 
 .permission-dialog-v3 .permission-table-wrapper {
     width: 590px !important;
-    margin-left: 25px;
-    margin-bottom: 20px;
+    text-align: left;
+    border-bottom: 1px solid #dcdee5;
+}
+.permission-dialog-v3  .bk-infobox-footer {
+    padding: 0;
 }
 
 .mr10 {

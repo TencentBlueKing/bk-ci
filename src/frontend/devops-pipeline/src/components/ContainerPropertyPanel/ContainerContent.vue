@@ -233,6 +233,7 @@
                         :loading="isLoadingMac"
                         name="systemVersion"
                         v-validate.initial="'required'"
+                        @change="toggleXcode"
                     >
                         <bk-option
                             v-for="item in systemVersionList"
@@ -618,7 +619,7 @@
                 return this.container.dispatchType.xcodeVersion
             },
             systemVersion () {
-                return this.container.dispatchType.systemVersion
+                return this.container?.dispatchType?.systemVersion
             },
             buildResource () {
                 return this.container.dispatchType.value
@@ -729,9 +730,6 @@
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
-            },
-            systemVersion () {
-                this.toggleXcode()
             }
         },
         created () {
@@ -963,8 +961,8 @@
                     })
                     .finally(() => (this.isLoadingMac = false))
             },
-            async toggleXcode () {
-                const res = await this.getMacXcodeVersion(this.systemVersion)
+            async toggleXcode (version) {
+                const res = await this.getMacXcodeVersion(version)
                 this.xcodeVersionList = res.data?.versionList.map(i => ({
                     id: i,
                     name: i

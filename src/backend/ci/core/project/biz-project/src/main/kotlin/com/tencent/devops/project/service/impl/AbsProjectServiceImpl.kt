@@ -343,21 +343,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 validate(ProjectValidateType.project_name, projectName)
                 validate(ProjectValidateType.english_name, englishName)
             }
-            validateProjectRelateProduct(
-                ProjectProductValidateDTO(
-                    englishName = englishName,
-                    userId = userId,
-                    projectOperation = ProjectOperation.CREATE,
-                    channelCode = projectChannel,
-                    productId = productId
-                )
-            )
             validateProjectOrganization(
                 projectChannel = projectChannel,
                 bgId = bgId,
                 bgName = bgName,
                 deptId = deptId,
                 deptName = deptName
+            )
+            validateProjectRelateProduct(
+                ProjectProductValidateDTO(
+                    englishName = englishName,
+                    userId = userId,
+                    projectOperation = ProjectOperation.CREATE,
+                    channelCode = projectChannel,
+                    productId = productId,
+                    productName = productName,
+                    bgId = bgId,
+                    bgName = bgName
+                )
             )
             validateProperties(properties)
         }
@@ -685,7 +688,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     englishName = englishName,
                     userId = userId,
                     projectOperation = ProjectOperation.UPDATE,
-                    productId = productId
+                    productId = productId,
+                    productName = productName,
+                    bgId = bgId,
+                    bgName = bgName
                 )
             )
             validateProjectOrganization(
@@ -1107,6 +1113,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.listProjectsByCondition(
+            dslContext = dslContext,
+            projectConditionDTO = projectConditionDTO,
+            limit = limit,
+            offset = offset
+        ).map { ProjectUtils.packagingBean(it) }
+    }
+
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -1296,7 +1315,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         englishName = englishName,
                         userId = userId,
                         projectOperation = ProjectOperation.ENABLE,
-                        productId = projectInfo.productId
+                        productId = projectInfo.productId,
+                        bgId = projectInfo.bgId,
+                        bgName = projectInfo.bgName
                     )
                 )
             }
