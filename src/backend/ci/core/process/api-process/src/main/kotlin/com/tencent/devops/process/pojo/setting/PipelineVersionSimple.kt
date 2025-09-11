@@ -78,5 +78,7 @@ data class PipelineVersionSimple(
     @get:Schema(title = "当前最新正式版本标识", required = false)
     var latestReleasedFlag: Boolean? = false,
     @get:Schema(title = "版本排序号", required = false)
-    val number: Int = -1
+    val number: Int = -1,
+    @get:Schema(title = "是否上架研发商店", required = false)
+    val storeFlag: Boolean? = false
 )

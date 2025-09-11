@@ -245,7 +245,8 @@ class PipelineTemplateResourceDao {
                 CREATOR,
                 UPDATER,
                 CREATED_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                STORE_STATUS
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc())
@@ -268,7 +269,8 @@ class PipelineTemplateResourceDao {
                         updater = it.value14(),
                         createTime = it.value15().timestampmilli(),
                         updateTime = it.value16().timestampmilli(),
-                        yamlVersion = null
+                        yamlVersion = null,
+                        storeFlag = it.value17() == TemplateStatusEnum.RELEASED.name
                     )
                 }
         }

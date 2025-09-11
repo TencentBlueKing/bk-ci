@@ -359,9 +359,8 @@ class PipelineTemplateMigrateService(
         val marketTemplateStatus = client.get(ServiceTemplateResource::class).getMarketTemplateStatus(templateId).data!!
 
         val isConstraint = latestTemplate.type == TemplateType.CONSTRAINT.name
-        val hasBeenPublished = !isConstraint &&
-            (marketTemplateStatus == TemplateStatusEnum.RELEASED ||
-                marketTemplateStatus == TemplateStatusEnum.UNDERCARRIAGED)
+        val hasBeenPublished = !isConstraint && marketTemplateStatus != TemplateStatusEnum.NEVER_PUBLISHED &&
+            marketTemplateStatus != TemplateStatusEnum.INIT
 
         val relatedPipelines = pipelineTemplateRelatedService.list(
             condition = PipelineTemplateRelatedCommonCondition(
