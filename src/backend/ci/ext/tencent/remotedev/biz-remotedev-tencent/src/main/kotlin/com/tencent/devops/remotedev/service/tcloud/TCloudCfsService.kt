@@ -194,10 +194,10 @@ class TCloudCfsService @Autowired constructor(
                     }
                 )
             } catch (e: TencentCloudSDKException) {
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error|$e", e)
                 if (e.message?.contains("permission group is updating") == true) {
                     throw AsyncExecuteListener.RetryEventException(delayMills = Random.nextInt(76, 86) * 1000)
                 }
-                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
                 return
             } catch (e: Exception) {
                 logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
@@ -215,10 +215,10 @@ class TCloudCfsService @Autowired constructor(
                     }
                 )
             } catch (e: TencentCloudSDKException) {
+                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error|$e", e)
                 if (e.message?.contains("permission group is updating") == true) {
                     throw AsyncExecuteListener.RetryEventException(delayMills = Random.nextInt(76, 86) * 1000)
                 }
-                logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
                 return
             } catch (e: Exception) {
                 logger.error("$LOG_UPDATE_TCLOUD_CFS_RULES|doCreateOrDeleteCfsRule|CreateCfsRule error", e)
