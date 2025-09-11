@@ -10,6 +10,7 @@ import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.tenant.TenantUtils
 import jakarta.ws.rs.HttpMethod
 import org.slf4j.LoggerFactory
@@ -365,11 +366,10 @@ class TenantAuthDeptServiceImpl : DeptService {
     )
 
     data class ListUserResp(
-        val count: Int,
-        val results: List<User>
+        val data: ListUser
     ) {
         fun toVo(): BkUserInfoVo {
-            val userInfos = results.map {
+            val userInfos = data.results.map {
                 BkUserInfo(
                     id = 0,
                     userName = it.bk_username,
@@ -379,12 +379,20 @@ class TenantAuthDeptServiceImpl : DeptService {
                     departments = null
                 )
             }
-            return BkUserInfoVo(count, userInfos)
+            return BkUserInfoVo(data.count, userInfos)
         }
+    }
+
+    data class ListUser(
+        val count: Int,
+        val results: List<User>
+    ) {
+
     }
 
     data class User(
         val bk_username: String,
+        val login_name: String,
         val full_name: String,
         val display_name: String,
         val status: String
