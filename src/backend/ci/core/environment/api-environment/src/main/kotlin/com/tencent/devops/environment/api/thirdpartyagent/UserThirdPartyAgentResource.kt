@@ -36,6 +36,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -316,6 +317,19 @@ interface UserThirdPartyAgentResource {
         @Parameter(description = "count", required = true)
         @QueryParam("count")
         count: Int
+    ): Result<Boolean>
+
+    @Operation(summary = "批量修改agent并发数")
+    @POST
+    @Path("/projects/{projectId}/nodes/batchUpdateParallelTaskCount")
+    fun batchUpdateParallelTaskCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        data: BatchUpdateParallelTaskCountData
     ): Result<Boolean>
 
     @Operation(summary = "获取构建机详情")
