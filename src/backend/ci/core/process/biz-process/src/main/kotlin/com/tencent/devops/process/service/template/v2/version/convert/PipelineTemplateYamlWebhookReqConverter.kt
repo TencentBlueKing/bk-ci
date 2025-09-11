@@ -126,6 +126,7 @@ class PipelineTemplateYamlWebhookReqConverter(
                 templateId = newTemplateId,
                 version = version,
                 versionAction = versionAction,
+                newTemplate = templateId == null,
                 pipelineTemplateInfo = templateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateSettingWithoutVersion = pTemplateSettingWithoutVersion,

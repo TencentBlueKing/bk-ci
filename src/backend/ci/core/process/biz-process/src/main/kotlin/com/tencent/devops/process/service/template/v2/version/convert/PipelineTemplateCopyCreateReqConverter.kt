@@ -88,7 +88,7 @@ class PipelineTemplateCopyCreateReqConverter @Autowired constructor(
                     params = arrayOf(srcTemplateId)
                 )
             }
-            val newTemplateId = templateId ?: pipelineTemplateGenerator.generateTemplateId()
+            val newTemplateId = pipelineTemplateGenerator.generateTemplateId()
             pipelineTemplateCommonService.checkTemplateBasicInfo(
                 projectId = projectId,
                 name = name
@@ -181,6 +181,7 @@ class PipelineTemplateCopyCreateReqConverter @Autowired constructor(
                 projectId = projectId,
                 templateId = newTemplateId,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
+                newTemplate = true,
                 pipelineTemplateInfo = pipelineTemplateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateSettingWithoutVersion = transferResult.templateSetting

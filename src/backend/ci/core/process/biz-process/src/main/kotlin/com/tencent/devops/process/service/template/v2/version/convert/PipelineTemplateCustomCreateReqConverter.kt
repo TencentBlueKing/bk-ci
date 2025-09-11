@@ -124,6 +124,7 @@ class PipelineTemplateCustomCreateReqConverter @Autowired constructor(
                 projectId = projectId,
                 templateId = newTemplateId,
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
+                newTemplate = true,
                 pipelineTemplateInfo = pipelineTemplateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateSettingWithoutVersion = templateSettingWithoutVersion

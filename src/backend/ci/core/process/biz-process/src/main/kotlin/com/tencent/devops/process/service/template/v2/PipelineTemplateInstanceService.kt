@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.template.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
@@ -95,6 +96,12 @@ class PipelineTemplateInstanceService @Autowired constructor(
 
         instances.forEach { instance ->
             try {
+                if (instance.pipelineName.isBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                        params = arrayOf(PipelineTemplateInstanceReleaseInfo::pipelineName.name)
+                    )
+                }
                 val instanceCreateReq = PipelineTemplateInstanceReq(
                     projectId = projectId,
                     templateId = templateId,
@@ -154,6 +161,14 @@ class PipelineTemplateInstanceService @Autowired constructor(
         logger.info(
             "async template instance creation start $projectId|$userId|$templateId|$version|$request"
         )
+        request.instanceReleaseInfos.forEach { instance ->
+            if (instance.pipelineName.isBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                    params = arrayOf(PipelineTemplateInstanceReleaseInfo::pipelineName.name)
+                )
+            }
+        }
         pipelineTemplateResourceService.get(projectId, templateId, version)
         val instances = request.instanceReleaseInfos.map {
             it.copy(pipelineId = pipelineIdGenerator.getNextId())
