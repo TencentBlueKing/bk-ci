@@ -184,8 +184,8 @@
             },
             async getRequestTemplatePreview () {
                 return this.requestTemplatePreview({
-                    projectId: this.$route.params.projectId,
-                    templateId: this.templatePipeline.templateId || this.templatePipeline.id,
+                    projectId: this.templatePipeline.srcProjectId || this.templatePipeline.projectId,
+                    templateId: this.templatePipeline.templateId || this.templatePipeline.code,
                     highlightType: this.highlightType
                 })
             },
