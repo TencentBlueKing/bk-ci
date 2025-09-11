@@ -209,11 +209,11 @@ class UserManageService @Autowired constructor(
         }
     }
 
-    fun syncUserInfoData(userIds: List<String>) {
+    fun syncUserInfoData(userIds: List<String>, tenantId: String?) {
         userIds.forEach {
-            val bkUserInfo = deptService.getUserInfo(it, null)!!
+            val bkUserInfo = deptService.getUserInfo(it, tenantId)!!
             try {
-                val deptInfoDTO = extractDeptInfo(it)
+                val deptInfoDTO = extractDeptInfo(it, tenantId)
                 userInfoDao.create(
                     dslContext = dslContext,
                     userInfo = UserInfo(
