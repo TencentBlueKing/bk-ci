@@ -49,10 +49,19 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         vmSeqId: String,
         vmName: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CertIOS> {
         checkParams(buildId, vmSeqId, vmName, certId, publicKey)
-        return Result(certService.queryIos(projectId, buildId, certId, publicKey))
+        return Result(
+            certService.queryIos(
+                projectId = projectId,
+                buildId = buildId,
+                certId = certId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.CERT_VIEW)
@@ -62,10 +71,19 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         vmSeqId: String,
         vmName: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CertAndroid> {
         checkParams(buildId, vmSeqId, vmName, certId, publicKey)
-        return Result(certService.queryAndroid(projectId, buildId, certId, publicKey))
+        return Result(
+            certService.queryAndroid(
+                projectId = projectId,
+                buildId = buildId,
+                certId = certId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     override fun queryEnterprise(
@@ -74,10 +92,19 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         vmSeqId: String,
         vmName: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CertEnterprise> {
         checkParams(buildId, vmSeqId, vmName, certId, publicKey)
-        return Result(certService.queryEnterprise(projectId, buildId, certId, publicKey))
+        return Result(
+            certService.queryEnterprise(
+                projectId = projectId,
+                buildId = buildId,
+                certId = certId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     @Suppress("ALL")
