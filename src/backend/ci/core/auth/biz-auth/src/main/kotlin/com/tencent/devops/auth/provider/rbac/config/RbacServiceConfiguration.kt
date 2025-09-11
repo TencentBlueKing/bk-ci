@@ -47,6 +47,7 @@ import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerServ
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.BkHttpRequestService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -107,7 +108,8 @@ class RbacServiceConfiguration {
         itsmService: ItsmService,
         authAuthorizationScopesService: AuthAuthorizationScopesService,
         permissionResourceGroupService: PermissionResourceGroupService,
-        resourceGroupSyncService: PermissionResourceGroupSyncService
+        resourceGroupSyncService: PermissionResourceGroupSyncService,
+        deptService: DeptService
     ) = PermissionGradeManagerService(
         client = client,
         iamV2ManagerService = iamV2ManagerService,
@@ -121,7 +123,8 @@ class RbacServiceConfiguration {
         itsmService = itsmService,
         authAuthorizationScopesService = authAuthorizationScopesService,
         permissionResourceGroupService = permissionResourceGroupService,
-        resourceGroupSyncService = resourceGroupSyncService
+        resourceGroupSyncService = resourceGroupSyncService,
+        deptService = deptService
     )
 
     @Bean

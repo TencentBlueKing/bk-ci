@@ -398,7 +398,7 @@ class SignatureManageService(
             latestClientDetails.forEach {
                 it.projectIds.forEach { projectId ->
                     val key = String.format(PROJECT_SIGNATURE_PLATFORM_KEY, projectId)
-                    redisOperation.set(key, it.platform)
+                    redisOperation.set(key, it.platform, expired = false)
                 }
             }
             val toAddRecords = latestProjectsVerificationRequired.filter { it !in oldProjectsVerificationRequired }

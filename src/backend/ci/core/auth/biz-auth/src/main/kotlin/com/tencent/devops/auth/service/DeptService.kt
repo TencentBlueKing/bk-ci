@@ -62,6 +62,8 @@ interface DeptService {
     // 获取单个用户信息
     fun getUserInfo(userId: String): UserAndDeptInfoVo?
 
+    fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo?
+
     // 获取成员信息
     fun getMemberInfo(
         memberId: String,

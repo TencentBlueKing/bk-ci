@@ -131,7 +131,6 @@ import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackR
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -148,13 +147,9 @@ class ProcessDataMigrateDao {
         offset: Int
     ): List<TAuditResourceRecord> {
         with(TAuditResource.T_AUDIT_RESOURCE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            if (!resourceType.isNullOrBlank()) {
-                conditions.add(RESOURCE_TYPE.eq(resourceType))
-            }
-            if (!resourceId.isNullOrBlank()) {
-                conditions.add(RESOURCE_ID.eq(resourceId))
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId)).apply {
+                resourceType?.takeIf { it.isNotBlank() }?.let { add(RESOURCE_TYPE.eq(it)) }
+                resourceId?.takeIf { it.isNotBlank() }?.let { add(RESOURCE_ID.eq(it)) }
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -836,6 +831,54 @@ class ProcessDataMigrateDao {
     ) {
         with(TTemplate.T_TEMPLATE) {
             val insertRecords = templateRecords.map { migratingShardingDslContext.newRecord(this, it) }
+            migratingShardingDslContext.batchInsert(insertRecords).execute()
+        }
+    }
+
+    fun getTemplateSettingRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<TPipelineSettingRecord> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(IS_TEMPLATE.eq(true)))
+                .orderBy(PIPELINE_ID.asc())
+                .limit(limit).offset(offset).fetchInto(TPipelineSettingRecord::class.java)
+        }
+    }
+
+    fun migrateTemplateSettingData(
+        migratingShardingDslContext: DSLContext,
+        templateSettingRecords: List<TPipelineSettingRecord>
+    ) {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val insertRecords = templateSettingRecords.map { migratingShardingDslContext.newRecord(this, it) }
+            migratingShardingDslContext.batchInsert(insertRecords).execute()
+        }
+    }
+
+    fun getTemplateSettingVersionRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<TPipelineSettingVersionRecord> {
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(IS_TEMPLATE.eq(true)))
+                .orderBy(ID.asc())
+                .limit(limit).offset(offset).fetchInto(TPipelineSettingVersionRecord::class.java)
+        }
+    }
+
+    fun migrateTemplateSettingVersionData(
+        migratingShardingDslContext: DSLContext,
+        templateSettingVersionRecords: List<TPipelineSettingVersionRecord>
+    ) {
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            val insertRecords = templateSettingVersionRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
         }
     }

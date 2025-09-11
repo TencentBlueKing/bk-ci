@@ -203,6 +203,12 @@ interface ProjectService {
         offset: Int
     ): List<ProjectByConditionDTO>
 
+    fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO>
+
     /**
      * 获取用户已的可访问项目列表=
      */

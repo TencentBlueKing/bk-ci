@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -34,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -79,6 +81,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
+import com.tencent.devops.remotedev.service.gitproxy.TGitService
 import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
@@ -87,11 +90,14 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
@@ -127,7 +133,9 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceHookService: WorkspaceHookService,
     private val remotedevProjectService: RemotedevProjectService,
     private val bkItsmService: BKItsmService,
-    private val projectStrategyService: ProjectStrategyService
+    private val projectStrategyService: ProjectStrategyService,
+    private val tGitBindService: TGitService,
+    private val gitTransfer: RemoteDevGitTransfer
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -872,5 +880,29 @@ class ServiceRemoteDevResourceImpl(
         body: Map<String, String>
     ): Result<List<IWhiteList>> {
         return Result(whiteListService.apiGetWhiteList(userId, type, body))
+    }
+
+    override fun tgitGetUserOauth(userId: String, redirectUrl: String): Result<AuthorizeResult> {
+        // 权限校验？
+        return gitTransfer.load(RemoteDevGitType.T_GIT).isOAuth(
+            userId = userId,
+            redirectUrlType = RedirectUrlTypeEnum.SPEC,
+            redirectUrl = redirectUrl,
+            refreshToken = null
+        )
+    }
+
+    override fun tgitGetProjectList(
+        userId: String,
+        tGitId: Long
+    ): Result<List<String>> {
+        return Result(tGitBindService.fetchProject(tGitId))
+    }
+
+    override fun tgitBindRemotedevProject(
+        userId: String,
+        data: TGitBindRemotedevData
+    ): Result<Map<String, Boolean>> {
+        return Result(tGitBindService.bindTGitProject(data.tGitId, data.projectIds))
     }
 }

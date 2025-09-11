@@ -243,6 +243,23 @@ class PipelineSettingDao {
         }
     }
 
+    fun listPipelineNames(
+        dslContext: DSLContext,
+        pipelineIds: List<String>,
+        projectId: String?
+    ): Map<String, String> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.select(PIPELINE_ID, NAME).from(this)
+                .where(conditions)
+                .fetch().map { Pair(it.value1(), it.value2()) }.toMap()
+        }
+    }
+
     fun getSetting(
         dslContext: DSLContext,
         projectId: String,

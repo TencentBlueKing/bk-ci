@@ -208,11 +208,16 @@ class ProcessDataMigrateService @Autowired constructor(
         validateMigrationState(projectId)
         // 锁定项目防止产生新的数据
         lockProject(projectId)
-        // 分配路由规则
-        val routingRuleMap = assignShardingRoutingRule(projectId, sourceDataSourceName, dataTag)
-        // 更新迁移计数器
-        updateMigrationCounters(projectId)
-        return PreMigrationResult(routingRuleMap)
+        try {
+            // 分配路由规则
+            val routingRuleMap = assignShardingRoutingRule(projectId, sourceDataSourceName, dataTag)
+            // 更新迁移计数器
+            updateMigrationCounters(projectId)
+            return PreMigrationResult(routingRuleMap)
+        } finally {
+            // 解锁项目
+            unlockProject(projectId)
+        }
     }
 
     /**
@@ -256,6 +261,17 @@ class ProcessDataMigrateService @Autowired constructor(
      */
     private fun lockProject(projectId: String) {
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+    }
+
+    /**
+     * 解锁项目
+     * 将项目移除API访问限制列表
+     */
+    private fun unlockProject(projectId: String) {
+        redisOperation.removeSetMember(
+            key = BkApiUtil.getApiAccessLimitProjectsKey(),
+            item = projectId
+        )
     }
 
     /**

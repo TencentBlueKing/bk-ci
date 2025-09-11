@@ -119,6 +119,20 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.listProjectDetailsByCondition(
+                projectConditionDTO = projectConditionDTO,
+                limit = limit,
+                offset = offset
+            )
+        )
+    }
+
     override fun listByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
         return Result(projectService.list(projectCodes = projectCodes, enabled = true))
     }

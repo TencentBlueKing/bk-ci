@@ -513,15 +513,14 @@
                         </span>
                     </p>
                     <div class="build-artifactory-operation">
-                        <bk-button
+                        <artifact-download-button
+                            class="artifact-downLoad-button"
                             v-if="artifactory.artifactoryType !== 'IMAGE'"
-                            text
-                            size="small"
-                            theme="primary"
-                            @click.stop="downloadFile(artifactory)"
-                        >
-                            {{ $t('download') }}
-                        </bk-button>
+                            :output="artifactory"
+                            :has-permission="hasDownloadPermission"
+                            v-bind="artifactory"
+                            :artifactory-type="artifactory.artifactoryType"
+                        />
                         <bk-button
                             v-if="artifactory.artifactoryType === 'PIPELINE'"
                             text
@@ -610,6 +609,7 @@
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
@@ -634,6 +634,7 @@
             FilterBar,
             TableColumnSetting,
             ArtifactQuality,
+            ArtifactDownloadButton,
             EmptyException
         },
         props: {
@@ -661,6 +662,7 @@
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
+                hasDownloadPermission: false,
                 dialogTopOffset: null
             }
         },
@@ -945,6 +947,7 @@
                         count: res.count
                     })
                     this.buildHistories = res.records
+                    this.hasDownloadPermission = res.hasDownloadPermission
                 } catch (err) {
                     if (err.code === 403) {
                         this.hasNoPermission = true
@@ -1639,6 +1642,12 @@
     .bk-dialog {
         top: 50% !important;
         transform: var(--dialog-top-translateY) !important;
+    }
+}
+.artifact-downLoad-button {
+    .bk-button-text {
+        font-size: 12px;
+        line-height: 26px;
     }
 }
 </style>

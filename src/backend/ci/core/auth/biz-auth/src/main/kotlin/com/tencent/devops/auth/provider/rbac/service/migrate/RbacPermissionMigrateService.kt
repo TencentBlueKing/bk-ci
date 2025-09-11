@@ -32,11 +32,13 @@ import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
@@ -66,6 +68,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
@@ -92,7 +95,8 @@ class RbacPermissionMigrateService(
     private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
     private val migrateResourceGroupService: MigrateResourceGroupService,
     private val syncDataTaskDao: AuthSyncDataTaskDao,
-    private val rbacCommonService: RbacCommonService
+    private val rbacCommonService: RbacCommonService,
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao
 ) : PermissionMigrateService {
 
     companion object {
@@ -246,15 +250,30 @@ class RbacPermissionMigrateService(
             // 迁移资源，若资源从未迁移过，则进行注册。迁移过，将重置资源下用户组的权限
             if (migrateResource && filterResourceTypes.isNotEmpty()) {
                 filterResourceTypes.forEach {
+                    // 当资源的创建人离职时，将使用当前项目的管理员身份来代替，若管理员也都离职或者过期了，则随机选择一个项目成员
+                    val fixResourceCreator = permissionResourceMemberService.getResourceGroupMembers(
+                        projectCode = projectCode,
+                        resourceType = ResourceTypeId.PROJECT,
+                        resourceCode = projectCode,
+                        group = BkAuthGroup.MANAGER
+                    ).ifEmpty {
+                        authResourceGroupMemberDao.listResourceGroupMember(
+                            dslContext = dslContext,
+                            projectCode = projectCode,
+                            minExpiredTime = LocalDateTime.now(),
+                            memberType = MemberType.USER.type
+                        ).map { memberInfo -> memberInfo.memberId }.distinct()
+                    }.ifEmpty {
+                        logger.warn(
+                            "All members of the project have resigned and no migration is required.$projectCode"
+                        )
+                        return@forEach
+                    }.random()
                     migrateResourceService.migrateResource(
                         projectCode = projectCode,
                         resourceType = it,
-                        projectCreator = permissionResourceMemberService.getResourceGroupMembers(
-                            projectCode = projectCode,
-                            resourceType = ResourceTypeId.PROJECT,
-                            resourceCode = projectCode,
-                            group = BkAuthGroup.MANAGER
-                        ).random()
+                        projectCreator = fixResourceCreator,
+                        throwException = false
                     )
                     // 若迁移流水线模板权限，需要修改项目的properties字段
                     if (it == ResourceTypeId.PIPELINE_TEMPLATE) {

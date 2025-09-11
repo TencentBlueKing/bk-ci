@@ -45,6 +45,8 @@ import com.tencent.devops.misc.strategy.impl.pipeline.PipelineYamlInfoMigrationS
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineYamlVersionMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.ReportMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.TemplatePipelineMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.TemplateSettingMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.project.TemplateSettingVersionMigrationStrategy
 
 class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMigrateDao) {
 
@@ -63,7 +65,9 @@ class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMig
         ProjectPipelineYamlBranchFileMigrationStrategy(processDataMigrateDao),
         ProjectPipelineYamlSyncMigrationStrategy(processDataMigrateDao),
         ProjectPipelineYamlViewMigrationStrategy(processDataMigrateDao),
-        TemplateMigrationStrategy(processDataMigrateDao)
+        TemplateMigrationStrategy(processDataMigrateDao),
+        TemplateSettingMigrationStrategy(processDataMigrateDao),
+        TemplateSettingVersionMigrationStrategy(processDataMigrateDao)
     )
 
     private val commonPipelineDataStrategies = listOf(
