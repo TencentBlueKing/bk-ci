@@ -47,7 +47,11 @@ class CodeSchemaCheckTest {
 
         println(exception)
         // 验证异常信息
-        Assertions.assertTrue(exception.params?.firstOrNull()?.contains("There may be a problem with your yaml syntax") == true)
+        Assertions.assertTrue(
+            exception.params?.firstOrNull()?.contains(
+                "There may be a problem with your yaml syntax"
+            ) == true
+        )
     }
 
     @Test
@@ -62,7 +66,11 @@ class CodeSchemaCheckTest {
 
         println(exception)
         // 验证异常信息
-        Assertions.assertTrue(exception.params?.firstOrNull()?.contains("yaml version(v1.0) not valid, only support v3.0") == true)
+        Assertions.assertTrue(
+            exception.params?.firstOrNull()?.contains(
+                "yaml version(v1.0) not valid, only support v3.0"
+            ) == true
+        )
     }
 
     @Test
@@ -76,7 +84,11 @@ class CodeSchemaCheckTest {
         }
 
         // 验证异常信息
-        Assertions.assertTrue(exception.params?.firstOrNull()?.contains("yaml version(null) not valid, only support v3.0") == true)
+        Assertions.assertTrue(
+            exception.params?.firstOrNull()?.contains(
+                "yaml version(null) not valid, only support v3.0"
+            ) == true
+        )
     }
 
     @Test
