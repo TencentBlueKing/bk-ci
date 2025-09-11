@@ -4,6 +4,7 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.pojo.BkUserDeptInfo
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -106,8 +107,25 @@ class TenantAuthDeptServiceImpl : DeptService {
     }
 
     override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): BkUserInfoVo {
-        logger.warn("listUserInfos isn`t support in tenant environment: $searchUserEntity, $tenantId")
-        return BkUserInfoVo(count = 0, results = emptyList())
+        try {
+            return TenantUtils.callApigw(
+                apigwHost = bkApigwUserHost!!,
+                path = BATCH_LOOKUP_DEPARTMENT,
+                params = mapOf(
+                    "page" to (searchUserEntity.page ?: 0),
+                    "page_size" to (searchUserEntity.pageSize ?: 100),
+                ),
+                tenantId = tenantId,
+                method = HttpMethod.GET,
+                respType = ListUserResp::class.java
+            ).toVo()
+        } catch (e: Exception) {
+            logger.error("listUserInfos error: $e")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                defaultMessage = "listUserInfos error, page:${searchUserEntity.page}, pageSize:${searchUserEntity.pageSize}"
+            )
+        }
     }
 
     override fun getUserDeptDetails(userId: String, tenantId: String?): BkDeptDetailsVo? {
@@ -251,6 +269,7 @@ class TenantAuthDeptServiceImpl : DeptService {
         const val RETRIEVE_USER = "/api/v3/open/tenant/users/{bk_username}/"
         const val BATCH_QUERY_USER_DISPLAY_INFO = "/api/v3/open/tenant/users/-/display_info/"
         const val BATCH_LOOKUP_DEPARTMENT = "/api/v3/open/tenant/departments/-/lookup/"
+        const val LIST_USER = "/api/v3/open/tenant/users/"
         private val logger = LoggerFactory.getLogger(TenantAuthDeptServiceImpl::class.java)
     }
 
@@ -343,5 +362,31 @@ class TenantAuthDeptServiceImpl : DeptService {
         val id: Int,
         val name: String,
         val organization_path: String? = null
+    )
+
+    data class ListUserResp(
+        val count: Int,
+        val results: List<User>
+    ) {
+        fun toVo(): BkUserInfoVo {
+            val userInfos = results.map {
+                BkUserInfo(
+                    id = 0,
+                    userName = it.bk_username,
+                    displayName = it.display_name,
+                    enabled = it.status == "enabled",
+                    extras = null,
+                    departments = null
+                )
+            }
+            return BkUserInfoVo(count, userInfos)
+        }
+    }
+
+    data class User(
+        val bk_username: String,
+        val full_name: String,
+        val display_name: String,
+        val status: String
     )
 }

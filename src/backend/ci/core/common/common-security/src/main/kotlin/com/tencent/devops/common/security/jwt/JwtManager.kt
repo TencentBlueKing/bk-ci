@@ -126,13 +126,17 @@ class JwtManager(
 
     @Scheduled(cron = "0 0/4 * * * ?", scheduler = ServiceSecurityAutoConfiguration.JWT_MANAGER_SCHEDULER)
     fun refreshToken() {
+        if (!isSendEnable()) {
+            logger.debug("Skip refresh service jwt token")
+            return
+        }
         logger.info("Refresh service jwt token")
         generateToken()
     }
 
     fun isAuthEnable(): Boolean {
         // 只有authEnable=true，且privateKeyString、publicKeyString不为空的时候，才会验证
-        return authEnable && !privateKeyString.isNullOrBlank() && !publicKeyString.isNullOrBlank()
+        return authEnable && isSendEnable()
     }
 
     fun isSendEnable(): Boolean {
