@@ -8,9 +8,8 @@
       :style="{width: isBatchOperate ? '128px' : '150px'}"
     >
       <bk-overflow-title type="tips">
-        {{ member.id }}
-        <span v-if="member.name && !member.departed"> ({{ member.name }}) </span>
-        <bk-tag v-else size="small" theme="danger"> {{ t("已离职")}}</bk-tag>
+        <span v-if="member.name"> ({{ member.name }}) </span>
+        <bk-tag v-if="member.departed" size="small" theme="danger"> {{ t("已离职")}}</bk-tag>
       </bk-overflow-title>
     </p>
     <p
@@ -56,8 +55,8 @@
 </template>
 
 <script setup>
+import { computed, defineEmits, defineProps } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { defineProps, defineEmits, computed } from 'vue';
 
 const props = defineProps({
   member: Object,
