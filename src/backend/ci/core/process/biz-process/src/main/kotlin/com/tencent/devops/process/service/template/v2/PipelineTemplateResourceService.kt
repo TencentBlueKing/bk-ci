@@ -75,7 +75,10 @@ class PipelineTemplateResourceService @Autowired constructor(
             projectId = projectId,
             templateId = templateId,
             status = VersionStatus.RELEASED,
-            storeStatus = TemplateStatusEnum.RELEASED
+            storeStatusList = listOf(
+                TemplateStatusEnum.RELEASED,
+                TemplateStatusEnum.AUDITING
+            )
         )
     }
 
