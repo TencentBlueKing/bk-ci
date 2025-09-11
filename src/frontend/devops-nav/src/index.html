@@ -148,8 +148,8 @@
 
     function matchPathProjectId() {
       try {
-        var reg = /^\/console\/\w+\/([\w\-]+)?/
-        if (location.pathname.match(/^\/console\/perm\/(\w+)?/)) {
+        var reg = /^\/console\/\w+\/([\w.-]+)?/
+        if (location.pathname.match(/^\/console\/perm\/([\w.-]+)?/)) {
           var query = location.search.slice(1)
           var queryArr = query.split('&')
           for (var i = 0; i < queryArr.length; i++) {
