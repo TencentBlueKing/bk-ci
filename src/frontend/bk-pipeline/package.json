@@ -52,7 +52,7 @@
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "~15.10.0",
-    "webpack": "~5.76.1"
+    "webpack": "~5.101.3"
   },
   "dependencies": {
     "uuid": "~8.1.0",
