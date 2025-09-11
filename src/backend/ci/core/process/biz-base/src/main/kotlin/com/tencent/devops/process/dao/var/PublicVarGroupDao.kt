@@ -233,10 +233,14 @@ class PublicVarGroupDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
-            if (version == null) {
+            if (version == null && versionName == null) {
                 conditions.add(LATEST_FLAG.eq(true))
             } else {
-                conditions.add(VERSION.eq(version))
+                if (version != null) {
+                    conditions.add(VERSION.eq(version))
+                } else {
+                    conditions.add(VERSION_NAME.eq(versionName))
+                }
             }
             return dslContext.selectFrom(this)
                 .where(conditions)

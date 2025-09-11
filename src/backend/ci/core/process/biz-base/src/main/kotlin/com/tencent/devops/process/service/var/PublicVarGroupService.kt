@@ -445,12 +445,12 @@ class PublicVarGroupService @Autowired constructor(
         varGroupRefs.forEach { varGroupRef ->
             try {
                 val groupName = varGroupRef.groupName
-                val version = varGroupRef.versionName?.substring(1)?.toIntOrNull()
+                val versionName = varGroupRef.versionName
                 val groupRecord = publicVarGroupDao.getRecordByGroupName(
                     dslContext = dslContext,
                     projectId = projectId,
                     groupName = groupName,
-                    version = version
+                    versionName = versionName
                 ) ?: run {
                     logger.warn("Variable group $groupName not found in project $projectId")
                     return@forEach

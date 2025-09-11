@@ -383,13 +383,16 @@ class PublicVarService @Autowired constructor(
 
         publicVarGroups.forEach { groupRef ->
             val groupName = groupRef.groupName
-            val version = groupRef.versionName?.substring(1)?.toIntOrNull()
+            val versionName = groupRef.versionName
             // 获取该组的最新版本（如果versionName为空则使用最新版本）
-            val targetVersion = version ?: publicVarGroupDao.getLatestVersionByGroupName(
+            val targetVersion = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
-                groupName = groupName
-            ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+                groupName = groupName,
+                versionName = versionName
+            )?.version
+
+            targetVersion ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
 
             // 获取目标版本的变量列表
             val varPOs = publicVarDao.listVarByGroupName(
