@@ -41,7 +41,7 @@ class AsyncExecuteListener @Autowired constructor(
     class RetryEventException(val delayMills: Int) : RuntimeException()
 
     fun listenAsyncExecuteEvent(event: AsyncExecuteEvent) {
-        logger.debug("listenAsyncExecuteEvent|$event")
+        logger.info("listenAsyncExecuteEvent|$event")
         try {
             doExecute(event)
         } catch (e: RetryEventException) {
