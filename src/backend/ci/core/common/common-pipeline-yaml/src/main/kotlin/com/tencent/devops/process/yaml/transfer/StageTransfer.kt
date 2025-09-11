@@ -38,7 +38,9 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -46,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePublicVarGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -100,6 +103,19 @@ class StageTransfer @Autowired(required = false) constructor(
         val triggerElementList = mutableListOf<Element>()
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
 
+        val params = mutableListOf<BuildFormProperty>()
+        var publicParam: List<BuildFormProperty>? = null
+        val varGroupRefs = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
+            PublicVarGroupRef(it.name, it.version)
+        }
+        if (varGroupRefs.isNotEmpty()) {
+            publicParam = client.get(ServicePublicVarGroupResource::class).getProjectPublicParam(
+                userId = yamlInput.userId,
+                projectId = yamlInput.projectCode,
+                varGroupRefs = varGroupRefs
+            ).data
+        }
+        params.addAll(variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml), publicParam))
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
@@ -108,7 +124,7 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml))
+            params = params
         )
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
