@@ -359,7 +359,17 @@ const actions = {
         }).then(response => {
             return response
         })
-    }
+    },
+    batchChangeImportUser ({ commit }, { projectId, nodeHashIds }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/batchChangeImportUser`, nodeHashIds).then(response => {
+            return response
+        })
+    },
+    batchUpdateParallelTaskCount ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/batchUpdateParallelTaskCount`, params).then(response => {
+            return response
+        })
+    },
 }
 
 export default actions
