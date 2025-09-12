@@ -40,7 +40,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 class CertResourceApi : AbstractBuildResourceApi() {
 
     fun queryIos(certId: String, publicKey: String): Result<CertIOS> {
-        val path = "/ticket/api/build/certs/ios/$certId?publicKey=${encode(publicKey)}"
+        val path = "/ticket/api/build/certs/ios/$certId?publicKey=${encode(publicKey)}&padding=true"
         val request = buildGet(path)
         val responseContent = request(
             request,
@@ -53,7 +53,7 @@ class CertResourceApi : AbstractBuildResourceApi() {
     }
 
     fun queryAndroid(certId: String, publicKey: String): Result<CertAndroid> {
-        val path = "/ticket/api/build/certs/android/$certId?publicKey=${encode(publicKey)}"
+        val path = "/ticket/api/build/certs/android/$certId?publicKey=${encode(publicKey)}&padding=true"
         val request = buildGet(path)
         val responseContent = request(
             request,
