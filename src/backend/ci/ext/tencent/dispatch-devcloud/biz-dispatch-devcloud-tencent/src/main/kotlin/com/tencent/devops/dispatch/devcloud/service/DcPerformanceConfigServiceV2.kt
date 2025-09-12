@@ -23,11 +23,6 @@ class DcPerformanceConfigServiceV2 constructor(
 
     fun getDcPerformanceConfigList(userId: String, projectId: String, pipelineId: String): UserPerformanceOptionsV2 {
         val performanceDataList = devCloudPerformanceClient.getPerformanceList(userId, projectId, pipelineId)
-        // 使用associateBy保持原始列表的顺序，返回LinkedHashMap
-        val performanceMaps = performanceDataList.associateBy { it.uid }
-
-        logger.info("Retrieved performance config list for user: $userId, project: $projectId, pipeline: $pipelineId, count: ${performanceDataList.size}")
-        
-        return UserPerformanceOptionsV2(performanceDataList.first().uid, performanceMaps)
+        return UserPerformanceOptionsV2(performanceDataList.first().uid, performanceDataList)
     }
 }

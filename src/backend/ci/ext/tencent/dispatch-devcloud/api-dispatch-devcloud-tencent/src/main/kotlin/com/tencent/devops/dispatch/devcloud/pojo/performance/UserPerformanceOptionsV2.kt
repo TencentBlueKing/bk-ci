@@ -8,5 +8,5 @@ data class UserPerformanceOptionsV2(
     @get:Schema(title = "默认选项")
     val defaultUid: String,
     @get:Schema(title = "性能配置")
-    val performanceMaps: Map<String, PerformanceData>
+    val performanceList: List<PerformanceData>
 )
