@@ -294,7 +294,7 @@
                 >
                     <devcloud-option
                         :disabled="!editable"
-                        :value="container.dispatchType.performanceConfigId"
+                        :value="devcloudValue"
                         :build-type="buildResourceType"
                         :handle-change="changeBuildResourceWithoutEnv"
                         :change-show-performance="changeShowPerformance"
@@ -735,6 +735,9 @@
             },
             dockerInfo () {
                 return this.container.dispatchType?.dockerInfo || {}
+            },
+            devcloudValue () {
+                return this.buildResourceType === 'PUBLIC_DEVCLOUD' ? this.container.dispatchType.performanceUid : this.container.dispatchType.performanceConfigId
             },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
