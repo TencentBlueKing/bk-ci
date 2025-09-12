@@ -18,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue
 class TencentGithubExtService @Autowired constructor(
     private val client: Client
 ) : IGithubExtService {
-    @Value("\${scm.bkCode.sync.github:webhook:enable:false}")
+    @Value("\${scm.bkCode.githubWebhookSyncEnable:false}")
     private val githubWebhookSyncEnabled: Boolean = false
 
     override fun webhookCommit(
