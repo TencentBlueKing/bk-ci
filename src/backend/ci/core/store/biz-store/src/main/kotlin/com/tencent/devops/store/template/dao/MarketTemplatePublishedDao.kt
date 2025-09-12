@@ -99,7 +99,6 @@ class MarketTemplatePublishedDao {
         return with(TTemplateVersionReleasedRel.T_TEMPLATE_VERSION_RELEASED_REL) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .and(PUBLISHED.eq(true))
                 .orderBy(NUMBER.desc())
                 .limit(1)
                 .fetchOne()?.let {
