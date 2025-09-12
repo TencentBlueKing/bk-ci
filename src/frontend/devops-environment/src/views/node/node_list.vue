@@ -530,14 +530,14 @@
                     {
                         key: 'bulkEditMaxConcurrency',
                         textKey: 'environment.bulkEditMaxConcurrency',
-                        tooltips: this.$t('未选择构建节点，不支持修改'),
+                        tooltips: this.$t('environment.未选择构建节点，不支持修改'),
                         disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
                         handler: () => this.batchSetMaxConcurrency()
                     },
                     {
                         key: 'bulkResetImportUser',
                         textKey: 'environment.bulkResetImportUser',
-                        tooltips: this.$t('未选择部署节点，不支持重置'),
+                        tooltips: this.$t('environment.未选择部署节点，不支持重置'),
                         disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
                         handler: () => this.batchResetImportUser()
                     },
