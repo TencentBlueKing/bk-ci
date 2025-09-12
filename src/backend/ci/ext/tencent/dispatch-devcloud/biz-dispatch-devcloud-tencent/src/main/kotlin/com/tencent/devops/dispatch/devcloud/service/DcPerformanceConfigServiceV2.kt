@@ -5,7 +5,6 @@ import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOpti
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.stream.Collectors
 
 @Service
 class DcPerformanceConfigServiceV2 constructor(
@@ -24,8 +23,11 @@ class DcPerformanceConfigServiceV2 constructor(
 
     fun getDcPerformanceConfigList(userId: String, projectId: String, pipelineId: String): UserPerformanceOptionsV2 {
         val performanceDataList = devCloudPerformanceClient.getPerformanceList(userId, projectId, pipelineId)
-        val performanceMaps = performanceDataList.stream().collect(Collectors.toMap({ it.uid }, { it }))
+        // 使用associateBy保持原始列表的顺序，返回LinkedHashMap
+        val performanceMaps = performanceDataList.associateBy { it.uid }
 
+        logger.info("Retrieved performance config list for user: $userId, project: $projectId, pipeline: $pipelineId, count: ${performanceDataList.size}")
+        
         return UserPerformanceOptionsV2(performanceDataList.first().uid, performanceMaps)
     }
 }

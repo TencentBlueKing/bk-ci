@@ -274,13 +274,13 @@ class DcContainerPrepareHandler @Autowired constructor(
 
         when (performanceConfigId) {
             "2" -> {
-                handlerContext.performanceUid = ""
+                handlerContext.performanceUid = "HighIO-M"
             }
             "10000" -> {
-                handlerContext.performanceUid = ""
+                handlerContext.performanceUid = "HighIO-L"
             }
             else -> {
-                handlerContext.performanceUid = performanceUid
+                handlerContext.performanceUid = "Standard-S"
             }
         }
     }
