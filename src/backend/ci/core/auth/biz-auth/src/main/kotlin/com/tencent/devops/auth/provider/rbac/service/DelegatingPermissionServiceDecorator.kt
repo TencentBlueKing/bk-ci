@@ -27,7 +27,7 @@ class DelegatingPermissionServiceDecorator(
     private val rbacCommonService: RbacCommonService
 ) : PermissionService {
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
-        // 此方法逻辑简单，保持不变
+        // 此方法未使用过，暂不处理
         return rbacPermissionService.validateUserActionPermission(userId = userId, action = action)
     }
 

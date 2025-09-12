@@ -116,20 +116,19 @@ import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.rbac.RbacCircuitBreakerProperties
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import java.time.Duration
 
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
@@ -376,35 +375,24 @@ class RbacAuthConfiguration {
     )
 
     @Bean
+    fun circuitBreakerRegistry(): CircuitBreakerRegistry = CircuitBreakerRegistry.of(
+        RbacCircuitBreakerProperties().toCircuitBreakerConfig()
+    )
+
+    @Bean
     @Primary
     fun delegatingPermissionServiceDecorator(
         rbacPermissionService: RbacPermissionService,
         bkInternalPermissionService: BkInternalPermissionService,
         routingStrategy: PermissionRoutingStrategy,
-        rbacCommonService: RbacCommonService
+        rbacCommonService: RbacCommonService,
+        circuitBreakerRegistry: CircuitBreakerRegistry
     ): DelegatingPermissionServiceDecorator {
-        val builder = CircuitBreakerConfig.custom()
-        builder.enableAutomaticTransitionFromOpenToHalfOpen()
-        builder.writableStackTraceEnabled(false)
-        // 当熔断后等待 5s 放开熔断
-        builder.waitDurationInOpenState(Duration.ofSeconds(5))
-        // 熔断放开后，运行通过的请求数，如果达到熔断条件，继续熔断
-        builder.permittedNumberOfCallsInHalfOpenState(10)
-        // 当错误率达到 60% 开启熔断
-        builder.failureRateThreshold(60.0F)
-        // 慢请求超过 80% 开启熔断
-        builder.slowCallRateThreshold(80.0F)
-        // 请求超过 500ms 就是慢请求
-        builder.slowCallDurationThreshold(Duration.ofMillis(500))
-        // 滑动窗口大小为 50，默认值
-        builder.slidingWindowSize(50)
-        // 至少需要 20 次调用，这样能避免因调用次数过少导致误判
-        builder.minimumNumberOfCalls(20)
         return DelegatingPermissionServiceDecorator(
             rbacPermissionService = rbacPermissionService,
             bkInternalPermissionService = bkInternalPermissionService,
             routingStrategy = routingStrategy,
-            circuitBreakerRegistry = CircuitBreakerRegistry.of(builder.build()),
+            circuitBreakerRegistry = circuitBreakerRegistry,
             rbacCommonService = rbacCommonService
         )
     }
