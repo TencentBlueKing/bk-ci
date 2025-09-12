@@ -43,6 +43,7 @@ spec:
         app.kubernetes.io/name: artifactory
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.artifactory.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.artifactory.hostAliases "context" $) | nindent 8 }}
       {{- end }}
