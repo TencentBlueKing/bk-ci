@@ -60,6 +60,7 @@
                 :draft-version="pipelineInfo?.version"
                 :pipeline-id="uniqueId"
                 :project-id="projectId"
+                :theme="isTemplate ? 'default' : 'primary'"
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
@@ -247,7 +248,7 @@
             operateName () {
                 switch (true) {
                     case this.editAndExecutable:
-                        return this.$t('edit')
+                        return this.isTemplate ? this.$t('template.editTemplate') : this.$t('edit')
                     case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
                     default:

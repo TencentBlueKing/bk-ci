@@ -65,17 +65,22 @@
                 >
                 </search-select>
             </div>
-            <template-table
-                ref="selfTemp"
-                :type="templateViewId"
-                :data="tableData"
-                :pagination="pagination"
-                :has-create-permission="hasCreatePermission"
-                :is-loading="isTableLoading"
-                @limit-change="handlePageLimitChange"
-                @page-change="handlePageChange"
-                @clear="handleClear"
-            />
+            <div
+                ref="tableBox"
+                class="table-box"
+            >
+                <template-table
+                    :type="templateViewId"
+                    :data="tableData"
+                    :max-height="tableHeight"
+                    :pagination="pagination"
+                    :has-create-permission="hasCreatePermission"
+                    :is-loading="isTableLoading"
+                    @limit-change="handlePageLimitChange"
+                    @page-change="handlePageChange"
+                    @clear="handleClear"
+                />
+            </div>
         </div>
 
         <CopyTemplateDialog
@@ -125,7 +130,7 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import dayjs from 'dayjs'
-    import { computed, onMounted, ref, watch } from 'vue'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
     import TemplateTable from './TemplateTable'
@@ -223,6 +228,8 @@
         return acc
     }, {}))
     const filterTips = computed(() => filterData.value.map(item => item.name).join(' / '))
+    const tableHeight = ref(null)
+    const tableBox = ref(null)
 
     watch(() => searchValue.value, () => {
         fetchTableData()
@@ -231,9 +238,19 @@
         searchValue.value = []
     })
     onMounted(() => {
+        updateTableHeight()
+        window.addEventListener('resize', updateTableHeight)
         searchValue.value = echoQueryParameters()
         hasPipelineTemplatePermission()
     })
+    
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', updateTableHeight)
+    })
+
+    function updateTableHeight () {
+        tableHeight.value = tableBox.value.offsetHeight
+    }
 
     function getFlagTooltips (row) {
         if (row.storeFlag || row.upgradeFlag || row.publishFlag) {
@@ -587,6 +604,10 @@
                     color: #c4c6cc;
                 }
             }
+        }
+        .table-box {
+            flex: 1;
+            overflow: hidden;
         }
    }
 }

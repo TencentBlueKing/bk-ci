@@ -1977,5 +1977,6 @@
   "refTemplateDiffTitle": "When the pipeline references the following templates via branch version or repository ref, the reference remains unchanged but the template content has changed",
   "refTemplate": "Referenced template",
   "preRef": "Previous version/Previous Commit",
-  "currentRef": "Current version/Current Commit"
+  "currentRef": "Current version/Current Commit",
+  "noVariablesAvailable": "No Variables Available"
 }
