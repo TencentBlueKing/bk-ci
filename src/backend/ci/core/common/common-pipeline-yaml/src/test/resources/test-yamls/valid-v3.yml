@@ -1,0 +1,22 @@
+version: v3.0
+name: test-pipeline
+desc: test description
+on:
+  repo-name: test/repo
+  type: git
+  push:
+    branches:
+      - main
+  manual: enabled
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"

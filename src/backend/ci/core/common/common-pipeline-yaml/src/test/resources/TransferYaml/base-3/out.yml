@@ -13,8 +13,6 @@ stages:
 - name: stage-1
   label:
   - Build
-  - Build
-  - Build
   jobs:
     #      这个job很帅
     job_dwG:

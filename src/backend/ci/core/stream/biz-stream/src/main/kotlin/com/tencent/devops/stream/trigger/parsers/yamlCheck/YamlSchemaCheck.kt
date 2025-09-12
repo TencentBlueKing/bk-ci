@@ -71,7 +71,6 @@ class YamlSchemaCheck @Autowired constructor() {
 
     private val logger = LoggerFactory.getLogger(YamlSchemaCheck::class.java)
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-        .objectMapper(YamlUtil.getObjectMapper())
         .build()
     private val schemaMap = ConcurrentHashMap<String, JsonSchema>()
 

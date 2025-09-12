@@ -97,5 +97,7 @@ data class BuildHistory(
     @get:Schema(title = "并发时,设定的group", required = false)
     var concurrencyGroup: String? = null,
     @get:Schema(title = "构建执行次数（重试次数-1）", required = false)
-    val executeCount: Int?
+    val executeCount: Int?,
+    @get:Schema(title = "版本是否变更", required = false)
+    val versionChange: Boolean? = false
 )

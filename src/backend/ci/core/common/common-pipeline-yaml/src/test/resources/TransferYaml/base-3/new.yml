@@ -12,8 +12,6 @@ stages:
   - name: stage-1
     label:
       - Build
-      - Build
-      - Build
     jobs:
       job_dwG:
         name: 构建环境-Linux
