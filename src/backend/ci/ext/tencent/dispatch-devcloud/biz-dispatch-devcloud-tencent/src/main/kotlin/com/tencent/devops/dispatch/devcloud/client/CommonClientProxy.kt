@@ -58,7 +58,7 @@ class CommonClientProxy @Autowired constructor(
     @Value("\${devCloud.smartProxyToken}")
     override val smartProxyToken: String = ""
 
-    @Value("\${devCloud.newUrl}")
+    @Value("\${devCloud.newUrl:}")
     val newDevCloudUrl: String = ""
 
     override fun baseRequest(
