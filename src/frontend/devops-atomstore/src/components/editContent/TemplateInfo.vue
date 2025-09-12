@@ -116,6 +116,11 @@
                             :key="option.version"
                             :id="option.version"
                             :name="option.versionName"
+                            :disabled="option.storeFlag"
+                            v-bk-tooltips="{
+                                content: $t('store.已上架至商店'),
+                                disabled: !option.storeFlag
+                            }"
                         >
                         </bk-option>
                     </bk-select>
@@ -419,7 +424,7 @@
                     if (newVal) {
                         await this.getVersionList(1)
                         this.$emit('updateTemplateForm', {
-                            templateVersion: this.versionList[0]?.version
+                            templateVersion:  this.versionList.find(item => !item.storeFlag)?.version || ''
                         })
                     }
                 },
@@ -545,8 +550,7 @@
                         templateId: this.templateForm.templateCode,
                         page: nextPage,
                         pageSize: this.versionsPagination.limit,
-                        status: 'RELEASED',
-                        storeFlag: false
+                        status: 'RELEASED'
                     })
 
                     const versions = res.records
