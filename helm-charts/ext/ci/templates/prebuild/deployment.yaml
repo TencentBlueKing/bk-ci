@@ -33,6 +33,7 @@ spec:
         app.kubernetes.io/name: prebuild
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.prebuild.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.prebuild.hostAliases "context" $) | nindent 8 }}
       {{- end }}
