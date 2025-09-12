@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ScmGithubExtService {
-    @Value("\${scm.bkCode.sync.github:webhook:url:}")
+    @Value("\${scm.bkCode.githubWebhookSyncUrl:}")
     private val githubWebhookSyncUrl: String = ""
 
     fun webhookCommit(event: String, guid: String, signature: String, body: String) {
