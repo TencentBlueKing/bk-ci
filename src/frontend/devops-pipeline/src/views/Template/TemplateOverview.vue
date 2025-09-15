@@ -231,7 +231,10 @@
             },
             {
                 text: t(`template.${pipelineInfo.value.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`),
-                handler: () => toRelativeStore(pipelineInfo.value, storeStatus.value),
+                handler: () => toRelativeStore({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, storeStatus.value),
                 hasPermission: canEdit.value,
                 disablePermissionApi: true,
                 disable: (pipelineInfo.value.storeFlag && !pipelineInfo.value.publishFlag) || pipelineInfo.value.latestVersionStatus === 'COMMITTING',
