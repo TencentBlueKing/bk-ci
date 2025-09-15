@@ -1252,6 +1252,7 @@ class TemplateFacadeService @Autowired constructor(
                 name = generateI18nTemplateName(templateId = templateId, templateType = type) ?: setting?.pipelineName
                 ?: model.name,
                 templateId = templateId,
+                srcTemplateId = srcTemplateId,
                 projectId = templateRecord[tTemplate.PROJECT_ID],
                 version = version,
                 versionName = templateRecord[tTemplate.VERSION_NAME],

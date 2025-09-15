@@ -1067,6 +1067,20 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 latestInstalledTime = recentlyInstalledVersion.createTime!!
             )
         }
+
+        val latestReleasedVersionNum = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        )?.number
+
+        val latestMarketPublishedVersionNum =
+            client.get(ServiceTemplateResource::class).getLatestMarketPublishedVersion(templateId).data?.number
+
+        val publishFlag = takeIf { basicInfo.storeStatus == TemplateStatusEnum.RELEASED }?.let {
+            latestReleasedVersionNum != null && latestMarketPublishedVersionNum != null &&
+                latestReleasedVersionNum > latestMarketPublishedVersionNum
+        } ?: false
+
         return PipelineTemplateInfoResponse(
             id = basicInfo.id,
             projectId = basicInfo.projectId,
@@ -1079,6 +1093,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             logoUrl = basicInfo.logoUrl,
             enablePac = basicInfo.enablePac,
             storeFlag = basicInfo.storeStatus == TemplateStatusEnum.RELEASED,
+            publishFlag = publishFlag,
             srcTemplateId = basicInfo.srcTemplateId,
             srcTemplateProjectId = basicInfo.srcTemplateProjectId,
             canDebug = draftResource != null,

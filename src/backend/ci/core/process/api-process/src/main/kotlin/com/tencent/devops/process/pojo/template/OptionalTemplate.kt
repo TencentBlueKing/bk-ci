@@ -105,7 +105,9 @@ data class OptionalTemplate(
     @get:Schema(title = "克隆模板设置项是否存在", required = false)
     val cloneTemplateSettingExist: CloneTemplateSettingExist? = null,
     @get:Schema(title = "模版描述", required = false)
-    val desc: String? = null
+    val desc: String? = null,
+    @get:Schema(title = "父模版ID", required = false)
+    val srcTemplateId: String? = null
 )
 
 @Schema(title = "克隆模板设置")

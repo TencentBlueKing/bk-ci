@@ -32,8 +32,10 @@ data class PipelineTemplateInfoResponse(
     val logoUrl: String? = null,
     @get:Schema(title = "是否开启PAC", required = true)
     val enablePac: Boolean,
-    @get:Schema(title = "是否从研发商店安装至项目", required = true)
+    @get:Schema(title = "是否已经上架研发商店", required = true)
     val storeFlag: Boolean,
+    @get:Schema(title = "发布标识", required = false)
+    val publishFlag: Boolean? = false,
     @get:Schema(title = "父模板ID", required = false)
     val srcTemplateId: String? = null,
     @get:Schema(title = "父模板项目ID", required = false)

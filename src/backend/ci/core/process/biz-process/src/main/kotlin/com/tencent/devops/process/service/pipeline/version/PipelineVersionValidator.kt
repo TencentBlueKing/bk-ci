@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.exception.CustomMessageException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -60,6 +61,10 @@ class PipelineVersionValidator @Autowired constructor(
     }
 
     fun PipelineVersionCreateContext.validateBasicInfo() {
+        if (pipelineBasicInfo.pipelineName.isBlank()) {
+            logger.warn("The pipeline name is empty")
+            throw CustomMessageException("The pipeline name cannot be empty.")
+        }
         val nameExist = pipelineRepositoryService.isPipelineExist(
             projectId = projectId,
             pipelineName = pipelineBasicInfo.pipelineName,
