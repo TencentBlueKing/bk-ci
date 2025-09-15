@@ -74,7 +74,9 @@
             const isShow = ref(false)
             const { proxy } = useInstance()
             const relatedInfo = computed(() => proxy.$store.state.atom.pipelineInfo?.pipelineTemplateMarketRelatedInfo ?? {})
-            const showAutoUpgradeStrategyTips = computed(()=> strategyConf.value.upgradeStrategy === STRATEGY_ENUM.AUTO)
+            const showAutoUpgradeStrategyTips = computed(()=>
+                strategyConf.value.upgradeStrategy === STRATEGY_ENUM.AUTO && (relatedInfo.value.latestInstalledVersion !== relatedInfo.value.srcMarketTemplateLatestVersion)
+            )
             const strategyConf = ref({
                 upgradeStrategy: relatedInfo.value.upgradeStrategy,
                 syncSettingStrategy: relatedInfo.value.settingSyncStrategy === STRATEGY_ENUM.AUTO
