@@ -165,20 +165,12 @@ const TelegrafConf = `
     X-DEVOPS-AGENT-ID = "{{.AgentId}}"
     X-DEVOPS-AGENT-SECRET-KEY = "{{.AgentSecret}}"
 
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
 [[inputs.win_perf_counters]]
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Processor Information"
-    Instances = ["*"]
-    Counters = [
-      "% Idle Time",
-      "% Interrupt Time",
-      "% Privileged Time",
-      "% User Time",
-      "% Processor Time",
-      "% DPC Time",
-    ]
-    Measurement = "cpu"
-    IncludeTotal=true
   [[inputs.win_perf_counters.object]]
     ObjectName = "PhysicalDisk"
     Instances = ["*"]
@@ -218,14 +210,17 @@ const TelegrafConf = `
     measurement = "cpu"
     dest = "cpu_detail"
   [[processors.rename.replace]]
-    field = "Percent_User_Time"
+    field = "usage_user"
     dest = "user"
   [[processors.rename.replace]]
-    field = "Percent_Privileged_Time"
+    field = "usage_system"
     dest = "system"
   [[processors.rename.replace]]
-    field = "Percent_Idle_Time"
+    field = "usage_idle"
     dest = "idle"
+  [[processors.rename.replace]]
+    field = "usage_iowait"
+    dest = "iowait"
   # net
   [[processors.rename.replace]]
     field = "Bytes_Received_persec"
