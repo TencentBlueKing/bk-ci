@@ -223,7 +223,7 @@
             async function deleteConfirm (params) {
                 try {
                     if (props.isTemplate) {
-                        await deleteTemplate(params)
+                        await proxy.$store.dispatch('templates/deleteTemplate', params)
                     } else {
                         const { data } = await proxy.$store.dispatch('pipelines/patchDeletePipelines', {
                             projectId: props.projectId,
