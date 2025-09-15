@@ -52,6 +52,7 @@ import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleRespon
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
+import com.tencent.devops.process.pojo.template.v2.PTemplateSource2Count
 import com.tencent.devops.process.pojo.template.v2.PTemplateTransferBody
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompareResponse
@@ -1109,6 +1110,32 @@ class PipelineTemplateFacadeService @Autowired constructor(
             yamlExist = yamlExist,
             pipelineTemplateMarketRelatedInfo = pipelineTemplateMarketRelatedInfo
         )
+    }
+
+    fun getType2Count(
+        userId: String,
+        projectId: String
+    ): Map<String, Int> {
+        val accessibleTemplateIds = pipelineTemplatePermissionService.getResourcesByPermission(
+            userId = userId,
+            projectId = projectId,
+            permissions = setOf(AuthPermission.LIST)
+        )[AuthPermission.LIST] ?: emptyList()
+        return pipelineTemplateInfoService.getType2Count(projectId, accessibleTemplateIds)
+    }
+
+    fun getSource2Count(
+        userId: String,
+        projectId: String,
+        commonCondition: PipelineTemplateCommonCondition
+    ): PTemplateSource2Count {
+        val accessibleTemplateIds = pipelineTemplatePermissionService.getResourcesByPermission(
+            userId = userId,
+            projectId = projectId,
+            permissions = setOf(AuthPermission.LIST)
+        )[AuthPermission.LIST] ?: emptyList()
+        commonCondition.filterTemplateIds = accessibleTemplateIds
+        return pipelineTemplateInfoService.getSource2Count(commonCondition)
     }
 
     fun getTemplateVersions(

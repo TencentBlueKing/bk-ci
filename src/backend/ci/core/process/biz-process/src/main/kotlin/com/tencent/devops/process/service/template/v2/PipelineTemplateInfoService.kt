@@ -77,12 +77,21 @@ class PipelineTemplateInfoService @Autowired constructor(
         )
     }
 
-    fun getType2Count(projectId: String): Map<String, Int> {
+    fun getType2Count(
+        projectId: String,
+        templateIds: List<String>
+    ): Map<String, Int> {
         val type2Count = pipelineTemplateInfoDao.getType2Count(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            templateIds = templateIds
         ).toMutableMap()
-        val totalCount = count(PipelineTemplateCommonCondition(projectId = projectId))
+        val totalCount = count(
+            PipelineTemplateCommonCondition(
+                projectId = projectId,
+                filterTemplateIds = templateIds
+            )
+        )
         type2Count[PipelineTemplateConstant.ALL] = totalCount
         return type2Count
     }

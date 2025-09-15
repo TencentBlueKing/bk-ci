@@ -218,12 +218,14 @@ class PipelineTemplateInfoDao {
 
     fun getType2Count(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        templateIds: List<String>
     ): Map<String, Int> {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.select(TYPE, DSL.count())
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(ID.`in`(templateIds))
                 .groupBy(TYPE)
                 .fetch().map { Pair(it.value1(), it.value2()) }.toMap()
         }

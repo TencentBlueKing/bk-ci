@@ -353,7 +353,7 @@ class UserPipelineTemplateV2ResourceImpl(
     }
 
     override fun getType2Count(userId: String, projectId: String): Result<Map<String, Int>> {
-        return Result(templateInfoService.getType2Count(projectId))
+        return Result(templateFacadeService.getType2Count(userId, projectId))
     }
 
     override fun getSource2Count(
@@ -361,13 +361,7 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         commonCondition: PipelineTemplateCommonCondition
     ): Result<PTemplateSource2Count> {
-        val accessibleTemplateIds = permissionService.getResourcesByPermission(
-            userId = userId,
-            projectId = projectId,
-            permissions = setOf(AuthPermission.VIEW, AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT)
-        )[AuthPermission.LIST] ?: emptyList()
-        commonCondition.filterTemplateIds = accessibleTemplateIds
-        return Result(templateInfoService.getSource2Count(commonCondition))
+        return Result(templateFacadeService.getSource2Count(userId, projectId, commonCondition))
     }
 
     override fun getTemplateVersions(

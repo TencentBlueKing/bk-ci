@@ -798,6 +798,10 @@ class PipelineTemplateMigrateService(
         // 如果模板已经上传研发商店，发布策略默认为自动
         val publishStrategy = if (storeFlag) UpgradeStrategyEnum.AUTO else null
         val strategy = if (isConstraint) UpgradeStrategyEnum.AUTO else null
+        val templateInfo = pipelineTemplateInfoService.getOrNull(
+            projectId = latestTemplate.id,
+            templateId = latestTemplate.id
+        )
         return PipelineTemplateInfoV2(
             id = latestTemplate.id,
             projectId = latestTemplate.projectId,
@@ -807,7 +811,7 @@ class PipelineTemplateMigrateService(
             category = latestTemplate.category,
             type = PipelineTemplateType.PIPELINE,
             logoUrl = latestTemplate.logoUrl,
-            enablePac = false,
+            enablePac = templateInfo?.enablePac ?: false,
             releasedVersion = latestReleasedResource.version,
             releasedVersionName = latestReleasedResource.versionName,
             releasedSettingVersion = latestReleasedResource.settingVersion,
