@@ -901,6 +901,15 @@ class WorkspaceService @Autowired constructor(
                 mountType = it.workspaceMountType
             )
         }
+        // 异常状态恢复后，需要重新检查修正
+        if (it.status.checkException() && status?.status == ComputerStatusEnum.NORMAL) {
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
+            )
+        }
         return it.status
     }
 
