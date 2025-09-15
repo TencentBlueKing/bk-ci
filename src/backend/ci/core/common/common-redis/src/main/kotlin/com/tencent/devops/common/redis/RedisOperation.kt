@@ -30,7 +30,7 @@ package com.tencent.devops.common.redis
 import com.tencent.devops.common.redis.split.RedisSplitProperties
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import java.util.Date
-import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.DefaultTypedTuple
@@ -50,7 +50,19 @@ class RedisOperation(
     // max expire time is 30 days
     private val maxExpireTime = TimeUnit.DAYS.toSeconds(30)
 
-    private val slaveThreadPool = Executors.newSingleThreadExecutor(NamedThreadFactory("redis-double-write"))
+    private val slaveThreadPool = ThreadPoolExecutor(
+        5,
+        5,
+        60L,
+        TimeUnit.SECONDS,
+        java.util.concurrent.LinkedBlockingQueue(1024),
+        NamedThreadFactory("redis-double-write"),
+        object : ThreadPoolExecutor.CallerRunsPolicy() {
+            override fun rejectedExecution(r: Runnable, e: ThreadPoolExecutor) {
+                logger.error("Redis slave thread pool is full, running task in caller thread")
+            }
+        }
+    )
 
     fun get(key: String, isDistinguishCluster: Boolean? = false): String? {
         return masterRedisTemplate.opsForValue().get(getFinalKey(key, isDistinguishCluster))
@@ -235,7 +247,7 @@ class RedisOperation(
         return masterRedisTemplate.opsForHash<String, String>().get(getFinalKey(key, isDistinguishCluster), hashKey)
     }
 
-    fun hmGet(key: String, hashKeys: Collection<String>, isDistinguishCluster: Boolean? = false): List<String>? {
+    fun hmGet(key: String, hashKeys: Collection<String>, isDistinguishCluster: Boolean? = false): List<String> {
         return masterRedisTemplate.opsForHash<String, String>()
             .multiGet(getFinalKey(key, isDistinguishCluster), hashKeys)
     }
@@ -264,15 +276,15 @@ class RedisOperation(
         return masterRedisTemplate.opsForHash<String, String>().size(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun hvalues(key: String, isDistinguishCluster: Boolean? = false): MutableList<String>? {
+    fun hvalues(key: String, isDistinguishCluster: Boolean? = false): MutableList<String> {
         return masterRedisTemplate.opsForHash<String, String>().values(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun hkeys(key: String, isDistinguishCluster: Boolean? = false): MutableSet<String>? {
+    fun hkeys(key: String, isDistinguishCluster: Boolean? = false): MutableSet<String> {
         return masterRedisTemplate.opsForHash<String, String>().keys(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun hentries(key: String, isDistinguishCluster: Boolean? = false): MutableMap<String, String>? {
+    fun hentries(key: String, isDistinguishCluster: Boolean? = false): MutableMap<String, String> {
         return masterRedisTemplate.opsForHash<String, String>().entries(getFinalKey(key, isDistinguishCluster))
     }
 
@@ -307,7 +319,7 @@ class RedisOperation(
         pattern: String,
         count: Long = 1000L,
         isDistinguishCluster: Boolean? = false
-    ): Cursor<String>? {
+    ): Cursor<String> {
         val options = ScanOptions.scanOptions().match(pattern).count(count).build()
         return masterRedisTemplate.opsForSet().scan(getFinalKey(key, isDistinguishCluster), options)
     }
@@ -495,10 +507,13 @@ class RedisOperation(
     }
 
     private fun <T> writeSlaveIfNeed(action: () -> T) {
-        slaveThreadPool.submit {
-            if (slaveRedisTemplate != null && splitMode == RedisSplitProperties.Mode.DOUBLE_WRITE_SLAVE) {
-                action()
-            }
+        if (slaveRedisTemplate != null && splitMode == RedisSplitProperties.Mode.DOUBLE_WRITE_SLAVE) {
+            // 使用 execute 避免创建 Future，并在满载时按 CallerRunsPolicy 进行背压
+            slaveThreadPool.execute { action() }
         }
+    }
+
+    companion object {
+        private val logger = org.slf4j.LoggerFactory.getLogger(RedisOperation::class.java)
     }
 }
