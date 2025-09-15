@@ -222,7 +222,7 @@
                 }, {
                     prop: 'updater',
                     width: 120,
-                    label: this.$t('audit.operator')
+                    label: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator')
                 }]
             },
             filterTips () {
@@ -237,7 +237,7 @@
                     name: this.$t('versionDesc'),
                     id: 'description'
                 }, {
-                    name: this.$t('audit.operator'),
+                    name: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator'),
                     id: 'creator'
                 }]
             },

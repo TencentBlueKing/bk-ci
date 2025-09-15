@@ -47,6 +47,7 @@
     import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import { computed, defineComponent } from 'vue'
     import useInstance from '../hook/useInstance'
+    import { getTemplateCacheViewId } from '@/utils/util'
     import useTemplateActions from '../hook/useTemplateActions'
 
     export default defineComponent({
@@ -165,6 +166,17 @@
                 }
             }
 
+            function getManageRouter () {
+                return props.isTemplate ? {
+                    name: 'TemplateManageList',
+                    params: {
+                        templateViewId: getTemplateCacheViewId()
+                    }
+                }: {
+                    name: 'PipelineManageList'
+                }
+            }
+
             async function deleteDraftConfirm (params) {
                 try {
                     const action = props.isTemplate ? 'templates/deleteTempalteVersion' : 'pipelines/deletePipelineVersion'
@@ -177,10 +189,7 @@
                         message: t('delete') + t('version') + t('success'),
                         theme: 'success'
                     })
-
-                    proxy.$router.push({
-                        name: 'PipelineManageList'
-                    })
+                    proxy.$router.push(getManageRouter())
                 } catch (err) {
                     proxy.$showTips({
                         message: err.message || err,
@@ -229,10 +238,7 @@
                         message: t('delete') + t('version') + t('success'),
                         theme: 'success'
                     })
-
-                    proxy.$router.push({
-                        name: 'PipelineManageList'
-                    })
+                    proxy.$router.push(getManageRouter())
                 } catch (err) {
                     proxy.$showTips({
                         message: err.message || err,

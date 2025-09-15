@@ -133,14 +133,14 @@
                         <bk-radio
                             label="MANUAL"
                             class="mr20 strategy"
-                            v-bk-tooltips="{ content: $t('store.当源模板有新版本时，按需手动发布新版本到商店'), placement: 'top' }"
+                            v-bk-tooltips="{ content: $t('store.MANUAL-upgradeStrategyDesc'), placement: 'top' }"
                         >
                             {{ $t('store.按需手动发布') }}
                         </bk-radio>
                         <bk-radio
                             label="AUTO"
                             class="strategy"
-                            v-bk-tooltips="{ content: $t('store.当源模板有新版本时，新版本自动发布到研发商店'), placement: 'top' }"
+                            v-bk-tooltips="{ content: $t('store.AUTO-upgradeStrategyDesc'), placement: 'top' }"
                         >
                             {{ $t('store.自动发布') }}
                         </bk-radio>
