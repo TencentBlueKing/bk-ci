@@ -63,3 +63,4 @@ bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
 bkCiRabbitQuorumEnable: false
 bkCiSyncCronEnabled: false
+bkCiPlatformManager: admin
