@@ -342,7 +342,7 @@ auth:
   gateway:
     devopsToken: __BK_CI_DEVOPS_TOKEN__
   platform:
-    manager: admin
+    manager: __BK_CI_PLATFORM_MANAGER__
 
 #bk esb config for cd plugin in pipeline
 esb:
