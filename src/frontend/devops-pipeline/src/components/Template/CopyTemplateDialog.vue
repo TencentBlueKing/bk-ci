@@ -111,7 +111,11 @@
     }
     .copy-pipeline .template-name-copy {
         text-align: right;
-        padding-right: 36px;
+        padding-right: 38px;
+        font-weight: 400;
+    }
+    .tip-bottom {
+        font-weight: 400;
     }
 }
 </style>

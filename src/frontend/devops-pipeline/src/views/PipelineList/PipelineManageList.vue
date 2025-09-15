@@ -438,7 +438,7 @@
                 'requestHasCreatePermission'
             ]),
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
