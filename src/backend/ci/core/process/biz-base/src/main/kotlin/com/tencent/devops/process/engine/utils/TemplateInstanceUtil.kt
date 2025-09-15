@@ -217,12 +217,7 @@ object TemplateInstanceUtil {
             val pipelineParams = if (templateVariable != null) {
                 // templateVariable 会覆盖模板的默认值
                 templateParam.copy(
-                    defaultValue = when {
-                        templateParam.type == BuildFormPropertyType.BOOLEAN ->
-                            (templateVariable.value as String?)?.toBoolean() ?: false
-
-                        else -> templateVariable.value
-                    },
+                    defaultValue = templateVariable.value,
                     required = templateVariable.allowModifyAtStartup ?: templateParam.required
                 )
             } else {
