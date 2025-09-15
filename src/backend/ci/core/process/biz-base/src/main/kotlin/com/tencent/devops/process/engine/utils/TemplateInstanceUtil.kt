@@ -219,12 +219,9 @@ object TemplateInstanceUtil {
                 templateParam.copy(
                     defaultValue = when {
                         templateParam.type == BuildFormPropertyType.BOOLEAN ->
-                            (templateParam.value as String?)?.toBoolean() ?: false
+                            (templateVariable.value as String?)?.toBoolean() ?: false
 
-                        CascadePropertyUtils.supportCascadeParam(templateParam.type) ->
-                            templateParam.value ?: mapOf<String, String>()
-
-                        else -> templateParam.value ?: ""
+                        else -> templateVariable.value
                     },
                     required = templateVariable.allowModifyAtStartup ?: templateParam.required
                 )
