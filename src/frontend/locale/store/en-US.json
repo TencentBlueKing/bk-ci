@@ -657,5 +657,6 @@
   "全部可见": "All visible",
   "部分可见": "Partial visible",
   "当前模板的版本已全部上架": "All versions of the current template have been listed",
-  "typeError": "Type Error"
+  "typeError": "Type Error",
+  "已上架至商店": "Listed in the store"
 }
