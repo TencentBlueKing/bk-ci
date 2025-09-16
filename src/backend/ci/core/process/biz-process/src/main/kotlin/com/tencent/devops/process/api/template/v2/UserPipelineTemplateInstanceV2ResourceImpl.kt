@@ -143,6 +143,38 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
         )
     }
 
+    override fun getTemplateInstanceParamsById(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): Result<TemplateInstanceParams> {
+        return Result(
+            instanceFacadeService.getTemplateInstanceParamsById(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version
+            )
+        )
+    }
+
+    override fun getTemplateInstanceParamsByRef(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        ref: String
+    ): Result<TemplateInstanceParams> {
+        return Result(
+            instanceFacadeService.getTemplateInstanceParamsByRef(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                ref = ref
+            )
+        )
+    }
+
     override fun preFetchTemplateInstance(
         userId: String,
         projectId: String,

@@ -39,8 +39,8 @@ import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceCompareResponse
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskDetail
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequest
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskDetail
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskResult
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedResp
 import io.swagger.v3.oas.annotations.Operation
@@ -176,6 +176,43 @@ interface UserPipelineTemplateInstanceV2Resource {
         @Parameter(description = "创建实例", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String/*pipelineId*/, TemplateInstanceParams>>
+
+    @Operation(summary = "通过ID方式获取模版实例化参数")
+    @GET
+    @Path("/templates/{templateId}/instanceParamsById")
+    fun getTemplateInstanceParamsById(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本", required = false)
+        @QueryParam("version")
+        version: Long
+    ): Result<TemplateInstanceParams>
+
+    @Operation(summary = "通过Ref方式获取模版实例化参数")
+    @GET
+    @Path("/templates/{templateId}/instanceParamsByRef")
+    fun getTemplateInstanceParamsByRef(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "模版引用,可以是分支/tag/commit", required = true)
+        @QueryParam("ref")
+        ref: String
+    ): Result<TemplateInstanceParams>
+
 
     @Operation(summary = "模版实例化发布时版本信息预览")
     @POST

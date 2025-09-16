@@ -28,6 +28,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
@@ -45,6 +46,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedResp
 import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
+import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.yaml.PipelineYamlService
@@ -77,6 +79,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineYamlVersionResolver: PipelineYamlVersionResolver,
+    private val permissionService: PipelineTemplatePermissionService,
     private val client: Client
 ) {
     /*同步创建模板实例*/
@@ -499,6 +503,82 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
             )
         }
+    }
+
+    fun getTemplateInstanceParamsById(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): TemplateInstanceParams {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        val triggerContainer = templateModel.getTriggerContainer()
+        val instanceParams = paramService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = null,
+            params = triggerContainer.params
+        )
+        // 实例化,参数默认是流水线全部覆盖模版
+        val overrideTemplateField = TemplateInstanceField(
+            paramIds = instanceParams.map { it.id }
+        )
+        return TemplateInstanceParams(
+            pipelineId = "",
+            pipelineName = "",
+            buildNo = triggerContainer.buildNo,
+            param = instanceParams,
+            triggerElements = triggerContainer.elements,
+            overrideTemplateField = overrideTemplateField
+        )
+    }
+
+    fun getTemplateInstanceParamsByRef(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        ref: String
+    ): TemplateInstanceParams {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = templateId,
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_ENABLE_PAC
+        )
+        val pipelineYamlVersion = pipelineYamlVersionResolver.resolveTemplateRefVersion(
+            projectId = projectId,
+            repoHashId = pipelineYamlInfo.repoHashId,
+            filePath = pipelineYamlInfo.filePath,
+            ref = ref
+        )
+        return getTemplateInstanceParamsById(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = pipelineYamlVersion.version.toLong()
+        )
     }
 
     fun preFetchTemplateInstance(
