@@ -287,7 +287,7 @@
                 theme: 'primary',
                 size: 'normal',
                 handler: () => createInstance(templateId.value, 'create'),
-                disabled: pipelineInfo.value.permissions.canEdit,
+                disabled: !pipelineInfo.value?.permissions?.canEdit,
                 text: t('template.addInstance')
             }
         ]
