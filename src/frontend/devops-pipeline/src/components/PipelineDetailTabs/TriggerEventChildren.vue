@@ -40,7 +40,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
@@ -53,7 +53,8 @@
 </template>
 <script>
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
@@ -69,6 +70,9 @@
             ...mapState('atom', ['pipelineInfo']),
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
             },
             statusColorMap () {
                 return statusColorMap

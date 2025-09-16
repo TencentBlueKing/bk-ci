@@ -228,9 +228,7 @@
         </div>
         <empty-tips
             v-else
-            :title="emptyTipsConfig.title"
-            :desc="emptyTipsConfig.desc"
-            :btns="emptyTipsConfig.btns"
+            v-bind="emptyTipsConfig"
         >
         </empty-tips>
     </div>
@@ -246,6 +244,7 @@
         SET_INSTANCE_LIST,
         TEMPLATE_INSTANCE_PIPELINE_STATUS
     } from '@/store/modules/templates/constants'
+    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -261,19 +260,7 @@
         count: 0,
         limit: 10
     })
-
-    const emptyTipsConfig = ref({
-        title: t('template.instanceEmptyTitle'),
-        desc: t('template.instanceEmptyDesc'),
-        btns: [
-            {
-                theme: 'primary',
-                size: 'normal',
-                handler: () => createInstance(templateId.value, 'create'),
-                text: t('template.addInstance')
-            }
-        ]
-    })
+    
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchValue.value.length))
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateId = computed(() => proxy.$route.params.templateId)
@@ -291,6 +278,26 @@
         const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
         return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
     })
+    const emptyTipsConfig = computed(() => ({
+        title: t('template.instanceEmptyTitle'),
+        desc: t('template.instanceEmptyDesc'),
+        hasPermission: pipelineInfo.value?.permissions?.canEdit,
+        disablePermissionApi: true,
+        permissionData: {
+            projectId: projectId.value,
+            resourceType: RESOURCE_TYPE.TEMPLATE,
+            resourceCode: templateId.value,
+            action: TEMPLATE_RESOURCE_ACTION.EDIT
+        },
+        btns: [
+            {
+                theme: 'primary',
+                size: 'normal',
+                handler: () => createInstance(templateId.value, 'create'),
+                text: t('template.addInstance')
+            }
+        ]
+    }))
     const tableHeight = ref('auto')
     const tableBox = ref(null)
     const searchList = computed(() => {
