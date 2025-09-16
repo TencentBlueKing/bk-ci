@@ -25,7 +25,7 @@ export const handlePipelineNoPermission = (query) => {
     return handleNoPermission(
         BKUI,
         {
-            resourceType: 'pipeline',
+            resourceType: RESOURCE_TYPE.PIPELINE,
             ...query
         },
         global.pipelineVue.$createElement

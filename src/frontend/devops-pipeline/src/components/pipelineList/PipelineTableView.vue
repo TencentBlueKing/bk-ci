@@ -325,7 +325,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
-                                        resourceType: 'pipeline',
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
                                         resourceCode: props.row.pipelineId,
                                         action: RESOURCE_ACTION.VIEW
                                     }
@@ -505,7 +505,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: props.row.pipelineId,
                                     action: RESOURCE_ACTION.EDIT
                                 }
@@ -528,7 +528,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: props.row.pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -575,9 +575,9 @@
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
-        ARCHIVE_VIEW_ID,
         PIPELINE_TABLE_COLUMN_CACHE,
         PIPELINE_TABLE_LIMIT_CACHE,
         RECENT_USED_VIEW_ID
@@ -585,6 +585,7 @@
     import {
         PROJECT_RESOURCE_ACTION,
         RESOURCE_ACTION,
+        RESOURCE_TYPE,
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -622,6 +623,7 @@
                 },
                 visibleTagCountList: {},
                 RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 PROJECT_RESOURCE_ACTION,
                 tableWidthMap: {},
                 tableSize: 'medium',

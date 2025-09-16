@@ -53,7 +53,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -81,7 +81,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -110,7 +110,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
@@ -134,7 +134,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
@@ -161,11 +161,12 @@
 
 <script>
     import {
-        RESOURCE_ACTION
-    } from '@/utils/permission'
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb'
-    import ReleaseButton from './ReleaseButton'
+    RESOURCE_ACTION,
+    RESOURCE_TYPE
+} from '@/utils/permission'
+import { mapActions, mapGetters, mapState } from 'vuex'
+import PipelineBreadCrumb from './PipelineBreadCrumb'
+import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
@@ -183,14 +184,17 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
-            },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
             },
             canEdit () {
                 return this.pipelineInfo?.permissions?.canEdit ?? true

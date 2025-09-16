@@ -33,7 +33,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EDIT
                                 }
@@ -55,7 +55,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
-                                        resourceType: 'pipeline',
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
                                         resourceCode: pipelineId,
                                         action: RESOURCE_ACTION.EXECUTE
                                     }
@@ -630,7 +630,8 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
 
     const LS_COLUMN_KEY = 'shownColumnsKeys'
@@ -658,6 +659,7 @@
             const initSortedColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
             return {
                 RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isShowMoreMaterial: false,
                 isShowMoreArtifactories: false,
                 showErorrInfoDialog: false,

@@ -34,6 +34,7 @@ import {
     handleProjectNoPermission,
     PROJECT_RESOURCE_ACTION,
     RESOURCE_ACTION,
+    RESOURCE_TYPE,
     TEMPLATE_RESOURCE_ACTION
 } from '@/utils/permission'
 
@@ -238,6 +239,12 @@ export default {
             } else {
                 archiveTooltip = false
             }
+            const editPermData = {
+                projectId: pipeline.projectId,
+                resourceType: RESOURCE_TYPE.PIPELINE,
+                resourceCode: pipeline.pipelineId,
+                action: RESOURCE_ACTION.EDIT
+            }
 
             return [
                 {
@@ -245,12 +252,7 @@ export default {
                     handler: this.lockPipelineHandler,
                     hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
-                    permissionData: {
-                        projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
+                    permissionData: editPermData
                 },
                 {
                     text: this.$t('addTo'),
@@ -264,7 +266,7 @@ export default {
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: pipeline.projectId,
-                            resourceType: 'project',
+                            resourceType: RESOURCE_TYPE.PROJECT,
                             resourceCode: pipeline.projectId,
                             action: RESOURCE_ACTION.CREATE
                         }
@@ -275,12 +277,7 @@ export default {
                     handler: this.copyAs,
                     hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
-                    permissionData: {
-                        projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
+                    permissionData: editPermData
                 },
                 {
                     text: this.$t('newlist.saveAsTemp'),
@@ -289,7 +286,7 @@ export default {
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
-                        resourceType: 'project',
+                        resourceType: RESOURCE_TYPE.PROJECT,
                         resourceCode: pipeline.projectId,
                         action: TEMPLATE_RESOURCE_ACTION.CREATE
                     }
@@ -318,7 +315,7 @@ export default {
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipeline.pipelineId,
                         action: RESOURCE_ACTION.ARCHIVED
                     }
@@ -330,7 +327,7 @@ export default {
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipeline.pipelineId,
                         action: RESOURCE_ACTION.DELETE
                     }

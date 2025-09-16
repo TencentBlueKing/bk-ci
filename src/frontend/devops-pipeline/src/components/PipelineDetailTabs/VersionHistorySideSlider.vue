@@ -111,7 +111,7 @@
                                 v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
-                                :rollback-id="isTemplate ? $route.params.ptemplateId : $route.params.pipelineId"
+                                :rollback-id="isTemplate ? $route.params.templateId : $route.params.pipelineId"
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-base-version-name="draftBaseVersionName"

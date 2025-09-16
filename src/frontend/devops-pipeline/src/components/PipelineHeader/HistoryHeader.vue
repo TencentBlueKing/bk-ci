@@ -67,6 +67,7 @@
                 :is-active-branch-version="isActiveBranchVersion"
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
+                :rollback-id="uniqueId"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -79,9 +80,9 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType,
                         resourceCode: uniqueId,
-                        action: RESOURCE_ACTION.EDIT
+                        action: resourceEditAction
                     }
                 }"
                 @click="goEdit"
@@ -96,9 +97,9 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType,
                         resourceCode: uniqueId,
-                        action: RESOURCE_ACTION.EDIT
+                        action: resourceEditAction
                     }
                 }"
                 @click="handleToInstanceEntry"
@@ -117,7 +118,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType,
                                     resourceCode: uniqueId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -151,6 +152,7 @@
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '../../utils/permission'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
@@ -193,6 +195,7 @@
                 onlyBranchPipeline: 'atom/onlyBranchPipeline',
                 isTemplate: 'atom/isTemplate'
             }),
+            
             breadCrumb () {
                 return this.isTemplate ? 'template-bread-crumb' : 'pipeline-bread-crumb'
             },
@@ -229,6 +232,12 @@
             },
             uniqueId () {
                 return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
+            },
+            resourceType () {
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
+            },
+            resourceEditAction () {
+                return this.isTemplate ? TEMPLATE_RESOURCE_ACTION.EDIT : RESOURCE_ACTION.EDIT
             },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo

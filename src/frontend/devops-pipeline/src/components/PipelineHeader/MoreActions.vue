@@ -91,7 +91,7 @@
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { RESOURCE_ACTION, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
@@ -140,6 +140,19 @@
                     projectId,
                     pac: this.pacEnabled
                 }
+                const editPermData = {
+                    projectId,
+                    resourceType: RESOURCE_TYPE.PIPELINE,
+                    resourceCode: pipeline.pipelineId,
+                    action: RESOURCE_ACTION.EDIT
+                }
+                const createPermData = {
+                    projectId,
+                    resourceType: RESOURCE_TYPE.PROJECT,
+                    resourceCode: projectId,
+                    action: RESOURCE_ACTION.CREATE
+                }
+                
                 const menuItems = [
                     [
                         {
@@ -167,12 +180,7 @@
                                     ? this.hasProjectPermission
                                     : pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         {
@@ -182,12 +190,7 @@
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         ...(pipeline.templateId
@@ -198,12 +201,7 @@
                                     vPerm: {
                                         hasPermission: pipeline.permissions?.canManage,
                                         disablePermissionApi: true,
-                                        permissionData: {
-                                            projectId,
-                                            resourceType: 'project',
-                                            resourceCode: projectId,
-                                            action: RESOURCE_ACTION.CREATE
-                                        }
+                                        permissionData: createPermData
                                     }
                                 }
                             ]
@@ -214,24 +212,14 @@
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         {
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
                             vPerm: {
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'project',
-                                    resourceCode: projectId,
-                                    action: TEMPLATE_RESOURCE_ACTION.CREATE
-                                }
+                                permissionData: createPermData
                             }
                         },
                         {
@@ -248,12 +236,7 @@
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         {
@@ -272,7 +255,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipeline.pipelineId,
                                     action: RESOURCE_ACTION.DELETE
                                 }
