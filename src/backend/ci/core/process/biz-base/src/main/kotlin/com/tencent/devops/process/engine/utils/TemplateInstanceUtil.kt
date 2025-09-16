@@ -220,8 +220,13 @@ object TemplateInstanceUtil {
                 // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
                 val defaultValue = if (
                     templateParam.type == BuildFormPropertyType.BOOLEAN &&
-                    templateVariable.value is String
+                    templateVariable.value is String?
                 ) {
+                    logger.info(
+                        "template params value:${templateParam.id}|${templateVariable.value}|" +
+                                "${templateVariable.value.javaClass}|${templateParam.value as String?}|" +
+                                "${(templateParam.value as String?)?.toBoolean()}"
+                    )
                     (templateParam.value as String?)?.toBoolean() ?: false
                 } else {
                     templateVariable.value
