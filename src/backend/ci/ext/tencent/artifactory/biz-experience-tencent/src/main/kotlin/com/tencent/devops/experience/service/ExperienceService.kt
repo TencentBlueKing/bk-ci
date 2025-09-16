@@ -548,7 +548,11 @@ class ExperienceService @Autowired constructor(
         } else {
             propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         }
-        val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        val appVersion = if (platform == PlatformEnum.WIN) {
+            experience.version ?: "未知"
+        } else {
+            propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        }
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -960,7 +964,8 @@ class ExperienceService @Autowired constructor(
             sendNotification = experience.sendNotification,
             classify = experience.classify,
             platform = experience.platform,
-            bundleIdentifier = experience.bundleIdentifier
+            bundleIdentifier = experience.bundleIdentifier,
+            version = experience.version
         )
 
         val experienceId = createExperience(
