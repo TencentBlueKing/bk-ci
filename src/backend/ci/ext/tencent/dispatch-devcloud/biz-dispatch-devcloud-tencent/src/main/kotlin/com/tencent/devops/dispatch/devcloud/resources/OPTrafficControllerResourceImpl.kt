@@ -23,37 +23,33 @@ class OPTrafficControllerResourceImpl constructor(
 
     override fun addToWhitelist(
         operatorUserId: String,
-        userId: String,
-        projectId: String?,
+        projectId: String,
         pipelineId: String?
     ): Result<Boolean> {
-        return Result(trafficControlService.addToWhitelist(operatorUserId, userId, projectId, pipelineId))
+        return Result(trafficControlService.addToWhitelist(operatorUserId, projectId, pipelineId))
     }
 
     override fun removeFromWhitelist(
         operatorUserId: String,
-        userId: String,
-        projectId: String?,
+        projectId: String,
         pipelineId: String?
     ): Result<Boolean> {
-        return Result(trafficControlService.removeFromWhitelist(operatorUserId, userId, projectId, pipelineId))
+        return Result(trafficControlService.removeFromWhitelist(operatorUserId, projectId, pipelineId))
     }
 
     override fun addToBlacklist(
         operatorUserId: String,
-        userId: String,
-        projectId: String?,
+        projectId: String,
         pipelineId: String?
     ): Result<Boolean> {
-        return Result(trafficControlService.addToBlacklist(operatorUserId, userId, projectId, pipelineId))
+        return Result(trafficControlService.addToBlacklist(operatorUserId, projectId, pipelineId))
     }
 
     override fun removeFromBlacklist(
         operatorUserId: String,
-        userId: String,
-        projectId: String?,
+        projectId: String,
         pipelineId: String?
     ): Result<Boolean> {
-        return Result(trafficControlService.removeFromBlacklist(operatorUserId, userId, projectId, pipelineId))
+        return Result(trafficControlService.removeFromBlacklist(operatorUserId, projectId, pipelineId))
     }
 }

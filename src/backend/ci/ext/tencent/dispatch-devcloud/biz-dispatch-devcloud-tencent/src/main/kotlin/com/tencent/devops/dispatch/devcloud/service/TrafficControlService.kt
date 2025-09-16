@@ -82,19 +82,17 @@ class TrafficControlService(
     /**
      * 判断是否应该使用新URL
      * 
-     * @param userId 用户ID
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @return true表示使用新URL，false表示使用旧URL
      */
-    fun shouldUseNewUrl(userId: String, projectId: String, pipelineId: String): Boolean {
-        require(userId.isNotBlank()) { "UserId cannot be blank" }
+    fun shouldUseNewUrl(projectId: String, pipelineId: String): Boolean {
         require(projectId.isNotBlank()) { "ProjectId cannot be blank" }
         require(pipelineId.isNotBlank()) { "PipelineId cannot be blank" }
         
         if (!trafficControlEnabled) {
             logger.debug(
-                "Traffic control is disabled, using old URL for userId: $userId, " +
+                "Traffic control is disabled, using old URL for " +
                 "projectId: $projectId, pipelineId: $pipelineId"
             )
             return false
@@ -102,19 +100,17 @@ class TrafficControlService(
 
         try {
             // 检查白名单
-            if (isInWhitelist(userId, projectId, pipelineId)) {
+            if (isInWhitelist(projectId, pipelineId)) {
                 logger.debug(
-                    "User $userId is in whitelist, using new URL for projectId: $projectId, " +
-                    "pipelineId: $pipelineId"
+                    "Project $projectId/pipeline $pipelineId is in whitelist, using new URL"
                 )
                 return true
             }
 
             // 检查黑名单
-            if (isInBlacklist(userId, projectId, pipelineId)) {
+            if (isInBlacklist(projectId, pipelineId)) {
                 logger.debug(
-                    "User $userId is in blacklist, using old URL for projectId: $projectId, " +
-                    "pipelineId: $pipelineId"
+                    "Project $projectId/pipeline $pipelineId is in blacklist, using old URL"
                 )
                 return false
             }
@@ -122,20 +118,20 @@ class TrafficControlService(
             // 根据灰度比例决定
             val grayRatio = getGrayRatio()
             if (grayRatio <= MIN_GRAY_RATIO) {
-                logger.debug("Gray ratio is $grayRatio%, using old URL for userId: $userId")
+                logger.debug("Gray ratio is $grayRatio%, using old URL for projectId: $projectId")
                 return false
             }
             if (grayRatio >= MAX_GRAY_RATIO) {
-                logger.debug("Gray ratio is $grayRatio%, using new URL for userId: $userId")
+                logger.debug("Gray ratio is $grayRatio%, using new URL for projectId: $projectId")
                 return true
             }
 
-            // 基于用户ID和项目ID的哈希值进行流量分配
-            val hashValue = calculateHash(userId, projectId, pipelineId)
+            // 基于项目ID和流水线ID的哈希值进行流量分配
+            val hashValue = calculateHash(projectId, pipelineId)
             val shouldUseNew = hashValue % 100 < grayRatio
             
             logger.debug(
-                "Traffic routing decision - userId: $userId, projectId: $projectId, " +
+                "Traffic routing decision - projectId: $projectId, " +
                 "pipelineId: $pipelineId, hashValue: $hashValue, grayRatio: $grayRatio%, " +
                 "useNewUrl: $shouldUseNew"
             )
@@ -143,7 +139,7 @@ class TrafficControlService(
 
         } catch (e: Exception) {
             logger.error(
-                "Traffic control decision failed, fallback to old URL for userId: $userId, " +
+                "Traffic control decision failed, fallback to old URL for " +
                 "projectId: $projectId, pipelineId: $pipelineId, error: ${e.message}", e
             )
             return false
@@ -210,21 +206,20 @@ class TrafficControlService(
      */
     fun addToWhitelist(
         operatorUserId: String,
-        userId: String,
-        projectId: String? = null,
+        projectId: String,
         pipelineId: String? = null
     ): Boolean {
         return try {
-            val key = buildKey(userId, projectId, pipelineId)
+            val key = buildKey(projectId, pipelineId)
             redisOperation.addSetValue(WHITELIST_KEY, key)
             logger.info(
-                "Operator $operatorUserId added key $key to whitelist, userId: $userId, " +
+                "Operator $operatorUserId added key $key to whitelist, " +
                 "projectId: $projectId, pipelineId: $pipelineId"
             )
             true
         } catch (e: Exception) {
             logger.error(
-                "Operator $operatorUserId failed to add to whitelist, userId: $userId, " +
+                "Operator $operatorUserId failed to add to whitelist, " +
                 "projectId: $projectId, pipelineId: $pipelineId, error: ${e.message}", e
             )
             false
@@ -236,21 +231,20 @@ class TrafficControlService(
      */
     fun removeFromWhitelist(
         operatorUserId: String,
-        userId: String,
-        projectId: String? = null,
+        projectId: String,
         pipelineId: String? = null
     ): Boolean {
         return try {
-            val key = buildKey(userId, projectId, pipelineId)
+            val key = buildKey(projectId, pipelineId)
             redisOperation.removeSetMember(WHITELIST_KEY, key)
             logger.info(
-                "Operator $operatorUserId removed key $key from whitelist, userId: $userId, " +
+                "Operator $operatorUserId removed key $key from whitelist, " +
                 "projectId: $projectId, pipelineId: $pipelineId"
             )
             true
         } catch (e: Exception) {
             logger.error(
-                "Operator $operatorUserId failed to remove from whitelist, userId: $userId, " +
+                "Operator $operatorUserId failed to remove from whitelist, " +
                 "projectId: $projectId, pipelineId: $pipelineId, error: ${e.message}", e
             )
             false
@@ -262,21 +256,20 @@ class TrafficControlService(
      */
     fun addToBlacklist(
         operatorUserId: String,
-        userId: String,
-        projectId: String? = null,
+        projectId: String,
         pipelineId: String? = null
     ): Boolean {
         return try {
-            val key = buildKey(userId, projectId, pipelineId)
+            val key = buildKey(projectId, pipelineId)
             redisOperation.addSetValue(BLACKLIST_KEY, key)
             logger.info(
-                "Operator $operatorUserId added key $key to blacklist, userId: $userId, " +
+                "Operator $operatorUserId added key $key to blacklist, " +
                 "projectId: $projectId, pipelineId: $pipelineId"
             )
             true
         } catch (e: Exception) {
             logger.error(
-                "Operator $operatorUserId failed to add to blacklist, userId: $userId, " +
+                "Operator $operatorUserId failed to add to blacklist, " +
                 "projectId: $projectId, pipelineId: $pipelineId, error: ${e.message}", e
             )
             false
@@ -288,21 +281,20 @@ class TrafficControlService(
      */
     fun removeFromBlacklist(
         operatorUserId: String,
-        userId: String,
-        projectId: String? = null,
+        projectId: String,
         pipelineId: String? = null
     ): Boolean {
         return try {
-            val key = buildKey(userId, projectId, pipelineId)
+            val key = buildKey(projectId, pipelineId)
             redisOperation.removeSetMember(BLACKLIST_KEY, key)
             logger.info(
-                "Operator $operatorUserId removed key $key from blacklist, userId: $userId, " +
+                "Operator $operatorUserId removed key $key from blacklist, " +
                 "projectId: $projectId, pipelineId: $pipelineId"
             )
             true
         } catch (e: Exception) {
             logger.error(
-                "Operator $operatorUserId failed to remove from blacklist, userId: $userId, " +
+                "Operator $operatorUserId failed to remove from blacklist, " +
                 "projectId: $projectId, pipelineId: $pipelineId, error: ${e.message}", e
             )
             false
@@ -312,13 +304,12 @@ class TrafficControlService(
     /**
      * 检查是否在白名单中
      */
-    private fun isInWhitelist(userId: String, projectId: String, pipelineId: String): Boolean {
+    private fun isInWhitelist(projectId: String, pipelineId: String): Boolean {
         return try {
             // 检查多个维度的白名单
             val keys = listOf(
-                buildKey(userId, projectId, pipelineId), // Exact match
-                buildKey(userId, projectId, null),       // User + project
-                buildKey(userId, null, null)             // User only
+                buildKey(projectId, pipelineId), // Exact match
+                buildKey(projectId, null)        // Project only
             )
             
             keys.any { key ->
@@ -326,7 +317,7 @@ class TrafficControlService(
             }
         } catch (e: Exception) {
             logger.error(
-                "Failed to check whitelist for userId: $userId, projectId: $projectId, " +
+                "Failed to check whitelist for projectId: $projectId, " +
                 "pipelineId: $pipelineId, error: ${e.message}", e
             )
             false
@@ -336,13 +327,12 @@ class TrafficControlService(
     /**
      * 检查是否在黑名单中
      */
-    private fun isInBlacklist(userId: String, projectId: String, pipelineId: String): Boolean {
+    private fun isInBlacklist(projectId: String, pipelineId: String): Boolean {
         return try {
             // 检查多个维度的黑名单
             val keys = listOf(
-                buildKey(userId, projectId, pipelineId), // Exact match
-                buildKey(userId, projectId, null),       // User + project
-                buildKey(userId, null, null)             // User only
+                buildKey(projectId, pipelineId), // Exact match
+                buildKey(projectId, null)        // Project only
             )
             
             keys.any { key ->
@@ -350,7 +340,7 @@ class TrafficControlService(
             }
         } catch (e: Exception) {
             logger.error(
-                "Failed to check blacklist for userId: $userId, projectId: $projectId, " +
+                "Failed to check blacklist for projectId: $projectId, " +
                 "pipelineId: $pipelineId, error: ${e.message}", e
             )
             false
@@ -360,11 +350,10 @@ class TrafficControlService(
     /**
      * 构建Redis键
      */
-    private fun buildKey(userId: String, projectId: String?, pipelineId: String?): String {
+    private fun buildKey(projectId: String, pipelineId: String?): String {
         return when {
-            projectId != null && pipelineId != null -> "$userId:$projectId:$pipelineId"
-            projectId != null -> "$userId:$projectId"
-            else -> userId
+            pipelineId != null -> "$projectId:$pipelineId"
+            else -> projectId
         }
     }
 
@@ -372,11 +361,11 @@ class TrafficControlService(
      * 计算哈希值，用于流量分配
      * 一致性：相同的输入总是产生相同的哈希值
      * 均匀分布：MD5算法确保哈希值在数值空间内均匀分布
-     * 稳定性：用户的路由决策在灰度比例不变的情况下保持稳定
+     * 稳定性：项目的路由决策在灰度比例不变的情况下保持稳定
      * 可控性：通过调整灰度比例可以精确控制流量分配
      */
-    private fun calculateHash(userId: String, projectId: String, pipelineId: String): Int {
-        val input = "$userId:$projectId:$pipelineId"
+    private fun calculateHash(projectId: String, pipelineId: String): Int {
+        val input = "$projectId:$pipelineId"
         val md5 = MessageDigest.getInstance(HASH_ALGORITHM)
         val hashBytes = md5.digest(input.toByteArray())
         

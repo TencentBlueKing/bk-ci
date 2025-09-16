@@ -77,17 +77,14 @@ interface OPTrafficControlResource {
 
     @POST
     @Path("/whitelist")
-    @Operation(summary = "添加用户到白名单")
+    @Operation(summary = "添加项目/流水线到白名单")
     fun addToWhitelist(
         @Parameter(description = "操作用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         operatorUserId: String,
-        @Parameter(description = "目标用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目ID，可选")
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String?,
+        projectId: String,
         @Parameter(description = "流水线ID，可选")
         @QueryParam("pipelineId")
         pipelineId: String?
@@ -95,17 +92,14 @@ interface OPTrafficControlResource {
 
     @DELETE
     @Path("/whitelist")
-    @Operation(summary = "从白名单移除用户")
+    @Operation(summary = "从白名单移除项目/流水线")
     fun removeFromWhitelist(
         @Parameter(description = "操作用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         operatorUserId: String,
-        @Parameter(description = "目标用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目ID，可选")
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String?,
+        projectId: String,
         @Parameter(description = "流水线ID，可选")
         @QueryParam("pipelineId")
         pipelineId: String?
@@ -113,17 +107,14 @@ interface OPTrafficControlResource {
 
     @POST
     @Path("/blacklist")
-    @Operation(summary = "添加用户到黑名单")
+    @Operation(summary = "添加项目/流水线到黑名单")
     fun addToBlacklist(
         @Parameter(description = "操作用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         operatorUserId: String,
-        @Parameter(description = "目标用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目ID，可选")
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String?,
+        projectId: String,
         @Parameter(description = "流水线ID，可选")
         @QueryParam("pipelineId")
         pipelineId: String?
@@ -131,17 +122,14 @@ interface OPTrafficControlResource {
 
     @DELETE
     @Path("/blacklist")
-    @Operation(summary = "从黑名单移除用户")
+    @Operation(summary = "从黑名单移除项目/流水线")
     fun removeFromBlacklist(
         @Parameter(description = "操作用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         operatorUserId: String,
-        @Parameter(description = "目标用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目ID，可选")
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String?,
+        projectId: String,
         @Parameter(description = "流水线ID，可选")
         @QueryParam("pipelineId")
         pipelineId: String?

@@ -72,12 +72,9 @@ class CommonClientProxy @Autowired constructor(
         return Request.Builder().url(selectedUrl + url).headers(headers(projectId, pipelineId, userId))
     }
 
-    /**
-     * Select URL based on traffic control strategy
-     */
     private fun selectUrl(userId: String, projectId: String, pipelineId: String): String {
         return try {
-            if (trafficControlService.shouldUseNewUrl(userId, projectId, pipelineId)) {
+            if (trafficControlService.shouldUseNewUrl(projectId, pipelineId)) {
                 if (newDevCloudUrl.isNotBlank()) {
                     logger.debug("Traffic control decision: using new URL $newDevCloudUrl for user: $userId, " +
                             "project: $projectId, pipeline: $pipelineId")
