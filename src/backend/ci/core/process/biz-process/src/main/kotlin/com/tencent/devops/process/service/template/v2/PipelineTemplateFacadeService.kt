@@ -708,6 +708,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                     version = templateInfo.releasedVersion,
                     versionName = templateInfo.releasedVersionName!!,
                     templateType = templateInfo.mode.name,
+                    srcTemplateId = templateInfo.srcTemplateId,
                     templateTypeDesc = templateInfo.desc ?: "",
                     category = category,
                     logoUrl = templateInfo.logoUrl ?: "",
