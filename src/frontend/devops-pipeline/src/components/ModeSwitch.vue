@@ -167,7 +167,7 @@
                         this.$bkInfo({
                             type: this.pipeline?.instanceFromTemplate ? 'warning' : 'error',
                             width: 500,
-                            zIndex: 2020,
+                            zIndex: 2040,
                             title: this.$t('invalidCodeMode'),
                             subHeader: this.$createElement(
                                 'pre',
