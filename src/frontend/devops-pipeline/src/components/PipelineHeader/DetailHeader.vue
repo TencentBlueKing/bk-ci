@@ -53,7 +53,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -81,7 +81,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -110,7 +110,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
@@ -134,7 +134,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
@@ -161,7 +161,8 @@
 
 <script>
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
@@ -185,6 +186,9 @@
             ...mapState('pipelines', ['executeStatus']),
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
             },
             projectId () {
                 return this.$route.params.projectId

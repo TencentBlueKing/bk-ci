@@ -24,7 +24,7 @@
                             :class="{ 'is-danger': copyTemp.nameHasError }"
                             @input="copyTemp.nameHasError = false"
                             name="copyTemplateName"
-                            v-validate="&quot;required|max:30&quot;"
+                            v-validate="'required|max:30'"
                             maxlength="30"
                         >
                     </div>
@@ -64,8 +64,8 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, defineEmits } from 'vue'
     import UseInstance from '@/hook/useInstance'
+    import { defineEmits, defineProps, ref } from 'vue'
 
     const { t } = UseInstance()
     defineProps({
