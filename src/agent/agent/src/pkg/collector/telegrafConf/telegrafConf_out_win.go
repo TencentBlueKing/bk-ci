@@ -59,7 +59,7 @@ const TelegrafConf = `
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
-    ObjectName = "Processor Information"
+    ObjectName = "Processor"
     Instances = ["*"]
     Counters = [
       "% Idle Time",
