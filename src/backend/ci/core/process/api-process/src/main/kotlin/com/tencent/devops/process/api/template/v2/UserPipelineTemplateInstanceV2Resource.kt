@@ -213,7 +213,6 @@ interface UserPipelineTemplateInstanceV2Resource {
         ref: String
     ): Result<TemplateInstanceParams>
 
-
     @Operation(summary = "模版实例化发布时版本信息预览")
     @POST
     @Path("/templates/{templateId}/{version}/preFetch")

@@ -324,7 +324,15 @@ class PipelineTemplateInfoDao {
                 if (instancePipelineCount != null) conditions.add(INSTANCE_PIPELINE_COUNT.eq(instancePipelineCount))
                 if (creator != null) conditions.add(CREATOR.eq(creator))
                 if (updater != null) conditions.add(UPDATER.eq(updater))
-                if (!filterTemplateIds.isNullOrEmpty()) conditions.add(ID.`in`(filterTemplateIds))
+                when {
+                    filterTemplateIds != null && filterTemplateIds!!.isEmpty() -> {
+                        conditions.add(ID.isNull)
+                    }
+
+                    filterTemplateIds != null -> {
+                        conditions.add(ID.`in`(filterTemplateIds))
+                    }
+                }
                 if (latestVersionStatus != null) conditions.add(LATEST_VERSION_STATUS.eq(latestVersionStatus!!.name))
                 if (upgradeStrategy != null) conditions.add(UPGRADE_STRATEGY.eq(upgradeStrategy!!.name))
                 conditions
