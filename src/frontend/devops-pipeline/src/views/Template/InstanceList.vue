@@ -246,6 +246,7 @@
         SET_INSTANCE_LIST,
         TEMPLATE_INSTANCE_PIPELINE_STATUS
     } from '@/store/modules/templates/constants'
+    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -287,7 +288,14 @@
                 theme: 'primary',
                 size: 'normal',
                 handler: () => createInstance(templateId.value, 'create'),
-                disabled: !pipelineInfo.value?.permissions?.canEdit,
+                hasPermission: !pipelineInfo.value?.permissions?.canEdit,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: templateId.value,
+                    action: TEMPLATE_RESOURCE_ACTION.EDIT
+                },
                 text: t('template.addInstance')
             }
         ]
