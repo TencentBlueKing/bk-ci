@@ -160,7 +160,7 @@
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { deepCopy } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import { mapGetters, mapActions } from 'vuex'
 
     const defaultSuc = {
         types: [],
@@ -249,6 +249,9 @@
             }
         },
         computed: {
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
             slideTitle () {
                 const actionType = this.editIndex > -1 ? this.$t('newui.editNotice') : this.$t('newui.addNotice')
                 const targetType = this.editType === 'failSubscriptionList' ? this.$t('settings.whenFail') : this.$t('settings.whenSuc')
@@ -290,6 +293,9 @@
                     this.sliderEditItem = deepCopy(this[type][index])
                 } else {
                     this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? defaultFail : defaultSuc)
+                    if (this.isTemplate) {
+                        this.sliderEditItem.detailFlag = true
+                    }
                 }
             },
             handleSaveNotify () {
