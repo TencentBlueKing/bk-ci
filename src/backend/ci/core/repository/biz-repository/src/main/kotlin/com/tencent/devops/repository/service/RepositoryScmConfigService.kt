@@ -164,6 +164,15 @@ class RepositoryScmConfigService @Autowired constructor(
                 request = request,
                 oldProviderProperties = scmConfig.providerProps
             )
+            // 如果状态一开始是部署中,clientId开始为空,修改后client有值,则将状态改成成功
+            val status = if (scmConfig.status == ScmConfigStatus.DEPLOYING &&
+                scmConfig.providerProps.oauth2ClientProperties?.clientId.isNullOrEmpty() &&
+                !request.props.clientId.isNullOrEmpty()
+            ) {
+                ScmConfigStatus.SUCCESS
+            } else {
+                scmConfig.status
+            }
             val newScmConfig = scmConfig.copy(
                 scmCode = scmCode,
                 name = name,
@@ -174,6 +183,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 credentialTypeList = request.credentialTypeList,
                 oauthType = oauthType,
                 oauthScmCode = oauthScmCode,
+                status = status,
                 mergeEnabled = mergeEnabled,
                 pacEnabled = pacEnabled,
                 webhookEnabled = webhookEnabled,
