@@ -228,9 +228,7 @@
         </div>
         <empty-tips
             v-else
-            :title="emptyTipsConfig.title"
-            :desc="emptyTipsConfig.desc"
-            :btns="emptyTipsConfig.btns"
+            v-bind="emptyTipsConfig"
         >
         </empty-tips>
     </div>
