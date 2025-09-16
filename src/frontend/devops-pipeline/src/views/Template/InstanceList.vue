@@ -261,19 +261,7 @@
         count: 0,
         limit: 10
     })
-
-    const emptyTipsConfig = ref({
-        title: t('template.instanceEmptyTitle'),
-        desc: t('template.instanceEmptyDesc'),
-        btns: [
-            {
-                theme: 'primary',
-                size: 'normal',
-                handler: () => createInstance(templateId.value, 'create'),
-                text: t('template.addInstance')
-            }
-        ]
-    })
+    
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchValue.value.length))
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateId = computed(() => proxy.$route.params.templateId)
@@ -291,6 +279,19 @@
         const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
         return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
     })
+    const emptyTipsConfig = computed(() => ({
+        title: t('template.instanceEmptyTitle'),
+        desc: t('template.instanceEmptyDesc'),
+        btns: [
+            {
+                theme: 'primary',
+                size: 'normal',
+                handler: () => createInstance(templateId.value, 'create'),
+                disabled: pipelineInfo.value.permissions.canEdit,
+                text: t('template.addInstance')
+            }
+        ]
+    }))
     const tableHeight = ref('auto')
     const tableBox = ref(null)
     const searchList = computed(() => {
