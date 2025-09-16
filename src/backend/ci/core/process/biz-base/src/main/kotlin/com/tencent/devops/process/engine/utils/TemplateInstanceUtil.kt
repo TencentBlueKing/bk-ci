@@ -22,6 +22,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import org.slf4j.LoggerFactory
 
 /**
  *  模板实例工具类
@@ -214,6 +215,8 @@ object TemplateInstanceUtil {
             val templateVariable = templateVariableMap[templateParam.id]
 
             val pipelineParams = if (templateVariable != null) {
+                logger.info("template params:${templateParam.id}|${templateVariable.value}|" +
+                        "${templateVariable.value.javaClass}")
                 // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
                 val defaultValue = if (
                     templateParam.type == BuildFormPropertyType.BOOLEAN &&
@@ -334,4 +337,6 @@ object TemplateInstanceUtil {
         }
         return recommendedVersion.buildNo
     }
+
+    private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
 }

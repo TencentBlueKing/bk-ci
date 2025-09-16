@@ -168,7 +168,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         request.instanceReleaseInfos.forEach { instance ->
             if (instance.pipelineName.isBlank()) {
                 throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                     params = arrayOf(PipelineTemplateInstanceReleaseInfo::pipelineName.name)
                 )
             }
