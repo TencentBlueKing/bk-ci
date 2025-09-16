@@ -283,19 +283,19 @@
     const emptyTipsConfig = computed(() => ({
         title: t('template.instanceEmptyTitle'),
         desc: t('template.instanceEmptyDesc'),
+        hasPermission: pipelineInfo.value?.permissions?.canEdit,
+        disablePermissionApi: true,
+        permissionData: {
+            projectId: projectId.value,
+            resourceType: RESOURCE_TYPE.TEMPLATE,
+            resourceCode: templateId.value,
+            action: TEMPLATE_RESOURCE_ACTION.EDIT
+        },
         btns: [
             {
                 theme: 'primary',
                 size: 'normal',
                 handler: () => createInstance(templateId.value, 'create'),
-                hasPermission: pipelineInfo.value?.permissions?.canEdit,
-                disablePermissionApi: true,
-                permissionData: {
-                    projectId: projectId.value,
-                    resourceType: RESOURCE_TYPE.TEMPLATE,
-                    resourceCode: templateId.value,
-                    action: TEMPLATE_RESOURCE_ACTION.EDIT
-                },
                 text: t('template.addInstance')
             }
         ]
