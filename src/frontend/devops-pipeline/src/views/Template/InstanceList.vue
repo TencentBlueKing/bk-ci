@@ -288,7 +288,7 @@
                 theme: 'primary',
                 size: 'normal',
                 handler: () => createInstance(templateId.value, 'create'),
-                hasPermission: !pipelineInfo.value?.permissions?.canEdit,
+                hasPermission: pipelineInfo.value?.permissions?.canEdit,
                 disablePermissionApi: true,
                 permissionData: {
                     projectId: projectId.value,
