@@ -131,11 +131,11 @@
                                 grayDesc: t(`template.${upgradeStrategy}-upgradeStrategyDesc`),
                                 handler: showUpgradeStrategyDialog
                             },
-                            {
+                            ...(upgradeStrategy === STRATEGY_ENUM.AUTO ? [{
                                 key: 'settingSyncStrategy',
                                 value: t(`template.${settingSyncStrategy}-SYNC`),
                                 grayDesc: t('template.syncSettingStrategyDesc')
-                            }
+                            }] : [])
                         ]
                     }
                 ]
