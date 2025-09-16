@@ -225,7 +225,7 @@
             }
         },
         {
-            text: t('delete'),
+            text: pipelineInfo.value.srcTemplateId ? t('uninstall') : t('delete'),
             handler: () => deleteTemplate({
                 ...pipelineInfo.value,
                 ...pipelineInfo.value?.permissions

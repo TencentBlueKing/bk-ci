@@ -23,7 +23,7 @@
         </bk-select>
         <template v-if="templateRefTypeById">
             <span class="selector-prepend">
-                {{ isInstanceCreateType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
+                {{ !isInstanceUpgradeType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
             </span>
             <VersionSelector
                 v-if="templateRefTypeById"
@@ -108,14 +108,14 @@
                         <ul>
                             <li>
                                 {{
-                                    isInstanceCreateType
+                                    !isInstanceUpgradeType
                                         ? $t('template.applyTemplateSettingTips.create.tips1')
                                         : $t('template.applyTemplateSettingTips.update.tips1')
                                 }}
                             </li>
                             <li>
                                 {{
-                                    isInstanceCreateType
+                                    !isInstanceUpgradeType
                                         ? $t('template.applyTemplateSettingTips.create.tips2')
                                         : $t('template.applyTemplateSettingTips.update.tips2')
                                 }}
@@ -156,9 +156,6 @@
     } from '@/store/modules/templates/constants'
     import { debounce } from '@/utils/util'
     import { computed, defineProps, onMounted, ref, watch } from 'vue'
-    defineProps({
-        isInstanceCreateType: Boolean
-    })
     const isShowPreview = ref(false)
     const templatePipeline = ref({})
     const errorRefMsg = ref('')
@@ -168,6 +165,7 @@
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
+    const isInstanceUpgradeType = computed(() => proxy.$route.params?.type === 'upgrade')
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef?.value ?? '')

@@ -161,7 +161,8 @@ export const actions = {
             const pipelineTemplateMap = new Map()
             for (const key in (response?.data?.templates ?? {})) {
                 const item = response.data.templates[key]
-                pipelineTemplateMap.set(key, {
+                const id = item.srcTemplateId || key
+                pipelineTemplateMap.set(id, {
                     ...item,
                     isStore: item.templateType === 'CONSTRAINT'
                 })

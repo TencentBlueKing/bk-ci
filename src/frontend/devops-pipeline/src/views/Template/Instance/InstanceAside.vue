@@ -119,6 +119,7 @@
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     const props = defineProps({
@@ -164,6 +165,10 @@
         }
     })
     async function checkPipelineName (val) {
+        if (!val) {
+            isErrorName.value = false
+            return
+        }
         if (renderInstanceList.value.find(i => i.pipelineName === val)) {
             isErrorName.value = true
             return
@@ -289,6 +294,9 @@
                     isFollowTemplate: false
                 }
             }),
+            overrideTemplateField: {
+                paramIds: params.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(i => i.id)
+            },
             ...(buildNo ? {
                 buildNo: {
                     ...buildNo,
@@ -306,7 +314,7 @@
             nameInputRef.value && nameInputRef.value[0]?.focus()
         }, 3000)
     }
-    function init () {
+    async function init () {
         if (!props.isInstanceCreateType && !instanceList.value.length) {
             proxy.$router.push({
                 name: 'TemplateOverview',
@@ -318,7 +326,7 @@
             return
         }
         if (!props.isInstanceCreateType) {
-            fetchPipelinesDetails()
+            await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })

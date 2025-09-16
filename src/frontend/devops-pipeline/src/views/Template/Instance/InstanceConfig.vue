@@ -2,7 +2,8 @@
     <section
         :class="{
             'instance-config-wrapper': true,
-            'has-ref-tips': !templateRefTypeById
+            'has-ref-tips': !templateRefTypeById,
+            'is-create': isInstanceCreateType
         }"
         v-bkloading="{ isLoading: isLoading || instancePageLoading }"
     >
@@ -97,6 +98,7 @@
                                 :param-values="paramsValues"
                                 :handle-param-change="handleParamChange"
                                 :params="paramsList"
+                                :is-exec-preview="false"
                                 sort-category
                                 show-operate-btn
                                 :hide-deleted="hideDeleted"
@@ -127,6 +129,7 @@
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
                                                 is-instance
+                                                :is-init-instance="isInstanceCreateType"
                                                 :is-follow-template="curInstance.buildNo?.isFollowTemplate"
                                                 :reset-build-no="curInstance.resetBuildNo"
                                                 :version-param-values="versionParamValues"
@@ -282,7 +285,7 @@
             </div>
         </section>
         <footer
-            v-if="!isLoading && !instancePageLoading"
+            v-if="!isLoading && !instancePageLoading && !isInstanceCreateType"
             class="config-footer"
         >
             <bk-button
@@ -492,8 +495,8 @@
         }
     })
     function compareParams (instance, template) {
-        const instanceParams = instance?.param
-        const templateParams = template?.params
+        const instanceParams = instance?.param ?? []
+        const templateParams = template?.params ?? []
         const instanceBuildNo = instance?.buildNo
         const templateBuildNo = template?.buildNo
 
@@ -550,10 +553,10 @@
     }
 
     function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
-        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.id, item]))
-        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.id, item]))
+        const instanceTriggerMap = new Map(instanceTriggerConfigs?.map(item => [item.id, item]))
+        const templateTriggerMap = new Map(templateTriggerConfigs?.map(item => [item.id, item]))
 
-        const result = templateTriggerConfigs.map(item => {
+        const result = templateTriggerConfigs?.map(item => {
             if (!instanceTriggerMap.has(item.id)) {
                 return { ...item, isNew: true }
             }
@@ -561,7 +564,7 @@
             return  instanceTrigger.isFollowTemplate ? item : instanceTrigger
         })
 
-        instanceTriggerConfigs.forEach(item => {
+        instanceTriggerConfigs?.forEach(item => {
             if (!templateTriggerMap.has(item.id)) {
                 result.push({ ...item, isDelete: true })
             }
@@ -661,8 +664,10 @@
                 ...curInstance.value,
                 buildNo: {
                     ...curInstance.value?.buildNo,
-                    [name]: value
-                }
+                    [name]: value,
+                    currentBuildNo: value
+                },
+                resetBuildNo: true
             }
         })
     }
@@ -795,7 +800,8 @@
                         param: curInstance.value?.param.map(p => ({
                             ...p,
                             defaultValue: p.id === id && !p.isFollowTemplate ? temDefaultValue : p.defaultValue,
-                            isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate
+                            isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate,
+                            isChange: false
                         }))
                     }
                 })
@@ -840,6 +846,9 @@
         height: calc(100% - 148px);
         &.has-ref-tips {
             height: calc(100% - 188px);
+        }
+        &.is-create {
+            height: calc(100% - 98px);
         }
         .doc-btn {
             color: #3a84ff;

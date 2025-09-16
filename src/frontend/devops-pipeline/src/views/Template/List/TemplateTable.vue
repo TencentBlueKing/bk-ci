@@ -268,7 +268,7 @@
             name: 'instanceEntry',
             params: {
                 templateId: row.id,
-                version: row.releaseVersion,
+                version: row.releasedVersion,
                 type: 'create'
             }
         })

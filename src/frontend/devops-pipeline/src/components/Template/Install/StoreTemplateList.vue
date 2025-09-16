@@ -14,7 +14,8 @@
             <li
                 v-for="(temp, tIndex) in storeTemplate"
                 :class="{
-                    'active': activeTempIndex === tIndex
+                    'active': activeTempIndex === tIndex,
+                    'disabled': temp.installed
                 }"
                 :key="temp.name"
                 @click="selectTemp(temp, tIndex)"
@@ -51,6 +52,13 @@
                     </p>
                 </div>
                 <div
+                    v-if="temp.installed"
+                    class="is-installed"
+                >
+                    {{ $t('newlist.installed') }}
+                </div>
+                <div
+                    v-else
                     class="pipeline-template-status"
                 >
                     <bk-button
@@ -106,9 +114,12 @@
                 excludeProjectCode: projectId.value
             }
             const res = await proxy.$store.dispatch('common/requestStoreTemplate', param)
-            page.value++
             storeTemplateNum.value = res.data.count || 0
             storeTemplate.value.push(...res.data.records)
+            if (page.value === 1) {
+                activeTempIndex.value = storeTemplate.value.findIndex(temp => !temp.installed)
+            }
+            page.value++
             loadEnd.value = res.data.count <= storeTemplate.value?.length
             emit('change', activeTemp.value)
         } catch (e) {
@@ -128,7 +139,7 @@
         requestMarkTemplates()
     }
     function selectTemp (temp, index) {
-        if (index === activeTempIndex.value) return
+        if (index === activeTempIndex.value || temp.installed) return
         activeTempIndex.value = index
         emit('change', activeTemp.value)
     }
@@ -208,6 +219,9 @@
                         }
                     }
                 }
+                &.disabled {
+                    cursor: not-allowed;
+                }
                 .pipeline-template-logo {
                     display: flex;
                     align-items: center;
@@ -242,6 +256,10 @@
                     font-size: 12px;
                     color: #979BA5;
                     align-self: center;
+                }
+                .is-installed {
+                    line-height: 50px;
+                    font-size: 12px;
                 }
             }
         }

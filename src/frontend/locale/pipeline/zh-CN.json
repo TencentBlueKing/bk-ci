@@ -657,7 +657,9 @@
     "constraintMode": "流水线使用了约束模式的模板",
     "notTemplate": "模板不存在",
     "pleaseMergePullUrl": "请到代码库处理合并请求，",
-    "toHandle": "去处理"
+    "toHandle": "去处理",
+    "upgradeInstance": "升级实例",
+    "createInstance": "新增实例"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
