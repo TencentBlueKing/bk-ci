@@ -399,6 +399,13 @@ class PipelineTemplateInstanceService @Autowired constructor(
 
         val results = templatePipelineRecords.map { record ->
             val yamlPipelineInfo = yamlPipelineMap[record.pipelineId]
+            val finalStatus = when {
+                record.status == null -> TemplatePipelineStatus.UPDATED
+                record.status == TemplatePipelineStatus.UPDATED &&
+                        record.version != record.releasedVersion -> TemplatePipelineStatus.PENDING_UPDATE
+
+                else -> record.status
+            }
             PipelineTemplateRelatedResp(
                 templateId = record.templateId,
                 pipelineId = record.pipelineId,
@@ -408,7 +415,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 fromTemplateVersion = record.version,
                 fromTemplateVersionName = record.versionName,
                 canEdit = canEditMap.contains(record.pipelineId),
-                status = record.status,
+                status = finalStatus,
                 enabledPac = yamlPipelineInfo != null,
                 repoHashId = yamlPipelineInfo?.repoHashId,
                 repoAliasName = yamlPipelineInfo?.repoHashId?.let { repoAliasNameMap[it] },

@@ -5,6 +5,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
@@ -213,9 +214,18 @@ object TemplateInstanceUtil {
             val templateVariable = templateVariableMap[templateParam.id]
 
             val pipelineParams = if (templateVariable != null) {
+                // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
+                val defaultValue = if (
+                    templateParam.type == BuildFormPropertyType.BOOLEAN &&
+                    templateVariable.value is String
+                ) {
+                    (templateParam.value as String?)?.toBoolean() ?: false
+                } else {
+                    templateVariable.value
+                }
                 // templateVariable 会覆盖模板的默认值
                 templateParam.copy(
-                    defaultValue = templateVariable.value,
+                    defaultValue = defaultValue,
                     required = templateVariable.allowModifyAtStartup ?: templateParam.required
                 )
             } else {
