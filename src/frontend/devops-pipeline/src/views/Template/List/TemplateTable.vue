@@ -98,12 +98,12 @@
                         @click="goInstanceEntry(row)"
                         v-perm="{
                             hasPermission: row.canView,
-                            disablePermissionApi: false,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: RESOURCE_TYPE.PIPELINE,
-                                resourceCode: projectId,
-                                action: RESOURCE_ACTION.CREATE
+                                resourceType: RESOURCE_TYPE.TEMPLATE,
+                                resourceCode: row.id,
+                                action: TEMPLATE_RESOURCE_ACTION.VIEW
                             }
                         }"
                     >
@@ -146,8 +146,8 @@
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_ACTION,
-        RESOURCE_TYPE
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { computed, defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'

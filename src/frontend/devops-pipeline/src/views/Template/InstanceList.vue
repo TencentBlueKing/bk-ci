@@ -224,9 +224,9 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
-                                        resourceType: RESOURCE_TYPE.PROJECT,
-                                        resourceCode: projectId,
-                                        action: RESOURCE_ACTION.CREATE
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
+                                        resourceCode: row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
                                     }
                                 }"
                             >
