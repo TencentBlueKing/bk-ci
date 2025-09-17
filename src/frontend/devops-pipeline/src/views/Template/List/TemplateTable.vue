@@ -97,8 +97,8 @@
                         :disabled="row.latestVersionStatus === 'COMMITTING'"
                         @click="goInstanceEntry(row)"
                         v-perm="{
-                            hasPermission: hasCreatePermission,
-                            disablePermissionApi: true,
+                            hasPermission: row.canView,
+                            disablePermissionApi: false,
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: RESOURCE_TYPE.PIPELINE,
@@ -171,10 +171,6 @@
                 count: 6,
                 limit: 20
             })
-        },
-        hasCreatePermission: {
-            type: Boolean,
-            default: false
         },
         maxHeight: {
             type: [Number, String],
