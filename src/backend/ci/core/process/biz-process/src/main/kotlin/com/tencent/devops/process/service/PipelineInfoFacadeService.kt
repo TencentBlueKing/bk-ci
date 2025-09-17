@@ -390,12 +390,13 @@ class PipelineInfoFacadeService @Autowired constructor(
         // 获取系统临时目录
         val systemTempDir = System.getProperty("java.io.tmpdir")
         val tmpdir = File(systemTempDir, dir)
-        if(!tmpdir.exists()) {
+        if (!tmpdir.exists()) {
             tmpdir.mkdirs()
         }
-        val file = File.createTempFile(fileName, suffix, tmpdir)
+        val file = File(tmpdir, fileName + suffix)
 
         try {
+            file.createNewFile()
             // 将内容写入文件
             file.writeText(content, Charsets.UTF_8)
             logger.info("Successfully exported content to temp file: ${file.absolutePath}")
