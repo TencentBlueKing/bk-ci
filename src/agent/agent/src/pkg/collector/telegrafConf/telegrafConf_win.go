@@ -109,17 +109,7 @@ const TelegrafConf = `
 [[inputs.mem]]
 [[inputs.disk]]
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
-[[inputs.exec]]
-  commands = [
-    '''powershell -Command "
-    $cpu = Get-CimInstance -ClassName Win32_ComputerSystem
-    $cores = (Get-CimInstance -ClassName Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
-    $logical = (Get-CimInstance -ClassName Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
-    Write-Output \"load,n_cpus=${cores}i,logical_cores=${logical}i\"
-    "'''
-  ]
-  data_format = "influx"
-  timeout = "30s"
+[[inputs.system]]
 
 [[processors.rename]]
   # cpu
@@ -196,6 +186,10 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "tcp_syn_sent"
     dest = "cur_tcp_syn_sent"
+  # load
+  [[processors.rename.replace]]
+    measurement = "system"
+    dest = "load"
 
 # disk的指标同名但改完名不同单独拿出来    
 [[processors.rename]]
