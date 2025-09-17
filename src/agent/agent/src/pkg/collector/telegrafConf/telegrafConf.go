@@ -51,29 +51,6 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
-{{ if eq .ProjectType "stream" }}
-[[outputs.influxdb]]
-  urls = ["{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-  database = "agentMetrix"
-  skip_database_creation = true
-  {{.TlsCa}}
-
-[[inputs.cpu]]
-  percpu = true
-  totalcpu = true
-  collect_cpu_time = false
-  report_active = false
-[[inputs.disk]]
-  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
-[[inputs.diskio]]
-[[inputs.kernel]]
-[[inputs.mem]]
-[[inputs.processes]]
-# [[inputs.swap]]
-[[inputs.system]]
-[[inputs.net]]
-
-{{ else }}
 
 [[outputs.http]]
   url = "{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
@@ -201,6 +178,4 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "used_percent"
     dest = "in_use"
-
-{{ end }}
 `
