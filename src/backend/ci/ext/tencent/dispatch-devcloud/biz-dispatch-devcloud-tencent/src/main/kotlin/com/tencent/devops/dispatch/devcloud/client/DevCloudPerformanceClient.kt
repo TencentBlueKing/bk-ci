@@ -7,7 +7,11 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.devcloud.pojo.devcloud.*
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.ListPerformanceRsp
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.ListPerformancesReq
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.PerformanceData
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.PerformanceRsp
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.RsType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
@@ -17,6 +21,11 @@ import java.net.SocketTimeoutException
 @Component
 class DevCloudPerformanceClient {
     private val logger = LoggerFactory.getLogger(DevCloudPerformanceClient::class.java)
+
+    companion object {
+        private const val MODEL_LIST_API_PATH = "/api/model/list"
+        private const val PERFORMANCE_INFO_API_PATH = "/api/model/info"
+    }
 
     fun getPerformanceList(
         userId: String,
@@ -37,8 +46,7 @@ class DevCloudPerformanceClient {
                 t2 = pipelineId,
                 rsType = RsType.DOCKER.value
             )
-            val url = "/api/model/list"
-            val request = getClientProxy().baseRequest(userId, url, projectId, pipelineId)
+            val request = getClientProxy().baseRequest(userId, MODEL_LIST_API_PATH, projectId, pipelineId)
                 .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
                 .build()
 
@@ -54,6 +62,31 @@ class DevCloudPerformanceClient {
                 
                 listPerformanceRsp.data
             }
+        }
+    }
+
+    fun getPerformanceInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        uid: String
+    ): PerformanceRsp {
+        val request = getClientProxy().baseRequest(userId, PERFORMANCE_INFO_API_PATH, projectId, pipelineId)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body?.string() ?: ""
+            logger.info("$userId|$projectId|$pipelineId getPerformanceInfo response: $responseContent")
+            if (!response.isSuccessful) {
+                throw BuildFailureException(
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                    "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()}（Fail to getWebsocket, " +
+                            "http response code: ${response.code}"
+                )
+            }
+            return JsonUtil.to(responseContent, PerformanceRsp::class.java)
         }
     }
 
@@ -114,7 +147,8 @@ class DevCloudPerformanceClient {
      */
     private fun validateHttpResponse(response: okhttp3.Response, logPrefix: String, operation: String) {
         if (!response.isSuccessful) {
-            val errorMessage = "${ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.getErrorMessage()} Failed to $operation, code: ${response.code}"
+            val errorMessage = "${ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.getErrorMessage()} Failed to $operation," +
+                    " code: ${response.code}"
             logger.error("$logPrefix HTTP request failed: $errorMessage")
             throw BuildFailureException(
                 ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.errorType,
@@ -130,7 +164,8 @@ class DevCloudPerformanceClient {
      */
     private fun validateBusinessResponse(actionCode: Int, logPrefix: String, operation: String) {
         if (actionCode != 200) {
-            val errorMessage = "${ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.getErrorMessage()} Failed to $operation, code: $actionCode"
+            val errorMessage = "${ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.getErrorMessage()} Failed to $operation, " +
+                    "code: $actionCode"
             logger.error("$logPrefix Business response failed: $errorMessage")
             throw BuildFailureException(
                 ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.errorType,
@@ -138,32 +173,6 @@ class DevCloudPerformanceClient {
                 ErrorCodeEnum.PERFORMANCE_INTERFACE_ERROR.getErrorMessage(),
                 errorMessage
             )
-        }
-    }
-
-    fun getPerformanceInfo(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        uid: String
-    ): PerformanceRsp {
-        val url = "/api/model/info"
-        val request = getClientProxy().baseRequest(userId, url, projectId, pipelineId)
-            .get()
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body?.string() ?: ""
-            logger.info("$userId|$projectId|$pipelineId getPerformanceInfo response: $responseContent")
-            if (!response.isSuccessful) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
-                    "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()}（Fail to getWebsocket, " +
-                        "http response code: ${response.code}"
-                )
-            }
-            return JsonUtil.to(responseContent, PerformanceRsp::class.java)
         }
     }
 

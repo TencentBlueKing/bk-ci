@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.dispatch.devcloud.client.DevCloudPerformanceClient
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.PerformanceData
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsV2
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -23,6 +24,14 @@ class DcPerformanceConfigServiceV2 constructor(
 
     fun getDcPerformanceConfigList(userId: String, projectId: String, pipelineId: String): UserPerformanceOptionsV2 {
         val performanceDataList = devCloudPerformanceClient.getPerformanceList(userId, projectId, pipelineId)
+        if (performanceDataList.isEmpty()) {
+            return UserPerformanceOptionsV2("Standard-S", listOf(PerformanceData(
+                uid = "Standard-S",
+                name = "标准型（16核/32G/100G），适用于小型项目编译场景",
+                desc = "标准型（16核/32G/100G），适用于小型项目编译场景"
+            )))
+        }
+
         return UserPerformanceOptionsV2(performanceDataList.first().uid, performanceDataList)
     }
 }

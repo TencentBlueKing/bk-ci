@@ -71,7 +71,8 @@ data class PublicDevCloudDispathcType(
     // 商店镜像名称
     override var imageName: String? = ""
 ) : StoreDispatchType(if (image.isNullOrBlank())
-    imageCode else image, DispatchRouteKeySuffix.DEVCLOUD, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    imageCode else image, DispatchRouteKeySuffix.DEVCLOUD, imageType, credentialId, credentialProject, imageCode,
+    imageVersion, imageName) {
     override fun cleanDataBeforeSave() {
         this.image = this.image?.trim()
         this.credentialId = this.credentialId?.trim()

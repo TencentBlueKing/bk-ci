@@ -101,6 +101,10 @@ class DcContainerPrepareHandler @Autowired constructor(
             "<a target='_blank' href='https://iwiki.woa.com/pages/viewpage.action?pageId=218952404'>" +
                 "【DevCloud容器问题FAQ】</a>"
         private const val BUILD_POOL_SIZE = 100000 // 单个流水线可同时执行的任务数量
+
+        private const val HIGH_IO_M = "HighIO-M"
+        private const val HIGH_IO_L = "HighIO-L"
+        private const val STANDARD_S = "Standard-S"
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
@@ -272,15 +276,19 @@ class DcContainerPrepareHandler @Autowired constructor(
             handlerContext.disk = disk
         }
 
+        // 根据performanceConfigId设置性能配置类型标识
+        // "2" → HighIO-M (中等高性能配置)
+        // "10000" → HighIO-L (高等高性能配置)
+        // 其他情况(包括null/空字符串/"0"等) → Standard-S (标准配置)
         when (performanceConfigId) {
             "2" -> {
-                handlerContext.performanceUid = "HighIO-M"
+                handlerContext.performanceUid = HIGH_IO_M
             }
             "10000" -> {
-                handlerContext.performanceUid = "HighIO-L"
+                handlerContext.performanceUid = HIGH_IO_L
             }
             else -> {
-                handlerContext.performanceUid = "Standard-S"
+                handlerContext.performanceUid = STANDARD_S
             }
         }
     }
