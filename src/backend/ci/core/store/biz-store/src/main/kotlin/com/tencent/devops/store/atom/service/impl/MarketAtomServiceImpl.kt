@@ -677,16 +677,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
         }
-        val versionLogRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, record.id)
-        val releaseType = if (record.atomStatus == AtomStatusEnum.INIT.status.toByte()) {
-            null
+
+        val isAtomInitStatus = record.atomStatus == AtomStatusEnum.INIT.status.toByte()
+
+        val (releaseType, lastVersionContent) = if (isAtomInitStatus) {
+            Pair(null, null)
         } else {
-            versionLogRecord.releaseType
-        }
-        val lastVersionContent = if (record.atomStatus == AtomStatusEnum.INIT.status.toByte()) {
-            null
-        } else {
-            versionLogRecord.content
+            val log = marketAtomVersionLogDao.getAtomVersion(dslContext, record.id)
+            Pair(log.releaseType, log.content)
         }
         val showReleaseType = if (releaseType != null) {
             ReleaseTypeEnum.getReleaseTypeObj(releaseType.toInt())
