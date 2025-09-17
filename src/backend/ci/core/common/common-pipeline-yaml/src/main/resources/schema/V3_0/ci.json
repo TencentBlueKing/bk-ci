@@ -1892,6 +1892,8 @@
                           "type" : "number"
                         }, {
                           "type" : "boolean"
+                        }, {
+                          "type" : "array"
                         } ]
                       },
                       "allow-modify-at-startup" : {
