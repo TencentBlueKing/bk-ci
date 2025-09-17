@@ -344,7 +344,7 @@ interface ServicePipelineVersionResource {
 
     @Operation(summary = "导出项目下所有用户有编辑权限的流水线")
     @GET
-    @Path("{pipelineId}/projects/{projectId}/export_all")
+    @Path("/projects/{projectId}/export_all")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipelineAll(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
