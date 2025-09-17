@@ -99,9 +99,9 @@
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: RESOURCE_TYPE.PIPELINE,
+                                resourceType: RESOURCE_TYPE.TEMPLATE,
                                 resourceCode: projectId,
-                                action: RESOURCE_ACTION.CREATE
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
                             }
                         }"
                     >
@@ -144,8 +144,8 @@
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_ACTION,
-        RESOURCE_TYPE
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { computed, defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'

@@ -97,9 +97,9 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType,
-                        resourceCode: uniqueId,
-                        action: resourceEditAction
+                        resourceType: RESOURCE_TYPE.PROJECT,
+                        resourceCode: projectId,
+                        action: RESOURCE_ACTION.CREATE
                     }
                 }"
                 @click="handleToInstanceEntry"
@@ -148,11 +148,12 @@
     import InstanceReleaseBtn from '@/components/Template/InstanceReleaseBtn.vue'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '../../utils/permission'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
@@ -173,6 +174,8 @@
         },
         data () {
             return {
+                RESOURCE_TYPE,
+                RESOURCE_ACTION,
                 showVersionSideslider: false,
                 isPipelineIdChanged: false
             }
@@ -273,9 +276,6 @@
                         content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
-            },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
             },
             editRouteName () {
                 return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
