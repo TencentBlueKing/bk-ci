@@ -366,6 +366,7 @@
                     sourceTooltip: getFlagTooltips(item),
                     overviewParams: {
                         templateId: item.id,
+                        canView: item.canView,
                         version: item.releasedVersion
                     },
                     templateActions: [
