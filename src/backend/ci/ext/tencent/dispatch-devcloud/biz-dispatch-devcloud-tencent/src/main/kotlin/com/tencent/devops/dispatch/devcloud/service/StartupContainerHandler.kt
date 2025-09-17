@@ -154,7 +154,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                 "pipelineId" to pipelineId,
                 "buildId" to buildId,
                 "vmSeqId" to vmSeqId,
-                "model" to performanceUid.ifBlank { "basic" }
+                "model" to performanceUid.ifBlank { "Standard-S" }
             )
 
             // 针对fuse插件优化
