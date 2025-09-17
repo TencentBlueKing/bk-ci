@@ -389,7 +389,11 @@ class PipelineInfoFacadeService @Autowired constructor(
     private fun exportStringToTempFile(content: String, dir: String, fileName: String, suffix: String): File {
         // 获取系统临时目录
         val systemTempDir = System.getProperty("java.io.tmpdir")
-        val file = File.createTempFile(fileName, suffix, File(systemTempDir, dir))
+        val tmpdir = File(systemTempDir, dir)
+        if(!tmpdir.exists()) {
+            tmpdir.mkdirs()
+        }
+        val file = File.createTempFile(fileName, suffix, tmpdir)
 
         try {
             // 将内容写入文件
