@@ -338,7 +338,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         logger.info("exportPipelineAll completed |$projectId|$userId|exported ${exportPipelines.size} pipelines")
 
         watcher.start("zip_pipelines")
-        val (zipFileName, fileStream) = createZipFile(fileList, "pipelines_export_${projectId}_${pageSize}.zip")
+        val (zipFileName, fileStream) = createZipFile(fileList, "pipelines_export_${projectId}_$pageSize.zip")
 
         watcher.stop()
         LogUtils.printCostTimeWE(watcher)
@@ -407,10 +407,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 file.delete()
             }
         }
-
         return file
     }
-
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {
         val permissionCheck = pipelinePermissionService.checkPipelinePermission(
