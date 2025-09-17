@@ -377,7 +377,7 @@
                             disablePermissionApi: true,
                             disable: item.latestVersionStatus !== 'RELEASED',
                             isShow: true,
-                            permissionData: addPerm.value.permissionData
+                            permissionData: editPerm
                         },
                         {
                             text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
