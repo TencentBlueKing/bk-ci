@@ -221,7 +221,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         groupName: String,
         page: Int,
         pageSize: Int
-    ): Result<List<PublicVarReleaseDO>> {
+    ): Result<Page<PublicVarReleaseDO>> {
         return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
             projectId = projectId,
             groupName = groupName,
