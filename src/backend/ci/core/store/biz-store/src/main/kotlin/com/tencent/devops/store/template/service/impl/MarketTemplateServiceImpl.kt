@@ -377,7 +377,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         score = statistic?.score
                             ?: 0.toDouble(),
                         summary = it[tTemplate.SUMMARY],
-                        flag = canInstall,
+                        flag = if (installed == true) true else canInstall,
                         publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean,
                         buildLessRunFlag = false,
                         docsLink = "",
