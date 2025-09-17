@@ -90,7 +90,6 @@
     import UseInstance from '@/hook/useInstance'
     import useTemplateActions from '@/hook/useTemplateActions'
     import {
-        RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { getTemplateCacheViewId } from '@/utils/util'
@@ -124,6 +123,7 @@
     const activeChild = computed(() => getNavComponent(activeMenuItem.value))
     const canEdit = computed(() => pipelineInfo.value?.permissions?.canEdit ?? false)
     const canDelete = computed(() => pipelineInfo.value?.permissions?.canDelete ?? false)
+    const canManage = computed(() => pipelineInfo.value?.permissions?.canManage ?? false)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
     const isFromStoreTemplate = computed(() => !!pipelineInfo.value?.pipelineTemplateMarketRelatedInfo)
@@ -199,19 +199,21 @@
     ])
     const templateActions = computed(() => {
         const editPerm = {
-            projectId: projectId.value,
-            resourceType: RESOURCE_TYPE.TEMPLATE,
-            resourceCode: templateId,
-            action: TEMPLATE_RESOURCE_ACTION.EDIT
+            hasPermission: canEdit.value,
+            disablePermissionApi: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: RESOURCE_TYPE.TEMPLATE,
+                resourceCode: templateId.value,
+                action: TEMPLATE_RESOURCE_ACTION.EDIT
+            }
         }
         return [
             {
                 text: t('template.export'), // 导出
                 handler: () => exportTemplate(pipelineInfo.value),
-                hasPermission: canEdit.value,
-                disablePermissionApi: true,
                 isShow: true,
-                permissionData: editPerm
+                ...editPerm
             },
             {
                 text: t('copy'), // 复制
@@ -219,14 +221,14 @@
                     ...pipelineInfo.value,
                     ...pipelineInfo.value?.permissions
                 }),
-                hasPermission: canEdit.value,
                 disablePermissionApi: true,
+                hasPermission: canManage.value,
                 isShow: true,
                 permissionData: {
                     projectId: projectId.value,
                     resourceType: RESOURCE_TYPE.TEMPLATE,
                     resourceCode: projectId.value,
-                    action: RESOURCE_ACTION.CREATE
+                    action: TEMPLATE_RESOURCE_ACTION.CREATE
                 }
             },
             {
@@ -235,11 +237,9 @@
                     ...pipelineInfo.value,
                     ...pipelineInfo.value?.permissions
                 }, storeStatus.value),
-                hasPermission: canEdit.value,
-                disablePermissionApi: true,
                 disable: (pipelineInfo.value.storeFlag && !pipelineInfo.value.publishFlag) || pipelineInfo.value.latestVersionStatus === 'COMMITTING',
                 isShow: pipelineInfo.value.mode === 'CUSTOMIZE',
-                permissionData: editPerm
+                ...editPerm
             },
             {
                 text: t('template.convertToCustom'),
@@ -247,10 +247,8 @@
                     ...pipelineInfo.value,
                     ...pipelineInfo.value?.permissions
                 }, goTemplateManageList),
-                hasPermission: canEdit.value,
-                disablePermissionApi: true,
                 isShow: pipelineInfo.value.mode === 'CONSTRAINT',
-                permissionData: editPerm
+                ...editPerm
             },
             {
                 text: t('delete'),
@@ -258,10 +256,15 @@
                     ...pipelineInfo.value,
                     ...pipelineInfo.value?.permissions
                 }, goTemplateManageList),
+                isShow: true,
                 hasPermission: canDelete.value,
                 disablePermissionApi: true,
-                isShow: true,
-                permissionData: editPerm
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: templateId.value,
+                    action: TEMPLATE_RESOURCE_ACTION.DELETE
+                }
             }
         ]
     })

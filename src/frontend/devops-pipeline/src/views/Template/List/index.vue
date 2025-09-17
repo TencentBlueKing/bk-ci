@@ -5,32 +5,14 @@
                 <div class="search-group">
                     <bk-button
                         :theme="'primary'"
-                        v-perm="{
-                            hasPermission: hasCreatePermission,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE.TEMPLATE,
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
+                        v-perm="addPerm"
                         @click="handleShowCreateTemplateDialog"
                     >
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
                         class="ml10"
-                        v-perm="{
-                            hasPermission: hasCreatePermission,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE.TEMPLATE,
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
+                        v-perm="addPerm"
                         @click="handleShowInstallTemplateDialog"
                     >
                         {{ $t('template.installOrImportTemplate') }}
@@ -121,9 +103,8 @@
         TEMPLATE_VIEW_ID_MAP
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_ACTION,
         RESOURCE_TYPE,
-        TEMPLATE_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { isShallowEqual } from '@/utils/util'
@@ -228,6 +209,18 @@
         return acc
     }, {}))
     const filterTips = computed(() => filterData.value.map(item => item.name).join(' / '))
+    const addPerm = computed(() => {
+        return {
+            hasPermission: hasCreatePermission.value,
+            disablePermissionApi: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: RESOURCE_TYPE.TEMPLATE,
+                resourceCode: projectId.value,
+                action: TEMPLATE_RESOURCE_ACTION.CREATE
+            }
+        }
+    })
     const tableHeight = ref(null)
     const tableBox = ref(null)
 
@@ -383,11 +376,7 @@
                             disablePermissionApi: true,
                             disable: item.latestVersionStatus !== 'RELEASED',
                             isShow: true,
-                            permissionData: {
-                                ...editPerm,
-                                resourceCode: projectId.value,
-                                action: RESOURCE_ACTION.CREATE
-                            }
+                            permissionData: addPerm.value.permissionData
                         },
                         {
                             text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店

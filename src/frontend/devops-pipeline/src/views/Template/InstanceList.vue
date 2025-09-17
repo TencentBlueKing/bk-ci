@@ -199,7 +199,17 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!row.canEdit || !!row.pullRequestUrl"
+                                :disabled="!!row.pullRequestUrl"
+                                v-perm="{
+                                    hasPermission: row.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
+                                        resourceCode: row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
                                 @click="updateInstance(row)"
                             >
                                 {{ $t('template.updateInstance') }}
@@ -209,7 +219,16 @@
                                 theme="primary"
                                 text
                                 @click="copyAsTemplateInstance(row)"
-                                :disabled="!row.canEdit"
+                                v-perm="{
+                                    hasPermission: row.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: RESOURCE_TYPE.PROJECT,
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }"
                             >
                                 {{ $t('copy') }}
                             </bk-button>
@@ -244,7 +263,7 @@
         SET_INSTANCE_LIST,
         TEMPLATE_INSTANCE_PIPELINE_STATUS
     } from '@/store/modules/templates/constants'
-    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -278,6 +297,7 @@
         const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
         return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
     })
+    
     const emptyTipsConfig = computed(() => ({
         title: t('template.instanceEmptyTitle'),
         desc: t('template.instanceEmptyDesc'),
@@ -285,9 +305,9 @@
         disablePermissionApi: true,
         permissionData: {
             projectId: projectId.value,
-            resourceType: RESOURCE_TYPE.TEMPLATE,
-            resourceCode: templateId.value,
-            action: TEMPLATE_RESOURCE_ACTION.EDIT
+            resourceType: RESOURCE_TYPE.PROJECT,
+            resourceCode: projectId.value,
+            action: RESOURCE_ACTION.CREATE
         },
         btns: [
             {
