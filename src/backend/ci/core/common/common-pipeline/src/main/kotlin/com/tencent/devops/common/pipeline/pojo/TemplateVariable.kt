@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模版-模版参数")
@@ -40,7 +41,10 @@ data class TemplateVariable(
 ) {
     constructor(buildFormProperty: BuildFormProperty) : this(
         key = buildFormProperty.id,
-        value = buildFormProperty.defaultValue,
+        value = when (buildFormProperty.type) {
+            BuildFormPropertyType.MULTIPLE -> buildFormProperty.defaultValue.toString().split(",").toList()
+            else -> buildFormProperty.defaultValue
+        },
         allowModifyAtStartup = buildFormProperty.required
     )
 }
