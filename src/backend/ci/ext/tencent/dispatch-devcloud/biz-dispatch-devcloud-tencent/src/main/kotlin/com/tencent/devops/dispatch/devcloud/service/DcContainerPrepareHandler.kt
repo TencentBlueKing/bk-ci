@@ -105,6 +105,10 @@ class DcContainerPrepareHandler @Autowired constructor(
         private const val HIGH_IO_M = "HighIO-M"
         private const val HIGH_IO_L = "HighIO-L"
         private const val STANDARD_S = "Standard-S"
+
+        private const val CONFIG_ID_ZERO = "0"
+        private const val HIGH_IO_M_CODE = "2"
+        private const val HIGH_IO_L_CODE = "10000"
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
@@ -262,7 +266,7 @@ class DcContainerPrepareHandler @Autowired constructor(
             return
         }
 
-        if (!performanceConfigId.isNullOrBlank() && performanceConfigId != "0") {
+        if (!performanceConfigId.isNullOrBlank() && performanceConfigId != CONFIG_ID_ZERO) {
             val performanceOption =
                 dcPerformanceOptionsDao.get(dslContext, performanceConfigId.toLong())
             if (performanceOption != null) {
@@ -281,10 +285,10 @@ class DcContainerPrepareHandler @Autowired constructor(
         // "10000" → HighIO-L (高等高性能配置)
         // 其他情况(包括null/空字符串/"0"等) → Standard-S (标准配置)
         when (performanceConfigId) {
-            "2" -> {
+            HIGH_IO_M_CODE -> {
                 handlerContext.performanceUid = HIGH_IO_M
             }
-            "10000" -> {
+            HIGH_IO_L_CODE -> {
                 handlerContext.performanceUid = HIGH_IO_L
             }
             else -> {

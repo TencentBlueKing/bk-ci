@@ -3,35 +3,29 @@ package com.tencent.devops.dispatch.devcloud.service
 import com.tencent.devops.dispatch.devcloud.client.DevCloudPerformanceClient
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.PerformanceData
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsV2
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class DcPerformanceConfigServiceV2 constructor(
     private val devCloudPerformanceClient: DevCloudPerformanceClient
 ) {
-    private val logger = LoggerFactory.getLogger(DcPerformanceConfigServiceV2::class.java)
-
-    @Value("\${devCloud.cpu}")
-    var cpu: Int = 32
-
-    @Value("\${devCloud.memory}")
-    var memory: String = "65535M"
-
-    @Value("\${devCloud.disk}")
-    var disk: String = "500G"
 
     fun getDcPerformanceConfigList(userId: String, projectId: String, pipelineId: String): UserPerformanceOptionsV2 {
         val performanceDataList = devCloudPerformanceClient.getPerformanceList(userId, projectId, pipelineId)
         if (performanceDataList.isEmpty()) {
-            return UserPerformanceOptionsV2("Standard-S", listOf(PerformanceData(
-                uid = "Standard-S",
-                name = "标准型（16核/32G/100G），适用于小型项目编译场景",
-                desc = "标准型（16核/32G/100G），适用于小型项目编译场景"
+            return UserPerformanceOptionsV2(DEFAULT_CONFIG_UID, listOf(PerformanceData(
+                uid = DEFAULT_CONFIG_UID,
+                name = DEFAULT_CONFIG_NAME,
+                desc = DEFAULT_CONFIG_DESC
             )))
         }
 
         return UserPerformanceOptionsV2(performanceDataList.first().uid, performanceDataList)
+    }
+
+    companion object {
+        private const val DEFAULT_CONFIG_UID = "Standard-S"
+        private const val DEFAULT_CONFIG_NAME = "标准型（16核/32G/100G），适用于小型项目编译场景"
+        private const val DEFAULT_CONFIG_DESC = "标准型（16核/32G/100G），适用于小型项目编译场景"
     }
 }

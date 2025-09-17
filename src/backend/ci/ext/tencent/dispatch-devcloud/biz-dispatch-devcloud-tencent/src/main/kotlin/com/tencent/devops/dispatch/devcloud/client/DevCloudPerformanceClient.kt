@@ -52,7 +52,7 @@ class DevCloudPerformanceClient {
 
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body?.string() ?: ""
-                val logPrefix = "$userId|$projectId|$pipelineId"
+                val logPrefix = getLogPrefix(userId, projectId, pipelineId)
                 logger.info("$logPrefix getPerformanceList response: $responseContent")
                 
                 validateHttpResponse(response, logPrefix, "get performance list")
@@ -127,7 +127,7 @@ class DevCloudPerformanceClient {
         exception: SocketTimeoutException,
         block: () -> T
     ): T {
-        val logPrefix = "$userId|$projectId|$pipelineId"
+        val logPrefix = getLogPrefix(userId, projectId, pipelineId)
         if (retryTime > 0) {
             logger.info("$logPrefix $operation SocketTimeoutException. retry: $retryTime")
             return executeWithRetry(userId, projectId, pipelineId, retryTime - 1, operation, block)
@@ -182,5 +182,9 @@ class DevCloudPerformanceClient {
                 "commonClientProxy"
             )
 
+    }
+
+    private fun getLogPrefix(userId: String, projectId: String, pipelineId: String): String {
+        return "$userId|$projectId|$pipelineId"
     }
 }
