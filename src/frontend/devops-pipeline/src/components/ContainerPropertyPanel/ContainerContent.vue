@@ -737,7 +737,19 @@
                 return this.container.dispatchType?.dockerInfo || {}
             },
             devcloudValue () {
-                return this.buildResourceType === 'PUBLIC_DEVCLOUD' ? this.container.dispatchType.performanceUid : this.container.dispatchType.performanceConfigId
+                if (this.buildResourceType === 'PUBLIC_DEVCLOUD') {
+                    if (this.container.dispatchType.performanceUid && this.container.dispatchType.performanceUid !== '') {
+                        return this.container.dispatchType.performanceUid
+                    }
+                    const enumId = {
+                        '0': 'Standard-S',
+                        '1': 'Standard-S',
+                        '2': 'HighIO-M',
+                        '10000': 'HighIO-L'
+                    }
+                    return enumId[this.container.dispatchType.performanceConfigId]
+                }
+                return this.container.dispatchType.performanceConfigId
             },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
