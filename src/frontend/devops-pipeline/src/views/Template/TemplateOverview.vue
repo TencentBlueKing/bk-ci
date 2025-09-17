@@ -123,7 +123,6 @@
     const activeChild = computed(() => getNavComponent(activeMenuItem.value))
     const canEdit = computed(() => pipelineInfo.value?.permissions?.canEdit ?? false)
     const canDelete = computed(() => pipelineInfo.value?.permissions?.canDelete ?? false)
-    const canManage = computed(() => pipelineInfo.value?.permissions?.canManage ?? false)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
     const isFromStoreTemplate = computed(() => !!pipelineInfo.value?.pipelineTemplateMarketRelatedInfo)
@@ -221,15 +220,8 @@
                     ...pipelineInfo.value,
                     ...pipelineInfo.value?.permissions
                 }),
-                disablePermissionApi: true,
-                hasPermission: canManage.value,
                 isShow: true,
-                permissionData: {
-                    projectId: projectId.value,
-                    resourceType: RESOURCE_TYPE.TEMPLATE,
-                    resourceCode: projectId.value,
-                    action: TEMPLATE_RESOURCE_ACTION.CREATE
-                }
+                ...editPerm,
             },
             {
                 text: t(`template.${pipelineInfo.value.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`),

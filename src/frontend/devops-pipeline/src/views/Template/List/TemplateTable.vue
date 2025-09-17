@@ -30,7 +30,9 @@
             <template slot-scope="{ row }">
                 <div
                     v-if="col.id === 'name'"
-                    class="template-name select-text"
+                    :class="['template-name', {
+                        'select-text': row.canView
+                    }]"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     <span
@@ -79,7 +81,7 @@
                 <bk-button
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
-                    :disabled="row.instancePipelineCount <= 0"
+                    :disabled="row.instancePipelineCount <= 0 || !row.canView"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     {{ row.instancePipelineCount }}
@@ -99,9 +101,9 @@
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: RESOURCE_TYPE.TEMPLATE,
+                                resourceType: RESOURCE_TYPE.PIPELINE,
                                 resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                action: RESOURCE_ACTION.CREATE
                             }
                         }"
                     >
@@ -144,8 +146,8 @@
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_TYPE,
-        TEMPLATE_RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { computed, defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
