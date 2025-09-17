@@ -44,7 +44,6 @@ import feign.Request
 import feign.RequestInterceptor
 import feign.RetryableException
 import feign.Retryer
-import feign.codec.Decoder
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs3.JAXRS3Contract
@@ -64,7 +63,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Component
-import jakarta.ws.rs.core.Response as JakartaResponse
 
 /**
  *

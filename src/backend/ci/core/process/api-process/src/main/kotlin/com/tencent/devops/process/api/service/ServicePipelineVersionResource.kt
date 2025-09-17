@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -339,4 +341,23 @@ interface ServicePipelineVersionResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
+
+    @Operation(summary = "导出项目下所有用户有编辑权限的流水线")
+    @GET
+    @Path("{pipelineId}/projects/{projectId}/export_all")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun exportPipelineAll(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "导出的数据类型,默认导出code编排", required = false)
+        @QueryParam("storageType")
+        storageType: PipelineStorageType?,
+        @Parameter(description = "第几页，该接口为分页获取，一次最多获取50条流水线", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?
+    ): Response
 }
