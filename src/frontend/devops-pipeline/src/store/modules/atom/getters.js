@@ -205,8 +205,8 @@ export default {
 
             stages.forEach((stage, index) => {
                 if (index !== 0 && stage.checkIn) {
-                    const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
-                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                    const { notifyType = [], notifyGroup = [], manualTrigger } = stage && stage.checkIn
+                    if (manualTrigger && notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
                         Vue.set(stage.checkIn, 'isReviewError', true)
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }

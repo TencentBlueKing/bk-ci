@@ -202,8 +202,8 @@
                     if (!res.yamlSupported && this.isCodeMode) {
                         this.updatePipelineMode(UI_MODE)
                     } else {
-                        this.templateYaml = this.isTemplate ? res.yamlPreview.yaml : res.templateYaml
-                        this.highlightMarkList = (this.isTemplate ? res.yamlPreview.pipeline : res.highlightMarkList) ?? []
+                        this.templateYaml = this.isTemplate ? res.yamlPreview?.yaml : res.templateYaml
+                        this.highlightMarkList = (this.isTemplate ? res.yamlPreview?.pipeline : res.highlightMarkList) ?? []
                     }
                     this.isYamlSupport = res.yamlSupported
                     this.yamlInvalidMsg = res.yamlInvalidMsg

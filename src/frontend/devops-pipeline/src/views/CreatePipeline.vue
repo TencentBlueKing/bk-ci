@@ -384,7 +384,7 @@
                     return this.projectedTemplateList.filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1)
                 } else {
                     return this.storeTemplate?.map(item => {
-                        const temp = this.pipelineTemplateMap.get(item.srcTemplateId) || {}
+                        const temp = this.pipelineTemplateMap.get(item.code) || {}
                         return {
                             ...item,
                             hasPermission: item.flag,

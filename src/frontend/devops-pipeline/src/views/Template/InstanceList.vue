@@ -191,7 +191,7 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!row.canEdit || !!row.pullRequestUrl"
+                                :disabled="!row.canEdit"
                                 @click="updateInstance(row)"
                             >
                                 {{ $t('template.updateInstance') }}
@@ -594,5 +594,8 @@
             color: $primaryColor;
             cursor: pointer;
         }
+    }
+    .bk-search-select-theme-theme {
+        max-width: 500px;
     }
 </style>
