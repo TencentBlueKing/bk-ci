@@ -437,8 +437,7 @@
                                 </bk-button>
                             </template>
                             <span
-                                v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                text
+                                v-if="['THIRDPARTY'].includes(props.row.nodeType)"
                                 v-perm="{
                                     hasPermission: props.row.canEdit,
                                     disablePermissionApi: true,
