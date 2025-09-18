@@ -19,7 +19,7 @@ class ServiceGithubExtResourceImpl constructor(
             event = event,
             guid = guid,
             signature = signature,
-            body = webhookSyncReq.body
+            webhookSyncReq = webhookSyncReq
         )
     }
 }
