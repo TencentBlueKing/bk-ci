@@ -102,7 +102,7 @@ class DcContainerPrepareHandler @Autowired constructor(
                 "【DevCloud容器问题FAQ】</a>"
         private const val BUILD_POOL_SIZE = 100000 // 单个流水线可同时执行的任务数量
 
-        private const val HIGH_IO_M = "HighIO-M"
+        private const val STANDARD_M = "Standard-M"
         private const val HIGH_IO_L = "HighIO-L"
         private const val STANDARD_S = "Standard-S"
 
@@ -286,7 +286,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         // 其他情况(包括null/空字符串/"0"等) → Standard-S (标准配置)
         when (performanceConfigId) {
             HIGH_IO_M_CODE -> {
-                handlerContext.performanceUid = HIGH_IO_M
+                handlerContext.performanceUid = STANDARD_M
             }
             HIGH_IO_L_CODE -> {
                 handlerContext.performanceUid = HIGH_IO_L
