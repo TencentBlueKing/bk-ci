@@ -56,5 +56,5 @@ data class RemoteDevSettings(
     @get:Schema(title = "公司名称")
     var companyName: String = "",
     @get:Schema(title = "平台维护的用户管理设置")
-    val userSetting: RemoteDevUserSettings = RemoteDevUserSettings(),
+    val userSetting: RemoteDevUserSettings = RemoteDevUserSettings()
 )

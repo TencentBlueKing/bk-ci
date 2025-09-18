@@ -26,6 +26,8 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
@@ -131,6 +133,23 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
             sort = sort,
             page = page,
             pageSize = pageSize
+        )
+    }
+
+    override fun listByConditions(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectConditionDTO: ProjectConditionDTO,
+        page: Int,
+        pageSize: Int
+    ): Result<List<ProjectVO>> {
+        logger.info("OPENAPI_PROJECT_V4|listByConditions|$userId|$projectConditionDTO")
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        return client.get(ServiceProjectResource::class).listProjectDetailsByCondition(
+            projectConditionDTO = projectConditionDTO,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
         )
     }
 

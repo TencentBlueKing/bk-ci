@@ -17,7 +17,7 @@ object AsyncExecute {
         )
     }
 
-    private fun dispatch(streamBridge: StreamBridge, event: AsyncExecuteEvent, errorLogTag: String? = null) {
+    fun dispatch(streamBridge: StreamBridge, event: AsyncExecuteEvent, errorLogTag: String? = null) {
         try {
             logger.info("AsyncExecuteDispatch|${event.type}|${event.eventStr}")
             event.sendTo(streamBridge)

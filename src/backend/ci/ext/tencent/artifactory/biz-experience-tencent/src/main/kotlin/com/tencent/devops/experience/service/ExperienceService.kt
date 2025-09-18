@@ -288,13 +288,16 @@ class ExperienceService @Autowired constructor(
         content = ActionAuditContent.EXPERIENCE_TASK_VIEW_CONTENT
     )
     fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
-
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
+        val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val experienceId = experienceRecord.id
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
-        val url = if (canExperience && online && !isExpired) getShortExternalUrl(experienceId) else null
+        val url = if (canExperience && online && !isExpired) getShortExternalUrl(
+            experienceId = experienceId,
+            isForPc = platform.isForPC()
+        ) else null
 
         val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
         val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
@@ -338,7 +341,7 @@ class ExperienceService @Autowired constructor(
             name = experienceRecord.name,
             path = experienceRecord.artifactoryPath,
             artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
-            platform = PlatformEnum.valueOf(experienceRecord.platform),
+            platform = platform,
             version = experienceRecord.version,
             remark = experienceRecord.remark ?: "",
             createDate = experienceRecord.createTime.timestamp(),
@@ -479,7 +482,7 @@ class ExperienceService @Autowired constructor(
         userId: String,
         isPublic: Boolean,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-    ): Long {
+    ): Pair<Long/*体验ID*/, PlatformEnum> {
         experience.experienceName?.let {
             experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
         }
@@ -515,7 +518,7 @@ class ExperienceService @Autowired constructor(
                 "null file detail , projectId:$projectId , " +
                         "artifactoryType:$artifactoryType , path:${experience.path}"
             )
-            return -1L
+            return Pair(-1L, PlatformEnum.UNKNOWN)
         }
 
         val encodePublicGroup = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP)
@@ -548,7 +551,11 @@ class ExperienceService @Autowired constructor(
         } else {
             propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         }
-        val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        val appVersion = if (platform == PlatformEnum.WIN) {
+            experience.version ?: "未知"
+        } else {
+            propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        }
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -654,7 +661,7 @@ class ExperienceService @Autowired constructor(
             sendNotification(experienceId)
         }
 
-        return experienceId
+        return Pair(experienceId, platform)
     }
 
     private fun onlinePublicExperience(
@@ -960,10 +967,11 @@ class ExperienceService @Autowired constructor(
             sendNotification = experience.sendNotification,
             classify = experience.classify,
             platform = experience.platform,
-            bundleIdentifier = experience.bundleIdentifier
+            bundleIdentifier = experience.bundleIdentifier,
+            version = experience.version
         )
 
-        val experienceId = createExperience(
+        val (experienceId, platform) = createExperience(
             projectId,
             experienceCreate,
             propertyMap,
@@ -979,7 +987,7 @@ class ExperienceService @Autowired constructor(
             .setInstance(experience)
 
         return ExperienceCreateResp(
-            url = getShortExternalUrl(experienceId),
+            url = getShortExternalUrl(experienceId, platform.isForPC()),
             experienceHashId = HashUtil.encodeLongId(experienceId)
         )
     }
@@ -1080,8 +1088,9 @@ class ExperienceService @Autowired constructor(
 
             for (i in experienceRecords.indices) {
                 val e = experienceRecords[i]
+                val platform = PlatformEnum.valueOf(e.platform)
                 val pcUrl = getPcUrl(e.projectId, e.id)
-                val appUrl = getShortExternalUrl(e.id)
+                val appUrl = getShortExternalUrl(e.id, platform.isForPC())
                 messages.add(
                     Message(
                         name = e.name,
@@ -1159,6 +1168,7 @@ class ExperienceService @Autowired constructor(
     fun sendNotification(experienceId: Long) {
         threadPool.submit {
             val experienceRecord = experienceDao.get(dslContext, experienceId)
+            val platform = PlatformEnum.valueOf(experienceRecord.platform)
             if (DateUtil.isExpired(experienceRecord.endDate)) {
                 logger.info("experience($experienceId) is expired")
                 return@submit
@@ -1210,7 +1220,7 @@ class ExperienceService @Autowired constructor(
                 innerReceivers = innerReceivers,
                 experienceRecord = experienceRecord,
                 pcUrl = getPcUrl(experienceRecord.projectId, experienceId),
-                appUrl = getShortExternalUrl(experienceId)
+                appUrl = getShortExternalUrl(experienceId, platform.isForPC())
             )
             sendMessageToOuterReceivers(outerReceivers, experienceRecord, notifyTypeList)
             sendMessageToSubscriber(subscribeUsers, experienceRecord, notifyTypeList)
@@ -1419,11 +1429,12 @@ class ExperienceService @Autowired constructor(
                 "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
-    fun getShortExternalUrl(experienceId: Long): String {
+    fun getShortExternalUrl(experienceId: Long, isForPc: Boolean): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
+        val html = if (isForPc) "download_desktop.html" else "devops_app_forward.html"
         val url =
             HomeHostUtil.outerServerHost() +
-                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                    "/app/download/$html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

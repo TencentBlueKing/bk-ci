@@ -69,5 +69,7 @@ data class ExperienceServiceCreate(
     @get:Schema(title = "平台", required = false)
     val platform: String? = null,
     @get:Schema(title = "应用标识", required = false)
-    val bundleIdentifier: String? = null
+    val bundleIdentifier: String? = null,
+    @get:Schema(title = "版本", required = false)
+    val version: String? = null
 )

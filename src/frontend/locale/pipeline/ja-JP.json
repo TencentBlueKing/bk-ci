@@ -885,6 +885,7 @@
         "assignResource": "ビルドリソースを指定",
         "imageTicket": "イメージ対応認証情報",
         "performance": "モデル",
+        "performanceDesc": "モデル説明を確認",
         "cpuUnit": "コア",
         "workspace": "ワークスペースを指定",
         "workspaceTips": "未入力的場合は [Agentインストールディレクトri]/workspace/[パイプラインID]/src がデフォルトです",

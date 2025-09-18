@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.12
+**文档版本：** 1.0.13
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -11,6 +11,7 @@
 | T_PIPELINE_ATOM_REPLACE_BASE | 流水线插件替换基本信息表 |
 | T_PIPELINE_ATOM_REPLACE_HISTORY | 流水线插件替换历史信息表 |
 | T_PIPELINE_ATOM_REPLACE_ITEM | 流水线插件替换项信息表 |
+| T_PIPELINE_BUILD_CHECK_RUN | 构建任务关联检查项信息表 |
 | T_PIPELINE_BUILD_CONTAINER | 流水线构建容器环境表 |
 | T_PIPELINE_BUILD_DETAIL | 流水线构建详情表 |
 | T_PIPELINE_BUILD_HISTORY | 流水线构建历史表 |
@@ -154,6 +155,28 @@
 |  10   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
 |  11   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  12   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+
+**表名：** <a>T_PIPELINE_BUILD_CHECK_RUN</a>
+
+**说明：** 构建任务关联检查项信息表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 蓝盾项目 ID  |
+|  2   | PIPELINE_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 流水线 ID  |
+|  3   | BUILD_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 构建任务 ID  |
+|  4   | BUILD_NUM |   int   | 10 |   0    |    N     |  N   |       | 构建编号  |
+|  5   | BUILD_STATUS |   varchar   | 32 |   0    |    N     |  N   |       | 构建状态  |
+|  6   | REPO_HASH_ID |   varchar   | 32 |   0    |    N     |  N   |       | 代码库 HASH_ID  |
+|  7   | CONTEXT |   varchar   | 255 |   0    |    N     |  N   |       | 检查项名称  |
+|  8   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 检查项关联版本  |
+|  9   | PULL_REQUEST_ID |   bigint   | 20 |   0    |    N     |  N   |   0    | 合并请求 ID  |
+|  10   | CHECK_RUN_STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 检查项状态  |
+|  11   | CHECK_RUN_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 检查项 ID  |
+|  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  13   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_BUILD_CONTAINER</a>
 

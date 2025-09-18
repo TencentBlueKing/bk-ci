@@ -50,7 +50,6 @@ class RsaUtilTest {
         RsaUtil.generatePublicKey(TEST_PUBLIC_KEY.toByteArray())
     }
 
-
     @Test
     fun generatePrivateKey() {
         RsaUtil.generatePrivateKey(TEST_PRIVATE_KEY.toByteArray())
