@@ -146,7 +146,6 @@ class ExperienceAppService(
         val newestPublic = experienceBaseService.getNewestPublic(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val isPublic = !isOuter && experienceBaseService.isPublic(experienceId, false)
         // 移除红点
         removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
@@ -158,6 +157,7 @@ class ExperienceAppService(
             experienceId = newestPublic.recordId
             experience = experienceDao.get(dslContext, experienceId)
         }
+        val isPublic = !isOuter && experienceBaseService.isPublic(experienceId, false)
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
