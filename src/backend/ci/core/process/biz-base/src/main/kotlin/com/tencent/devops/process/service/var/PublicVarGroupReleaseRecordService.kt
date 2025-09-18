@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service.`var`
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -70,10 +72,23 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             versionDesc = publicVarGroupReleaseDTO.versionDesc
         )
 
+        // 批量生成ID
+        val segmentIds = if (releaseRecords.isNotEmpty()) {
+            client.get(ServiceAllocIdResource::class)
+                .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
+        } else {
+            emptyList()
+        }
+        
+        if (releaseRecords.isNotEmpty() && segmentIds.isNullOrEmpty()) {
+            logger.warn("Failed to generate segment IDs for release records, size: ${releaseRecords.size}")
+            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf("Failed to generate segment IDs"))
+        }
+
+        var index = 0
         val records = releaseRecords.map { releaseRecord ->
             PipelinePublicVarGroupReleaseRecordPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD").data ?: 0,
+                id = segmentIds?.get(index++) ?: 0,
                 projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.first().projectId,
                 groupName = releaseRecord.groupName,
                 version = releaseRecord.version,

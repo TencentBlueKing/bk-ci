@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
@@ -262,35 +261,7 @@ class PublicVarGroupService @Autowired constructor(
         operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
     ): String {
-        val parserVO = try {
-            TransferMapper.getObjectMapper().readValue(
-                yaml.yaml,
-                object : TypeReference<PublicVarGroupYamlParser>() {}
-            )
-        } catch (e: Throwable) {
-            logger.warn("Failed to parse YAML for public variable group", e)
-            throw e
-        }
-
-        // 将variables转换为List<BuildFormProperty>
-        val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
-        val publicVars = buildFormProperties.map { property ->
-            PublicVarVO(
-                varName = property.id,
-                alias = property.name ?: "",
-                type = if (property.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE,
-                valueType = property.type,
-                defaultValue = property.defaultValue,
-                desc = property.desc,
-                buildFormProperty = property
-            )
-        }
-
-        val publicVarGroupVO = PublicVarGroupVO(
-            groupName = parserVO.name,
-            desc = parserVO.desc,
-            publicVars = publicVars
-        )
+        val publicVarGroupVO = parseYamlToPublicVarGroupVO(yaml)
 
         return addGroup(
             PublicVarGroupDTO(
@@ -502,6 +473,13 @@ class PublicVarGroupService @Autowired constructor(
     }
 
     fun convertYamlToGroup(userId: String, projectId: String, yaml: PublicVarGroupYamlStringVO): PublicVarGroupVO {
+        return parseYamlToPublicVarGroupVO(yaml)
+    }
+
+    /**
+     * 解析YAML字符串并转换为PublicVarGroupVO对象
+     */
+    private fun parseYamlToPublicVarGroupVO(yaml: PublicVarGroupYamlStringVO): PublicVarGroupVO {
         val parserVO = try {
             TransferMapper.getObjectMapper().readValue(
                 yaml.yaml,
