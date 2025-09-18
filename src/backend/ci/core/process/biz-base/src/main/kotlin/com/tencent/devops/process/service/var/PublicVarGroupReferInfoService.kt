@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.service.`var`
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
@@ -48,13 +48,14 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PublicVarGroupReferInfoService @Autowired constructor(
@@ -72,408 +73,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
         private const val PIPELINE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/%s/history/pipeline"
         private const val TEMPLATE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/template/%s/%s/pipeline"
-    }
-
-    /**
-     * 更新公共变量组引用
-     * @param userId 用户ID
-     * @param projectId 项目ID
-     * @param publicVarGroupReferInfo 变量组引用信息
-     * @return 操作是否成功
-     */
-    fun updatePublicGroupRefer(
-        userId: String,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO
-    ): Boolean {
-        handlePublicVarInfo(publicVarGroupReferInfo)
-        logger.info("updatePublicGroupRefer: $publicVarGroupReferInfo")
-        validateParameters(publicVarGroupReferInfo)
-        
-        // 处理空变量组引用的情况
-        if (publicVarGroupReferInfo.publicVarGroupRefs.isEmpty()) {
-            return handleEmptyVarGroupRefs(projectId, publicVarGroupReferInfo)
-        }
-
-        // 验证变量组存在性并构建数据对象
-        val (newReferPOs, updateReferPOs) = buildDataObjects(
-            userId = userId,
-            projectId = projectId,
-            publicVarGroupReferInfo = publicVarGroupReferInfo
-        )
-
-        // 执行数据库事务操作
-        return executeTransaction(
-            userId = userId,
-            projectId = projectId,
-            publicVarGroupReferInfo = publicVarGroupReferInfo,
-            newReferPOs = newReferPOs,
-            updateReferPOs = updateReferPOs
-        )
-    }
-
-    /**
-     * 处理公共变量组信息
-     */
-    fun handlePublicVarInfo(publicVarGroupReferInfo: PublicVarGroupReferDTO) {
-        val params = publicVarGroupReferInfo.params
-        if(params.isNullOrEmpty()) {
-            return
-        }
-        // 从params获取varGroupName不为空的参数
-        val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
-
-        if (varGroupParams.isEmpty()) {
-            return
-        } else {
-            publicVarGroupReferInfo.publicVarGroupRefs =
-                varGroupParams.associate { it.varGroupName!! to it.varGroupVersion }
-            publicVarGroupReferInfo.positionInfo = getGroupVarPositionInfo(params)
-        }
-    }
-
-    private fun getGroupVarPositionInfo(params: List<BuildFormProperty>): Map<String, Int> {
-        val positionInfo = mutableMapOf<String, Int>()
-        params.forEachIndexed { index, property ->
-            if (property.varGroupName != null) {
-                positionInfo[property.id] = index
-            }
-        }
-        return positionInfo
-    }
-
-    /**
-     * 验证输入参数
-     */
-    private fun validateParameters(
-        publicVarGroupReferInfo: PublicVarGroupReferDTO
-    ) {
-        // 检查变量组引用中是否存在重复的groupName
-        val groupNames = publicVarGroupReferInfo.publicVarGroupRefs!!.keys
-        val duplicateGroupNames = groupNames.groupBy { it }.filter { it.value.size > 1 }.keys
-        
-        if (duplicateGroupNames.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE,
-                params = arrayOf(duplicateGroupNames.joinToString(", "))
-            )
-        }
-    }
-
-    /**
-     * 处理空变量组引用的情况
-     */
-    private fun handleEmptyVarGroupRefs(
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO
-    ): Boolean {
-        val countByReferId = publicVarGroupReferInfoDao.countByPublicVarGroupRef(
-            dslContext = dslContext,
-            projectId = projectId,
-            referId = publicVarGroupReferInfo.referId,
-            referType = publicVarGroupReferInfo.referType,
-            referVersionName = publicVarGroupReferInfo.referVersionName
-        )
-        
-        if (countByReferId > 0) {
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                deleteAllReferencesByReferId(context, projectId, publicVarGroupReferInfo)
-            }
-        }
-        
-        return true
-    }
-
-    /**
-     * 验证变量组存在性并构建数据对象
-     */
-    private fun buildDataObjects(
-        userId: String,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO
-    ): Pair<List<PipelinePublicVarGroupReferPO>, List<PipelinePublicVarGroupReferPO>> {
-        val newReferPOs = mutableListOf<PipelinePublicVarGroupReferPO>()
-        val updateReferPOs = mutableListOf<PipelinePublicVarGroupReferPO>()
-        
-        publicVarGroupReferInfo.publicVarGroupRefs!!.forEach { ref ->
-            val groupName = ref.key
-            val version = ref.value
-            
-            // 验证变量组是否存在
-            validateVarGroupExists(projectId, groupName, version)
-            
-            // 检查是否已存在引用
-            if (isVarGroupRefExists(projectId, publicVarGroupReferInfo, groupName)) {
-                // 已存在，添加到更新列表
-                updateReferPOs.add(
-                    createVarGroupReferPO(
-                        userId = userId,
-                        projectId = projectId,
-                        publicVarGroupReferInfo = publicVarGroupReferInfo,
-                        groupName = groupName,
-                        version = version
-                    )
-                )
-            } else {
-                // 不存在，添加到新增列表
-                newReferPOs.add(
-                    createVarGroupReferPO(
-                        userId = userId,
-                        projectId = projectId,
-                        publicVarGroupReferInfo = publicVarGroupReferInfo,
-                        groupName = groupName,
-                        version = version
-                    )
-                )
-            }
-        }
-        
-        return Pair(newReferPOs, updateReferPOs)
-    }
-
-    /**
-     * 验证变量组是否存在
-     */
-    private fun validateVarGroupExists(projectId: String, groupName: String, version: Int?) {
-        val groupCount = publicVarGroupDao.countRecordByGroupName(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            version = version
-        )
-        if (groupCount == 0) {
-            throw ErrorCodeException(
-                errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf(groupName)
-            )
-        }
-    }
-
-    /**
-     * 检查变量组引用是否已存在
-     */
-    private fun isVarGroupRefExists(
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO,
-        groupName: String
-    ): Boolean {
-        return publicVarGroupReferInfoDao.countByPublicVarGroupRef(
-            dslContext = dslContext,
-            projectId = projectId,
-            referId = publicVarGroupReferInfo.referId,
-            referType = publicVarGroupReferInfo.referType,
-            groupName = groupName,
-            referVersionName = publicVarGroupReferInfo.referVersionName
-        ) > 0
-    }
-
-    /**
-     * 创建变量组引用PO对象
-     */
-    private fun createVarGroupReferPO(
-        userId: String,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO,
-        groupName: String,
-        version: Int?
-    ): PipelinePublicVarGroupReferPO {
-
-        val positionInfoJson = publicVarGroupReferInfo.positionInfo?.let { JsonUtil.toJson(it) }
-        
-        return PipelinePublicVarGroupReferPO(
-            id = client.get(ServiceAllocIdResource::class)
-                .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO").data ?: 0,
-            projectId = projectId,
-            groupName = groupName,
-            version = version,
-            referId = publicVarGroupReferInfo.referId,
-            referName = publicVarGroupReferInfo.referName,
-            referVersionName = publicVarGroupReferInfo.referVersionName,
-            referType = publicVarGroupReferInfo.referType,
-            positionInfo = positionInfoJson,
-            modifier = userId,
-            updateTime = LocalDateTime.now(),
-            creator = userId,
-            createTime = LocalDateTime.now()
-        )
-    }
-
-
-
-    /**
-     * 执行数据库事务操作
-     */
-    private fun executeTransaction(
-        userId: String,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO,
-        newReferPOs: List<PipelinePublicVarGroupReferPO>,
-        updateReferPOs: List<PipelinePublicVarGroupReferPO>
-    ): Boolean {
-        try {
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                val newGroupNames = publicVarGroupReferInfo.publicVarGroupRefs!!.keys
-
-                // 处理需要删除的旧引用
-                if (newGroupNames.isNotEmpty()) {
-                    handleObsoleteReferences(
-                        context = context,
-                        projectId = projectId,
-                        publicVarGroupReferInfo = publicVarGroupReferInfo,
-                        newGroupNames = newGroupNames
-                    )
-                }
-
-                // 批量保存新的引用记录
-                if (newReferPOs.isNotEmpty()) {
-                    publicVarGroupReferInfoDao.batchSave(context, newReferPOs)
-                }
-
-                // 批量更新已存在的引用记录
-                if (updateReferPOs.isNotEmpty()) {
-                    updateExistingReferenceRecords(
-                        context = context,
-                        projectId = projectId,
-                        publicVarGroupReferInfo = publicVarGroupReferInfo,
-                        updateReferPOs = updateReferPOs,
-                        userId = userId
-                    )
-                }
-                
-                // 更新新增引用的计数
-                updateReferenceCountsForNewRefs(
-                    context = context,
-                    projectId = projectId,
-                    newReferPOs = newReferPOs
-                )
-            }
-            
-            // 处理变量引用信息
-            publicVarReferInfoService.addPublicVarRefer(
-                userId = userId,
-                projectId = projectId,
-                publicVarGroupReferInfo = publicVarGroupReferInfo
-            )
-        } catch (t: Throwable) {
-            logger.warn("Failed to add pipeline group refer for ${publicVarGroupReferInfo.referId}", t)
-            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
-        }
-        return true
-    }
-
-    /**
-     * 处理需要删除的旧引用
-     */
-    private fun handleObsoleteReferences(
-        context: DSLContext,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO,
-        newGroupNames: Set<String>
-    ) {
-        // 获取现有的引用记录
-        val existingReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
-            dslContext = context,
-            projectId = projectId,
-            referId = publicVarGroupReferInfo.referId,
-            referType = publicVarGroupReferInfo.referType,
-            referVersionName = publicVarGroupReferInfo.referVersionName
-        )
-        
-        // 找出需要删除的引用记录
-        val toDeleteReferInfos = existingReferInfos.filter { it.groupName !in newGroupNames }
-        
-        if (toDeleteReferInfos.isNotEmpty()) {
-            // 删除变量组引用记录
-            deleteVarGroupReferences(
-                context = context,
-                projectId = projectId,
-                publicVarGroupReferInfo = publicVarGroupReferInfo,
-                excludedGroupNames = newGroupNames.toList()
-            )
-            
-            // 更新引用计数
-            updateReferenceCountsForDeletedRefs(
-                context = context,
-                projectId = projectId,
-                deletedReferInfos = toDeleteReferInfos
-            )
-        }
-    }
-    
-    /**
-     * 删除变量组引用记录的通用方法
-     */
-    private fun deleteVarGroupReferences(
-        context: DSLContext,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO,
-        excludedGroupNames: List<String>? = null
-    ) {
-        if (excludedGroupNames != null) {
-            publicVarGroupReferInfoDao.deleteByReferIdExcludingGroupNames(
-                dslContext = context,
-                projectId = projectId,
-                referId = publicVarGroupReferInfo.referId,
-                referType = publicVarGroupReferInfo.referType,
-                referVersionName = publicVarGroupReferInfo.referVersionName,
-                excludedGroupNames = excludedGroupNames
-            )
-        } else {
-            publicVarGroupReferInfoDao.deleteByReferIdExcludingGroupNames(
-                dslContext = context,
-                projectId = projectId,
-                referId = publicVarGroupReferInfo.referId,
-                referType = publicVarGroupReferInfo.referType,
-                referVersionName = publicVarGroupReferInfo.referVersionName
-            )
-        }
-    }
-
-
-
-    /**
-     * 删除指定referId的所有引用记录
-     */
-    private fun deleteAllReferencesByReferId(
-        context: DSLContext,
-        projectId: String,
-        publicVarGroupReferInfo: PublicVarGroupReferDTO
-    ) {
-        // 获取要删除的引用记录
-        val existingReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
-            dslContext = context,
-            projectId = projectId,
-            referId = publicVarGroupReferInfo.referId,
-            referType = publicVarGroupReferInfo.referType,
-            referVersionName = publicVarGroupReferInfo.referVersionName
-        )
-        
-        // 删除变量组引用记录
-        deleteVarGroupReferences(
-            context = context,
-            projectId = projectId,
-            publicVarGroupReferInfo = publicVarGroupReferInfo
-        )
-        
-        // 删除变量引用记录
-        publicVarReferInfoDao.deleteByReferIdExcludingGroupNames(
-            dslContext = context,
-            projectId = projectId,
-            referId = publicVarGroupReferInfo.referId,
-            referType = publicVarGroupReferInfo.referType,
-            referVersionName = publicVarGroupReferInfo.referVersionName
-        )
-        
-
-        
-        // 更新引用计数
-        updateReferenceCountsForDeletedRefs(
-            context = context,
-            projectId = projectId,
-            deletedReferInfos = existingReferInfos
-        )
     }
 
     /**
@@ -592,9 +191,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 groupName = referPO.groupName,
                 referVersionName = publicVarGroupReferInfo.referVersionName,
                 version = referPO.version,
-                positionInfo = referPO.positionInfo,
+                positionInfo = referPO.positionInfo?.let { JsonUtil.toJson(it, false) },
                 modifier = userId,
-                updateTime = java.time.LocalDateTime.now()
+                updateTime = LocalDateTime.now()
             )
 
             if (updateCount > 0) {
@@ -901,6 +500,94 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             templateId = templateId,
             version = version
         )
+    }
+
+    fun handleVarGroupReferBus(
+        publicVarGroupReferDTO: PublicVarGroupReferDTO
+    ) {
+        logger.info("handleVarGroupBus publicVarGroupReferDTO:$publicVarGroupReferDTO")
+        val model = publicVarGroupReferDTO.model
+        val params = model.getTriggerContainer().params
+        if (params.isEmpty()) {
+            return
+        }
+        model.handlePublicVarInfo()
+        // 提取非固定版本的变量组变量并记录位置信息
+        data class GroupKey(val groupName: String, val version: Int?)
+
+        val dynamicPublicVarWithPositions = params.withIndex()
+            .filter { (_, element) ->
+                !element.varGroupName.isNullOrBlank() && element.varGroupVersion == null
+            }
+            .groupBy { (_, element) ->
+                GroupKey(element.varGroupName!!, element.varGroupVersion)
+            }
+            .mapValues { (key, group) ->
+                group.map { (index, element) ->
+                    PublicVarPositionPO(
+                        groupName = key.groupName,
+                        version = key.version,
+                        varName = element.id,
+                        index = index
+                    )
+                }
+            }
+        // 提取所有需要删除的索引，并按降序排序
+        val indicesToRemove = dynamicPublicVarWithPositions.values
+            .flatMap { it.map { po -> po.index } } // 提取所有索引
+            .distinct() // 确保索引唯一
+            .sortedDescending() // 降序排序
+
+        // 按降序索引从 params 中移除元素
+        indicesToRemove.forEach { index ->
+            if (index < params.size) {
+                params.removeAt(index)
+            }
+        }
+        // 批量保存
+        val currentTime = LocalDateTime.now()
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO", dynamicPublicVarWithPositions.size).data
+        if (segmentIds.isNullOrEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
+        var index = 0
+        val pipelinePublicVarGroupReferPOs = dynamicPublicVarWithPositions.map { (groupKey, positionInfos) ->
+            PipelinePublicVarGroupReferPO(
+                id = segmentIds[index++] ?: 0,
+                projectId = publicVarGroupReferDTO.projectId,
+                groupName = groupKey.groupName,
+                version = groupKey.version,
+                referId = publicVarGroupReferDTO.referId,
+                referName = publicVarGroupReferDTO.referName,
+                referType = publicVarGroupReferDTO.referType,
+                referVersion = publicVarGroupReferDTO.referVersion,
+                referVersionName = publicVarGroupReferDTO.referVersionName,
+                positionInfo = positionInfos,
+                creator = publicVarGroupReferDTO.userId,
+                modifier = publicVarGroupReferDTO.userId,
+                createTime = currentTime,
+                updateTime = currentTime
+            )
+        }
+        publicVarGroupReferInfoDao.batchSave(dslContext, pipelinePublicVarGroupReferPOs)
+    }
+
+    private fun getLatestVersionsForGroups(
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        val versionMap = publicVarGroupDao.getLatestVersionsByGroupNames(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNames = groupNames
+        )
+        // 检查是否有组名不存在
+        val missingGroups = groupNames.filter { it !in versionMap }
+        if (missingGroups.isNotEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(missingGroups.first()))
+        }
+        return versionMap
     }
 
     /**

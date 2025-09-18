@@ -27,25 +27,28 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线公共变量组关联传输对象")
 data class PublicVarGroupReferDTO(
+    @get:Schema(title = "用户ID")
+    val userId: String,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "模型内容")
+    val model: Model,
     @get:Schema(title = "关联资源ID")
     val referId: String,
-    @get:Schema(title = "流水线/模板类型")
+    @get:Schema(title = "关联组件类型")
     val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "流水线/模板名称")
+    @get:Schema(title = "关联组件名称")
     val referName: String,
-    @get:Schema(title = "流水线/模板版本名称")
-    val referVersionName: String,
-    @get:Schema(title = "编排参数", required = false)
-    val params: List<BuildFormProperty>? = emptyList(),
-    @get:Schema(title = "流水线/模板公共变量位置信息,key为变量名，value为变量序号")
-    var positionInfo: Map<String, Int?>? = null,
+    @get:Schema(title = "关联组件内容")
+    val referVersion: Int,
+    @get:Schema(title = "关联组件版本名称")
+    val referVersionName: String? = null,
     @get:Schema(title = "变量组引用列表,key为变量名，value为变量组版本号")
     var publicVarGroupRefs: Map<String, Int?> = emptyMap()
 )

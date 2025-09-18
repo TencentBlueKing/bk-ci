@@ -54,7 +54,6 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -131,6 +130,7 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -226,20 +226,29 @@ class TemplateFacadeService @Autowired constructor(
         )
         checkTemplate(template, projectId, userId)
         val templateId = UUIDUtil.generate()
+        val version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data ?: 0
+        val versionName = INIT_TEMPLATE_NAME
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templateCommonService.checkTemplateName(context, template.name, projectId, templateId)
-            updateModelParam(template)
-            val version = templateDao.create(
+            updateModelParam(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version.toInt(),
+                versionName = versionName,
+                model = template
+            )
+            templateDao.create(
                 dslContext = context,
                 projectId = projectId,
                 templateId = templateId,
                 templateName = template.name,
-                versionName = INIT_TEMPLATE_NAME,
+                versionName = versionName,
                 userId = userId,
                 template = JsonUtil.toJson(template, formatted = false),
                 storeFlag = false,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                version = version,
                 desc = template.desc
             )
             templateSettingService.saveDefaultTemplateSetting(
@@ -254,17 +263,6 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 templateName = template.name
-            )
-            publicVarGroupReferInfoService.updatePublicGroupRefer(
-                userId = userId,
-                projectId = projectId,
-                PublicVarGroupReferDTO(
-                    referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
-                    referName = template.name,
-                    referVersionName = version.toString(),
-                    params = template.getTriggerContainer().params
-                )
             )
             logger.info("Get the template version $version")
         }
@@ -560,16 +558,6 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 version = version
             )
-            publicVarGroupReferInfoService.updatePublicGroupRefer(
-                userId = userId,
-                projectId = projectId,
-                PublicVarGroupReferDTO(
-                    referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
-                    referName = "",
-                    referVersionName = version.toString()
-                )
-            )
             templateDao.delete(dslContext, projectId, templateId, setOf(version)) == 1
         }
     }
@@ -626,16 +614,6 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 versionName = versionName
             )
-            publicVarGroupReferInfoService.updatePublicGroupRefer(
-                userId = userId,
-                projectId = projectId,
-                PublicVarGroupReferDTO(
-                    referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
-                    referName = template.templateName,
-                    referVersionName = template.version.toString()
-                )
-            )
         }
         return true
     }
@@ -679,7 +657,14 @@ class TemplateFacadeService @Autowired constructor(
             .setInstanceId(templateId)
             .setInstanceName(template.name)
         templateCommonService.checkTemplateName(dslContext, template.name, projectId, templateId)
-        updateModelParam(template)
+        updateModelParam(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version.toInt(),
+            versionName = versionName,
+            model = template
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             pipelineSettingDao.updateSetting(
@@ -731,18 +716,6 @@ class TemplateFacadeService @Autowired constructor(
                     templateName = template.name
                 )
             }
-            template.handlePublicVarInfo()
-            publicVarGroupReferInfoService.updatePublicGroupRefer(
-                userId = userId,
-                projectId = projectId,
-                PublicVarGroupReferDTO(
-                    referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
-                    referName = template.name,
-                    referVersionName = version.toString(),
-                    params = template.getTriggerContainer().params
-                )
-            )
             logger.info("Get the update template version $version")
         }
 
@@ -2487,9 +2460,29 @@ class TemplateFacadeService @Autowired constructor(
         return null
     }
 
-    private fun updateModelParam(model: Model) {
+    private fun updateModelParam(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Int,
+        versionName: String,
+        model: Model
+    ) {
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }
+        model.handlePublicVarInfo()
+        publicVarGroupReferInfoService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = templateId,
+                referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                referName = model.name,
+                referVersion = version,
+                referVersionName = versionName
+            )
+        )
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (stage.name.isNullOrBlank()) stage.name = stage.id

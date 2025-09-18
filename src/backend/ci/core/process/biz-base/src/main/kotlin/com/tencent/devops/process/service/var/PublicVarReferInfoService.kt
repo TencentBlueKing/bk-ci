@@ -60,7 +60,7 @@ class PublicVarReferInfoService @Autowired constructor(
         val referId = publicVarGroupReferInfo.referId
         val referType = publicVarGroupReferInfo.referType
         val publicVarGroupRefs = publicVarGroupReferInfo.publicVarGroupRefs
-        val referVersionName = publicVarGroupReferInfo.referVersionName
+        val referVersionName = publicVarGroupReferInfo.referVersionName ?: ""
 
         try {
             dslContext.transaction { configuration ->

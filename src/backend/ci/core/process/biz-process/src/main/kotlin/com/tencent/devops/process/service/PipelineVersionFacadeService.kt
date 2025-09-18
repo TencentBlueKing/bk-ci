@@ -80,6 +80,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -761,8 +762,13 @@ class PipelineVersionFacadeService @Autowired constructor(
         /* 兼容存量数据 */
         model.desc = setting.desc
         // 更新触发器容器中的公共变量到最新版本
-        val triggerContainer = model.getTriggerContainer()
-        triggerContainer.params = publicVarService.listPublicVarByLatest(projectId, triggerContainer.params)
+        publicVarService.handleModelParams(
+            projectId = resource.projectId,
+            model = resource.model,
+            referId = pipelineId,
+            referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+            referVersion = version
+        )
         // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,

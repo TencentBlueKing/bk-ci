@@ -25,15 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.pojo.`var`.po
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class PublicVarGroupRef(
-    @get:Schema(title = "变量组名称", required = true)
+@Schema(title = "公共变量位置信息数据")
+data class PublicVarPositionPO(
+    @get:Schema(title = "变量组名称")
     val groupName: String,
-    @get:Schema(title = "版本号", required = false)
+    @get:Schema(title = "版本号")
     val version: Int? = null,
-    @get:Schema(title = "版本名称", required = false)
-    val versionName: String? = null
+    @get:Schema(title = "变量名称")
+    val varName: String,
+    @get:Schema(title = "序号 ")
+    val index: Int,
 )

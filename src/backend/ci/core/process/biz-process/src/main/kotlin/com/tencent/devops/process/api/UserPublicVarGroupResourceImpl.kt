@@ -197,14 +197,14 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String?
+        referVersion: Int
     ): Result<List<PipelinePublicVarGroupDO>> {
         return publicVarGroupService.listPipelineVariables(
             userId = userId,
             projectId = projectId,
             referId = referId,
             referType = referType,
-            referVersionName = referVersionName
+            referVersion = referVersion
         )
     }
 

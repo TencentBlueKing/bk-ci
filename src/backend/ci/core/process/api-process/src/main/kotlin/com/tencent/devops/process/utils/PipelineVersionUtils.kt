@@ -80,9 +80,9 @@ object PipelineVersionUtils {
         return try {
             var changed = false
             val originTrigger = (originModel.stages.first().containers.first() as TriggerContainer)
-                .copy(params = emptyList())
+                .copy(params = mutableListOf())
             val newTrigger = (newModel.stages.first().containers.first() as TriggerContainer)
-                .copy(params = emptyList())
+                .copy(params = mutableListOf())
             if (originTrigger == newTrigger) {
                 originTrigger.elements.forEachIndexed { index, origin ->
                     val new = newTrigger.elements[index]
