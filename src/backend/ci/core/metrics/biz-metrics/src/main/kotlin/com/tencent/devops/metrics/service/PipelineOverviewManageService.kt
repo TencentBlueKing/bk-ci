@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.service
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
+import java.time.LocalDateTime
 
 interface PipelineOverviewManageService {
 
@@ -50,4 +51,19 @@ interface PipelineOverviewManageService {
     fun queryPipelineTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<PipelineTrendInfoDO>
+    
+    /**
+     * 批量查询多个流水线最近一月执行次数
+     * @param projectId 项目ID
+     * @param pipelineIds 流水线ID列表
+     * @param startDate 开始时间
+     * @param endDate 结束时间
+     * @return 流水线ID到执行次数的映射
+     */
+    fun queryPipelineMonthlyExecCounts(
+        projectId: String,
+        pipelineIds: List<String>,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime
+    ): Map<String, Int>
 }

@@ -70,7 +70,7 @@ class ParamFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         params: List<BuildFormProperty>
-    ): List<BuildFormProperty> {
+    ): MutableList<BuildFormProperty> {
         val filterParams = mutableListOf<BuildFormProperty>()
         params.forEach {
             if (it.type == BuildFormPropertyType.SVN_TAG && (!it.repoHashId.isNullOrBlank())) {

@@ -245,7 +245,7 @@ object PipelineUtils {
      * 当参数类型为GIT/SNV分支、代码库、子流水线时,流水线保存、模板保存和模板实例化时,需要清空options参数,减少model大小.
      * options需在运行时实时计算
      */
-    fun cleanOptions(params: List<BuildFormProperty>): List<BuildFormProperty> {
+    fun cleanOptions(params: List<BuildFormProperty>): MutableList<BuildFormProperty> {
         val filterParams = mutableListOf<BuildFormProperty>()
         params.forEach {
             when (it.type) {

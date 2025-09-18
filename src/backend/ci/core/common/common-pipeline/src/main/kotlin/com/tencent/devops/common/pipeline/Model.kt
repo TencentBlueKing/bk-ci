@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import io.swagger.v3.oas.annotations.media.Schema
@@ -74,7 +75,9 @@ data class Model(
     @get:Schema(title = "模板入参", required = true)
     override var variables: Map<String, String>? = null,
     @get:Schema(title = "模板资源", required = true)
-    val resources: Resources? = null
+    val resources: Resources? = null,
+    @get:Schema(title = "公共变量组引用", required = false)
+    var publicVarGroups: List<PublicVarGroupRef>? = null
 ) : IModelTemplate {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -229,4 +232,26 @@ data class Model(
     }
 
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    /**
+     * 处理公共变量组信息
+     */
+    fun handlePublicVarInfo() {
+        if (!publicVarGroups.isNullOrEmpty()) return
+        val triggerParams = (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params
+        triggerParams ?: run {
+            publicVarGroups = emptyList()
+            return
+        }
+        publicVarGroups = triggerParams
+            .asSequence() // 转换为序列进行惰性操作
+            .filter { !it.varGroupName.isNullOrBlank() } // 过滤出有 varGroupName 的参数
+            .map { param ->
+                val varGroupVersion = param.varGroupVersion
+                val versionName = varGroupVersion?.let { "v$it" }
+                PublicVarGroupRef(param.varGroupName!!, varGroupVersion, versionName)
+            }
+            .distinctBy { it.groupName } // 根据 groupName 去重
+            .toList() // 将序列转换回 List
+    }
 }
