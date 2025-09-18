@@ -310,6 +310,7 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
+    import { isObject, isShallowEqual } from '@/utils/util'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -357,14 +358,14 @@
         // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
         let instanceParams, instanceBuildNo, instanceTriggerConfigs
         if (!props.isInstanceCreateType && instance && (curTemplateVersion.value || templateRef.value)) {
-            if (curTemplateDetail.value?.params) {
+            if (curTemplateDetail.value?.param) {
                 instanceParams = compareParams(instance, curTemplateDetail.value)
             }
             if (curTemplateDetail.value?.buildNo) {
                 instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
-            if (templateTriggerConfigs.value?.length) {
-                instanceTriggerConfigs = compareTriggerConfigs(instance?.triggerConfigs, templateTriggerConfigs.value)
+            if (curTemplateDetail.value?.triggerConfigs?.length) {
+                instanceTriggerConfigs = compareTriggerConfigs(instance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
             }
         }
         if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
@@ -450,20 +451,6 @@
         }
         return paramsList.value.length
     })
-    const templateTriggerConfigs = computed(() => {
-        const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
-        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
-            atomCode: i.atomCode,
-            id: i.id,
-            stepId: i.stepId ?? '',
-            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
-            cron: i.advanceExpression,
-            variables: i.startParams,
-            name: i.name,
-            version: i.version,
-            isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
-        }))
-    })
     watch(() => activeIndex.value, () => {
         isLoading.value = true
     })
@@ -473,7 +460,7 @@
     }, {
         deep: true
     })
-    watch(() => [curTemplateVersion.value], () => {
+    watch(() => curTemplateVersion.value, () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
@@ -483,7 +470,7 @@
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
                 return {
                     ...instance,
-                    param: curTemplateDetail.value?.params?.map(i => ({
+                    param: curTemplateDetail.value?.param?.map(i => ({
                         ...i,
                         isRequiredParam: true
                     })),
@@ -496,7 +483,7 @@
     })
     function compareParams (instance, template) {
         const instanceParams = instance?.param ?? []
-        const templateParams = template?.params ?? []
+        const templateParams = template?.param ?? []
         const instanceBuildNo = instance?.buildNo
         const templateBuildNo = template?.buildNo
 
@@ -533,9 +520,14 @@
                 if (item.isFollowTemplate) {
                     item.defaultValue = templateParamItem.defaultValue
                 } else {
-                    item.isChange = item.defaultValue !== templateParamItem.defaultValue
+                    item.isChange = isObject(item.defaultValue)
+                        ? !isShallowEqual(item.defaultValue, templateParamItem.defaultValue)
+                        : item.defaultValue !== templateParamItem.defaultValue
                 }
-                item.required = templateParamItem.required
+                if (!item.required && templateParamItem.required) {
+                    item.required = true
+                    item.isRequiredParam = true
+                }
             }
         }
 
@@ -575,7 +567,7 @@
         if (instanceBuildNo?.isFollowTemplate) {
             return {
                 ...instanceBuildNo,
-                ...templateBuildNo
+                buildNo: templateBuildNo.buildNo
             }
         } else {
             if (!instanceBuildNo && !!templateBuildNo) {
@@ -609,7 +601,7 @@
     }
     
     function handleUseDefaultValue (id) {
-        const defaultValue = curTemplateDetail.value?.params?.find(i => i.id === id)?.defaultValue
+        const defaultValue = curTemplateDetail.value?.param?.find(i => i.id === id)?.defaultValue
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
@@ -752,7 +744,7 @@
                                 return {
                                     ...p,
                                     defaultValue: allVersionKeyList.includes(p.id)
-                                        ? curTemplateDetail.value.params?.find(t => t.id === p.id)?.defaultValue
+                                        ? curTemplateDetail.value.param?.find(t => t.id === p.id)?.defaultValue
                                         : p.defaultValue
                                 }
                             })
@@ -762,7 +754,7 @@
                 break
 
             case 'trigger':
-                const temTriggerValue = templateTriggerConfigs.value?.find(trigger => trigger.stepId === id).disabled
+                const temTriggerValue = curTemplateDetail.value.triggerConfigs?.find(trigger => trigger.stepId === id).disabled
                 const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
                 index = triggerStepIds.indexOf(target)
                 index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
@@ -786,7 +778,7 @@
                 })
                 break
             case 'param':
-                const temDefaultValue =  curTemplateDetail.value.params?.find(t => t.id === id)?.defaultValue
+                const temDefaultValue =  curTemplateDetail.value.param?.find(t => t.id === id)?.defaultValue
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
                 proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {

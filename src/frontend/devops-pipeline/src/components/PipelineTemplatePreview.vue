@@ -185,7 +185,8 @@
             async getRequestTemplatePreview () {
                 return this.requestTemplatePreview({
                     projectId: this.$route.params.projectId,
-                    templateId: this.templatePipeline.templateId || this.templatePipeline.id,
+                    // 研发商店的模板用srcTemplateId
+                    templateId: this.templatePipeline.srcTemplateId || this.templatePipeline.templateId || this.templatePipeline.id,
                     highlightType: this.highlightType
                 })
             },

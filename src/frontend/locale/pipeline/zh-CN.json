@@ -434,7 +434,7 @@
     "previewDiff": "编排预览",
     "templateInstantiation": "模板实例化",
     "templateVersion": "模板版本",
-    "applyTemplateSetting": "同时应用模板设置",
+    "applyTemplateSetting": "复制模板设置到实例",
     "applyTemplateSettingTips": {
       "create": {
         "tips1": "● 勾选后，实例的标签、描述、运行设置、通知等设置信息，将使用模版设置进行初始化",

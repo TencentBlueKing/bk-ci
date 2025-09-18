@@ -444,6 +444,7 @@
     "previewDiff": "Arrange Preview",
     "templateInstantiation": "Instantiate Templates",
     "templateVersion": "Template Version",
+    "applyTemplateSetting": "Apply Template Settings to Instance",
     "applyTemplateSettingTips": {
       "create": {
         "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other setting information will be initialized using template settings",

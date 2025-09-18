@@ -119,7 +119,6 @@
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     const props = defineProps({
@@ -145,18 +144,6 @@
     })
     const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
     const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
-    const templateTriggerConfigs = computed(() => {
-        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
-            atomCode: i.atomCode,
-            stepId: i.stepId ?? '',
-            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
-            cron: i.advanceExpression,
-            variables: i.startParams,
-            name: i.name,
-            version: i.version,
-            isFollowTemplate: true
-        }))
-    })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     watch(() => curTemplateDetail.value, (val) => {
         if (pipelineName.value) {
@@ -282,29 +269,10 @@
         }
     }
     function handleAddInstance () {
-        if (!curTemplateDetail.value?.params) return
-        const { params, buildNo } = deepClone(curTemplateDetail.value)
+        const instanceParams = deepClone(curTemplateDetail.value)
         const newInstance = {
-            enablePac: false,
-            pipelineName: pipelineName.value ?? '',
-            param: params.map(p => {
-                return {
-                    ...p,
-                    isRequiredParam: p.required,
-                    isFollowTemplate: false
-                }
-            }),
-            overrideTemplateField: {
-                paramIds: params.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(i => i.id)
-            },
-            ...(buildNo ? {
-                buildNo: {
-                    ...buildNo,
-                    isRequiredParam: buildNo.required,
-                    isFollowTemplate: false
-                }
-            } : undefined),
-            triggerConfigs: templateTriggerConfigs.value
+            ...instanceParams,
+            pipelineName: pipelineName.value ?? ''
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
         proxy?.$nextTick(() => {
