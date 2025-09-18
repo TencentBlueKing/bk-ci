@@ -379,7 +379,13 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
 
-        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
+        val propertyMap = getArtifactoryPropertiesMap(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = experience.path,
+            platform = experience.platform
+        )
 
         val experienceId = createExperience(
             projectId = projectId,
@@ -422,13 +428,19 @@ class ExperienceService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
-        path: String
+        path: String,
+        platform: String? = null
     ): MutableMap<String, String> {
         val properties =
             client.get(ServiceArtifactoryResource::class).properties(userId, projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
+        }
+        if (platform?.uppercase() == PlatformEnum.WIN.name) {
+            propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] = ""
+            propertyMap[ARCHIVE_PROPS_APP_VERSION] = "1.0.0"
+            propertyMap[ARCHIVE_PROPS_APP_ICON] = ""
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
@@ -472,6 +484,29 @@ class ExperienceService @Autowired constructor(
             experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
         }
 
+        val platform = if (experience.platform == null) {
+            PlatformEnum.ofTail(experience.path)
+        } else {
+            PlatformEnum.ofName(experience.platform!!).also {
+                for (t in it.tails) {
+                    if (experience.path.endsWith(t)) {
+                        return@also
+                    }
+                }
+                logger.warn("experience path not match platform")
+                throw RuntimeException("experience path not match platform")
+            }
+        }
+
+        if (platform == PlatformEnum.WIN) {
+            if (experience.experienceName.isNullOrBlank()) {
+                throw RuntimeException("windows experience name is empty")
+            }
+            if (experience.bundleIdentifier.isNullOrBlank()) {
+                throw RuntimeException("windows experience bundleIdentifier is empty")
+            }
+        }
+
         val fileDetail =
             client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
@@ -508,9 +543,16 @@ class ExperienceService @Autowired constructor(
             experience.outerUsers
         }
 
-        val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
-        val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val platform = PlatformEnum.ofTail(experience.path)
+        val appBundleIdentifier = if (platform == PlatformEnum.WIN) {
+            experience.bundleIdentifier!!
+        } else {
+            propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
+        }
+        val appVersion = if (platform == PlatformEnum.WIN) {
+            experience.version ?: "未知"
+        } else {
+            propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        }
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -873,7 +915,13 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
+        val propertyMap = getArtifactoryPropertiesMap(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            platform = experience.platform
+        )
 
         if (!experience.scheme.isNullOrBlank()) {
             propertyMap[ARCHIVE_PROPS_APP_SCHEME] = experience.scheme!!
@@ -914,7 +962,10 @@ class ExperienceService @Autowired constructor(
             categoryId = experience.categoryId,
             productOwner = experience.productOwner,
             sendNotification = experience.sendNotification,
-            classify = experience.classify
+            classify = experience.classify,
+            platform = experience.platform,
+            bundleIdentifier = experience.bundleIdentifier,
+            version = experience.version
         )
 
         val experienceId = createExperience(

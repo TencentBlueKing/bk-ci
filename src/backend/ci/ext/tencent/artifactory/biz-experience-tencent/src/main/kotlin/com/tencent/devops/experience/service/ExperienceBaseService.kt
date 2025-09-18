@@ -156,7 +156,7 @@ class ExperienceBaseService @Autowired constructor(
                 platform = PlatformEnum.valueOf(it.platform),
                 source = Source.valueOf(it.source),
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                name = it.projectId,
+                name = it.name,
                 version = it.version,
                 bundleIdentifier = it.bundleIdentifier,
                 experienceName = it.experienceName ?: it.projectId,

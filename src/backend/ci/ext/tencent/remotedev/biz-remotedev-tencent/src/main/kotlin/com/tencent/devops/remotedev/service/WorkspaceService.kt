@@ -901,6 +901,15 @@ class WorkspaceService @Autowired constructor(
                 mountType = it.workspaceMountType
             )
         }
+        // 异常状态恢复后，需要重新检查修正
+        if (it.status.checkException() && status?.status == ComputerStatusEnum.NORMAL) {
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
+            )
+        }
         return it.status
     }
 
@@ -1227,9 +1236,9 @@ class WorkspaceService @Autowired constructor(
         val userAll = kotlin.runCatching {
             client.get(ServiceTxProjectResource::class).list(userId, null).data
         }.onFailure {
-            logger.error("error in ServiceTxProjectResource::list|$userId", it)
+            logger.warn("error in ServiceTxProjectResource::list|$userId", it)
         }.getOrNull()?.map { it.englishName }?.toSet() ?: kotlin.run {
-            logger.error("fail to get user projects|$userId")
+            logger.warn("fail to get user projects|$userId")
             return emptyList()
         }
         val userHas = all.intersect(userAll)
@@ -1238,7 +1247,7 @@ class WorkspaceService @Autowired constructor(
         }.onFailure {
             logger.warn("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
         }.getOrNull() ?: kotlin.run {
-            logger.error("fail to get user env|$userId|$userHas")
+            logger.warn("fail to get user env|$userId|$userHas")
             emptyList()
         }
     }
@@ -1448,6 +1457,10 @@ class WorkspaceService @Autowired constructor(
                 hasIpPermissions = true
                 hasMacPermissions = true
             }
+        }
+        // 新增逻辑：如果userId非空且是集团员工，并且hasIpPermissions=false，则置为true
+        if (userId.isNotEmpty() && !userId.endsWith("@tai") && !hasIpPermissions) {
+            hasIpPermissions = true
         }
     }
 

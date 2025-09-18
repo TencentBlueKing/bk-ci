@@ -61,7 +61,7 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "APP_EXPERIENCE", description = "版本体验-发布体验")
-@Path("/{apiType:app|user}/experiences")
+@Path("/app/experiences")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList", "TooManyFunctions")

@@ -67,5 +67,11 @@ data class ExperienceCreate(
     @get:Schema(title = "是否发送通知", required = false)
     val sendNotification: Boolean = true,
     @get:Schema(title = "分类", required = false)
-    val classify: String? = null
+    val classify: String? = null,
+    @get:Schema(title = "平台", required = false)
+    val platform: String? = null,
+    @get:Schema(title = "应用标识", required = false)
+    val bundleIdentifier: String? = null,
+    @get:Schema(title = "版本", required = false)
+    val version: String? = null
 )

@@ -36,9 +36,10 @@
                 <i class="devops-icon icon-circle-2-1 spin-icon" />
                 {{ $t('needSignTips', [name]) }}
             </b>
-            <span class="signing-duration-tips">
-                {{ $t('apkSignDurationTips') }}
-            </span>
+            <pre
+                class="signing-duration-tips"
+                v-if="signingDurationTips"
+            >{{ signingDurationTips }}</pre>
             <footer slot="footer">
                 <bk-button
                     @click="cancelDownloading"
@@ -51,6 +52,7 @@
 </template>
 
 <script>
+    import request from '@/utils/request'
     export default {
         props: {
             downloadIcon: Boolean,
@@ -79,7 +81,8 @@
             return {
                 visible: false,
                 signingMap: new Map(),
-                isLoading: false
+                isLoading: false,
+                signingDurationTips: ''
             }
         },
         computed: {
@@ -132,6 +135,7 @@
                             this.setVisible(false)
                             this.$bkMessage({
                                 theme: 'success',
+                                extCls: 'apk-sign',
                                 message: this.$t('apkSignSuccess', [this.name])
                             })
 
@@ -140,7 +144,7 @@
                         this.signingMap.delete(this.path)
                     }
                 } catch (err) {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    this.$bkMessage({ theme: 'error', message: err.message || err, extCls: 'apk-sign' })
                 } finally {
                     this.isLoading = false
                 }
@@ -164,9 +168,15 @@
             },
             async checkApkSigned (url) {
                 try {
-                    await this.$ajax.head(url)
+                    await request.get(url, { headers: { 'Range': 'bytes=0-1' } })
+                    this.signingDurationTips = ''
                     return true
                 } catch (err) {
+                    if (err.httpStatus === 451) {
+                        this.signingDurationTips = err.message || ''
+                    } else {
+                        this.signingDurationTips = ''
+                    }
                     return err.httpStatus !== 451
                 }
             },
@@ -175,6 +185,7 @@
                 this.resolve?.(false)
                 this.resolve = null
                 this.setVisible(false)
+                this.signingDurationTips = ''
             },
             getFolderSize (payload) {
                 if (!payload.folder) return '0'
@@ -210,7 +221,14 @@
         cursor: not-allowed;
     }
     .signing-duration-tips {
+        font-family: inherit;
+        white-space: pre-wrap;
+        margin: 0;
+        padding: 0;
         color: #979ba5;
         font-size: 12px;
+    }
+    .apk-sign {
+        z-index: 6666 !important;
     }
 </style>

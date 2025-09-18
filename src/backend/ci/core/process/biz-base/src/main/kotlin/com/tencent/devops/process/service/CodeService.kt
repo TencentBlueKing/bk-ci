@@ -192,7 +192,8 @@ class CodeService @Autowired constructor(
             .get(
                 projectId = projectId,
                 credentialId = credentialId,
-                publicKey = encoder.encodeToString(pair.publicKey)
+                publicKey = encoder.encodeToString(pair.publicKey),
+                padding = true
             )
 
         if (result.isNotOk() || result.data == null) {

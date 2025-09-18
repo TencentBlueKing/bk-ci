@@ -256,18 +256,12 @@ const handleAuthorize = () => {
       <div class="content">
         <div class="title">{{ t(' OAUTH授权') }}</div>
         <div class="oauth-tips">
-          <template v-if="oauth.scmCode === 'GITHUB'">
-            <p>{{ t('此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
-            <p>1.{{ t('回写 Commit statuses 到 Github') }}</p>
-            <p>2.{{ t('流水线中 Checkout 代码') }}</p>
-            <p>{{ t('需拥有代码库 Push 权限') }}</p>
-          </template>
-          <template v-else>
-            <p>{{ t('此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
-            <p>1.{{ t('注册 Webhook 到工蜂') }}</p>
-            <p>2.{{ t('回写提交检测状态到工蜂') }}</p>
-            <p>3.{{ t('流水线中 Checkout 代码') }}</p>
-            <p>{{ t('需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+          <template>
+            <p>{{ t('此授权用于平台和代码库进行交互，涉及如下功能：') }}</p>
+            <p>1.{{ t('1.注册 Webhook 到代码库，用于事件触发场景') }}</p>
+            <p>2.{{ t('2.回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景"') }}</p>
+            <p>3.{{ t('3.流水线中 Checkout 代码') }}</p>
+            <p>{{ t('拥有代码库注册 Webhook 权限') }}</p>
           </template>
         </div>
         <bk-button

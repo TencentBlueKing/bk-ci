@@ -111,6 +111,7 @@ class WindowsResourceZoneDao {
                 .set(SHORT_NAME, config.zoneShortName)
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
+                .set(TYPE, config.type.name)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()

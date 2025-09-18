@@ -30,6 +30,9 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.scm.api.exception.NotFoundScmApiException
 import com.tencent.devops.scm.api.pojo.BranchListOptions
 import com.tencent.devops.scm.api.pojo.Change
+import com.tencent.devops.scm.api.pojo.CheckRun
+import com.tencent.devops.scm.api.pojo.CheckRunInput
+import com.tencent.devops.scm.api.pojo.CheckRunListOptions
 import com.tencent.devops.scm.api.pojo.Comment
 import com.tencent.devops.scm.api.pojo.CommentInput
 import com.tencent.devops.scm.api.pojo.Commit
@@ -51,8 +54,6 @@ import com.tencent.devops.scm.api.pojo.PullRequestListOptions
 import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.ReferenceInput
 import com.tencent.devops.scm.api.pojo.RepoListOptions
-import com.tencent.devops.scm.api.pojo.Status
-import com.tencent.devops.scm.api.pojo.StatusInput
 import com.tencent.devops.scm.api.pojo.TagListOptions
 import com.tencent.devops.scm.api.pojo.Tree
 import com.tencent.devops.scm.api.pojo.User
@@ -138,22 +139,29 @@ class ScmApiManager constructor(
         scmProviderManager.repositories(providerProperties).deleteHook(providerRepository, hookId)
     }
 
-    fun listStatus(
+    /*============================================check-run============================================*/
+    fun listCheckRun(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository,
-        ref: String,
-        opts: ListOptions
-    ): List<Status> {
-        return scmProviderManager.repositories(providerProperties).listStatus(providerRepository, ref, opts)
+        opts: CheckRunListOptions
+    ): List<CheckRun> {
+        return scmProviderManager.checkRun(providerProperties).getCheckRuns(providerRepository, opts)
     }
 
-    fun createStatus(
+    fun createCheckRun(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository,
-        ref: String,
-        input: StatusInput
-    ): Status {
-        return scmProviderManager.repositories(providerProperties).createStatus(providerRepository, ref, input)
+        input: CheckRunInput
+    ): CheckRun {
+        return scmProviderManager.checkRun(providerProperties).create(providerRepository, input)
+    }
+
+    fun updateCheckRun(
+        providerProperties: ScmProviderProperties,
+        providerRepository: ScmProviderRepository,
+        input: CheckRunInput
+    ): CheckRun {
+        return scmProviderManager.checkRun(providerProperties).update(providerRepository, input)
     }
 
     /*============================================refs============================================*/

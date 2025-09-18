@@ -16,7 +16,8 @@ class BuildPasswordResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         realIp: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<PasswordInfo?> {
         return Result(
             buildTaskService.getPassword(
@@ -24,7 +25,8 @@ class BuildPasswordResourceImpl @Autowired constructor(
                 pipelineId,
                 buildId,
                 realIp,
-                publicKey
+                publicKey,
+                padding ?: false
             )
         )
     }

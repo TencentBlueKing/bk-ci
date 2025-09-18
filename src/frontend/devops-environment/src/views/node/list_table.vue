@@ -332,14 +332,14 @@
                                 <span
                                     v-bk-tooltips="{
                                         content: $t('environment.主机负责人已变更，请联系主机负责人重新授权使用'),
-                                        disabled: userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator
+                                        disabled: !(props.row.allOperator.split(';').indexOf(userInfo.username) === -1)
                                     }"
                                 >
                                     <bk-button
-                                        v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                        v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && !props.row.bakOperator.includes(props.row.createdUser))
                                             || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                                         class="mr5"
-                                        :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                        :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
                                         text
                                         @click="changeCreatedUser(props.row)"
                                     >
@@ -350,7 +350,7 @@
                                 <span
                                     v-bk-tooltips="{
                                         content: $t('environment.你不是主机负责人，请联系主机负责人重新导入使用'),
-                                        disabled: userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator
+                                        disabled: !(props.row.allOperator.split(';').indexOf(userInfo.username) === -1)
                                     }"
                                 >
                                     <bk-button
@@ -367,7 +367,7 @@
                                                 action: NODE_RESOURCE_ACTION.EDIT
                                             }
                                         }"
-                                        :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                        :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
                                         @click="handleReImport(props.row)"
                                     >
                                         {{ $t('environment.reImport') }}
@@ -437,8 +437,7 @@
                                 </bk-button>
                             </template>
                             <span
-                                v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                text
+                                v-if="['THIRDPARTY'].includes(props.row.nodeType)"
                                 v-perm="{
                                     hasPermission: props.row.canEdit,
                                     disablePermissionApi: true,
