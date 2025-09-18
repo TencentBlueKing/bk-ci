@@ -33,13 +33,16 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.pojo.MonitorConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.utils.TokenEncryptUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,12 +55,48 @@ class RemoteDevSettingService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val whiteListService: WhiteListService,
     private val taiClient: TaiClient,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val configDao: ConfigDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevSettingService::class.java)
         private const val BKREPO_HOST_KEY = "remotedev:bkrepoHost"
+        private const val MONITOR_URL_KEY = "monitor:url"
+        private const val MONITOR_TOKEN_KEY = "monitor:token"
+    }
+
+    /**
+     * 获取监控配置信息
+     *
+     * @return 监控配置对象，包含URL和加密Token
+     */
+    fun getMonitorConfig(): MonitorConfig {
+        logger.debug("Getting monitor configuration")
+
+        try {
+            // 从缓存或数据库获取监控URL
+            val monitorUrl = configCacheService.get(MONITOR_URL_KEY)
+                ?: configDao.fetchConfig(dslContext, MONITOR_URL_KEY)
+
+            // 从缓存或数据库获取原始Token
+            val originalToken = configCacheService.get(MONITOR_TOKEN_KEY)
+                ?: configDao.fetchConfig(dslContext, MONITOR_TOKEN_KEY)
+
+            // 对Token进行加密
+            val encryptedToken = originalToken?.let { TokenEncryptUtil.encryptToken(it) }
+
+            val enabled = !monitorUrl.isNullOrBlank() && !encryptedToken.isNullOrBlank()
+
+            return MonitorConfig(
+                monitorUrl = monitorUrl,
+                monitorToken = encryptedToken,
+                enabled = enabled
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to get monitor configuration", e)
+            return MonitorConfig(enabled = false)
+        }
     }
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
@@ -75,7 +114,15 @@ class RemoteDevSettingService @Autowired constructor(
                 setting.projectId = it?.data?.englishName ?: ""
             }
         }
-        return setting
+
+        // 获取监控配置信息
+        val monitorConfig = getMonitorConfig()
+
+        // 在现有设置基础上添加监控配置信息
+        return setting.copy(
+            monitorUrl = monitorConfig.monitorUrl,
+            monitorToken = monitorConfig.monitorToken
+        )
     }
 
     fun getFileGateway(): Map<String, String> {

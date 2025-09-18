@@ -29,6 +29,19 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * 监控配置数据类
+ */
+@Schema(title = "监控配置")
+data class MonitorConfig(
+    @get:Schema(title = "监控上报URL")
+    val monitorUrl: String? = null,
+    @get:Schema(title = "加密后的监控Token")
+    val monitorToken: String? = null,
+    @get:Schema(title = "监控是否启用")
+    val enabled: Boolean = false
+)
+
 @Schema(title = "远程开发配置")
 data class RemoteDevSettings(
     @get:Schema(title = "默认shell")
@@ -56,5 +69,9 @@ data class RemoteDevSettings(
     @get:Schema(title = "公司名称")
     var companyName: String = "",
     @get:Schema(title = "平台维护的用户管理设置")
-    val userSetting: RemoteDevUserSettings = RemoteDevUserSettings()
+    val userSetting: RemoteDevUserSettings = RemoteDevUserSettings(),
+    @get:Schema(title = "监控上报URL")
+    val monitorUrl: String? = null,
+    @get:Schema(title = "加密后的监控Token")
+    val monitorToken: String? = null
 )
