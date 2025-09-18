@@ -210,7 +210,7 @@
                 }, {
                     prop: 'creator',
                     width: 120,
-                    label: this.$t('template.lastModifiedBy')
+                    label: this.isTemplate ? this.$t('creator') : this.$t('template.lastModifiedBy')
                 }, {
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),

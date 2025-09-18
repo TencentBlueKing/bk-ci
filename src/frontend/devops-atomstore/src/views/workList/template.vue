@@ -161,7 +161,7 @@
                     v-if="allRenderColumnMap.operate"
                     :label="$t('store.操作')"
                     width="300"
-                    flxed="right"
+                    fixed="right"
                     class-name="handler-btn"
                 >
                     <template slot-scope="props">
