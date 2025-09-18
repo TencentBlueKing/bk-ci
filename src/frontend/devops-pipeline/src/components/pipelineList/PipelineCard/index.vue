@@ -70,7 +70,7 @@
                     v-else
                     class="bk-pipeline-card-summary"
                 >
-                    {{ $t('restore.deleter') }}: {{ getPipelineDeleteInfo(pipeline.pipelineDesc) }}
+                    {{ $t('restore.deleter') }}: {{ getPipelineDeleteInfo(pipeline) }}
                 </p>
             </aside>
             <aside
@@ -256,6 +256,7 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -311,31 +312,10 @@
 
         },
         methods: {
-            parseExpression (str) {
-                const year = '20' + str.slice(0, 2)
-                const month = str.slice(2, 4)
-                const day = str.slice(4, 6)
-                const hour = str.slice(6, 8)
-                const minute = str.slice(8, 10)
-                let second = str.slice(10, 12)
-
-                second = (parseInt(second, 10) % 60).toString().padStart(2, '0')
-
-                return `${year}-${month}-${day} ${hour}:${minute}:${second}`
-            },
-            getPipelineDeleteInfo (pipelineDesc){
-                if(!pipelineDesc) {
-                    return
-                }
-                const regex = /^DELETE BY (\S+) in (\S+)$/
-                const match = pipelineDesc.match(regex)
-
-                if (match) {
-                    const deletedBy = match[1]
-                    const deleteTime = this.parseExpression(match[2])
-                    
-                    return `${deletedBy} ${deleteTime}`
-                }
+            getPipelineDeleteInfo (pipeline){
+                const {updater, updateTime} = pipeline
+                const deleteTime = convertTime(updateTime)
+                return `${updater} ${deleteTime}`
             },
             applyPermission (pipeline) {
                 handlePipelineNoPermission({
