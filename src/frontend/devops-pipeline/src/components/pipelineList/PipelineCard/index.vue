@@ -323,9 +323,12 @@
 
                 return `${year}-${month}-${day} ${hour}:${minute}:${second}`
             },
-            getPipelineDeleteInfo (pipeline){
+            getPipelineDeleteInfo (pipelineDesc){
+                if(!pipelineDesc) {
+                    return
+                }
                 const regex = /^DELETE BY (\S+) in (\S+)$/
-                const match = pipeline.match(regex)
+                const match = pipelineDesc.match(regex)
 
                 if (match) {
                     const deletedBy = match[1]
