@@ -77,7 +77,7 @@ data class Model(
     @get:Schema(title = "模板资源", required = true)
     val resources: Resources? = null,
     @get:Schema(title = "公共变量组引用", required = false)
-    var publicVarGroups: List<PublicVarGroupRef> = emptyList()
+    var publicVarGroups: List<PublicVarGroupRef>? = null
 ) : IModelTemplate {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -237,26 +237,21 @@ data class Model(
      * 处理公共变量组信息
      */
     fun handlePublicVarInfo() {
-        val triggerContainer = stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
-        triggerContainer ?: return
-        val params = triggerContainer.params
-
-        // 从params获取varGroupName不为空的参数
-        val varGroupParams = params.filter { !it.varGroupName.isNullOrBlank() }
-
-        if (varGroupParams.isEmpty()) {
-            // 如果没有公共变量组参数，清空publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) return
+        val triggerParams = (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params
+        triggerParams ?: run {
             publicVarGroups = emptyList()
             return
-        } else {
-            publicVarGroups = varGroupParams
-                .asSequence()
-                .map {
-                    val versionName = it.varGroupVersion?.let { version -> "v$version" }
-                    PublicVarGroupRef(it.varGroupName!!, versionName)
-                }
-                .distinctBy { it.groupName }
-                .toList()
         }
+        publicVarGroups = triggerParams
+            .asSequence() // 转换为序列进行惰性操作
+            .filter { !it.varGroupName.isNullOrBlank() } // 过滤出有 varGroupName 的参数
+            .map { param ->
+                val varGroupVersion = param.varGroupVersion
+                val versionName = varGroupVersion?.let { "v$it" }
+                PublicVarGroupRef(param.varGroupName!!, varGroupVersion, versionName)
+            }
+            .distinctBy { it.groupName } // 根据 groupName 去重
+            .toList() // 将序列转换回 List
     }
 }

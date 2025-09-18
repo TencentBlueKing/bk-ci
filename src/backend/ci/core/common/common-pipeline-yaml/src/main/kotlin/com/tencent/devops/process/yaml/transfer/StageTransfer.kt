@@ -106,7 +106,7 @@ class StageTransfer @Autowired(required = false) constructor(
         val params = mutableListOf<BuildFormProperty>()
         var publicParam: List<BuildFormProperty>? = null
         val varGroupRefs = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
-            PublicVarGroupRef(it.name, it.version)
+            PublicVarGroupRef(groupName = it.name, versionName = it.version)
         }
         if (varGroupRefs.isNotEmpty()) {
             publicParam = client.get(ServicePublicVarGroupResource::class).getProjectPublicParam(

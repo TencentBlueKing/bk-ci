@@ -27,9 +27,13 @@
 
 package com.tencent.devops.process.dao.`var`
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
+import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupReferInfoRecord
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -62,21 +66,7 @@ class PublicVarGroupReferInfoDao {
                 .offset((page - 1) * pageSize)
                 .fetch()
                 .map {
-                    PipelinePublicVarGroupReferPO(
-                        id = it.id,
-                        projectId = it.projectId,
-                        groupName = it.groupName,
-                        version = it.version,
-                        referId = it.referId,
-                        referName= it.referName,
-                        referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
-                        createTime = it.createTime,
-                        updateTime = it.updateTime,
-                        creator = it.creator,
-                        modifier = it.modifier,
-                        referVersionName = it.referVersionName,
-                        positionInfo = it.positionInfo
-                    )
+                    convertPipelinePublicVarGroupReferPO(it)
                 }
         }
     }
@@ -86,38 +76,46 @@ class PublicVarGroupReferInfoDao {
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String? = null
+        referVersion: Int? = null
     ): List<PipelinePublicVarGroupReferPO> {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
             conditions.add(REFER_ID.eq(referId))
             conditions.add(REFER_TYPE.eq(referType.name))
-            if (referVersionName != null) {
-                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            referVersion?.let {
+                conditions.add(REFER_VERSION.eq(referVersion))
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.asc())
                 .fetch()
                 .map {
-                    PipelinePublicVarGroupReferPO(
-                        id = it.id,
-                        projectId = it.projectId,
-                        groupName = it.groupName,
-                        version = it.version,
-                        referId = it.referId,
-                        referName= it.referName,
-                        referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
-                        createTime = it.createTime,
-                        updateTime = it.updateTime,
-                        creator = it.creator,
-                        modifier = it.modifier,
-                        referVersionName = it.referVersionName,
-                        positionInfo = it.positionInfo
-                    )
+                    convertPipelinePublicVarGroupReferPO(it)
                 }
         }
     }
+
+    private fun convertPipelinePublicVarGroupReferPO(
+        publicVarGroupReferInfoRecord: TPipelinePublicVarGroupReferInfoRecord
+    ) = PipelinePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
+        projectId = publicVarGroupReferInfoRecord.projectId,
+        groupName = publicVarGroupReferInfoRecord.groupName,
+        version = publicVarGroupReferInfoRecord.version,
+        referId = publicVarGroupReferInfoRecord.referId,
+        referName = publicVarGroupReferInfoRecord.referName,
+        referType = PublicVerGroupReferenceTypeEnum.valueOf(publicVarGroupReferInfoRecord.referType),
+        createTime = publicVarGroupReferInfoRecord.createTime,
+        updateTime = publicVarGroupReferInfoRecord.updateTime,
+        creator = publicVarGroupReferInfoRecord.creator,
+        modifier = publicVarGroupReferInfoRecord.modifier,
+        referVersion = publicVarGroupReferInfoRecord.referVersion,
+        referVersionName = publicVarGroupReferInfoRecord.referVersionName,
+        positionInfo = publicVarGroupReferInfoRecord.positionInfo?.let {
+            JsonUtil.to(
+                json = it,
+                typeReference = object : TypeReference<List<PublicVarPositionPO>>() {}
+            )
+        })
 
     fun countByPublicVarGroupRef(
         dslContext: DSLContext,
@@ -209,7 +207,6 @@ class PublicVarGroupReferInfoDao {
         dslContext: DSLContext,
         pipelinePublicVarGroupReferPOs: List<PipelinePublicVarGroupReferPO>
     ) {
-
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val insertSteps = pipelinePublicVarGroupReferPOs.map { po ->
                 dslContext.insertInto(
@@ -221,6 +218,7 @@ class PublicVarGroupReferInfoDao {
                     REFER_ID,
                     REFER_TYPE,
                     REFER_NAME,
+                    REFER_VERSION,
                     REFER_VERSION_NAME,
                     POSITION_INFO,
                     CREATOR,
@@ -235,13 +233,18 @@ class PublicVarGroupReferInfoDao {
                     po.referId,
                     po.referType.name,
                     po.referName,
+                    po.referVersion,
                     po.referVersionName,
-                    po.positionInfo,
+                    po.positionInfo?.let { JsonUtil.toJson(it, false) },
                     po.creator,
                     po.modifier,
                     po.createTime,
                     po.updateTime
-                )
+                ).onDuplicateKeyUpdate()
+                    .set(REFER_NAME, po.referName)
+                    .set(POSITION_INFO, po.positionInfo?.let { JsonUtil.toJson(it, false) })
+                    .set(MODIFIER, po.modifier)
+                    .set(UPDATE_TIME, po.updateTime)
             }
             dslContext.batch(insertSteps).execute()
         }

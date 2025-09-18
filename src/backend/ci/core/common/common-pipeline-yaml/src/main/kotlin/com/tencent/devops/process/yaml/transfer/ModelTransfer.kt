@@ -282,7 +282,7 @@ class ModelTransfer @Autowired constructor(
         val variables = mutableMapOf<String, Any>()
         modelInput.model.handlePublicVarInfo()
         val publicVarGroupNames = modelInput.model.publicVarGroups
-        if (publicVarGroupNames.isNotEmpty()) {
+        if (!publicVarGroupNames.isNullOrEmpty()) {
             variables[BK_PIPELINE_YAML_PUB_VAR_GROUP_ID] = publicVarGroupNames.map {
                 VariableTemplate(it.groupName, it.versionName)
             }

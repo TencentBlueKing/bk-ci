@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
@@ -56,6 +55,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.`var`.PublicVarService
@@ -216,10 +216,12 @@ class PipelineBuildService(
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
 
-            resource.model.getTriggerContainer().params = publicVarService.listPublicVarByLatest(
+            publicVarService.handleModelParams(
                 projectId = resource.projectId,
-                params = resource.model.getTriggerContainer().params,
-                maintainOrder = false
+                model = resource.model,
+                referId = pipeline.pipelineId,
+                referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                referVersion = pipeline.version
             )
             initPipelineParamMap(
                 buildId = buildId,

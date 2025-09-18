@@ -815,16 +815,16 @@ class PipelineRepositoryService constructor(
                         versionNum, pipelineVersion, triggerVersion, settingVersion
                     )
                 }
-                publicVarGroupReferInfoService.updatePublicGroupRefer(
-                    userId = userId,
-                    projectId = projectId,
+                publicVarGroupReferInfoService.handleVarGroupReferBus(
                     PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = model,
                         referId = pipelineId,
                         referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
                         referName = model.name,
-                        // 分支版本直接使用版本名称进行记录
-                        referVersionName = getPublicVarReferVersionName(versionName, versionStatus),
-                        params = model.getTriggerContainer().params
+                        referVersion = 1,
+                        referVersionName = versionName ?: ""
                     )
                 )
 
@@ -1233,6 +1233,19 @@ class PipelineRepositoryService constructor(
                     }
                 }
 
+                publicVarGroupReferInfoService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = model,
+                        referId = pipelineId,
+                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
+                        referVersion = version,
+                        referVersionName = versionName
+                    )
+                )
+
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
@@ -1262,19 +1275,6 @@ class PipelineRepositoryService constructor(
                         pipelineId = pipelineId,
                         currentVersion = version,
                         maxPipelineResNum = it
-                    )
-                }
-                referVersionName?.let {
-                    publicVarGroupReferInfoService.updatePublicGroupRefer(
-                        userId = userId,
-                        projectId = projectId,
-                        PublicVarGroupReferDTO(
-                            referId = pipelineId,
-                            referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                            referName = model.name,
-                            referVersionName = it,
-                            params = model.getTriggerContainer().params
-                        )
                     )
                 }
             }
