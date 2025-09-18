@@ -102,9 +102,17 @@ class PipelineBuildVersionDiffService(
                     templateId = currTemplatePipeline.templateId
                 )!!
 
+                /**
+                 * 判断流水线模板版本是否发生变化（当满足以下所有条件时）：
+                 * 1. 当前流水线模板引用类型为路径引用（PATH）
+                 * 2. 先前流水线模板引用类型也为路径引用（PATH）
+                 * 3. 当前流水线模板版本名与先前相同 或 当前流水线模板引用路径与先前相同
+                 * 4. 当前流水线模板版本号与先前不同
+                 */
                 val refPipelineTemplateVersionChange = currTemplatePipeline.refType == TemplateRefType.PATH &&
                     prevTemplatePipeline.refType == TemplateRefType.PATH &&
-                    currTemplatePipeline.templateVersionName == prevTemplatePipeline.templateVersionName &&
+                    (currTemplatePipeline.templateVersionName == prevTemplatePipeline.templateVersionName ||
+                        currTemplatePipeline.inputTemplateRef == prevTemplatePipeline.inputTemplateRef) &&
                     currTemplatePipeline.templateVersion != prevTemplatePipeline.templateVersion
 
                 val currTemplateVersionRef = pipelineYamlVersionDao.getPipelineYamlVersion(
