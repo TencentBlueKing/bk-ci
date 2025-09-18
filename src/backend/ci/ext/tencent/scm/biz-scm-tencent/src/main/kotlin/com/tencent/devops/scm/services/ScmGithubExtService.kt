@@ -1,6 +1,7 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.scm.pojo.GithubWebhookSyncReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -10,7 +11,7 @@ class ScmGithubExtService {
     @Value("\${scm.bkCode.githubWebhookSyncUrl:}")
     private val githubWebhookSyncUrl: String = ""
 
-    fun webhookCommit(event: String, guid: String, signature: String, body: String) {
+    fun webhookCommit(event: String, guid: String, signature: String, webhookSyncReq: GithubWebhookSyncReq) {
         try {
             val headers = mapOf(
                 "X-GitHub-Event" to event,
@@ -20,7 +21,7 @@ class ScmGithubExtService {
             OkhttpUtils.doShortPost(
                 url = githubWebhookSyncUrl,
                 headers = headers,
-                jsonParam = body
+                jsonParam = webhookSyncReq.body
             )
         } catch (ignore: Exception) {
             logger.warn("Failed to sync github webhook", ignore)
