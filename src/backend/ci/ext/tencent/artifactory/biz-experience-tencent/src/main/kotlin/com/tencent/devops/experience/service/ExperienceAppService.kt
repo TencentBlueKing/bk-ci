@@ -208,7 +208,7 @@ class ExperienceAppService(
             .setScopeId(projectId)
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return AppExperienceDetail(
-            experienceHashId = experienceHashId,
+            experienceHashId = HashUtil.encodeLongId(experienceId),
             size = experience.size,
             logoUrl = logoUrl,
             shareUrl = shareUrl,
