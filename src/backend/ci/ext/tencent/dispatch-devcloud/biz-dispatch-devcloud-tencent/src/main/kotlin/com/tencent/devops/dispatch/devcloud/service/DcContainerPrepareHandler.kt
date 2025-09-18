@@ -281,7 +281,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         }
 
         // 根据performanceConfigId设置性能配置类型标识
-        // "2" → HighIO-M (中等高性能配置)
+        // "2" → Standard-M (中等高性能配置)
         // "10000" → HighIO-L (高等高性能配置)
         // 其他情况(包括null/空字符串/"0"等) → Standard-S (标准配置)
         when (performanceConfigId) {
