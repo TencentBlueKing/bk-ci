@@ -249,7 +249,6 @@
                 }
             },
             handleHidePopover () {
-                this.constraintInfo = null
                 this.contraintApiSignal?.abort()
             }
         }

@@ -80,6 +80,7 @@
                 ref="detailSummary"
                 :visible="summaryVisible"
                 :exec-detail="execDetail"
+                :version-change="pipelineInfo?.versionChange"
             ></Summary>
 
             <p class="pipeline-exec-gap">
@@ -247,6 +248,7 @@
 
         computed: {
             ...mapState('atom', [
+                'pipelineInfo',
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
