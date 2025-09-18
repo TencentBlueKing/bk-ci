@@ -80,6 +80,7 @@ enum class PoolType {
             return PublicDevCloudDispathcType(
                 image = pool.container ?: pool.image?.imageCode,
                 performanceConfigId = pool.performanceConfigId ?: "0",
+                performanceUid = pool.performanceUid ?: "",
                 imageType = pool.image?.imageType ?: ImageType.THIRD,
                 credentialId = pool.credential?.credentialId,
                 imageVersion = pool.image?.imageVersion,
@@ -238,7 +239,7 @@ enum class PoolType {
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
-                    displayName = pool.agentId!!,
+                    displayName = pool.agentId,
                     workspace = pool.workspace,
                     agentType = AgentType.ID,
                     dockerInfo = ThirdPartyAgentDockerInfo(

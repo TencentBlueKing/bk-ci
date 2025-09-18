@@ -93,7 +93,16 @@ enum class ErrorCodeEnum(
         2133019,
         "第三方服务-DEVCLOUD 异常，异常信息 - 用户操作异常"
     ),
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2133020, "已超过DevCloud创建Job容器上限.");
+    CREATE_JOB_LIMIT_ERROR(
+        ErrorType.USER,
+        2133020,
+        "已超过DevCloud创建Job容器上限."
+    ),
+    PERFORMANCE_INTERFACE_ERROR(
+        ErrorType.THIRD_PARTY,
+        2133021,
+        "第三方服务-DEVCLOUD 异常，异常信息 - 获取配额信息异常"
+    );
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode.toString())

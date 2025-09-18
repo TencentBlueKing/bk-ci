@@ -5,5 +5,6 @@ data class Pool(
     val credential: Credential?,
     val performanceConfigId: String? = "0",
     val third: Boolean? = true,
-    val persistence: Boolean? = false
+    val persistence: Boolean? = false,
+    val performanceUid: String = "",
 )
