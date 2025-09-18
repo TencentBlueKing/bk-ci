@@ -2,6 +2,7 @@ package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceGithubExtResource
+import com.tencent.devops.scm.pojo.GithubWebhookSyncReq
 import com.tencent.devops.scm.services.ScmGithubExtService
 
 @RestResource
@@ -12,13 +13,13 @@ class ServiceGithubExtResourceImpl constructor(
         event: String,
         guid: String,
         signature: String,
-        body: String
+        webhookSyncReq: GithubWebhookSyncReq
     ) {
         scmGithubExtService.webhookCommit(
             event = event,
             guid = guid,
             signature = signature,
-            body = body
+            body = webhookSyncReq.body
         )
     }
 }
