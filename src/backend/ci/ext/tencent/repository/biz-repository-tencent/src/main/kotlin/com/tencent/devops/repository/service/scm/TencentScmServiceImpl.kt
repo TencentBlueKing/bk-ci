@@ -38,6 +38,8 @@ import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.CheckPrivateKeyAndTokenReq
+import com.tencent.devops.scm.pojo.CheckUsernameAndPasswordReq
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -52,12 +54,11 @@ import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
+import jakarta.ws.rs.NotSupportedException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import jakarta.ws.rs.NotSupportedException
 
 @Primary
 @Service
@@ -176,15 +177,17 @@ class TencentScmServiceImpl @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String
     ): TokenCheckResult {
-        return client.getScm(ServiceScmResource::class).checkPrivateKeyAndToken(
-            projectName = projectName,
-            url = url,
-            type = type,
-            privateKey = privateKey,
-            passPhrase = passPhrase,
-            token = token,
-            region = region,
-            userName = userName
+        return client.getScm(ServiceScmResource::class).checkPrivateKeyAndTokenNew(
+            request = CheckPrivateKeyAndTokenReq(
+                projectName = projectName,
+                url = url,
+                type = type,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            )
         ).data!!
     }
 
@@ -198,15 +201,17 @@ class TencentScmServiceImpl @Autowired constructor(
         region: CodeSvnRegion?,
         repoUsername: String
     ): TokenCheckResult {
-        return client.getScm(ServiceScmResource::class).checkUsernameAndPassword(
-            projectName = projectName,
-            url = url,
-            type = type,
-            username = username,
-            password = URLEncoder.encode(password, "UTF-8"),
-            token = token,
-            region = region,
-            repoUsername = repoUsername
+        return client.getScm(ServiceScmResource::class).checkUsernameAndPasswordNew(
+            request = CheckUsernameAndPasswordReq(
+                projectName = projectName,
+                url = url,
+                type = type,
+                username = username,
+                password = password,
+                token = token,
+                region = region,
+                repoUsername = repoUsername
+            )
         ).data!!
     }
 

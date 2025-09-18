@@ -10,8 +10,10 @@ import org.slf4j.MDC
 data class AsyncExecuteEvent(
     val traceId: String? = MDC.get(TraceTag.BIZID),
     val eventStr: String,
-    val type: AsyncExecuteEventType
-) : IEvent()
+    val type: AsyncExecuteEventType,
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 1
+) : IEvent(delayMills = delayMills, retryTime = retryTime)
 
 enum class AsyncExecuteEventType {
     ASYNC_PIPELINE,

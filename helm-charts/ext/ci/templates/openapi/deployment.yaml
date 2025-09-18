@@ -33,6 +33,7 @@ spec:
         app.kubernetes.io/name: openapi
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.openapi.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.openapi.hostAliases "context" $) | nindent 8 }}
       {{- end }}

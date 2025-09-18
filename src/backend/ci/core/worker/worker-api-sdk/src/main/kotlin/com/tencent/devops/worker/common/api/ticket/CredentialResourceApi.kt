@@ -39,7 +39,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
     override fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo> {
-        val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
+        val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}&padding=true"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = "GET",
@@ -64,7 +64,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         signToken: String
     ): Result<CredentialInfo> {
         val path = "/ms/ticket/api/build/credentials/$credentialId/across" +
-            "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
+            "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId&padding=true"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = "GET",

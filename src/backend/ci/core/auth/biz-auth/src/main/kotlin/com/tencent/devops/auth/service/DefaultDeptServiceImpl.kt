@@ -93,6 +93,10 @@ class DefaultDeptServiceImpl : DeptService {
         return null
     }
 
+    override fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+        return null
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum

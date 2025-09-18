@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CheckPrivateKeyAndTokenReq
+import com.tencent.devops.scm.pojo.CheckUsernameAndPasswordReq
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -44,9 +46,9 @@ import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
@@ -193,6 +195,13 @@ interface ServiceScmResource {
     ): Result<TokenCheckResult>
 
     @Operation(summary = "Check if the svn private key and passphrase legal")
+    @POST
+    @Path("tokenCheckNew")
+    fun checkPrivateKeyAndTokenNew(
+        request: CheckPrivateKeyAndTokenReq
+    ): Result<TokenCheckResult>
+
+    @Operation(summary = "Check if the svn private key and passphrase legal")
     @GET
     @Path("usernameAndPasswordCheck")
     fun checkUsernameAndPassword(
@@ -220,6 +229,13 @@ interface ServiceScmResource {
         @Parameter(description = "仓库对应的用户名", required = false)
         @QueryParam("repoUsername")
         repoUsername: String
+    ): Result<TokenCheckResult>
+
+    @Operation(summary = "Check if the svn private key and passphrase legal")
+    @POST
+    @Path("usernameAndPasswordCheckNew")
+    fun checkUsernameAndPasswordNew(
+        request: CheckUsernameAndPasswordReq
     ): Result<TokenCheckResult>
 
     @Operation(summary = "添加Git或者Gitlab WEB hook")
