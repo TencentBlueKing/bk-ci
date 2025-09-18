@@ -245,12 +245,14 @@ class PipelineBuildFacadeService(
         var canManualStartup = false
         var canElementSkip = false
         var useLatestParameters = false
+        var manualBuildMsg: String? = null
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
+                    manualBuildMsg = it.buildMsg
                     return@lit
                 }
             }
@@ -301,7 +303,8 @@ class PipelineBuildFacadeService(
             userId = userId,
             triggerParams = triggerContainer.params,
             checkPermission = false, // 已校验权限
-            debug = debug
+            debug = debug,
+            manualBuildMsg = manualBuildMsg
         )
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
@@ -2976,7 +2979,8 @@ class PipelineBuildFacadeService(
         userId: String?,
         debug: Boolean,
         checkPermission: Boolean,
-        triggerParams: List<BuildFormProperty>
+        triggerParams: List<BuildFormProperty>,
+        manualBuildMsg: String? = null
     ): List<BuildFormProperty> {
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
             val permission = AuthPermission.EXECUTE
@@ -3001,8 +3005,8 @@ class PipelineBuildFacadeService(
                 id = PIPELINE_BUILD_MSG,
                 required = true,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "",
-                value = "",
+                defaultValue = manualBuildMsg ?: "",
+                value = manualBuildMsg ?: "",
                 options = null,
                 desc = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_DESC,

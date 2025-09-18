@@ -229,6 +229,24 @@ class UserNodeResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun batchChangeImportUser(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
+        val hashIdDisplayNameList = nodeService.batchChangeCreateUser(userId, projectId, nodeHashIds)
+        val resourceAuthorizationHandoverList = hashIdDisplayNameList.map { it ->
+            ResourceAuthorizationHandoverDTO(
+                projectCode = projectId,
+                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                resourceName = it.second,
+                resourceCode = it.first,
+                handoverTo = userId
+            )
+        }
+        authorizationService.batchModifyHandoverFrom(
+            projectId = projectId,
+            resourceAuthorizationHandoverList = resourceAuthorizationHandoverList
+        )
+        return Result(true)
+    }
+
     @AuditEntry(actionId = ActionId.ENV_NODE_EDIT)
     override fun updateDisplayName(
         userId: String,
