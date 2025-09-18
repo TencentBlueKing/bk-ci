@@ -1033,13 +1033,6 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline branch version|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$pipelineId"
         )
-        pipelineYamlService.updateBranchAction(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            ref = ref,
-            branchAction = BranchVersionAction.INACTIVE.name
-        )
         pipelineYamlResourceManager.updateBranchAction(
             userId = userId,
             projectId = projectId,
@@ -1047,6 +1040,13 @@ class PipelineYamlFileManager @Autowired constructor(
             branchName = ref,
             branchVersionAction = BranchVersionAction.INACTIVE,
             isTemplate = isTemplate
+        )
+        pipelineYamlService.updateBranchAction(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            ref = ref,
+            branchAction = BranchVersionAction.INACTIVE.name
         )
         pipelineYamlService.refreshPipelineYamlStatus(
             projectId = projectId,
@@ -1064,18 +1064,18 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$pipelineId"
         )
-        pipelineYamlService.deleteYamlPipeline(
-            userId = authUser,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath
-        )
         val isTemplate = GitActionCommon.isTemplateFile(filePath)
         pipelineYamlResourceManager.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             isTemplate = isTemplate
+        )
+        pipelineYamlService.deleteYamlPipeline(
+            userId = authUser,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
         )
         // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
         if (!isTemplate) {

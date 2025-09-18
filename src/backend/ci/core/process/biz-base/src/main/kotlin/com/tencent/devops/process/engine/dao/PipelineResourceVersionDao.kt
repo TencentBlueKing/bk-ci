@@ -344,9 +344,12 @@ class PipelineResourceVersionDao {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
-                    STATUS.ne(VersionStatus.DELETE.name)
-                        .or(STATUS.ne(VersionStatus.HIDDEN.name))
-                        .or(STATUS.isNull)
+                    STATUS.isNull.or(
+                        STATUS.notIn(
+                            VersionStatus.DELETE.name,
+                            VersionStatus.HIDDEN.name
+                        )
+                    )
                 )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)

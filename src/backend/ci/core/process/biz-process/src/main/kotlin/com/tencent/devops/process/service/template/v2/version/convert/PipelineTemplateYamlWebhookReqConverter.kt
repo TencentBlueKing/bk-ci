@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.template.v2.version.convert
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -78,13 +79,26 @@ class PipelineTemplateYamlWebhookReqConverter(
             } else {
                 Pair(VersionStatus.BRANCH, PipelineVersionAction.CREATE_BRANCH)
             }
+            val templateSetting = transferResult.templateSetting
+            val templateModel = transferResult.templateModel
+            // 模版名称实际取值优先级：setting > model > fileName
+            val templateName = if (templateModel is Model) {
+                templateSetting.pipelineName.takeIf {
+                    it.isNotBlank()
+                } ?: templateModel.name.ifBlank {
+                    yamlFileName
+                }
+            } else {
+                // TODO PAC局部模版后续得看下名称要怎么处理
+                yamlFileName
+            }
+
             val (newTemplateId, templateInfo) = if (templateId == null) {
                 val newTemplateId = pipelineTemplateGenerator.generateTemplateId()
-                val templateSetting = transferResult.templateSetting
                 val templateInfo = PipelineTemplateInfoV2(
                     id = newTemplateId,
                     projectId = projectId,
-                    name = templateSetting.pipelineName,
+                    name = templateName,
                     desc = templateSetting.desc,
                     mode = TemplateType.CUSTOMIZE,
                     type = transferResult.templateType,
@@ -101,20 +115,26 @@ class PipelineTemplateYamlWebhookReqConverter(
                 )
                 Pair(templateId, templateInfo)
             }
-            pipelineTemplateModelInitializer.initTemplateModel(transferResult.templateModel)
+            pipelineTemplateModelInitializer.initTemplateModel(templateModel)
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(
                 projectId = projectId,
                 templateId = newTemplateId,
                 params = transferResult.params,
                 type = transferResult.templateType,
-                model = transferResult.templateModel,
+                model = if (templateModel is Model) {
+                    templateModel.copy(
+                        name = templateName
+                    )
+                } else {
+                    templateModel
+                },
                 yaml = transferResult.yamlWithVersion?.yamlStr,
                 description = description,
                 status = status,
                 creator = userId,
                 updater = userId
             )
-            val pTemplateSettingWithoutVersion = transferResult.templateSetting.copy(
+            val pTemplateSettingWithoutVersion = templateSetting.copy(
                 projectId = projectId,
                 pipelineId = newTemplateId,
                 creator = userId,

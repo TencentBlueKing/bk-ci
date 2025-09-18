@@ -214,24 +214,34 @@ object TemplateInstanceUtil {
             val templateVariable = templateVariableMap[templateParam.id]
 
             val pipelineParams = if (templateVariable != null) {
-                // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
-                val defaultValue = if (
-                    templateParam.type == BuildFormPropertyType.BOOLEAN &&
-                    templateVariable.value is String?
-                ) {
-                    (templateVariable.value as String?)?.toBoolean() ?: false
-                } else {
-                    templateVariable.value
-                }
-                // templateVariable 会覆盖模板的默认值
+                // 用templateVariable覆盖模板的默认值
                 templateParam.copy(
-                    defaultValue = defaultValue,
+                    defaultValue = getPipelineParamDefaultValue(
+                        templateParam = templateParam,
+                        templateVariable = templateVariable
+                    ),
                     required = templateVariable.allowModifyAtStartup ?: templateParam.required
                 )
             } else {
                 templateParam
             }
             PipelineUtils.cleanOptions(pipelineParams)
+        }
+    }
+
+    private fun getPipelineParamDefaultValue(
+        templateParam: BuildFormProperty,
+        templateVariable: TemplateVariable
+    ): Any {
+        return when {
+            // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
+            templateParam.type == BuildFormPropertyType.BOOLEAN && templateVariable.value is String -> {
+                (templateVariable.value as String?).toBoolean()
+            }
+            templateParam.type == BuildFormPropertyType.MULTIPLE && templateVariable.value is List<*> -> {
+                (templateVariable.value as List<*>).joinToString(",")
+            }
+            else -> templateVariable.value
         }
     }
 
