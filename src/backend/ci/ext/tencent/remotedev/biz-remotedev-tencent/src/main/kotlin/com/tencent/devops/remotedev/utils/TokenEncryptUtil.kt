@@ -38,17 +38,8 @@ object TokenEncryptUtil {
     private val logger = LoggerFactory.getLogger(TokenEncryptUtil::class.java)
 
     /**
-     * 加密结果数据类
-     */
-    data class EncryptResult(
-        val originalToken: String,
-        val encryptedToken: String,
-        val encryptTime: Long = System.currentTimeMillis()
-    )
-
-    /**
      * 对Token进行奇偶位对换加密
-     * 
+     *
      * @param originalToken 原始token字符串
      * @return 加密后的token字符串
      */
@@ -74,45 +65,13 @@ object TokenEncryptUtil {
             return encryptedToken
         } catch (e: Exception) {
             logger.error("Failed to encrypt token", e)
-            return originalToken
-        }
-    }
-
-    /**
-     * 对加密Token进行解密（用于测试验证）
-     * 
-     * @param encryptedToken 加密后的token字符串
-     * @return 解密后的原始token字符串
-     */
-    fun decryptToken(encryptedToken: String): String {
-        if (!validateTokenFormat(encryptedToken)) {
-            logger.warn("Invalid token format for decryption")
-            return encryptedToken
-        }
-
-        try {
-            val chars = encryptedToken.toCharArray()
-            val length = chars.size
-
-            // 奇偶位对换解密：奇数位和偶数位字符对换（与加密过程相同）
-            for (i in 0 until length - 1 step 2) {
-                val temp = chars[i]
-                chars[i] = chars[i + 1]
-                chars[i + 1] = temp
-            }
-
-            val decryptedToken = String(chars)
-            logger.debug("Token decrypted successfully, original length: $length")
-            return decryptedToken
-        } catch (e: Exception) {
-            logger.error("Failed to decrypt token", e)
-            return encryptedToken
+            throw e
         }
     }
 
     /**
      * 验证Token格式是否有效
-     * 
+     *
      * @param token 待验证的token字符串
      * @return token格式是否有效
      */
