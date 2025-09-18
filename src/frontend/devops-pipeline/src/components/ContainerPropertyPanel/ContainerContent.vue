@@ -744,7 +744,7 @@
                     const enumId = {
                         '0': 'Standard-S',
                         '1': 'Standard-S',
-                        '2': 'HighIO-M',
+                        '2': 'Standard-M',
                         '10000': 'HighIO-L'
                     }
                     return enumId[this.container.dispatchType.performanceConfigId]
