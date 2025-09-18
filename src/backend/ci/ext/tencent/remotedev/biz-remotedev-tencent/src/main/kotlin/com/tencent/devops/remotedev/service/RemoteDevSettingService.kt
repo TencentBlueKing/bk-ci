@@ -73,7 +73,7 @@ class RemoteDevSettingService @Autowired constructor(
      * @param type 监控类型，默认为DEFAULT
      * @return 监控配置对象，包含URL和加密Token
      */
-    fun getMonitorConfig(type: String = "DEFAULT"): MonitorConfig {
+    fun getMonitorConfig(type: String = "DEFAULT"): MonitorConfig? {
         logger.debug("Getting monitor configuration for type: $type")
 
         try {
@@ -111,7 +111,7 @@ class RemoteDevSettingService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.error("Failed to get monitor configuration for type: $type", e)
-            return MonitorConfig(type = type)
+            return null
         }
     }
 
@@ -125,20 +125,11 @@ class RemoteDevSettingService @Autowired constructor(
 
         return try {
             MonitorType.values().mapNotNull { monitorType ->
-                val config = getMonitorConfig(monitorType.name)
-                // 只返回已启用的配置，或者至少有URL配置的
-                if (config.enabled || !config.monitorUrl.isNullOrBlank()) {
-                    config
-                } else {
-                    null
-                }
-            }.ifEmpty {
-                // 如果没有任何配置，返回一个默认的空配置
-                listOf(MonitorConfig(type = MonitorType.DEFAULT.name, enabled = false))
+                getMonitorConfig(monitorType.name)
             }
         } catch (e: Exception) {
             logger.error("Failed to get all monitor configurations", e)
-            listOf(MonitorConfig(type = MonitorType.DEFAULT.name, enabled = false))
+            emptyList()
         }
     }
 
