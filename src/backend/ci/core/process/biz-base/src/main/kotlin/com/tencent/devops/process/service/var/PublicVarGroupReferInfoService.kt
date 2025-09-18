@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.`var`
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -644,23 +643,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             )
         }
         publicVarGroupReferInfoDao.batchSave(dslContext, pipelinePublicVarGroupReferPOs)
-    }
-
-    private fun getLatestVersionsForGroups(
-        projectId: String,
-        groupNames: List<String>
-    ): Map<String, Int> {
-        val versionMap = publicVarGroupDao.getLatestVersionsByGroupNames(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupNames = groupNames
-        )
-        // 检查是否有组名不存在
-        val missingGroups = groupNames.filter { it !in versionMap }
-        if (missingGroups.isNotEmpty()) {
-            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(missingGroups.first()))
-        }
-        return versionMap
     }
 
     /**
