@@ -45,6 +45,10 @@ enum class PlatformEnum(
 
     ;
 
+    fun isForPC(): Boolean {
+        return this == WIN
+    }
+
     companion object {
         /**
          * 根据尾巴获取平台
