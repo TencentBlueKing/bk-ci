@@ -1,5 +1,6 @@
 package com.tencent.devops.scm.api
 
+import com.tencent.devops.scm.pojo.GithubWebhookSyncReq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -29,6 +30,7 @@ interface ServiceGithubExtResource {
         @Parameter(description = "secretKey签名(sha1)", required = true)
         @HeaderParam("X-Hub-Signature")
         signature: String,
-        body: String
+        // 这里直接用body: String, 会出现body被转义,变成"{}",而不是{},导致同步后签名失败,索引直接用对象接收
+        webhookSyncReq: GithubWebhookSyncReq
     )
 }

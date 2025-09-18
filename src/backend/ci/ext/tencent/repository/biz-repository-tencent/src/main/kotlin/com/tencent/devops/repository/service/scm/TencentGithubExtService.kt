@@ -5,6 +5,7 @@ import com.tencent.devops.common.service.trace.TraceTag.BIZID
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.repository.service.github.IGithubExtService
 import com.tencent.devops.scm.api.ServiceGithubExtResource
+import com.tencent.devops.scm.pojo.GithubWebhookSyncReq
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +40,7 @@ class TencentGithubExtService @Autowired constructor(
                     event = event,
                     guid = guid,
                     signature = signature,
-                    body = body
+                    webhookSyncReq = GithubWebhookSyncReq(body = body)
                 )
             } catch (ignored: Exception) {
                 logger.warn("Failed to sync github webhook", ignored)
