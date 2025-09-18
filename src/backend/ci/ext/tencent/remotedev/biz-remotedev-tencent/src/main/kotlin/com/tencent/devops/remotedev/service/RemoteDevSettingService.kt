@@ -36,6 +36,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.MonitorConfig
+import com.tencent.devops.remotedev.pojo.MonitorType
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
@@ -69,19 +70,36 @@ class RemoteDevSettingService @Autowired constructor(
     /**
      * 获取监控配置信息
      *
+     * @param type 监控类型，默认为DEFAULT
      * @return 监控配置对象，包含URL和加密Token
      */
-    fun getMonitorConfig(): MonitorConfig {
-        logger.debug("Getting monitor configuration")
+    fun getMonitorConfig(type: String = "DEFAULT"): MonitorConfig {
+        logger.debug("Getting monitor configuration for type: $type")
 
         try {
+            val monitorType = MonitorType.parseType(type)
+            val typePrefix = monitorType.name.lowercase()
+            
+            // 根据类型构建配置键
+            val urlKey = if (monitorType == MonitorType.DEFAULT) {
+                MONITOR_URL_KEY
+            } else {
+                "monitor:${typePrefix}:url"
+            }
+            
+            val tokenKey = if (monitorType == MonitorType.DEFAULT) {
+                MONITOR_TOKEN_KEY
+            } else {
+                "monitor:${typePrefix}:token"
+            }
+
             // 从缓存或数据库获取监控URL
-            val monitorUrl = configCacheService.get(MONITOR_URL_KEY)
-                ?: configDao.fetchConfig(dslContext, MONITOR_URL_KEY)
+            val monitorUrl = configCacheService.get(urlKey)
+                ?: configDao.fetchConfig(dslContext, urlKey)
 
             // 从缓存或数据库获取原始Token
-            val originalToken = configCacheService.get(MONITOR_TOKEN_KEY)
-                ?: configDao.fetchConfig(dslContext, MONITOR_TOKEN_KEY)
+            val originalToken = configCacheService.get(tokenKey)
+                ?: configDao.fetchConfig(dslContext, tokenKey)
 
             // 对Token进行加密
             val encryptedToken = originalToken?.let { TokenEncryptUtil.encryptToken(it) }
@@ -91,11 +109,39 @@ class RemoteDevSettingService @Autowired constructor(
             return MonitorConfig(
                 monitorUrl = monitorUrl,
                 monitorToken = encryptedToken,
+                type = monitorType.name,
                 enabled = enabled
             )
         } catch (e: Exception) {
-            logger.error("Failed to get monitor configuration", e)
-            return MonitorConfig(enabled = false)
+            logger.error("Failed to get monitor configuration for type: $type", e)
+            return MonitorConfig(type = type, enabled = false)
+        }
+    }
+
+    /**
+     * 获取所有类型的监控配置列表
+     *
+     * @return 监控配置列表
+     */
+    fun getAllMonitorConfigs(): List<MonitorConfig> {
+        logger.debug("Getting all monitor configurations")
+        
+        return try {
+            MonitorType.values().mapNotNull { monitorType ->
+                val config = getMonitorConfig(monitorType.name)
+                // 只返回已启用的配置，或者至少有URL配置的
+                if (config.enabled || !config.monitorUrl.isNullOrBlank()) {
+                    config
+                } else {
+                    null
+                }
+            }.ifEmpty {
+                // 如果没有任何配置，返回一个默认的空配置
+                listOf(MonitorConfig(type = MonitorType.DEFAULT.name, enabled = false))
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get all monitor configurations", e)
+            listOf(MonitorConfig(type = MonitorType.DEFAULT.name, enabled = false))
         }
     }
 
@@ -115,13 +161,12 @@ class RemoteDevSettingService @Autowired constructor(
             }
         }
 
-        // 获取监控配置信息
-        val monitorConfig = getMonitorConfig()
+        // 获取所有监控配置信息
+        val monitorConfigs = getAllMonitorConfigs()
 
         // 在现有设置基础上添加监控配置信息
         return setting.copy(
-            monitorUrl = monitorConfig.monitorUrl,
-            monitorToken = monitorConfig.monitorToken
+            monitorConfigs = monitorConfigs
         )
     }
 
