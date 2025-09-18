@@ -824,6 +824,18 @@ class PipelineRepositoryService constructor(
                         versionNum, pipelineVersion, triggerVersion, settingVersion
                     )
                 }
+                publicVarGroupReferInfoService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = model,
+                        referId = pipelineId,
+                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
+                        referVersion = 1,
+                        referVersionName = versionName ?: ""
+                    )
+                )
 
                 pipelineResourceDao.create(
                     dslContext = transactionContext,
@@ -1227,6 +1239,19 @@ class PipelineRepositoryService constructor(
                         )
                     }
                 }
+
+                publicVarGroupReferInfoService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = model,
+                        referId = pipelineId,
+                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
+                        referVersion = version,
+                        referVersionName = versionName
+                    )
+                )
 
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(

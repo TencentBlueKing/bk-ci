@@ -25,30 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.dto
+package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线公共变量组关联传输对象")
-data class PublicVarGroupReferDTO(
-    @get:Schema(title = "用户ID")
-    val userId: String,
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "模型内容")
-    val model: Model,
-    @get:Schema(title = "关联资源ID")
-    val referId: String,
-    @get:Schema(title = "关联组件类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "关联组件名称")
-    val referName: String,
-    @get:Schema(title = "关联组件内容")
-    val referVersion: Int,
-    @get:Schema(title = "关联组件版本名称")
-    val referVersionName: String? = null,
-    @get:Schema(title = "变量组引用列表,key为变量名，value为变量组版本号")
-    var publicVarGroupRefs: Map<String, Int?> = emptyMap()
+@Schema(title = "公共变量位置信息数据")
+data class PublicVarPositionPO(
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "版本号")
+    val version: Int? = null,
+    @get:Schema(title = "变量名称")
+    val varName: String,
+    @get:Schema(title = "序号 ")
+    val index: Int,
 )

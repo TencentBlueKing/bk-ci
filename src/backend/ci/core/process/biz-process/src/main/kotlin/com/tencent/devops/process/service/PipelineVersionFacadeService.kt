@@ -65,11 +65,13 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.`var`.PublicVarService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -92,7 +94,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineVersionManager: PipelineVersionManager
+    private val pipelineVersionManager: PipelineVersionManager,
+    private val publicVarService: PublicVarService
 ) {
 
     companion object {
@@ -491,6 +494,14 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         /* 兼容存量数据 */
         model.desc = setting.desc
+        // 更新触发器容器中的公共变量到最新版本
+        publicVarService.handleModelParams(
+            projectId = resource.projectId,
+            model = resource.model,
+            referId = pipelineId,
+            referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+            referVersion = version
+        )
         // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,

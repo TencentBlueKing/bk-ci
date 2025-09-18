@@ -82,7 +82,7 @@ data class Model(
     @get:Schema(title = "流水线覆盖模版的字段", required = false)
     var overrideTemplateField: TemplateInstanceField? = null,
     @get:Schema(title = "公共变量组引用", required = false)
-    var publicVarGroups: List<PublicVarGroupRef> = emptyList()
+    var publicVarGroups: List<PublicVarGroupRef>? = null
 ) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -276,10 +276,7 @@ data class Model(
     }
 
     fun handlePublicVarInfo() {
-        if (!publicVarGroups.isNullOrEmpty()) {
-            publicVarGroups!!.map { it.variables = null }
-            return
-        }
+        if (!publicVarGroups.isNullOrEmpty()) return
         val triggerParams = (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params
         triggerParams ?: run {
             publicVarGroups = emptyList()

@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
@@ -538,7 +537,7 @@ class PublicVarGroupService @Autowired constructor(
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String?
+        referVersion: Int
     ): Result<List<PipelinePublicVarGroupDO>> {
         try {
             logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
@@ -549,7 +548,7 @@ class PublicVarGroupService @Autowired constructor(
                 projectId = projectId,
                 referId = referId,
                 referType = referType,
-                referVersionName = referVersionName ?: VersionStatus.COMMITTING.name
+                referVersion = referVersion
             )
             
             if (referInfos.isEmpty()) {

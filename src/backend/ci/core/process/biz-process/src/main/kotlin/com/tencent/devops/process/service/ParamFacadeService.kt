@@ -50,11 +50,10 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.api.container.ServiceContainerResource
+import java.io.File
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
-import java.lang.RuntimeException
 
 @Suppress("ALL")
 @Service
@@ -70,7 +69,7 @@ class ParamFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         params: List<BuildFormProperty>
-    ): List<BuildFormProperty> {
+    ): MutableList<BuildFormProperty> {
         val filterParams = mutableListOf<BuildFormProperty>()
         params.forEach {
             if (it.type == BuildFormPropertyType.SVN_TAG && (!it.repoHashId.isNullOrBlank())) {

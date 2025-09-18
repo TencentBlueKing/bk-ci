@@ -245,7 +245,7 @@ interface UserPublicVarGroupResource {
         yaml: PublicVarGroupYamlStringVO
     ): Result<PublicVarGroupVO>
 
-    @Operation(summary = "获取流水线关联公共变量组信息")
+    @Operation(summary = "获取关联的公共变量组信息")
     @GET
     @Path("/refers/{referId}/referVersion/{referVersion}group/info")
     fun listPipelineVarGroupInfo(
@@ -261,9 +261,9 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "引用资源类型", required = true)
         @QueryParam("referType")
         referType: PublicVerGroupReferenceTypeEnum,
-        @Parameter(description = "引用资源类型", required = true)
-        @QueryParam("referVersionName")
-        referVersionName: String? = null
+        @Parameter(description = "引用版本号", required = true)
+        @QueryParam("referVersion")
+        referVersion: Int
     ): Result<List<PipelinePublicVarGroupDO>>
 
     @Operation(summary = "获取项目关联公共变量组信息")
