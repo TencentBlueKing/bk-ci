@@ -79,14 +79,14 @@ class RemoteDevSettingService @Autowired constructor(
         try {
             val monitorType = MonitorType.parseType(type)
             val typePrefix = monitorType.name.lowercase()
-            
+
             // 根据类型构建配置键
             val urlKey = if (monitorType == MonitorType.DEFAULT) {
                 MONITOR_URL_KEY
             } else {
                 "monitor:${typePrefix}:url"
             }
-            
+
             val tokenKey = if (monitorType == MonitorType.DEFAULT) {
                 MONITOR_TOKEN_KEY
             } else {
@@ -104,17 +104,14 @@ class RemoteDevSettingService @Autowired constructor(
             // 对Token进行加密
             val encryptedToken = originalToken?.let { TokenEncryptUtil.encryptToken(it) }
 
-            val enabled = !monitorUrl.isNullOrBlank() && !encryptedToken.isNullOrBlank()
-
             return MonitorConfig(
                 monitorUrl = monitorUrl,
                 monitorToken = encryptedToken,
-                type = monitorType.name,
-                enabled = enabled
+                type = monitorType.name
             )
         } catch (e: Exception) {
             logger.error("Failed to get monitor configuration for type: $type", e)
-            return MonitorConfig(type = type, enabled = false)
+            return MonitorConfig(type = type)
         }
     }
 
@@ -125,7 +122,7 @@ class RemoteDevSettingService @Autowired constructor(
      */
     fun getAllMonitorConfigs(): List<MonitorConfig> {
         logger.debug("Getting all monitor configurations")
-        
+
         return try {
             MonitorType.values().mapNotNull { monitorType ->
                 val config = getMonitorConfig(monitorType.name)

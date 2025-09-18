@@ -57,9 +57,7 @@ data class MonitorConfig(
     @get:Schema(title = "加密后的监控Token")
     val monitorToken: String? = null,
     @get:Schema(title = "监控类型", allowableValues = ["DEFAULT"])
-    val type: String = MonitorType.DEFAULT.name,
-    @get:Schema(title = "监控是否启用")
-    val enabled: Boolean = false
+    val type: String = MonitorType.DEFAULT.name
 )
 
 @Schema(title = "远程开发配置")
