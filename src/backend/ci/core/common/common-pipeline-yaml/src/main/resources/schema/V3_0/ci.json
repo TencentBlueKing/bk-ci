@@ -1894,6 +1894,16 @@
                           "type" : "boolean"
                         }, {
                           "type" : "array"
+                        }, {
+                          "type" : "object",
+                          "properties" : {
+                            "repo-name" : {
+                              "type" : "string"
+                            },
+                            "branch" : {
+                              "type" : "string"
+                            }
+                          }
                         } ]
                       },
                       "allow-modify-at-startup" : {
