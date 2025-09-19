@@ -444,6 +444,7 @@
     "previewDiff": "Arrange Preview",
     "templateInstantiation": "Instantiate Templates",
     "templateVersion": "Template Version",
+    "applyTemplateSetting": "Apply Template Settings to Instance",
     "applyTemplateSettingTips": {
       "create": {
         "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other setting information will be initialized using template settings",
@@ -654,7 +655,9 @@
     "constraintMode": "The pipeline uses a constraint mode template",
     "notTemplate": "Template does not exist",
     "pleaseMergePullUrl": "Resolve merge request in code repo first.",
-    "toHandle": "Resolve now"
+    "toHandle": "Resolve now",
+    "upgradeInstance": "Upgrade Instance",
+    "createInstance": "Create Instance"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

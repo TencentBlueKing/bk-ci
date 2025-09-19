@@ -464,6 +464,7 @@
                 this.requestMarkTemplates(true)
             },
             requestMarkTemplates (isReload) {
+                if (this.isLoadingMore) return
                 this.isLoadingMore = true
                 if (isReload) {
                     this.page = 1
@@ -556,7 +557,6 @@
                         this.$showTips({ message: this.$t('newlist.noTemplateTips'), theme: 'error' })
                         return
                     }
-
                     const params = {
                         emptyTemplate: this.activeTemp.isEmptyTemplate ?? false, // 0 为空模板
                         projectId: this.$route.params.projectId,

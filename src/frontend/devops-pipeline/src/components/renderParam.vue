@@ -2,6 +2,7 @@
     <section class="render-param">
         <form-field
             v-bind="param"
+            :required="param.required && isExecPreview"
             :is-error="errors.has('devops' + param.name)"
             :error-msg="errors.first('devops' + param.name)"
             :label="param.label || param.id"
@@ -100,6 +101,10 @@
             handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
+            },
+            isExecPreview: {
+                type: Boolean,
+                default: true
             }
         },
         methods: {

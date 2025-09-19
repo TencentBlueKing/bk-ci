@@ -5,7 +5,7 @@
                 v-if="isInstanceCreateType"
                 icon="plus"
                 :disabled="!curTemplateVersion || editingIndex > -1"
-                @click="handleAddInstance"
+                @click="handleShowInstanceCreate"
             >
                 {{ $t('new') }}
             </bk-button>
@@ -108,6 +108,11 @@
                 </template>
             </li>
         </ul>
+        <instance-pipeline-name
+            :show-instance-create.sync="showInstanceCreate"
+            :pipeline-list="renderInstanceList"
+            @confirm="handleConfirmCreateInstance"
+        />
     </div>
 </template>
 
@@ -121,6 +126,7 @@
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
+    import InstancePipelineName from '@/components/Template/instance-pipeline-name'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -131,6 +137,7 @@
     const newIndex = ref(1)
     const isEmptyName = ref(false)
     const isErrorName = ref(false)
+    const showInstanceCreate = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
@@ -144,18 +151,6 @@
     })
     const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
     const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
-    const templateTriggerConfigs = computed(() => {
-        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
-            atomCode: i.atomCode,
-            stepId: i.stepId ?? '',
-            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
-            cron: i.advanceExpression,
-            variables: i.startParams,
-            name: i.name,
-            version: i.version,
-            isFollowTemplate: true
-        }))
-    })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     watch(() => curTemplateDetail.value, (val) => {
         if (pipelineName.value) {
@@ -164,6 +159,10 @@
         }
     })
     async function checkPipelineName (val) {
+        if (!val) {
+            isErrorName.value = false
+            return
+        }
         if (renderInstanceList.value.find(i => i.pipelineName === val)) {
             isErrorName.value = true
             return
@@ -276,37 +275,28 @@
             console.error(e)
         }
     }
-    function handleAddInstance () {
-        if (!curTemplateDetail.value?.params) return
-        const { params, buildNo } = deepClone(curTemplateDetail.value)
+    function handleShowInstanceCreate () {
+        showInstanceCreate.value = true
+    }
+    function handleConfirmCreateInstance (name) {
+        showInstanceCreate.value = false
+        handleAddInstance(name)
+    }
+    function handleAddInstance (name) {
+        const instanceParams = deepClone(curTemplateDetail.value)
         const newInstance = {
-            enablePac: false,
-            pipelineName: pipelineName.value ?? '',
-            param: params.map(p => {
-                return {
-                    ...p,
-                    isRequiredParam: p.required,
-                    isFollowTemplate: false
-                }
-            }),
-            ...(buildNo ? {
-                buildNo: {
-                    ...buildNo,
-                    isRequiredParam: buildNo.required,
-                    isFollowTemplate: false
-                }
-            } : undefined),
-            triggerConfigs: templateTriggerConfigs.value
+            ...instanceParams,
+            pipelineName: name ?? pipelineName.value ?? ''
         }
+        console.log(newInstance,)
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
         proxy?.$nextTick(() => {
             const index = instanceList.value.length - 1
             handleInstanceClick(index)
-            handleEditName(index)
-            nameInputRef.value && nameInputRef.value[0]?.focus()
+            editingIndex.value = index
         }, 3000)
     }
-    function init () {
+    async function init () {
         if (!props.isInstanceCreateType && !instanceList.value.length) {
             proxy.$router.push({
                 name: 'TemplateOverview',
@@ -318,7 +308,7 @@
             return
         }
         if (!props.isInstanceCreateType) {
-            fetchPipelinesDetails()
+            await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })

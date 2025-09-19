@@ -23,7 +23,7 @@
         </bk-select>
         <template v-if="templateRefTypeById">
             <span class="selector-prepend">
-                {{ isInstanceCreateType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
+                {{ !isInstanceUpgradeType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
             </span>
             <VersionSelector
                 v-if="templateRefTypeById"
@@ -108,14 +108,14 @@
                         <ul>
                             <li>
                                 {{
-                                    isInstanceCreateType
+                                    !isInstanceUpgradeType
                                         ? $t('template.applyTemplateSettingTips.create.tips1')
                                         : $t('template.applyTemplateSettingTips.update.tips1')
                                 }}
                             </li>
                             <li>
                                 {{
-                                    isInstanceCreateType
+                                    !isInstanceUpgradeType
                                         ? $t('template.applyTemplateSettingTips.create.tips2')
                                         : $t('template.applyTemplateSettingTips.update.tips2')
                                 }}
@@ -156,9 +156,6 @@
     } from '@/store/modules/templates/constants'
     import { debounce } from '@/utils/util'
     import { computed, defineProps, onMounted, ref, watch } from 'vue'
-    defineProps({
-        isInstanceCreateType: Boolean
-    })
     const isShowPreview = ref(false)
     const templatePipeline = ref({})
     const errorRefMsg = ref('')
@@ -168,6 +165,7 @@
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
+    const isInstanceUpgradeType = computed(() => proxy.$route.params?.type === 'upgrade')
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef?.value ?? '')
@@ -180,12 +178,13 @@
             id: 'ID',
             label: proxy.$t('template.referenceById')
         },
-        {
-            id: 'PATH',
-            label: proxy.$t('template.referenceByPath'),
-            tips: proxy.$t('template.referenceByPathTips'),
-            disabled: !pacEnabled.value
-        }
+        ...(
+            pacEnabled.value ? [{
+                id: 'PATH',
+                label: proxy.$t('template.referenceByPath'),
+                tips: proxy.$t('template.referenceByPathTips'),
+            }] : []
+        )
     ]))
     const isCommitPullMode = computed(() => pullMode.value === 'commit')
     const pullModeList = computed(() => ([
@@ -210,8 +209,8 @@
         }
     })
 
-    watch(() => pipelineInfo.value?.version, () => {
-        versionValue.value = pipelineInfo.value?.version
+    watch(() => pipelineInfo.value?.version, (value) => {
+        versionValue.value = value
     })
     watch(() => [pullMode.value, templateRefType.value], () => {
         proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
@@ -238,21 +237,34 @@
     async function handleVersionChange (value) {
         if (templateRefTypeById.value && !value) return
         try {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', true)
             versionValue.value = value
-            const res = await proxy.$store.dispatch('templates/fetchTemplateByVersion', {
-                projectId: projectId.value,
-                templateId: templateId.value,
+            const [templateParams, templateData] = await Promise.all([
+                proxy.$store.dispatch('templates/fetchTemplateParamsById', {
+                    projectId: projectId.value,
+                    templateId: templateId.value,
+                    version: value
+                }),
+                proxy.$store.dispatch('templates/fetchTemplateDetailByVersion', {
+                    projectId: projectId.value,
+                    templateId: templateId.value,
+                    version: value
+                })
+            ])
+            await proxy.$store.dispatch('templates/updateTemplateData', {
+                data: templateParams,
                 version: value
             })
-            if (!res.resource) return
             templatePipeline.value = {
-                templateId: res.resource.templateId,
-                projectId: res.resource.projectId,
-                stages: res.resource.model.stages,
-                name: res.setting.pipelineName
+                templateId: templateData.resource?.templateId,
+                projectId: templateData.resource?.projectId,
+                stages: templateData.resource?.model.stages,
+                name: templateData.setting?.pipelineName
             }
         } catch (e) {
             console.error(e)
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }
     }
     function handleChangeUseTemplateSettings (value) {
@@ -284,16 +296,27 @@
         })
         try {
             proxy.$store.dispatch('templates/updateInstancePageLoading', true)
-            const res = await proxy.$store.dispatch('templates/fetchTemplateByRef', {
-                projectId: projectId.value,
-                templateId: templateId.value,
-                ref: refAlias
+            const [templateParams, templateData] = await Promise.all([
+                proxy.$store.dispatch('templates/fetchTemplateParamsByRef', {
+                    projectId: projectId.value,
+                    templateId: templateId.value,
+                    ref: refAlias
+                }),
+                proxy.$store.dispatch('templates/fetchTemplateDetailByRef', {
+                    projectId: projectId.value,
+                    templateId: templateId.value,
+                    ref: refAlias
+                })
+            ])
+            const version = templateData.resource.version
+            await proxy.$store.dispatch('templates/updateTemplateData', {
+                data: templateParams,
+                version
             })
-            if (!res.resource) return
             templatePipeline.value = {
-                templateId: res.resource.templateId,
-                projectId: res.resource.projectId,
-                stages: res.resource.model.stages
+                templateId: templateData.resource.templateId,
+                projectId: templateData.resource.projectId,
+                stages: templateData.resource.model.stages
             }
             errorRefMsg.value = ''
         } catch (e) {

@@ -308,7 +308,9 @@
                     } else {
                         this.versionList.push(...versions)
                     }
-                    this.switchVersion(this.value)
+                    if (!this.activeVersion) {
+                        this.switchVersion(this.value)
+                    }
                 } catch (error) {
                     console.log(error)
                 } finally {
