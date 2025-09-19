@@ -307,210 +307,212 @@ abstract class ImageReleaseService {
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
     ): Result<String?> {
-        logger.info("updateMarketImage params:[$userId|$marketImageUpdateRequest|$checkLatest|$sendCheckResultNotify]")
-        if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
-            marketImageUpdateRequest.agentTypeScope.isEmpty()) {
-            throw InvalidParamException(
-                message = "agentTypeScope cannot be empty",
-                params = arrayOf("agentTypeScope=[]")
-            )
-        }
-        val imageCode = marketImageUpdateRequest.imageCode
-        val imageTag = marketImageUpdateRequest.imageTag
-        // 判断镜像tag是否为latest
-        if (checkLatest && imageTag == LATEST) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(imageTag),
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-        val imageCount = imageDao.countByCode(dslContext, imageCode)
-        if (imageCount < 1) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(imageCode),
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-        val imageName = marketImageUpdateRequest.imageName
-        // 判断更新的名称是否已存在
-        if (validateNameIsExist(imageCode, imageName)) return I18nUtil.generateResponseDataObject(
-            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-            params = arrayOf(imageName),
-            language = I18nUtil.getLanguage(userId)
-        )
-        val imageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)!!
-        val imageSourceType = marketImageUpdateRequest.imageSourceType
-        val imageRepoName = marketImageUpdateRequest.imageRepoName
-        if (imageSourceType == ImageType.BKDEVOPS) {
-            // 判断用户发布的镜像是否是自已名下有权限操作的镜像
-            val projectCode =
-                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
-                    ?: throw DataConsistencyException(
-                        srcData = "(IMAGE,$userId,$imageCode)",
-                        targetData = "TestProjectCode",
-                        message = "Cannot find testproject record"
-                    )
-            val listProjectImagesResult = client.get(ServiceImageResource::class).listAllProjectImages(
-                userId = userId,
-                projectId = projectCode,
-                searchKey = imageRepoName
-            )
-            if (listProjectImagesResult.isNotOk()) {
-                return Result(listProjectImagesResult.status, listProjectImagesResult.message, null)
-            }
-            val projectImageListResp = listProjectImagesResult.data
-            if ((null == projectImageListResp ||
-                    projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
-                // 查询是否上架的是公共镜像
-                val listPublicImagesResult = client.get(ServiceImageResource::class).listAllPublicImages(
-                    userId = userId,
-                    searchKey = imageRepoName
-                )
-                logger.info("$imageRepoName listPublicImagesResult is :$listPublicImagesResult")
-                if (listPublicImagesResult.isNotOk()) {
-                    return Result(listPublicImagesResult.status, listPublicImagesResult.message, null)
-                }
-                val publicImageListResp = listPublicImagesResult.data
-                if ((null == publicImageListResp ||
-                        publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
-                    return I18nUtil.generateResponseDataObject(
-                        messageCode = IMAGE_PUBLISH_REPO_NO_PERMISSION,
-                        language = I18nUtil.getLanguage(userId)
-                    )
-                }
-            }
-        }
-        // 判断镜像的tag是否被关联过
-        val relFlag = imageDao.countReleaseImageByTag(
-            dslContext = dslContext,
-            imageCode = imageCode,
-            imageRepoUrl = marketImageUpdateRequest.imageRepoUrl,
-            imageRepoName = imageRepoName,
-            imageTag = imageTag
-        ) == 0
-        if (!relFlag) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(imageTag),
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-        // 校验前端传的版本号是否正确
-        val releaseType = marketImageUpdateRequest.releaseType
-        val version = marketImageUpdateRequest.version
-        val dbVersion = imageRecord.version
-        val imageStatus = imageRecord.imageStatus
-        // 判断镜像首个版本对应的请求是否合法
-        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            imageStatus != ImageStatusEnum.INIT.status.toByte()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
-        }
-        // 最近的版本处于上架中止状态，重新升级版本号不变
-        val cancelFlag = imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersionList =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                listOf(dbVersion)
-            } else {
-                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
-                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
-                    imageDao.getImage(
-                        dslContext = dslContext,
-                        imageCode = imageCode,
-                        version = VersionUtils.convertLatestVersion(version)
-                    )?.version
-                } else {
-                    null
-                }
-                storeCommonService.getRequireVersion(
-                    reqVersion = reqVersion,
-                    dbVersion = dbVersion,
-                    releaseType = releaseType
-                )
-            }
-        if (!requireVersionList.contains(version)) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
-                params = arrayOf(version, requireVersionList.toString()),
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-        // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
-        val imageFinalStatusList = mutableListOf(
-            ImageStatusEnum.AUDIT_REJECT.status.toByte(),
-            ImageStatusEnum.RELEASED.status.toByte(),
-            ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
-        )
-        if (imageCount == 1) {
-            // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
-            imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
-        }
-        if (!imageFinalStatusList.contains(imageStatus)) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                params = arrayOf(imageRecord.imageName, imageRecord.version),
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-        var imageId = UUIDUtil.generate()
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            if (imageRecord.version.isNullOrBlank() ||
-                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
-                // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
-                imageId = imageRecord.id
-                val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                    val imageVersion = marketImageVersionLogDao.getImageVersion(context, imageId)
-                    imageVersion.releaseType
-                } else {
-                    releaseType.releaseType.toByte()
-                }
-                updateMarketImage(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId,
-                    imageSize = "",
-                    releaseType = finalReleaseType,
-                    marketImageUpdateRequest = marketImageUpdateRequest
-                )
-            } else {
-                // 升级镜像
-                upgradeMarketImage(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId,
-                    imageSize = "",
-                    imageRecord = imageRecord,
-                    marketImageUpdateRequest = marketImageUpdateRequest
-                )
-            }
-            // 更新标签信息
-            imageLabelRelDao.deleteByImageId(context, imageId)
-            val labelIdList = marketImageUpdateRequest.labelIdList
-            if (!labelIdList.isNullOrEmpty()) {
-                imageLabelRelDao.batchAdd(context, userId, imageId, labelIdList)
-            }
-            if (runCheckPipeline) {
-                // 运行检查镜像合法性的流水线
-                runCheckImagePipeline(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId
-                )
-            } else {
-                // 直接置为测试中状态
-                marketImageDao.updateImageStatusById(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = ImageStatusEnum.TESTING.status.toByte(),
-                    userId = userId,
-                    msg = "no check"
-                )
-            }
-        }
-        return Result(imageId)
+//        logger.info("updateMarketImage params:[$userId|$marketImageUpdateRequest|$checkLatest|$sendCheckResultNotify]")
+//        if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
+//            marketImageUpdateRequest.agentTypeScope.isEmpty()) {
+//            throw InvalidParamException(
+//                message = "agentTypeScope cannot be empty",
+//                params = arrayOf("agentTypeScope=[]")
+//            )
+//        }
+//        val imageCode = marketImageUpdateRequest.imageCode
+//        val imageTag = marketImageUpdateRequest.imageTag
+//        // 判断镜像tag是否为latest
+//        if (checkLatest && imageTag == LATEST) {
+//            return I18nUtil.generateResponseDataObject(
+//                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+//                params = arrayOf(imageTag),
+//                language = I18nUtil.getLanguage(userId)
+//            )
+//        }
+//        val imageCount = imageDao.countByCode(dslContext, imageCode)
+//        if (imageCount < 1) {
+//            return I18nUtil.generateResponseDataObject(
+//                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+//                params = arrayOf(imageCode),
+//                language = I18nUtil.getLanguage(userId)
+//            )
+//        }
+//        val imageName = marketImageUpdateRequest.imageName
+//        // 判断更新的名称是否已存在
+//        if (validateNameIsExist(imageCode, imageName)) return I18nUtil.generateResponseDataObject(
+//            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+//            params = arrayOf(imageName),
+//            language = I18nUtil.getLanguage(userId)
+//        )
+//        val imageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)!!
+//        val imageSourceType = marketImageUpdateRequest.imageSourceType
+//        val imageRepoName = marketImageUpdateRequest.imageRepoName
+//        if (imageSourceType == ImageType.BKDEVOPS) {
+//            // 判断用户发布的镜像是否是自已名下有权限操作的镜像
+//            val projectCode =
+//                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
+//                    ?: throw DataConsistencyException(
+//                        srcData = "(IMAGE,$userId,$imageCode)",
+//                        targetData = "TestProjectCode",
+//                        message = "Cannot find testproject record"
+//                    )
+//            val listProjectImagesResult = client.get(ServiceImageResource::class).listAllProjectImages(
+//                userId = userId,
+//                projectId = projectCode,
+//                searchKey = imageRepoName
+//            )
+//            if (listProjectImagesResult.isNotOk()) {
+//                return Result(listProjectImagesResult.status, listProjectImagesResult.message, null)
+//            }
+//            val projectImageListResp = listProjectImagesResult.data
+//            if ((null == projectImageListResp ||
+//                    projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
+//                // 查询是否上架的是公共镜像
+//                val listPublicImagesResult = client.get(ServiceImageResource::class).listAllPublicImages(
+//                    userId = userId,
+//                    searchKey = imageRepoName
+//                )
+//                logger.info("$imageRepoName listPublicImagesResult is :$listPublicImagesResult")
+//                if (listPublicImagesResult.isNotOk()) {
+//                    return Result(listPublicImagesResult.status, listPublicImagesResult.message, null)
+//                }
+//                val publicImageListResp = listPublicImagesResult.data
+//                if ((null == publicImageListResp ||
+//                        publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
+//                    return I18nUtil.generateResponseDataObject(
+//                        messageCode = IMAGE_PUBLISH_REPO_NO_PERMISSION,
+//                        language = I18nUtil.getLanguage(userId)
+//                    )
+//                }
+//            }
+//        }
+//        // 判断镜像的tag是否被关联过
+//        val relFlag = imageDao.countReleaseImageByTag(
+//            dslContext = dslContext,
+//            imageCode = imageCode,
+//            imageRepoUrl = marketImageUpdateRequest.imageRepoUrl,
+//            imageRepoName = imageRepoName,
+//            imageTag = imageTag
+//        ) == 0
+//        if (!relFlag) {
+//            return I18nUtil.generateResponseDataObject(
+//                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+//                params = arrayOf(imageTag),
+//                language = I18nUtil.getLanguage(userId)
+//            )
+//        }
+//        // 校验前端传的版本号是否正确
+//        val releaseType = marketImageUpdateRequest.releaseType
+//        val version = marketImageUpdateRequest.version
+//        val dbVersion = imageRecord.version
+//        val imageStatus = imageRecord.imageStatus
+//        // 判断镜像首个版本对应的请求是否合法
+//        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+//            imageStatus != ImageStatusEnum.INIT.status.toByte()) {
+//            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+//        }
+//        // 最近的版本处于上架中止状态，重新升级版本号不变
+//        val cancelFlag = imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+//        val requireVersionList =
+//            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+//                listOf(dbVersion)
+//            } else {
+//                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+//                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+//                    imageDao.getImage(
+//                        dslContext = dslContext,
+//                        imageCode = imageCode,
+//                        version = VersionUtils.convertLatestVersion(version)
+//                    )?.version
+//                } else {
+//                    null
+//                }
+//                storeCommonService.getRequireVersion(
+//                    reqVersion = reqVersion,
+//                    dbVersion = dbVersion,
+//                    releaseType = releaseType
+//                )
+//            }
+//        if (!requireVersionList.contains(version)) {
+//            return I18nUtil.generateResponseDataObject(
+//                messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
+//                params = arrayOf(version, requireVersionList.toString()),
+//                language = I18nUtil.getLanguage(userId)
+//            )
+//        }
+//        // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+//        val imageFinalStatusList = mutableListOf(
+//            ImageStatusEnum.AUDIT_REJECT.status.toByte(),
+//            ImageStatusEnum.RELEASED.status.toByte(),
+//            ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+//            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+//        )
+//        if (imageCount == 1) {
+//            // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
+//            imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
+//        }
+//        if (!imageFinalStatusList.contains(imageStatus)) {
+//            return I18nUtil.generateResponseDataObject(
+//                messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+//                params = arrayOf(imageRecord.imageName, imageRecord.version),
+//                language = I18nUtil.getLanguage(userId)
+//            )
+//        }
+//        var imageId = UUIDUtil.generate()
+//        dslContext.transaction { t ->
+//            val context = DSL.using(t)
+//            if (imageRecord.version.isNullOrBlank() ||
+//                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+//                // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
+//                imageId = imageRecord.id
+//                val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+//                    val imageVersion = marketImageVersionLogDao.getImageVersion(context, imageId)
+//                    imageVersion.releaseType
+//                } else {
+//                    releaseType.releaseType.toByte()
+//                }
+//                updateMarketImage(
+//                    context = context,
+//                    userId = userId,
+//                    imageId = imageId,
+//                    imageSize = "",
+//                    releaseType = finalReleaseType,
+//                    marketImageUpdateRequest = marketImageUpdateRequest
+//                )
+//            } else {
+//                // 升级镜像
+//                upgradeMarketImage(
+//                    context = context,
+//                    userId = userId,
+//                    imageId = imageId,
+//                    imageSize = "",
+//                    imageRecord = imageRecord,
+//                    marketImageUpdateRequest = marketImageUpdateRequest
+//                )
+//            }
+//            // 更新标签信息
+//            imageLabelRelDao.deleteByImageId(context, imageId)
+//            val labelIdList = marketImageUpdateRequest.labelIdList
+//            if (!labelIdList.isNullOrEmpty()) {
+//                imageLabelRelDao.batchAdd(context, userId, imageId, labelIdList)
+//            }
+//            if (runCheckPipeline) {
+//                // 运行检查镜像合法性的流水线
+//                runCheckImagePipeline(
+//                    context = context,
+//                    userId = userId,
+//                    imageId = imageId
+//                )
+//            } else {
+//                // 直接置为测试中状态
+//                marketImageDao.updateImageStatusById(
+//                    dslContext = context,
+//                    imageId = imageId,
+//                    imageStatus = ImageStatusEnum.TESTING.status.toByte(),
+//                    userId = userId,
+//                    msg = "no check"
+//                )
+//            }
+//        }
+//        return Result(imageId)
+//        return Result()
+        return Result(null)
     }
 
     fun recheck(
