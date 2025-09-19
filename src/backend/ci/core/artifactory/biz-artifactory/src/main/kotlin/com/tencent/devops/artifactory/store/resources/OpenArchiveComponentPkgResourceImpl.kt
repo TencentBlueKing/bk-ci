@@ -25,46 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.artifactory.store.resources
 
+import com.tencent.devops.artifactory.api.OpenArchiveComponentPkgResource
+import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
-import com.tencent.devops.store.api.common.OpenStoreResource
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpenStoreResourceImpl @Autowired constructor(
-    private val storeProjectService: StoreProjectService,
-    private val storeCommonService: StoreCommonService,
-    private val redisOperation: RedisOperation
-) : OpenStoreResource {
+class OpenArchiveComponentPkgResourceImpl @Autowired constructor(
+    private val archiveStorePkgService: ArchiveStorePkgService
+) : OpenArchiveComponentPkgResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun validateProjectComponentPermission(
+    override fun getComponentPkgDownloadUrl(
         token: String,
-        projectCode: String,
+        userId: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
         storeCode: String,
-        storeType: StoreTypeEnum
-    ): Result<Boolean> {
-        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
-            // 如果从缓存中查出该组件是公共组件则无需权限校验
-            return Result(true)
-        }
+        version: String,
+        instanceId: String?,
+        osName: String?,
+        osArch: String?
+    ): Result<String> {
         return Result(
-            storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||
-                storeProjectService.isInstalledByProject(
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
+            archiveStorePkgService.getComponentPkgDownloadUrl(
+                userId = userId,
+                projectId = projectId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                instanceId = instanceId,
+                osName = osName,
+                osArch = osArch
+            )
         )
     }
 }
