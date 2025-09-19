@@ -535,10 +535,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineId = null,
             params = triggerContainer.params
         )
-        // 实例化,参数默认是流水线全部覆盖模版
-        val overrideTemplateField = TemplateInstanceField(
-            // 常量不能被覆盖
-            paramIds = instanceParams.filter { it.constant != true }.map { it.id }
+        val overrideTemplateField = TemplateInstanceField.initFromTrigger(
+            triggerContainer = triggerContainer
         )
         return TemplateInstanceParams(
             pipelineId = "",

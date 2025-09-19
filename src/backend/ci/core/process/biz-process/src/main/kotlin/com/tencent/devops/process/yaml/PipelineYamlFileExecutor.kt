@@ -7,7 +7,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.pipeline.enums.YamDiffFileStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
-import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileExecutorEvent
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service
 class PipelineYamlFileExecutor @Autowired constructor(
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val webhookTriggerBuildService: WebhookTriggerBuildService,
-    private val webhookTriggerManager: WebhookTriggerManager,
     private val pipelineYamlFileManager: PipelineYamlFileManager,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val redisOperation: RedisOperation,
