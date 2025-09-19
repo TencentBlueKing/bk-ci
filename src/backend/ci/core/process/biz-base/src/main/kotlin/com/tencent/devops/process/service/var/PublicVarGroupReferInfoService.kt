@@ -529,6 +529,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     )
                 }
             }
+        if (dynamicPublicVarWithPositions.isEmpty()) {
+            return
+        }
         // 提取所有需要删除的索引，并按降序排序
         val indicesToRemove = dynamicPublicVarWithPositions.values
             .flatMap { it.map { po -> po.index } } // 提取所有索引
