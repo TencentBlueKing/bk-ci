@@ -234,6 +234,35 @@ class PipelineResourceDao {
         }
     }
 
+    /**
+     * 获取流水线最新的版本名称
+     */
+    fun getLatestVersionNames(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>
+    ): Map<String, String> {
+        with(T_PIPELINE_RESOURCE) {
+            val record3s = dslContext.select(PIPELINE_ID, VERSION_NAME, VERSION)
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .fetch()
+            if (record3s.isEmpty()) {
+                return emptyMap()
+            }
+            val result = mutableMapOf<String, String>()
+            val maxVersionMap = mutableMapOf<String, Int>()
+            record3s.forEach {
+                val maxVersion = maxVersionMap[it.get(PIPELINE_ID)]
+                if (maxVersion == null || maxVersion < it.get(VERSION)) {
+                    maxVersionMap[it.get(PIPELINE_ID)] = it.get(VERSION)
+                    result[it.get(PIPELINE_ID)] = it.get(VERSION_NAME) ?: "init"
+                }
+            }
+            return result
+        }
+    }
+
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceRecord?): PipelineResourceVersion? {
             return record?.let {

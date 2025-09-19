@@ -38,10 +38,10 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_U
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_SUCCESS
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailCombination
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 @Service
 class WebhookTriggerEventListener(
     private val pipelineTriggerEventService: PipelineTriggerEventService
-) : WebhookTriggerListenerSupport(), PipelineYamlChangeListener {
+) : WebhookTriggerListener, PipelineYamlChangeListener {
 
     override fun onBuildSuccess(context: WebhookTriggerContext) {
         val triggerDetail = with(context) {

@@ -64,7 +64,7 @@ class StageBuildRecordService(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     private val stageBuildDetailService: StageBuildDetailService,
-    private val pipelineBuildDao: PipelineBuildDao,
+    pipelineBuildDao: PipelineBuildDao,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineResourceVersionDao: PipelineResourceVersionDao,
