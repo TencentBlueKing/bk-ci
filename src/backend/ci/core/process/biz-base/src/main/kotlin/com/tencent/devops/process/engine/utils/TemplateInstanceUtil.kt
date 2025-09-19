@@ -249,6 +249,9 @@ object TemplateInstanceUtil {
         )
         return when {
             // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
+            templateParam.type == BuildFormPropertyType.BOOLEAN && templateVariable.value is String -> {
+                (templateVariable.value as String?).toBoolean()
+            }
             templateParam.type == BuildFormPropertyType.MULTIPLE && templateVariable.value is List<*> -> {
                 (templateVariable.value as List<*>).joinToString(",")
             }

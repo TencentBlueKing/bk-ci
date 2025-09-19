@@ -21,7 +21,9 @@ data class TemplateInstanceField(
         fun initFromTrigger(
             triggerContainer: TriggerContainer
         ): TemplateInstanceField {
-            val paramIds = triggerContainer.params.map { it.id }.toMutableList()
+            val paramIds = triggerContainer.params.filter {
+                it.constant != true
+            }.map { it.id }.toMutableList()
             if (triggerContainer.buildNo != null) {
                 paramIds.add(BK_CI_BUILD_NO)
             }

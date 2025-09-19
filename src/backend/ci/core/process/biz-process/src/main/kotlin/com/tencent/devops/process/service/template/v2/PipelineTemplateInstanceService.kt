@@ -537,7 +537,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         )
         // 实例化,参数默认是流水线全部覆盖模版
         val overrideTemplateField = TemplateInstanceField(
-            paramIds = instanceParams.map { it.id }
+            // 常量不能被覆盖
+            paramIds = instanceParams.filter { it.constant != true }.map { it.id }
         )
         return TemplateInstanceParams(
             pipelineId = "",
