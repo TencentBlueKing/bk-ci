@@ -1876,7 +1876,11 @@
                 "type" : "string"
               },
               "version" : {
-                "type" : "string"
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                } ]
               },
               "variables" : {
                 "type" : "object",
