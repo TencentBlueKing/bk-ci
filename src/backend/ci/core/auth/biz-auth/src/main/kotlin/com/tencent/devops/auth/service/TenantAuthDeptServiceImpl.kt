@@ -57,6 +57,10 @@ class TenantAuthDeptServiceImpl : DeptService {
         return retrieveUser(userId, tenantId).toVo()
     }
 
+    override fun getUserInfoFromExternal(userId: String, tenantId: String?): UserAndDeptInfoVo? {
+        return getUserInfo(userId, tenantId)
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum,

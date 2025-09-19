@@ -886,6 +886,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/projects/list/by/conditions/{page}/{pageSize}:
+    post:
+      operationId: "v4_app_list_projects_by_conditions"
+      description: "根据条件查询项目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/project/list/by/conditions/{page}/{pageSize}"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/projects/project/get_projects_by_product_id:
     get:
       operationId: "v4_app_get_projects_by_product_id"
@@ -973,7 +994,7 @@ paths:
   /v4/apigw-app/projects/project_list:
     get:
       operationId: "v4_app_project_list"
-      description: "查询所有项目"
+      description: "查询当前用户有权限的项目列表"
       tags:
       - "V4应用态"
       x-bk-apigateway-resource:
@@ -4408,7 +4429,7 @@ paths:
   /v4/apigw-user/projects/project_list:
     get:
       operationId: "v4_user_project_list"
-      description: "查询所有项目"
+      description: "查询当前用户有权限的项目列表"
       tags:
       - "V4用户态"
       x-bk-apigateway-resource:

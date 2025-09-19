@@ -33,6 +33,7 @@ spec:
         app.kubernetes.io/name: stream
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.stream.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.stream.hostAliases "context" $) | nindent 8 }}
       {{- end }}

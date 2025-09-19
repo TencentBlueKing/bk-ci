@@ -214,14 +214,17 @@ class ReportArchiveTask : ITask() {
     private fun getAllFiles(dir: File, pipelineId: String): List<File> {
         val config = api.getPluginConfig().data!!
         if (config.enableCompress || config.enableCompressPipelines.contains(pipelineId)) {
-            return compress(dir, config.compressThreshold)
+            return compress(dir, config.compressThreshold, config.compressSizeLimit)
         }
         return recursiveGetFiles(dir)
     }
 
-    private fun compress(dir: File, compressThreshold: Long): List<File> {
+    private fun compress(dir: File, compressThreshold: Long, compressSizeLimit: Long): List<File> {
         val files = recursiveGetFiles(dir)
         if (files.size < compressThreshold) {
+            return files
+        }
+        if (files.sumOf { it.length() } > compressSizeLimit) {
             return files
         }
         return try {
@@ -262,6 +265,8 @@ class ReportArchiveTask : ITask() {
             if (it.isDirectory) {
                 val subFileList = recursiveGetFiles(it)
                 fileList.addAll(subFileList)
+            } else if (it.name == COMPRESS_REPORT_FILE_NAME) {
+                // skip
             } else {
                 fileList.add(it)
             }

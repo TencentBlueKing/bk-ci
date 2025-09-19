@@ -39,7 +39,6 @@ dependencies {
     api(project(":core:auth:api-auth"))
     api(project(":core:artifactory:api-artifactory"))
 
-    api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
     api("com.tencent.devops.leaf:leaf-boot-starter")
 }

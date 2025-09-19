@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.1.0-rc.2](#v410-rc2)
+   - [Changelog since v4.1.0-rc.1](#changelog-since-v410-rc1)
+
 - [v4.1.0-rc.1](#v410-rc1)
    - [Changelog since v4.0.0](#changelog-since-v400)
 
@@ -7,6 +10,50 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.1.0-rc.2
+## 2025-09-11
+### Changelog since v4.1.0-rc.1
+#### 新增
+
+##### 流水线
+- [新增] feat：手动触发支持配置默认的「构建信息」 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12215)
+
+##### 代码库
+- [新增] feat: githubService增加扩展接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12246)
+- [新增] feat: Gitee类型代码库支持Check-Run [链接](http://github.com/TencentBlueKing/bk-ci/issues/12092)
+
+##### 其他
+- [新增] feat：获取项目列表的 APP态 openapi 接口，增加筛选条件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12232)
+- [新增] feat: 传递traceid到bkrepo [链接](http://github.com/TencentBlueKing/bk-ci/issues/12223)
+
+#### 优化
+
+##### 流水线
+- [优化] pref: 分库分表逻辑支持按指定序号剔除数据源 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12212)
+
+##### 研发商店
+- [优化] pref: 插件代码库被删除时，查询插件详情信息逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12206)
+
+##### 凭证管理
+- [优化] chore: 升级bcprov-jdk15on到	1.78.1 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11888)
+
+##### 权限中心
+- [优化] perf：我的授权- OAuth 授权提示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12227)
+
+#### 修复
+
+##### 流水线
+- [修复] bug：约束流水线保存草稿出现名称重复异常问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12234)
+- [修复] bug: PAC 流水线修改名称后，权限中心资源未释放 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12078)
+
+##### 研发商店
+- [修复] bug: 插件多个版本取消后再发布审核时最新标识设置重复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12248)
+
+##### 其他
+- [修复] bug: 代码框架升级导致Jersey 的 getAnnotation方法获取不到方法上的注解 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12237)
+- [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+- [修复] bug: 流水线事件上报处理异常数据 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12210)
+
 # v4.1.0-rc.1
 ## 2025-09-01
 ### Changelog since v4.0.0

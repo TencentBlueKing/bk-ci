@@ -129,7 +129,8 @@ class MigrateResourceService @Autowired constructor(
     fun migrateResource(
         projectCode: String,
         resourceType: String,
-        projectCreator: String
+        projectCreator: String,
+        throwException: Boolean = true
     ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource|$projectCode|$resourceType")
@@ -137,7 +138,8 @@ class MigrateResourceService @Autowired constructor(
             createRbacResource(
                 resourceType = resourceType,
                 projectCode = projectCode,
-                projectCreator = projectCreator
+                projectCreator = projectCreator,
+                throwException = throwException
             )
         } catch (ignore: Exception) {
             logger.error("Failed to migrate resource|$projectCode|$resourceType", ignore)
@@ -153,7 +155,8 @@ class MigrateResourceService @Autowired constructor(
     private fun createRbacResource(
         resourceType: String,
         projectCode: String,
-        projectCreator: String
+        projectCreator: String,
+        throwException: Boolean
     ) {
         var offset = 0L
         val limit = 100L
@@ -180,40 +183,47 @@ class MigrateResourceService @Autowired constructor(
             instanceInfoList.data.map {
                 JsonUtil.to(JsonUtil.toJson(it), InstanceInfoDTO::class.java)
             }.forEach { instance ->
-                val resourceCode =
-                    migrateResourceCodeConverter.getRbacResourceCode(
+                try {
+                    val resourceCode =
+                        migrateResourceCodeConverter.getRbacResourceCode(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            migrateResourceCode = instance.id
+                        ) ?: return@forEach
+                    logger.info("MigrateResourceService|projectCode:$projectCode|resourceCode:$resourceCode")
+                    authResourceService.getOrNull(
                         projectCode = projectCode,
                         resourceType = resourceType,
-                        migrateResourceCode = instance.id
-                    ) ?: return@forEach
-                logger.info("MigrateResourceService|projectCode:$projectCode|resourceCode:$resourceCode")
-                authResourceService.getOrNull(
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode
-                )?.let { authResource ->
-                    // 如果存在,说明重复迁移,判断资源名称是否相同,如果不同则需要修改
-                    if (instance.displayName != authResource.resourceName) {
-                        rbacPermissionResourceService.resourceModifyRelation(
+                        resourceCode = resourceCode
+                    )?.let { authResource ->
+                        // 如果存在,说明重复迁移,判断资源名称是否相同,如果不同则需要修改
+                        if (instance.displayName != authResource.resourceName) {
+                            rbacPermissionResourceService.resourceModifyRelation(
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                resourceName = instance.displayName
+                            )
+                        }
+                    } ?: run {
+                        rbacPermissionResourceService.resourceCreateRelation(
+                            userId = migrateCreatorFixService.getResourceCreator(
+                                projectCreator = projectCreator,
+                                resourceCreator = instance.iamApprover.first()
+                            ),
                             projectCode = projectCode,
                             resourceType = resourceType,
                             resourceCode = resourceCode,
-                            resourceName = instance.displayName
-                        )
-                    }
-                } ?: run {
-                    rbacPermissionResourceService.resourceCreateRelation(
-                        userId = migrateCreatorFixService.getResourceCreator(
-                            projectCreator = projectCreator,
-                            resourceCreator = instance.iamApprover.first()
-                        ),
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = instance.displayName,
-                        async = false,
+                            resourceName = instance.displayName,
+                            async = false,
                         tenantId = TenantUtils.getTenantId()
-                    )
+                    )}
+                } catch (ex: Exception) {
+                    if (throwException) {
+                        throw ex
+                    } else {
+                        logger.warn("migrate resource failed . $projectCode|$resourceType|${instance.id}", ex)
+                    }
                 }
             }
             offset += limit

@@ -114,6 +114,9 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_TAG_NOW_UPDATING = "2105064" // 环境管理：标签正在被修改或添加节点，请重试
     const val ERROR_NODE_TAG_INTERNAL_NOT_EDIT = "2105065" // 环境管理：系统内置标签不能被删除或修改
     const val ERROR_NODES_NO_EDIT_PERMISSSION = "2105066" // 环境管理：没有节点[{0}]编辑权限
+    // 环境管理：修改节点导入人仅支持节点类型为CMDB，非CMDB类型的节点：[{0}]
+    const val ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB = "2105067"
+    const val ERROR_NODE_NO_IMPORT_PERMISSION_NODES = "2105068" // 环境管理：没有节点[{0}]导入权限，仅有节点的主备份负责人才可导入
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

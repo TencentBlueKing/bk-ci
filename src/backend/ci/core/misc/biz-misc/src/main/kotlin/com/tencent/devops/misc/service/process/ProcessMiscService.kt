@@ -150,7 +150,7 @@ class ProcessMiscService @Autowired constructor(
         return processDao.getMinPipelineBuildNum(generateQueryDslContext(archiveFlag), projectId, pipelineId)
     }
 
-    fun getTotalBuildCount(
+    fun getMaxPipelineBuildNum(
         projectId: String,
         pipelineId: String,
         maxBuildNum: Int? = null,
@@ -158,7 +158,7 @@ class ProcessMiscService @Autowired constructor(
         geTimeFlag: Boolean? = null,
         archiveFlag: Boolean? = null
     ): Long {
-        return processDao.getTotalBuildCount(
+        return processDao.getMaxPipelineBuildNum(
             dslContext = generateQueryDslContext(archiveFlag),
             projectId = projectId,
             pipelineId = pipelineId,

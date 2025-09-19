@@ -33,6 +33,7 @@ spec:
         app.kubernetes.io/name: quality
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.quality.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.quality.hostAliases "context" $) | nindent 8 }}
       {{- end }}

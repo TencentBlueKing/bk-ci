@@ -241,7 +241,7 @@ class AuthDeptServiceImpl(
         }
     }
 
-    private fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+    override fun getUserInfoFromExternal(userId: String, tenantId: String?): UserAndDeptInfoVo? {
         return try {
             val url = getAuthRequestUrl(String.format(USER_INFO, userId))
             val searchEntity = SearchUserAndDeptEntity(
@@ -360,7 +360,7 @@ class AuthDeptServiceImpl(
                 type = ManagerScopesEnum.USER,
                 deptInfo = it.departments
             )
-        } ?: getUserInfoFromExternal(userId).also {
+        } ?: getUserInfoFromExternal(userId, null).also {
             if (it != null) userInfoCache.put(userId, it)
         }
     }

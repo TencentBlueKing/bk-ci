@@ -11,6 +11,12 @@ data class ProjectConditionDTO(
     val deptId: Long? = null,
     @get:Schema(title = "bgId")
     val bgId: Long? = null,
+    @get:Schema(title = "businessLineId")
+    val businessLineId: Long? = null,
+    @get:Schema(title = "项目名称")
+    val projectName: String? = null,
+    @get:Schema(title = "项目英文名称")
+    val englishName: String? = null,
     @get:Schema(title = "bg列表")
     val bgIdList: List<Long>? = null,
     @get:Schema(title = "项目创建人")
@@ -35,6 +41,4 @@ data class ProjectConditionDTO(
     val channelCode: String? = null,
     @get:Schema(title = "remoteDev相关")
     val queryRemoteDevFlag: Boolean? = null,
-    @get:Schema(title = "项目名称")
-    val projectName: String? = null
 )

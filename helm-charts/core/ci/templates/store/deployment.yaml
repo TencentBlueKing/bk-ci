@@ -33,6 +33,7 @@ spec:
         app.kubernetes.io/name: store
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.store.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.store.hostAliases "context" $) | nindent 8 }}
       {{- end }}
