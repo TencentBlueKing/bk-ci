@@ -137,7 +137,7 @@ class ReportArchiveTask : ITask() {
             val allFileList = getAllFiles(fileDir, buildVariables.pipelineId)
             compressed = allFileList.size == 1 && allFileList.first().name == COMPRESS_REPORT_FILE_NAME
             if (allFileList.size > 10) {
-                val executors = Executors.newFixedThreadPool(10)
+                val executors = Executors.newFixedThreadPool(5)
                 allFileList.forEach {
                     executors.execute {
                         uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
