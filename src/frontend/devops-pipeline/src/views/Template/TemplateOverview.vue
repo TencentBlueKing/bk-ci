@@ -90,7 +90,6 @@
     import UseInstance from '@/hook/useInstance'
     import useTemplateActions from '@/hook/useTemplateActions'
     import {
-        RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { getTemplateCacheViewId } from '@/utils/util'
@@ -103,6 +102,8 @@
         copyTemp,
         copyTemplate,
         exportTemplate,
+        toRelativeStore,
+        convertToCustom,
         deleteTemplate,
         copyConfirmHandler,
         copyCancelHandler
@@ -111,6 +112,7 @@
 
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+    const storeStatus = computed(() => proxy.$store?.state?.atom?.storeStatus)
 
     const pipelineHistoryViewable = computed(() => proxy.$store?.getters['atom/pipelineHistoryViewable'])
     const isReleaseVersion = computed(() => proxy.$store?.getters['atom/isReleaseVersion'])
@@ -194,53 +196,70 @@
             }))
         }
     ])
-    const templateActions = computed(() => [
-        {
-            text: t('template.export'), // 导出
-            handler: () => exportTemplate(pipelineInfo.value),
+    const templateActions = computed(() => {
+        const editPerm = {
             hasPermission: canEdit.value,
             disablePermissionApi: true,
-            isShow: true,
             permissionData: {
                 projectId: projectId.value,
                 resourceType: RESOURCE_TYPE.TEMPLATE,
-                resourceCode: templateId,
-                action: TEMPLATE_RESOURCE_ACTION.EDIT
-            }
-        },
-        {
-            text: t('copy'), // 复制
-            handler: () => copyTemplate({
-                ...pipelineInfo.value,
-                ...pipelineInfo.value?.permissions
-            }),
-            hasPermission: canEdit.value,
-            disablePermissionApi: true,
-            isShow: true,
-            permissionData: {
-                projectId: projectId.value,
-                resourceType: RESOURCE_TYPE.TEMPLATE,
-                resourceCode: projectId.value,
-                action: RESOURCE_ACTION.CREATE
-            }
-        },
-        {
-            text: pipelineInfo.value.srcTemplateId ? t('uninstall') : t('delete'),
-            handler: () => deleteTemplate({
-                ...pipelineInfo.value,
-                ...pipelineInfo.value?.permissions
-            }, goTemplateManageList),
-            hasPermission: canDelete.value,
-            disablePermissionApi: true,
-            isShow: true,
-            permissionData: {
-                projectId: projectId.value,
-                resourceType: RESOURCE_TYPE.TEMPLATE,
-                resourceCode: templateId,
+                resourceCode: templateId.value,
                 action: TEMPLATE_RESOURCE_ACTION.EDIT
             }
         }
-    ])
+        return [
+            {
+                text: t('template.export'), // 导出
+                handler: () => exportTemplate(pipelineInfo.value),
+                isShow: true,
+                ...editPerm
+            },
+            {
+                text: t('copy'), // 复制
+                handler: () => copyTemplate({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }),
+                isShow: true,
+                ...editPerm,
+            },
+            {
+                text: t(`template.${pipelineInfo.value.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`),
+                handler: () => toRelativeStore({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, storeStatus.value),
+                disable: (pipelineInfo.value.storeFlag && !pipelineInfo.value.publishFlag) || pipelineInfo.value.latestVersionStatus === 'COMMITTING',
+                isShow: pipelineInfo.value.mode === 'CUSTOMIZE',
+                ...editPerm
+            },
+            {
+                text: t('template.convertToCustom'),
+                handler: () => convertToCustom({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, goTemplateManageList),
+                isShow: pipelineInfo.value.mode === 'CONSTRAINT',
+                ...editPerm
+            },
+            {
+                text: t('delete'),
+                handler: () => deleteTemplate({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, goTemplateManageList),
+                isShow: true,
+                hasPermission: canDelete.value,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: templateId.value,
+                    action: TEMPLATE_RESOURCE_ACTION.DELETE
+                }
+            }
+        ]
+    })
 
     function getNavComponent (type) {
         switch (type) {

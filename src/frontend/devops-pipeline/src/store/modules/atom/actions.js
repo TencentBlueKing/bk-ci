@@ -87,6 +87,7 @@ import {
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_TEMPLATE_CONSTRAINT,
+    UPDATE_STORESTATUS,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -210,7 +211,7 @@ export default {
             return response.data
         })
     },
-    requestTemplate: async ({ dispatch }, { projectId, templateId, version, query }) => {
+    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
             dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
@@ -220,6 +221,7 @@ export default {
                 }
             })
         ])
+        commit(UPDATE_STORESTATUS, templateRes.resource.storeStatus)
 
         return [
             {

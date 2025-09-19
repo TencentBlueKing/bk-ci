@@ -973,5 +973,6 @@
         background: #FFFFFF;
         border: 1px solid #DCDEE5;
         z-index: 100;
+        border-left: none;
     }
 </style>

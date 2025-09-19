@@ -49,6 +49,6 @@
   },
   "peerDependencies": {
     "vue": "~2.7.16",
-    "axios": "0.30.0"
+    "axios": "1.12.2"
   }
 }

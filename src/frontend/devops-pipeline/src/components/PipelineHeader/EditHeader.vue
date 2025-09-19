@@ -37,7 +37,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
@@ -53,7 +53,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
@@ -82,7 +82,8 @@
     import ModeSwitch from '@/components/ModeSwitch'
     import PipelineEditMoreAction from '@/components/PipelineEditMoreAction.vue'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { UI_MODE } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg } from '@/utils/util'
@@ -136,6 +137,9 @@
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
             },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus

@@ -5,32 +5,14 @@
                 <div class="search-group">
                     <bk-button
                         :theme="'primary'"
-                        v-perm="{
-                            hasPermission: hasCreatePermission,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE.TEMPLATE,
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
+                        v-perm="addPerm"
                         @click="handleShowCreateTemplateDialog"
                     >
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
                         class="ml10"
-                        v-perm="{
-                            hasPermission: hasCreatePermission,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE.TEMPLATE,
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
+                        v-perm="addPerm"
                         @click="handleShowInstallTemplateDialog"
                     >
                         {{ $t('template.installOrImportTemplate') }}
@@ -65,17 +47,22 @@
                 >
                 </search-select>
             </div>
-            <template-table
-                ref="selfTemp"
-                :type="templateViewId"
-                :data="tableData"
-                :pagination="pagination"
-                :has-create-permission="hasCreatePermission"
-                :is-loading="isTableLoading"
-                @limit-change="handlePageLimitChange"
-                @page-change="handlePageChange"
-                @clear="handleClear"
-            />
+            <div
+                ref="tableBox"
+                class="table-box"
+            >
+                <template-table
+                    :type="templateViewId"
+                    :data="tableData"
+                    :max-height="tableHeight"
+                    :pagination="pagination"
+                    :has-create-permission="hasCreatePermission"
+                    :is-loading="isTableLoading"
+                    @limit-change="handlePageLimitChange"
+                    @page-change="handlePageChange"
+                    @clear="handleClear"
+                />
+            </div>
         </div>
 
         <CopyTemplateDialog
@@ -116,16 +103,15 @@
         TEMPLATE_VIEW_ID_MAP
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_ACTION,
         RESOURCE_TYPE,
-        TEMPLATE_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { isShallowEqual } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import dayjs from 'dayjs'
-    import { computed, onMounted, ref, watch } from 'vue'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
     import TemplateTable from './TemplateTable'
@@ -223,6 +209,20 @@
         return acc
     }, {}))
     const filterTips = computed(() => filterData.value.map(item => item.name).join(' / '))
+    const addPerm = computed(() => {
+        return {
+            hasPermission: hasCreatePermission.value,
+            disablePermissionApi: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: RESOURCE_TYPE.TEMPLATE,
+                resourceCode: projectId.value,
+                action: TEMPLATE_RESOURCE_ACTION.CREATE
+            }
+        }
+    })
+    const tableHeight = ref(null)
+    const tableBox = ref(null)
 
     watch(() => searchValue.value, () => {
         fetchTableData()
@@ -231,9 +231,19 @@
         searchValue.value = []
     })
     onMounted(() => {
+        updateTableHeight()
+        window.addEventListener('resize', updateTableHeight)
         searchValue.value = echoQueryParameters()
         hasPipelineTemplatePermission()
     })
+    
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', updateTableHeight)
+    })
+
+    function updateTableHeight () {
+        tableHeight.value = tableBox.value.offsetHeight
+    }
 
     function getFlagTooltips (row) {
         if (row.storeFlag || row.upgradeFlag || row.publishFlag) {
@@ -356,6 +366,7 @@
                     sourceTooltip: getFlagTooltips(item),
                     overviewParams: {
                         templateId: item.id,
+                        canView: item.canView,
                         version: item.releasedVersion
                     },
                     templateActions: [
@@ -366,11 +377,7 @@
                             disablePermissionApi: true,
                             disable: item.latestVersionStatus !== 'RELEASED',
                             isShow: true,
-                            permissionData: {
-                                ...editPerm,
-                                resourceCode: projectId.value,
-                                action: RESOURCE_ACTION.CREATE
-                            }
+                            permissionData: editPerm
                         },
                         {
                             text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
@@ -587,6 +594,10 @@
                     color: #c4c6cc;
                 }
             }
+        }
+        .table-box {
+            flex: 1;
+            overflow: hidden;
         }
    }
 }

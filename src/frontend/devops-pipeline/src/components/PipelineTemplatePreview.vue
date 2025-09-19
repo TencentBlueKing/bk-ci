@@ -184,9 +184,8 @@
             },
             async getRequestTemplatePreview () {
                 return this.requestTemplatePreview({
-                    projectId: this.$route.params.projectId,
-                    // 研发商店的模板用srcTemplateId
-                    templateId: this.templatePipeline.srcTemplateId || this.templatePipeline.templateId || this.templatePipeline.id,
+                    projectId: this.templatePipeline.srcProjectId || this.templatePipeline.projectId,
+                    templateId: this.templatePipeline.templateId || this.templatePipeline.code,
                     highlightType: this.highlightType
                 })
             },

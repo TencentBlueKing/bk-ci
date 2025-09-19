@@ -13,52 +13,60 @@
                 slot="trigger"
             >
                 <span @click="goHistory">{{ pipelineName }}</span>
-                
-                <bk-popover
-                    v-if="instanceFromTemplate"
-                    class="template-instance-tag"
-                    theme="light"
-                    :on-show="handleShowPopover"
-                    :on-hide="handleHidePopover"
+                <bk-badge
+                    dot
+                    :visible="!!constraintInfo?.upgradeFlag"
+                    theme="danger"
                 >
-                    <span>
-                        {{ $t('constraint') }}
-                    </span>
-                    <section
-                        slot="content"
+                    <bk-popover
+                        v-if="instanceFromTemplate"
+                        class="template-instance-tag"
+                        theme="light"
+                        @click.stop=""
+                        :on-show="handleShowPopover"
+                        :on-hide="handleHidePopover"
                     >
-                        <p>{{ $t('template.constraintMode') }}</p>
-                        <div
-                            class="constraint-info-area"
-                            v-bkloading="constraintInfoFetching"
+                    
+                        <span>
+                            {{ $t('constraint') }}
+                        </span>
+                    
+                        <section
+                            slot="content"
                         >
-                            <p>
-                                <label>{{ $t('template.name') }}</label>
-                                <a
-                                    class="text-link"
-                                    target="_blank"
-                                    :href="constraintInfo?.templateDetailsUrl"
-                                >
-                                    {{ constraintInfo?.templateName ?? '--' }}
-                                </a>
-                            </p>
-                            <p>
-                                <label>{{ $t('template.templateVersion') }}</label>
-                                <span>
-                                    {{ constraintInfo?.templateVersionName ?? '--' }}
-                                </span>
-                                <a
-                                    v-if="constraintInfo?.upgradeFlag"
-                                    class="text-link"
-                                    target="_blank"
-                                    :href="constraintInfo?.upgradeUrl"
-                                >
-                                    {{ $t('template.goUpgrade') }}
-                                </a>
-                            </p>
-                        </div>
-                    </section>
-                </bk-popover>
+                            <p>{{ $t('template.constraintMode') }}</p>
+                            <div
+                                class="constraint-info-area"
+                                v-bkloading="constraintInfoFetching"
+                            >
+                                <p>
+                                    <label>{{ $t('template.name') }}</label>
+                                    <a
+                                        class="text-link"
+                                        target="_blank"
+                                        :href="constraintInfo?.templateDetailsUrl"
+                                    >
+                                        {{ constraintInfo?.templateName ?? '--' }}
+                                    </a>
+                                </p>
+                                <p>
+                                    <label>{{ $t('template.templateVersion') }}</label>
+                                    <span v-bk-overflow-tips="constraintInfo?.templateVersionName">
+                                        {{ constraintInfo?.templateVersionName ?? '--' }}
+                                    </span>
+                                    <a
+                                        v-if="constraintInfo?.upgradeFlag"
+                                        class="text-link"
+                                        target="_blank"
+                                        :href="constraintInfo?.upgradeUrl"
+                                    >
+                                        {{ $t('template.goUpgrade') }}
+                                    </a>
+                                </p>
+                            </div>
+                        </section>
+                    </bk-popover>
+                </bk-badge>
                 <div
                     class="pipeline-pac-indicator"
                     @click.stop.prevent=""
@@ -133,6 +141,7 @@
         },
         created () {
             this.fetchPipelineList()
+            this.handleShowPopover()
         },
         methods: {
             ...mapActions({
@@ -231,7 +240,7 @@
                     this.constraintInfo = res.data
 
                 } catch (error) {
-                    
+                    console.log(error)
                 } finally {
                     this.constraintInfoFetching = {
                         isLoading: false,
@@ -240,7 +249,6 @@
                 }
             },
             handleHidePopover () {
-                this.constraintInfo = null
                 this.contraintApiSignal?.abort()
             }
         }
@@ -248,6 +256,7 @@
 </script>
 
 <style lang="scss">
+    @import "@/scss/mixins/ellipsis";
     .template-instance-tag {
         font-size: 12px;
         line-height: 20px;
@@ -259,18 +268,25 @@
     }
     .constraint-info-area {
         background: #F5F7FA;
+        margin-top: 8px;
         border-radius: 2px;
         display: flex;
         flex-direction: column;
         padding: 4px 16px;
+
         gap: 6px;
-        min-width: 280px;
-        margin-top: 8px;
+        width: 280px;
+        
         > p {
             height: 32px;
             display: flex;
             align-items: center;
             grid-gap: 20px;
+            flex-shrink: 0;
+            > span {
+                @include ellipsis();
+                flex: 1;
+            }
         }
     }
     .pipeline-name-crumb {

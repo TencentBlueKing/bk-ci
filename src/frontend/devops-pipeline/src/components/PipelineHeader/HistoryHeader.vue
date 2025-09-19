@@ -60,12 +60,14 @@
                 :draft-version="pipelineInfo?.version"
                 :pipeline-id="uniqueId"
                 :project-id="projectId"
+                :theme="isTemplate ? 'default' : 'primary'"
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
                 :is-active-branch-version="isActiveBranchVersion"
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
+                :rollback-id="uniqueId"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -78,9 +80,9 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType,
                         resourceCode: uniqueId,
-                        action: RESOURCE_ACTION.EDIT
+                        action: resourceEditAction
                     }
                 }"
                 @click="goEdit"
@@ -95,9 +97,9 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: uniqueId,
-                        action: RESOURCE_ACTION.EDIT
+                        resourceType: RESOURCE_TYPE.PROJECT,
+                        resourceCode: projectId,
+                        action: RESOURCE_ACTION.CREATE
                     }
                 }"
                 @click="handleToInstanceEntry"
@@ -116,7 +118,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType,
                                     resourceCode: uniqueId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -146,7 +148,9 @@
     import InstanceReleaseBtn from '@/components/Template/InstanceReleaseBtn.vue'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -170,6 +174,8 @@
         },
         data () {
             return {
+                RESOURCE_TYPE,
+                RESOURCE_ACTION,
                 showVersionSideslider: false,
                 isPipelineIdChanged: false
             }
@@ -192,6 +198,7 @@
                 onlyBranchPipeline: 'atom/onlyBranchPipeline',
                 isTemplate: 'atom/isTemplate'
             }),
+            
             breadCrumb () {
                 return this.isTemplate ? 'template-bread-crumb' : 'pipeline-bread-crumb'
             },
@@ -229,6 +236,12 @@
             uniqueId () {
                 return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
             },
+            resourceType () {
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
+            },
+            resourceEditAction () {
+                return this.isTemplate ? TEMPLATE_RESOURCE_ACTION.EDIT : RESOURCE_ACTION.EDIT
+            },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
             },
@@ -247,7 +260,7 @@
             operateName () {
                 switch (true) {
                     case this.editAndExecutable:
-                        return this.$t('edit')
+                        return this.isTemplate ? this.$t('template.editTemplate') : this.$t('edit')
                     case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
                     default:
@@ -263,9 +276,6 @@
                         content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
-            },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
             },
             editRouteName () {
                 return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'

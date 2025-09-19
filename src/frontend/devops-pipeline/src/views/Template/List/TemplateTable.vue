@@ -3,7 +3,8 @@
         v-bkloading="{ isLoading }"
         :data="data"
         :size="tableSize"
-        height="100%"
+        :max-height="maxHeight"
+        ext-cls="template-table"
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
@@ -112,13 +113,13 @@
                         :disabled="row.latestVersionStatus === 'COMMITTING'"
                         @click="goInstanceEntry(row)"
                         v-perm="{
-                            hasPermission: hasCreatePermission,
+                            hasPermission: row.canView,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: projectId,
-                                action: RESOURCE_ACTION.CREATE
+                                resourceType: RESOURCE_TYPE.TEMPLATE,
+                                resourceCode: row.id,
+                                action: TEMPLATE_RESOURCE_ACTION.VIEW
                             }
                         }"
                     >
@@ -161,7 +162,8 @@
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_ACTION
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { computed, defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
@@ -186,10 +188,10 @@
                 limit: 20
             })
         },
-        hasCreatePermission: {
-            type: Boolean,
-            default: false
-        }
+        maxHeight: {
+            type: [Number, String],
+            default: 'auto'
+        },
     })
     const emit = defineEmits(['limit-change', 'page-change', 'clear'])
     const tableSize = ref('small')
@@ -354,6 +356,10 @@
     align-items: center;
     height: 40px;
     grid-gap: 12px;
+}
+
+.template-table.bk-table-enable-row-transition .bk-table-body td {
+    transition: none;
 }
 
 .select-text {

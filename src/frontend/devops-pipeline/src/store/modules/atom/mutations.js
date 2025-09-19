@@ -88,6 +88,7 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
+    UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
@@ -519,5 +520,10 @@ export default {
             [classify]: constraintList
         } })
         return state
-    }
+    },
+    [UPDATE_STORESTATUS]: (state, storeStatus) => {
+        return Object.assign(state, {
+            storeStatus
+        })
+    },
 }

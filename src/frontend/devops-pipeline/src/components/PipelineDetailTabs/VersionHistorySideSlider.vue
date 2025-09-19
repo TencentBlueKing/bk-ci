@@ -111,7 +111,7 @@
                                 v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
-                                :rollback-id="isTemplate ? $route.params.ptemplateId : $route.params.pipelineId"
+                                :rollback-id="isTemplate ? $route.params.templateId : $route.params.pipelineId"
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-base-version-name="draftBaseVersionName"
@@ -210,7 +210,7 @@
                 }, {
                     prop: 'creator',
                     width: 120,
-                    label: this.$t('template.lastModifiedBy')
+                    label: this.isTemplate ? this.$t('creator') : this.$t('template.lastModifiedBy')
                 }, {
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),
@@ -222,7 +222,7 @@
                 }, {
                     prop: 'updater',
                     width: 120,
-                    label: this.$t('audit.operator')
+                    label: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator')
                 }]
             },
             filterTips () {
@@ -237,7 +237,7 @@
                     name: this.$t('versionDesc'),
                     id: 'description'
                 }, {
-                    name: this.$t('audit.operator'),
+                    name: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator'),
                     id: 'creator'
                 }]
             },

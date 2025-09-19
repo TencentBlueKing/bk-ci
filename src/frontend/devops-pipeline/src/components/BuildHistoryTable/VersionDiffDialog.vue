@@ -142,45 +142,10 @@
                     const res = await proxy.$ajax.post(`/process/api/user/builds/${projectId}/${pipelineId}/${props.buildId}/buildVersionDiff`)
                     buildVersionDiffState.value = res.data
                 } catch (error) {
-                    buildVersionDiffState.value = {
-                        prevVersion: 1025348,
-                        prevVersionName: 'V8(P8.T7.5)',
-                        currVersion: 1025347,
-                        currVersionName: 'V5(P2.T3.3)',
-                        templateId: '8236b3567f7643379e5f367cdd3330fd',
-                        buildVersionDiffs: [
-                            {
-                                projectId: 'lockie',
-                                templateId: '8236b3567f7643379e5f367cdd3330fd',
-                                templateName: 'stage 模板 1',
-                                templateVersionName: 'dev',
-                                prevTemplateVersion: 1025348,
-                                currTemplateVersion: 1025347,
-                                prevTemplateVersionRef: 'a58c06f',
-                                currTemplateVersionRef: 'a2e4b6'
-                            },
-                            {
-                                projectId: 'lockie',
-                                templateId: '8236b3567f7643379e5f367cdd3330fd',
-                                templateName: 'stage 模板 2',
-                                templateVersionName: 'latest',
-                                prevTemplateVersion: 1025348,
-                                currTemplateVersion: 1025347,
-                                prevTemplateVersionRef: 'v9(P8.T7.5)',
-                                currTemplateVersionRef: 'V10(P2.T3.3)'
-                            },
-                            {
-                                projectId: 'lockie',
-                                templateId: '8236b3567f7643379e5f367cdd3330fd',
-                                templateName: 'job 模板 1',
-                                templateVersionName: '/refs/head/test',
-                                prevTemplateVersion: 1025348,
-                                currTemplateVersion: 1025347,
-                                prevTemplateVersionRef: 'c6d8e9',
-                                currTemplateVersionRef: '3a5d7f'
-                            }
-                        ]
-                    }
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: error.message,
+                    })
                 } finally {
                     isLoading.value = false
                 }

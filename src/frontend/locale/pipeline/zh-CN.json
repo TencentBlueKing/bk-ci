@@ -1982,5 +1982,6 @@
   "refTemplateDiffTitle": "流水线通过分支版本或代码库 ref 方式引用以下模板时，引用未变，但模板内容发生了变化",
   "refTemplate": "引用模板",
   "preRef": "上一版本/上一 Commit",
-  "currentRef": "当前版本/当前 Commit"
+  "currentRef": "当前版本/当前 Commit",
+  "noVariablesAvailable": "暂无变量"
 }

@@ -14,91 +14,100 @@
                 :right-icon="'bk-icon icon-search'"
             />
         </div>
-        <param-group
-            v-for="(group, index) in renderOutputList"
-            :key="group.key"
-            :show-content="group.isOpen === true || index === 0"
-        >
-            <div
-                class="atom-group-header"
-                slot="header"
-                :class="{ 'disabled-header': group.disableHeader }"
+        <template v-if="renderOutputList.length">
+            <param-group
+                v-for="(group, index) in renderOutputList"
+                :key="group.key"
+                :show-content="group.isOpen === true || index === 0"
             >
-                <div class="env-name flex-item">
-                    <bk-icon
-                        class="toggle-icon"
-                        type="right-shape"
-                    />
-                    <span
-                        class="group-title"
-                        :class="{ 'title-overflow': !group.stepId }"
-                        v-bk-tooltips="{ content: group.title, maxWidth: 300, disabled: group.stepId, allowHTML: false }"
-                    >
-                        {{ group.title }}
-                    </span>
-                </div>
                 <div
-                    v-if="!group.stepId && editable"
-                    @click.stop
-                    class="flex-item step-tips"
+                    class="atom-group-header"
+                    slot="header"
+                    :class="{ 'disabled-header': group.disableHeader }"
                 >
-                    <bk-icon type="exclamation-circle-shape" />
-                    <span>{{ $t('newui.noStepidTips') }}
-                        <bk-popconfirm
-                            trigger="click"
-                            ext-cls="step-pop-confirm"
-                            :ext-popover-cls="{ 'disabled-confirm-button': !editStepId || errors.has('step.editStepId') }"
-                            width="280"
-                            :confirm-text="$t('save')"
-                            @confirm="handleUpdateStepId"
-                            @cancel="resetStep"
+                    <div class="env-name flex-item">
+                        <bk-icon
+                            class="toggle-icon"
+                            type="right-shape"
+                        />
+                        <span
+                            class="group-title"
+                            :class="{ 'title-overflow': !group.stepId }"
+                            v-bk-tooltips="{ content: group.title, maxWidth: 300, disabled: group.stepId, allowHTML: false }"
                         >
-                            <div slot="content">
-                                <form-field
-                                    label="Step ID"
-                                    style="margin-bottom: 16px;"
-                                    :hide-colon="true"
-                                    :is-error="errors.has('step.editStepId')"
-                                    :desc="$t('editPage.stepIdDesc')"
-                                    :error-msg="errors.first('step.editStepId')"
-                                >
-                                    <vuex-input
-                                        style="margin-top: 6px;"
-                                        name="editStepId"
-                                        :value.sync="editStepId"
-                                        :handle-change="(name, value) => editStepId = value"
-                                        data-vv-scope="step"
-                                        v-validate="`required|varRule|notInList:${allStepId}`"
+                            {{ group.title }}
+                        </span>
+                    </div>
+                    <div
+                        v-if="!group.stepId && editable"
+                        @click.stop
+                        class="flex-item step-tips"
+                    >
+                        <bk-icon type="exclamation-circle-shape" />
+                        <span>{{ $t('newui.noStepidTips') }}
+                            <bk-popconfirm
+                                trigger="click"
+                                ext-cls="step-pop-confirm"
+                                :ext-popover-cls="{ 'disabled-confirm-button': !editStepId || errors.has('step.editStepId') }"
+                                width="280"
+                                :confirm-text="$t('save')"
+                                @confirm="handleUpdateStepId"
+                                @cancel="resetStep"
+                            >
+                                <div slot="content">
+                                    <form-field
+                                        label="Step ID"
+                                        style="margin-bottom: 16px;"
+                                        :hide-colon="true"
+                                        :is-error="errors.has('step.editStepId')"
+                                        :desc="$t('editPage.stepIdDesc')"
+                                        :error-msg="errors.first('step.editStepId')"
                                     >
-                                    </vuex-input>
-                                </form-field>
-                            </div>
-                            <a
-                                class="edit-step-span"
-                                @click="location = group.location"
-                            >{{ $t('newui.setNow') }}</a>
-                        </bk-popconfirm>
-                    </span>
+                                        <vuex-input
+                                            style="margin-top: 6px;"
+                                            name="editStepId"
+                                            :value.sync="editStepId"
+                                            :handle-change="(name, value) => editStepId = value"
+                                            data-vv-scope="step"
+                                            v-validate="`required|varRule|notInList:${allStepId}`"
+                                        >
+                                        </vuex-input>
+                                    </form-field>
+                                </div>
+                                <a
+                                    class="edit-step-span"
+                                    @click="location = group.location"
+                                >{{ $t('newui.setNow') }}</a>
+                            </bk-popconfirm>
+                        </span>
+                    </div>
+                    <span
+                        v-else
+                        class="flex-item item-num"
+                    >{{ group.params.length }}</span>
                 </div>
-                <span
-                    v-else
-                    class="flex-item item-num"
-                >{{ group.params.length }}</span>
-            </div>
-            <section slot="content">
-                <template v-for="env in group.params">
-                    <env-item
-                        :key="env.name"
-                        :name="env.name"
-                        :desc="env.desc"
-                        :editable="editable"
-                        :copy-prefix="group.envPrefix"
-                        :disabled-copy="!group.stepId || group.disableHeader"
-                        :disabled-copy-tips="group.disableHeader ? $t('newui.stepUseWarn') : ''"
-                    />
-                </template>
-            </section>
-        </param-group>
+                <section slot="content">
+                    <template v-for="env in group.params">
+                        <env-item
+                            :key="env.name"
+                            :name="env.name"
+                            :desc="env.desc"
+                            :editable="editable"
+                            :copy-prefix="group.envPrefix"
+                            :disabled-copy="!group.stepId || group.disableHeader"
+                            :disabled-copy-tips="group.disableHeader ? $t('newui.stepUseWarn') : ''"
+                        />
+                    </template>
+                </section>
+            </param-group>
+        </template>
+        <bk-exception
+            v-else
+            type="empty"
+            scene="part"
+        >
+            <span>{{ $t('noVariablesAvailable') }}</span>
+        </bk-exception>
     </div>
 </template>
 
