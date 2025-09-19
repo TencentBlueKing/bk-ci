@@ -434,6 +434,8 @@ object ProcessMessageCode {
     const val ERROR_PARENTS_TEMPLATE_NOT_EXISTS = "2101318" // 父模板{0}不存在
     const val ERROR_TEMPLATE_VERSION_NAME_DUPLICATION = "2101330" // 版本名称[{0}]已存在，不允许重复
     const val ERROR_TEMPLATE_VERSION_HAS_PUBLISHED = "2101331" // 模板{0}的最新版本已发布
+    // variable [xxx][yyy][zzz] 在模版中已定义为常量，不支持实例传入
+    const val ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST = "2101332"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -673,11 +675,17 @@ object ProcessMessageCode {
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
 
+    // [<a href={0}>{1}</a>]更新失败
+    const val BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED = "bkYamlPipelineDependencyUpgradeFailed"
+
     // [<a href={0}>{1}</a>]删除版本失败,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
 
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
+
+    // [<a href={0}>{1}</a>]实例化状态更新失败
+    const val BK_YAML_PIPELINE_CLOSE_FAILED = "bkYamlPipelineCloseFailed"
 
     // MR [<a href={0}>{1}</a>]已关闭，变更未发布到默认分支
     const val BK_YAML_INSTANCE_PULL_REQUEST_CLOSED = "bkYamlInstancePullRequestClosed"

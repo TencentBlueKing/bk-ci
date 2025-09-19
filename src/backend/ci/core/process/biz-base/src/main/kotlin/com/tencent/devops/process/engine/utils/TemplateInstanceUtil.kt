@@ -22,6 +22,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import org.slf4j.LoggerFactory
 
 /**
  *  模板实例工具类
@@ -209,6 +210,16 @@ object TemplateInstanceUtil {
     ): List<BuildFormProperty> {
         if (templateVariables == null) return templateParams
 
+        val constParamIds = templateParams.filter { it.constant == true }.map { it.id }
+        // 判断是否覆盖常量
+        val overrideConstParamIds = templateVariables.filter { constParamIds.contains(it.key)}
+        if (overrideConstParamIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST,
+                params = arrayOf(overrideConstParamIds.joinToString { "[$it]" })
+            )
+        }
+
         val templateVariableMap = templateVariables.associateBy { it.key }
         return templateParams.map { templateParam ->
             val templateVariable = templateVariableMap[templateParam.id]
@@ -233,6 +244,9 @@ object TemplateInstanceUtil {
         templateParam: BuildFormProperty,
         templateVariable: TemplateVariable
     ): Any {
+        logger.info(
+            "template instance default value|$templateParam|$templateVariable|${templateVariable.value.javaClass}"
+        )
         return when {
             // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
             templateParam.type == BuildFormPropertyType.BOOLEAN && templateVariable.value is String -> {
@@ -344,4 +358,6 @@ object TemplateInstanceUtil {
         }
         return recommendedVersion.buildNo
     }
+
+    private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
 }

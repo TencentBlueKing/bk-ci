@@ -7,7 +7,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.pipeline.enums.YamDiffFileStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
-import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
@@ -72,13 +71,6 @@ class PipelineYamlFileExecutor @Autowired constructor(
                     "[PAC_PIPELINE]|Failed to execute yaml file|" +
                         "$eventId|$projectId|${repository.repoHashId}|$filePath|$ref",
                     ignored
-                )
-                handleException(
-                    projectId = projectId,
-                    eventId = eventId,
-                    filePath = filePath,
-                    ref = ref,
-                    exception = ignored
                 )
             } finally {
                 lock.unlock()
@@ -389,11 +381,6 @@ class PipelineYamlFileExecutor @Autowired constructor(
         ref: String,
         exception: Exception
     ) {
-        val context = WebhookTriggerContext(
-            projectId = projectId,
-            pipelineId = filePath,
-            eventId = eventId
-        )
         val errorMsg = when (exception) {
             is ErrorCodeException -> {
                 I18nUtil.getCodeLanMessage(
@@ -406,7 +393,6 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 exception.message
             }
         }
-        webhookTriggerManager.fireError(context = context, exception = exception)
         pipelineYamlDiffService.updateStatus(
             projectId = projectId,
             eventId = eventId,

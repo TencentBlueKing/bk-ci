@@ -319,6 +319,12 @@ class PipelineYamlFileManager @Autowired constructor(
                 return
             }
 
+            val context = PipelineYamlChangeContext(
+                projectId = projectId,
+                filePath = filePath,
+                eventId = eventId,
+                actionType = YamlPipelineActionType.DEPENDENCY_UPGRADE
+            )
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
                 projectId = projectId,
@@ -328,10 +334,12 @@ class PipelineYamlFileManager @Autowired constructor(
             try {
                 lock.lock()
                 dependencyUpgradePipeline(
+                    context = context,
                     dependentFilePath = dependentFilePath,
                     dependentBlobId = dependentBlobId
                 )
             } catch (ignored: Exception) {
+                webhookTriggerManager.fireChangeError(context = context, exception = ignored)
                 throw ignored
             } finally {
                 lock.unlock()
@@ -354,6 +362,12 @@ class PipelineYamlFileManager @Autowired constructor(
                 )
                 return
             }
+            val context = PipelineYamlChangeContext(
+                projectId = projectId,
+                filePath = filePath,
+                eventId = eventId,
+                actionType = YamlPipelineActionType.CLOSE
+            )
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
                 projectId = projectId,
@@ -370,6 +384,19 @@ class PipelineYamlFileManager @Autowired constructor(
                     logger.info("[PAC_PIPELINE]|yaml pipeline not found|$projectId|$repoHashId|$filePath")
                     return
                 }
+                val pipelineId = pipelineYamlInfo.pipelineId
+                val pipelineName = pipelineYamlResourceManager.getPipelineName(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    isTemplate = isTemplate
+                ) ?: run {
+                    throw ErrorCodeException(
+                        errorCode = ERROR_PIPELINE_NOT_EXISTS,
+                        params = arrayOf(pipelineId)
+                    )
+                }
+                context.pipelineId = pipelineId
+                context.versionName = pipelineName
                 pipelineYamlResourceManager.completePullRequest(
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
@@ -380,6 +407,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     isTemplate = isTemplate
                 )
             } catch (ignored: Exception) {
+                webhookTriggerManager.fireChangeError(context = context, exception = ignored)
                 throw ignored
             } finally {
                 lock.unlock()
@@ -1090,6 +1118,7 @@ class PipelineYamlFileManager @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.dependencyUpgradePipeline(
+        context: PipelineYamlChangeContext,
         dependentFilePath: String,
         dependentBlobId: String
     ) {
@@ -1127,6 +1156,19 @@ class PipelineYamlFileManager @Autowired constructor(
             )
             return
         }
+        val pipelineId = pipelineYamlInfo.pipelineId
+        val pipelineName = pipelineYamlResourceManager.getPipelineName(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isTemplate = isTemplate
+        ) ?: run {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(pipelineId)
+            )
+        }
+        context.pipelineId = pipelineId
+        context.versionName = pipelineName
         updateYamlPipeline(pipelineId = pipelineYamlInfo.pipelineId)
     }
 
