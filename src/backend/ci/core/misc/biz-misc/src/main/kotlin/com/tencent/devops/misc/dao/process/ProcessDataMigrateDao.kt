@@ -171,15 +171,12 @@ class ProcessDataMigrateDao {
     fun getPipelineBuildContainerRecords(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
-        limit: Int,
-        offset: Int
+        buildIds: List<String>
     ): List<TPipelineBuildContainerRecord> {
         with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(BUILD_ID.asc())
-                .limit(limit).offset(offset).fetchInto(TPipelineBuildContainerRecord::class.java)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .fetchInto(TPipelineBuildContainerRecord::class.java)
         }
     }
 
@@ -268,15 +265,12 @@ class ProcessDataMigrateDao {
     fun getPipelineBuildStageRecords(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
-        limit: Int,
-        offset: Int
+        buildIds: List<String>
     ): List<TPipelineBuildStageRecord> {
         with(TPipelineBuildStage.T_PIPELINE_BUILD_STAGE) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(BUILD_ID.asc())
-                .limit(limit).offset(offset).fetchInto(TPipelineBuildStageRecord::class.java)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .fetchInto(TPipelineBuildStageRecord::class.java)
         }
     }
 
@@ -293,15 +287,12 @@ class ProcessDataMigrateDao {
     fun getPipelineBuildTaskRecords(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
-        limit: Int,
-        offset: Int
+        buildIds: List<String>
     ): List<TPipelineBuildTaskRecord> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(BUILD_ID.asc())
-                .limit(limit).offset(offset).fetchInto(TPipelineBuildTaskRecord::class.java)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .fetchInto(TPipelineBuildTaskRecord::class.java)
         }
     }
 
