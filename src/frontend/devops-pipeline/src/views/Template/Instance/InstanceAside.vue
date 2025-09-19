@@ -5,7 +5,7 @@
                 v-if="isInstanceCreateType"
                 icon="plus"
                 :disabled="!curTemplateVersion || editingIndex > -1"
-                @click="handleAddInstance"
+                @click="handleShowInstanceCreate"
             >
                 {{ $t('new') }}
             </bk-button>
@@ -108,6 +108,11 @@
                 </template>
             </li>
         </ul>
+        <instance-pipeline-name
+            :show-instance-create.sync="showInstanceCreate"
+            :pipeline-list="renderInstanceList"
+            @confirm="handleConfirmCreateInstance"
+        />
     </div>
 </template>
 
@@ -121,6 +126,7 @@
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
+    import InstancePipelineName from '@/components/Template/instance-pipeline-name'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -131,6 +137,7 @@
     const newIndex = ref(1)
     const isEmptyName = ref(false)
     const isErrorName = ref(false)
+    const showInstanceCreate = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
@@ -268,18 +275,25 @@
             console.error(e)
         }
     }
-    function handleAddInstance () {
+    function handleShowInstanceCreate () {
+        showInstanceCreate.value = true
+    }
+    function handleConfirmCreateInstance (name) {
+        showInstanceCreate.value = false
+        handleAddInstance(name)
+    }
+    function handleAddInstance (name) {
         const instanceParams = deepClone(curTemplateDetail.value)
         const newInstance = {
             ...instanceParams,
-            pipelineName: pipelineName.value ?? ''
+            pipelineName: name ?? pipelineName.value ?? ''
         }
+        console.log(newInstance,)
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
         proxy?.$nextTick(() => {
             const index = instanceList.value.length - 1
             handleInstanceClick(index)
-            handleEditName(index)
-            nameInputRef.value && nameInputRef.value[0]?.focus()
+            editingIndex.value = index
         }, 3000)
     }
     async function init () {
