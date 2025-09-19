@@ -164,10 +164,10 @@ class RepositoryScmConfigService @Autowired constructor(
                 request = request,
                 oldProviderProperties = scmConfig.providerProps
             )
-            // 如果状态一开始是部署中,clientId开始为空,修改后client有值,则将状态改成成功
+            // 如果状态一开始是部署中,clientId开始为空,修改后clientId有值,则将状态改成成功
             val status = if (scmConfig.status == ScmConfigStatus.DEPLOYING &&
                 scmConfig.providerProps.oauth2ClientProperties?.clientId.isNullOrEmpty() &&
-                !request.props.clientId.isNullOrEmpty()
+                providerProperties.oauth2Enabled == true
             ) {
                 ScmConfigStatus.SUCCESS
             } else {
@@ -187,6 +187,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 mergeEnabled = mergeEnabled,
                 pacEnabled = pacEnabled,
                 webhookEnabled = webhookEnabled,
+                oauth2Enabled = request.credentialTypeList.contains(RepoCredentialType.OAUTH),
                 providerProps = providerProperties,
                 updater = userId
             )
