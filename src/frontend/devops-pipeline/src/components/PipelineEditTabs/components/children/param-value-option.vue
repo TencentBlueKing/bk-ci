@@ -116,6 +116,7 @@
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
+            :disabled="valueRequired"
             @toggleConstraint="handleToggleConstraint"
         >
             <template #constraint-area="{ props: { isOverride } }">

@@ -854,7 +854,7 @@
                                 ...this.releaseParams,
                                 useTemplateSettings: this.useTemplateSettings,
                                 instanceReleaseInfos: this.instanceList,
-                                customVersionName: this.customVersionName
+                                customVersionName: this.customVersionName?.trim()
                             }
                         })
                         this.newReleaseVersionNameList = res.data
@@ -864,7 +864,7 @@
                             ...this.$route.params,
                             version: this.version,
                             ...params,
-                            customVersionName: this.customVersionName
+                            customVersionName: this.customVersionName?.trim()
                         })
                         this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
                         if (!this.customVersionName) {

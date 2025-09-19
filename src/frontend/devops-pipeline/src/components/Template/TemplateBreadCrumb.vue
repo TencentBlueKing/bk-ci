@@ -45,6 +45,7 @@
     import { getTemplateCacheViewId } from '@/utils/util'
     import { computed, defineComponent } from 'vue'
     import { useI18n } from 'vue-i18n-bridge'
+    import UseInstance from '@/hook/useInstance'
 
     export default defineComponent({
         components: {
@@ -62,6 +63,7 @@
             }
         },
         setup (props) {
+            const { proxy } = UseInstance()
             const { t } = useI18n()
             const manageRoute = {
                 name: 'TemplateManageList',
@@ -69,16 +71,27 @@
                     templateViewId: getTemplateCacheViewId()
                 }
             }
+            const isInstanceEntry = computed(() => proxy.$route.name === 'instanceEntry')
+            const operateName = computed(() => proxy.$route.params.type === 'upgrade' ? t('template.upgradeInstance') : t('template.createInstance'))
             const breadCrumbs = computed(() => [
                 {
                     title: t('templateName'),
                     to: manageRoute
-                }, {
+                },
+                {
                     slot: TemplateNameCrumbItem,
                     slotProps: {
                         templateName: props.templateName
                     }
-                }
+                },
+                ...(isInstanceEntry.value
+                    ? [
+                        {
+                            title: operateName.value
+                        }
+                    ]
+                    : []
+                )
             ])
 
             return {

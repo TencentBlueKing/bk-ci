@@ -446,7 +446,7 @@
     "templateInstantiation": "Instantiate Templates",
     "templateVersion": "Template Version",
     "templateVersionErrTips": "Please select Template version first",
-    "applyTemplateSetting": "Apply template settings simultaneously",
+    "applyTemplateSetting": "Apply Template Settings to Instance",
     "applyTemplateSettingTips": {
       "create": {
         "tips1": "● After selecting, the instance's label, description, running settings, notifications, and other setting information will be initialized using template settings",
@@ -657,7 +657,9 @@
     "constraintMode": "The pipeline uses a constraint mode template",
     "notTemplate": "Template does not exist",
     "pleaseMergePullUrl": "Resolve merge request in code repo first.",
-    "toHandle": "Resolve now"
+    "toHandle": "Resolve now",
+    "upgradeInstance": "Upgrade Instance",
+    "createInstance": "Create Instance"
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",

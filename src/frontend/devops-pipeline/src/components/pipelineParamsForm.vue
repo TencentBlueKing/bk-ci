@@ -16,6 +16,7 @@
                             <render-param
                                 v-bind="param"
                                 :param="param"
+                                :is-exec-preview="isExecPreview"
                                 :disabled="disabled || param.isFollowTemplate"
                                 :show-operate-btn="showOperateBtn"
                                 :handle-set-parma-required="handleSetParmaRequired"
@@ -36,6 +37,7 @@
                     <render-param
                         v-bind="param"
                         :param="param"
+                        :is-exec-preview="isExecPreview"
                         :disabled="disabled || param.isFollowTemplate"
                         :show-operate-btn="showOperateBtn"
                         :handle-set-parma-required="handleSetParmaRequired"
@@ -134,6 +136,11 @@
             handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
+            },
+            isExecPreview: {
+                // 是否为执行预览页面
+                type: Boolean,
+                default: true
             }
         },
         data () {

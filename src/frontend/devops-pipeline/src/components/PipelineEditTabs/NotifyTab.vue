@@ -2,7 +2,6 @@
     <constraint-wraper
         :classify="CLASSIFY_ENUM.SETTING"
         field="notices"
-        :label="$t('notifyConf')"
         :show-constraint-area-bg="false"
         :space-between="false"
     >

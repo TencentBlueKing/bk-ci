@@ -55,7 +55,11 @@
             }
         },
         props: {
-            showInstanceCreate: Boolean
+            showInstanceCreate: Boolean,
+            pipelineList: {
+                type: Array,
+                default: () => []
+            }
         },
         data () {
             return {
@@ -94,7 +98,7 @@
                             pipelineName: this.pipelineName.trim()
                         })
 
-                        if (res || this.$parent.pipelineNameList.some(item => item.pipelineName === this.pipelineName.trim())) {
+                        if (res || this.pipelineList.some(item => item.pipelineName === this.pipelineName.trim())) {
                             message = this.$t('template.nameExists')
                             theme = 'error'
                         } else {
@@ -119,7 +123,7 @@
                 return this.showInstanceCreate
             },
             cancel () {
-                this.$emit('cancel')
+                this.$emit('update:showInstanceCreate', false)
             }
         }
     }

@@ -195,11 +195,10 @@
                                 {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
-                                v-else-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE"
+                                v-else-if="row.status !== TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING"
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!!row.pullRequestUrl"
                                 v-perm="{
                                     hasPermission: row.canEdit,
                                     disablePermissionApi: true,
@@ -504,7 +503,7 @@
                 name: 'instanceEntry',
                 params: {
                     ...proxy.$route.params,
-                    version: pipelineInfo.value?.releaseVersion,
+                    version: row.fromTemplateVersion,
                     type: 'copy'
                 }
             })
@@ -656,5 +655,8 @@
     }
     .instance-list.bk-table-enable-row-transition .bk-table-body td {
         transition: none;
+    }
+    .bk-search-select-theme-theme {
+        max-width: 500px;
     }
 </style>

@@ -436,7 +436,7 @@
     "previewDiff": "编排预览",
     "templateInstantiation": "模板实例化",
     "templateVersion": "模板版本",
-    "applyTemplateSetting": "同时应用模板设置",
+    "applyTemplateSetting": "复制模板设置到实例",
     "applyTemplateSettingTips": {
       "create": {
         "tips1": "● 勾选后，实例的标签、描述、运行设置、通知等设置信息，将使用模版设置进行初始化",
@@ -659,7 +659,9 @@
     "constraintMode": "流水线使用了约束模式的模板",
     "notTemplate": "模板不存在",
     "pleaseMergePullUrl": "请到代码库处理合并请求，",
-    "toHandle": "去处理"
+    "toHandle": "去处理",
+    "upgradeInstance": "升级实例",
+    "createInstance": "新增实例"
   },
   "newlist": {
     "exportYamlTip": "PreCI 是蓝盾 DevOps 为开发者在 CI 之前的研发活动所提供的一套解决方案，能在提交代码之前尽早发现问题，提升代码质量。包括 IDE 插件和命令行工具。",

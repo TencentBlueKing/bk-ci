@@ -159,7 +159,7 @@
     const selectedData = ref([])
     const activeName = ref(new Set([1, 2, 3]))
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
-    const params = ref(curTemplateDetail.value?.params ?? [])
+    const params = ref(curTemplateDetail.value?.param ?? [])
     const buildNo = ref(curTemplateDetail.value?.buildNo ?? {})
     const isVisibleVersion = computed(() => {
         // buildNo.value?.required
