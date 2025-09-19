@@ -507,7 +507,7 @@ object YamlObjects {
         }
     }
 
-    private fun getNotNullValueAny(key: String, mapName: String, map: Map<String, Any?>): Any {
+    fun getNotNullValueAny(key: String, mapName: String, map: Map<String, Any?>): Any {
         return if (map[key] == null) {
             throw YamlFormatException(Constants.ATTR_MISSING_ERROR.format(key, mapName))
         } else {
