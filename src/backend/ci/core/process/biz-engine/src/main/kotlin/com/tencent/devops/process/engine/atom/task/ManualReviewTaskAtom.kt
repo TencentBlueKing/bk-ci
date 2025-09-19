@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
@@ -47,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULTS_APPROVE
@@ -75,12 +78,12 @@ import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
 /**
  * 人工审核插件
@@ -93,7 +96,8 @@ class ManualReviewTaskAtom(
     private val taskBuildRecordService: TaskBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineVariableService: BuildVariableService,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val client: Client
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
     @Value("\${esb.appSecret:#{null}}")
@@ -121,7 +125,18 @@ class ManualReviewTaskAtom(
                 variables = variables, model = null, executeCount = task.executeCount
             )
         )
-        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), contextMap)
+
+        // 多租户处理展示名字
+        val reviewerNames = if (TenantUtils.isMultiTenantMode()) {
+            client.get(ServiceDeptResource::class).listUserInfos(
+                memberIds = param.reviewUsers,
+                tenantId = TenantUtils.getTenantIdByEnglishName(task.projectId)
+            ).data?.map { it.displayName } ?: param.reviewUsers
+        } else {
+            param.reviewUsers
+        }
+
+        val reviewUsers = parseVariable(reviewerNames.joinToString(","), contextMap)
         val reviewDesc = parseVariable(param.desc, contextMap)
         val notifyTitle = parseVariable(param.notifyTitle, contextMap)
         val notifyGroup = parseVariable(param.notifyGroup, contextMap)
@@ -139,7 +154,7 @@ class ManualReviewTaskAtom(
             operation = "manualReviewTaskStart#${task.taskId}",
             timestamps = mapOf(
                 BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                        BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             )
         )
         // #7983 兜底只有一个审核插件的job未刷新执行状态
@@ -169,7 +184,7 @@ class ManualReviewTaskAtom(
         buildLogPrinter.addLine(
             buildId = buildId,
             message = getI18nByLocal(BK_PARAMS) +
-                "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
+                    "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
             jobId = null, stepId = task.stepId
         )
@@ -294,6 +309,7 @@ class ManualReviewTaskAtom(
                 notifyEvent(task, BuildStatus.REVIEW_PROCESSED)
                 AtomResponse(BuildStatus.SUCCEED)
             }
+
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(
                     buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_REJECT),
@@ -357,7 +373,7 @@ class ManualReviewTaskAtom(
                     type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_PAUSE,
                     labels = mapOf(
                         PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
-                            LocalDateTime.now().timestamp()
+                                LocalDateTime.now().timestamp()
                     )
                 )
             )
