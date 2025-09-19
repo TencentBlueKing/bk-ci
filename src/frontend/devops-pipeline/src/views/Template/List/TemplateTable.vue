@@ -29,7 +29,17 @@
             <template slot-scope="{ row }">
                 <div
                     v-if="col.id === 'name'"
-                    class="template-name select-text"
+                    :class="['template-name', {
+                        'select-text': row.canView
+                    }]"
+                    v-perm="{
+                        hasPermission: row.canView,
+                        disablePermissionApi: true,
+                        projectId: projectId,
+                        resourceType: RESOURCE_TYPE.TEMPLATE,
+                        resourceCode: row.id,
+                        action: TEMPLATE_RESOURCE_ACTION.VIEW
+                    }"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     <span
@@ -78,7 +88,15 @@
                 <bk-button
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
-                    :disabled="row.instancePipelineCount <= 0"
+                    :disabled="row.instancePipelineCount <= 0 || !row.canView"
+                    v-perm="{
+                        hasPermission: row.canView,
+                        disablePermissionApi: true,
+                        projectId: projectId,
+                        resourceType: RESOURCE_TYPE.TEMPLATE,
+                        resourceCode: row.id,
+                        action: TEMPLATE_RESOURCE_ACTION.VIEW
+                    }"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     {{ row.instancePipelineCount }}
