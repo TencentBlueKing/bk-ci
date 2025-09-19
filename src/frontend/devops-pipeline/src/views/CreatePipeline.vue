@@ -199,7 +199,7 @@
                             </p>
                         </div>
                         <div
-                            v-if="tIndex > 0 || activePanel === 'store'"
+                            v-if="!temp.isEmptyTemplate || activePanel === 'store'"
                             class="pipeline-template-status"
                         >
                             <bk-button
