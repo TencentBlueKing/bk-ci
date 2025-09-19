@@ -396,9 +396,13 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 taskBuildRecordService.updateTaskStatus(
-                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                    stageId = stageId, containerId = containerId, taskId = taskId,
-                    executeCount = executeCount ?: 1, buildStatus = taskStatus, operation = "taskNeedTerminate"
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount ?: 1,
+                    buildStatus = taskStatus,
+                    operation = "taskNeedTerminate"
                 )
                 // 打印构建日志
                 message.append(
@@ -438,8 +442,6 @@ class StartActionTaskContainerCmd(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
                     taskId = taskId,
                     executeCount = executeCount ?: 1,
                     buildStatus = BuildStatus.FAILED,
@@ -669,8 +671,6 @@ class StartActionTaskContainerCmd(
                     projectId = currentTask.projectId,
                     pipelineId = currentTask.pipelineId,
                     buildId = currentTask.buildId,
-                    stageId = currentTask.stageId,
-                    containerId = currentTask.containerId,
                     taskId = currentTask.taskId,
                     executeCount = currentTask.executeCount ?: 1,
                     buildStatus = taskStatus,
