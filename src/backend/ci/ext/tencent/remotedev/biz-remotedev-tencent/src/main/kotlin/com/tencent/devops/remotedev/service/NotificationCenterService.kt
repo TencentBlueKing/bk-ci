@@ -2,36 +2,39 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.remotedev.dao.WorkspaceNotifyReadStatusDao
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
-import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
-import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
+import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class NotificationCenterService @Autowired constructor(
-    private val notifyControl: NotifyControl,
+    private val webSocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation,
     private val workspaceNotifyReadStatusDao: WorkspaceNotifyReadStatusDao,
     private val dslContext: DSLContext
 ) {
-    data class NotificationCreateRequest(
-        val operator: String,
-        val userIds: List<String>,
-        val notifyType: RemoteDevNotifyType,
-        val title: String,
-        val content: String? = null,
-        val bodyParams: Map<String, Any> = emptyMap()
-    )
-
     data class NotificationQueryCondition(
         val userId: String,
         val page: Int,
         val pageSize: Int,
         val category: String? = null,
         val isRead: Boolean? = null
+    )
+
+    /**
+     * 未读数量消息
+     */
+    data class UnreadCountMessage(
+        val actionType: WebSocketActionType,
+        val userId: String,
+        val unreadCount: Int,
+        val timestamp: Long = System.currentTimeMillis()
     )
 
     fun createNotification(userId: String, notifyId: Long): Boolean {
@@ -90,7 +93,29 @@ class NotificationCenterService @Autowired constructor(
 
     fun pushUnreadCountUpdate(userId: String) {
         val cnt = getUnreadCount(userId)
-        notifyControl.pushUnreadCountUpdate(userId, cnt)
+        pushUnreadCountUpdate(userId, cnt)
+    }
+
+    /**
+     * 推送未读数量更新到客户端
+     */
+    fun pushUnreadCountUpdate(userId: String, unreadCount: Int) {
+        val message = UnreadCountMessage(
+            actionType = WebSocketActionType.WORKSPACE_NOTIFY_UNREAD_COUNT,
+            userId = userId,
+            unreadCount = unreadCount,
+            timestamp = System.currentTimeMillis()
+        )
+        val push = WorkspaceWebsocketPush(
+            type = WebSocketActionType.WORKSPACE_NOTIFY_UNREAD_COUNT,
+            status = true,
+            anyMessage = message,
+            projectId = "",
+            userId = userId,
+            redisOperation = redisOperation,
+            page = WorkspacePageBuild.buildPage(userId)
+        )
+        webSocketDispatcher.dispatch(push)
     }
 
     private fun buildUnreadCacheKey(userId: String) = "remotedev:notify:unread:$userId"

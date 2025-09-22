@@ -678,46 +678,4 @@ class NotifyControl @Autowired constructor(
             )
         }
     }
-
-    /**
-     * 推送未读数量更新到客户端
-     */
-    fun pushUnreadCountUpdate(userId: String, unreadCount: Int) {
-        val message = UnreadCountMessage(
-            actionType = WebSocketActionType.WORKSPACE_NOTIFY_UNREAD_COUNT,
-            userId = userId,
-            unreadCount = unreadCount,
-            timestamp = System.currentTimeMillis()
-        )
-        val push = WorkspaceWebsocketPush(
-            type = WebSocketActionType.WORKSPACE_NOTIFY_UNREAD_COUNT,
-            status = true,
-            anyMessage = message,
-            projectId = "",
-            userId = userId,
-            redisOperation = redisOperation,
-            page = WorkspacePageBuild.buildPage(userId)
-        )
-        webSocketDispatcher.dispatch(push)
-    }
-
-    /**
-     * 未读数量消息
-     */
-    data class UnreadCountMessage(
-        val actionType: WebSocketActionType,
-        val userId: String,
-        val unreadCount: Int,
-        val timestamp: Long = System.currentTimeMillis()
-    )
-
-    /**
-     * 通知中心消息
-     */
-    data class NotifyCenterMessage(
-        val actionType: WebSocketActionType,
-        val userId: String,
-        val notifyInfo: UserNotifyInfo,
-        val timestamp: Long = System.currentTimeMillis()
-    )
 }
