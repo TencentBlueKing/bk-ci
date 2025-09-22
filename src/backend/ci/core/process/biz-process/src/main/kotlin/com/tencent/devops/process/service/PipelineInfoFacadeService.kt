@@ -70,6 +70,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -112,17 +113,22 @@ import com.tencent.devops.store.api.template.ServiceTemplateResource
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileInputStream
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.util.LinkedList
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -228,6 +234,180 @@ class PipelineInfoFacadeService @Autowired constructor(
             val suffix = PipelineStorageType.MODEL.fileSuffix
             exportStringToFile(JsonUtil.toSortJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
         }
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_EDIT_EXPORT_PIPELINE_CONTENT
+    )
+    fun exportPipelineAll(
+        userId: String,
+        projectId: String,
+        storageType: PipelineStorageType = PipelineStorageType.YAML,
+        page: Int = 1,
+        pageSize: Int = 50
+    ): Response {
+
+        val watcher = Watcher(id = "exportPipelineAll|$projectId|$userId")
+        watcher.start("permission_check")
+        val authPipelines = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST
+        )
+
+        val editPermissionPipelines = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.EDIT
+            ),
+            pipelineIds = authPipelines
+        ).getOrDefault(AuthPermission.EDIT, emptyList()).sorted()
+        watcher.stop()
+        watcher.start("db_select")
+        val fileList = mutableListOf<File>()
+        val dir = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+        // 根据page参数获取需要导出的editPermissionPipelines
+        val exportPipelines = editPermissionPipelines.chunked(pageSize).getOrNull(page - 1) ?: emptyList()
+        exportPipelines.chunked(10).forEach { chunk ->
+            chunk.parallelStream().forEach pipeline@{ pipeline ->
+                val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId, pipelineId = pipeline, version = null, archiveFlag = false
+                ) ?: return@pipeline
+                val settingInfo = pipelineSettingFacadeService.userGetSetting(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipeline,
+                    version = targetVersion.settingVersion ?: 1,
+                    archiveFlag = false
+                )
+                val model = targetVersion.model
+                // 适配兼容老数据
+                model.stages.forEach {
+                    it.transformCompatibility()
+                }
+                // 审计
+                ActionAuditContext.current().setInstanceName(model.name)
+                val exportFile = if (storageType == PipelineStorageType.YAML) {
+                    exportStringToTempFile(
+                        content = targetVersion.yaml ?: kotlin.runCatching {
+                            transferService.transfer(
+                                userId = userId,
+                                projectId = projectId,
+                                pipelineId = pipeline,
+                                actionType = TransferActionType.FULL_MODEL2YAML,
+                                data = TransferBody(
+                                    modelAndSetting = PipelineModelAndSetting(
+                                        model = model,
+                                        setting = settingInfo
+                                    )
+                                )
+                            ).yamlWithVersion?.yamlStr
+                        }.onFailure {
+                            logger.warn("TRANSFER_YAML|$projectId|$userId|${it.message}")
+                        }.getOrNull() ?: "unsupported code model",
+                        dir = dir,
+                        fileName = settingInfo.pipelineName,
+                        suffix = PipelineStorageType.YAML.fileSuffix
+                    )
+                } else {
+                    exportStringToTempFile(
+                        content = JsonUtil.toSortJson(
+                            PipelineModelAndSetting(
+                                model = model,
+                                setting = settingInfo
+                            )
+                        ),
+                        dir = dir,
+                        fileName = settingInfo.pipelineName,
+                        suffix = PipelineStorageType.MODEL.fileSuffix
+                    )
+                }
+                fileList.add(exportFile)
+            }
+        }
+        watcher.stop()
+
+        logger.info("exportPipelineAll completed |$projectId|$userId|exported ${exportPipelines.size} pipelines")
+
+        watcher.start("zip_pipelines")
+        val (zipFileName, fileStream) = createZipFile(fileList, "pipelines_export_${projectId}_$pageSize.zip")
+
+        watcher.stop()
+        LogUtils.printCostTimeWE(watcher)
+        val encodedFileName = URLEncoder.encode(zipFileName, "UTF-8")
+        return Response
+            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename=$encodedFileName")
+            .header("Cache-Control", "no-cache")
+            .build()
+    }
+
+    private fun createZipFile(fileList: MutableList<File>, zipFileName: String): Pair<String, StreamingOutput> {
+        val fileStream = StreamingOutput { output ->
+            ZipOutputStream(output).use { zipOut ->
+                fileList.forEach { file ->
+                    try {
+                        if (file.exists()) {
+                            val zipEntry = ZipEntry(file.name)
+                            zipOut.putNextEntry(zipEntry)
+
+                            FileInputStream(file).use { fileInput ->
+                                fileInput.copyTo(zipOut)
+                            }
+                            zipOut.closeEntry()
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Failed to add file ${file.name} to zip", e)
+                    }
+                }
+            }
+            output.flush()
+
+            // 清理临时文件
+            fileList.forEach { file ->
+                try {
+                    if (file.exists()) {
+                        file.delete()
+                        logger.debug("Deleted temp file: ${file.absolutePath}")
+                    }
+                } catch (e: Exception) {
+                    logger.warn("Failed to delete temp file: ${file.absolutePath}", e)
+                }
+            }
+        }
+        return Pair(zipFileName, fileStream)
+    }
+
+    private fun exportStringToTempFile(content: String, dir: String, fileName: String, suffix: String): File {
+        // 获取系统临时目录
+        val systemTempDir = System.getProperty("java.io.tmpdir")
+        val tmpdir = File(systemTempDir, dir)
+        if (!tmpdir.exists()) {
+            tmpdir.mkdirs()
+        }
+        val file = File(tmpdir, fileName + suffix)
+
+        try {
+            file.createNewFile()
+            // 将内容写入文件
+            file.writeText(content, Charsets.UTF_8)
+            logger.info("Successfully exported content to temp file: ${file.absolutePath}")
+        } catch (e: Exception) {
+            logger.error("Failed to write content to temp file: ${file.absolutePath}", e)
+            // 如果写入失败，删除已创建的文件
+            if (file.exists()) {
+                file.delete()
+            }
+        }
+        return file
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {

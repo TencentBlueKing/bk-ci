@@ -311,7 +311,7 @@
                     <template v-if="props.row.canUse">
                         <div class="table-node-item node-item-handler">
                             <span
-                                v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                v-if="['THIRDPARTY'].includes(props.row.nodeType)"
                                 v-perm="{
                                     hasPermission: props.row.canEdit,
                                     disablePermissionApi: true,
