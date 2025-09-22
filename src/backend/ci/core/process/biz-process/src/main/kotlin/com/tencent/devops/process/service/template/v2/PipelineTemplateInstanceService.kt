@@ -760,6 +760,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         )
         val pipelineName = pipelineInfoService.getPipelineInfo(projectId, pipelineId)?.pipelineName
         val templateInfo = pipelineTemplateInfoService.get(projectId, templateId)
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(projectId, pipelineId)
         // 获取指定模板版本的资源
         val templateResource = pipelineTemplateResourceService.get(
             projectId = projectId,
@@ -830,7 +831,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             baseVersionYaml = pipelineYaml,
             comparedVersionYaml = templateYaml,
             instanceName = pipelineName ?: "",
-            templateVersionName = templateResource.versionName ?: ""
+            templateVersionName = pipelineTemplateRelated?.versionName ?: ""
         )
     }
 
