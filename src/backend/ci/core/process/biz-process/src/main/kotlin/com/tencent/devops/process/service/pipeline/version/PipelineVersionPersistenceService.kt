@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.service.pipeline.version
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -144,73 +146,82 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
-            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
-            operationLogType = OperationLogType.RELEASE_MASTER_VERSION
-            operationLogParams = resourceOnlyVersion.versionName!!
+            val watcher = Watcher("createReleaseVersion|$projectId|$pipelineId")
+            try {
+                pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
+                operationLogType = OperationLogType.RELEASE_MASTER_VERSION
+                operationLogParams = resourceOnlyVersion.versionName!!
 
-            val pipelineResourceVersion = PipelineResourceVersion(
-                pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
-                pipelineResourceOnlyVersion = resourceOnlyVersion
-            )
-            val pipelineSetting = pipelineSettingWithoutVersion.copy(
-                version = resourceOnlyVersion.settingVersion!!
-            )
-            postProcessBeforeVersionCreate(
-                context = context,
-                pipelineResourceVersion = pipelineResourceVersion,
-                pipelineSetting = pipelineSetting
-            )
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                updatePipelineInfo(
-                    transactionContext = transactionContext,
-                    userId = userId,
-                    pipelineBasicInfo = pipelineBasicInfo,
-                    pipelineModelBasicInfo = pipelineModelBasicInfo,
-                    version = pipelineResourceVersion.version,
-                    latestVersionStatus = pipelineResourceVersion.status,
+                val pipelineResourceVersion = PipelineResourceVersion(
+                    pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
+                    pipelineResourceOnlyVersion = resourceOnlyVersion
                 )
-                updatePipelineResource(
-                    transactionContext = transactionContext,
-                    pipelineResourceVersion = pipelineResourceVersion
+                val pipelineSetting = pipelineSettingWithoutVersion.copy(
+                    version = resourceOnlyVersion.settingVersion!!
                 )
-                createPipelineResourceVersion(
-                    transactionContext = transactionContext,
-                    userId = userId,
-                    pipelineResourceVersion = pipelineResourceVersion
-                )
-                pipelineSettingDao.saveSetting(
-                    dslContext = transactionContext,
-                    setting = pipelineSetting
-                )
-                createPipelineSettingVersion(
-                    transactionContext = transactionContext,
-                    pipelineSetting = pipelineSetting
-                )
-                context.pipelineModelBasicInfo.buildNo?.let {
-                    if (resetBuildNo == true) {
-                        logger.info("reset build no|$projectId|$pipelineId|${it.buildNo}")
-                        pipelineBuildSummaryDao.updateBuildNo(
-                            dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildNo = it.buildNo,
-                            debug = false
-                        )
-                    }
-                }
-                postProcessInTransactionVersionCreate(
-                    transactionContext = transactionContext,
+                watcher.start("postProcessBeforeVersionCreate")
+                postProcessBeforeVersionCreate(
                     context = context,
                     pipelineResourceVersion = pipelineResourceVersion,
                     pipelineSetting = pipelineSetting
                 )
+                watcher.start("transaction")
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    updatePipelineInfo(
+                        transactionContext = transactionContext,
+                        userId = userId,
+                        pipelineBasicInfo = pipelineBasicInfo,
+                        pipelineModelBasicInfo = pipelineModelBasicInfo,
+                        version = pipelineResourceVersion.version,
+                        latestVersionStatus = pipelineResourceVersion.status,
+                    )
+                    updatePipelineResource(
+                        transactionContext = transactionContext,
+                        pipelineResourceVersion = pipelineResourceVersion
+                    )
+                    createPipelineResourceVersion(
+                        transactionContext = transactionContext,
+                        userId = userId,
+                        pipelineResourceVersion = pipelineResourceVersion
+                    )
+                    pipelineSettingDao.saveSetting(
+                        dslContext = transactionContext,
+                        setting = pipelineSetting
+                    )
+                    createPipelineSettingVersion(
+                        transactionContext = transactionContext,
+                        pipelineSetting = pipelineSetting
+                    )
+                    context.pipelineModelBasicInfo.buildNo?.let {
+                        if (resetBuildNo == true) {
+                            logger.info("reset build no|$projectId|$pipelineId|${it.buildNo}")
+                            pipelineBuildSummaryDao.updateBuildNo(
+                                dslContext = dslContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildNo = it.buildNo,
+                                debug = false
+                            )
+                        }
+                    }
+                    postProcessInTransactionVersionCreate(
+                        transactionContext = transactionContext,
+                        context = context,
+                        pipelineResourceVersion = pipelineResourceVersion,
+                        pipelineSetting = pipelineSetting
+                    )
+                }
+                watcher.start("postProcessAfterVersionCreate")
+                postProcessAfterVersionCreate(
+                    context = context,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    pipelineSetting = pipelineSetting
+                )
+            } finally {
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher = watcher)
             }
-            postProcessAfterVersionCreate(
-                context = context,
-                pipelineResourceVersion = pipelineResourceVersion,
-                pipelineSetting = pipelineSetting
-            )
         }
     }
 

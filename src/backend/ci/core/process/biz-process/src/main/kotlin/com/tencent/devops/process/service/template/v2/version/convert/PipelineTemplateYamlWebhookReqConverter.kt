@@ -137,6 +137,7 @@ class PipelineTemplateYamlWebhookReqConverter(
             val pTemplateSettingWithoutVersion = templateSetting.copy(
                 projectId = projectId,
                 pipelineId = newTemplateId,
+                pipelineName = templateName,
                 creator = userId,
                 updater = userId
             )

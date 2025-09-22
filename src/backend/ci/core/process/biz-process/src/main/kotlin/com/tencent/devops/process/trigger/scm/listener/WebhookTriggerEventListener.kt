@@ -38,6 +38,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_D
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_SUCCESS
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailCombination
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
@@ -170,9 +171,10 @@ class WebhookTriggerEventListener(
      * 获取yaml流水线变更成功说明
      */
     private fun PipelineYamlChangeContext.getChangeSuccessMsg(): PipelineTriggerReasonDetail? {
+        val fileType = YamlFileType.getFileType(filePath)
+        val linkUrl = getPipelineUrl(fileType = fileType, projectId = projectId, pipelineId = pipelineId)
         return when (actionType) {
             YamlPipelineActionType.CREATE -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_CREATE_SUCCESS,
                     params = listOf(linkUrl, pipelineName ?: "", versionName ?: "")
@@ -180,7 +182,6 @@ class WebhookTriggerEventListener(
             }
 
             YamlPipelineActionType.UPDATE -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_UPDATE_SUCCESS,
                     params = listOf(linkUrl, pipelineName ?: "", versionName ?: "")
@@ -188,7 +189,6 @@ class WebhookTriggerEventListener(
             }
 
             YamlPipelineActionType.DELETE_VERSION -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS,
                     params = listOf(linkUrl, pipelineName ?: "", versionName ?: "")
@@ -208,7 +208,10 @@ class WebhookTriggerEventListener(
     /**
      * 获取yaml流水线变更失败原因
      */
+    @Suppress("CyclomaticComplexMethod")
     private fun PipelineYamlChangeContext.getChangeFailedMsg(): PipelineTriggerReasonDetail? {
+        val fileType = YamlFileType.getFileType(filePath)
+        val linkUrl = getPipelineUrl(fileType = fileType, projectId = projectId, pipelineId = pipelineId)
         return when (actionType) {
             YamlPipelineActionType.CREATE -> {
                 PipelineTriggerDetailMessageCode(
@@ -217,7 +220,6 @@ class WebhookTriggerEventListener(
             }
 
             YamlPipelineActionType.UPDATE -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_UPDATE_FAILED,
                     listOf(linkUrl, pipelineName ?: pipelineId ?: "")
@@ -225,7 +227,6 @@ class WebhookTriggerEventListener(
             }
 
             YamlPipelineActionType.DEPENDENCY_UPGRADE -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED,
                     listOf(linkUrl, pipelineName ?: pipelineId ?: "")
@@ -233,7 +234,6 @@ class WebhookTriggerEventListener(
             }
 
             YamlPipelineActionType.DELETE_VERSION -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_DELETE_VERSION_FAILED,
                     listOf(linkUrl, pipelineName ?: "", versionName ?: "")
@@ -241,14 +241,12 @@ class WebhookTriggerEventListener(
             }
 
             YamlPipelineActionType.DELETE -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_DELETE_FAILED,
                     params = listOf(linkUrl, pipelineName ?: pipelineId ?: "")
                 )
             }
             YamlPipelineActionType.CLOSE -> {
-                val linkUrl = getPipelineUrl(projectId = projectId, pipelineId = pipelineId)
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_CLOSE_FAILED,
                     params = listOf(linkUrl, pipelineName ?: pipelineId ?: "")
@@ -258,11 +256,19 @@ class WebhookTriggerEventListener(
         }
     }
 
-    private fun getPipelineUrl(projectId: String?, pipelineId: String?): String {
+    private fun getPipelineUrl(
+        fileType: YamlFileType,
+        projectId: String?,
+        pipelineId: String?,
+    ): String {
         return if (projectId.isNullOrBlank() || pipelineId.isNullOrBlank()) {
             return ""
         } else {
-            "/console/pipeline/$projectId/$pipelineId"
+            if (fileType == YamlFileType.TEMPLATE) {
+                "/console/pipeline/$projectId/template/$pipelineId"
+            } else {
+                "/console/pipeline/$projectId/$pipelineId"
+            }
         }
     }
 }
