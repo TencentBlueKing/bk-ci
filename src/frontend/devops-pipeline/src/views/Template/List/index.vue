@@ -444,6 +444,7 @@
     }
     function handleChangeSearchTab (key) {
         currentMode.value = key
+        pagination.value.current = 1
         fetchTableData()
     }
     function handleSearchChange (value) {

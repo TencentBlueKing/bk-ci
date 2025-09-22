@@ -79,6 +79,7 @@
         />
         <BatchEditConfig
             v-model="showBatchEdit"
+            :instance-list="instanceList"
             @change="handleBatchChange"
         />
     </section>
