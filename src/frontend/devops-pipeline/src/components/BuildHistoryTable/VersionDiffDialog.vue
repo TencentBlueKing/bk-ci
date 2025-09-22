@@ -66,7 +66,6 @@
                     >
                         <template #default="{ row }">
                             <VersionDiffEntry
-                                force-template
                                 :template-id="row.templateId"
                                 :version="row.prevTemplateVersion"
                                 :latest-version="row.currTemplateVersion"

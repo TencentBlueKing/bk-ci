@@ -661,7 +661,12 @@
     "pleaseMergePullUrl": "请到代码库处理合并请求，",
     "toHandle": "去处理",
     "upgradeInstance": "升级实例",
-    "createInstance": "新增实例"
+    "createInstance": "新增实例",
+    "useTemplateSettings": "使用模板「设置」",
+    "instanceCompareWithTemplate": "引用模版的部分，对比时以解析后的内容为准，非原始YAML文件",
+    "withSettingCompareTips": "勾选后，将使用模板的标签、描述、运行设置、通知等设置信息进行差异对比",
+    "fromTemplateVersion": "来源模板版本：{0}",
+    "parsedYaml": "解析后 YAML"
   },
   "newlist": {
     "exportYamlTip": "PreCI 是蓝盾 DevOps 为开发者在 CI 之前的研发活动所提供的一套解决方案，能在提交代码之前尽早发现问题，提升代码质量。包括 IDE 插件和命令行工具。",
