@@ -657,7 +657,12 @@
     "pleaseMergePullUrl": "Resolve merge request in code repo first.",
     "toHandle": "Resolve now",
     "upgradeInstance": "Upgrade Instance",
-    "createInstance": "Create Instance"
+    "createInstance": "Create Instance",
+    "useTemplateSettings": "Use Template Settings",
+    "instanceCompareWithTemplate": "For template-referenced parts, comparison is based on parsed content, not the original YAML file",
+    "withSettingCompareTips": "When checked, template labels, descriptions, run settings, notifications and other configuration information will be used for difference comparison",
+    "fromTemplateVersion": "From Template Version: {0}",
+    "parsedYaml": "Parsed YAML"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

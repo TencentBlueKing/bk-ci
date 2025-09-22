@@ -86,8 +86,8 @@ import {
     UPDATE_CONTAINER,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_STORESTATUS,
+    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -1102,6 +1102,12 @@ export default {
     },
     async revertTemplateConstraint (_, { projectId, pipelineId, version }) {
         const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version}/related/details`)
+        return res.data
+    },
+    async compareYamlWithTemplate (_, { projectId, templateId, ...query }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/${templateId}/compareYaml`, {
+            params: query
+        })
         return res.data
     }
 

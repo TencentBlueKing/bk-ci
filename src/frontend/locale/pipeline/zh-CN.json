@@ -659,7 +659,12 @@
     "pleaseMergePullUrl": "请到代码库处理合并请求，",
     "toHandle": "去处理",
     "upgradeInstance": "升级实例",
-    "createInstance": "新增实例"
+    "createInstance": "新增实例",
+    "useTemplateSettings": "使用模板「设置」",
+    "instanceCompareWithTemplate": "引用模版的部分，对比时以解析后的内容为准，非原始YAML文件",
+    "withSettingCompareTips": "勾选后，将使用模板的标签、描述、运行设置、通知等设置信息进行差异对比",
+    "fromTemplateVersion": "来源模板版本：{0}",
+    "parsedYaml": "解析后 YAML"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
