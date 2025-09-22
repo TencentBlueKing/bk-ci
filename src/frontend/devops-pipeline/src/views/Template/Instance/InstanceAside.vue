@@ -251,7 +251,9 @@
                                     variables: trigger.startParams,
                                     name: trigger.name,
                                     version: trigger.version,
-                                    isFollowTemplate: !(overrideTemplateField?.triggerStepIds?.includes(trigger.stepId))
+                                    isFollowTemplate: !(overrideTemplateField?.triggerStepIds?.includes(trigger.stepId)),
+                                    isDelete: false,
+                                    isNew: false
                                 }
                             })
                         }

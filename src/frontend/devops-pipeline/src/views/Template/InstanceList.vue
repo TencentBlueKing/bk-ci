@@ -199,7 +199,7 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="row.pullRequestUrl"
+                                :disabled="!row.canEdit || row.pullRequestUrl"
                                 v-perm="{
                                     hasPermission: row.canEdit,
                                     disablePermissionApi: true,

@@ -9,6 +9,7 @@
     >
         <template slot="content">
             <InstanceAddField
+                :instance-list="instanceList"
                 @confirm="confirmChange"
                 @cancel="hideBatchEditSlider"
             />
@@ -21,7 +22,8 @@
     import InstanceAddField from '@/components/Template/InstanceAddField'
     import UseInstance from '@/hook/useInstance'
     defineProps({
-        value: Boolean
+        value: Boolean,
+        instanceList: Array
     })
     const { proxy } = UseInstance()
     function hideBatchEditSlider () {
