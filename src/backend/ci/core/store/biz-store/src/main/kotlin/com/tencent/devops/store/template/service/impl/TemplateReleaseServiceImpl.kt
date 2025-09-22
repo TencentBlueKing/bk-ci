@@ -572,6 +572,13 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
                         ).message
                     )
                 }
+                // 首次发布，检查版本号是否为空
+                if (request.templateVersion == null) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("templateVersion")
+                    )
+                }
                 // 检查名称是否重复
                 val nameCount = marketTemplateDao.countByName(dslContext, templateName)
                 if (nameCount > 0) {
