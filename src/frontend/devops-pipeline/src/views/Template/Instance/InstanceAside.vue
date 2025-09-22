@@ -288,12 +288,10 @@
             ...instanceParams,
             pipelineName: name ?? pipelineName.value ?? ''
         }
-        console.log(newInstance,)
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
         proxy?.$nextTick(() => {
             const index = instanceList.value.length - 1
             handleInstanceClick(index)
-            editingIndex.value = index
         }, 3000)
     }
     async function init () {
