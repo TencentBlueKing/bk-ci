@@ -679,11 +679,15 @@ class RbacPermissionResourceMemberService(
         memberIds: List<String>
     ): Boolean {
         if (memberIds.isNotEmpty()) {
-            iamV2ManagerService.deleteRoleGroupMemberV2(
-                groupId,
-                type,
-                memberIds.joinToString(",")
-            )
+            try {
+                iamV2ManagerService.deleteRoleGroupMemberV2(
+                    groupId,
+                    type,
+                    memberIds.joinToString(",")
+                )
+            } catch (e: Exception) {
+                logger.warn("delete iam group member failed, groupId=$groupId, type=$type, memberIds=$memberIds", e)
+            }
         }
         return true
     }

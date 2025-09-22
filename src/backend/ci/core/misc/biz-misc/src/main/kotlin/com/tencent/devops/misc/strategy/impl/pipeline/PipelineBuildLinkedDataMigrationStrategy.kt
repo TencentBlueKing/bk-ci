@@ -4,11 +4,14 @@ import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigrationContext
 import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.utils.PageMigrationUtil
+import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import com.tencent.devops.model.process.tables.records.TPipelinePauseValueRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerReviewRecord
@@ -64,6 +67,27 @@ class PipelineBuildLinkedDataMigrationStrategy(
                 processDataMigrateDao.getPipelineWebhookBuildParameterRecords(dslContext, projectId, buildIds)
             override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineWebhookBuildParameterRecord>) =
                 processDataMigrateDao.migratePipelineWebhookBuildParameterData(migratingDslContext, records)
+        },
+        // 迁移T_PIPELINE_BUILD_STAGE相关表数据
+        object : RecordHandler<TPipelineBuildStageRecord> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildStageRecords(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildStageRecord>) =
+                processDataMigrateDao.migratePipelineBuildStageData(migratingDslContext, records)
+        },
+        // 迁移T_PIPELINE_BUILD_CONTAINER相关表数据
+        object : RecordHandler<TPipelineBuildContainerRecord> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildContainerRecords(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildContainerRecord>) =
+                processDataMigrateDao.migratePipelineBuildContainerData(migratingDslContext, records)
+        },
+        // 迁移T_PIPELINE_BUILD_TASK相关表数据
+        object : RecordHandler<TPipelineBuildTaskRecord> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildTaskRecords(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildTaskRecord>) =
+                processDataMigrateDao.migratePipelineBuildTaskData(migratingDslContext, records)
         }
     )
 
