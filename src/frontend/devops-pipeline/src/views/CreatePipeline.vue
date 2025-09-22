@@ -389,6 +389,7 @@
                             ...item,
                             hasPermission: item.flag,
                             stages: temp?.stages ?? [],
+                            projectId: temp?.projectId,
                             templateId: temp?.templateId,
                             version: temp?.version,
                             cloneTemplateSettingExist: temp?.cloneTemplateSettingExist,

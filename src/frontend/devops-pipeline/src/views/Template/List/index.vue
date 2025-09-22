@@ -81,7 +81,7 @@
         />
         <UpgradeFromStoreDialog
             v-model="showTemplateUpgradeDialog"
-            :template-id="upgradingTemplate?.id"
+            :template-id="upgradingTemplate?.srcTemplateId"
             :project-id="upgradingTemplate?.srcTemplateProjectId"
             @confirm="upgradeTemplate"
             @cancel="hideUpgradeDialog"
