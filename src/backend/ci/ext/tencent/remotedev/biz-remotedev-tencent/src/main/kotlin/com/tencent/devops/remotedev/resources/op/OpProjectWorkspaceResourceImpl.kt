@@ -16,7 +16,6 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
-import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -89,19 +88,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             notifyData = notifyData,
             bodyParams = mutableMapOf(UserNotifyInfo::category.name to NotifyCategory.SYSTEM.name)
         )
-        // 新增已读状态与推送逻辑：委托到通知中心服务
-        kotlin.runCatching {
-            notificationCenterService.createNotification(
-                NotificationCenterService.NotificationCreateRequest(
-                    operator = userId,
-                    userIds = (notifyData.owner ?: emptyList()).toList(),
-                    notifyType = notifyData.notifyType?.firstOrNull() ?: RemoteDevNotifyType.CLIENT_PUSH,
-                    title = notifyData.title,
-                    content = notifyData.desc,
-                    bodyParams = emptyMap()
-                )
-            )
-        }
         return Result(true)
     }
 

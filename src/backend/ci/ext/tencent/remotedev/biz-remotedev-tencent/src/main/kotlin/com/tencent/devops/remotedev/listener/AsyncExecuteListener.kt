@@ -119,19 +119,6 @@ class AsyncExecuteListener @Autowired constructor(
                     notifyData = data.notifyData,
                     bodyParams = mutableMapOf(UserNotifyInfo::category.name to NotifyCategory.BUSINESS.name)
                 )
-                kotlin.runCatching {
-                    notificationCenterService.createNotification(
-                        NotificationCenterService.NotificationCreateRequest(
-                            operator = data.operator,
-                            userIds = (data.notifyData.owner ?: emptyList()).toList(),
-                            notifyType = (data.notifyData.notifyType?.firstOrNull()
-                                ?: com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType.CLIENT_PUSH),
-                            title = data.notifyData.title,
-                            content = data.notifyData.desc,
-                            bodyParams = emptyMap()
-                        )
-                    )
-                }
             }
 
             AsyncExecuteEventType.ASYNC_USER_AUTH_CHECK -> {

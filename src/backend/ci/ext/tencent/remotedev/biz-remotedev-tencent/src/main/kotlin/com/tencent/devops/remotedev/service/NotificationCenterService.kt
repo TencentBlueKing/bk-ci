@@ -34,13 +34,12 @@ class NotificationCenterService @Autowired constructor(
         val isRead: Boolean? = null
     )
 
-    fun createNotification(request: NotificationCreateRequest): Boolean {
-        request.userIds.forEach { uid ->
-            // invalidate cache
-            redisOperation.delete(buildUnreadCacheKey(uid))
-            // compute and push
-            pushUnreadCountUpdate(uid)
-        }
+    fun createNotification(userId: String, notifyId: Long): Boolean {
+        workspaceNotifyReadStatusDao.createReadStatus(dslContext, userId, notifyId)
+        // invalidate cache
+        redisOperation.delete(buildUnreadCacheKey(userId))
+        // compute and push
+        pushUnreadCountUpdate(userId)
         return true
     }
 

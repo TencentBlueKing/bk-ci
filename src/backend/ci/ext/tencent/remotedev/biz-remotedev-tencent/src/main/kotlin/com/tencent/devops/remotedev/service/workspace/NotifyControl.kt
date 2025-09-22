@@ -45,7 +45,6 @@ import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceNotifyHistoryDao
-import com.tencent.devops.remotedev.dao.WorkspaceNotifyReadStatusDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -59,6 +58,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.service.NotificationCenterService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.client.TaiClient
@@ -90,7 +90,7 @@ class NotifyControl @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val permissionService: PermissionService,
     private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao,
-    private val workspaceNotifyReadStatusDao: WorkspaceNotifyReadStatusDao
+    private val notificationCenterService: NotificationCenterService
 ) {
 
     companion object {
@@ -469,7 +469,7 @@ class NotifyControl @Autowired constructor(
                         bodyParams = bodyJson
                     )
                 }
-                workspaceNotifyReadStatusDao.createReadStatus(dslContext, user, id)
+                notificationCenterService.createNotification(user, id)
             }
         }
     }
