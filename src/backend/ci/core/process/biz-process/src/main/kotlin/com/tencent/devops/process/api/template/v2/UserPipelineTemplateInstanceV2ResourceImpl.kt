@@ -193,24 +193,6 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
         )
     }
 
-    override fun compare(
-        userId: String,
-        projectId: String,
-        templateId: String,
-        pipelineId: String,
-        comparedVersion: Long?
-    ): Result<PipelineTemplateInstanceCompareResponse> {
-        return Result(
-            instanceFacadeService.compare(
-                userId = userId,
-                projectId = projectId,
-                templateId = templateId,
-                pipelineId = pipelineId,
-                compareVersion = comparedVersion
-            )
-        )
-    }
-
     override fun compareTemplateAndPipelineYaml(
         userId: String,
         projectId: String,

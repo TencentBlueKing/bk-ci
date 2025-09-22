@@ -29,6 +29,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
@@ -55,7 +56,6 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenera
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -88,7 +88,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
-    private val pipelineTemplateSettingService: PipelineTemplateSettingService
+    private val pipelineTemplateSettingService: PipelineTemplateSettingService,
+    private val pipelineInfoService: PipelineInfoService
 ) {
     /*同步创建模板实例*/
     fun createTemplateInstances(
@@ -602,40 +603,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
         )
     }
 
-    fun compare(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        templateId: String,
-        compareVersion: Long?
-    ): PipelineTemplateInstanceCompareResponse {
-        val comparedVersionResource = pipelineTemplateResourceService.get(
-            projectId = projectId,
-            templateId = templateId,
-            version = compareVersion ?: pipelineTemplateInfoService.get(projectId, templateId).releasedVersion!!
-        )
-        val latestPipelineVersion = pipelineResourceDao.getReleaseVersionResource(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )?.version ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-            params = arrayOf(pipelineId)
-        )
-        val pipelineYaml = pipelineVersionFacadeService.getVersion(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = latestPipelineVersion
-        ).yamlPreview?.yaml ?: ""
-
-        return PipelineTemplateInstanceCompareResponse(
-            baseVersionYaml = pipelineYaml,
-            comparedVersionYaml = comparedVersionResource.yaml ?: ""
-        )
-    }
-
     fun getTemplateInstanceTaskResult(
         projectId: String,
         baseId: String
@@ -791,6 +758,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             permission = AuthPermission.VIEW,
             templateId = templateId
         )
+        val pipelineName = pipelineInfoService.getPipelineInfo(projectId, pipelineId)?.pipelineName
         val templateInfo = pipelineTemplateInfoService.get(projectId, templateId)
         // 获取指定模板版本的资源
         val templateResource = pipelineTemplateResourceService.get(
@@ -860,7 +828,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
 
         return PipelineTemplateInstanceCompareResponse(
             baseVersionYaml = pipelineYaml,
-            comparedVersionYaml = templateYaml
+            comparedVersionYaml = templateYaml,
+            instanceName = pipelineName ?: "",
+            templateVersionName = templateResource.versionName ?: ""
         )
     }
 

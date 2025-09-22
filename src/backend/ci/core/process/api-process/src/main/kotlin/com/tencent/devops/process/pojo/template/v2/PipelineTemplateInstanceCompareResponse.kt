@@ -34,5 +34,9 @@ data class PipelineTemplateInstanceCompareResponse(
     @get:Schema(title = "基准版本（流水线）", required = true)
     val baseVersionYaml: String,
     @get:Schema(title = "对比版本（最新模板）", required = true)
-    val comparedVersionYaml: String
+    val comparedVersionYaml: String,
+    @get:Schema(title = "实例流水线名称", required = true)
+    val instanceName: String,
+    @get:Schema(title = "模板版本名称", required = true)
+    val templateVersionName: String
 )

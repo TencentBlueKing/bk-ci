@@ -233,27 +233,6 @@ interface UserPipelineTemplateInstanceV2Resource {
         request: PipelineTemplateInstancesRequest
     ): Result<List<PrefetchReleaseResult>>
 
-    @Operation(summary = "版本对比")
-    @GET
-    @Path("/{templateId}/compare/")
-    fun compare(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String,
-        @Parameter(description = "流水线Id", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "比较版本（可为空，默认为最新版本）", required = false)
-        @QueryParam("comparedVersion")
-        comparedVersion: Long?
-    ): Result<PipelineTemplateInstanceCompareResponse>
-
     @Operation(summary = "比较模板YAML和流水线实例YAML")
     @GET
     @Path("/{templateId}/compareYaml")
