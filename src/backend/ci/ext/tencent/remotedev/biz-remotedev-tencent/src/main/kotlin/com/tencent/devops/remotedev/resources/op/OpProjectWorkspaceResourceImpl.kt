@@ -11,15 +11,19 @@ import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
+import com.tencent.devops.remotedev.pojo.NotifyCategory
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
+import com.tencent.devops.remotedev.service.NotificationCenterService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
@@ -39,7 +43,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val workspaceRecordService: WorkspaceRecordService,
     private val notifyControl: NotifyControl,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val notificationCenterService: NotificationCenterService
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = TencentActionId.CGS_ASSIGN,
@@ -78,10 +83,25 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
+        // 保持现有历史记录创建逻辑
         notifyControl.notifyWorkspaceInfo(
             userId = userId,
-            notifyData = notifyData
+            notifyData = notifyData,
+            bodyParams = mutableMapOf(UserNotifyInfo::category.name to NotifyCategory.SYSTEM.name)
         )
+        // 新增已读状态与推送逻辑：委托到通知中心服务
+        kotlin.runCatching {
+            notificationCenterService.createNotification(
+                NotificationCenterService.NotificationCreateRequest(
+                    operator = userId,
+                    userIds = (notifyData.owner ?: emptyList()).toList(),
+                    notifyType = notifyData.notifyType?.firstOrNull() ?: RemoteDevNotifyType.CLIENT_PUSH,
+                    title = notifyData.title,
+                    content = notifyData.desc,
+                    bodyParams = emptyMap()
+                )
+            )
+        }
         return Result(true)
     }
 

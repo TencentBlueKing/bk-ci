@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -249,7 +250,7 @@ class ServiceRemoteDevResourceImpl(
                 "messageContent" to notifyData.data,
                 "messageStartTime" to notifyData.messageStartTime.toString(),
                 "messageEndTime" to notifyData.messageEndTime.toString(),
-                "clientMsg" to notifyData.data,
+                UserNotifyInfo::content.name to notifyData.data,
                 "notifyTemplateCode" to notifyData.notifyTemplateCode
             )
         )

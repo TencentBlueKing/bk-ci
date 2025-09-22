@@ -35,6 +35,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.cdi.CDIResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -149,7 +150,7 @@ class CDIResourceImpl @Autowired constructor(
                 "messageContent" to data.data,
                 "messageStartTime" to data.messageStartTime.toString(),
                 "messageEndTime" to data.messageEndTime.toString(),
-                "clientMsg" to data.data,
+                UserNotifyInfo::content.name to data.data,
                 "notifyTemplateCode" to data.notifyTemplateCode
             )
         )

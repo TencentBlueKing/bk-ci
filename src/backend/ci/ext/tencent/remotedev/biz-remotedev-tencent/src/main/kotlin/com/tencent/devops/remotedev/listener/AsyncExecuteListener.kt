@@ -7,6 +7,8 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEvent
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
+import com.tencent.devops.remotedev.pojo.NotifyCategory
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncJobPipeline
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -21,6 +23,7 @@ import com.tencent.devops.remotedev.service.job.RemoteDevJobActionService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.NotificationCenterService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
@@ -36,6 +39,7 @@ class AsyncExecuteListener @Autowired constructor(
     private val jobActionService: RemoteDevJobActionService,
     private val notifyControl: NotifyControl,
     private val userInfoCertService: UserInfoCertService,
+    private val notificationCenterService: NotificationCenterService,
     private val streamBridge: StreamBridge
 ) {
     class RetryEventException(val delayMills: Int) : RuntimeException()
@@ -112,8 +116,22 @@ class AsyncExecuteListener @Autowired constructor(
                 val data = objectMapper.readValue<AsyncNotify>(event.eventStr)
                 notifyControl.notifyWorkspaceInfo(
                     userId = data.operator,
-                    notifyData = data.notifyData
+                    notifyData = data.notifyData,
+                    bodyParams = mutableMapOf(UserNotifyInfo::category.name to NotifyCategory.BUSINESS.name)
                 )
+                kotlin.runCatching {
+                    notificationCenterService.createNotification(
+                        NotificationCenterService.NotificationCreateRequest(
+                            operator = data.operator,
+                            userIds = (data.notifyData.owner ?: emptyList()).toList(),
+                            notifyType = (data.notifyData.notifyType?.firstOrNull()
+                                ?: com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType.CLIENT_PUSH),
+                            title = data.notifyData.title,
+                            content = data.notifyData.desc,
+                            bodyParams = emptyMap()
+                        )
+                    )
+                }
             }
 
             AsyncExecuteEventType.ASYNC_USER_AUTH_CHECK -> {

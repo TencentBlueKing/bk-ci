@@ -1,0 +1,98 @@
+package com.tencent.devops.remotedev.service
+
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.dao.WorkspaceNotifyReadStatusDao
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class NotificationCenterService @Autowired constructor(
+    private val notifyControl: NotifyControl,
+    private val redisOperation: RedisOperation,
+    private val workspaceNotifyReadStatusDao: WorkspaceNotifyReadStatusDao,
+    private val dslContext: DSLContext
+) {
+    data class NotificationCreateRequest(
+        val operator: String,
+        val userIds: List<String>,
+        val notifyType: RemoteDevNotifyType,
+        val title: String,
+        val content: String? = null,
+        val bodyParams: Map<String, Any> = emptyMap()
+    )
+
+    data class NotificationQueryCondition(
+        val userId: String,
+        val page: Int,
+        val pageSize: Int,
+        val category: String? = null,
+        val isRead: Boolean? = null
+    )
+
+    fun createNotification(request: NotificationCreateRequest): Boolean {
+        request.userIds.forEach { uid ->
+            // invalidate cache
+            redisOperation.delete(buildUnreadCacheKey(uid))
+            // compute and push
+            pushUnreadCountUpdate(uid)
+        }
+        return true
+    }
+
+    fun getUserNotifications(condition: NotificationQueryCondition): Page<UserNotifyInfo> {
+        val list = workspaceNotifyReadStatusDao.getUserNotifyListWithReadStatus(
+            dslContext = dslContext,
+            userId = condition.userId,
+            page = condition.page,
+            pageSize = condition.pageSize,
+            category = condition.category
+        )
+        return Page(
+            count = list.size.toLong(),
+            page = condition.page,
+            pageSize = condition.pageSize,
+            records = list
+        )
+    }
+
+    fun markAsRead(userId: String, notifyIds: List<Long>): Boolean {
+        val updated = workspaceNotifyReadStatusDao.markAsRead(dslContext, userId, notifyIds)
+        if (updated > 0) {
+            redisOperation.delete(buildUnreadCacheKey(userId))
+            pushUnreadCountUpdate(userId)
+        }
+        return updated > 0
+    }
+
+    fun clearAllNotifications(userId: String, category: String?): Boolean {
+        val cleared = workspaceNotifyReadStatusDao.clearAllUnread(dslContext, userId, category)
+        if (cleared > 0) {
+            redisOperation.delete(buildUnreadCacheKey(userId))
+            pushUnreadCountUpdate(userId)
+        }
+        return cleared > 0
+    }
+
+    fun getUnreadCount(userId: String): Int {
+        val key = buildUnreadCacheKey(userId)
+        val cached = redisOperation.get(key)
+        if (!cached.isNullOrBlank()) {
+            return cached.toIntOrNull() ?: 0
+        }
+        val count = workspaceNotifyReadStatusDao.getUnreadCount(dslContext, userId)
+        redisOperation.set(key, count.toString(), 600L) // simple TTL 60s per plan guidance
+        return count
+    }
+
+    fun pushUnreadCountUpdate(userId: String) {
+        val cnt = getUnreadCount(userId)
+        notifyControl.pushUnreadCountUpdate(userId, cnt)
+    }
+
+    private fun buildUnreadCacheKey(userId: String) = "remotedev:notify:unread:$userId"
+}

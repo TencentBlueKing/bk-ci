@@ -45,7 +45,9 @@ import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceNotifyHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceNotifyReadStatusDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -87,7 +89,8 @@ class NotifyControl @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val permissionService: PermissionService,
-    private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao
+    private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao,
+    private val workspaceNotifyReadStatusDao: WorkspaceNotifyReadStatusDao
 ) {
 
     companion object {
@@ -134,7 +137,8 @@ class NotifyControl @Autowired constructor(
 
     fun notifyWorkspaceInfo(
         userId: String,
-        notifyData: WorkspaceNotifyData
+        notifyData: WorkspaceNotifyData,
+        bodyParams: MutableMap<String, String>
     ) {
         val workspace = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
@@ -175,15 +179,15 @@ class NotifyControl @Autowired constructor(
             notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true
         ) {
             workspace.forEach { ws ->
+                bodyParams["operator"] = userId
+                bodyParams["workspaceName"] = ws.workspaceName
+                bodyParams[UserNotifyInfo::title.name] = notifyData.title
+                bodyParams[UserNotifyInfo::content.name] = messageContent
+                bodyParams["projectId"] = ws.projectId
                 notify4User(
                     userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
                     notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
-                    bodyParams = mutableMapOf(
-                        "operator" to userId,
-                        "workspaceName" to ws.workspaceName,
-                        "clientMsg" to messageContent,
-                        "projectId" to ws.projectId
-                    )
+                    bodyParams = bodyParams
                 )
             }
         }
@@ -192,10 +196,12 @@ class NotifyControl @Autowired constructor(
         if (notifyData.notifyType == null ||
             notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_MARQUEE) == true
         ) {
+            bodyParams["operator"] = userId
+            bodyParams["messageContent"] = messageContent
             notify4User(
                 userIds = userList,
                 notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
-                bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
+                bodyParams = bodyParams
             )
         }
 
@@ -203,15 +209,14 @@ class NotifyControl @Autowired constructor(
         if (notifyData.notifyType == null ||
             notifyData.notifyType?.contains(RemoteDevNotifyType.EMAIL) == true
         ) {
+            bodyParams["operator"] = userId
+            bodyParams["title"] = notifyData.title
+            bodyParams["body"] = (notifyData.desc ?: "")
+            bodyParams["notifyTemplateCode"] = "REMOTEDEV_NOTIFY"
             notify4User(
                 userIds = userList,
                 notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                bodyParams = mutableMapOf(
-                    "operator" to userId,
-                    "title" to notifyData.title,
-                    "body" to (notifyData.desc ?: ""),
-                    "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
-                )
+                bodyParams = bodyParams
             )
         }
     }
@@ -422,11 +427,13 @@ class NotifyControl @Autowired constructor(
         userIds: Set<String>
     ) {
         val notifyTemplateCode = bodyParams["notifyTemplateCode"]
-        val res = bodyParams["clientMsg"]?.ifBlank { null } ?: getMsgFromTemplate(notifyTemplateCode, bodyParams)
-        ?: kotlin.run {
-            logger.warn("notifyClient fail with null body|$notifyTemplateCode")
-            return
-        }
+        val res = bodyParams[UserNotifyInfo::content.name]?.ifBlank { null }
+            ?: getMsgFromTemplate(notifyTemplateCode, bodyParams)
+                ?.also { bodyParams[UserNotifyInfo::content.name] = it }
+            ?: kotlin.run {
+                logger.warn("notifyClient fail with null body|$notifyTemplateCode")
+                return
+            }
         logger.info("notify4User CLIENT_PUSH|$notifyTemplateCode|$userIds|$res")
         val bodyJson = JsonUtil.toJson(bodyParams)
         userIds.forEach { user ->
@@ -443,11 +450,11 @@ class NotifyControl @Autowired constructor(
                 ownerType = null,
                 projectId = bodyParams["projectId"] ?: ""
             ) { result ->
-                if (result) {
+                val id = if (result) {
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
                         operator = bodyParams["operator"] ?: "null",
-                        userIds = setOf(user),
+                        userId = user,
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.SUCCESS,
                         bodyParams = bodyJson
@@ -456,12 +463,13 @@ class NotifyControl @Autowired constructor(
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
                         operator = bodyParams["operator"] ?: "null",
-                        userIds = setOf(user),
+                        userId = user,
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.FAIL,
                         bodyParams = bodyJson
                     )
                 }
+                workspaceNotifyReadStatusDao.createReadStatus(dslContext, user, id)
             }
         }
     }
@@ -670,4 +678,46 @@ class NotifyControl @Autowired constructor(
             )
         }
     }
+
+    /**
+     * 推送未读数量更新到客户端
+     */
+    fun pushUnreadCountUpdate(userId: String, unreadCount: Int) {
+        val message = UnreadCountMessage(
+            actionType = WebSocketActionType.WORKSPACE_NOTIFY_UNREAD_COUNT,
+            userId = userId,
+            unreadCount = unreadCount,
+            timestamp = System.currentTimeMillis()
+        )
+        val push = WorkspaceWebsocketPush(
+            type = WebSocketActionType.WORKSPACE_NOTIFY_UNREAD_COUNT,
+            status = true,
+            anyMessage = message,
+            projectId = "",
+            userId = userId,
+            redisOperation = redisOperation,
+            page = WorkspacePageBuild.buildPage(userId)
+        )
+        webSocketDispatcher.dispatch(push)
+    }
+
+    /**
+     * 未读数量消息
+     */
+    data class UnreadCountMessage(
+        val actionType: WebSocketActionType,
+        val userId: String,
+        val unreadCount: Int,
+        val timestamp: Long = System.currentTimeMillis()
+    )
+
+    /**
+     * 通知中心消息
+     */
+    data class NotifyCenterMessage(
+        val actionType: WebSocketActionType,
+        val userId: String,
+        val notifyInfo: UserNotifyInfo,
+        val timestamp: Long = System.currentTimeMillis()
+    )
 }
