@@ -195,7 +195,7 @@
                                 {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
-                                v-else-if="row.status !== TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING"
+                                v-else-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE"
                                 class="mr10"
                                 theme="primary"
                                 text

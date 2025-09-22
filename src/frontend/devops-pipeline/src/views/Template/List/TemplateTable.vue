@@ -1,7 +1,7 @@
 <template>
     <bk-table
         v-bkloading="{ isLoading }"
-        :data="data"
+        :data="templateList"
         :size="tableSize"
         :max-height="maxHeight"
         ext-cls="template-table"
@@ -33,6 +33,7 @@
                     :class="['template-name', {
                         'select-text': row.canView
                     }]"
+                    v-perm="row.viewPerm"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     <span
@@ -82,6 +83,7 @@
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
                     :disabled="row.instancePipelineCount <= 0 || !row.canView"
+                    v-perm="row.viewPerm"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     {{ row.instancePipelineCount }}
@@ -96,16 +98,7 @@
                         text
                         :disabled="row.latestVersionStatus === 'COMMITTING'"
                         @click="goInstanceEntry(row)"
-                        v-perm="{
-                            hasPermission: row.canView,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE.TEMPLATE,
-                                resourceCode: row.id,
-                                action: TEMPLATE_RESOURCE_ACTION.VIEW
-                            }
-                        }"
+                        v-perm="row.viewPerm"
                     >
                         {{ $t('template.instantiate') }}
                     </bk-button>
@@ -155,7 +148,7 @@
     const {
         goTemplateOverview
     } = useTemplateActions()
-    defineProps({
+    const props = defineProps({
         data: {
             type: Array,
             default: () => []
@@ -241,6 +234,21 @@
     }, {})
     const selectedTableColumn = ref([])
     const projectId = computed(() => proxy.$route.params.projectId)
+    const templateList = computed(() => props.data.map(temp => {
+        return {
+            ...temp,
+            viewPerm: {
+                hasPermission: temp.canView,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: temp.id,
+                    action: TEMPLATE_RESOURCE_ACTION.VIEW
+                }
+            }
+        }
+    }))
 
     onBeforeMount(() => {
         try {

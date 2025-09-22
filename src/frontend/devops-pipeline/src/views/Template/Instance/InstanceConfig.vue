@@ -398,14 +398,14 @@
         })
 
         // 触发器新增/删除统计
-        // curInstance?.value?.triggerConfigs?.forEach(item => {
-        //     if (item.isNew) {
-        //         counts.added++
-        //     }
-        //     if (item.isDelete) {
-        //         counts.deleted++
-        //     }
-        // })
+        curInstance?.value?.triggerConfigs?.forEach(item => {
+            if (item.isNew) {
+                counts.added++
+            }
+            if (item.isDelete) {
+                counts.deleted++
+            }
+        })
 
         return counts
     })
@@ -553,9 +553,11 @@
                 return { ...item, isNew: true }
             }
             const instanceTrigger = instanceTriggerMap.get(item.id)
-            return  instanceTrigger.isFollowTemplate ? item : instanceTrigger
+            return  instanceTrigger.isFollowTemplate ? {
+                ...instanceTrigger,
+                ...item
+            } : instanceTrigger
         })
-
         instanceTriggerConfigs?.forEach(item => {
             if (!templateTriggerMap.has(item.id)) {
                 result.push({ ...item, isDelete: true })
