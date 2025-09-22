@@ -616,4 +616,59 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         }
     }
 
+    /**
+     * 删除指定版本的变量组引用
+     */
+    fun delitePublicGroupRefer(
+        userId: String,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersion: Int
+    ) {
+
+        try {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+
+                // 先获取要删除的引用记录，用于减少referCount
+                val referInfosToDelete = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
+                    dslContext = context,
+                    projectId = projectId,
+                    referId = referId,
+                    referType = referType
+                ).filter { it.referVersion == referVersion }
+
+                if (referInfosToDelete.isEmpty()) {
+                    logger.info("No reference found for referId: $referId with version: $referVersion, skip deletion")
+                    return@transaction
+                }
+
+                // 删除指定版本的变量组引用记录
+                referInfosToDelete.forEach { referInfo ->
+                    publicVarGroupReferInfoDao.deleteByReferIds(
+                        dslContext = context,
+                        projectId = projectId,
+                        referIds = listOf(referId),
+                        referType = referType
+                    )
+                }
+
+                // 为每个被删除的变量组引用减少referCount计数
+                updateReferenceCounts(
+                    context = context,
+                    projectId = projectId,
+                    referInfos = referInfosToDelete,
+                    isIncrement = false
+                )
+
+                logger.info("Successfully deleted ${referInfosToDelete.size} " +
+                        "references for referId: $referId with version: $referVersion")
+            }
+        } catch (t: Throwable) {
+            logger.warn("Failed to delete refer info for referId: $referId with version: $referVersion", t)
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
+        }
+    }
+
 }
