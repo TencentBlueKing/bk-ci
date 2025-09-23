@@ -885,6 +885,7 @@
     "assignResource": "指定构建资源",
     "imageTicket": "镜像对应凭证",
     "performance": "机型",
+    "performanceDesc": "查看机型说明",
     "cpuUnit": "核",
     "workspace": "指定工作空间",
     "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/src",

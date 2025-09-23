@@ -34,6 +34,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 80
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
       {{- if .Values.dispatchDevcloud.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchDevcloud.hostAliases "context" $) | nindent 8 }}
       {{- end }}

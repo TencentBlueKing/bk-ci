@@ -285,8 +285,10 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId, credentialId,
-            encoder.encodeToString(pair.publicKey)
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.warn("getCredential|credential($credentialId)|project($projectId)|${credentialResult.message}")

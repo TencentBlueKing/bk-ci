@@ -1,4 +1,4 @@
-package com.tencent.devops.misc.strategy.impl.pipeline
+package com.tencent.devops.misc.strategy.impl.project
 
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigrationContext
@@ -6,37 +6,33 @@ import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.utils.PageMigrationUtil
 import org.slf4j.LoggerFactory
 
-class PipelineBuildTaskMigrationStrategy(
+class TemplateSettingVersionMigrationStrategy(
     private val processDataMigrateDao: ProcessDataMigrateDao
 ) : MigrationStrategy {
 
-    private val logger = LoggerFactory.getLogger(PipelineBuildTaskMigrationStrategy::class.java)
+    private val logger = LoggerFactory.getLogger(TemplateSettingVersionMigrationStrategy::class.java)
 
     override fun migrate(context: MigrationContext) {
-        val pipelineId = context.pipelineId ?: run {
-            logger.warn("Skipping T_PIPELINE_BUILD_TASK migration: pipelineId is null")
-            return
-        }
-        // 迁移T_PIPELINE_BUILD_TASK表数据
-        logger.info("Start migrating T_PIPELINE_BUILD_TASK data for pipeline $pipelineId")
+        // 迁移T_TEMPLATE_SETTING_VERSION表数据
+        val projectId = context.projectId
+        logger.info("Start migrating T_TEMPLATE_SETTING_VERSION data for projectId: $projectId")
         PageMigrationUtil.migrateByPage(
             pageSize = PageMigrationUtil.MEDIUM_PAGE_SIZE,
             fetch = { offset, limit ->
-                processDataMigrateDao.getPipelineBuildTaskRecords(
+                processDataMigrateDao.getTemplateSettingVersionRecords(
                     dslContext = context.dslContext,
                     projectId = context.projectId,
-                    pipelineId = pipelineId,
                     limit = limit,
                     offset = offset
                 )
             },
             migrate = { records ->
-                processDataMigrateDao.migratePipelineBuildTaskData(
+                processDataMigrateDao.migrateTemplateSettingVersionData(
                     migratingShardingDslContext = context.migratingShardingDslContext,
-                    pipelineBuildTaskRecords = records
+                    templateSettingVersionRecords = records
                 )
             }
         )
-        logger.info("Finished migrating T_PIPELINE_BUILD_TASK data for pipeline $pipelineId")
+        logger.info("Finish migrating T_TEMPLATE_SETTING_VERSION data for projectId: $projectId")
     }
 }

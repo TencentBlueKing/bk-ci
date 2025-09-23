@@ -101,6 +101,14 @@ class DcContainerPrepareHandler @Autowired constructor(
             "<a target='_blank' href='https://iwiki.woa.com/pages/viewpage.action?pageId=218952404'>" +
                 "【DevCloud容器问题FAQ】</a>"
         private const val BUILD_POOL_SIZE = 100000 // 单个流水线可同时执行的任务数量
+
+        private const val STANDARD_M = "Standard-M"
+        private const val HIGH_IO_L = "HighIO-L"
+        private const val STANDARD_S = "Standard-S"
+
+        private const val CONFIG_ID_ZERO = "0"
+        private const val HIGH_IO_M_CODE = "2"
+        private const val HIGH_IO_L_CODE = "10000"
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
@@ -122,7 +130,11 @@ class DcContainerPrepareHandler @Autowired constructor(
                 )
 
                 // 根据项目负载配置设置当前构建容器负载
-                setContainerPerformance(containerPool?.performanceConfigId ?: "0", this)
+                setContainerPerformance(
+                    performanceConfigId = containerPool?.performanceConfigId ?: "0",
+                    performanceUid = containerPool?.performanceUid ?: "",
+                    handlerContext = this
+                )
 
                 // 获取容器池空闲poolNo，如果poolNo绑定了container，则设置对应containerName
                 // 对poolNo, containerName, containerChanged赋值
@@ -224,7 +236,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         if (containerPool.third != null && !containerPool.third!!) {
             val containerPoolFixed = if (containerPool.container!!.startsWith(registryHost!!)) {
                 Pool(
-                    containerPool.container,
+                    container = containerPool.container,
                     Credential(registryUser!!, registryPwd!!),
                     containerPool.performanceConfigId,
                     containerPool.third
@@ -246,9 +258,15 @@ class DcContainerPrepareHandler @Autowired constructor(
 
     private fun setContainerPerformance(
         performanceConfigId: String?,
+        performanceUid: String,
         handlerContext: DcStartupHandlerContext
     ) {
-        if (!performanceConfigId.isNullOrBlank() && performanceConfigId != "0") {
+        if (performanceUid.isNotBlank()) {
+            handlerContext.performanceUid = performanceUid
+            return
+        }
+
+        if (!performanceConfigId.isNullOrBlank() && performanceConfigId != CONFIG_ID_ZERO) {
             val performanceOption =
                 dcPerformanceOptionsDao.get(dslContext, performanceConfigId.toLong())
             if (performanceOption != null) {
@@ -260,6 +278,22 @@ class DcContainerPrepareHandler @Autowired constructor(
             handlerContext.cpu = cpu
             handlerContext.memory = memory
             handlerContext.disk = disk
+        }
+
+        // 根据performanceConfigId设置性能配置类型标识
+        // "2" → Standard-M (中等高性能配置)
+        // "10000" → HighIO-L (高等高性能配置)
+        // 其他情况(包括null/空字符串/"0"等) → Standard-S (标准配置)
+        when (performanceConfigId) {
+            HIGH_IO_M_CODE -> {
+                handlerContext.performanceUid = STANDARD_M
+            }
+            HIGH_IO_L_CODE -> {
+                handlerContext.performanceUid = HIGH_IO_L
+            }
+            else -> {
+                handlerContext.performanceUid = STANDARD_S
+            }
         }
     }
 

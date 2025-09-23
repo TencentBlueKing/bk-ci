@@ -50,7 +50,8 @@ class BuildTaskService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         realIp: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): PasswordInfo? {
         logger.info("publicKey:$publicKey")
         logger.info("realIp:$realIp")
@@ -68,7 +69,8 @@ class BuildTaskService @Autowired constructor(
         val password = encryptCredential(
             aesEncryptedCredential = passwordOrigin,
             publicKeyByteArray = publicKeyByteArray,
-            serverPrivateKeyByteArray = serverPrivateKeyByteArray
+            serverPrivateKeyByteArray = serverPrivateKeyByteArray,
+            padding = padding
         )
         logger.info("passwordOrigin:$passwordOrigin")
         logger.info("serverBase64PublicKey:$serverBase64PublicKey")
@@ -82,11 +84,16 @@ class BuildTaskService @Autowired constructor(
     fun encryptCredential(
         aesEncryptedCredential: String,
         publicKeyByteArray: ByteArray,
-        serverPrivateKeyByteArray: ByteArray
+        serverPrivateKeyByteArray: ByteArray,
+        padding: Boolean
     ): String {
         try {
-            val credentialEncryptedContent =
-                DHUtil.encrypt(aesEncryptedCredential.toByteArray(), publicKeyByteArray, serverPrivateKeyByteArray)
+            val credentialEncryptedContent = DHUtil.encrypt(
+                aesEncryptedCredential.toByteArray(),
+                publicKeyByteArray,
+                serverPrivateKeyByteArray,
+                padding
+            )
             return String(Base64.getEncoder().encode(credentialEncryptedContent))
         } catch (ignored: Throwable) {
             throw ignored

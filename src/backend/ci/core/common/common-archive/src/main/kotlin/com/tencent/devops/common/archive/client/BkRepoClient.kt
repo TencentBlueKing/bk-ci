@@ -94,6 +94,7 @@ import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import io.opentelemetry.api.trace.Span
 import jakarta.ws.rs.NotFoundException
 import java.io.File
 import java.io.IOException
@@ -1319,7 +1320,21 @@ class BkRepoClient constructor(
         headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
         val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         devopsToken?.let { headers[DEVOPS_TOKEN] = it }
+        val traceHeader = getTraceHeader()
+        traceHeader?.let { headers[BK_REPO_TRACE] = it }
         return headers
+    }
+
+    private fun getTraceHeader(): String? {
+        return try {
+            val currentSpan = Span.current()
+            val traceId = currentSpan.spanContext.traceId
+            val spanId = currentSpan.spanContext.spanId
+            "$traceId-$spanId"
+        } catch (e: Exception) {
+            logger.warn("get trace id failed: ${e.localizedMessage}")
+            null
+        }
     }
 
     private fun doRequest(request: Request): okhttp3.Response {
@@ -1358,6 +1373,7 @@ class BkRepoClient constructor(
         private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
         private const val BK_REPO_PROJECT_ID = "X-BKREPO-PROJECT-ID"
+        private const val BK_REPO_TRACE = "b3"
 
         private const val DEVOPS_TOKEN = "X-DEVOPS-TOKEN"
 

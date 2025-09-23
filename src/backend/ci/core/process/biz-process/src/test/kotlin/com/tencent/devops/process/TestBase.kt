@@ -232,6 +232,7 @@ open class TestBase {
                 mutexGroup = null
             ),
             cost = containerCost,
+            containPostTaskFlag = null,
             matrixGroupId = null,
             matrixGroupFlag = false,
             containerHashId = containerHashId
