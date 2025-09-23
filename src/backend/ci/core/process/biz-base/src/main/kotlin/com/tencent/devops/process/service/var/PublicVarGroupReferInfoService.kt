@@ -91,10 +91,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             referType = referType
         )
         
-        if (allGroupInfos.isEmpty()) {
-            return referIds.keys.associateWith { 0 }
-        }
-        
         // 收集所有需要查询的变量组版本信息
         val groupVersionsToQuery = allGroupInfos
             .map { Pair(it.groupName, it.version) }
