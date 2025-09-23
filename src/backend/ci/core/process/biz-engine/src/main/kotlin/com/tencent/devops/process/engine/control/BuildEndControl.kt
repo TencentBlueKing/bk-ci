@@ -306,9 +306,10 @@ class BuildEndControl @Autowired constructor(
             buildId = buildId,
             containerId = "0"
         ) ?: return
-        val buildNoStr = triggerRecordContainer.containerVar[TriggerContainer::buildNo.name]?.toString() ?: return
-        val buildNoObj = JsonUtil.to(buildNoStr, BuildNo::class.java)
-        if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+        val buildNoMap =
+            triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *> ?: return
+        val buildNoTypeStr = buildNoMap[BuildNo::buildNoType.name]?.toString()
+        if (buildNoTypeStr == BuildNoType.SUCCESS_BUILD_INCREMENT.name) {
             // 使用分布式锁防止并发更新
             PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
                 buildNoLock.lock()
@@ -453,12 +454,9 @@ class BuildEndControl @Autowired constructor(
             ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(nextBuild.buildId)
             )
-            val buildNoStr = triggerRecordContainer.containerVar[TriggerContainer::buildNo.name]?.toString()
-            val buildNoObj = if (!buildNoStr.isNullOrBlank()) {
-                JsonUtil.to(buildNoStr, BuildNo::class.java)
-            } else {
-                null
-            }
+            val buildNoMap =
+                triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *>
+            val buildNoTypeStr = buildNoMap?.get(BuildNo::buildNoType.name)?.toString()
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStartEvent(
                     source = "build_finish_$buildId",
@@ -470,7 +468,7 @@ class BuildEndControl @Autowired constructor(
                     status = nextBuild.status,
                     actionType = ActionType.START,
                     executeCount = nextBuild.executeCount,
-                    buildNoType = buildNoObj?.buildNoType
+                    buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
                 )
             )
         }

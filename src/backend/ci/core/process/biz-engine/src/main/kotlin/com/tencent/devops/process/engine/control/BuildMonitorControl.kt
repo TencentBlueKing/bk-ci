@@ -30,17 +30,17 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
@@ -494,12 +494,9 @@ class BuildMonitorControl @Autowired constructor(
                 ) ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
                 )
-                val buildNoStr = triggerRecordContainer.containerVar[TriggerContainer::buildNo.name]?.toString()
-                val buildNoObj = if (!buildNoStr.isNullOrBlank()) {
-                    JsonUtil.to(buildNoStr, BuildNo::class.java)
-                } else {
-                    null
-                }
+                val buildNoMap =
+                    triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *>
+                val buildNoTypeStr = buildNoMap?.get(BuildNo::buildNoType.name)?.toString()
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = START_EVENT_SOURCE,
@@ -511,7 +508,7 @@ class BuildMonitorControl @Autowired constructor(
                         status = BuildStatus.RUNNING,
                         actionType = ActionType.START,
                         executeCount = buildInfo.executeCount,
-                        buildNoType = buildNoObj?.buildNoType
+                        buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
                     )
                 )
             }
