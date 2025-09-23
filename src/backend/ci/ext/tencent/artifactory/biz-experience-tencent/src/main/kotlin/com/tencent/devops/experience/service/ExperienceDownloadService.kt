@@ -132,7 +132,8 @@ class ExperienceDownloadService @Autowired constructor(
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 experienceName = it.experienceName,
                 createTime = it.createTime.timestampmilli(),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                appNameI18n = it.appNameI18n
             )
         }
     }
@@ -482,7 +483,8 @@ class ExperienceDownloadService @Autowired constructor(
                         appScheme = it.scheme,
                         expired = false,
                         lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-                            ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
+                            ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+                        appNameI18n = it.appNameI18n
                     )
                 }.sortedByDescending { it.downloadTime }.toList()
 

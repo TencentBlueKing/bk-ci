@@ -52,6 +52,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME_I18N
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BK_CI_APP_STAGE
@@ -361,7 +362,8 @@ class ExperienceService @Autowired constructor(
             versionTitle = experienceRecord.versionTitle,
             categoryId = experienceRecord.category,
             productOwner = objectMapper.readValue(experienceRecord.productOwner),
-            classify = experienceRecord.classify
+            classify = experienceRecord.classify,
+            appNameI18n = experienceRecord.appNameI18n
         )
     }
 
@@ -577,6 +579,7 @@ class ExperienceService @Autowired constructor(
                 projectId
             }
         }
+        val appNameI18n = propertyMap[ARCHIVE_PROPS_APP_NAME_I18N]
 
         val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
             .withHour(23)
@@ -614,7 +617,8 @@ class ExperienceService @Autowired constructor(
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: "",
             classify = experience.classify ?: "",
-            repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime)
+            repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime),
+            appNameI18n = appNameI18n
         )
         // IAM权限
         experiencePermissionService.createTaskResource(
@@ -648,7 +652,8 @@ class ExperienceService @Autowired constructor(
                 appBundleIdentifier = appBundleIdentifier,
                 logoUrl = logoUrl,
                 scheme = scheme,
-                version = appVersion
+                version = appVersion,
+                appNameI18n = appNameI18n
             )
         } else { // 内部体验
             if (experienceBaseService.isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
@@ -675,7 +680,8 @@ class ExperienceService @Autowired constructor(
         appBundleIdentifier: String,
         logoUrl: String,
         scheme: String,
-        version: String
+        version: String,
+        appNameI18n: String?
     ) {
 
         experiencePublicDao.create(
@@ -690,7 +696,8 @@ class ExperienceService @Autowired constructor(
             size = size,
             logoUrl = logoUrl,
             scheme = scheme,
-            version = version
+            version = version,
+            appNameI18n = appNameI18n
         )
     }
 
@@ -781,7 +788,8 @@ class ExperienceService @Autowired constructor(
                 appBundleIdentifier = experienceRecord.bundleIdentifier,
                 logoUrl = experienceRecord.logoUrl,
                 scheme = experienceRecord.scheme,
-                version = experienceRecord.version
+                version = experienceRecord.version,
+                appNameI18n = experienceRecord.appNameI18n
             )
         } else {
             experiencePublicDao.updateByRecordId(
