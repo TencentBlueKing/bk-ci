@@ -27,9 +27,7 @@
 
 package com.tencent.devops.repository.resources
 
-import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.OPRepositoryConfigResource
 import com.tencent.devops.repository.pojo.RepositoryConfigDept
