@@ -165,6 +165,7 @@ class ProjectDao {
                 enabled?.let { conditions.add(ENABLED.eq(enabled)) }
                 centerId?.let { conditions.add(CENTER_ID.eq(centerId)) }
                 deptId?.let { conditions.add(DEPT_ID.eq(deptId)) }
+                businessLineId?.let { conditions.add(BUSINESS_LINE_ID.eq(businessLineId)) }
                 bgId?.let { conditions.add(BG_ID.eq(bgId)) }
                 projectCreator?.let { conditions.add(CREATOR.eq(projectCreator)) }
                 excludedProjectCodes?.let { conditions.add(ENGLISH_NAME.notIn(excludedProjectCodes)) }
@@ -201,6 +202,9 @@ class ProjectDao {
                 }
                 if (!projectName.isNullOrBlank()) {
                     conditions.add(PROJECT_NAME.like("%$projectName%"))
+                }
+                if (!englishName.isNullOrBlank()) {
+                    conditions.add(ENGLISH_NAME.like("%$englishName%"))
                 }
             }
         }

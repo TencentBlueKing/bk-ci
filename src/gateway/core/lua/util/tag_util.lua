@@ -38,6 +38,10 @@ function _M:get_tag(ns_config)
         x_gateway_tag = ngx.var["arg_x-gateway-tag"]
     end
 
+
+    -- 特殊tag处理
+    x_gateway_tag = specialTagUtil:get_special_tag(gateway_project, devops_project_id, x_gateway_tag)
+
     if x_gateway_tag ~= nil then
         tag = x_gateway_tag
     else
