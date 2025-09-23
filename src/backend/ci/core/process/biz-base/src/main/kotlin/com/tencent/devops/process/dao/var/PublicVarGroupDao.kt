@@ -350,4 +350,67 @@ class PublicVarGroupDao {
                 }
         }
     }
+
+    /**
+     * 批量查询最新版本变量组的varCount
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNames 变量组名称列表
+     * @return Map<String, Int> 变量组名称到VAR_COUNT的映射
+     */
+    fun batchGetLatestVarCountsByGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(GROUP_NAME, VAR_COUNT)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+                .associate { record ->
+                    record.getValue(GROUP_NAME) to record.getValue(VAR_COUNT)
+                }
+        }
+    }
+
+    /**
+     * 批量查询指定版本变量组的varCount
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupVersions 变量组名称和版本的映射列表
+     * @return Map<Pair<String, Int>, Int> (变量组名称,版本)到VAR_COUNT的映射
+     */
+    fun batchGetSpecificVarCountsByGroupVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupVersions: List<Pair<String, Int>>
+    ): Map<Pair<String, Int>, Int> {
+        if (groupVersions.isEmpty()) return emptyMap()
+        
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            // 构建OR条件：(GROUP_NAME = ? AND VERSION = ?) OR (GROUP_NAME = ? AND VERSION = ?) ...
+            val conditions = groupVersions.map { (groupName, version) ->
+                GROUP_NAME.eq(groupName).and(VERSION.eq(version))
+            }
+            
+            val orCondition = conditions.reduce { acc, condition -> acc.or(condition) }
+            
+            return dslContext.select(GROUP_NAME, VERSION, VAR_COUNT)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(orCondition)
+                .fetch()
+                .associate { record ->
+                    val groupName = record.getValue(GROUP_NAME)
+                    val version = record.getValue(VERSION)
+                    val varCount = record.getValue(VAR_COUNT)
+                    Pair(groupName, version) to varCount
+                }
+        }
+    }
 }
