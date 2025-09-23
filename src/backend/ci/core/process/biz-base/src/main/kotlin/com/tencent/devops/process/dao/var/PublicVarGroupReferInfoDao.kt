@@ -123,6 +123,42 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 批量查询多个引用ID的变量组信息
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 引用ID映射，key为引用ID，value为REFER_VERSION
+     * @param referType 引用类型
+     * @return 变量组引用信息列表
+     */
+    fun batchListVarGroupReferInfoByReferIds(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: Map<String, Int>,
+        referType: PublicVerGroupReferenceTypeEnum
+    ): List<PipelinePublicVarGroupReferPO> {
+        if (referIds.isEmpty()) {
+            return emptyList()
+        }
+        
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val referConditions = referIds.map { (referId, referVersion) ->
+                REFER_ID.eq(referId).and(REFER_VERSION.eq(referVersion))
+            }
+            
+            // 组合所有条件
+            val finalCondition = PROJECT_ID.eq(projectId)
+                .and(REFER_TYPE.eq(referType.name))
+                .and(referConditions.reduce { acc, condition -> acc.or(condition) })
+            
+            return dslContext.selectFrom(this)
+                .where(finalCondition)
+                .orderBy(REFER_ID.asc(), CREATE_TIME.asc())
+                .fetch()
+                .map { convertPipelinePublicVarGroupReferPO(it) }
+        }
+    }
+
     private fun convertPipelinePublicVarGroupReferPO(
         publicVarGroupReferInfoRecord: TPipelinePublicVarGroupReferInfoRecord
     ) = PipelinePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
