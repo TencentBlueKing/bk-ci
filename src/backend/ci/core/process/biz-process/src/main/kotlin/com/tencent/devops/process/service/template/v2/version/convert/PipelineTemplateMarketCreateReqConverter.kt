@@ -151,8 +151,8 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 },
                 logoUrl = marketTemplateDetails.logoUrl,
                 latestVersionStatus = VersionStatus.RELEASED,
-                upgradeStrategy = templateInfo?.upgradeStrategy ?: UpgradeStrategyEnum.MANUAL,
-                settingSyncStrategy = templateInfo?.upgradeStrategy ?: UpgradeStrategyEnum.MANUAL
+                upgradeStrategy = templateInfo?.upgradeStrategy ?: UpgradeStrategyEnum.AUTO,
+                settingSyncStrategy = templateInfo?.upgradeStrategy ?: UpgradeStrategyEnum.AUTO
             )
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(
                 projectId = projectId,
