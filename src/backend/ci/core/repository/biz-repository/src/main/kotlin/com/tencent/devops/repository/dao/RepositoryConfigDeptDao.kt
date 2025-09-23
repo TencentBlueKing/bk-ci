@@ -79,6 +79,7 @@ class RepositoryConfigDeptDao {
         return with(TRepositoryScmConfigDeptRel.T_REPOSITORY_SCM_CONFIG_DEPT_REL) {
             dslContext.selectFrom(this)
                     .where(SCM_CODE.eq(scmCode))
+                    .orderBy(CREATE_TIME.desc(), DEPT_ID)
                     .limit(limit)
                     .offset(offset)
                     .fetch()
