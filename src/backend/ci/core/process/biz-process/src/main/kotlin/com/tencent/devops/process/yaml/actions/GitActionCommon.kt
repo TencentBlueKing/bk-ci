@@ -139,7 +139,7 @@ object GitActionCommon {
     }
 
     fun getCiTemplateName(filePath: String): String {
-        return filePath.removePrefix(Constansts.ciTemplateDirectoryName)
+        return filePath.removePrefix("${Constansts.ciTemplateDirectoryName}${File.separator}")
     }
 
     fun getCiFilePath(fileName: String): String {

@@ -91,7 +91,7 @@ class PTemplateYamlResourceService(
         with(event) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
-            val yamlFileName = GitActionCommon.getCiFileName(filePath)
+            val yamlFileName = GitActionCommon.getCiTemplateName(filePath)
             val deployTemplateResult = pipelineTemplateFacadeService.updateYamlTemplate(
                 userId = userId,
                 projectId = projectId,

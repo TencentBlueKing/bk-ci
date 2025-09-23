@@ -437,6 +437,11 @@ object ProcessMessageCode {
     // variable [xxx][yyy][zzz] 在模版中已定义为常量，不支持实例传入
     const val ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST = "2101332"
 
+    const val ERROR_SCM_API_FILE_NOT_FOUND = "2101340" // 仓库[$0]在分支[{1}]中不存在文件[{2}]
+    const val ERROR_SCM_API_NOT_READ_PERMISSION = "2101341" // 用户/凭证[{0}]没有仓库[{1}]访问权限
+    const val ERROR_SCM_API_UNKNOWN_EXCEPTION = "2101343" // 调用[{0}]接口失败，异常信息: {1}
+    const val ERROR_SCM_API_REPOSITORY_NOT_FOUND = "2101344" // 仓库[$0]不存在或用户/凭证[{0}]没有访问权限
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

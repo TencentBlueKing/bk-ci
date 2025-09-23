@@ -34,11 +34,13 @@ import com.tencent.devops.repository.service.RepositoryScmConfigService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.ScmApiManager
 import com.tencent.devops.scm.api.enums.PullRequestState
+import com.tencent.devops.scm.api.exception.NotFoundScmApiException
 import com.tencent.devops.scm.api.pojo.ContentInput
 import com.tencent.devops.scm.api.pojo.PullRequest
 import com.tencent.devops.scm.api.pojo.PullRequestInput
 import com.tencent.devops.scm.api.pojo.PullRequestListOptions
 import com.tencent.devops.scm.api.pojo.ReferenceInput
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -69,11 +71,16 @@ class ScmApiComposer @Autowired constructor(
                 authRepository = authRepository
             ) { providerProperties, providerRepository ->
                 // 判断分支是否存在,不存在则创建
-                scmApiManager.findBranch(
-                    providerProperties = providerProperties,
-                    providerRepository = providerRepository,
-                    name = ref
-                ) ?: run {
+                try {
+                    scmApiManager.findBranch(
+                        providerProperties = providerProperties,
+                        providerRepository = providerRepository,
+                        name = ref
+                    )
+                } catch (ignored: NotFoundScmApiException) {
+                    logger.info("branch ($ref) not found, create")
+                    null
+                } ?: run {
                     val referenceInput = ReferenceInput(
                         name = ref,
                         sha = defaultBranch
@@ -85,12 +92,17 @@ class ScmApiComposer @Autowired constructor(
                     )
                 }
                 // 判断文件是否存在
-                val newFile = scmApiManager.getFileContent(
-                    providerProperties = providerProperties,
-                    providerRepository = providerRepository,
-                    path = path,
-                    ref = ref
-                ) == null
+                val newFile = try {
+                    scmApiManager.getFileContent(
+                        providerProperties = providerProperties,
+                        providerRepository = providerRepository,
+                        path = path,
+                        ref = ref
+                    )
+                } catch (ignored: NotFoundScmApiException) {
+                    logger.info("file $path not found, create")
+                    null
+                } == null
                 // 创建或更新文件
                 val contentInput = ContentInput(
                     ref = ref,
@@ -173,5 +185,9 @@ class ScmApiComposer @Autowired constructor(
                 }
             }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ScmApiComposer::class.java)
     }
 }
