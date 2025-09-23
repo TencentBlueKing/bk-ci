@@ -41,25 +41,6 @@ class OPRepositoryConfigResourceImpl @Autowired constructor(
     private val repositoryScmConfigService: RepositoryScmConfigService
 ) : OPRepositoryConfigResource {
 
-    override fun supportDept(
-        scmCode: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<SQLPage<RepositoryConfigDept>> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
-        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        return Result(
-            repositoryScmConfigService.listDept(
-                userId = "",
-                checkPermission = false,
-                scmCode = scmCode,
-                limit = sqlLimit.limit,
-                offset = sqlLimit.offset
-            )
-        )
-    }
-
     override fun addDept(
         userId: String,
         scmCode: String,

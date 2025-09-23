@@ -479,13 +479,10 @@ class RepositoryScmConfigService @Autowired constructor(
     fun listDept(
         scmCode: String,
         userId: String,
-        checkPermission: Boolean = true,
         limit: Int,
         offset: Int
     ): SQLPage<RepositoryConfigDept> {
-        if (checkPermission) {
-            validateUserPlatformPermission(userId)
-        }
+        validateUserPlatformPermission(userId)
         val record = repositoryConfigDeptService.listDept(
             scmCode = scmCode,
             limit = limit,

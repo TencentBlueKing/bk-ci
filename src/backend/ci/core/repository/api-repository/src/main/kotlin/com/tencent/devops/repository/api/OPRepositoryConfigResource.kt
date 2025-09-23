@@ -47,21 +47,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPRepositoryConfigResource {
 
-    @Operation(summary = "获取目标代码源的组织架构")
-    @GET
-    @Path("/{scmCode}/dept")
-    fun supportDept(
-        @Parameter(description = "scmCode", required = true)
-        @PathParam("scmCode")
-        scmCode: String,
-        @Parameter(description = "第几页", required = false, example = "1")
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<SQLPage<RepositoryConfigDept>>
-
     @Operation(summary = "批量添加目标代码源的组织架构")
     @POST
     @Path("/{scmCode}/dept")
