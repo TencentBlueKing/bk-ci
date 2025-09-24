@@ -69,6 +69,7 @@ interface UserGitRepositoryResource {
         commitNumber: Int,
         @Parameter(description = "需要过滤的前缀列表（逗号分隔,空值表示不过滤）", required = false)
         @QueryParam("prefixes")
+        @DefaultValue("Merge")
         prefixes: String?,
         @Parameter(description = "需要过滤的关键词列表（逗号分隔,空值表示不过滤）", required = false)
         @QueryParam("keywords")
