@@ -51,19 +51,24 @@
                     <div class="edit-input-main">
                         <bk-input
                             ref="nameInputRef"
+                            name="pipelineName"
                             :class="{
-                                'instance-empty-input': isEmptyName
+                                'instance-empty-input is-danger': isErrorName || errors.has('pipelineName')
                             }"
-                            v-model="instanceName"
+                            v-validate="{
+                                required: true,
+                                max: 128
+                            }"
+                            :value="instanceName"
                             @change="checkPipelineName"
                             @blur="(value) => handleEnterChangeName(value, instanceIndex)"
                             @enter="(value) => handleEnterChangeName(value, instanceIndex)"
                         >
                         </bk-input>
                         <i
-                            v-if="isErrorName"
+                            v-if="isErrorName || errors.has('pipelineName')"
                             class="bk-icon icon-exclamation-circle-shape tooltips-icon"
-                            v-bk-tooltips="$t('template.nameExists')"
+                            v-bk-tooltips="errors.has('pipelineName') ? errors.first('pipelineName') : $t('template.nameExists')"
                         />
                     </div>
                 </template>
@@ -128,14 +133,14 @@
     import UseInstance from '@/hook/useInstance'
     import InstancePipelineName from '@/components/Template/instance-pipeline-name'
     const props = defineProps({
-        isInstanceCreateType: Boolean
+        isInstanceCreateType: Boolean,
+        isEditing: Boolean
     })
     const { proxy } = UseInstance()
     const instanceActiveIndex = ref(0)
     const editingIndex = ref(-1)
     const nameInputRef = ref(null)
     const newIndex = ref(1)
-    const isEmptyName = ref(false)
     const isErrorName = ref(false)
     const showInstanceCreate = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -158,19 +163,20 @@
             proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, useTemplateSettings.value)
         }
     })
-    async function checkPipelineName (val) {
-        if (!val) {
+    async function checkPipelineName (newVal) {
+        const curInstanceName = instanceList.value[editingIndex.value]?.pipelineName
+        if (!newVal || curInstanceName === newVal) {
             isErrorName.value = false
             return
         }
-        if (renderInstanceList.value.find(i => i.pipelineName === val)) {
+        if (renderInstanceList.value.find(i => i.pipelineName === newVal)) {
             isErrorName.value = true
             return
         }
         try {
             isErrorName.value = await proxy.$store.dispatch('pipelines/checkPipelineName', {
                 projectId: projectId.value,
-                pipelineName: val.trim()
+                pipelineName: newVal.trim()
             })
         } catch(e) {
             console.error(e)
@@ -187,10 +193,7 @@
         })
     }
     function handleEnterChangeName (value, index) {
-        if (!value) {
-            isEmptyName.value = true
-            return
-        }
+        if (!value.trim()) return
         if (isErrorName.value) return
         if (props.isInstanceCreateType && !value) {
             instanceList.value.splice(index, 1)
@@ -205,13 +208,14 @@
         proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         editingIndex.value = -1
-        isEmptyName.value = false
+        proxy.$emit('update:isEditing', false)
     }
     function handleEditName (index) {
         editingIndex.value = index
         proxy?.$nextTick(() => {
             nameInputRef.value && nameInputRef.value[0]?.focus()
         })
+        proxy.$emit('update:isEditing', true)
     }
     function handelDeleteInstance (index) {
         instanceList.value.splice(index, 1)
@@ -393,7 +397,7 @@
             width: 100%;
             .tooltips-icon {
                 position: absolute;
-                z-index: 10;
+                z-index: 1000;
                 right: 8px;
                 top: 8px;
                 color: #ea3636;

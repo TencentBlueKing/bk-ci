@@ -488,7 +488,7 @@
         const templateBuildNo = template?.buildNo
 
         // 非入参的参数直接赋值模板配置的入参默认值
-        if (instanceBuildNo?.required && !templateBuildNo?.required) {
+        if (!instanceBuildNo?.required && templateBuildNo?.required) {
             instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
                     const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
@@ -517,12 +517,14 @@
             } else {
                 // 对比 defaultValue, 如果不同则标记为isChange
                 // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
-                if (item.isFollowTemplate) {
+                if (!allVersionKeyList.includes(item.id) && item.isFollowTemplate) {
                     item.defaultValue = templateParamItem.defaultValue
                 } else {
-                    item.isChange = isObject(item.defaultValue)
-                        ? !isShallowEqual(item.defaultValue, templateParamItem.defaultValue)
-                        : item.defaultValue !== templateParamItem.defaultValue
+                    const templateDefaultValue = allVersionKeyList.includes(item.id) ? Number(templateParamItem.defaultValue) : templateParamItem.defaultValue
+                    const itemDefaultValue = allVersionKeyList.includes(item.id) ? Number(item.defaultValue) : item.defaultValue
+                    item.isChange = isObject(itemDefaultValue)
+                        ? !isShallowEqual(itemDefaultValue, templateDefaultValue)
+                        : itemDefaultValue !== templateDefaultValue
                 }
                 if (!item.required && templateParamItem.required) {
                     item.required = true
@@ -540,7 +542,6 @@
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
             }
         }
-        
         return instanceParams
     }
 
