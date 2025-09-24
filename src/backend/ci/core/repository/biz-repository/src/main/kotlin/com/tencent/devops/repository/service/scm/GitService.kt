@@ -151,6 +151,16 @@ class GitService @Autowired constructor(
     @Value("\${git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
 
+    @Value("\${git.commit.filter.enabled:true}")
+    private val filterEnabled: Boolean = true
+
+    @Value("\${git.commit.filter.prefixes:}")
+    private val prefixesConfig: String = ""
+
+    @Value("\${git.commit.filter.keywords:}")
+    private val keywordsConfig: String = ""
+
+
     private val redirectUrl = gitConfig.redirectUrl
 
     private val gitCIUrl = gitConfig.gitUrl
@@ -2177,13 +2187,9 @@ class GitService @Autowired constructor(
     }
 
     fun processCommits(commits: List<Commit>): String {
-        // 过滤合并提交信息
+        // 根据配置信息进行指定过滤
         val filteredCommits = commits.filter { commit ->
-            commit.message?.takeIf { it.isNotBlank() }
-                ?.trimStart()
-                ?.startsWith("Merge ", ignoreCase = true)
-                ?.not()
-                ?: false
+            shouldKeepCommit(commit.message)
         }
         // 最早的排最前面
         val sortedCommits = filteredCommits.sortedBy {
@@ -2192,5 +2198,18 @@ class GitService @Autowired constructor(
         return sortedCommits.mapIndexed { index, commit ->
             "${index + 1}. ${commit.message}"
         }.joinToString("")
+    }
+
+    private fun shouldKeepCommit(message: String?): Boolean {
+        val trimmedMessage = message?.takeIf { it.isNotBlank() }?.trimStart() ?: return false
+        if (!filterEnabled) return true
+
+        val prefixes = prefixesConfig.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val keywords = keywordsConfig.split(",").map { it.trim() }.filter { it.isNotBlank() }
+
+        val matchesPrefix = prefixes.any { trimmedMessage.startsWith(it, ignoreCase = true) }
+        val containsKeyword = keywords.any { trimmedMessage.contains(it, ignoreCase = true) }
+
+        return !matchesPrefix && !containsKeyword
     }
 }
