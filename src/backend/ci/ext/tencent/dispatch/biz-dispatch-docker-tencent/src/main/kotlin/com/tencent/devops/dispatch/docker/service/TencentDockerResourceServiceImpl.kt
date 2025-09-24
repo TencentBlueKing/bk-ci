@@ -67,7 +67,8 @@ class TencentDockerResourceServiceImpl @Autowired constructor(
                     dispatchType = PublicDevCloudDispathcType(
                         image = JsonUtil.toJson(containerPool),
                         imageType = ImageType.THIRD,
-                        performanceConfigId = "0"
+                        performanceConfigId = "0",
+                        performanceUid = ""
                     ),
                     atoms = atoms,
                     executeCount = executeCount,

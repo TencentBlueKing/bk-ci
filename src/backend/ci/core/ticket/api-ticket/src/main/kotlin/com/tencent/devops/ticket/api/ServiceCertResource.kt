@@ -79,7 +79,10 @@ interface ServiceCertResource {
         certId: String,
         @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
-        publicKey: String
+        publicKey: String,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CertAndroidWithCredential>
 
     @Operation(summary = "获取IOS企业签名证书")
@@ -94,7 +97,10 @@ interface ServiceCertResource {
         certId: String,
         @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
-        publicKey: String
+        publicKey: String,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CertEnterprise>
 
     @Operation(summary = "获取tls证书")
@@ -109,6 +115,9 @@ interface ServiceCertResource {
         certId: String,
         @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
-        publicKey: String
+        publicKey: String,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CertTls>
 }

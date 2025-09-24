@@ -132,6 +132,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     )
                     commandContext.notifyValue["failContent"] = failContent
                     commandContext.notifyValue["emailFailContent"] = failContent
+                    commandContext.notifyValue["logoIconUrl"] = logoIconUrl
+                    commandContext.notifyValue["logoTextUrl"] = logoTextUrl
                     commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
                     val receivers = parseReceiver(failSubscription.users, commandContext.variables)
                     if (!emptyGroup(failSubscription.groups)) {

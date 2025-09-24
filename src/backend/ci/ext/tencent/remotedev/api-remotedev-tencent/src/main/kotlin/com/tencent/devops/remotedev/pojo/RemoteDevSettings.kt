@@ -29,6 +29,37 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
+/**
+ * 监控配置类型枚举
+ */
+enum class MonitorType(val description: String) {
+    DEFAULT("默认监控");
+    
+    companion object {
+        fun parseType(type: String?): MonitorType {
+            if (type.isNullOrBlank()) return DEFAULT
+            return try {
+                MonitorType.valueOf(type.uppercase())
+            } catch (ignore: Throwable) {
+                DEFAULT
+            }
+        }
+    }
+}
+
+/**
+ * 监控配置数据类
+ */
+@Schema(title = "监控配置")
+data class MonitorConfig(
+    @get:Schema(title = "监控上报URL")
+    val monitorUrl: String? = null,
+    @get:Schema(title = "加密后的监控Token")
+    val monitorToken: String? = null,
+    @get:Schema(title = "监控类型", allowableValues = ["DEFAULT"])
+    val type: String = MonitorType.DEFAULT.name
+)
+
 @Schema(title = "远程开发配置")
 data class RemoteDevSettings(
     @get:Schema(title = "默认shell")
@@ -57,4 +88,6 @@ data class RemoteDevSettings(
     var companyName: String = "",
     @get:Schema(title = "平台维护的用户管理设置")
     val userSetting: RemoteDevUserSettings = RemoteDevUserSettings(),
+    @get:Schema(title = "监控配置列表")
+    val monitorConfigs: List<MonitorConfig> = emptyList()
 )

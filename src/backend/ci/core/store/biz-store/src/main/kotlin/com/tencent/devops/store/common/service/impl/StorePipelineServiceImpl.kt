@@ -382,7 +382,8 @@ class StorePipelineServiceImpl @Autowired constructor(
                                 projectId = projectCode,
                                 pipelineId = pipelineId,
                                 creator = storeInnerPipelineConfig.innerPipelineUser,
-                                model = model
+                                model = model,
+                                channelCode = ChannelCode.AM
                             )
                         )
                     )
