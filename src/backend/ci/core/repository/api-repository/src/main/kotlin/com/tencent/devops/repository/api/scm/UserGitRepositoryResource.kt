@@ -66,6 +66,12 @@ interface UserGitRepositoryResource {
         @Parameter(description = "获取提交信息数量(默认读取最近5条)", required = false)
         @QueryParam("commitNumber")
         @DefaultValue("5")
-        commitNumber: Int
+        commitNumber: Int,
+        @Parameter(description = "需要过滤的前缀列表（逗号分隔,空值表示不过滤）", required = false)
+        @QueryParam("prefixes")
+        prefixes: String?,
+        @Parameter(description = "需要过滤的关键词列表（逗号分隔,空值表示不过滤）", required = false)
+        @QueryParam("keywords")
+        keywords: String?
     ): Result<String>
 }

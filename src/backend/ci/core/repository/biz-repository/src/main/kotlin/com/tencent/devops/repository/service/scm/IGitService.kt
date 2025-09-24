@@ -407,6 +407,8 @@ interface IGitService {
         branch: String?,
         codeSrc: String?,
         gitProjectId: Long?,
-        commitNumber: Int
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
     ): Result<String>
 }

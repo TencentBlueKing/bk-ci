@@ -151,16 +151,6 @@ class GitService @Autowired constructor(
     @Value("\${git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
 
-    @Value("\${git.commit.filter.enabled:true}")
-    private val filterEnabled: Boolean = true
-
-    @Value("\${git.commit.filter.prefixes:}")
-    private val prefixesConfig: String = ""
-
-    @Value("\${git.commit.filter.keywords:}")
-    private val keywordsConfig: String = ""
-
-
     private val redirectUrl = gitConfig.redirectUrl
 
     private val gitCIUrl = gitConfig.gitUrl
@@ -2135,7 +2125,9 @@ class GitService @Autowired constructor(
         branch: String?,
         codeSrc: String?,
         gitProjectId: Long?,
-        commitNumber: Int
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
     ): Result<String> {
         if (commitNumber !in min..max) {
             throw ErrorCodeException(
@@ -2183,13 +2175,13 @@ class GitService @Autowired constructor(
             filePath = null
         ).data ?: emptyList()
 
-        return Result(processCommits(commits))
+        return Result(processCommits(commits = commits, prefixes = prefixes, keywords = keywords))
     }
 
-    fun processCommits(commits: List<Commit>): String {
-        // 根据配置信息进行指定过滤
+    fun processCommits(commits: List<Commit>, prefixes: String?, keywords: String?): String {
+        // 根据请求条件过滤
         val filteredCommits = commits.filter { commit ->
-            shouldKeepCommit(commit.message)
+            shouldKeepCommit(message = commit.message, prefixes = prefixes, keywords = keywords)
         }
         // 最早的排最前面
         val sortedCommits = filteredCommits.sortedBy {
@@ -2200,15 +2192,22 @@ class GitService @Autowired constructor(
         }.joinToString("")
     }
 
-    private fun shouldKeepCommit(message: String?): Boolean {
+    private fun shouldKeepCommit(message: String?, prefixes: String?, keywords: String?): Boolean {
         val trimmedMessage = message?.takeIf { it.isNotBlank() }?.trimStart() ?: return false
-        if (!filterEnabled) return true
+        val prefixList = prefixes
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
 
-        val prefixes = prefixesConfig.split(",").map { it.trim() }.filter { it.isNotBlank() }
-        val keywords = keywordsConfig.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val keywordList = keywords
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+        val matchesPrefix = prefixList.any { trimmedMessage.startsWith(it, ignoreCase = true) }
 
-        val matchesPrefix = prefixes.any { trimmedMessage.startsWith(it, ignoreCase = true) }
-        val containsKeyword = keywords.any { trimmedMessage.contains(it, ignoreCase = true) }
+        val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
 
         return !matchesPrefix && !containsKeyword
     }
