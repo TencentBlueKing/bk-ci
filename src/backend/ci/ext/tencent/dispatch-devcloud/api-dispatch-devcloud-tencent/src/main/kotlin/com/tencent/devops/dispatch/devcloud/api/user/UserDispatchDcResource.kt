@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.PerformanceData
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsV2
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -87,6 +88,27 @@ interface UserDispatchDcResource {
         projectId: String,
         @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "templateId", required = true)
+        @QueryParam("templateId")
+        templateId: String,
     ): Result<UserPerformanceOptionsV2>
+
+    @GET
+    @Path("v2/project/{projectId}/pipeline/{pipelineId}/uid/{performanceUid}performanceConfig/info")
+    @Operation(summary = "获取devcloud性能配置详情")
+    fun getDcPerformanceConfigInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "performanceUid", required = true)
+        @PathParam("performanceUid")
+        performanceUid: String,
+    ): Result<PerformanceData>
 }

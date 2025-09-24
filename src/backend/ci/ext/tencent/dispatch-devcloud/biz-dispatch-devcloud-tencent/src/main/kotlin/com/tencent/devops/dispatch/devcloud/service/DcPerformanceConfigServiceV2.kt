@@ -10,8 +10,18 @@ class DcPerformanceConfigServiceV2 constructor(
     private val devCloudPerformanceClient: DevCloudPerformanceClient
 ) {
 
-    fun getDcPerformanceConfigList(userId: String, projectId: String, pipelineId: String): UserPerformanceOptionsV2 {
-        val performanceDataList = devCloudPerformanceClient.getPerformanceList(userId, projectId, pipelineId)
+    fun getDcPerformanceConfigList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        templateId: String
+    ): UserPerformanceOptionsV2 {
+        val performanceDataList = devCloudPerformanceClient.getPerformanceList(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            templateId = templateId
+        )
         if (performanceDataList.isEmpty()) {
             return UserPerformanceOptionsV2(DEFAULT_CONFIG_UID, listOf(PerformanceData(
                 uid = DEFAULT_CONFIG_UID,
@@ -21,6 +31,30 @@ class DcPerformanceConfigServiceV2 constructor(
         }
 
         return UserPerformanceOptionsV2(performanceDataList.first().uid, performanceDataList)
+    }
+
+    fun getDcPerformanceConfigInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        performanceUid: String
+    ): PerformanceData {
+        val performanceData = devCloudPerformanceClient.getPerformanceInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            performanceUid = performanceUid
+        )
+
+        if (performanceData.name.isBlank()) {
+            return PerformanceData(
+                uid = DEFAULT_CONFIG_UID,
+                name = DEFAULT_CONFIG_NAME,
+                desc = DEFAULT_CONFIG_DESC
+            )
+        }
+
+        return performanceData
     }
 
     companion object {
