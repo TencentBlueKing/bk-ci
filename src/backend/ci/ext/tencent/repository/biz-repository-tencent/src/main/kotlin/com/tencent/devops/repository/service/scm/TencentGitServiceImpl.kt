@@ -835,7 +835,9 @@ class TencentGitServiceImpl @Autowired constructor(
         branch: String?,
         codeSrc: String?,
         gitProjectId: Long?,
-        commitNumber: Int
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
     ): Result<String> {
         val tokenRecord = gitTokenDao.getAccessToken(dslContext, userId) ?: throw ErrorCodeException(
             errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(userId)
@@ -848,6 +850,8 @@ class TencentGitServiceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             commitNumber = commitNumber,
             token = token,
+            prefixes = prefixes,
+            keywords = keywords
         )
     }
 }

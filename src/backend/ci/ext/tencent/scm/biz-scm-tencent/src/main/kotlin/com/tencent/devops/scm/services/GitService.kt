@@ -2711,7 +2711,9 @@ class GitService @Autowired constructor(
         branch: String?,
         codeSrc: String?,
         gitProjectId: Long?,
-        commitNumber: Int
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
     ): Result<String> {
         if (commitNumber !in min..max) {
             throw ErrorCodeException(
@@ -2751,17 +2753,13 @@ class GitService @Autowired constructor(
             until = null,
             filePath = null
         )
-        return Result(processCommits(commits))
+        return Result(processCommits(commits = commits, prefixes = prefixes, keywords = keywords))
     }
 
-    fun processCommits(commits: List<Commit>): String {
-        // 过滤合并提交信息
+    fun processCommits(commits: List<Commit>, prefixes: String?, keywords: String?): String {
+        // 根据请求条件过滤
         val filteredCommits = commits.filter { commit ->
-            commit.message?.takeIf { it.isNotBlank() }
-                ?.trimStart()
-                ?.startsWith("Merge ", ignoreCase = true)
-                ?.not()
-                ?: false
+            shouldKeepCommit(message = commit.message, prefixes = prefixes, keywords = keywords)
         }
         // 最早的排最前面
         val sortedCommits = filteredCommits.sortedBy {
@@ -2770,5 +2768,25 @@ class GitService @Autowired constructor(
         return sortedCommits.mapIndexed { index, commit ->
             "${index + 1}. ${commit.message}"
         }.joinToString("")
+    }
+
+    private fun shouldKeepCommit(message: String?, prefixes: String?, keywords: String?): Boolean {
+        val trimmedMessage = message?.takeIf { it.isNotBlank() }?.trimStart() ?: return false
+        val prefixList = prefixes
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+
+        val keywordList = keywords
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+        val matchesPrefix = prefixList.any { trimmedMessage.startsWith(it, ignoreCase = true) }
+
+        val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
+
+        return !matchesPrefix && !containsKeyword
     }
 }

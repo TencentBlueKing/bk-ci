@@ -848,7 +848,9 @@ class ServiceGitResourceImpl @Autowired constructor(
         branch: String?,
         codeSrc: String?,
         gitProjectId: Long?,
-        commitNumber: Int
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
     ): Result<String> {
         return gitService.getRecentGitCommitMessages(
             userId = userId,
@@ -857,7 +859,9 @@ class ServiceGitResourceImpl @Autowired constructor(
             branch = branch,
             codeSrc = codeSrc,
             gitProjectId = gitProjectId,
-            commitNumber = commitNumber
+            commitNumber = commitNumber,
+            prefixes = prefixes,
+            keywords = keywords
         )
     }
 }
