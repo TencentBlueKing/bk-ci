@@ -1275,6 +1275,7 @@
             font-size: 12px;
             color: #62a5fb;
             cursor: pointer;
+            z-index: 6;
         }
     }
 
