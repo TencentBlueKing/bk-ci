@@ -2281,7 +2281,6 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
-
     fun getTopParentPipelineByBuildId(buildId: String, projectId: String): BuildBasicInfo? {
 
         val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
@@ -2300,8 +2299,8 @@ class PipelineRuntimeService @Autowired constructor(
             }
         }
 
-        return if (webhookInfo != null && !webhookInfo.parentBuildId.isNullOrBlank()
-            && !webhookInfo.parentProjectId.isNullOrBlank()
+        return if (webhookInfo != null &&
+            !webhookInfo.parentBuildId.isNullOrBlank() && !webhookInfo.parentProjectId.isNullOrBlank()
         ) {
             getTopParentPipelineByBuildId(webhookInfo.parentBuildId!!, webhookInfo.parentProjectId!!)
         } else {

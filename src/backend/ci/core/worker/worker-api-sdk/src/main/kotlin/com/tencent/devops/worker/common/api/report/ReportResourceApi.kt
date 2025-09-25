@@ -107,7 +107,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         buildVariables: BuildVariables,
         token: String?
     ) {
-        val result = getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
+        val result = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
         val url = "/ms/artifactory/api/build/artifactories/projects" +
                 "/${result.projectId}/pipelines/${result.pipelineId}" +
@@ -151,7 +151,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         reportType: String?,
         token: String?
     ): Result<Boolean> {
-        val result = getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
+        val result = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
         val path =
             "/ms/process/api/build/reports/${result.projectId}/${result.pipelineId}/${result.buildId}/$taskId?indexFile=${
                 encode(
