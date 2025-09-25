@@ -466,7 +466,7 @@ class DelegatingPermissionServiceDecorator(
     companion object {
         private val logger = LoggerFactory.getLogger(DelegatingPermissionServiceDecorator::class.java)
         private const val AUTH_CIRCUIT_BREAKER_NAME = "AUTH_CIRCUIT_BREAKER"
-        private val threadPoolExecutor = ThreadPoolExecutor(
+        val threadPoolExecutor = ThreadPoolExecutor(
             5,
             5,
             0,

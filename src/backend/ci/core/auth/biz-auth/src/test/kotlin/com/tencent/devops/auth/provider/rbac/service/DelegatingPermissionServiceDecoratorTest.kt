@@ -1,12 +1,3 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 Tencent.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- */
-
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.pojo.enum.RoutingMode
@@ -97,10 +88,6 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
         // Mock the companion object's threadPoolExecutor to use our testThreadPool
         mockkObject(DelegatingPermissionServiceDecorator.Companion)
         every { DelegatingPermissionServiceDecorator.threadPoolExecutor } returns testThreadPool
-
-        // Spy on the logger to capture log messages
-        loggerSpy = spyk(LoggerFactory.getLogger(DelegatingPermissionServiceDecorator::class.java))
-        every { DelegatingPermissionServiceDecorator.logger } returns loggerSpy
 
         decorator = DelegatingPermissionServiceDecorator(
             rbacPermissionService = rbacPermissionService,
