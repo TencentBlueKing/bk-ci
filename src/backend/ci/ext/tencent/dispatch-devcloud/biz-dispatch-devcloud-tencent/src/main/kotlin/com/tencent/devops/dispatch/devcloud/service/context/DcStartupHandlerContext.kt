@@ -51,6 +51,7 @@ class DcStartupHandlerContext(
     var containerChanged: Boolean = true, // 复用的容器池容器配置是否已变更，默认true
     var persistenceAgentId: String = "",
     var jobId: String? = "",
+    var performanceUid: String = "",
     override val executeCount: Int?,
     override val userId: String,
     override val projectId: String,

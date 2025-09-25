@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
@@ -98,7 +99,6 @@ class PipelineBuildQualityService(
     private val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val buildDetailService: PipelineBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService
@@ -138,61 +138,39 @@ class PipelineBuildQualityService(
             )
         }
 
-        val model = buildDetailService.getBuildModel(projectId, buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 params = arrayOf(buildId)
             )
-
-        var find = false
-        var taskType = ""
-        model.stages.forEachIndexed nextStage@{ index, s ->
-            if (index == 0) {
-                return@nextStage
-            }
-            s.containers.forEach nextContainer@{ c ->
-                c.elements.forEach nextElement@{ element ->
-                    if (element.id != elementId) return@nextElement
-                    logger.info("${element.id}, ${element.name}")
-                    when (element) {
-                        is QualityGateInElement -> {
-                            find = true
-                            taskType = element.interceptTask!!
-                        }
-                        is QualityGateOutElement -> {
-                            find = true
-                            taskType = element.interceptTask!!
-                        }
-                    }
-                    return@nextStage
-                }
-                c.fetchGroupContainers()?.forEach {
-                    it.elements.forEach nextElement@{ element ->
-                        if (element.id != elementId || element !is MatrixStatusElement) return@nextElement
-                        logger.info("${element.id}, ${element.name}")
-                        if (element.originClassType == QualityGateInElement.classType ||
-                            element.originClassType == QualityGateOutElement.classType
-                        ) {
-                            find = true
-                            taskType = element.interceptTask!!
-                        }
-                        return@nextStage
-                    }
-                }
-            }
-        }
-
-        if (!find) {
+        val buildRecordTask = taskBuildRecordService.getTaskBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = elementId,
+            executeCount = buildInfo.executeCount ?: 1
+        )
+        val atomCode = buildRecordTask?.atomCode
+        if (atomCode.isNullOrBlank() || atomCode !in listOf(
+                QualityGateInElement.classType,
+                QualityGateOutElement.classType
+            )
+        ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
                 params = arrayOf(elementId)
             )
         }
+        val interceptTaskKey = QualityGateInElement::interceptTask.name
+        val interceptTask = buildRecordTask.taskVar[interceptTaskKey]?.toString() ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(interceptTaskKey)
+        )
 
         // 校验审核权限
-        val auditUserSet = getAuditUserList(projectId, pipelineId, buildId, taskType)
+        val auditUserSet = getAuditUserList(projectId, pipelineId, buildId, interceptTask)
         if (!auditUserSet.contains(userId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -483,7 +461,7 @@ class PipelineBuildQualityService(
                     pipelineId = task.pipelineId,
                     userId = task.starter,
                     buildId = task.buildId,
-                    refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
+                    refreshTypes = RefreshType.RECORD.binary
                 )
             )
             return AtomResponse(BuildStatus.RUNNING)

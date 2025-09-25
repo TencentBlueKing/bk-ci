@@ -33,13 +33,17 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.pojo.MonitorConfig
+import com.tencent.devops.remotedev.pojo.MonitorType
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.utils.TokenEncryptUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,12 +56,81 @@ class RemoteDevSettingService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val whiteListService: WhiteListService,
     private val taiClient: TaiClient,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val configDao: ConfigDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevSettingService::class.java)
         private const val BKREPO_HOST_KEY = "remotedev:bkrepoHost"
+        private const val MONITOR_URL_KEY = "monitor:url"
+        private const val MONITOR_TOKEN_KEY = "monitor:token"
+    }
+
+    /**
+     * 获取监控配置信息
+     *
+     * @param type 监控类型，默认为DEFAULT
+     * @return 监控配置对象，包含URL和加密Token
+     */
+    fun getMonitorConfig(type: String = "DEFAULT"): MonitorConfig? {
+        logger.debug("Getting monitor configuration for type: $type")
+
+        try {
+            val monitorType = MonitorType.parseType(type)
+            val typePrefix = monitorType.name.lowercase()
+
+            // 根据类型构建配置键
+            val urlKey = if (monitorType == MonitorType.DEFAULT) {
+                MONITOR_URL_KEY
+            } else {
+                "monitor:${typePrefix}:url"
+            }
+
+            val tokenKey = if (monitorType == MonitorType.DEFAULT) {
+                MONITOR_TOKEN_KEY
+            } else {
+                "monitor:${typePrefix}:token"
+            }
+
+            // 从缓存或数据库获取监控URL
+            val monitorUrl = configCacheService.get(urlKey)
+                ?: configDao.fetchConfig(dslContext, urlKey)
+
+            // 从缓存或数据库获取原始Token
+            val originalToken = configCacheService.get(tokenKey)
+                ?: configDao.fetchConfig(dslContext, tokenKey)
+
+            // 对Token进行加密
+            val encryptedToken = originalToken?.let { TokenEncryptUtil.encryptToken(it) }
+
+            return MonitorConfig(
+                monitorUrl = monitorUrl,
+                monitorToken = encryptedToken,
+                type = monitorType.name
+            )
+        } catch (e: Exception) {
+            logger.error("Failed to get monitor configuration for type: $type", e)
+            return null
+        }
+    }
+
+    /**
+     * 获取所有类型的监控配置列表
+     *
+     * @return 监控配置列表
+     */
+    fun getAllMonitorConfigs(): List<MonitorConfig> {
+        logger.debug("Getting all monitor configurations")
+
+        return try {
+            MonitorType.values().mapNotNull { monitorType ->
+                getMonitorConfig(monitorType.name)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get all monitor configurations", e)
+            emptyList()
+        }
     }
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
@@ -75,7 +148,14 @@ class RemoteDevSettingService @Autowired constructor(
                 setting.projectId = it?.data?.englishName ?: ""
             }
         }
-        return setting
+
+        // 获取所有监控配置信息
+        val monitorConfigs = getAllMonitorConfigs()
+
+        // 在现有设置基础上添加监控配置信息
+        return setting.copy(
+            monitorConfigs = monitorConfigs
+        )
     }
 
     fun getFileGateway(): Map<String, String> {
