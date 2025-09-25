@@ -343,4 +343,23 @@ class PublicVarService @Autowired constructor(
             }
         }
     }
+
+    /**
+     * 更新变量引用计数
+     * @param countChange 计数变化量（正数表示增加，负数表示减少）
+     */
+    fun updateVarReferCounts(
+        projectId: String,
+        groupName: String,
+        version: Int,
+        countChange: Int
+    ) {
+        publicVarDao.updateReferCountByGroup(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            version = version,
+            countChange = countChange
+        )
+    }
 }
