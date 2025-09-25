@@ -115,9 +115,10 @@
             },
             // 流水线查看页面PUBLIC_DEVCLOUD类型下的机型列表
             async getViewPageDeviceList () {
+                const uid = this.value && this.value !== '' ? this.value : 'Standard-S'
                 const res = await this.getHistoryDevcloudSettings({
                     projectId: this.projectId,
-                    uid: this.value
+                    uid
                 })
                 this.changeShowPerformance(true)
                 this.selectValue = this.value || res.data.uid
