@@ -983,11 +983,16 @@ interface ServiceBuildResource {
 
     @Operation(summary = "根据构建ID获取顶级父流水线的构建信息")
     @GET
-    @Path("/{buildId}/topParent/get")
+    @Path("/{projectId}/{buildId}/topParent/get")
     fun getTopParentPipelineByBuildId(
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(required = true)
+        projectId: String
     ): Result<BuildBasicInfo?>
 
     @Operation(summary = "获取最新构建")

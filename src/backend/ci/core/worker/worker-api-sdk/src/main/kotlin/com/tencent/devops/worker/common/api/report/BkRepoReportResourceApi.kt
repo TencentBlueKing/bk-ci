@@ -155,7 +155,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         shouldArchiveToParentPipeline: Boolean = false
     ) {
         if (shouldArchiveToParentPipeline) {
-            val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
+            val result = getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
             bkrepoResourceApi.uploadFileByToken(
                 file = file,
                 projectId = result.projectId,
@@ -190,7 +190,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     ) {
         //  新增：父流水线逻辑
         if (shouldArchiveToParentPipeline) {
-            val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
+            val result = getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
             val path = relativePath.removePrefix("/")
             val parentUrl =
                 "/bkrepo/api/build/generic/${result.projectId}/" +
@@ -282,7 +282,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         reportType: String?,
         token: String?
     ): Result<Boolean> {
-        val result = getParentPipelineBuildInfo(buildVariables.buildId).data!!
+        val result = getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
         val path =
             "/ms/process/api/build/reports/${result.projectId}/${result.pipelineId}/${result.buildId}/$taskId?indexFile=${
                 encode(
@@ -325,8 +325,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
-    override fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
-        val path = "/ms/process/api/service/builds/$buildId/topParent/get"
+    override fun getParentPipelineBuildInfo(buildId: String, projectId: String): Result<BuildBasicInfo> {
+        val path = "/ms/process/api/service/builds/$projectId/$buildId/topParent/get"
         val request = buildGet(path)
         val responseContent = request(
             request,

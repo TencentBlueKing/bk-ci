@@ -147,7 +147,7 @@ interface BuildFileResource {
 
     @Operation(summary = "归档文件到父流水线")
     @POST
-    @Path("projectId/{projectId}/pipelineId/{pipelineId}/buildId/{buildId}/file/archiveToParentPipeline")
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/file/archiveToParentPipeline")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFileToParentPipeline(
         @Parameter(description = "projectId", required = true)

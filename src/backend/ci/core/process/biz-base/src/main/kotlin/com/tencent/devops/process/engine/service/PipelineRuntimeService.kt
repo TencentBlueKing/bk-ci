@@ -124,6 +124,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -2280,26 +2281,38 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
-    fun getTopParentPipelineByBuildId(buildId: String): BuildBasicInfo? {
+
+    fun getTopParentPipelineByBuildId(buildId: String, projectId: String): BuildBasicInfo? {
 
         val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
 
-        val currentBuildInfo = pipelineBuildDao.getPipelineBuildInfo(dslContext, buildId)
-            ?: return null
+        val currentBuildInfo =
+            pipelineBuildDao.getPipelineBuildInfo(dslContext = dslContext, buildId = buildId, projectId = projectId)
+                ?: return null
 
-        val parentBuildId = currentBuildInfo[pipelineBuildHistory.PARENT_BUILD_ID]
+        val webhookInfoJson = currentBuildInfo[pipelineBuildHistory.WEBHOOK_INFO]
+        val webhookInfo = webhookInfoJson.takeIf { it.isNotBlank() }?.let { json ->
+            try {
+                JsonUtil.to(json, WebhookInfo::class.java)
+            } catch (ignore: Throwable) {
+                logger.warn("Fail to parse webhookInfoJson: $json", ignore)
+                null
+            }
+        }
 
-        if (parentBuildId.isNullOrBlank()) {
-            return BuildBasicInfo(
+        return if (webhookInfo != null && !webhookInfo.parentBuildId.isNullOrBlank()
+            && !webhookInfo.parentProjectId.isNullOrBlank()
+        ) {
+            getTopParentPipelineByBuildId(webhookInfo.parentBuildId!!, webhookInfo.parentProjectId!!)
+        } else {
+            BuildBasicInfo(
                 buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],
                 projectId = currentBuildInfo[pipelineBuildHistory.PROJECT_ID],
                 pipelineId = currentBuildInfo[pipelineBuildHistory.PIPELINE_ID],
                 pipelineVersion = currentBuildInfo[pipelineBuildHistory.VERSION],
-                status = null // 此接口暂时不需要该信息，默认给null
+                status = null
             )
         }
-
-        return getTopParentPipelineByBuildId(parentBuildId)
     }
 
     fun transferWebhookType(webhookType: String?) = when (webhookType) {

@@ -204,17 +204,18 @@ class ReportArchiveTask : ITask() {
             compressed = compressed
         )
         if (shouldArchiveToParentPipeline) {
-            // 异步处理
-            thread {
+            executor.execute {
                 try {
-                    api.createParentReportRecord(
-                        buildVariables = buildVariables,
-                        taskId = elementId,
-                        indexFile = indexFileParam,
-                        name = reportNameParam,
-                        reportType = reportType,
-                        token = token
-                    )
+                    HttpRetryUtils.retry(retryTime = 3) {
+                        api.createParentReportRecord(
+                            buildVariables = buildVariables,
+                            taskId = elementId,
+                            indexFile = indexFileParam,
+                            name = reportNameParam,
+                            reportType = reportType,
+                            token = token
+                        )
+                    }
                 } catch (ignore: Throwable) {
                     logger.warn("create parent report record fail", ignore)
                 }
@@ -248,7 +249,7 @@ class ReportArchiveTask : ITask() {
         allFileList: List<File>,
         buildTask: BuildTask
     ) {
-        val result = api.getParentPipelineBuildInfo(buildVariables.buildId).data!!
+        val result = api.getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
         try {
             val token = api.getRepoToken(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
@@ -266,16 +267,11 @@ class ReportArchiveTask : ITask() {
                 return
             }
 
-            val executor = Executors.newFixedThreadPool(5)
-            try {
-                allFileList.forEach { file ->
-                    executor.execute { uploadSingleFile(file, fileDirPath, elementId, buildVariables, token) }
-                }
-                if (!executor.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
-                    LoggerService.addNormalLine("parallel upload to parent report timeout")
-                }
-            } finally {
-                executor.shutdown()
+            allFileList.forEach { file ->
+                executor.execute { uploadSingleFile(file, fileDirPath, elementId, buildVariables, token) }
+            }
+            if (!executor.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
+                LoggerService.addNormalLine("parallel upload to parent report timeout")
             }
         } catch (ignore: Throwable) {
             LoggerService.addNormalLine(
@@ -381,6 +377,7 @@ class ReportArchiveTask : ITask() {
 
     companion object {
         const val COMPRESS_REPORT_FILE_NAME = "bkrepo_compressed_report.zip"
+        private val executor = Executors.newFixedThreadPool(5)
     }
 
     private fun shouldArchiveToParentPipeline(buildVariables: BuildVariables, buildTask: BuildTask): Boolean {
