@@ -27,9 +27,9 @@
 
 package com.tencent.devops.repository.dao
 
-import com.tencent.devops.model.repository.tables.TRepositoryScmConfigDeptRel
-import com.tencent.devops.model.repository.tables.records.TRepositoryScmConfigDeptRelRecord
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.model.repository.tables.TRepositoryScmConfigVisibility
+import com.tencent.devops.model.repository.tables.records.TRepositoryScmConfigVisibilityRecord
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -37,14 +37,14 @@ import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
-class RepositoryConfigDeptDao {
+class RepositoryConfigVisibilityDao {
     fun create(
         dslContext: DSLContext,
         userId: String,
         scmCode: String,
-        deptList: List<RepositoryConfigDept>
+        deptList: List<RepositoryConfigVisibility>
     ) {
-        with(TRepositoryScmConfigDeptRel.T_REPOSITORY_SCM_CONFIG_DEPT_REL) {
+        with(TRepositoryScmConfigVisibility.T_REPOSITORY_SCM_CONFIG_VISIBILITY) {
             val now = LocalDateTime.now()
             deptList.forEach {
                 dslContext.insertInto(
@@ -75,8 +75,8 @@ class RepositoryConfigDeptDao {
         scmCode: String,
         limit: Int,
         offset: Int
-    ): Result<TRepositoryScmConfigDeptRelRecord> {
-        return with(TRepositoryScmConfigDeptRel.T_REPOSITORY_SCM_CONFIG_DEPT_REL) {
+    ): Result<TRepositoryScmConfigVisibilityRecord> {
+        return with(TRepositoryScmConfigVisibility.T_REPOSITORY_SCM_CONFIG_VISIBILITY) {
             dslContext.selectFrom(this)
                     .where(SCM_CODE.eq(scmCode))
                     .orderBy(CREATE_TIME.desc(), DEPT_ID)
@@ -90,7 +90,7 @@ class RepositoryConfigDeptDao {
         dslContext: DSLContext,
         scmCode: String
     ): Int {
-        return with(TRepositoryScmConfigDeptRel.T_REPOSITORY_SCM_CONFIG_DEPT_REL) {
+        return with(TRepositoryScmConfigVisibility.T_REPOSITORY_SCM_CONFIG_VISIBILITY) {
             dslContext.selectCount()
                     .from(this)
                     .where(SCM_CODE.eq(scmCode))
@@ -103,7 +103,7 @@ class RepositoryConfigDeptDao {
         scmCode: String,
         deptList: Set<Int>
     ) {
-        with(TRepositoryScmConfigDeptRel.T_REPOSITORY_SCM_CONFIG_DEPT_REL) {
+        with(TRepositoryScmConfigVisibility.T_REPOSITORY_SCM_CONFIG_VISIBILITY) {
             dslContext.deleteFrom(this)
                     .where(SCM_CODE.eq(scmCode))
                     .and(DEPT_ID.`in`(deptList))

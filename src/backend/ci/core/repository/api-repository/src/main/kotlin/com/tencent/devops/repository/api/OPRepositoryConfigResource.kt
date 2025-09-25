@@ -28,7 +28,7 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
@@ -56,7 +56,7 @@ interface OPRepositoryConfigResource {
         @PathParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要添加的代码源管理的组织架构", required = true)
-        deptList: List<RepositoryConfigDept>? = null
+        deptList: List<RepositoryConfigVisibility>? = null
     ): Result<Boolean>
 
     @Operation(summary = "批量删除目标代码源的组织架构")

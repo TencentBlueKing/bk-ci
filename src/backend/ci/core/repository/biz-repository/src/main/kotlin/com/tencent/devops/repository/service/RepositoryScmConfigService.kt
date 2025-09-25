@@ -44,7 +44,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.dao.RepositoryScmProviderDao
 import com.tencent.devops.repository.pojo.RepoCredentialTypeVo
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfig
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
@@ -82,7 +82,7 @@ class RepositoryScmConfigService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val uploadFileService: RepositoryUploadFileService,
     private val authPlatformApi: AuthPlatformApi,
-    private val repositoryConfigDeptService: RepositoryConfigDeptService
+    private val repositoryConfigVisibilityService: RepositoryConfigVisibilityService
 ) {
     @Value("\${aes.scm.props:#{null}}")
     private val aesKey: String = ""
@@ -481,14 +481,14 @@ class RepositoryScmConfigService @Autowired constructor(
         userId: String,
         limit: Int,
         offset: Int
-    ): SQLPage<RepositoryConfigDept> {
+    ): SQLPage<RepositoryConfigVisibility> {
         validateUserPlatformPermission(userId)
-        val record = repositoryConfigDeptService.listDept(
+        val record = repositoryConfigVisibilityService.listDept(
             scmCode = scmCode,
             limit = limit,
             offset = offset
         )
-        val count = repositoryConfigDeptService.countDept(
+        val count = repositoryConfigVisibilityService.countDept(
             scmCode = scmCode
         ).toLong()
         return SQLPage(count = count, records = record)
@@ -498,13 +498,13 @@ class RepositoryScmConfigService @Autowired constructor(
         scmCode: String,
         userId: String,
         checkPermission: Boolean = true,
-        deptList: List<RepositoryConfigDept>
+        deptList: List<RepositoryConfigVisibility>
     ) {
         if (checkPermission) {
             validateUserPlatformPermission(userId)
         }
         if (deptList.isNotEmpty()) {
-            repositoryConfigDeptService.createDept(
+            repositoryConfigVisibilityService.createDept(
                 scmCode = scmCode,
                 userId = userId,
                 deptList = deptList
@@ -522,7 +522,7 @@ class RepositoryScmConfigService @Autowired constructor(
             validateUserPlatformPermission(userId)
         }
         if (deptList.isNotEmpty()) {
-            repositoryConfigDeptService.deleteDept(
+            repositoryConfigVisibilityService.deleteDept(
                 scmCode = scmCode,
                 deptList = deptList.toSet()
             )
@@ -709,7 +709,7 @@ class RepositoryScmConfigService @Autowired constructor(
     private fun validateUserPermission(
         userId: String,
         scmCodes: List<String>
-    ) = repositoryConfigDeptService.listScmCode(
+    ) = repositoryConfigVisibilityService.listScmCode(
         userId = userId,
         scmCodes = scmCodes
     )
