@@ -61,7 +61,6 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
 import org.jooq.Record6
-import org.jooq.Record7
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL

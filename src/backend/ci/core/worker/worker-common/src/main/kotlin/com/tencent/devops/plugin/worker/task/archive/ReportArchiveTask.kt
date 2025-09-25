@@ -63,7 +63,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
-import kotlin.concurrent.thread
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -249,7 +248,7 @@ class ReportArchiveTask : ITask() {
         allFileList: List<File>,
         buildTask: BuildTask
     ) {
-        val result = api.getParentPipelineBuildInfo(buildVariables.buildId,buildVariables.projectId).data!!
+        val result = api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
         try {
             val token = api.getRepoToken(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
