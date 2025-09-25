@@ -11,10 +11,12 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * 权限服务装饰器 (Decorator Pattern)
@@ -442,6 +444,12 @@ class DelegatingPermissionServiceDecorator(
                 context,
                 e.message
             )
+            fallbackCall()
+        } catch (e: TimeoutException) {
+            logger.error("[AUTH_TIMEOUT] External call timeout for context '$context'", e)
+            fallbackCall()
+        } catch (e: IOException) {
+            logger.error("[AUTH_NETWORK_ERROR] Network issue for context '$context'", e)
             fallbackCall()
         } catch (e: Exception) {
             logger.error(
