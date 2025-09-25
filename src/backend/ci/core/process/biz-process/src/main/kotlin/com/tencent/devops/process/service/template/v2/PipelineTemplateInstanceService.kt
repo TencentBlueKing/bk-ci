@@ -12,6 +12,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
@@ -414,7 +415,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             val finalStatus = when {
                 record.status == null -> TemplatePipelineStatus.UPDATED
                 record.status == TemplatePipelineStatus.UPDATED &&
-                        record.version != record.releasedVersion -> TemplatePipelineStatus.PENDING_UPDATE
+                    record.version != record.releasedVersion -> TemplatePipelineStatus.PENDING_UPDATE
 
                 else -> record.status
             }
@@ -767,24 +768,36 @@ class PipelineTemplateInstanceService @Autowired constructor(
             templateId = templateId,
             version = templateVersion
         )
-
         // 获取指定流水线版本的完整model和setting
-        val pipelineVersionWithModel = pipelineVersionFacadeService.getVersion(
+        val pipelineModelAndSetting = pipelineVersionFacadeService.getVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = pipelineVersion
-        )
+        ).modelAndSetting
 
-        // 使用完整的modelAndSetting转换为YAML，而不是直接使用yamlPreview
+        // 获取模板参数并设置到触发容器中
+        val templateParams = pipelineTemplateRelated?.version?.let { templateVer ->
+            pipelineTemplateResourceService.get(
+                projectId = projectId,
+                templateId = templateId,
+                version = templateVer
+            ).params
+        } ?: emptyList()
+
+        with(pipelineModelAndSetting.model) {
+            (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params = templateParams
+            template = null
+            overrideTemplateField = null
+        }
+
+        // 使用修改后的modelAndSetting转换为YAML
         val pipelineYaml = transferService.transfer(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             actionType = TransferActionType.FULL_MODEL2YAML,
-            data = TransferBody(
-                modelAndSetting = pipelineVersionWithModel.modelAndSetting
-            )
+            data = TransferBody(modelAndSetting = pipelineModelAndSetting)
         ).yamlWithVersion?.yamlStr ?: ""
 
         // 获取模板YAML
