@@ -1,19 +1,19 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.dao.RepositoryConfigDeptDao
+import com.tencent.devops.repository.dao.RepositoryConfigVisibilityDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class SimpleRepositoryConfigDeptService @Autowired constructor(
+class SimpleRepositoryConfigVisibilityService @Autowired constructor(
     override val dslContext: DSLContext,
-    override val repositoryConfigDeptDao: RepositoryConfigDeptDao,
+    override val repositoryConfigVisibilityDao: RepositoryConfigVisibilityDao,
     override val client: Client
-) : RepositoryConfigDeptService(
+) : RepositoryConfigVisibilityService(
     dslContext = dslContext,
-    repositoryConfigDeptDao = repositoryConfigDeptDao,
+    repositoryConfigVisibilityDao = repositoryConfigVisibilityDao,
     client = client
 ) {
     /**

@@ -30,7 +30,7 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.OPRepositoryConfigResource
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import com.tencent.devops.repository.service.RepositoryScmConfigService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,7 +42,7 @@ class OPRepositoryConfigResourceImpl @Autowired constructor(
     override fun addDept(
         userId: String,
         scmCode: String,
-        deptList: List<RepositoryConfigDept>?
+        deptList: List<RepositoryConfigVisibility>?
     ): Result<Boolean> {
         deptList?.let {
             repositoryScmConfigService.addDept(

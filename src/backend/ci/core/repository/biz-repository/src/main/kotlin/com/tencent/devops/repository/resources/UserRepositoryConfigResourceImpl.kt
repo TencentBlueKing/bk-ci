@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryConfigResource
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
 import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
@@ -163,7 +163,7 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
         scmCode: String,
         page: Int?,
         pageSize: Int?
-    ): Result<SQLPage<RepositoryConfigDept>> {
+    ): Result<SQLPage<RepositoryConfigVisibility>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
@@ -180,7 +180,7 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     override fun addDept(
         userId: String,
         scmCode: String,
-        deptList: List<RepositoryConfigDept>?
+        deptList: List<RepositoryConfigVisibility>?
     ): Result<Boolean> {
         deptList?.let {
             repositoryScmConfigService.addDept(

@@ -28,20 +28,32 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
-import com.tencent.devops.repository.dao.RepositoryConfigDeptDao
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.repository.dao.RepositoryConfigVisibilityDao
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * 代码库源权限抽象类
  */
-abstract class RepositoryConfigDeptService @Autowired constructor(
+abstract class RepositoryConfigVisibilityService @Autowired constructor(
     open val dslContext: DSLContext,
-    open val repositoryConfigDeptDao: RepositoryConfigDeptDao,
+    open val repositoryConfigVisibilityDao: RepositoryConfigVisibilityDao,
     open val client: Client
 ) {
+    // 代码源可见性信息
+    private val repoVisibilityCache = CacheHelper.createCache<String, List<Int>>(
+        duration = 5,
+        maxSize = 20
+    )
+
+    // 用户组织架构缓存
+    private val userOrgCache = CacheHelper.createCache<String, List<Int>>(
+        duration = 5,
+        maxSize = 5000
+    )
 
     /**
      * 获取用户组织信息
@@ -52,16 +64,20 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
      * 查询用户项目下支持的代码源
      */
     fun listScmCode(userId: String, scmCodes: List<String>): List<String> {
-        val userDeptList = getUserDeptList(userId)
+        val userDeptList = userOrgCache.get(userId) {
+            getUserDeptList(userId)
+        }
         if (userDeptList.isEmpty()) return scmCodes
         val result = mutableListOf<String>()
         scmCodes.forEach scmEach@{ scmCode ->
-            val deptList = repositoryConfigDeptDao.list(
-                dslContext = dslContext,
-                scmCode = scmCode,
-                limit = MAX_DEPT_COUNT,
-                offset = 0
-            ).map { it.deptId }
+            val deptList = repoVisibilityCache.get(scmCode) {
+                repositoryConfigVisibilityDao.list(
+                    dslContext = dslContext,
+                    scmCode = scmCode,
+                    limit = MAX_DEPT_COUNT,
+                    offset = 0
+                ).map { it.deptId }
+            }
             deptList.forEach deptEach@{ deptId ->
                 if (validateDeptId(deptId, userDeptList)) {
                     result.add(scmCode)
@@ -74,10 +90,10 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
 
     fun createDept(
         scmCode: String,
-        deptList: List<RepositoryConfigDept>,
+        deptList: List<RepositoryConfigVisibility>,
         userId: String
     ) {
-        repositoryConfigDeptDao.create(
+        repositoryConfigVisibilityDao.create(
             dslContext = dslContext,
             scmCode = scmCode,
             deptList = deptList,
@@ -88,7 +104,7 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
     fun deleteDept(
         scmCode: String,
         deptList: Set<Int>
-    ) = repositoryConfigDeptDao.delete(
+    ) = repositoryConfigVisibilityDao.delete(
         dslContext = dslContext,
         scmCode = scmCode,
         deptList = deptList
@@ -98,13 +114,13 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
         scmCode: String,
         limit: Int,
         offset: Int
-    ): List<RepositoryConfigDept> = repositoryConfigDeptDao.list(
+    ): List<RepositoryConfigVisibility> = repositoryConfigVisibilityDao.list(
         dslContext = dslContext,
         scmCode = scmCode,
         limit = limit,
         offset = offset
     ).map {
-        RepositoryConfigDept(
+        RepositoryConfigVisibility(
             deptId = it.deptId,
             deptName = it.deptName
         )
@@ -112,7 +128,7 @@ abstract class RepositoryConfigDeptService @Autowired constructor(
 
     fun countDept(
         scmCode: String
-    ) = repositoryConfigDeptDao.count(
+    ) = repositoryConfigVisibilityDao.count(
         dslContext = dslContext,
         scmCode = scmCode
     )

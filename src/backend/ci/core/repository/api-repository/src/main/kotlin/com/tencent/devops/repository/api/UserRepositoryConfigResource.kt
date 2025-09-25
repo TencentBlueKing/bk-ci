@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.RepositoryConfigDept
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
 import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
@@ -226,7 +226,7 @@ interface UserRepositoryConfigResource {
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<SQLPage<RepositoryConfigDept>>
+    ): Result<SQLPage<RepositoryConfigVisibility>>
 
     @Operation(summary = "批量添加目标代码源的组织架构")
     @POST
@@ -239,7 +239,7 @@ interface UserRepositoryConfigResource {
         @PathParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要添加的代码源管理的组织架构", required = true)
-        deptList: List<RepositoryConfigDept>? = null
+        deptList: List<RepositoryConfigVisibility>? = null
     ): Result<Boolean>
 
     @Operation(summary = "批量删除目标代码源的组织架构")
