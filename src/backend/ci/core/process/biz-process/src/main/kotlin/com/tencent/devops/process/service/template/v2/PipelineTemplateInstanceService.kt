@@ -776,18 +776,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
             version = pipelineVersion
         ).modelAndSetting
 
-        // 获取模板参数并设置到触发容器中
-        val templateParams = pipelineTemplateRelated?.version?.let { templateVer ->
-            pipelineTemplateResourceService.get(
-                projectId = projectId,
-                templateId = templateId,
-                version = templateVer
-            ).params
-        } ?: emptyList()
-
+        // 流水线实例与模板yaml对比时，不需要extends部分
         with(pipelineModelAndSetting.model) {
-            (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
-                )?.params = templateParams.toMutableList()
             template = null
             overrideTemplateField = null
         }
