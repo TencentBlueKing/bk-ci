@@ -29,15 +29,15 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ExternalAuthResource
+import com.tencent.devops.dispatch.api.ExternalAuthBuildResource
 import com.tencent.devops.dispatch.pojo.AuthBuildResponse
-import com.tencent.devops.dispatch.service.ExternalAuthService
+import com.tencent.devops.dispatch.service.AuthBuildService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ExternalAuthResourceImpl @Autowired constructor(
-    private val externalAuthService: ExternalAuthService
-) : ExternalAuthResource {
+class ExternalAuthBuildBuildResourceImpl @Autowired constructor(
+    private val authBuildService: AuthBuildService
+) : ExternalAuthBuildResource {
 
     override fun authAgent(
         secretKey: String,
@@ -47,7 +47,7 @@ class ExternalAuthResourceImpl @Autowired constructor(
         token: String
     ): Result<AuthBuildResponse> {
         return Result(
-            externalAuthService.authAgent(
+            authBuildService.authAgent(
                 secretKey = secretKey,
                 agentId = agentId,
                 buildId = buildId,
@@ -63,7 +63,7 @@ class ExternalAuthResourceImpl @Autowired constructor(
         token: String
     ): Result<AuthBuildResponse> {
         return Result(
-            externalAuthService.authDocker(
+            authBuildService.authDocker(
                 secretKey = secretKey,
                 agentId = agentId,
                 token = token
@@ -77,7 +77,7 @@ class ExternalAuthResourceImpl @Autowired constructor(
         token: String
     ): Result<AuthBuildResponse> {
         return Result(
-            externalAuthService.authPlugin(
+            authBuildService.authPlugin(
                 secretKey = secretKey,
                 agentId = agentId,
                 token = token
@@ -91,7 +91,7 @@ class ExternalAuthResourceImpl @Autowired constructor(
         token: String
     ): Result<AuthBuildResponse> {
         return Result(
-            externalAuthService.authMacos(
+            authBuildService.authMacos(
                 clientIp = clientIp,
                 checkVersion = checkVersion,
                 token = token
@@ -104,7 +104,7 @@ class ExternalAuthResourceImpl @Autowired constructor(
         token: String
     ): Result<AuthBuildResponse> {
         return Result(
-            externalAuthService.authOther(
+            authBuildService.authOther(
                 clientIp = clientIp,
                 token = token
             )

@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class ExternalAuthService @Autowired constructor(
+class AuthBuildService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
@@ -50,7 +50,7 @@ class ExternalAuthService @Autowired constructor(
     private lateinit var externalAuthToken: String
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ExternalAuthService::class.java)
+        private val logger = LoggerFactory.getLogger(AuthBuildService::class.java)
     }
 
     /**

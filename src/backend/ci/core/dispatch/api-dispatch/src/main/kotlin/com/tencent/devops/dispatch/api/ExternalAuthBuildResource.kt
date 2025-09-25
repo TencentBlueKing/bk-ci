@@ -34,7 +34,6 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -44,23 +43,23 @@ import jakarta.ws.rs.core.MediaType
 @Path("/external/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalAuthResource {
+interface ExternalAuthBuildResource {
 
     @Operation(summary = "第三方构建机鉴权")
     @GET
     @Path("/agent")
     fun authAgent(
         @Parameter(description = "Agent Secret Key", required = true)
-        @HeaderParam("X-DEVOPS-AGENT-SECRET-KEY")
+        @QueryParam("secretKey")
         secretKey: String,
         @Parameter(description = "Agent ID", required = true)
-        @HeaderParam("X-DEVOPS-AGENT-ID")
+        @QueryParam("agentId")
         agentId: String,
         @Parameter(description = "Build ID", required = true)
-        @HeaderParam("X-DEVOPS-BUILD-ID")
+        @QueryParam("buildId")
         buildId: String,
         @Parameter(description = "VM Sequence ID", required = false)
-        @HeaderParam("X-DEVOPS-VM-SID")
+        @QueryParam("vmSeqId")
         vmSeqId: String?,
         @Parameter(description = "鉴权Token", required = true)
         @QueryParam("token")
@@ -72,10 +71,10 @@ interface ExternalAuthResource {
     @Path("/docker")
     fun authDocker(
         @Parameter(description = "Agent Secret Key", required = true)
-        @HeaderParam("X-DEVOPS-AGENT-SECRET-KEY")
+        @QueryParam("secretKey")
         secretKey: String,
         @Parameter(description = "Agent ID", required = true)
-        @HeaderParam("X-DEVOPS-AGENT-ID")
+        @QueryParam("agentId")
         agentId: String,
         @Parameter(description = "鉴权Token", required = true)
         @QueryParam("token")
@@ -87,10 +86,10 @@ interface ExternalAuthResource {
     @Path("/plugin")
     fun authPlugin(
         @Parameter(description = "Agent Secret Key", required = true)
-        @HeaderParam("X-DEVOPS-AGENT-SECRET-KEY")
+        @QueryParam("secretKey")
         secretKey: String,
         @Parameter(description = "Agent ID", required = true)
-        @HeaderParam("X-DEVOPS-AGENT-ID")
+        @QueryParam("agentId")
         agentId: String,
         @Parameter(description = "鉴权Token", required = true)
         @QueryParam("token")
@@ -102,7 +101,7 @@ interface ExternalAuthResource {
     @Path("/macos")
     fun authMacos(
         @Parameter(description = "客户端IP", required = false)
-        @HeaderParam("X-Real-IP")
+        @QueryParam("clientIp")
         clientIp: String?,
         @Parameter(description = "是否检查版本", required = false)
         @QueryParam("checkVersion")
@@ -117,7 +116,7 @@ interface ExternalAuthResource {
     @Path("/other")
     fun authOther(
         @Parameter(description = "客户端IP", required = false)
-        @HeaderParam("X-Real-IP")
+        @QueryParam("clientIp")
         clientIp: String?,
         @Parameter(description = "鉴权Token", required = true)
         @QueryParam("token")
