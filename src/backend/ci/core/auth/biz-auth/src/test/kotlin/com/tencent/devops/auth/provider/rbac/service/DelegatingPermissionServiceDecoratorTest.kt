@@ -14,25 +14,15 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.spyk
-import io.mockk.unmockkObject
 import io.mockk.verify
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.spy
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.RejectedExecutionException
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
@@ -44,8 +34,6 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
 
     private lateinit var decorator: DelegatingPermissionServiceDecorator
     private lateinit var circuitBreakerRegistry: CircuitBreakerRegistry
-    private lateinit var testThreadPool: ThreadPoolExecutor // 用于控制异步比较的线程池
-    private lateinit var loggerSpy: Logger // 用于捕获日志
 
     // Helper to build a decorator with a CircuitBreakerRegistry configured similarly to production.
     // For test reliability we slightly shorten durations and counts so tests run quickly.
@@ -68,27 +56,8 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
         clearAllMocks()
         circuitBreakerRegistry = createTestCircuitBreakerRegistry()
 
-        // Setup test-specific ThreadPoolExecutor for `compareAndLogDifference`
-        testThreadPool = spy(ThreadPoolExecutor(
-            1, // Single thread for predictable async execution
-            1,
-            0,
-            TimeUnit.SECONDS,
-            LinkedBlockingQueue(1), // Small queue to test rejection
-            Executors.defaultThreadFactory()
-        ) { r, executor ->
-            LoggerFactory.getLogger(DelegatingPermissionServiceDecorator::class.java).warn(
-                "Test Auth validation task rejected. Task: {}. Pool status: {}",
-                r.toString(),
-                executor.toString()
-            )
-            throw RejectedExecutionException("Test pool full")
-        })
-
         // Mock the companion object's threadPoolExecutor to use our testThreadPool
         mockkObject(DelegatingPermissionServiceDecorator.Companion)
-        every { DelegatingPermissionServiceDecorator.threadPoolExecutor } returns testThreadPool
-
         decorator = DelegatingPermissionServiceDecorator(
             rbacPermissionService = rbacPermissionService,
             bkInternalPermissionService = bkInternalPermissionService,
@@ -96,14 +65,6 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             circuitBreakerRegistry = circuitBreakerRegistry,
             rbacCommonService = rbacCommonService
         )
-    }
-
-    @AfterEach
-    fun tearDown() {
-        // Shut down the test thread pool
-        testThreadPool.shutdownNow()
-        testThreadPool.awaitTermination(1, TimeUnit.SECONDS)
-        unmockkObject(DelegatingPermissionServiceDecorator.Companion) // Unmock companion object
     }
 
     @Nested
