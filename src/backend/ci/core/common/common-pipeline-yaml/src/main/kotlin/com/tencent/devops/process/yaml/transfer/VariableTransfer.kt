@@ -161,7 +161,7 @@ class VariableTransfer {
             }
             val const = it.constant.nullIfDefault(false)
 
-            if (it.name?.isNotEmpty() == true) {
+            if (it.name?.isNotEmpty() == true && it.name != it.id) {
                 props = props ?: VariableProps()
                 props.label = it.name
             }
