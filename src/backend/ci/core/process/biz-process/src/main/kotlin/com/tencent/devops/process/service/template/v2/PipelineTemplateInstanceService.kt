@@ -786,7 +786,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         } ?: emptyList()
 
         with(pipelineModelAndSetting.model) {
-            (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params = templateParams
+            (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
+                )?.params = templateParams.toMutableList()
             template = null
             overrideTemplateField = null
         }
