@@ -193,7 +193,7 @@
         let valid = true
         let message = ''
         instanceList.value.forEach(instance => {
-            if (instance.buildNo.isRequiredParam) {
+            if (instance?.buildNo?.isRequiredParam) {
                 const buildNoParams = instance.param.filter(i => allVersionKeyList.includes(i.id))
                 valid = buildNoParams.every(i => !(i.defaultValue === null || i.defaultValue === ''))
                 message = valid ? '' : proxy.$t('storeMap.correctPipeline')
