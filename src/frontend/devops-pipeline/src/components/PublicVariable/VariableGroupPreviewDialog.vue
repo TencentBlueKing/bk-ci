@@ -222,12 +222,12 @@
                 ? [
                     {
                         label: proxy.$t('publicVar.execCount'),
-                        prop: 'instanceCount'
+                        prop: 'executeCount'
                     }
                 ] : [
                     {
                         label: proxy.$t('publicVar.instanceNum'),
-                        prop: 'executeCount'
+                        prop: 'instanceCount'
                     }
                 ]
             )
@@ -238,11 +238,13 @@
         if (!curVarData.value.groupName) return
         try {
             const res = await proxy.$store.dispatch('publicVar/getReferenceList', {
-                page:1,
-                pageSize: 2000,
-                groupName: curVarData.groupName,
-                varName: curVarData.varName,
-                referType: type
+                groupName: curVarData.value.groupName,
+                params: {
+                    page:1,
+                    pageSize: 2000,
+                    varName: curVarData.value.varName,
+                    referType: type
+                }
             })
             return res.records
         } catch (e) {

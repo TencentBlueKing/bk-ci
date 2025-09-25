@@ -5,6 +5,7 @@
         width="800"
         :title="$t('publicVar.manageGroup')"
         :quick-close="false"
+        :before-close="beforeHiddenFn"
         @hidden="hideSlider"
     >
         <div
@@ -35,7 +36,7 @@
                         @scroll-end="fetchVarGroupList"
                     >
                         <bk-option
-                            v-for="item in varGroupList"
+                            v-for="item in renderVarGroupList"
                             :key="item.groupName"
                             :id="item.groupName"
                             :name="item.groupName"
@@ -48,6 +49,7 @@
                     <bk-button
                         class="mr10"
                         text
+                        :disabled="!selectedVarGroupData.groupName"
                         @click="handleAppend"
                     >
                         {{ $t('publicVar.append') }}
@@ -96,7 +98,7 @@
                 {{ $t('confirm') }}
             </bk-button>
             <bk-button
-                @click="handleCancelAdd"
+                @click="beforeHiddenFn"
             >
                 {{ $t('cancel') }}
             </bk-button>
@@ -192,6 +194,12 @@
             )
         ]
     })
+    const renderVarGroupList = computed(() => {
+        return varGroupList.value.map(i => ({
+            ...i,
+            disabled: allVarGroup.value.some(group => group.groupName === i.groupName) || groupsMap.value.publicVarGroups.some(group => group.groupName === i.groupName)
+        }))
+    })
     watch(() => showAddComp.value, (val) => {
         if (val) {
             fetchVarGroupList()
@@ -205,7 +213,7 @@
     })
     watch(() => props.isShow, async (val) => {
         if (val) {
-            groupsMap.value.publicVarGroups = publicVarGroups.value
+            groupsMap.value.publicVarGroups = JSON.parse(JSON.stringify(publicVarGroups.value))
             groupsMap.value.variableList = props.globalParams
             await fetchVarGroupList()
             await fetchAllVarGroupByGroupName()
@@ -218,8 +226,43 @@
             showAddComp.value = false
         }
     })
-    function hideSlider () {
-        proxy.$emit('update:isShow', false)
+    function varGroupsEqualByGroupName (refArray, compArray) {
+        const referenceSet = new Set(refArray.map(item => item.groupName))
+        const comparisonSet = new Set(compArray.map(item => item.groupName))
+  
+        for (const groupName of comparisonSet) {
+            if (!referenceSet.has(groupName)) {
+                return true
+            }
+        }
+
+        for (const groupName of referenceSet) {
+            if (!comparisonSet.has(groupName)) {
+                return true
+            }
+        }
+
+        return false
+    }
+    function beforeHiddenFn () {
+        if (varGroupsEqualByGroupName(publicVarGroups.value, groupsMap.value.publicVarGroups)) {
+            proxy.$bkInfo({
+                title: proxy.$t('确认离开当前页？'),
+                subHeader: proxy.$createElement('p', {
+                    style: {
+                        color: '#63656e',
+                        fontSize: '14px',
+                        textAlign: 'center'
+                    }
+                }, proxy.$t('离开将会导致未保存信息丢失')),
+                okText: proxy.$t('离开'),
+                confirmFn: () => {
+                    hideSlider()
+                }
+            })
+        } else {
+            hideSlider()
+        }
     }
     async function chooseGroup (id) {
         selectedVarGroupData.value = varGroupList.value.find(i => i.groupName === id)
@@ -261,10 +304,7 @@
                     pageSize: pagination.value.pageSize,
                 }
             })
-            varGroupList.value = res.records.map(i => ({
-                ...i,
-                disabled: [...publicVarGroups.value, ...groupsMap.value.publicVarGroups]?.findIndex(group => group.groupName === i.groupName) > -1
-            }))
+            varGroupList.value = res.records
             pagination.value.loadEnd = res.page === res.totalPages
             pagination.value.page = res.page + 1
         } catch (e) {
@@ -304,7 +344,7 @@
             }))]
 
             const newVarGroupData = varGroupList.value.find(i => i.groupName === newGroups.value.groupName)
-            allVarGroup.value.unshift({
+            allVarGroup.value.push({
                 ...newVarGroupData,
                 variableList: selectedVariableList.value,
                 isOpen: true,
@@ -320,12 +360,11 @@
     }
     function handleConfirmAdd () {
         proxy.$store.dispatch('atom/setPipelineEditing', true)
-        console.log(groupsMap.value, '123')
         proxy.$store.dispatch('atom/updatePipelinePublicVarGroups', groupsMap.value.publicVarGroups)
         props.saveVariable(groupsMap.value.variableList)
         proxy.$emit('update:isShow', false)
     }
-    function handleCancelAdd () {
+    function hideSlider () {
         proxy.$emit('update:isShow', false)
     }
 </script>

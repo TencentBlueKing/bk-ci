@@ -42,7 +42,7 @@
                         prop="type"
                     >
                         <template slot-scope="{ row }">
-                            {{ row.type === VARIABLE ? $t('publicVar.params') : $t('publicVar.constant') }}
+                            {{ $t(`storeMap.${DEFAULT_PARAM[row.buildFormProperty.type]?.typeDesc}`) ?? row.type }}
                         </template>
                     </bk-table-column>
                     <bk-table-column
@@ -132,6 +132,9 @@
     import {
         VARIABLE
     } from '@/store/modules/publicVar/constants'
+    import {
+        DEFAULT_PARAM
+    } from '@/store/modules/atom/paramsConfig'
     const props = defineProps({
         isShow: Boolean,
         data: Object,

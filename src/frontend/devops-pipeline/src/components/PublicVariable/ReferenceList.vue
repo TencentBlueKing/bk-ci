@@ -29,11 +29,11 @@
                 </bk-table-column>
                 <bk-table-column
                     :label="$t('type')"
-                    prop="referType"
+                    prop="referTypeName"
                 />
                 <bk-table-column
                     :label="$t('publicVar.referenceNum')"
-                    prop="num"
+                    prop="actualRefCount"
                 />
                 <bk-table-column
                     :label="$t('publicVar.lastModifiedBy')"
@@ -74,10 +74,15 @@
         try {
             const res = await proxy.$store.dispatch('publicVar/getReferenceList', {
                 groupName: props.groupData?.groupName,
-                page: pagination.value.current,
-                pageSize: pagination.value.limit
+                params: {
+                    page: pagination.value.current,
+                    pageSize: pagination.value.limit
+                }
             })
-            referenceList.value = res.records
+            referenceList.value = res.records.map(i => ({
+                ...i,
+                referTypeName: i.referType === 'PIPELINE' ? proxy.$t('pipeline') : proxy.$t('template')
+            }))
             pagination.value.count = res.count
         } catch (e) {
             proxy.$bkMessage({

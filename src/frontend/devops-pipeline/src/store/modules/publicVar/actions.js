@@ -69,8 +69,11 @@ const actions = {
         })
     },
     // 获取变量组引用列表
-    getReferenceList (_, { groupName, page, pageSize }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/${groupName}/references?page=${page}&pageSize=${pageSize}`).then(response => {
+    getReferenceList (_, { groupName, params }) {
+        const query = new URLSearchParams({
+            ...params,
+        }).toString()
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/public/var/groups/${groupName}/references?${query}`).then(response => {
             return response.data
         })
     },

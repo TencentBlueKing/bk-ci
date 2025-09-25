@@ -74,7 +74,7 @@
             >
                 <bk-table-column
                     :label="$t('publicVar.paramGroupId')"
-                    width="250"
+                    width="200"
                     prop="groupName"
                 >
                     <template slot-scope="{ row }">
@@ -87,7 +87,7 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column
-                    width="120"
+                    width="140"
                     prop="referCount"
                     :label="$t('publicVar.pipelineNum')"
                 >
@@ -102,6 +102,7 @@
                 <template v-if="!showDetail">
                     <bk-table-column
                         :label="$t('publicVar.paramNum')"
+                        width="140"
                         prop="varCount"
                     />
                     <bk-table-column
