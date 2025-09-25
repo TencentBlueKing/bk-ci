@@ -45,7 +45,7 @@ class DevCloudPerformanceClient {
                 username = userId,
                 t1 = projectId,
                 t2 = pipelineId,
-                t3 = templateId,
+                tx = templateId,
                 rsType = RsType.DOCKER.value
             )
             val request = getClientProxy().baseRequest(userId, MODEL_LIST_API_PATH, projectId, pipelineId)
