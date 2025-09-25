@@ -2040,6 +2040,7 @@
     "remove": "移除",
     "hasRefNumTips": "この変数は既に参照されているため、変数グループを削除できません。",
     "viewGroup": "変数グループを表示",
-    "varGroupName": "変数グループ: {0}"
+    "varGroupName": "変数グループ: {0}",
+    "changeConstDefaultValueTips": "定数の値を変更すると、パイプライン/テンプレートの実行ロジックに影響します"
   }
 }

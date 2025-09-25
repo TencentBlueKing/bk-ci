@@ -2045,6 +2045,7 @@
     "remove": "Remove",
     "hasRefNumTips": "The variable has been referenced and the variable group cannot be removed",
     "viewGroup": "View variable group",
-    "varGroupName": "Variable Group: {0}"
+    "varGroupName": "Variable Group: {0}",
+    "changeConstDefaultValueTips": "Changing constant values will affect the execution logic of pipelines/templates"
   }
 }

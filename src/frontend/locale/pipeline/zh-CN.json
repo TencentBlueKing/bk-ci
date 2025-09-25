@@ -2048,6 +2048,7 @@
     "remove": "移除",
     "hasRefNumTips": "变量已被引用，无法移除变量组",
     "viewGroup": "查看变量组",
-    "varGroupName": "变量组：{0}"
+    "varGroupName": "变量组：{0}",
+    "changeConstDefaultValueTips": "常量值变更后将影响流水线/模板执行逻辑"
   }
 }

@@ -86,7 +86,11 @@
                     </div>
                     <div class="row-item">
                         <span class="key">
-                             
+                            <i
+                                v-if="curVarData.type === CONSTANT"
+                                class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                                v-bk-tooltips="$t('publicVar.changeConstDefaultValueTips')"
+                            />
                             {{ curVarData.type === VARIABLE ? $t('publicVar.defaultValue') : $t('newui.pipelineParam.constValue') }}
                         </span>
                         <template v-if="curVarData?.content?.changes?.defaultValue">
@@ -142,6 +146,10 @@
     import RenderRelatedTable from './RenderRelatedTable'
     import UseInstance from '@/hook/useInstance'
     import { convertTime } from '@/utils/util'
+    import {
+        VARIABLE,
+        CONSTANT
+    } from '@/store/modules/publicVar/constants'
     const { proxy } = UseInstance()
     const props = defineProps({
         isShow: Boolean,
@@ -351,7 +359,13 @@
                 font-size: 12px;
                 margin-bottom: 20px;
                 .row-item {
+                    display: flex;
                     margin-bottom: 8px;
+                    
+                }
+                .tooltips-icon {
+                    font-size: 14px;
+                    color: red;
                 }
                 .key {
                     display: inline-block;
@@ -360,6 +374,10 @@
                     padding: 4px 8px;
                     margin-right: 8px;
                     min-width: 70px;
+                    max-width: 100px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                     text-align: center;
                 }
                 .value {
