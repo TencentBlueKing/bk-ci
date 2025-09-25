@@ -159,7 +159,8 @@ class PipelineBuildRetryService @Autowired constructor(
                 pipelineId = pipelineId,
                 version = buildInfo.version,
                 buildId = buildId,
-                executeCount = buildInfo.executeCount
+                executeCount = buildInfo.executeCount,
+                debug = buildInfo.debug
             ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )

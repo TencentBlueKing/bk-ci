@@ -761,7 +761,8 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             version = buildInfo.version,
             buildId = buildId,
-            executeCount = buildInfo.executeCount
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1158,7 +1159,8 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             version = buildInfo.version,
             buildId = buildId,
-            executeCount = buildInfo.executeCount
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS

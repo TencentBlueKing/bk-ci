@@ -127,7 +127,8 @@ class BuildCancelControl @Autowired constructor(
             pipelineId = event.pipelineId,
             version = buildInfo.version,
             buildId = buildId,
-            executeCount = buildInfo.executeCount
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
         )
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")

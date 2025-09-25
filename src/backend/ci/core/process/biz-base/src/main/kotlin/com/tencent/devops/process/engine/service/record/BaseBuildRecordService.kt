@@ -159,7 +159,7 @@ open class BaseBuildRecordService(
         buildId: String,
         executeCount: Int? = null,
         queryDslContext: DSLContext? = null,
-        debug: Boolean? = false
+        debug: Boolean? = null
     ): Model? {
         val fixedExecuteCount = fixedExecuteCount(
             projectId = projectId,
@@ -224,25 +224,28 @@ open class BaseBuildRecordService(
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
         queryDslContext: DSLContext? = null,
-        debug: Boolean? = false
+        debug: Boolean? = null
     ): Model? {
         val watcher = Watcher(id = "getRecordModel#$buildId")
         watcher.start("getVersionModelString")
-        val resourceStr = if (debug == true) {
+        val finalDSLContext = queryDslContext ?: dslContext
+        // 当debug没有传的时候，从数据库中获取数据判断是否是调试产生的构建
+        val debugFlag = debug ?: pipelineBuildDao.getDebugFlag(finalDSLContext, projectId, buildId)
+        val resourceStr = if (debugFlag) {
             pipelineBuildDao.getDebugResourceStr(
-                dslContext = queryDslContext ?: dslContext,
+                dslContext = finalDSLContext,
                 projectId = projectId,
                 buildId = buildId
             )
         } else {
             pipelineResourceVersionDao.getVersionModelString(
-                dslContext = queryDslContext ?: dslContext,
+                dslContext = finalDSLContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version
             )
         } ?: pipelineResourceDao.getVersionModelString(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = finalDSLContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
