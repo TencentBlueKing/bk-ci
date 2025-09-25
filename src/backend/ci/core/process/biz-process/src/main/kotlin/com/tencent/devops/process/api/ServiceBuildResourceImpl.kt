@@ -901,9 +901,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getTopParentPipelineByBuildId(buildId: String,projectId: String): Result<BuildBasicInfo?> {
+    override fun getTopParentPipelineByBuildId(buildId: String, projectId: String): Result<BuildBasicInfo?> {
         return Result(
-            data = pipelineRuntimeService.getTopParentPipelineByBuildId(buildId,projectId)
+            data = pipelineRuntimeService.getTopParentPipelineByBuildId(buildId, projectId)
         )
     }
 
