@@ -121,6 +121,10 @@ config = {
         special_domain = {},
         auto_prefix = "__BK_CI_KUBERNETES_AUTO_PREFIX__"
     },
+    external_auth = {
+        base_url = "http://__BKCI_FQDN__",
+        token = "__BK_CI_EXTERNAL_AUTH_TOKEN__"
+    },
     openHttps = "__BKCI_OPEN_HTTPS__",
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
     devx = {
