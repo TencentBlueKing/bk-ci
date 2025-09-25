@@ -227,8 +227,8 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         ))
     }
 
-    override fun getParentPipelineBuildInfo(buildId: String): Result<BuildBasicInfo> {
-        val path = "/ms/process/api/service/builds/$buildId/topParent/get"
+    override fun getParentPipelineBuildInfo(buildId: String, projectId: String): Result<BuildBasicInfo> {
+        val path = "/ms/process/api/service/builds/$projectId/$buildId/topParent/get"
         val request = buildGet(path)
         val responseContent = request(
             request,
