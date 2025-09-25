@@ -390,15 +390,12 @@ class PublicVarGroupDao {
         projectId: String,
         groupVersions: List<Pair<String, Int>>
     ): Map<Pair<String, Int>, Int> {
-        if (groupVersions.isEmpty()) return emptyMap()
-        
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            // 构建OR条件：(GROUP_NAME = ? AND VERSION = ?) OR (GROUP_NAME = ? AND VERSION = ?) ...
-            val conditions = groupVersions.map { (groupName, version) ->
-                GROUP_NAME.eq(groupName).and(VERSION.eq(version))
-            }
+            if (groupVersions.isEmpty()) return emptyMap()
             
-            val orCondition = conditions.reduce { acc, condition -> acc.or(condition) }
+            val orCondition = groupVersions.map { (groupName, version) ->
+                GROUP_NAME.eq(groupName).and(VERSION.eq(version))
+            }.reduce { acc, condition -> acc.or(condition) }
             
             return dslContext.select(GROUP_NAME, VERSION, VAR_COUNT)
                 .from(this)

@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.model.process.tables.TPipelinePublicVar
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -196,6 +197,61 @@ class PublicVarDao {
                     .groupBy(VAR_NAME)
                     .fetch().map { it.value1() }
             }
+        }
+    }
+
+    /**
+     * 更新变量引用计数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param varName 变量名
+     * @param referCount 新的引用计数
+     */
+    fun updateReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varName: String,
+        referCount: Int
+    ) {
+        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+            dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
+                .execute()
+        }
+    }
+
+    /**
+     * 按变量组批量更新引用计数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param countChange 计数变化量（正数表示增加，负数表示减少）
+     */
+    fun updateReferCountByGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        countChange: Int
+    ) {
+        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+            dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .execute()
         }
     }
 }
