@@ -10,6 +10,8 @@ import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.concurrent.Executors
@@ -26,8 +28,15 @@ class DelegatingPermissionServiceDecorator(
     private val bkInternalPermissionService: BkInternalPermissionService,
     private val routingStrategy: PermissionRoutingStrategy,
     private val circuitBreakerRegistry: CircuitBreakerRegistry,
-    private val rbacCommonService: RbacCommonService
+    private val rbacCommonService: RbacCommonService,
+    private val meterRegistry: MeterRegistry
 ) : PermissionService {
+    private fun circuitBreakerCounter(): Counter {
+        return Counter.builder("permission.circuit.breaker.counter")
+            .description("Counts the circuit breaker")
+            .register(meterRegistry)
+    }
+
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         // 此方法未使用过，暂不处理
         return rbacPermissionService.validateUserActionPermission(userId = userId, action = action)
@@ -444,6 +453,7 @@ class DelegatingPermissionServiceDecorator(
                 context,
                 e.message
             )
+            circuitBreakerCounter().increment()
             fallbackCall()
         } catch (e: TimeoutException) {
             logger.error("[AUTH_TIMEOUT] External call timeout for context '$context'", e)

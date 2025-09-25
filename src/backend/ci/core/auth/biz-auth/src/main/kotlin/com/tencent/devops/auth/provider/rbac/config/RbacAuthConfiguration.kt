@@ -124,6 +124,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.micrometer.core.instrument.MeterRegistry
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -386,14 +387,16 @@ class RbacAuthConfiguration {
         bkInternalPermissionService: BkInternalPermissionService,
         routingStrategy: PermissionRoutingStrategy,
         rbacCommonService: RbacCommonService,
-        circuitBreakerRegistry: CircuitBreakerRegistry
+        circuitBreakerRegistry: CircuitBreakerRegistry,
+        meterRegistry: MeterRegistry
     ): DelegatingPermissionServiceDecorator {
         return DelegatingPermissionServiceDecorator(
             rbacPermissionService = rbacPermissionService,
             bkInternalPermissionService = bkInternalPermissionService,
             routingStrategy = routingStrategy,
             circuitBreakerRegistry = circuitBreakerRegistry,
-            rbacCommonService = rbacCommonService
+            rbacCommonService = rbacCommonService,
+            meterRegistry = meterRegistry
         )
     }
 
