@@ -190,6 +190,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             groupName = groupName,
             version = version
         )
+        logger.info("Updating reference count for group: $groupName, version: $version")
         
         currentGroupRecord?.let { record ->
             val newReferCount = if (countChange > 0) {
@@ -504,7 +505,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
         for (param in params) {
             if (!seenIds.add(param.id)) {
-
                 duplicateIds.add(param.id)
             }
         }
