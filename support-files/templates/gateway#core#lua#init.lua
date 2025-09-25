@@ -100,6 +100,11 @@ config = {
         },
         special_domain = {},
         auto_prefix = ""
+    },
+    external_auth = {
+        enabled = false,
+        base_url = "",
+        token = ""
     }
 }
 
