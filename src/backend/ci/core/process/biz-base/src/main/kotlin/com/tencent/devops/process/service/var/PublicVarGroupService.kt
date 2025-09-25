@@ -232,9 +232,18 @@ class PublicVarGroupService @Autowired constructor(
             filterByUpdater = queryReq.filterByUpdater,
             groupNames = groupNames
         ).map { po ->
+            // 统计所有关联变量组的唯一referId数量
+            val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = po.groupName,
+                referType = null,
+                version = null
+            )
+            
             PublicVarGroupDO(
                 groupName = po.groupName,
-                referCount = po.referCount,
+                referCount = actualReferCount,
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,

@@ -164,13 +164,15 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         // 批量更新引用计数
         referCountUpdates.forEach { (groupInfo, countChange) ->
             val (groupName, version) = groupInfo
-            updateSingleGroupReferCount(
-                context = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version,
-                countChange = if (isIncrement) countChange else -countChange
-            )
+            version?.let {
+                updateSingleGroupReferCount(
+                    context = context,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = it,
+                    countChange = if (isIncrement) countChange else -countChange
+                )
+            }
         }
     }
     
@@ -181,7 +183,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         context: DSLContext,
         projectId: String,
         groupName: String,
-        version: Int?,
+        version: Int,
         countChange: Int
     ) {
         val currentGroupRecord = publicVarGroupDao.getRecordByGroupName(
@@ -215,19 +217,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 referCount = newReferCount
             )
             
-            // 同时更新变量引用计数
-            version?.let {
-                try {
-                    publicVarService.updateVarReferCounts(
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = it,
-                        countChange = countChange
-                    )
-                } catch (e: Throwable) {
-                    logger.warn("Failed to update variable refer counts for group: $groupName, version: $it", e)
-                }
-            }
+            // 更新变量引用计数
+            publicVarService.updateVarReferCounts(
+                projectId = projectId,
+                groupName = groupName,
+                version = version,
+                countChange = countChange
+            )
         }
     }
 
@@ -623,7 +619,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
                 // 如果两个集合完全相同，无需更新
                 if (historicalGroups.keys == newGroups.keys) {
-                    logger.debug("No reference count changes detected for projectId: $projectId")
                     return@submit
                 }
 
@@ -646,21 +641,12 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 if (updatesNeeded.isEmpty()) {
                     return@submit
                 }
-
-                // 批量执行更新操作
+                
                 updatesNeeded.forEach { (groupName, version, countChange) ->
                     // 更新变量组引用计数
-                    updateSingleGroupReferCount(
-                        context = dslContext,
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = version,
-                        countChange = countChange
-                    )
-                    
-                    // 更新变量引用计数
                     version?.let {
-                        updateVarReferCounts(
+                        updateSingleGroupReferCount(
+                            context = dslContext,
                             projectId = projectId,
                             groupName = groupName,
                             version = it,
