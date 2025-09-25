@@ -1930,6 +1930,17 @@ class PipelineBuildDao {
         }
     }
 
+    fun getDebugFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun clearDebugHistory(
         dslContext: DSLContext,
         projectId: String,
