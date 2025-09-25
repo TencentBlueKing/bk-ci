@@ -295,6 +295,7 @@
                     <devcloud-option
                         :disabled="!editable"
                         :value="devcloudValue"
+                        :template-id="templateId"
                         :build-type="buildResourceType"
                         :handle-change="changeBuildResourceWithoutEnv"
                         :change-show-performance="changeShowPerformance"
@@ -573,6 +574,9 @@
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
                     { label: this.$t('editPage.fromHand'), value: 'THIRD' }
                 ]
+            },
+            templateId () {
+                return this.pipeline.templateId
             },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)
