@@ -34,6 +34,7 @@ class DelegatingPermissionServiceDecorator(
     private fun circuitBreakerCounter(): Counter {
         return Counter.builder("permission.circuit.breaker.counter")
             .description("Counts the circuit breaker")
+            .tag("method", "circuit breaker")
             .register(meterRegistry)
     }
 
