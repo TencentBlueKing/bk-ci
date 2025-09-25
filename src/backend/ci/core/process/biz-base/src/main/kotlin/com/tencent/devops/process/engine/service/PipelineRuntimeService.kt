@@ -2290,7 +2290,7 @@ class PipelineRuntimeService @Autowired constructor(
                 ?: return null
 
         val webhookInfoJson = currentBuildInfo[pipelineBuildHistory.WEBHOOK_INFO]
-        val webhookInfo = webhookInfoJson.takeIf { it.isNotBlank() }?.let { json ->
+        val webhookInfo = webhookInfoJson?.takeIf { it.isNotBlank() }?.let { json ->
             try {
                 JsonUtil.to(json, WebhookInfo::class.java)
             } catch (ignore: Throwable) {
