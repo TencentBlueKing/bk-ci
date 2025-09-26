@@ -195,11 +195,10 @@
                                 {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
-                                v-else-if="row.status !== TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING"
+                                v-else-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE"
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!row.canEdit || row.pullRequestUrl"
                                 v-perm="{
                                     hasPermission: row.canEdit,
                                     disablePermissionApi: true,
@@ -232,13 +231,13 @@
                             >
                                 {{ $t('copy') }}
                             </bk-button>
-                            <!-- v-if="row.fromTemplateVersion !== currentVersion" -->
                             <version-diff-entry
-                                v-if="false"
+                                v-if="row.fromTemplateVersion !== currentVersion"
                                 :version="row.pipelineVersion"
                                 :latest-version="currentVersion"
                                 :pipeline-id="row.pipelineId"
-                                type="templateInstance"
+                                :template-id="row.templateId"
+                                instance-compare-with-template
                             />
                         </template>
                     </bk-table-column>
