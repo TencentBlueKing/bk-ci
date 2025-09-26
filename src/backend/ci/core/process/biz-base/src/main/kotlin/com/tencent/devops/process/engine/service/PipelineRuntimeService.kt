@@ -71,6 +71,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -123,6 +124,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -144,15 +146,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -2274,6 +2276,39 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             keys = keys
         )
+    }
+
+    fun getTopParentPipelineByBuildId(buildId: String, projectId: String): BuildBasicInfo? {
+
+        val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+
+        val currentBuildInfo =
+            pipelineBuildDao.getPipelineBuildInfo(dslContext = dslContext, buildId = buildId, projectId = projectId)
+                ?: return null
+
+        val webhookInfoJson = currentBuildInfo[pipelineBuildHistory.WEBHOOK_INFO]
+        val webhookInfo = webhookInfoJson?.takeIf { it.isNotBlank() }?.let { json ->
+            try {
+                JsonUtil.to(json, WebhookInfo::class.java)
+            } catch (ignore: Throwable) {
+                logger.warn("Fail to parse webhookInfoJson: $json", ignore)
+                null
+            }
+        }
+
+        return if (webhookInfo != null &&
+            !webhookInfo.parentBuildId.isNullOrBlank() && !webhookInfo.parentProjectId.isNullOrBlank()
+        ) {
+            getTopParentPipelineByBuildId(webhookInfo.parentBuildId!!, webhookInfo.parentProjectId!!)
+        } else {
+            BuildBasicInfo(
+                buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],
+                projectId = currentBuildInfo[pipelineBuildHistory.PROJECT_ID],
+                pipelineId = currentBuildInfo[pipelineBuildHistory.PIPELINE_ID],
+                pipelineVersion = currentBuildInfo[pipelineBuildHistory.VERSION],
+                status = null
+            )
+        }
     }
 
     fun transferWebhookType(webhookType: String?) = when (webhookType) {
