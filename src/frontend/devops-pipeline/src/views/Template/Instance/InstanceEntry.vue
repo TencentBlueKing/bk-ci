@@ -27,7 +27,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length)"
+                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}
@@ -48,6 +48,7 @@
                 >
                     <InstanceAside
                         slot="aside"
+                        :is-editing.sync="isEditing"
                         :is-instance-create-type="isInstanceCreateViewType"
                         @batchEdit="handleBatchEdit"
                     />
@@ -89,6 +90,7 @@
     import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import UseInstance from '@/hook/useInstance'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import {
         SET_INSTANCE_LIST,
         SET_RELEASE_BASE_ID,
@@ -106,6 +108,7 @@
     const isLoading = ref(false)
     const showRelease = ref(false)
     const showBatchEdit = ref(false)
+    const isEditing = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
@@ -186,6 +189,21 @@
         
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
+    function checkInstanceListInValid () {
+        let valid = true
+        let message = ''
+        instanceList.value.forEach(instance => {
+            if (instance?.buildNo?.isRequiredParam) {
+                const buildNoParams = instance.param.filter(i => allVersionKeyList.includes(i.id))
+                valid = buildNoParams.every(i => !(i.defaultValue === null || i.defaultValue === ''))
+                message = valid ? '' : proxy.$t('storeMap.correctPipeline')
+            }
+        })
+        return {
+            valid,
+            message
+        }
+    }
     async function handleReleaseInstance (value) {
         const type = proxy.$route.params?.type
         const fnMap = {
@@ -200,6 +218,14 @@
                 message: proxy.$t(`unknown type, ${type}`)
             })
             return
+        }
+        const { valid, message } = checkInstanceListInValid()
+        if (!valid) {
+            proxy.$showTips({
+                theme: 'error',
+                message
+            })
+            throw new Error(message)
         }
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {

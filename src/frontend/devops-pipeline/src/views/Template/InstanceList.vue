@@ -89,7 +89,7 @@
                                     class="template-version"
                                     v-if="[TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE, TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED].includes(row.status)"
                                 >
-                                    {{ $t('template.from') }} {{ row.fromTemplateVersionName }}
+                                    {{ $t('template.fromTemplateVersion') }} {{ row.fromTemplateVersionName }}
                                 </span>
 
                                 <template v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE">

@@ -184,8 +184,8 @@
             },
             async getRequestTemplatePreview () {
                 return this.requestTemplatePreview({
-                    projectId: this.templatePipeline.srcProjectId || this.templatePipeline.projectId,
-                    templateId: this.templatePipeline.templateId || this.templatePipeline.code,
+                    projectId: this.templatePipeline.projectId,
+                    templateId: this.templatePipeline.templateId,
                     highlightType: this.highlightType
                 })
             },
