@@ -576,7 +576,8 @@
                 ]
             },
             templateId () {
-                return this.pipeline.templateId
+                // 实例流水线、模板编辑流水线的templateId
+                return this.pipeline.templateId || this.$route.params.templateId
             },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)

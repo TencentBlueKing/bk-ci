@@ -95,7 +95,7 @@
             async getEditPageDeviceList () {
                 const res = await this.fetchDevcloudSettings({
                     projectId: this.projectId,
-                    pipelineId: this.pipelineId,
+                    pipelineId: this.pipelineId || this.templateId,
                     templateId: this.templateId
                 })
                 this.changeShowPerformance(true)
