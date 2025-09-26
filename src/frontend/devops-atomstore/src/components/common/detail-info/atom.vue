@@ -67,7 +67,8 @@
             </h3>
             <div class="detail-info-row atom-detail-info-row">
                 <h5 class="detail-info">
-                    <span> {{ $t('store.发布者：') }} </span><span>{{ detail.publisher || '-' }}</span>
+                    <span> {{ $t('store.发布者：') }} </span>
+                    <bk-user-display-name :user-id="detail.publisher" />
                 </h5>
                 <h5 class="detail-info">
                     <span> {{ $t('store.版本：') }} </span><span>{{ detail.version || '-' }}</span>
@@ -168,10 +169,9 @@
                 v-if="showCooperDialog"
             >
                 <bk-form-item :label="$t('store.申请人')">
-                    <bk-input
-                        v-model="user"
-                        :disabled="true"
-                    ></bk-input>
+                    <span class="cooperator-user-name">
+                        <bk-user-display-name :user-id="user" />
+                    </span>
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('store.调试项目')"
@@ -487,5 +487,12 @@
     }
     ::v-deep .bk-dialog-body .tips-body {
         text-align: left;
+    }
+    .cooperator-user-name {
+        border: 1px solid #c4c6cc;
+        border-radius: 2px;
+        padding: 0 10px;
+        display: block;
+        background-color: #fafafa;
     }
 </style>

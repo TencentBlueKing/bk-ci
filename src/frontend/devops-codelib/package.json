@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
+    "@blueking/bk-user-selector": "0.0.35",
     "lodash-es": "^4.17.21",
     "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
@@ -50,7 +51,7 @@
     "webpack": "~5.101.3"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev webpack-cli serve --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",

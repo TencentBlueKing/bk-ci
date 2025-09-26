@@ -7,7 +7,7 @@
     :placeholder="t('输入交接人，选中回车进行有效性校验')"
     :search-key="searchKeyArr"
     save-key="id"
-    display-key="displayName"
+    display-key="name"
     is-async-list
     allow-auto-match
     :list="userList"
@@ -19,10 +19,10 @@
 </template>
 
 <script setup name="ProjectUserSelector">
-import { ref, computed } from 'vue';
+import http from '@/http/api';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import http from '@/http/api';
 
 defineExpose({
   removeAll,

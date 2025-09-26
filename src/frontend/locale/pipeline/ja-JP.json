@@ -654,7 +654,7 @@
     "versionSelectorDisableTips": " 1. PACブランチバージョンが存在する場合は、ブランチバージョンを選択して実行できます<br/>2. PACブランチバージョンがない場合は、常に現在の最新バージョンを実行します"
   },
   "details": {
-    "executorInfo": "{0} {1}が{2}にトリガー",
+    "executorInfo": "が{0}にトリガー",
     "pipelineVersionDiffTips": "パイプライン編成バージョン番号が変更されました",
     "executeDetail": "実行詳細",
     "outputs": "成果物",

@@ -65,7 +65,6 @@
                         <bk-user-display-name :user-id="startUser" />
                         {{
                             $t("details.executorInfo", [
-                                execDetail.trigger,
                                 execFormatStartTime
                             ])
                         }}

@@ -1,7 +1,7 @@
 import { deepMerge } from '@/common/util';
-import successInterceptor from './success-interceptor';
 import errorInterceptor from './error-interceptor';
 import RequestError from './request-error';
+import successInterceptor from './success-interceptor';
 
 export interface IFetchConfig extends RequestInit {
   responseType?: 'json' | 'text' | 'arrayBuffer' | 'blob' | 'formData',

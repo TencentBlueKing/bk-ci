@@ -10,6 +10,7 @@
     "public:master": "vite build"
   },
   "dependencies": {
+    "@blueking/bk-user-display-name": "^1.0.2",
     "bkui-vue": "2.0.2-beta.45",
     "dayjs": "^1.11.2",
     "lodash": "^4.17.21",

@@ -1,30 +1,32 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import router from './router';
+import { createApp } from 'vue';
 import App from './app.vue';
+import './css/iconcool.js';
 import './css/index.css';
-import './css/iconcool.js'
+import router from './router';
+import TenantSingleton from './utils/tenant';
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
-import 'bkui-vue/dist/style.variable.css';
 import bkuiEn from 'bkui-vue/dist/locale/en.esm';
+import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm';
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
-import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
+import 'bkui-vue/dist/style.variable.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
 
+
 // 引入权限指令相关资源
-import { handleProjectManageNoPermission } from './utils/permission';
 import { AuthorityDirectiveV3 } from 'bk-permission';
 import 'bk-permission/dist/main.css';
+import { handleProjectManageNoPermission } from './utils/permission';
 
 // i18n
-import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
-import ZhCN from '../../locale/manage/zh-CN.json';
 import EnUS from '../../locale/manage/en-US.json';
 import JaJP from '../../locale/manage/ja-JP.json';
+import ZhCN from '../../locale/manage/zh-CN.json';
+import { getCookies } from './common/util';
 
 const localeAliasMap = {
   'zh-CN': 'zh-CN',
@@ -68,14 +70,25 @@ const i18n = createI18n({
   },
 });
 
-const app = createApp(App)
-app
-  .use(router)
-  .use(createPinia())
-  .use(bkui, {
-    locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
-  })
-  .use(i18n)
+
+async function initializeApp() {
+  const data = await TenantSingleton.init();
+  const app = createApp(App, {
+    tenantId: data.tenantId,
+    apiBaseUrl: data.apiBaseUrl,
+  });
+
+  app
+    .use(router)
+    .use(createPinia())
+    .use(bkui, {
+      locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
+    })
+    .use(i18n)
   .use(AuthorityDirectiveV3(handleProjectManageNoPermission))
-  .mount('.app');
-app.directive('bk-tooltips', bkTooltips)
+    .mount('.app');
+  app.directive('bk-tooltips', bkTooltips)
+}
+
+
+initializeApp()
