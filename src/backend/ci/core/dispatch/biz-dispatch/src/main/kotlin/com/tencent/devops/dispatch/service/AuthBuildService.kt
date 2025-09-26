@@ -303,7 +303,6 @@ class AuthBuildService @Autowired constructor(
 
             // 构建响应
             responseBuilder(authInfo, cacheKey)
-
         } catch (e: Exception) {
             logger.error("Error during $authType authentication", e)
             createErrorResponse("Authentication error: ${e.message}")

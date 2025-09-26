@@ -33,37 +33,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class AuthBuildResponse(
     @get:Schema(title = "鉴权是否成功", required = true)
     val success: Boolean,
-    
+
     @get:Schema(title = "项目ID", required = false)
     val projectId: String? = null,
-    
+
     @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String? = null,
-    
+
     @get:Schema(title = "构建ID", required = false)
     val buildId: String? = null,
-    
+
     @get:Schema(title = "Agent ID", required = false)
     val agentId: String? = null,
-    
+
     @get:Schema(title = "VM序列ID", required = false)
     val vmSeqId: String? = null,
-    
+
     @get:Schema(title = "VM名称", required = false)
     val vmName: String? = null,
-    
+
     @get:Schema(title = "渠道代码", required = false)
     val channelCode: String? = null,
-    
+
     @get:Schema(title = "密钥", required = false)
     val secretKey: String? = null,
-    
+
     @get:Schema(title = "系统版本", required = false)
     val systemVersion: String? = null,
-    
+
     @get:Schema(title = "Xcode版本", required = false)
     val xcodeVersion: String? = null,
-    
+
     @get:Schema(title = "错误信息", required = false)
     val message: String? = null
 )
