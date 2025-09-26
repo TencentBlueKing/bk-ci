@@ -685,6 +685,7 @@ class RepositoryDao {
             dslContext.select(SCM_CODE, DSL.count())
                 .from(this)
                 .where(SCM_CODE.`in`(scmCodes))
+                .groupBy(SCM_CODE)
                 .fetch().map {
                     Pair(it.value1(), it.value2().toLong())
                 }.toMap()
