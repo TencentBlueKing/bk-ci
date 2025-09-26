@@ -124,12 +124,12 @@
                 </div>
                 <div class="param-checkbox-row">
                     <atom-checkbox
-                        name="isSensitive"
+                        name="sensitive"
                         :disabled="disabled"
-                        :text="$t('editPage.isSensitive')"
+                        :text="$t('editPage.sensitive')"
                         :desc="sensitiveTips"
                         :custom-tip="true"
-                        :value="param.isSensitive"
+                        :value="param.sensitive"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>

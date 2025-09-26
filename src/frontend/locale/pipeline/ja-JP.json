@@ -906,7 +906,7 @@
     "required": "必須かどうか",
     "showOnExec": "入力パラメータかどうか",
     "readOnlyOnRun": "実行時に読み取り専用",
-    "isSensitive": "センシティブかどうか",
+    "sensitive": "センシティブかどうか",
     "sensitiveTips1": "選択すると、以下のインターフェースでは平文値が表示されません：",
     "sensitiveTips2": "1. パイプライン表示ページ、変数パネル",
     "sensitiveTips3": "2. パイプライン構築詳細ページ、起動変数リスト",

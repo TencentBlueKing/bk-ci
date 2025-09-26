@@ -909,7 +909,7 @@
     "descTips": " Enter a description of parameters, it will display in preview page",
     "showOnExec": "Display when previewing",
     "readOnlyOnRun": "readOnly when executing",
-    "isSensitive": "Is Sensitive",
+    "sensitive": "Is Sensitive",
     "sensitiveTips1": "After selecting, the plain text value will not be displayed in the following interfaces:",
     "sensitiveTips2": "1. Pipeline viewing page, variable panel",
     "sensitiveTips3": "2. Pipeline build details page, start variable list",

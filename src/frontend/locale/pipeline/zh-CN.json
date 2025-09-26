@@ -906,7 +906,7 @@
     "required": "是否必填",
     "showOnExec": "是否为入参",
     "readOnlyOnRun": "运行时只读",
-    "isSensitive": "是否敏感",
+    "sensitive": "是否敏感",
     "sensitiveTips1": "勾选后，在如下界面不展示明文值：",
     "sensitiveTips2": "1. 流水线查看页，变量面板",
     "sensitiveTips3": "2. 流水线构建详情页，启动变量列表",

@@ -32,7 +32,7 @@
                                 'diff-param-value': param.isDiff
                             }"
                         >
-                            {{ param.isSensitive ? '******' : param.value }}
+                            {{ param.value }}
                         </span>
                         <bk-button
                             v-if="overflowSpan[index]"
