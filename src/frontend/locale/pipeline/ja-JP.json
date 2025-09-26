@@ -659,7 +659,8 @@
     "pleaseMergePullUrl": "コードリポジトリでマージリクエストを処理してください。",
     "toHandle": "処理する",
     "upgradeInstance": "インスタンスをアップグレード",
-    "createInstance": "インスタンスを作成"
+    "createInstance": "インスタンスを作成",
+    "triggersUpdateTips": "Step ID を設定したトリガーのみが表示されます。Step ID が設定されていないトリガーは、インスタンスで有効または無効にする設定を行うことができません。"
   },
   "newlist": {
     "exportJsonTip": "インポート機能を使用すると、パイプラインをすばやく作成したり、クロスプロジェクト、クロス藍盾プラットフォームのパイプラインインポートを実現したりすることができます。",

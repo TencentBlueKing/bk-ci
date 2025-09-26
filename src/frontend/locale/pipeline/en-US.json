@@ -657,7 +657,8 @@
     "pleaseMergePullUrl": "Resolve merge request in code repo first.",
     "toHandle": "Resolve now",
     "upgradeInstance": "Upgrade Instance",
-    "createInstance": "Create Instance"
+    "createInstance": "Create Instance",
+    "triggersUpdateTips": "Lists only triggers with Step ID. Those without can't control instance enablement."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
