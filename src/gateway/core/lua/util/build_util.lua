@@ -24,7 +24,7 @@ function _M:call_external_auth_api(auth_type, params)
 
     -- 构建请求URL
     local base_url = config.external_auth.base_url
-    local api_path = "/api/external/auth/" .. auth_type
+    local api_path = "/ms/dispatch/api/external/auth/" .. auth_type
     local query_params = {}
 
     -- 添加参数到查询字符串
@@ -46,7 +46,8 @@ function _M:call_external_auth_api(auth_type, params)
         method = "GET",
         headers = {
             ["Accept"] = "application/json",
-            ["Content-Type"] = "application/json"
+            ["Content-Type"] = "application/json",
+            ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id
         },
         ssl_verify = false
     })
