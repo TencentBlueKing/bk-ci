@@ -10,6 +10,7 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.test.BkCiAbstractTest
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -31,7 +32,7 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
     private val bkInternalPermissionService: BkInternalPermissionService = mockk()
     private val routingStrategy: PermissionRoutingStrategy = mockk()
     private val rbacCommonService: RbacCommonService = mockk()
-
+    private val meterRegistry: MeterRegistry = mockk()
     private lateinit var decorator: DelegatingPermissionServiceDecorator
     private lateinit var circuitBreakerRegistry: CircuitBreakerRegistry
 
@@ -63,7 +64,8 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             bkInternalPermissionService = bkInternalPermissionService,
             routingStrategy = routingStrategy,
             circuitBreakerRegistry = circuitBreakerRegistry,
-            rbacCommonService = rbacCommonService
+            rbacCommonService = rbacCommonService,
+            meterRegistry = meterRegistry
         )
     }
 
