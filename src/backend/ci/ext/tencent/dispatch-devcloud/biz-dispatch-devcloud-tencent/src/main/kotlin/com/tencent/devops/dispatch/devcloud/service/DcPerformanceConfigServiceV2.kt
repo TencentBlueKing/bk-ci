@@ -47,9 +47,9 @@ class DcPerformanceConfigServiceV2 constructor(
             performanceUid = performanceUid
         )
 
-        if (performanceData == null || performanceData.name.isBlank()) {
+        if (performanceData == null || performanceData.name.isBlank() || performanceData.uid.isBlank()) {
             logger.warn("获取性能配置失败，使用默认配置。userId=$userId, projectId=$projectId, pipelineId=$pipelineId, " +
-                    "performanceUid=$performanceUid，原因：performanceData为空或name为空白")
+                    "performanceUid=$performanceUid，原因：performanceData为空或name｜uid为空白")
             return PerformanceData(
                 uid = DEFAULT_CONFIG_UID,
                 name = DEFAULT_CONFIG_NAME,
