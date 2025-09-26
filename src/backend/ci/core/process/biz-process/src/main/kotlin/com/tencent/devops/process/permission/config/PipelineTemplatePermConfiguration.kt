@@ -38,6 +38,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.MockPipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.RbacPipelineTemplatePermissionService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -65,7 +66,8 @@ class PipelineTemplatePermConfiguration {
         pipelineViewGroupService: PipelineViewGroupService,
         client: Client,
         authResourceApi: AuthResourceApi,
-        pipelinePermissionService: PipelinePermissionService
+        pipelinePermissionService: PipelinePermissionService,
+        pipelineTemplateInfoService: PipelineTemplateInfoService
     ): PipelineTemplatePermissionService = RbacPipelineTemplatePermissionService(
         authPermissionApi = authPermissionApi,
         authProjectApi = authProjectApi,
@@ -74,7 +76,8 @@ class PipelineTemplatePermConfiguration {
         pipelineInfoDao = pipelineInfoDao,
         client = client,
         authResourceApi = authResourceApi,
-        pipelinePermissionService = pipelinePermissionService
+        pipelinePermissionService = pipelinePermissionService,
+        pipelineTemplateInfoService = pipelineTemplateInfoService
     )
 
     @Bean

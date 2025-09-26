@@ -64,6 +64,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -99,14 +100,19 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
+import com.tencent.devops.process.util.FileExportUtil
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -116,9 +122,6 @@ import jakarta.ws.rs.core.StreamingOutput
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLEncoder
-import java.time.LocalDateTime
-import java.util.LinkedList
-import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import org.jooq.DSLContext
@@ -129,6 +132,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.LinkedList
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
@@ -153,7 +159,9 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
     private val pipelineAuthorizationService: PipelineAuthorizationService,
-    private val auditService: AuditService
+    private val auditService: AuditService,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -229,10 +237,16 @@ class PipelineInfoFacadeService @Autowired constructor(
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return if (storageType == PipelineStorageType.YAML) {
             val suffix = PipelineStorageType.YAML.fileSuffix
-            exportStringToFile(targetVersion.yaml ?: "", "${settingInfo.pipelineName}$suffix")
+            FileExportUtil.exportStringToFile(
+                targetVersion.yaml ?: "",
+                "${settingInfo.pipelineName}$suffix"
+            )
         } else {
             val suffix = PipelineStorageType.MODEL.fileSuffix
-            exportStringToFile(JsonUtil.toSortJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
+            FileExportUtil.exportStringToFile(
+                JsonUtil.toSortJson(modelAndSetting),
+                "${settingInfo.pipelineName}$suffix"
+            )
         }
     }
 
@@ -452,22 +466,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         ).pipelineId
     }
 
-    private fun exportStringToFile(content: String, fileName: String): Response {
-        // 流式下载
-        val fileStream = StreamingOutput { output ->
-            val sb = StringBuilder()
-            sb.append(content)
-            output.write(sb.toString().toByteArray())
-            output.flush()
-        }
-        val encodeName = URLEncoder.encode(fileName, "UTF-8")
-        return Response
-            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $encodeName")
-            .header("Cache-Control", "no-cache")
-            .build()
-    }
-
     fun getPipelineNameVersion(projectId: String, pipelineId: String): Pair<String, Int> {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
@@ -646,7 +644,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 先进行模板关联操作
                 if (templateId != null) {
                     watcher.start("createTemplate")
-                    templateService.createRelationBtwTemplate(
+                    val (templateVersion, templateVersionName) = pipelineTemplateRelatedService.createRelation(
                         userId = userId,
                         projectId = projectId,
                         templateId = templateId,
@@ -655,6 +653,25 @@ class PipelineInfoFacadeService @Autowired constructor(
                         buildNo = buildNo,
                         param = param,
                         fixTemplateVersion = fixTemplateVersion
+                    )
+                    pipelineTemplatePipelineVersionService.createOrUpdate(
+                        record = PTemplatePipelineVersion(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            pipelineVersion = result.version,
+                            pipelineVersionName = result.versionName ?: "",
+                            instanceType = PipelineInstanceTypeEnum.get(instanceType),
+                            buildNo = buildNo,
+                            params = param,
+                            refType = TemplateRefType.ID,
+                            inputTemplateId = templateId,
+                            inputTemplateVersionName = templateVersionName,
+                            templateId = templateId,
+                            templateVersion = templateVersion,
+                            templateVersionName = templateVersionName,
+                            creator = userId,
+                            updater = userId
+                        )
                     )
                     watcher.stop()
                 }
@@ -852,6 +869,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             model = newResource.model.copy(name = pipelineName),
             channelCode = ChannelCode.BS,
+            checkTemplate = false,
             yaml = yamlWithVersion,
             savedSetting = savedSetting,
             versionStatus = versionStatus,
@@ -1590,6 +1608,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     queryDslContext = finalDslContext
                 )
+
+                // 老的模版实例参数和设置都是流水线自定义,不跟随模版
+                if (model.overrideTemplateField == null) {
+                    model.overrideTemplateField =
+                        TemplateInstanceField.initFromTrigger(triggerContainer = triggerContainer)
+                }
             }
             // 静态组
             model.staticViews = pipelineViewGroupService.listViewByPipelineId(

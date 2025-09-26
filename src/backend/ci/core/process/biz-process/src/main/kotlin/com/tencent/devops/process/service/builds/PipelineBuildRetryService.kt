@@ -340,7 +340,7 @@ class PipelineBuildRetryService @Autowired constructor(
                             element = element,
                             taskId = taskId,
                             paramMap = paramMap,
-                            skipFailedTask = skipFailedTask,
+                            skipFailedTask = skipFailedTask
                         )
                         return
                     }

@@ -35,7 +35,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.api.template.v2.ServicePipelineTemplateV2Resource
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
+import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
@@ -44,6 +47,7 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.OFFSET_REASON_IS_NOT_ALLOW_NULL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.pojo.common.CLOSE
@@ -57,46 +61,68 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
+import com.tencent.devops.store.pojo.template.MarketTemplateInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateReleaseReq
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateV2Request
+import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
 import com.tencent.devops.store.template.dao.TemplateLabelRelDao
+import com.tencent.devops.store.template.service.MarketTemplatePublishedService
 import com.tencent.devops.store.template.service.TemplateNotifyService
 import com.tencent.devops.store.template.service.TemplateReleaseService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
 
 @Suppress("ALL")
-abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateReleaseService {
+abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var marketTemplateDao: MarketTemplateDao
+
     @Autowired
     lateinit var templateLabelRelDao: TemplateLabelRelDao
+
     @Autowired
     lateinit var templateCategoryRelDao: TemplateCategoryRelDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
+
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
+
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+
     @Autowired
     lateinit var templateNotifyService: TemplateNotifyService
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var client: Client
+
+    @Autowired
+    lateinit var marketTemplatePublishedService: MarketTemplatePublishedService
 
     private val logger = LoggerFactory.getLogger(TemplateReleaseServiceImpl::class.java)
 
@@ -208,93 +234,95 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 params = arrayOf(imageCode)
             )
         }
-        if (templateCount > 0) {
-            val templateName = marketTemplateUpdateRequest.templateName
-            // 判断更新的名称是否已存在
-            if (validateNameIsExist(templateCode, templateName)) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf(templateName),
-                    language = I18nUtil.getLanguage(userId)
-                )
-            }
-            val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)!!
-            // 判断最近一个模板版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
-            val templateFinalStatusList = mutableListOf(
-                    TemplateStatusEnum.AUDIT_REJECT.status.toByte(),
-                    TemplateStatusEnum.RELEASED.status.toByte(),
-                    TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                    TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
+        if (templateCount == 0) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode),
+                language = I18nUtil.getLanguage(userId)
             )
-            if (templateCount == 1) {
-                // 如果是首次发布，处于初始化的模板状态也允许添加新的版本
-                templateFinalStatusList.add(TemplateStatusEnum.INIT.status.toByte())
-            }
-            if (!templateFinalStatusList.contains(templateRecord.templateStatus)) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = StoreMessageCode.USER_TEMPLATE_VERSION_IS_NOT_FINISH,
-                    params = arrayOf(templateRecord.templateName, templateRecord.version),
-                    language = I18nUtil.getLanguage(userId)
-                )
-            }
-            val isNormalUpgrade = getNormalUpgradeFlag(
-                templateCode = templateRecord.templateCode,
-                status = templateRecord.templateStatus.toInt()
+        }
+
+        val templateName = marketTemplateUpdateRequest.templateName
+        // 判断更新的名称是否已存在
+        if (validateNameIsExist(templateCode, templateName)) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(templateName),
+                language = I18nUtil.getLanguage(userId)
             )
-            logger.info("updateMarketTemplate isNormalUpgrade is:$isNormalUpgrade")
-            val templateStatus = if (isNormalUpgrade) {
-                TemplateStatusEnum.RELEASED.status.toByte()
-            } else TemplateStatusEnum.AUDITING.status.toByte()
-            var templateId = UUIDUtil.generate()
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                if (1 == templateCount) {
-                    if (templateRecord.version.isNullOrBlank()) {
-                        // 首次创建版本
-                        templateId = templateRecord.id
-                        marketTemplateDao.updateMarketTemplate(
-                            dslContext = context,
-                            userId = userId,
-                            templateId = templateId,
-                            version = "1",
-                            marketTemplateUpdateRequest = marketTemplateUpdateRequest
-                        )
-                        // 插入标签
-                        val labelIdList = marketTemplateUpdateRequest.labelIdList
-                        if (null != labelIdList) {
-                            templateLabelRelDao.deleteByTemplateId(context, templateId)
-                            if (labelIdList.isNotEmpty()) {
-                                templateLabelRelDao.batchAdd(context, userId, templateId, labelIdList)
-                            }
+        }
+        val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)!!
+        // 判断最近一个模板版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+        val templateFinalStatusList = mutableListOf(
+            TemplateStatusEnum.AUDIT_REJECT.status.toByte(),
+            TemplateStatusEnum.RELEASED.status.toByte(),
+            TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        if (templateCount == 1) {
+            // 如果是首次发布，处于初始化的模板状态也允许添加新的版本
+            templateFinalStatusList.add(TemplateStatusEnum.INIT.status.toByte())
+        }
+        if (!templateFinalStatusList.contains(templateRecord.templateStatus)) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_TEMPLATE_VERSION_IS_NOT_FINISH,
+                params = arrayOf(templateRecord.templateName, templateRecord.version),
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
+        val isNormalUpgrade = getNormalUpgradeFlag(
+            templateCode = templateRecord.templateCode,
+            status = templateRecord.templateStatus.toInt()
+        )
+        logger.info("updateMarketTemplate isNormalUpgrade is:$isNormalUpgrade")
+        val templateStatus = if (isNormalUpgrade) {
+            TemplateStatusEnum.RELEASED.status.toByte()
+        } else {
+            TemplateStatusEnum.AUDITING.status.toByte()
+        }
+
+        var templateId = UUIDUtil.generate()
+        val isInitialRelease = templateCount == 1 && templateRecord.version.isNullOrBlank()
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            when {
+                // 首次创建版本
+                isInitialRelease -> {
+                    templateId = templateRecord.id
+                    marketTemplateDao.updateMarketTemplate(
+                        dslContext = context,
+                        userId = userId,
+                        templateId = templateId,
+                        version = "1",
+                        marketTemplateUpdateRequest = marketTemplateUpdateRequest
+                    )
+                    // 插入标签
+                    val labelIdList = marketTemplateUpdateRequest.labelIdList
+                    if (null != labelIdList) {
+                        templateLabelRelDao.deleteByTemplateId(context, templateId)
+                        if (labelIdList.isNotEmpty()) {
+                            templateLabelRelDao.batchAdd(context, userId, templateId, labelIdList)
                         }
-                        // 插入范畴
-                        templateCategoryRelDao.deleteByTemplateId(context, templateId)
-                        templateCategoryRelDao.batchAdd(
-                            dslContext = context,
-                            userId = userId,
-                            templateId = templateId,
-                            categoryIdList = marketTemplateUpdateRequest.categoryIdList
-                        )
-                        if (templateApproveSwitch == CLOSE) {
-                            passTemplateReleaseAndNotify(
-                                context = context,
-                                userId = userId,
-                                templateId = templateId,
-                                templateStatus = templateStatus
-                            )
-                        }
-                    } else {
-                        // 升级模板
-                        upgradeMarketTemplate(
-                            templateRecord = templateRecord,
+                    }
+                    // 插入范畴
+                    templateCategoryRelDao.deleteByTemplateId(context, templateId)
+                    templateCategoryRelDao.batchAdd(
+                        dslContext = context,
+                        userId = userId,
+                        templateId = templateId,
+                        categoryIdList = marketTemplateUpdateRequest.categoryIdList
+                    )
+                    if (templateApproveSwitch == CLOSE) {
+                        passTemplateReleaseAndNotify(
                             context = context,
                             userId = userId,
                             templateId = templateId,
-                            templateStatus = templateStatus,
-                            marketTemplateUpdateRequest = marketTemplateUpdateRequest
+                            templateStatus = templateStatus
                         )
                     }
-                } else {
+                }
+
+                else -> {
                     // 升级模板
                     upgradeMarketTemplate(
                         templateRecord = templateRecord,
@@ -306,14 +334,33 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     )
                 }
             }
-            return Result(templateId)
-        } else {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateCode),
-                language = I18nUtil.getLanguage(userId)
-            )
         }
+
+        val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, templateRecord.id)
+        val categoryCodeList = mutableListOf<String>()
+        categoryRecords?.forEach {
+            categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
+        }
+        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = templateRecord.templateCode,
+            storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+        )
+        val addMarketTemplateRequest = MarketTemplateRequest(
+            projectCodeList = arrayListOf(projectCode!!),
+            templateCode = templateRecord.templateCode,
+            templateName = templateRecord.templateName,
+            logoUrl = templateRecord.logoUrl,
+            categoryCodeList = categoryCodeList,
+            publicFlag = templateRecord.publicFlag,
+            publisher = templateRecord.publisher
+        )
+        logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
+        val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
+            .updateMarketTemplateReference("system", projectCode, addMarketTemplateRequest)
+        logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
+
+        return Result(templateId)
     }
 
     private fun upgradeMarketTemplate(
@@ -377,6 +424,263 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         templateNotifyService.sendTemplateReleaseAuditNotifyMessage(templateId, AuditTypeEnum.AUDIT_SUCCESS)
     }
 
+    override fun releaseMarketTemplate(
+        userId: String,
+        request: MarketTemplateUpdateV2Request
+    ): Result<String> {
+        logger.info("release market template:$userId|$request")
+
+        return request.run {
+            val isInitialRelease = marketTemplateDao.countByCode(dslContext, templateCode) == 0
+
+            checkWhenReleaseTemplate(
+                isInitialRelease = isInitialRelease,
+                userId = userId,
+                request = request
+            )
+            val marketTemplateId = UUIDUtil.generate()
+            val classifyId = classifyDao.getClassifyByCode(
+                dslContext = dslContext,
+                classifyCode = classifyCode,
+                type = StoreTypeEnum.TEMPLATE
+            )?.id ?: ""
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+
+                val version = if (isInitialRelease) {
+                    "1"
+                } else {
+                    val latest = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)!!
+                    marketTemplateDao.cleanLatestFlag(context, templateCode)
+                    (latest.version.toInt() + 1).toString()
+                }
+
+                // 模板数据操作
+                marketTemplateDao.insert(
+                    dslContext = context,
+                    MarketTemplateInfo(
+                        id = marketTemplateId,
+                        templateName = templateName,
+                        templateCode = templateCode,
+                        classifyId = classifyId,
+                        version = version,
+                        templateStatus = TemplateStatusEnum.RELEASED,
+                        logoUrl = logoUrl,
+                        summary = summary,
+                        description = description,
+                        pubDescription = pubDescription,
+                        publicFlag = publicFlag,
+                        latestFlag = true,
+                        publisher = userId,
+                        creator = userId,
+                        modifier = userId,
+                        pubTime = LocalDateTime.now()
+                    )
+                )
+
+                // 关联数据操作
+                if (isInitialRelease) {
+                    storeProjectRelDao.addStoreProjectRel(
+                        dslContext = context,
+                        userId = userId,
+                        storeCode = templateCode,
+                        projectCode = projectCode,
+                        type = StoreProjectTypeEnum.INIT.type.toByte(),
+                        storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+                    )
+                    storeMemberDao.addStoreMember(
+                        dslContext = context,
+                        userId = userId,
+                        storeCode = templateCode,
+                        userName = userId,
+                        type = StoreMemberTypeEnum.ADMIN.type.toByte(),
+                        storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+                    )
+                    storeStatisticTotalDao.initStatisticData(
+                        dslContext = context,
+                        storeCode = templateCode,
+                        storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+                    )
+                }
+
+                // 标签和分类处理
+                labelIdList?.takeIf { it.isNotEmpty() }?.let {
+                    templateLabelRelDao.deleteByTemplateId(context, marketTemplateId)
+                    templateLabelRelDao.batchAdd(context, userId, marketTemplateId, it)
+                }
+                categoryIdList.takeIf { it.isNotEmpty() }?.let {
+                    templateCategoryRelDao.deleteByTemplateId(context, marketTemplateId)
+                    templateCategoryRelDao.batchAdd(context, userId, marketTemplateId, it)
+                }
+                storeReleaseDao.addStoreReleaseInfo(
+                    dslContext = context,
+                    userId = userId,
+                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                        storeCode = templateCode,
+                        storeType = StoreTypeEnum.TEMPLATE,
+                        latestUpgrader = userId,
+                        latestUpgradeTime = LocalDateTime.now()
+                    )
+                )
+            }
+            // 更新可见范围
+            addTemplateVisibleDept(
+                userId = userId,
+                templateCode = templateCode,
+                fullScopeVisible = fullScopeVisible,
+                deptInfos = deptInfos
+            )
+            // 更新引用
+            val categoryCodeList = templateCategoryRelDao.getCategorysByTemplateId(dslContext, marketTemplateId)
+                ?.map { it[KEY_CATEGORY_CODE].toString() }
+            client.get(ServicePipelineTemplateV2Resource::class).handleMarketTemplatePublished(
+                MarketTemplateV2Request(
+                    projectId = projectCode,
+                    marketTemplateId = marketTemplateId,
+                    templateCode = templateCode,
+                    templateVersion = templateVersion,
+                    publishStrategy = publishStrategy,
+                    templateName = templateName,
+                    logoUrl = logoUrl,
+                    categoryCodeList = categoryCodeList,
+                    publicFlag = publicFlag,
+                    publisher = userId
+                )
+            )
+            Result(templateCode)
+        }
+    }
+
+    private fun checkWhenReleaseTemplate(
+        isInitialRelease: Boolean,
+        userId: String,
+        request: MarketTemplateUpdateV2Request
+    ): Result<Boolean> {
+        with(request) {
+            if (isInitialRelease) {
+                // 判断模板是否已经上架过研发商店
+                val isReleased = marketTemplateDao.countByCode(dslContext, templateCode) > 0
+                if (isReleased) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(templateCode),
+                        defaultMessage = I18nUtil.generateResponseDataObject(
+                            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                            params = arrayOf(templateCode),
+                            data = false,
+                            language = I18nUtil.getLanguage(userId)
+                        ).message
+                    )
+                }
+                // 首次发布，检查版本号是否为空
+                if (request.templateVersion == null) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("templateVersion")
+                    )
+                }
+                // 检查名称是否重复
+                val nameCount = marketTemplateDao.countByName(dslContext, templateName)
+                if (nameCount > 0) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(templateName),
+                        defaultMessage = I18nUtil.generateResponseDataObject(
+                            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                            params = arrayOf(templateName),
+                            data = false,
+                            language = I18nUtil.getLanguage(userId)
+                        ).message
+                    )
+                }
+            }
+
+            // 校验模板是否合法
+            if (templateVersion != null) {
+                val checkResult = client.get(ServicePipelineTemplateV2Resource::class).checkWhenPublishedTemplate(
+                    userId = userId,
+                    projectId = projectCode,
+                    templateId = templateCode,
+                    version = templateVersion!!
+                )
+                if (checkResult.isNotOk()) {
+                    return checkResult
+                }
+                val releaseResult = client.get(ServicePipelineTemplateV2Resource::class).checkImageReleaseStatus(
+                    userId = userId,
+                    templateId = templateCode,
+                    projectId = projectCode,
+                    version = templateVersion!!
+                )
+                val imageCode = releaseResult.data
+                if (!imageCode.isNullOrBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = USER_TEMPLATE_IMAGE_IS_INVALID,
+                        params = arrayOf(imageCode)
+                    )
+                }
+            }
+            validateTemplateVisibleDept(
+                templateCode = templateCode,
+                fullScopeVisible = fullScopeVisible,
+                deptInfos = deptInfos
+            )
+        }
+        return Result(true)
+    }
+
+    override fun releaseMarketTemplateVersions(
+        userId: String,
+        request: MarketTemplateReleaseReq
+    ): Boolean {
+        with(request) {
+            marketTemplateDao.getLatestTemplateByCode(
+                dslContext = dslContext,
+                templateCode = templateCode
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(templateCode)
+            )
+            val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                dslContext = dslContext,
+                storeCode = templateCode,
+                storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+            ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+            val templateResource = client.get(ServicePipelineTemplateV2Resource::class).getTemplateDetails(
+                projectId = projectCode,
+                templateId = templateCode,
+                version = version
+            ).data?.resource!!
+            marketTemplatePublishedService.create(
+                TemplatePublishedVersionInfo(
+                    projectCode = projectCode,
+                    templateCode = templateCode,
+                    version = version,
+                    versionName = templateResource.versionName!!,
+                    number = templateResource.number,
+                    published = true,
+                    creator = userId,
+                    updater = userId
+                )
+            )
+            marketTemplateDao.updateTemplateStatusByCode(
+                dslContext = dslContext,
+                templateCode = templateCode,
+                templateOldStatus = TemplateStatusEnum.UNDERCARRIAGED.status.toByte(),
+                templateNewStatus = TemplateStatusEnum.RELEASED.status.toByte(),
+                userId = userId
+            )
+
+            client.get(ServicePipelineTemplateV2Resource::class).handleMarketTemplateVersionPublished(
+                userId = userId,
+                projectId = projectCode,
+                templateId = templateCode,
+                version = version
+            )
+        }
+        return true
+    }
+
     override fun handleTemplateRelease(
         context: DSLContext,
         userId: String,
@@ -416,34 +720,22 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             latestFlag = latestFlag,
             pubTime = pubTime
         )
-        if (approveResult == PASS) {
-            val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, template.id)
-            val categoryCodeList = mutableListOf<String>()
-            categoryRecords?.forEach {
-                categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
-            }
-            val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                dslContext = dslContext,
-                storeCode = template.templateCode,
-                storeType = StoreTypeEnum.TEMPLATE.type.toByte()
-            )
-            val addMarketTemplateRequest = MarketTemplateRequest(
-                projectCodeList = arrayListOf(projectCode!!),
-                templateCode = template.templateCode,
-                templateName = template.templateName,
-                logoUrl = template.logoUrl,
-                categoryCodeList = categoryCodeList,
-                publicFlag = template.publicFlag,
-                publisher = template.publisher
-            )
-            logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
-            val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
-                .updateMarketTemplateReference("system", projectCode, addMarketTemplateRequest)
-            logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
-        }
     }
 
     abstract fun validateTemplateVisibleDept(templateCode: String)
+
+    abstract fun validateTemplateVisibleDept(
+        templateCode: String,
+        fullScopeVisible: Boolean?,
+        deptInfos: List<DeptInfo>?
+    )
+
+    abstract fun addTemplateVisibleDept(
+        userId: String,
+        templateCode: String,
+        fullScopeVisible: Boolean?,
+        deptInfos: List<DeptInfo>?
+    )
 
     private fun validateNameIsExist(
         templateCode: String,
@@ -468,10 +760,14 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     override fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo templateId: $templateId")
         val record = marketTemplateDao.getTemplate(dslContext, templateId)
+        return getProcessInfo(userId, record)
+    }
+
+    private fun getProcessInfo(userId: String, record: TTemplateRecord?): Result<StoreProcessInfo> {
         return if (null == record) {
             I18nUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(templateId),
+                arrayOf("template not exist"),
                 language = I18nUtil.getLanguage(userId)
             )
         } else {
@@ -497,7 +793,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             val processInfo = handleProcessInfo(isNormalUpgrade, status)
             val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
                 userId = userId,
-                storeId = templateId,
+                storeId = record.id,
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE,
                 creator = record.creator,
@@ -506,6 +802,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
             Result(storeProcessInfo)
         }
+    }
+
+    override fun getProcessInfoByCode(userId: String, templateCode: String): Result<StoreProcessInfo> {
+        logger.info("getProcessInfo code: $templateCode")
+        val record = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
+        return getProcessInfo(userId, record)
     }
 
     private fun getNormalUpgradeFlag(templateCode: String, status: Int): Boolean {
@@ -527,7 +829,6 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
      */
     override fun cancelRelease(userId: String, templateId: String): Result<Boolean> {
         logger.info("cancelRelease userId is:$userId, templateId is:$templateId")
-        val status = TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -535,6 +836,23 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 data = false,
                 language = I18nUtil.getLanguage(userId)
             )
+        return cancelRelease(userId, templateRecord)
+    }
+
+    override fun cancelReleaseByCode(userId: String, templateCode: String): Result<Boolean> {
+        logger.info("cancelRelease userId is:$userId, templateCode is:$templateCode")
+        val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
+        return cancelRelease(userId, templateRecord)
+    }
+
+    private fun cancelRelease(userId: String, templateRecord: TTemplateRecord): Result<Boolean> {
+        val status = TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val templateCode = templateRecord.templateCode
         val creator = templateRecord.creator
         val templateStatus = templateRecord.templateStatus
@@ -556,7 +874,13 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 params = arrayOf(templateCode)
             )
         }
-        marketTemplateDao.updateTemplateStatusById(dslContext, templateId, status, userId, "cancel release")
+        marketTemplateDao.updateTemplateStatusById(
+            dslContext = dslContext,
+            templateId = templateRecord.id,
+            templateStatus = status,
+            userId = userId,
+            msg = "cancel release"
+        )
         return Result(true)
     }
 
@@ -571,7 +895,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     ): Result<Boolean> {
         logger.info("offlineTemplate userId is:$userId, templateCode is:$templateCode,version is:$version")
         // 判断用户是否有权限下架模板
-        if (! storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())) {
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                 language = I18nUtil.getLanguage(userId),
@@ -637,6 +961,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             // 把所有已发布的版本全部下架
             dslContext.transaction { t ->
                 val context = DSL.using(t)
+
                 marketTemplateDao.updateTemplateStatusByCode(
                     dslContext = context,
                     templateCode = templateCode,
@@ -658,7 +983,98 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                         latestFlag = true
                     )
                 }
+                val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                    dslContext = context,
+                    storeCode = templateCode,
+                    storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+                ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+                marketTemplatePublishedService.offlineTemplate(
+                    templateCode = templateCode,
+                    templateVersion = null
+                )
+                try {
+                    client.get(ServicePipelineTemplateV2Resource::class).updateStoreStatus(
+                        userId = userId,
+                        projectId = projectCode,
+                        templateId = templateCode,
+                        storeStatus = TemplateStatusEnum.UNDERCARRIAGED,
+                        version = null
+                    )
+                } catch (ex: Exception) {
+                    logger.info("update store flag failed! $ex")
+                }
             }
+        }
+        return Result(true)
+    }
+
+    override fun offlineTemplateV2(
+        userId: String,
+        templateCode: String,
+        templateVersion: Long?,
+        reason: String?
+    ): Result<Boolean> {
+        if (templateVersion != null && reason.isNullOrBlank()) {
+            throw ErrorCodeException(errorCode = OFFSET_REASON_IS_NOT_ALLOW_NULL)
+        }
+
+        // 判断用户是否有权限下架模板
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())) {
+            throw ErrorCodeException(
+                errorCode = NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(templateCode),
+                defaultMessage = I18nUtil.generateResponseDataObject(
+                    messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(templateCode),
+                    data = false,
+                ).message
+            )
+        }
+
+        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+
+        if (templateVersion == null) {
+            // 把所有已发布的版本全部下架
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                marketTemplateDao.updateTemplateStatusByCode(
+                    dslContext = context,
+                    templateCode = templateCode,
+                    templateOldStatus = TemplateStatusEnum.RELEASED.status.toByte(),
+                    templateNewStatus = TemplateStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    userId = userId,
+                    msg = "undercarriage"
+                )
+
+                marketTemplatePublishedService.offlineTemplate(
+                    templateCode = templateCode,
+                    templateVersion = null
+                )
+                client.get(ServicePipelineTemplateV2Resource::class).updateStoreStatus(
+                    userId = userId,
+                    projectId = projectCode,
+                    templateId = templateCode,
+                    storeStatus = TemplateStatusEnum.UNDERCARRIAGED,
+                    version = null
+                )
+            }
+        } else {
+            marketTemplatePublishedService.offlineTemplate(
+                templateCode = templateCode,
+                templateVersion = templateVersion
+            )
+            client.get(ServicePipelineTemplateV2Resource::class).updateStoreStatus(
+                userId = userId,
+                projectId = projectCode,
+                templateId = templateCode,
+                storeStatus = TemplateStatusEnum.UNDERCARRIAGED,
+                version = templateVersion
+            )
         }
         return Result(true)
     }

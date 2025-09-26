@@ -129,7 +129,6 @@ object MatrixContextUtils {
     }
 
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-        .objectMapper(YamlUtil.getObjectMapper())
         .build()
 
     /**

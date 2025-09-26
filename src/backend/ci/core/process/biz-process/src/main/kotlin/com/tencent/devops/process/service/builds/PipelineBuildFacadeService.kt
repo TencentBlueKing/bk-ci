@@ -103,6 +103,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.PipelineBuildVersionDiffService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -124,6 +125,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -153,10 +155,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -186,7 +188,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildRetryService: PipelineBuildRetryService
+    private val pipelineBuildRetryService: PipelineBuildRetryService,
+    private val pipelineBuildVersionDiffService: PipelineBuildVersionDiffService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -1216,7 +1219,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         reviewUsers: List<String>,
         params: MutableList<ManualReviewParam>,
-        desc: String,
+        desc: String
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
         reviewUsers.forEach { user ->
@@ -2996,6 +2999,59 @@ class PipelineBuildFacadeService(
             }
         }
         return parameter
+    }
+
+    fun getBuildVersionDiff(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): BuildVersionDiff? {
+        // 校验用户是否有查看权限
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val currBuildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId)
+        )
+        if (currBuildInfo.buildNum == 1 || currBuildInfo.versionChange == false || currBuildInfo.debug) {
+            return null
+        }
+        val prevBuildInfo = pipelineRuntimeService.getBuildInfoByBuildNum(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = currBuildInfo.buildNum - 1
+        )
+        val buildVersionDiffs = pipelineBuildVersionDiffService.list(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        return BuildVersionDiff(
+            currVersion = currBuildInfo.version,
+            currVersionName = currBuildInfo.versionName,
+            prevVersion = prevBuildInfo?.version,
+            prevVersionName = prevBuildInfo?.versionName,
+            buildVersionDiffs = buildVersionDiffs
+        )
     }
 
     private fun getBuildManualParams(

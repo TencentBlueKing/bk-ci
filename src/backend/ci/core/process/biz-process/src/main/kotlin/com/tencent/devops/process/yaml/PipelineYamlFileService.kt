@@ -27,12 +27,11 @@
 
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
-import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlBranchFileDao
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
-import com.tencent.devops.repository.api.scm.ServiceScmFileApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.enums.ContentKind
 import com.tencent.devops.scm.api.pojo.Content
@@ -43,22 +42,22 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlFileService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
-    private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao
+    private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
+    private val scmProxyService: ScmProxyService
 ) {
     fun listFileTree(
         projectId: String,
         ref: String,
         authRepository: AuthRepository
     ): List<Tree> {
-        return client.get(ServiceScmFileApiResource::class).listFileTree(
+        return scmProxyService.listFileTree(
             projectId = projectId,
             path = Constansts.ciFileDirectoryName,
             ref = ref,
             recursive = true,
             authRepository = authRepository
-        ).data?.filter {
+        )?.filter {
             it.kind == ContentKind.FILE && GitActionCommon.checkYamlPipelineFile(it.path)
         } ?: emptyList()
     }
@@ -69,12 +68,12 @@ class PipelineYamlFileService @Autowired constructor(
         ref: String,
         authRepository: AuthRepository
     ): Content {
-        return client.get(ServiceScmFileApiResource::class).getFileContent(
+        return scmProxyService.getFileContent(
             projectId = projectId,
             path = path,
             ref = ref,
             authRepository = authRepository
-        ).data!!
+        )
     }
 
     fun getBranchFilePath(
