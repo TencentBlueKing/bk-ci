@@ -146,6 +146,7 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
         @Test
         fun `triggerCircuitBreakerByFailures opens circuit and calls fallback`() {
             every { routingStrategy.getModeForProject("p") } returns RoutingMode.CIRCUIT_BREAKER
+            every { decorator.circuitBreakerCounter().increment() } returns Unit
             // Simulate failures for external service
             every {
                 rbacPermissionService.validateUserProjectPermission(any(), any(), any())
@@ -195,7 +196,7 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
         @Test
         fun `triggerCircuitBreakerBySlowCall opens circuit and calls fallback`() {
             every { routingStrategy.getModeForProject("p") } returns RoutingMode.CIRCUIT_BREAKER
-
+            every { decorator.circuitBreakerCounter().increment() } returns Unit
             // Simulate slow calls for external service (threshold 50ms, sleep 100ms)
             every { rbacPermissionService.validateUserProjectPermission(any(), any(), any()) } answers {
                 Thread.sleep(100)

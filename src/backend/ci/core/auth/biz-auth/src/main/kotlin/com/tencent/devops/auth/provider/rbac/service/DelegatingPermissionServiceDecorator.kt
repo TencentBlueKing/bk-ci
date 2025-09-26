@@ -31,7 +31,7 @@ class DelegatingPermissionServiceDecorator(
     private val rbacCommonService: RbacCommonService,
     private val meterRegistry: MeterRegistry
 ) : PermissionService {
-    private fun circuitBreakerCounter(): Counter {
+    fun circuitBreakerCounter(): Counter {
         return Counter.builder("permission.circuit.breaker.counter")
             .description("Counts the circuit breaker")
             .tag("method", "circuit breaker")
