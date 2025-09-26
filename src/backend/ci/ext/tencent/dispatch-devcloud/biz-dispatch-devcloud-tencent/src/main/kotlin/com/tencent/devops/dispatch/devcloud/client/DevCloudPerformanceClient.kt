@@ -73,7 +73,7 @@ class DevCloudPerformanceClient {
         pipelineId: String,
         performanceUid: String,
         retryTime: Int = 3
-    ): PerformanceData {
+    ): PerformanceData? {
         return executeWithRetry(
             userId = userId,
             projectId = projectId,
