@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -201,43 +200,6 @@ class PipelineResourceDao {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
-        }
-    }
-
-    fun updatePipelineModel(
-        dslContext: DSLContext,
-        userId: String,
-        pipelineModelVersion: PipelineModelVersion
-    ) {
-        with(T_PIPELINE_RESOURCE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(pipelineModelVersion.projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineModelVersion.pipelineId))
-            val version = pipelineModelVersion.version
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
-            }
-            dslContext.update(this)
-                .set(MODEL, pipelineModelVersion.model)
-                .set(CREATOR, userId)
-                .where(conditions)
-                .execute()
-        }
-    }
-
-    fun updateSettingVersion(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        settingVersion: Int
-    ): Int? {
-        with(T_PIPELINE_RESOURCE) {
-            return dslContext.update(this)
-                .set(SETTING_VERSION, settingVersion)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .returning(VERSION)
-                .fetchOne()?.version
         }
     }
 

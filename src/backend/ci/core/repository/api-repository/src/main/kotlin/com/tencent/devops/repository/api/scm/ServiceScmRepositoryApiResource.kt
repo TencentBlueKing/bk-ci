@@ -27,9 +27,13 @@
 
 package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.scm.api.pojo.CheckRun
+import com.tencent.devops.scm.api.pojo.CheckRunInput
+import com.tencent.devops.scm.api.pojo.CommentInput
 import com.tencent.devops.scm.api.pojo.Perm
 import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
@@ -142,4 +146,58 @@ interface ServiceScmRepositoryApiResource {
         @Parameter(description = "代码库模型", required = true)
         repository: Repository
     )
+
+    @Operation(summary = "添加check-run")
+    @POST
+    @Path("/createCheckRun")
+    fun createCheckRun(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("repoType")
+        repoType: RepositoryType,
+        @Parameter(description = "仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "checkRun参数", required = true)
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun>
+
+    @Operation(summary = "添加check-run")
+    @POST
+    @Path("/updateCheckRun")
+    fun updateCheckRun(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("repoType")
+        repoType: RepositoryType,
+        @Parameter(description = "仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "checkRun参数", required = true)
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun>
+
+    @Operation(summary = "添加评论")
+    @POST
+    @Path("/addComment")
+    fun addComment(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("repoType")
+        repoType: RepositoryType,
+        @Parameter(description = "仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "number", required = true)
+        @QueryParam("number")
+        number: Int,
+        @Parameter(description = "comment参数", required = true)
+        input: CommentInput
+    ): Result<Boolean>
 }

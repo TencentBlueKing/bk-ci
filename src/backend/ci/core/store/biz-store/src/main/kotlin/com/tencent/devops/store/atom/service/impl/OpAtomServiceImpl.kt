@@ -92,7 +92,6 @@ import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.FileSystems
-import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
@@ -328,21 +327,13 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
-        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE || atom.version == INIT_VERSION) {
-            // 历史大版本下的小版本更新或者插件首个版本上架审核时不更新latestFlag
-            null
-        } else {
-            approveReq.result == PASS
-        }
-        // 入库信息，并设置当前版本的LATEST_FLAG
+        // 入库信息
         marketAtomDao.approveAtomFromOp(
             dslContext = dslContext,
             userId = userId,
             atomId = atomId,
             atomStatus = atomStatus,
-            approveReq = approveReq,
-            latestFlag = latestFlag,
-            pubTime = LocalDateTime.now()
+            approveReq = approveReq
         )
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
@@ -634,7 +625,11 @@ class OpAtomServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
+    override fun updateAtomConfigCache(
+        userId: String,
+        kProperty: String,
+        atomCode: String?
+    ): Result<Boolean> {
         executorService.submit {
             logger.info("begin updateAtomSensitiveCacheConfig!!")
             val statusList = listOf(
@@ -644,9 +639,9 @@ class OpAtomServiceImpl @Autowired constructor(
             )
             try {
                 if (atomCode.isNullOrBlank()) {
-                    batchUpdateAtomSensitiveCacheConfig(null, statusList)
+                    batchUpdateAtomConfigCache(null, kProperty, statusList)
                 } else {
-                    batchUpdateAtomSensitiveCacheConfig(atomCode, statusList)
+                    batchUpdateAtomConfigCache(atomCode, kProperty, statusList)
                 }
             } catch (ignored: Exception) {
                 logger.warn("updateAtomSensitiveCacheConfig failed", ignored)
@@ -656,8 +651,9 @@ class OpAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    private fun batchUpdateAtomSensitiveCacheConfig(
+    private fun batchUpdateAtomConfigCache(
         atomCode: String? = null,
+        kProperty: String,
         statusList: List<Byte>
     ) {
         val limit = 100
@@ -673,15 +669,17 @@ class OpAtomServiceImpl @Autowired constructor(
             val tAtom = TAtom.T_ATOM
             result.forEach {
                 val latestFlag = it[tAtom.LATEST_FLAG]
-                marketAtomService.updateAtomSensitiveCacheConfig(
+                marketAtomService.updateAtomConfigCache(
                     atomCode = it[tAtom.ATOM_CODE],
                     atomVersion = it[tAtom.VERSION],
+                    kProperty = kProperty,
                     props = it[tAtom.PROPS]
                 )
                 if (latestFlag == true) {
-                    marketAtomService.updateAtomSensitiveCacheConfig(
+                    marketAtomService.updateAtomConfigCache(
                         atomCode = it[tAtom.ATOM_CODE],
                         atomVersion = VersionUtils.convertLatestVersion(it[tAtom.VERSION]),
+                        kProperty = kProperty,
                         props = it[tAtom.PROPS]
                     )
                 }

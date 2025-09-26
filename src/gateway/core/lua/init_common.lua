@@ -40,6 +40,8 @@ securityUtil = require("util.security_util")
 buildUtil = require("util.build_util")
 cjson = require("cjson")
 resolvUtil = require("util.resolv_util")
+jwtKeyUtil = require("util.jwt_key_util")
+specialTagUtil = require("util.special_tag_util")
 
 local ok_table = {status = 0, data = true}
 

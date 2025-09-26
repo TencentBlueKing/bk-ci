@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.9
+**文档版本：** 1.0.13
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -20,6 +20,11 @@
 | T_ENV_NODE | 环境-节点映射表 |
 | T_ENV_SHARE_PROJECT |  |
 | T_NODE | 节点信息表 |
+| T_NODE_TAGS |  |
+| T_NODE_TAG_INTERNAL_KEY | 内部标签，ID 需要是负数和用户标签区分 |
+| T_NODE_TAG_INTERNAL_VALUES | 内部标签，ID 需要是负数和用户标签区分 |
+| T_NODE_TAG_KEY |  |
+| T_NODE_TAG_VALUES |  |
 | T_PROJECT_CONFIG |  |
 
 **表名：** <a>T_AGENT_BATCH_INSTALL_TOKEN</a>
@@ -266,6 +271,71 @@
 |  31   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
 |  32   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
 |  33   | SIZE |   varchar   | 32 |   0    |    Y     |  N   |       | 机型  |
+
+**表名：** <a>T_NODE_TAGS</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID  |
+|  3   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值 ID  |
+|  4   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
+
+**表名：** <a>T_NODE_TAG_INTERNAL_KEY</a>
+
+**说明：** 内部标签，ID 需要是负数和用户标签区分
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | KEY_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  3   | ALLOW_MUL_VALUES |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否允许一个节点可以有多个此 key 下的值  |
+
+**表名：** <a>T_NODE_TAG_INTERNAL_VALUES</a>
+
+**说明：** 内部标签，ID 需要是负数和用户标签区分
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
+|  3   | VALUE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 标签值  |
+
+**表名：** <a>T_NODE_TAG_KEY</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | KEY_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  4   | ALLOW_MUL_VALUES |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否允许一个节点可以有多个此 key 下的值  |
+|  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
+
+**表名：** <a>T_NODE_TAG_VALUES</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
+|  4   | VALUE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 标签值  |
+|  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
 
 **表名：** <a>T_PROJECT_CONFIG</a>
 

@@ -1204,7 +1204,8 @@
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
     "minutes": "Minutes",
-    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'",
+    "paramLengthLimitTips": "Pipeline variable [{0}] length [{1}] exceeds limit [{2}]"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
@@ -1751,6 +1752,7 @@
     "下次：": "Next:",
     "小时": "Hour"
   },
+  "validVariableFormat": "Please enter a valid variable format",
   "enterRepoAlias": "Please enter the repository alias",
   "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
   "addParam": "Add",

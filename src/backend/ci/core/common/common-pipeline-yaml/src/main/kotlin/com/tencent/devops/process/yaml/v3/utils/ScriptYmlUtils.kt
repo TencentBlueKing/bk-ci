@@ -493,6 +493,8 @@ object ScriptYmlUtils {
             timeoutMinutes = preStep.timeoutMinutes,
             continueOnError = preStep.continueOnError?.toString(),
             retryTimes = preStep.retryTimes,
+            canPauseBeforeRun = preStep.canPauseBeforeRun,
+            pauseNoticeReceivers = preStep.pauseNoticeReceivers,
             env = preStep.env,
             run = preStep.run,
             runAdditionalOptions = mapOf("shell" to preStep.shell),
