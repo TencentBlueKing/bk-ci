@@ -25,20 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.version
+package com.tencent.devops.repository.resources.scm
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.scm.UserGitRepositoryResource
+import com.tencent.devops.repository.service.scm.IGitService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "回显版本信息")
-data class StoreShowVersionItem(
-    @get:Schema(title = "回显版本号", required = true)
-    val version: String,
-    @get:Schema(title = "上个版本号", required = true)
-    val lastVersion: String,
-    @get:Schema(title = "发布类型", required = true)
-    val releaseType: String,
-    @get:Schema(title = "上个版本内容", required = false)
-    val lastVersionContent: String? = null,
-    @get:Schema(title = "是否默认选中", required = true)
-    val defaultFlag: Boolean = false
-)
+@RestResource
+class UserGitRepositoryResourceImpl @Autowired constructor(
+    private val gitService: IGitService
+) : UserGitRepositoryResource {
+
+    override fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String?,
+        gitProjectId: Long?,
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
+    ): Result<String> {
+        return gitService.getRecentGitCommitMessages(
+            userId = userId,
+            branch = branch,
+            codeSrc = codeSrc,
+            gitProjectId = gitProjectId,
+            commitNumber = commitNumber,
+            prefixes = prefixes,
+            keywords = keywords
+        )
+    }
+}
