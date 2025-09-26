@@ -492,7 +492,7 @@ class BuildEndControl @Autowired constructor(
 
         // 存储流水线执行完后构建的产物
         val reportUrls = reportService.listReportUrl(this.projectId, this.pipelineId, this.buildId)
-        if (reportUrls.isNotEmpty()){
+        if (reportUrls.isNotEmpty()) {
             buildVariableService.setVariable(
                 projectId = this.projectId,
                 pipelineId = this.pipelineId,
