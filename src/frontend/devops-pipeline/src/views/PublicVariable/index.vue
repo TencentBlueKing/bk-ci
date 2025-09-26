@@ -316,6 +316,7 @@
                         data: row,
                         hasPermission: isManage.value,
                         disablePermissionApi: true,
+                        disable: row.referCount > 0,
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'project',
