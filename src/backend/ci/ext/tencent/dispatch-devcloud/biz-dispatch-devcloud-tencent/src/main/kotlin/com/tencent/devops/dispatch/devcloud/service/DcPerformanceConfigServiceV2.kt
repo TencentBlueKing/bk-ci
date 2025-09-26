@@ -46,7 +46,7 @@ class DcPerformanceConfigServiceV2 constructor(
             performanceUid = performanceUid
         )
 
-        if (performanceData?.name?.isBlank() == true) {
+        if (performanceData == null || performanceData.name.isBlank()) {
             return PerformanceData(
                 uid = DEFAULT_CONFIG_UID,
                 name = DEFAULT_CONFIG_NAME,
@@ -54,11 +54,7 @@ class DcPerformanceConfigServiceV2 constructor(
             )
         }
 
-        return performanceData ?: PerformanceData(
-            uid = DEFAULT_CONFIG_UID,
-            name = DEFAULT_CONFIG_NAME,
-            desc = DEFAULT_CONFIG_DESC
-        )
+        return performanceData
     }
 
     companion object {
