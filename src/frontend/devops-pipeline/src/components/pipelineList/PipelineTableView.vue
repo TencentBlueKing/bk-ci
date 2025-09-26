@@ -416,14 +416,15 @@
                 prop="updateTime"
                 sort
             >
-                <div
-                    class="latest-build-multiple-row"
-                    v-if="!props.row.delete || isArchiveView"
-                    slot-scope="props"
-                >
-                    <p>{{ props.row.updater }}</p>
-                    <p class="desc">{{ props.row.updateDate }}</p>
-                </div>
+                <template v-slot="props">
+                    <div
+                        class="latest-build-multiple-row"
+                        v-if="!props.row.delete || isArchiveView"
+                    >
+                        <bk-user-display-name :user-id="props.row.updater" />
+                        <p class="desc">{{ props.row.updateDate }}</p>
+                    </div>
+                </template>
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.creator"
@@ -586,9 +587,9 @@
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
-        ARCHIVE_VIEW_ID,
         PIPELINE_TABLE_COLUMN_CACHE,
         PIPELINE_TABLE_LIMIT_CACHE,
         RECENT_USED_VIEW_ID

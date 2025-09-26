@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
+import { ArtifactoryContent } from "@/components/project-form-item/";
 import http from '@/http/api';
 import {
   handleProjectManageNoPermission,
@@ -18,8 +20,6 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
-import { ArtifactoryContent } from "@/components/project-form-item/";
 
 const { t } = useI18n();
 const router = useRouter();

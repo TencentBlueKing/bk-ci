@@ -111,6 +111,7 @@
                     />
                 </span>
                 <ext-menu
+                    v-if="pipeline.pipelineActions?.length"
                     :data="pipeline"
                     ext-cls="bk-pipeline-card-more-trigger"
                     :config="pipeline.pipelineActions"
@@ -219,7 +220,7 @@
             </bk-button>
         </div>
         <div
-            v-else-if="!pipeline.permissions?.canView && !pipeline.delete"
+            v-else-if="pipeline.permissions && !pipeline.permissions.canView && !pipeline.delete"
             class="pipeline-card-apply-mask"
         >
             <bk-button

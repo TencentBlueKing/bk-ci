@@ -112,10 +112,10 @@ export default {
                     const archiveObj = {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
-                        updater: item.lastModifyUser,
                         updateDate: convertTime(item.updateTime),
                         duration: this.calcDuration(item),
                         latestBuildUserId: item.lastModifyUser,
+                        pipelineActions: this.getPipelineActions(item, index),
                         onlyDraftVersion: isDraft,
                         historyRoute: {
                             name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',
@@ -142,7 +142,6 @@ export default {
                         return Object.assign(archiveObj, {
                             latestBuildUserId: item.latestBuildUserId,
                             progress: this.calcProgress(item),
-                            pipelineActions: this.getPipelineActions(item, index),
                             disabled: this.isDisabledPipeline(item),
                             tooltips: this.disabledTips(item),
                             released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
@@ -225,6 +224,24 @@ export default {
                 : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
             const isBuilding = pipeline.runningBuildCount > 0
+            const isArchiveView = this.$route.params.viewId === ARCHIVE_VIEW_ID
+            const deleteAction = {
+                text: this.$t('delete'),
+                handler: isArchiveView ? this.openDeleteArchivedDialog : this.deleteHandler,
+                hasPermission: pipeline.permissions?.canDelete || isArchiveView,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: pipeline.projectId,
+                    resourceType: 'pipeline',
+                    resourceCode: pipeline.pipelineId,
+                    action: RESOURCE_ACTION.DELETE
+                }
+            }
+            if (isArchiveView) {
+                return [
+                    deleteAction
+                ]
+            }
             
             const isDraft = pipeline.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
             let archiveTooltip
@@ -242,7 +259,7 @@ export default {
                 {
                     text: this.$t(pipeline.lock ? 'enable' : 'disable'),
                     handler: this.lockPipelineHandler,
-                    hasPermission: pipeline.permissions.canEdit,
+                    hasPermission: pipeline.permissions?.canEdit,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
@@ -259,7 +276,7 @@ export default {
                     ? [{
                         text: this.$t('copyAsTemplateInstance'),
                         handler: () => this.copyAsTemplateInstance(pipeline),
-                        hasPermission: pipeline.permissions.canManage,
+                        hasPermission: pipeline.permissions?.canManage,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: pipeline.projectId,
@@ -272,7 +289,7 @@ export default {
                 {
                     text: this.$t('newlist.copyAs'),
                     handler: this.copyAs,
-                    hasPermission: pipeline.permissions.canEdit,
+                    hasPermission: pipeline.permissions?.canEdit,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
@@ -313,7 +330,7 @@ export default {
                     disable: isBuilding || isDraft || pipeline.archivingFlag,
                     tooltips: archiveTooltip,
                     handler: this.archiveHandler,
-                    hasPermission: pipeline.permissions.canArchive,
+                    hasPermission: pipeline.permissions?.canArchive,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
@@ -322,18 +339,7 @@ export default {
                         action: RESOURCE_ACTION.ARCHIVED
                     }
                 },
-                {
-                    text: this.$t('delete'),
-                    handler: this.deleteHandler,
-                    hasPermission: pipeline.permissions.canDelete,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.DELETE
-                    }
-                }
+                deleteAction
             ]
         },
         async collectHandler (pipeline) {

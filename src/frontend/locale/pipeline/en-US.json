@@ -739,7 +739,7 @@
       "settingNow": "Set now",
       "reflashSetting": " Click here to refresh"
     },
-    "executorInfo": "{1} triggered at {2}",
+    "executorInfo": "triggered at {0}",
     "triggerTime": "Trigger Time",
     "startTime": "Start Time",
     "endTime": "End Time",
