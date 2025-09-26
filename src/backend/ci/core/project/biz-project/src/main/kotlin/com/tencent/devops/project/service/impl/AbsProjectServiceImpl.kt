@@ -1024,6 +1024,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, null)
+            val projectsWithManagePermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.MANAGE
+            )
+            val projectsWithViewPermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.VIEW
+            )
             logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(
@@ -1036,7 +1046,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 channelCodes = splitStr(channelCodes).toSet(),
                 sortType = sort
             ).map {
-                list.add(ProjectUtils.packagingBean(it))
+                list.add(
+                    ProjectUtils.packagingBean(
+                        tProjectRecord = it,
+                        managePermission = projectsWithManagePermission?.contains(it.englishName),
+                        viewPermission = projectsWithViewPermission?.contains(it.englishName)
+                    )
+                )
             }
             success = true
             return list
