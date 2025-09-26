@@ -79,18 +79,20 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     private fun batchCountActualVarReferences(
         projectId: String,
-        referIds: Map<String, Int>,
+        referInfos: List<PipelinePublicVarGroupReferPO>,
         referType: PublicVerGroupReferenceTypeEnum
     ): Map<String, Int> {
-        if (referIds.isEmpty()) {
+        if (referInfos.isEmpty()) {
             return emptyMap()
         }
+
+        val referInfosList = referInfos.map { Pair(it.referId, it.referVersion) }
 
         // 批量查询所有引用信息
         val allGroupInfos = publicVarGroupReferInfoDao.batchListVarGroupReferInfoByReferIds(
             dslContext = dslContext,
             projectId = projectId,
-            referIds = referIds,
+            referinfos = referInfosList,
             referType = referType
         )
         
@@ -342,7 +344,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             // 批量查询实际引用变量数
             val actualRefCounts = batchCountActualVarReferences(
                 projectId = queryReq.projectId,
-                referIds = pipelineReferInfos.associate { it.referId to it.referVersion },
+                referInfos = pipelineReferInfos,
                 referType = PublicVerGroupReferenceTypeEnum.PIPELINE
             )
 
@@ -385,7 +387,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             // 批量查询实际引用变量数
             val actualRefCounts = batchCountActualVarReferences(
                 projectId = queryReq.projectId,
-                referIds = validTemplateReferInfos.associate { it.referId to it.referVersion },
+                referInfos = validTemplateReferInfos,
                 referType = PublicVerGroupReferenceTypeEnum.TEMPLATE
             )
 

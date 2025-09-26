@@ -326,7 +326,7 @@ class PublicVarGroupService @Autowired constructor(
         )
         redisLock.lock()
         try {
-            val groupRecord = publicVarGroupDao.getRecordByGroupName(
+            publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName
@@ -335,8 +335,17 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
 
-            // 检查引用计数是否大于0
-            if (groupRecord.referCount > 0) {
+            // 统计变量组的实际关联引用数量
+            val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                referType = null,
+                version = null
+            )
+            
+            // 检查实际引用计数是否大于0
+            if (actualReferCount > 0) {
                 throw ErrorCodeException(
                     errorCode = PIPELINE_PUBLIC_VAR_GROUP_REFERENCED,
                     params = arrayOf(groupName)
