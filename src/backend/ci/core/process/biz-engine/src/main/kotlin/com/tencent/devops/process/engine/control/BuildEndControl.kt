@@ -492,13 +492,15 @@ class BuildEndControl @Autowired constructor(
 
         // 存储流水线执行完后构建的产物
         val reportUrls = reportService.listReportUrl(this.projectId, this.pipelineId, this.buildId)
-        buildVariableService.setVariable(
-            projectId = this.projectId,
-            pipelineId = this.pipelineId,
-            buildId = this.buildId,
-            varName = PIPELINE_BUILD_ARTIFACT,
-            varValue = reportUrls.joinToString(",")
-        )
+        if (reportUrls.isNotEmpty()){
+            buildVariableService.setVariable(
+                projectId = this.projectId,
+                pipelineId = this.pipelineId,
+                buildId = this.buildId,
+                varName = PIPELINE_BUILD_ARTIFACT,
+                varValue = reportUrls.joinToString(",")
+            )
+        }
     }
 
     // 子流水线回调父流水线
