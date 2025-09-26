@@ -183,6 +183,7 @@
         computed: {
             // isTemplate代表是一个模板，而不是说是模板实例
             ...mapGetters('atom', ['isTemplate']),
+            
             uniqueId () {
                 const { pipelineId, templateId } = this.$route.params
                 if (this.isTemplate) {
@@ -192,7 +193,7 @@
             },
             versionSelectorConf () {
                 return {
-                    isTemplate: this.isTemplate,
+                    isTemplate: (this.isTemplate || !!this.templateId),
                     uniqueId: this.uniqueId
                 }
             },
@@ -213,9 +214,10 @@
             ...mapActions('templates', ['requestVersionCompare']),
             async fetchPipelineYaml (version) {
                 try {
-                    const fn = this.isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
+                    const isTemplate = this.isTemplate || !!this.templateId
+                    const fn = isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
                     const res = await fn({
-                        ...(this.isTemplate ? {templateId: this.uniqueId} : {}),
+                        ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         ...this.$route.params,
                         version,
                         archiveFlag: this.archiveFlag

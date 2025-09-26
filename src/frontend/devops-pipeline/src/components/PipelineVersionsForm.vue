@@ -9,10 +9,13 @@
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
             </label>
             <div class="execute-build-version">
-                <span
+                <form-field
+                    :hide-colon="true"
                     class="execute-build-version-input"
                     v-for="v in renderVersionParamList"
                     :key="v.id"
+                    :required="v.required"
+                    :is-error="errors.has(v.id)"
                 >
                     <vuex-input
                         :disabled="disabled || isFollowTemplate"
@@ -29,7 +32,7 @@
                         :value="versionParamValues[v.id]"
                         :handle-change="handleVersionChange"
                     />
-                </span>
+                </form-field>
             </div>
         </bk-form-item>
         <div

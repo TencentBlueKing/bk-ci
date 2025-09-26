@@ -35,6 +35,7 @@
             <div class="form-footer">
                 <bk-button
                     theme="primary"
+                    :disabled="pipelineName.trim() === '' || instanceDialogConfig.isLoading"
                     @click="confirm()"
                 >
                     {{ $t('confirm') }}
