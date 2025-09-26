@@ -91,7 +91,7 @@ interface UserDispatchDcResource {
         pipelineId: String,
         @Parameter(description = "templateId", required = true)
         @QueryParam("templateId")
-        templateId: String,
+        templateId: String?,
     ): Result<UserPerformanceOptionsV2>
 
     @GET
