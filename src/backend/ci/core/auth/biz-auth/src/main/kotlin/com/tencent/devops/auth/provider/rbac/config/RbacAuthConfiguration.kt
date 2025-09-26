@@ -378,9 +378,9 @@ class RbacAuthConfiguration {
     )
 
     @Bean
-    fun circuitBreakerRegistry(): CircuitBreakerRegistry = CircuitBreakerRegistry.of(
-        RbacCircuitBreakerProperties().toCircuitBreakerConfig()
-    )
+    fun circuitBreakerRegistry(properties: RbacCircuitBreakerProperties): CircuitBreakerRegistry {
+        return CircuitBreakerRegistry.of(properties.toCircuitBreakerConfig())
+    }
 
     @Bean
     @Primary
