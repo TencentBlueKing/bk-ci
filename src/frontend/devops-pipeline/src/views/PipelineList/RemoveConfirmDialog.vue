@@ -208,9 +208,10 @@
                         overflowCount,
                         yamlExist: pipeline.yamlExist,
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
+                        delete: pipeline.delete,
                         tooltips: (!pipeline.permissions?.canDelete || pipeline.yamlExist)
                             ? {
-                                content: this.$t(pipeline.yamlExist ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
+                                content: this.$t(pipeline.delete ? 'deleteAlready' : pipeline.yamlExist ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
                                 placement: 'top',
                                 delay: [300, 0],
                                 allowHTML: false
