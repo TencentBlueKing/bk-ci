@@ -5,4 +5,6 @@ object Constansts {
     const val ciFileExtensionYaml = ".yaml"
     const val ciFileName = ".ci.yml"
     const val ciFileDirectoryName = ".ci"
+    const val ciTemplateDirectoryName = ".ci/templates"
+    const val DEFAULT_DEPENDENT_REF = "*"
 }

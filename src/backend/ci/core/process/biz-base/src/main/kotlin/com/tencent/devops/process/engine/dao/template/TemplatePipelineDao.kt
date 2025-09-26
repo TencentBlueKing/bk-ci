@@ -100,8 +100,8 @@ class TemplatePipelineDao {
                     userId,
                     now,
                     now,
-                    buildNo ?: "",
-                    param ?: ""
+                    buildNo,
+                    param
                 )
                 .execute()
         }

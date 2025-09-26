@@ -198,7 +198,7 @@ class WebhookGrayCompareService @Autowired constructor(
         if (newMissVar.isNotEmpty()) {
             logger.warn(
                 "compare webhook exception|new miss var|" +
-                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|newMissVar:$newMissVar",
+                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|newMissVar:$newMissVar"
             )
             return
         }

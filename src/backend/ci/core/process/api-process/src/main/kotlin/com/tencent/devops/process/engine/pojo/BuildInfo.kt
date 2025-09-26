@@ -62,6 +62,7 @@ data class BuildInfo(
     var errorInfoList: List<ErrorInfo>?,
     val stageStatus: List<BuildStageStatus>?,
     val debug: Boolean,
+    val versionChange: Boolean? = null,
     @Deprecated("后续只用executeCount做判断")
     val retryFlag: Boolean? = null,
     val executeCount: Int = 1,
@@ -88,6 +89,7 @@ data class BuildInfo(
             startTime != null &&
             endTime!! > startTime!!
         -> true
+
         else -> status.isFinish()
     }
 
@@ -98,6 +100,7 @@ data class BuildInfo(
             startTime != null &&
             endTime!! > startTime!!
         -> true
+
         else -> status.isSuccess()
     }
 

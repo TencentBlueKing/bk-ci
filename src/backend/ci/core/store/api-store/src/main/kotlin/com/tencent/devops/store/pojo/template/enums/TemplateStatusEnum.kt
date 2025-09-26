@@ -33,7 +33,8 @@ enum class TemplateStatusEnum(val status: Int) {
     AUDIT_REJECT(2), // 审核驳回
     RELEASED(3), // 已发布
     GROUNDING_SUSPENSION(4), // 上架中止
-    UNDERCARRIAGED(5); // 已下架
+    UNDERCARRIAGED(5), // 已下架（上架后下架）
+    NEVER_PUBLISHED(6); // 从未关联/上架过
 
     companion object {
 
@@ -53,6 +54,15 @@ enum class TemplateStatusEnum(val status: Int) {
                 }
             }
             return INIT.name
+        }
+
+        fun getTemplateStatusEnum(status: Int): TemplateStatusEnum {
+            values().forEach { enumObj ->
+                if (enumObj.status == status) {
+                    return enumObj
+                }
+            }
+            return INIT
         }
     }
 }
