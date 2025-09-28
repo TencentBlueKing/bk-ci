@@ -180,7 +180,10 @@ class PipelineBuildRetryService @Autowired constructor(
             buildInfo.buildParameters?.forEach { param ->
                 webHookStartParam[param.key] = param
                 if (paramKeys.contains(param.key)) {
-                    webHookStartParam[PipelineVarUtil.getVariableKey(param.key)] = param
+                    val variableKey = PipelineVarUtil.getVariableKey(param.key)
+                    webHookStartParam[variableKey] = param.copy(
+                        key = variableKey
+                    )
                 }
             }
             webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
