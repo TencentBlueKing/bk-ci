@@ -186,7 +186,7 @@
             
             uniqueId () {
                 const { pipelineId, templateId } = this.$route.params
-                if (this.isTemplate) {
+                if (this.isTemplate || !!this.templateId) {
                     return this.templateId || templateId
                 }
                 return this.pipelineId || pipelineId
@@ -217,8 +217,8 @@
                     const isTemplate = this.isTemplate || !!this.templateId
                     const fn = isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
                     const res = await fn({
-                        ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         ...this.$route.params,
+                        ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
                         archiveFlag: this.archiveFlag
                     })
