@@ -320,6 +320,7 @@
                                     ref="remarkInput"
                                     rows="3"
                                     :disabled="isChangeRemark"
+                                    :maxlength="4096"
                                     class="remark-input"
                                     v-model.trim="tempRemark"
                                 />
@@ -354,6 +355,11 @@
                                     v-if="!archiveFlag"
                                     class="devops-icon icon-edit-line remark-entry"
                                     @click.stop="activeRemarkInput(props.row)"
+                                />
+                                <i
+                                    v-if="!archiveFlag && props.row.remark"
+                                    class="bk-icon icon-copy remark-entry"
+                                    @click.stop="coptRemark(props.row)"
                                 />
                             </template>
                         </div>
@@ -625,7 +631,7 @@
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
+    import { convertFileSize, convertMStoString, convertTime, flatSearchKey, copyToClipboard } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -1023,6 +1029,16 @@
                 this.activeIndex = row.index
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
+            },
+            coptRemark (row) {
+                if (row.remark) {
+                    copyToClipboard(row.remark)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('copySuc'),
+                        limit: 1
+                    })
+                }
             },
             retryable (row) {
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0

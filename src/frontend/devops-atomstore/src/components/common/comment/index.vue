@@ -108,17 +108,16 @@
                 const type = this.$route.params.type
                 const postData = { replyContent, replyToUser: this.replyToUser }
                 const funObj = {
-                    atom: () => this.requestAtomReplyComment({ id, postData }),
-                    template: () => this.requestTemplateReplyComment({ id, postData }),
-                    image: () => this.requestImageReplyComment({ id, postData })
+                    atom: this.requestAtomReplyComment,
+                    template: this.requestTemplateReplyComment,
+                    image: this.requestImageReplyComment
                 }
 
-                if (!Object.hasOwnProperty.call(funObj, type) || typeof funObj[type] !== 'function') {
+                if (!Object.keys(funObj).includes(type) || typeof funObj[type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
-
-                funObj[type]().then((res) => {
+                funObj[type]({ id, postData }).then((res) => {
                     this.setCommentReplay({ id, newList: [res], isAdd: true })
                     this.reply = ''
                 }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))

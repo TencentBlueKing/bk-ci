@@ -35,6 +35,7 @@ data class OauthTokenInfo(
     val expiresIn: Long? = 0L,
     val refreshToken: String? = null,
     val createTime: Long? = 0L,
+    val updateTime: Long? = 0L,
     @get:Schema(title = "授权用户")
     val userId: String,
     @get:Schema(title = "操作者")

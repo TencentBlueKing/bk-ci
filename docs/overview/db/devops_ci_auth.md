@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.9
+**文档版本：** 1.0.13
 
 **文档描述：** devops_ci_auth 的数据库文档
 | 表名                  | 说明       |
@@ -20,6 +20,7 @@
 | T_AUTH_MANAGER_USER | 管理员用户表(只存有效期内的用户) |
 | T_AUTH_MANAGER_USER_HISTORY | 管理员用户历史表 |
 | T_AUTH_MANAGER_WHITELIST | 管理员自助申请表名单表 |
+| T_AUTH_MEMBER_PROJECT_PERMISSION | 用户项目级权限表 |
 | T_AUTH_MIGRATION | 权限迁移 |
 | T_AUTH_MONITOR_SPACE | 蓝盾监控空间权限表 |
 | T_AUTH_OAUTH2_ACCESS_TOKEN | ACCESS_TOKEN 表 |
@@ -38,9 +39,13 @@
 | T_AUTH_RESOURCE_SYNC | 同步 IAM 资源 |
 | T_AUTH_RESOURCE_TYPE | 权限资源类型表 |
 | T_AUTH_STRATEGY | 权限策略表 |
+| T_AUTH_SYNC_DATA_TASK | 权限中心同步数据任务记录 |
 | T_AUTH_TEMPORARY_VERIFY_RECORD | 迁移-鉴权记录表 |
 | T_AUTH_USER_BLACKLIST |  |
 | T_AUTH_USER_INFO | 账号信息表 |
+| T_DEPARTMENT | 部门信息表 |
+| T_DEPARTMENT_RELATION | 部门信息关系表 |
+| T_USER_INFO | 用户信息表 |
 
 **表名：** <a>T_AUTH_ACTION</a>
 
@@ -270,6 +275,22 @@
 |  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理策略 ID  |
 |  3   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
+
+**表名：** <a>T_AUTH_MEMBER_PROJECT_PERMISSION</a>
+
+**说明：** 用户项目级权限表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
+|  3   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  4   | ACTION |   varchar   | 32 |   0    |    N     |  N   |       | 权限  |
+|  5   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | 权限来源的用户组  |
+|  6   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 该组授予的权限有效期  |
+|  7   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_AUTH_MIGRATION</a>
 
@@ -600,6 +621,19 @@
 |  7   | CREATE_USER |   varchar   | 32 |   0    |    N     |  N   |       | 创建人  |
 |  8   | UPDATE_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 修改人  |
 
+**表名：** <a>T_AUTH_SYNC_DATA_TASK</a>
+
+**说明：** 权限中心同步数据任务记录
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | TASK_ID |   varchar   | 255 |   0    |    N     |  Y   |       | 任务单号  |
+|  2   | TASK_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 任务类型，USER 或 DEPARTMENT  |
+|  3   | START_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 开始时间  |
+|  4   | END_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 结束时间  |
+
 **表名：** <a>T_AUTH_TEMPORARY_VERIFY_RECORD</a>
 
 **说明：** 迁移-鉴权记录表
@@ -646,3 +680,52 @@
 |  6   | user_type |   int   | 10 |   0    |    N     |  N   |       | 用户类型 0.页面注册 1.GitHub2.Gitlab  |
 |  7   | last_login_time |   datetime   | 19 |   0    |    Y     |  N   |       | 最后登陆时间  |
 |  8   | user_status |   int   | 10 |   0    |    N     |  N   |       | 用户状态,0--正常,1--冻结  |
+
+**表名：** <a>T_DEPARTMENT</a>
+
+**说明：** 部门信息表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | DEPARTMENT_ID |   int   | 10 |   0    |    N     |  Y   |       | 部门 ID  |
+|  2   | DEPARTMENT_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 部门名称  |
+|  3   | PARENT |   int   | 10 |   0    |    Y     |  N   |       | 父级  |
+|  4   | LEVEL |   int   | 10 |   0    |    Y     |  N   |       | 层级  |
+|  5   | HAS_CHILDREN |   bit   | 1 |   0    |    N     |  N   |       | 是否有子部门  |
+|  6   | TASK_ID |   varchar   | 255 |   0    |    N     |  N   |       | 同步任务单号  |
+|  7   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a>T_DEPARTMENT_RELATION</a>
+
+**说明：** 部门信息关系表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PARENT_ID |   int   | 10 |   0    |    N     |  N   |       | 父部门 ID  |
+|  2   | CHILDREN_ID |   int   | 10 |   0    |    N     |  N   |       | 子部门 ID  |
+|  3   | DEPTH |   int   | 10 |   0    |    N     |  N   |       | 深度  |
+|  4   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a>T_USER_INFO</a>
+
+**说明：** 用户信息表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | USER_ID |   varchar   | 255 |   0    |    N     |  Y   |       | 用户 ID  |
+|  2   | USER_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 用户名称  |
+|  3   | ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否离职  |
+|  4   | DEPARTMENT_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 部门名称  |
+|  5   | DEPARTMENT_ID |   int   | 10 |   0    |    Y     |  N   |       | 部门 ID  |
+|  6   | FULL_DEPARTMENTS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 完整部门信息  |
+|  7   | PATH |   varchar   | 255 |   0    |    Y     |  N   |       | 部门路径  |
+|  8   | DEPARTED |   bit   | 1 |   0    |    N     |  N   |       | 是否离职  |
+|  9   | TASK_ID |   varchar   | 255 |   0    |    N     |  N   |       | 同步  |
+|  10   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  11   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |

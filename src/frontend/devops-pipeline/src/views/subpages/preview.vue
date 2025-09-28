@@ -21,7 +21,6 @@
                 :show-extension="false"
                 refresh-list-on-expand
                 :unique-id="pipelineId"
-                build-only
             />
             <i
                 class="bk-icon icon-info-circle"

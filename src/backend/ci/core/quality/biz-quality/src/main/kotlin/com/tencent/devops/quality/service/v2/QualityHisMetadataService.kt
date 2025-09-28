@@ -171,7 +171,8 @@ class QualityHisMetadataService @Autowired constructor(
                 taskName = it.taskName ?: "",
                 msg = it.dataDesc,
                 value = it.dataValue,
-                extra = it.extra
+                extra = it.extra,
+                createTime = it.createTime
             )
         } ?: listOf()
     }

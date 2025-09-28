@@ -57,6 +57,7 @@
 <script>
     import card from '@/components/common/card'
     import eventBus from '@/utils/eventBus.js'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -119,6 +120,11 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'requestMarketAtom',
+                'requestMarketTemplate',
+                'requestMarketImage'
+            ]),
             closeOrderList () {
                 this.showOrderList = false
             },
@@ -165,16 +171,16 @@
                 }
 
                 const apiFun = {
-                    atom: () => this.$store.dispatch('store/requestMarketAtom', postData),
-                    template: () => this.$store.dispatch('store/requestMarketTemplate', postData),
-                    image: () => this.$store.dispatch('store/requestMarketImage', postData)
+                    atom: this.requestMarketAtom,
+                    template: this.requestMarketTemplate,
+                    image: this.requestMarketImage
                 }
-                if (!Object.hasOwnProperty.call(apiFun, pipeType) || typeof apiFun[pipeType] !== 'function') {
+                if (!Object.keys(apiFun).includes(pipeType) || typeof apiFun[pipeType] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
                 this.isLoadingMore = true
-                apiFun[pipeType]().then((res) => {
+                apiFun[pipeType](postData).then((res) => {
                     this.cards = isReset ? res.records : this.cards.concat(res.records || [])
                     this.count = res.count || 0
                     this.page++

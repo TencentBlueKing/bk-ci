@@ -558,7 +558,7 @@
               "type" : "string",
               "uniqueItems" : true,
               "items" : {
-                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
+                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
               },
               "additionalItems" : false
             },
@@ -716,6 +716,9 @@
                   }
                 }
               } ]
+            },
+            "scm-code" : {
+              "type" : "string"
             }
           }
         }
@@ -1255,7 +1258,7 @@
             "type" : "string",
             "uniqueItems" : true,
             "items" : {
-              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab" ]
+              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
             },
             "additionalItems" : false
           },
@@ -1413,6 +1416,9 @@
                 }
               }
             } ]
+          },
+          "scm-code" : {
+            "type" : "string"
           }
         }
       } ]
@@ -1601,6 +1607,9 @@
               },
               "name" : {
                 "type" : "string"
+              },
+              "if" : {
+                "type" : "object"
               }
             }
           } ]
@@ -1785,6 +1794,9 @@
             },
             "name" : {
               "type" : "string"
+            },
+            "if" : {
+              "type" : "object"
             }
           }
         }
@@ -2787,6 +2799,15 @@
             },
             "shell" : {
               "type" : "string"
+            },
+            "can-pause-before-run" : {
+              "type" : "boolean"
+            },
+            "pause-notice-receivers" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
             },
             "can-manually-retry" : {
               "type" : "boolean"

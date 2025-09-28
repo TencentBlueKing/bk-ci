@@ -25,6 +25,7 @@ allprojects {
     // 新增maven 仓库
     repositories {
         add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
+        add(maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") })
     }
 
     // 版本管理
@@ -32,8 +33,8 @@ allprojects {
         setApplyMavenExclusions(false)
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
-            dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
-            dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcpkix-jdk18on:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcprov-jdk18on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")

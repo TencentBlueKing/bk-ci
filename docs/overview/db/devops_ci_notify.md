@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_notify
 
-**文档版本：** 1.0.9
+**文档版本：** 1.0.13
 
 **文档描述：** devops_ci_notify 的数据库文档
 | 表名                  | 说明       |
@@ -12,6 +12,7 @@
 | T_NOTIFY_EMAIL |  |
 | T_NOTIFY_RTX | rtx 流水表 |
 | T_NOTIFY_SMS |  |
+| T_NOTIFY_USER_BLACKLIST | 消息通知黑名单用户表 |
 | T_NOTIFY_VOICE | 语音流水表 |
 | T_NOTIFY_WECHAT | 微信流水表 |
 | T_NOTIFY_WEWORK | 企业微信流水表 |
@@ -140,6 +141,18 @@
 |  16   | TOF_SYS_ID |   varchar   | 20 |   0    |    Y     |  N   |       | tof 系统 id  |
 |  17   | FROM_SYS_ID |   varchar   | 20 |   0    |    Y     |  N   |       | 发送消息的系统 id  |
 |  18   | DelaySeconds |   int   | 10 |   0    |    Y     |  N   |       | 延迟发送的时间，秒  |
+
+**表名：** <a>T_NOTIFY_USER_BLACKLIST</a>
+
+**说明：** 消息通知黑名单用户表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键  |
+|  2   | USER_ID |   varchar   | 32 |   0    |    N     |  N   |       | 用户 ID  |
+|  3   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
 **表名：** <a>T_NOTIFY_VOICE</a>
 

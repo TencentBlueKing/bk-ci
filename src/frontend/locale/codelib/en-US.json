@@ -218,5 +218,6 @@
     "触发器不匹配": "Trigger Not Match",
     "触发结果": "Trigger Result",
     "codelibUndeployTitle": "{0} connection service has not been fully deployed",
-    "githubUndeployDesc": "To use this feature, please contact the platform administrator to register the GitHub APP"
+    "githubUndeployDesc": "To use this feature, please contact the platform administrator to register the GitHub APP",
+    "authorizeAccount": "Authorize Account"
 }

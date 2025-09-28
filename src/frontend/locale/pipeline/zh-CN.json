@@ -1390,7 +1390,8 @@
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
     "minutes": "分钟",
-    "customConditionExpPlaceholder": "如：variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'",
+    "paramLengthLimitTips": "流水线变量［{0}］长度［{1}］超过限制［{2}］"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1952,6 +1953,7 @@
     "下次：": "下次：",
     "小时": "小时"
   },
+  "validVariableFormat": "请输入有效的变量格式",
   "enterRepoAlias": "请输入代码库别名",
   "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
   "addParam": "添加参数",

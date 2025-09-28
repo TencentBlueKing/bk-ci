@@ -55,7 +55,8 @@ class BuildCredentialResourceImpl @Autowired constructor(
         credentialId: String,
         publicKey: String,
         taskId: String?,
-        oldTaskId: String?
+        oldTaskId: String?,
+        padding: Boolean?
     ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -78,7 +79,8 @@ class BuildCredentialResourceImpl @Autowired constructor(
                 buildId = buildId,
                 credentialId = credentialId,
                 publicKey = publicKey,
-                taskId = taskId ?: oldTaskId
+                taskId = taskId ?: oldTaskId,
+                padding = padding ?: false
             )
         )
     }
@@ -93,7 +95,8 @@ class BuildCredentialResourceImpl @Autowired constructor(
         vmName: String,
         credentialId: String,
         targetProjectId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -111,7 +114,14 @@ class BuildCredentialResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid publicKey")
         }
         return Result(
-            credentialService.buildGetAcrossProject(projectId, targetProjectId, buildId, credentialId, publicKey)
+            credentialService.buildGetAcrossProject(
+                projectId = projectId,
+                targetProjectId = targetProjectId,
+                buildId = buildId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
         )
     }
 

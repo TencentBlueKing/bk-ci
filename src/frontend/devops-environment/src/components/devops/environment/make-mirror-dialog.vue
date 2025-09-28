@@ -86,7 +86,7 @@
                     :disabled="loading.isLoading"
                     @click="confirmFn"
                 >
-                    {{ $t('environment.comfirm') }}
+                    {{ $t('environment.confirm') }}
                 </bk-button>
                 <bk-button
                     theme="default"

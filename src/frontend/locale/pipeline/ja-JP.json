@@ -1393,7 +1393,8 @@
     "allNodeConcurrency": "すべてのノード上の総並行処理",
     "allNodeConcurrencyPlaceholder": "入力しない場合は 総並行処理の理論値=単一ノードの最大並行数*ビルドノード数 です",
     "minutes": "分",
-    "customConditionExpPlaceholder": "例：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "例：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'",
+    "paramLengthLimitTips": "パイプライン変数［{0}］の長さ［{1}］が制限［{2}］を超えています"
   },
   "主版本": "メインバージョン",
   "特性版本": "機能バージョン",
@@ -1954,6 +1955,7 @@
     "下次：": "次回：",
     "小时": "時間"
   },
+  "validVariableFormat": "有効な変数形式を入力してください",
   "enterRepoAlias": "コードリポジトリの別名を入力してください",
   "pacRepoNotSet": "所属PACコードリポジトリを自動的に監視するため、設定する必要はありません",
   "addParam": "パラメータを追加",

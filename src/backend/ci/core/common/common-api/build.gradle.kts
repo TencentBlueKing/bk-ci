@@ -36,7 +36,7 @@ dependencies {
     api("com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-json-provider")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-base")
-    api("org.bouncycastle:bcprov-jdk15on")
+    api("org.bouncycastle:bcprov-jdk18on")
     api("com.github.fge:json-schema-validator")
     api("com.google.guava:guava")
     api("com.squareup.okhttp3:okhttp")

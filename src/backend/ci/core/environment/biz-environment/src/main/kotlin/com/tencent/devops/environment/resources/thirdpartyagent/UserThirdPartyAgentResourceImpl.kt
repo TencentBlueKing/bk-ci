@@ -39,6 +39,7 @@ import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentRes
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -49,6 +50,7 @@ import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,7 +61,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val importService: ImportService,
     private val agentMetricService: AgentMetricService,
-    private val batchInstallAgentService: BatchInstallAgentService
+    private val batchInstallAgentService: BatchInstallAgentService,
+    private val tpaService: ThirdPartAgentService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
         return Result(true)
@@ -214,6 +217,23 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
             nodeHashId = nodeHashId,
             parallelTaskCount = null,
             dockerParallelTaskCount = count
+        )
+        return Result(true)
+    }
+
+    override fun batchUpdateParallelTaskCount(
+        userId: String,
+        projectId: String,
+        data: BatchUpdateParallelTaskCountData
+    ): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        tpaService.batchSetParallelTaskCount(
+            userId = userId,
+            projectId = projectId,
+            nodeHashIds = data.nodeHashIds,
+            parallelTaskCount = data.parallelTaskCount,
+            dockerParallelTaskCount = data.dockerParallelTaskCount
         )
         return Result(true)
     }
