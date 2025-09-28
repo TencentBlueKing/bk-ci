@@ -255,6 +255,9 @@
                             />
     
                             {{ $t('template.triggers') }}
+                            <span class="trigger-tips">
+                                {{ $t('template.triggersUpdateTips') }}
+                            </span>
                         </header>
                         <div
                             v-if="activeName.has(4)"
@@ -546,24 +549,29 @@
     }
 
     function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
-        const instanceTriggerMap = new Map(instanceTriggerConfigs?.map(item => [item.id, item]))
-        const templateTriggerMap = new Map(templateTriggerConfigs?.map(item => [item.id, item]))
+        function createTriggerMap (configs) {
+            return new Map(configs.filter(i => !!i.stepId)?.map(item => [item.stepId, item]))
+        }
 
-        const result = templateTriggerConfigs?.map(item => {
-            if (!instanceTriggerMap.has(item.id)) {
-                return { ...item, isNew: true }
+        const instanceTriggerMap = createTriggerMap(instanceTriggerConfigs)
+        const templateTriggerMap = createTriggerMap(templateTriggerConfigs)
+
+        const result = templateTriggerConfigs.filter(i => !!i.stepId)?.reduce((acc, item) => {
+            if (!instanceTriggerMap.has(item.stepId)) {
+                acc.push({ ...item, isNew: true })
+            } else {
+                const instanceTrigger = instanceTriggerMap.get(item.stepId)
+                acc.push(instanceTrigger.isFollowTemplate ? { ...instanceTrigger, ...item } : instanceTrigger)
             }
-            const instanceTrigger = instanceTriggerMap.get(item.id)
-            return  instanceTrigger.isFollowTemplate ? {
-                ...instanceTrigger,
-                ...item
-            } : instanceTrigger
-        })
-        instanceTriggerConfigs?.forEach(item => {
-            if (!templateTriggerMap.has(item.id)) {
+            return acc
+        }, [])
+
+        instanceTriggerConfigs.filter(i => !!i.stepId).forEach(item => {
+            if (!templateTriggerMap.has(item.stepId)) {
                 result.push({ ...item, isDelete: true })
             }
         })
+
         return result
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
@@ -958,7 +966,12 @@
                         transform: rotate(90deg);
                     }
                 }
-
+                .trigger-tips {
+                    font-size: 12px;
+                    margin-left: 10px;
+                    color: #979BA5;
+                    font-weight: 400;
+                }
                 .icon-angle-right {
                     transition: all 0.3 ease;
                     color: #4D4F56;

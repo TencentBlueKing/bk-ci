@@ -664,7 +664,8 @@
     "instanceCompareWithTemplate": "For template-referenced parts, comparison is based on parsed content, not the original YAML file",
     "withSettingCompareTips": "When checked, template labels, descriptions, run settings, notifications and other configuration information will be used for difference comparison",
     "fromTemplateVersion": "From Template Version: {0}",
-    "parsedYaml": "Parsed YAML"
+    "parsedYaml": "Parsed YAML",
+    "triggersUpdateTips": "Lists only triggers with Step ID. Those without can't control instance enablement."
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",
