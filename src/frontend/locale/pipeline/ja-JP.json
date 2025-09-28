@@ -664,7 +664,8 @@
     "instanceCompareWithTemplate": "テンプレート参照部分については、比較時は元のYAMLファイルではなく、解析後の内容を基準とします",
     "withSettingCompareTips": "チェックすると、テンプレートのラベル、説明、実行設定、通知などの設定情報を使用して差異比較を行います",
     "fromTemplateVersion": "ソーステンプレートバージョン: {0}",
-    "parsedYaml": "解析後のYAML"
+    "parsedYaml": "解析後のYAML",
+    "triggersUpdateTips": "Step ID を設定したトリガーのみが表示されます。Step ID が設定されていないトリガーは、インスタンスで有効または無効にする設定を行うことができません。"
 
   },
   "newlist": {

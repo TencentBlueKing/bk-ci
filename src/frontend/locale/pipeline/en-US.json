@@ -662,7 +662,8 @@
     "instanceCompareWithTemplate": "For template-referenced parts, comparison is based on parsed content, not the original YAML file",
     "withSettingCompareTips": "When checked, template labels, descriptions, run settings, notifications and other configuration information will be used for difference comparison",
     "fromTemplateVersion": "From Template Version: {0}",
-    "parsedYaml": "Parsed YAML"
+    "parsedYaml": "Parsed YAML",
+    "triggersUpdateTips": "Lists only triggers with Step ID. Those without can't control instance enablement."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
