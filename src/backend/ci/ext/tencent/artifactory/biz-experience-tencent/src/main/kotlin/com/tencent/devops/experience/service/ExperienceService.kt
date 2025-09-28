@@ -1089,7 +1089,6 @@ class ExperienceService @Autowired constructor(
             for (i in experienceRecords.indices) {
                 val e = experienceRecords[i]
                 val platform = PlatformEnum.valueOf(e.platform)
-                val pcUrl = getPcUrl(e.projectId, e.id)
                 val appUrl = getShortExternalUrl(e.id, platform.isForPC())
                 messages.add(
                     Message(
@@ -1106,7 +1105,7 @@ class ExperienceService @Autowired constructor(
                         projectName = projectName,
                         name = e.name,
                         version = e.version,
-                        url = pcUrl,
+                        url = appUrl,
                         receivers = innerReceivers.toSet()
                     )
                     client.get(ServiceNotifyResource::class).sendEmailNotify(message)
@@ -1219,7 +1218,6 @@ class ExperienceService @Autowired constructor(
                     .get(experienceRecord.projectId).data!!.projectName,
                 innerReceivers = innerReceivers,
                 experienceRecord = experienceRecord,
-                pcUrl = getPcUrl(experienceRecord.projectId, experienceId),
                 appUrl = getShortExternalUrl(experienceId, platform.isForPC())
             )
             sendMessageToOuterReceivers(outerReceivers, experienceRecord, notifyTypeList)
@@ -1327,7 +1325,6 @@ class ExperienceService @Autowired constructor(
         projectName: String,
         innerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord,
-        pcUrl: String,
         appUrl: String
     ) {
         if (innerReceivers.size > BATCH_SEND_LIMIT) {
@@ -1348,7 +1345,7 @@ class ExperienceService @Autowired constructor(
                 projectName = projectName,
                 name = experienceRecord.name,
                 version = experienceRecord.version,
-                url = pcUrl,
+                url = appUrl,
                 receivers = innerReceivers.toSet()
             )
             client.get(ServiceNotifyResource::class).sendEmailNotify(message)
@@ -1421,12 +1418,6 @@ class ExperienceService @Autowired constructor(
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
-    }
-
-    fun getPcUrl(projectId: String, experienceId: Long): String {
-        val experienceHashId = HashUtil.encodeLongId(experienceId)
-        return HomeHostUtil.innerServerHost() +
-                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long, isForPc: Boolean): String {
