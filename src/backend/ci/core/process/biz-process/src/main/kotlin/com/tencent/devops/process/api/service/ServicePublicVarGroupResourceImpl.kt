@@ -28,8 +28,8 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
@@ -45,7 +45,7 @@ class ServicePublicVarGroupResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         varGroupRefs: List<PublicVarGroupRef>
-    ): Result<List<BuildFormProperty>> {
+    ): Result<List<PublicVarGroupVariable>> {
         return Result(publicVarGroupService.getProjectPublicParamByRef(
             userId = userId,
             projectId = projectId,

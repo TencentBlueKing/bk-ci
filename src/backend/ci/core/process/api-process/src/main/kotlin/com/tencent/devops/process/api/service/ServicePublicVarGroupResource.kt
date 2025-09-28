@@ -30,8 +30,8 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -61,5 +61,5 @@ interface ServicePublicVarGroupResource {
         projectId: String,
         @Parameter(description = "变量组名称列表", required = true)
         varGroupRefs: List<PublicVarGroupRef>
-    ): Result<List<BuildFormProperty>>
+    ): Result<List<PublicVarGroupVariable>>
 }
