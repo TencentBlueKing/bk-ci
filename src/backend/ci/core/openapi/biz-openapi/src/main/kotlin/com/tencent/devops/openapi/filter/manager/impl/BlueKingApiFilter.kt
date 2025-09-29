@@ -20,7 +20,8 @@ import org.springframework.stereotype.Service
 @Service
 class BlueKingApiFilter constructor(
     private val apiGatewayUtil: ApiGatewayUtil,
-    private val apigwJwtProperties: JwtConfig
+    private val apiJwtProperties: JwtConfig,
+    private val apiGatewayPubFile: ApiGatewayPubFile
 ) : ApiFilterManager {
     companion object {
         private val logger = LoggerFactory.getLogger(BlueKingApiFilter::class.java)
@@ -31,11 +32,11 @@ class BlueKingApiFilter constructor(
     @Value("\${api.blueKing.enable:#{null}}")
     private val apiFilterEnabled: Boolean? = false
 
-    private val jwtManager = JwtManager(apigwJwtProperties).apply {
+    private val jwtManager = JwtManager(apiJwtProperties).apply {
         addKeyConfig(
             kid = "devops",
             privateKey = null,
-            publicKey = SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().lines()
+            publicKey = apiGatewayPubFile.getPubOuter().lines()
                 .drop(1)
                 .dropLast(1)
                 .joinToString("\n"),

@@ -53,5 +53,5 @@ class OpenAPiConfiguration {
 
     @Bean
     @ConfigurationProperties(prefix = "api.gateway.jwt")
-    fun apigwJwtProperties(): JwtConfig = JwtConfig()
+    fun apiJwtProperties(): JwtConfig = JwtConfig()
 }
