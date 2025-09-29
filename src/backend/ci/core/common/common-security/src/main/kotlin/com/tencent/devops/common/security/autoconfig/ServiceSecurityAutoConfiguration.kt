@@ -32,6 +32,7 @@ import com.tencent.devops.common.security.jwt.JwtConfig
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.pojo.SecurityJwtInfo
 import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import java.net.InetAddress
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -81,7 +82,12 @@ class ServiceSecurityAutoConfiguration {
     }
 
     @Scheduled(cron = "0 0/4 * * * ?", scheduler = JWT_MANAGER_SCHEDULER)
-    fun refreshToken(jwtManager: JwtManager) {
+    fun refreshToken() {
+        val jwtManager = SpringContextUtil.getBean(JwtManager::class.java)
+        refreshToken(jwtManager)
+    }
+
+    private fun refreshToken(jwtManager: JwtManager) {
         logger.info("refresh token")
         jwtManager.generateToken(
             JsonUtil.toJson(
