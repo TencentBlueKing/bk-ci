@@ -49,29 +49,29 @@ import org.slf4j.LoggerFactory
  * @property validateNotBefore 是否验证生效时间
  */
 data class JwtConfig(
-    val properties: List<Property> = emptyList(),
+    var properties: List<Property> = emptyList(),
     @field:JsonProperty("auth-enable")
-    val authEnable: Boolean = false,
-    val issuer: String? = null,
-    val audience: String? = null,
+    var authEnable: Boolean = false,
+    var issuer: String? = null,
+    var audience: String? = null,
     @field:JsonProperty("expiration-minutes")
-    val expirationMinutes: Long = 10,
+    var expirationMinutes: Long = 10,
     @field:JsonProperty("not-before-minutes")
-    val notBeforeMinutes: Long = 0,
+    var notBeforeMinutes: Long = 0,
     @field:JsonProperty("validate-issuer")
-    val validateIssuer: Boolean = false,
+    var validateIssuer: Boolean = false,
     @field:JsonProperty("validate-audience")
-    val validateAudience: Boolean = false,
+    var validateAudience: Boolean = false,
     @field:JsonProperty("validate-not-before")
-    val validateNotBefore: Boolean = false
+    var validateNotBefore: Boolean = false
 ) {
     data class Property(
-        val kid: String,
+        var kid: String,
         @field:JsonProperty("public-key")
-        val publicKey: String,
+        var publicKey: String,
         @field:JsonProperty("private-key")
-        val privateKey: String,
-        val active: Boolean
+        var privateKey: String,
+        var active: Boolean
     )
 }
 
