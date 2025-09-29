@@ -35,7 +35,10 @@ class BlueKingApiFilter constructor(
         addKeyConfig(
             kid = "devops",
             privateKey = null,
-            publicKey = SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter(),
+            publicKey = SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().lines()
+                .drop(1)
+                .dropLast(1)
+                .joinToString("\n"),
             active = true
         )
     }

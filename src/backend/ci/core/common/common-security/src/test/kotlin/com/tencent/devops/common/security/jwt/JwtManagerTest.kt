@@ -56,7 +56,7 @@ class JwtManagerTest {
             "/UT8Vtnhar1zpDh8m++9lS1nSfR8SVSyXNRlNspMM6cWyV8CW40="
     private val enable: Boolean = true
 
-    val jwtManager = JwtManager(enable, JwtClaimsConfig()).apply {
+    val jwtManager = JwtManager(JwtConfig(authEnable = enable)).apply {
         addKeyConfig(kid = "devops", privateKey = privateKeyString, publicKey = publicKeyString, active = true)
     }
     @Test
