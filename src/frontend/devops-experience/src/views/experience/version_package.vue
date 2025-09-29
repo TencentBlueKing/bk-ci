@@ -113,12 +113,12 @@
 </template>
 
 <script>
-    import { platformList } from '@/utils/util'
+    import { platformMap } from '@/utils/util'
     export default {
         props: {
             platform: {
                 type: String,
-                default: platformList[0].id
+                default: platformMap.ANDROID
             },
             versionSelectConf: Object,
             loading: Object,
@@ -173,7 +173,7 @@
                     return extList
                 }
             },
-            fileNameTitle () {
+            fileNamesTitle () {
                 return this.fileNameByPlatform.reduce((pre, cur) => {
                     if (pre) {
                         return pre + '/' + cur.replace('*.', '')

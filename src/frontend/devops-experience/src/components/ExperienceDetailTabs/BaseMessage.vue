@@ -96,7 +96,7 @@
 <script>
     import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import qrcode from '@/components/devops/qrcode'
-    import { platformList } from '@/utils/util'
+    import { platformMap } from '@/utils/util'
     import { mapActions } from 'vuex'
     
     export default {
@@ -123,7 +123,7 @@
         },
         computed: {
             isWindowsExp () {
-                return this.curReleaseDetail.platform === platformList[3].id
+                return this.curReleaseDetail.platform === platformMap.WINDOWS
             },
             projectId () {
                 return this.$route.params.projectId

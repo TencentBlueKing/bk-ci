@@ -381,9 +381,9 @@ export function getQueryString (name) {
     if (r != null) return unescape(r[2]); return null
 }
 
-export const platformList = [
-    { id: 1, localeLabel: 'ANDROID' },
-    { id: 2, localeLabel: 'IOS' },
-    { id: 3, localeLabel: 'HAP' },
-    { id: 4, localeLabel: 'WINDOWS' }
-]
+export const platformMap = {
+    'ANDROID':'ANDROID',
+    'IOS':'IOS',
+    'HAP':'HAP',
+    'WINDOWS':'WINDOWS'
+}

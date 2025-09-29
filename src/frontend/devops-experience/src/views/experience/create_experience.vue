@@ -30,7 +30,7 @@
                                     :key="platform.id"
                                     :value="platform.id"
                                 >
-                                    {{ $t(`experience.platform_labels.${platform.localeLabel}`) }}
+                                    {{ platform.name }}
                                 </bk-radio>
                             </bk-radio-group>
                         </bk-form-item>
@@ -393,7 +393,7 @@
         PIPELINE_RESOURCE_ACTION,
         PIPELINE_RESOURCE_TYPE
     } from '@/utils/permission'
-    import { convertTime, platformList } from '@/utils/util'
+    import { convertTime, platformMap } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import experienceGroup from './create_group'
     import versionPackage from './version_package'
@@ -420,7 +420,7 @@
                 query: {},
                 experienceRange: 'internals',
                 createReleaseForm: {
-                    platform: platformList[0].id,
+                    platform: platformMap.ANDROID,
                     name: '',
                     version_no: '',
                     versionTitle: '',
@@ -554,7 +554,7 @@
                 }
             },
             isWindowsPlatform () {
-                return this.createReleaseForm?.platform === this.platformList[3].id
+                return this.createReleaseForm?.platform === this.platformMap.WINDOWS
             },
             appNameRequired () {
                 return this.isWindowsPlatform
@@ -566,7 +566,10 @@
                 }
             },
             platformList () {
-                return platformList
+                return Object.keys(platformMap).map(key =>({
+                    id: key,
+                    name: this.$t(`experience.platform_labels.${key}`)
+                }))
             },
             categoryList () {
                 return [
