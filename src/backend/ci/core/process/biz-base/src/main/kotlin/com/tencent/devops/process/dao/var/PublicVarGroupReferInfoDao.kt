@@ -268,6 +268,25 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    fun deleteByReferIdAndGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        groupName: String,
+        version: Int
+    ) {
+        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.name))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
     fun batchSave(
         dslContext: DSLContext,
         pipelinePublicVarGroupReferPOs: List<PipelinePublicVarGroupReferPO>

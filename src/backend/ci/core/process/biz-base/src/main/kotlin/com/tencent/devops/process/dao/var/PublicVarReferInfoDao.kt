@@ -31,7 +31,6 @@ import com.tencent.devops.model.process.tables.TPipelinePublicVarReferInfo
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarReferPO
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -138,6 +137,25 @@ class PublicVarReferInfoDao {
             }
             dslContext.deleteFrom(this)
                 .where(conditions)
+                .execute()
+        }
+    }
+
+    fun deleteByReferIdAndGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        groupName: String,
+        version: Int
+    ) {
+        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.name))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
                 .execute()
         }
     }
