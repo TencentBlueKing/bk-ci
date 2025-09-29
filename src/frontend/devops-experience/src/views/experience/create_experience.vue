@@ -12,12 +12,31 @@
                     class="experience-form"
                     ref="form"
                     :model="createReleaseForm"
+                    label-width="190"
+                    :rules="rules"
                 >
                     <template v-if="hasPermission">
+                        <bk-form-item
+                            :label="$t('experience.platform')"
+                            property="platform"
+                            required
+                        >
+                            <bk-radio-group
+                                class="exp-platform-enum"
+                                v-model="createReleaseForm.platform"
+                            >
+                                <bk-radio
+                                    v-for="platform in platformList"
+                                    :key="platform.id"
+                                    :value="platform.id"
+                                >
+                                    {{ $t(`experience.platform_labels.${platform.localeLabel}`) }}
+                                </bk-radio>
+                            </bk-radio-group>
+                        </bk-form-item>
                         <div class="version-name">
                             <bk-form-item
                                 :label="$t('experience.package_type')"
-                                label-width="190"
                                 :required="true"
                                 property="name"
                             >
@@ -38,11 +57,11 @@
                         <bk-form-item
                             style="margin-top: 20px"
                             :label="$t('experience.app_name')"
-                            label-width="190"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
                             :desc="$t('experience.app_name_tip')"
                             property="experienceName"
+                            :required="appNameRequired"
                         >
                             <bk-input
                                 v-model="createReleaseForm.experienceName"
@@ -51,9 +70,19 @@
                             />
                         </bk-form-item>
                         <bk-form-item
+                            :label="$t('experience.bundleIdentifier')"
+                            required
+                            property="bundleIdentifier"
+                        >
+                            <bk-input
+                                :disabled="!isWindowsPlatform"
+                                :placeholder="$t('experience.bundleIdentifierPlaceholder')"
+                                v-model="createReleaseForm.bundleIdentifier"
+                            />
+                        </bk-form-item>
+                        <bk-form-item
                             :label="$t('experience.version_title')"
-                            :required="true"
-                            label-width="190"
+                            required
                             desc-type="icon"
                             desc-icon="icon-info-circle"
                             :desc="$t('experience.version_title_tip')"
@@ -68,14 +97,17 @@
                         </bk-form-item>
                         <bk-form-item
                             :label="$t('experience.version_number')"
-                            label-width="190"
+                            required
+                            property="version_no"
                         >
-                            <span class="version-number-info">{{ createReleaseForm.version_no || '--' }}</span>
+                            <bk-input
+                                :disabled="!isWindowsPlatform"
+                                v-model="createReleaseForm.version_no"
+                            />
                         </bk-form-item>
                         <bk-form-item
                             style="margin-top: 20px"
                             :label="$t('experience.group_identifier')"
-                            label-width="190"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
                             :desc="$t('experience.group_identifier_tip')"
@@ -90,7 +122,6 @@
                         <bk-form-item
                             :label="$t('experience.version_description')"
                             property="desc"
-                            label-width="190"
                             :required="true"
                         >
                             <bk-input
@@ -99,14 +130,12 @@
                                 maxlength="2000"
                                 name="releaseDesc"
                                 v-model="createReleaseForm.desc"
-                                :class="{ 'is-error': errorFormHandler.nameError }"
                             >
                             </bk-input>
                         </bk-form-item>
                         <bk-form-item
                             :label="$t('experience.product_category')"
                             :required="true"
-                            label-width="190"
                             property="categoryId"
                         >
                             <bk-select v-model="createReleaseForm.categoryId">
@@ -121,7 +150,6 @@
                         </bk-form-item>
                         <bk-form-item
                             :label="$t('experience.product_owner')"
-                            label-width="190"
                             :required="true"
                             property="productOwner"
                         >
@@ -133,7 +161,6 @@
                         </bk-form-item>
                         <bk-form-item
                             :label="$t('experience.experience_end_time')"
-                            label-width="190"
                             :required="true"
                             property="end_date"
                         >
@@ -147,7 +174,6 @@
                         </bk-form-item>
                         <bk-form-item
                             :label="$t('experience.experience_scope')"
-                            label-width="190"
                             :required="true"
                         >
                             <bk-radio-group v-model="experienceRange">
@@ -164,7 +190,6 @@
                             v-show="isInerExp"
                             :label="$t('experience.experience_group')"
                             required
-                            label-width="190"
                             property="experienceGroups"
                         >
                             <div class="bkdevop-checkbox-group">
@@ -214,7 +239,6 @@
                             desc-type="icon"
                             desc-icon="icon-info-circle"
                             :desc="$t('experience.temp_experience_personnel_internal_tip')"
-                            label-width="190"
                             property="internal_list"
                         >
                             <bk-member-selector
@@ -226,7 +250,6 @@
                         <bk-form-item
                             v-show="isInerExp"
                             :label="$t('experience.temp_experience_personnel_external')"
-                            label-width="190"
                             property="external_list"
                         >
                             <bk-select
@@ -248,7 +271,6 @@
                         </bk-form-item>
                         <bk-form-item
                             :label="$t('experience.notification_method')"
-                            label-width="190"
                             v-bind="notifyDesc"
                         >
                             <div
@@ -353,6 +375,7 @@
             </experience-group>
 
             <version-package
+                :platform="createReleaseForm.platform"
                 :version-select-conf="versionSelectConf"
                 :loading="packageLoading"
                 :confirm-fn="confirmSelect"
@@ -370,7 +393,7 @@
         PIPELINE_RESOURCE_ACTION,
         PIPELINE_RESOURCE_TYPE
     } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
+    import { convertTime, platformList } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import experienceGroup from './create_group'
     import versionPackage from './version_package'
@@ -397,6 +420,7 @@
                 query: {},
                 experienceRange: 'internals',
                 createReleaseForm: {
+                    platform: platformList[0].id,
                     name: '',
                     version_no: '',
                     versionTitle: '',
@@ -442,10 +466,6 @@
                 errorHandler: {
                     nameError: false
                 },
-                errorFormHandler: {
-                    nameError: false,
-                    dateError: false
-                },
                 PIPELINE_RESOURCE_ACTION,
                 PIPELINE_RESOURCE_TYPE,
                 EXPERIENCE_TASK_RESOURCE_TYPE,
@@ -457,11 +477,96 @@
                 'getSelectedFile',
                 'getUserGroup'
             ]),
+            rules () {
+                return {
+                    name: [
+                        {
+                            required: true,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    experienceName: [
+                        {
+                            required: true,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    bundleIdentifier: [
+                        {
+                            required: this.isWindowsPlatform,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    versionTitle: [{
+                        required: this.appNameRequired,
+                        message: (field) => this.$t('experience.noEmptyTips', [field]),
+                        trigger: 'blur'
+                    }
+                    ],
+                    desc: [
+                        {
+                            required: true,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    version_no: [
+                        {
+                            required: this.isWindowsPlatform,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    end_date: [
+                        {
+                            required: true,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    categoryId: [
+                        {
+                            required: true,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    productOwner: [
+                        {
+                            required: true,
+                            message: (field) => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ],
+                    experienceGroups: [
+                        {
+                            required: true,
+                            validator: (value) => {
+                                return Array.isArray(value) && value.length > 0
+                            },
+                            message: field => this.$t('experience.noEmptyTips', [field]),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
+            },
+            isWindowsPlatform () {
+                return this.createReleaseForm?.platform === this.platformList[3].id
+            },
+            appNameRequired () {
+                return this.isWindowsPlatform
+            },
             groupIdDesc () {
                 return {
                     content: this.$t('experience.enable_group_tips'),
                     maxWidth: 300
                 }
+            },
+            platformList () {
+                return platformList
             },
             categoryList () {
                 return [
@@ -473,12 +578,12 @@
             },
             noticeTypeList () {
                 return [
-                    {
+                    ...(this.isWindowsPlatform ? [] : [{
                         name: this.$t('experience.app_push'),
                         value: 'PUSH',
                         isChecked: true,
                         placeholder: this.$t('experience.app_push_placeholder')
-                    },
+                    }]),
                     { name: this.$t('experience.rtx'), value: 'RTX', isChecked: false },
                     { name: this.$t('experience.mail'), value: 'EMAIL', isChecked: false }
                 ]
@@ -630,6 +735,7 @@
                         projectId: this.projectId,
                         experienceHashId: this.experienceHashId
                     })
+                    this.createReleaseForm.platform = res.platform
                     this.createReleaseForm.name = res.name
                     this.createReleaseForm.path = res.path
                     this.createReleaseForm.artifactoryType = res.artifactoryType
@@ -753,19 +859,6 @@
             productResult () {
                 this.createReleaseForm.productOwner = this.createReleaseForm.productOwner.split(',')
             },
-            validate () {
-                let errorCount = 0
-                if (!this.createGroupForm.name) {
-                    this.errorHandler.nameError = true
-                    errorCount++
-                }
-
-                if (errorCount > 0) {
-                    return false
-                }
-
-                return true
-            },
             afterCreateGroup () {
                 this.requestGroupList()
                 this.groupSideslider.visible = false
@@ -805,6 +898,9 @@
                                 if (item.key === 'pipelineName') {
                                     this.curPipelineName = item.value
                                 }
+                                if (item.key === 'bundleIdentifier' && !!item.value) {
+                                    this.createReleaseForm.bundleIdentifier = item.value
+                                }
                                 return item
                             })
 
@@ -815,10 +911,12 @@
                                 }
                             }
 
-                            this.createReleaseForm.name = obj.name
-                            this.createReleaseForm.path = obj.fullPath
-                            this.createReleaseForm.artifactoryType = obj.artifactoryType
-                            this.errorFormHandler.nameError = false
+                            Object.assign(this.createReleaseForm, {
+                                name: obj.name,
+                                path: obj.fullPath,
+                                artifactoryType: obj.artifactoryType
+                            })
+                            
                         } catch (err) {
                             const message = err.message ? err.message : err
                             const theme = 'error'
@@ -891,125 +989,105 @@
                     this.createReleaseForm.internal_list = []
                     this.createReleaseForm.external_list = []
                 }
-                let message
-                const theme = 'error'
-                if (!this.createReleaseForm.desc || !this.createReleaseForm.name || !this.createReleaseForm.end_date || !this.createReleaseForm.versionTitle || !this.createReleaseForm.categoryId || !this.createReleaseForm.productOwner.length || !this.createReleaseForm.experienceGroups.length) {
-                    if (!this.createReleaseForm.experienceGroups.length) message = this.$t('experience.requiredExpGroup')
-                    if (!this.createReleaseForm.end_date) message = this.$t('experience.requiredEndDate')
-                    if (this.createReleaseForm.categoryId === null) message = this.$t('experience.requiredProduct')
-                    if (!this.createReleaseForm.productOwner.length) message = this.$t('experience.requiredResponser')
-                    if (!this.createReleaseForm.desc) message = this.$t('experience.requiredVersionDesc')
-                    if (!this.createReleaseForm.versionTitle) message = this.$t('experience.requiredVersionTitle')
-                    // if (!this.createReleaseForm.experienceName) message = '请填写体验名称'
-                    if (!this.createReleaseForm.name) message = this.$t('experience.requiredExpFile')
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } else {
-                    if (this.isInerExp) {
-                        // 如果为内部体验组，取选中体验组id
-                        const newExperienceGroups = []
+                const validate = await this.$refs.form.validate()
+                if (!validate) {
+                    return
+                }
+                if (this.isInerExp) {
+                    // 如果为内部体验组，取选中体验组id
+                    const newExperienceGroups = []
     
-                        this.experienceGroup.forEach(item => {
-                            if (item.isChecked) {
-                                newExperienceGroups.push(item.groupHashId)
-                            }
-                        })
-                        this.createReleaseForm.experienceGroups = newExperienceGroups
-                    }
-                    const params = {
-                        name: this.createReleaseForm.name,
-                        path: this.createReleaseForm.path,
-                        artifactoryType: this.createReleaseForm.artifactoryType,
-                        version: this.createReleaseForm.version_no,
-                        expireDate: Date.parse(this.createReleaseForm.end_date) / 1000,
-                        remark: this.createReleaseForm.desc || undefined,
-                        outerUsers: this.createReleaseForm.external_list,
-                        innerUsers: this.createReleaseForm.internal_list,
-                        enableWechatGroups: this.createReleaseForm.enableWechatGroups,
-                        experienceGroups: this.createReleaseForm.experienceGroups,
-                        notifyTypes: [],
-                        experienceName: this.createReleaseForm.experienceName,
-                        versionTitle: this.createReleaseForm.versionTitle,
-                        categoryId: this.createReleaseForm.categoryId,
-                        productOwner: this.createReleaseForm.productOwner,
-                        classify: this.createReleaseForm.classify
-                    }
-                    if (this.createReleaseForm.enableWechatGroups) {
-                        params.wechatGroups = this.wechatGroupCompletion()
-                    } else {
-                        params.wechatGroups = ''
-                    }
-
-                    this.noticeTypeList.forEach(item => {
+                    this.experienceGroup.forEach(item => {
                         if (item.isChecked) {
-                            params.notifyTypes.push(item.value)
+                            newExperienceGroups.push(item.groupHashId)
                         }
                     })
+                    this.createReleaseForm.experienceGroups = newExperienceGroups
+                }
+                const params = {
+                    name: this.createReleaseForm.name,
+                    outerUsers: this.createReleaseForm.external_list,
+                    innerUsers: this.createReleaseForm.internal_list,
+                    version: this.createReleaseForm.version_no,
+                    notifyTypes: [],
+                    expireDate: Date.parse(this.createReleaseForm.end_date) / 1000,
+                    remark: this.createReleaseForm.desc || undefined,
+                    ...this.createReleaseForm
+                }
+                if (this.createReleaseForm.enableWechatGroups) {
+                    params.wechatGroups = this.wechatGroupCompletion()
+                } else {
+                    params.wechatGroups = ''
+                }
+
+                this.noticeTypeList.forEach(item => {
+                    if (item.isChecked) {
+                        params.notifyTypes.push(item.value)
+                    }
+                })
             
-                    let message, theme
+                let message, theme
             
-                    this.loading.isLoading = true
-                    try {
-                        if (this.$route.params.experienceId) {
-                            await this.$store.dispatch('experience/editExperience', {
+                this.loading.isLoading = true
+                try {
+                    if (this.$route.params.experienceId) {
+                        await this.$store.dispatch('experience/editExperience', {
+                            projectId: this.projectId,
+                            experienceHashId: this.experienceHashId,
+                            params
+                        })
+            
+                        message = this.$t('experience.editExpSuccess')
+                        theme = 'success'
+                    } else {
+                        const payload = {
+                            path: params.path,
+                            artifactoryType: params.artifactoryType
+                        }
+            
+                        const result = await this.$store.dispatch('experience/requestHasPermission', {
+                            projectId: this.projectId,
+                            payload
+                        })
+            
+                        if (result) {
+                            await this.$store.dispatch('experience/createExperience', {
                                 projectId: this.projectId,
-                                experienceHashId: this.experienceHashId,
                                 params
                             })
             
-                            message = this.$t('experience.editExpSuccess')
+                            message = this.$t('experience.addExpSuccess')
                             theme = 'success'
                         } else {
-                            const payload = {
-                                path: params.path,
-                                artifactoryType: params.artifactoryType
-                            }
-            
-                            const result = await this.$store.dispatch('experience/requestHasPermission', {
+                            this.handleNoPermission({
                                 projectId: this.projectId,
-                                payload
+                                resourceType: PIPELINE_RESOURCE_TYPE,
+                                resourceCode: this.curPipelineId,
+                                action: PIPELINE_RESOURCE_ACTION.EXECUTE
                             })
-            
-                            if (result) {
-                                await this.$store.dispatch('experience/createExperience', {
-                                    projectId: this.projectId,
-                                    params
-                                })
-            
-                                message = this.$t('experience.addExpSuccess')
-                                theme = 'success'
-                            } else {
-                                this.handleNoPermission({
-                                    projectId: this.projectId,
-                                    resourceType: PIPELINE_RESOURCE_TYPE,
-                                    resourceCode: this.curPipelineId,
-                                    action: PIPELINE_RESOURCE_ACTION.EXECUTE
-                                })
-                            }
-                        }
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-                    } finally {
-                        if (message) {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        }
-                            
-                        this.loading.isLoading = false
-            
-                        if (theme === 'success') {
-                            if (this.createReleaseForm.enableWechatGroups) {
-                                this.setGroupidStorage(params.wechatGroups)
-                            }
-                            this.toExperienceList()
                         }
                     }
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    if (message) {
+                        this.$bkMessage({
+                            message,
+                            theme
+                        })
+                    }
+                            
+                    this.loading.isLoading = false
+            
+                    if (theme === 'success') {
+                        if (this.createReleaseForm.enableWechatGroups) {
+                            this.setGroupidStorage(params.wechatGroups)
+                        }
+                        this.toExperienceList()
+                    }
                 }
+                
             },
             
             toExperienceList () {
@@ -1073,6 +1151,12 @@
                 cursor: pointer;
                 color: $primaryColor;
             }
+            .exp-platform-enum {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                height: 32px;
+    }
             .version-name {
                 margin-top: 20px;
                 display: flex;
@@ -1088,9 +1172,6 @@
                         color: $fontLighterColor;
                     }
                 }
-            }
-            .version-number-info {
-                line-height: 30px;
             }
             .item-groupid {
                 margin-top: 12px;

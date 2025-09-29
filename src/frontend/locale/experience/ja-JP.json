@@ -26,7 +26,8 @@
     "platform_labels": {
         "ANDROID": "Android",
         "IOS": "iOS",
-        "HAP": "HarmonyOS Next"
+        "HAP": "HarmonyOS Next",
+        "WINDOWS": "Windows"
     },
     "search_fields": {
         "name": "ファイル名",
@@ -41,8 +42,8 @@
     "basic_info": "基本情報",
     "download_data": "ダウンロードデータ",
     "loading_title": "データを読み込んでいます、少々お待ちください",
-    "package_type": "ipa/apk/apks/hap インストールパッケージ",
-    "select_package_placeholder": "バージョンリポジトリからipa/apk/apks/hapファイルを選択してください",
+    "package_type": "体験パッケージ",
+    "select_package_placeholder": "リポジトリから体験パッケージを選択してください",
     "get_from_repository": "リポジトリから取得",
     "app_name": "アプリ名",
     "app_name_tip": "BlueKing CIアプリに表示されるアプリ名。空の場合、ipa/apk/hapの組み込みアプリ名が自動的に取得されます",
@@ -84,7 +85,7 @@
     "no_download_permission": "このパイプラインのアーティファクトをダウンロードする権限がありません",
     "preparing_download": "内部テストバージョンです、ダウンロード準備中です、少々お待ちください",
     "download_wait_time": "初回ダウンロードのみ待機が必要です。準備時間はパッケージサイズによります、通常約5秒で完了します",
-    "download_later": "後でダウンロード",
+    "download_later": "ダウンロードをキャンセル",
     "download_ready": "{name}のダウンロード準備が完了しました",
     "add": "追加",
     "confirm": "確認",
@@ -172,20 +173,13 @@
     "innerExpTips": "{0}は開発/テストバージョンです。体験パッケージの準備には時間がかかる場合があります。しばらくお待ちください。",
     "over2000Tips": "選択した体験グループの人数が重複排除後も2000人を超える場合、通知は送信されません。",
     "submiting": "送信中...",
-    "requiredExpGroup": "体験グループを選択してください",
-    "requiredEndDate": "体験終了日を選択してください",
-    "requiredProduct": "製品カテゴリを選択してください",
-    "requiredResponser": "製品責任者を入力してください",
-    "requiredVersionDesc": "バージョン説明を入力してください",
-    "requiredVersionTitle": "バージョンタイトルを入力してください",
-    "requiredExpFile": "ipa/apk/hapファイルを選択してください",
     "editExpSuccess": "体験の編集に成功しました",
     "addExpSuccess": "体験の追加に成功しました",
-    "mobileRelease": "モバイルリリース管理",
+    "expManage": "体験管理",
     "releaseDetail": "リリース詳細",
     "editRelease": "リリース編集",
     "setting": "設定",
-    "select_file": "ipaまたはapkまたはhapファイルを選択してください",
+    "select_file": "{0}ファイルを選択してください",
     "pipeline": "パイプライン",
     "build_number": "ビルド番号",
     "path": "パス",
@@ -201,5 +195,8 @@
         "WEB": "手動作成"
     },
     "save_success": "保存に成功しました",
-    "versionCreateTime": "体験パック作成時間"
+    "versionCreateTime": "体験パック作成時間",
+    "bundleIdentifier": "バンドルID",
+    "bundleIdentifierPlaceholder": "アプリケーションの一意識別子、例：Microsoft.Office.OneNote_8wekyb3d8bbwe",
+    "noEmptyTips": "{0}は空にできません"
 }

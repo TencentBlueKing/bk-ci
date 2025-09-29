@@ -26,7 +26,8 @@
     "platform_labels": {
         "ANDROID": "Android",
         "IOS": "iOS",
-        "HAP": "HarmonyOS Next"
+        "HAP": "HarmonyOS Next",
+        "WINDOWS": "Windows"
     },
     "search_fields": {
         "name": "文件名",
@@ -41,8 +42,8 @@
     "basic_info": "基础信息",
     "download_data": "下载数据",
     "loading_title": "数据加载中，请稍候",
-    "package_type": "ipa/apk/apks/hap 安装包",
-    "select_package_placeholder": "请从版本仓库中选择一个 ipa/apk/apks/hap 文件",
+    "package_type": "待体验构件",
+    "select_package_placeholder": "请从版本仓库中选择一个体验构件",
     "get_from_repository": "从版本仓库获取",
     "app_name": "应用名称",
     "app_name_tip": "展示于蓝盾App上的应用名。如果为空，将自动获取ipa/apk/hap内置的应用名",
@@ -84,7 +85,7 @@
     "no_download_permission": "你没有该流水线的下载构件权限，无法下载",
     "preparing_download": "为内部测试版本，正在准备下载，请稍等",
     "download_wait_time": "仅首次下载需等待，准备时长和包大小有关，大约 5s 内完成准备。",
-    "download_later": "稍后再下载",
+    "download_later": "取消下载",
     "download_ready": "{{name}}已经准备完成，开始下载",
     "add": "新增",
     "confirm": "确认",
@@ -177,20 +178,13 @@
     "innerExpTips": "{0}为开发测试版本，准备体验包过程需要一段时间，请耐心等待",
     "over2000Tips": "若选择的体验组人数去重后仍然超过了2000人，通知将会发送失败。",
     "submiting": "提交中...",
-    "requiredExpGroup": "请选择体验组",
-    "requiredEndDate": "请选择体验结束日期",
-    "requiredProduct": "请选择产品类别",
-    "requiredResponser": "请填写产品负责人",
-    "requiredVersionDesc": "请填写版本描述",
-    "requiredVersionTitle": "请填写版本标题",
-    "requiredExpFile": "请选择ipa/apk/hap文件",
     "editExpSuccess": "编辑体验成功",
     "addExpSuccess": "新增体验成功",
-    "mobileRelease": "移动端管理发布",
+    "expManage": "体验管理",
     "releaseDetail": "发布详情",
     "editRelease": "编辑发布",
     "setting": "设置",
-    "select_file": "请选择ipa或apk或hap文件",
+    "select_file": "请选择{0}文件",
     "pipeline": "流水线",
     "build_number": "构建号",
     "path": "路径",
@@ -206,5 +200,8 @@
         "WEB": "手动创建"
     },
     "save_success": "保存成功",
-    "versionCreateTime": "体验包创建时间"
+    "versionCreateTime": "体验包创建时间",
+    "bundleIdentifier": "应用标识",
+    "bundleIdentifierPlaceholder": "应用的唯一标识，如Microsoft.Office.OneNote_8wekyb3d8bbwe",
+    "noEmptyTips": "{0}不能为空"
 }

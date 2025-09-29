@@ -380,3 +380,10 @@ export function getQueryString (name) {
     const r = window.location.search.substr(1).match(reg)
     if (r != null) return unescape(r[2]); return null
 }
+
+export const platformList = [
+    { id: 1, localeLabel: 'ANDROID' },
+    { id: 2, localeLabel: 'IOS' },
+    { id: 3, localeLabel: 'HAP' },
+    { id: 4, localeLabel: 'WINDOWS' }
+]

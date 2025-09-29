@@ -26,7 +26,8 @@
     "platform_labels": {
         "ANDROID": "Android",
         "IOS": "iOS",
-        "HAP": "HarmonyOS Next"
+        "HAP": "HarmonyOS Next",
+        "WINDOWS": "Windows"
     },
     "search_fields": {
         "name": "File name",
@@ -41,8 +42,8 @@
     "basic_info": "Basic information",
     "download_data": "Download data",
     "loading_title": "Loading data, please wait",
-    "package_type": "ipa/apk/apks/hap installation package",
-    "select_package_placeholder": "Please select an ipa/apk/apks/hap file from the version repository",
+    "package_type": "Experience Package",
+    "select_package_placeholder": "Please select an experience package from the repository",
     "get_from_repository": "Get from repository",
     "app_name": "Application name",
     "app_name_tip": "Displayed on the Blue Shield App. If empty, the built-in application name from ipa/apk/hap will be automatically obtained",
@@ -84,7 +85,7 @@
     "no_download_permission": "You do not have permission to download artifacts from this pipeline",
     "preparing_download": "Preparing for download, please wait",
     "download_wait_time": "Only the first download requires waiting. Preparation time depends on package size, usually about 5 seconds",
-    "download_later": "Download later",
+    "download_later": "Cancel Download",
     "download_ready": "{{name}} is ready to download",
     "add": "Add",
     "confirm": "Confirm",
@@ -172,20 +173,13 @@
     "innerExpTips": "{0} is a development/test version. The preparation of the experience package may take some time. Please be patient.",
     "over2000Tips": "If the number of selected experience group members still exceeds 2000 after deduplication, the notification will fail to send.",
     "submiting": "Submitting...",
-    "requiredExpGroup": "Please select an experience group",
-    "requiredEndDate": "Please select the experience end date",
-    "requiredProduct": "Please select the product category",
-    "requiredResponser": "Please enter the product owner",
-    "requiredVersionDesc": "Please enter the version description",
-    "requiredVersionTitle": "Please enter the version title",
-    "requiredExpFile": "Please select an ipa/apk/hap file",
     "editExpSuccess": "Experience edited successfully",
     "addExpSuccess": "Experience added successfully",
-    "mobileRelease": "Mobile Release Management",
+    "expManage": "Experience Management",
     "releaseDetail": "Release Details",
     "editRelease": "Edit Release",
     "setting": "Settings",
-    "select_file": "Please select an ipa/apk/hap file",
+    "select_file": "Please select {0} file",
     "pipeline": "Pipeline",
     "build_number": "Build Number",
     "path": "Path",
@@ -201,5 +195,8 @@
         "WEB": "Manual Creation"
     },
     "save_success": "Save successful",
-    "versionCreateTime": "Version Creation Time"
+    "versionCreateTime": "Version Creation Time",
+    "bundleIdentifier": "BundleIdentifier",
+    "bundleIdentifierPlaceholder": "Unique identifier of the application, e.g., Microsoft.Office.OneNote_8wekyb3d8bbwe",
+    "noEmptyTips": "{0} cannot be empty"
 }
