@@ -688,83 +688,40 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 if (newReferInfos.isNotEmpty()) {
                     publicVarGroupReferInfoDao.batchSave(dslContext, newReferInfos)
                 }
-                data class GroupVersionKey(val groupName: String, val version: Int)
 
-                // 构建历史引用映射
-                val historicalGroups = historicalReferInfos.associateBy {
-                    GroupVersionKey(it.groupName, it.version)
-                }
-
-                // 构建当前应该存在的引用映射（基于publicVarGroupNames）
-                val currentExpectedGroups = mutableSetOf<GroupVersionKey>()
-                
-                // 从publicVarGroupNames中获取当前应该存在的变量组引用
-                // 注意：这里我们只能知道组名，版本信息需要从历史引用中获取或使用最新版本(-1)
-                publicVarGroupNames.forEach { groupName ->
-                    // 查找历史引用中该组的所有版本
-                    val historicalVersions = historicalReferInfos
-                        .filter { it.groupName == groupName }
-                        .map { it.version }
-                        .distinct()
-                    
-                    if (historicalVersions.isNotEmpty()) {
-                        // 如果有历史版本，保留这些版本
-                        historicalVersions.forEach { version ->
-                            currentExpectedGroups.add(GroupVersionKey(groupName, version))
-                        }
-                    } else {
-                        // 如果没有历史版本，使用最新版本(-1)
-                        currentExpectedGroups.add(GroupVersionKey(groupName, -1))
-                    }
-                }
+                // 构建历史引用映射（按组名）
+                val historicalGroupNames = historicalReferInfos.map { it.groupName }.toSet()
+                val currentGroupNames = publicVarGroupNames.toSet()
 
                 // 如果历史引用和当前引用完全相同，无需更新
-                if (historicalGroups.keys == currentExpectedGroups) {
+                if (historicalGroupNames == currentGroupNames) {
                     return@submit
                 }
 
-                // 计算需要更新的变量组（只处理有变化的）
-                val updatesNeeded = mutableListOf<Triple<String, Int, Int>>()
-
-                // 处理删除的引用（历史中有，当前中没有）
-                (historicalGroups.keys - currentExpectedGroups).forEach { groupVersionKey ->
-                    val group = historicalGroups[groupVersionKey]!!
-                    if (group.version != -1) {
-                        updatesNeeded.add(Triple(group.groupName, group.version, -1))
-                    }
-                }
-
-                // 处理新增的引用（当前中有，历史中没有）
-                (currentExpectedGroups - historicalGroups.keys).forEach { groupVersionKey ->
-                    if (groupVersionKey.version != -1) {
-                        updatesNeeded.add(Triple(groupVersionKey.groupName, groupVersionKey.version, 1))
-                    }
-                }
-
-                // 如果没有需要更新的项
-                if (updatesNeeded.isEmpty()) {
-                    return@submit
-                }
-                
-                updatesNeeded.forEach { (groupName, version, countChange) ->
-                    updateSingleGroupReferCount(
-                        context = dslContext,
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = version,
-                        countChange = countChange
-                    )
-                }
-
-                // 删除publicVarGroupNames中不存在的历史引用记录
+                // 计算需要删除的引用（历史中有，当前中没有）
                 val groupsToDelete = historicalReferInfos.filter { historical ->
-                    val isInCurrentExpected = currentExpectedGroups.contains(
-                        GroupVersionKey(historical.groupName, historical.version)
-                    )
-                    !isInCurrentExpected
+                    !currentGroupNames.contains(historical.groupName)
                 }
-                
+
+                // 计算需要新增的引用（当前中有，历史中没有）
+                val groupsToAdd = currentGroupNames - historicalGroupNames
+
+                // 处理删除的引用
                 if (groupsToDelete.isNotEmpty()) {
+                    // 更新引用计数（减少）
+                    groupsToDelete.forEach { groupToDelete ->
+                        if (groupToDelete.version != -1) {
+                            updateSingleGroupReferCount(
+                                context = dslContext,
+                                projectId = projectId,
+                                groupName = groupToDelete.groupName,
+                                version = groupToDelete.version,
+                                countChange = -1
+                            )
+                        }
+                    }
+
+                    // 删除引用记录
                     dslContext.transaction { configuration ->
                         val context = DSL.using(configuration)
                         groupsToDelete.forEach { groupToDelete ->
@@ -788,6 +745,23 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                         }
                     }
                 }
+
+                // 处理新增的引用（更新引用计数）
+                groupsToAdd.forEach { groupName ->
+                    // 从newReferInfos中找到对应的引用信息来获取版本
+                    val newReferInfo = newReferInfos.find { it.groupName == groupName }
+                    if (newReferInfo != null && newReferInfo.version != -1) {
+                        updateSingleGroupReferCount(
+                            context = dslContext,
+                            projectId = projectId,
+                            groupName = groupName,
+                            version = newReferInfo.version,
+                            countChange = 1
+                        )
+                    }
+                }
+
+                logger.info("Successfully updated reference counts for projectId: $projectId")
 
             } catch (e: Throwable) {
                 logger.warn("Async update reference count failed for projectId: $projectId", e)
