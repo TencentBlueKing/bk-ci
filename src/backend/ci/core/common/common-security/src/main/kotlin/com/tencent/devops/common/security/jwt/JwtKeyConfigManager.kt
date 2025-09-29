@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory
  * @property kid 密钥ID，用于标识不同的密钥
  * @property privateKey 私钥
  * @property publicKey 公钥
- * @property algorithm 签名算法
  * @property isActive 是否为当前活跃密钥
  */
 data class JwtKeyConfig(

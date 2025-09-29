@@ -112,7 +112,7 @@ data class ParsedJwtHeader(
  * 支持各种Claims的验证逻辑，包括过期时间、签发者、受众、生效时间等
  */
 class JwtClaimsValidator(
-    val keyConfigManager: JwtKeyConfigManager
+    private val keyConfigManager: JwtKeyConfigManager
 ) {
 
     private val logger = LoggerFactory.getLogger(JwtClaimsValidator::class.java)
@@ -123,7 +123,7 @@ class JwtClaimsValidator(
      * @param context 验证上下文，包含Claims和验证规则
      * @return 完整的验证结果
      */
-    fun validateAllClaims(context: ClaimsValidationContext): JwtValidationResult {
+    private fun validateAllClaims(context: ClaimsValidationContext): JwtValidationResult {
         val claims = context.claims
 
         // 根据验证规则进行其他验证
@@ -178,7 +178,7 @@ class JwtClaimsValidator(
      * @param token 完整的JWT Token
      * @return 分割后的Token各部分
      */
-    fun splitJwtToken(token: String): JwtTokenParts {
+    private fun splitJwtToken(token: String): JwtTokenParts {
         val parts = token.split(".")
         if (parts.size != 3) {
             throw IllegalArgumentException("Invalid JWT token format. Expected 3 parts, got ${parts.size}")
@@ -197,7 +197,7 @@ class JwtClaimsValidator(
      * @param encodedHeader Base64编码的Header
      * @return 解码后的Header JSON字符串
      */
-    fun decodeHeader(encodedHeader: String): String {
+    private fun decodeHeader(encodedHeader: String): String {
         return try {
             String(Base64.getUrlDecoder().decode(encodedHeader), Charsets.UTF_8)
         } catch (e: Exception) {
@@ -212,7 +212,7 @@ class JwtClaimsValidator(
      * @param headerJson Header JSON字符串
      * @return 解析后的Header对象
      */
-    fun parseHeaderJson(headerJson: String): ParsedJwtHeader {
+    private fun parseHeaderJson(headerJson: String): ParsedJwtHeader {
         return try {
             val headerMap = JsonUtil.toMap(headerJson)
             ParsedJwtHeader(
@@ -235,7 +235,7 @@ class JwtClaimsValidator(
      * @param header 解析后的Header对象
      * @return Header结构验证结果
      */
-    fun validateHeaderStructure(header: ParsedJwtHeader): Boolean {
+    private fun validateHeaderStructure(header: ParsedJwtHeader): Boolean {
         // 检查必需字段
         if (header.algorithm.isBlank()) {
             logger.warn("JWT header missing algorithm field")
@@ -256,7 +256,7 @@ class JwtClaimsValidator(
      * @param token JWT Token字符串
      * @return 解析后的Header对象
      */
-    fun parseJwtHeader(token: String): ParsedJwtHeader {
+    private fun parseJwtHeader(token: String): ParsedJwtHeader {
         val parts = splitJwtToken(token)
         val headerJson = decodeHeader(parts.header)
         val parsedHeader = parseHeaderJson(headerJson)
@@ -275,7 +275,7 @@ class JwtClaimsValidator(
      * @param validationRules 额外的验证规则
      * @return JWT验证结果
      */
-    fun verifyJwtToken(
+    private fun verifyJwtToken(
         token: String,
         validationRules: List<ClaimsValidationRule> = emptyList()
     ): JwtValidationResult {

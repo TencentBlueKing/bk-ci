@@ -158,7 +158,7 @@ class JwtManager(
      * @param request JWT生成请求，包含主题、Claims和密钥配置
      * @return 生成的JWT Token字符串
      */
-    fun generateEnhancedToken(request: JwtGenerationRequest): String {
+    private fun generateEnhancedToken(request: JwtGenerationRequest): String {
         try {
             // 获取密钥配置
             val keyConfig = if (request.kid != null) {
