@@ -134,7 +134,7 @@
                             ...(upgradeStrategy === STRATEGY_ENUM.AUTO ? [{
                                 key: 'settingSyncStrategy',
                                 value: t(`template.${settingSyncStrategy}-SYNC`),
-                                grayDesc: t('template.syncSettingStrategyDesc')
+                                grayDesc: settingSyncStrategy === STRATEGY_ENUM.AUTO ? t('template.syncSettingStrategyDesc') : ''
                             }] : [])
                         ]
                     }
