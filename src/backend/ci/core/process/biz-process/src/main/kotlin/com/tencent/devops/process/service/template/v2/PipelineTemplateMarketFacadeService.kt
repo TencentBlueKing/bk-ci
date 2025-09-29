@@ -261,6 +261,7 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
     ) {
         PipelineTemplateTriggerUpgradesLock(redisOperation = redisOperation, templateId = templateId).use {
             it.lock()
+            val startEpoch = System.currentTimeMillis()
             val templateResource = pipelineTemplateResourceService.get(
                 projectId = projectId,
                 templateId = templateId,
@@ -309,6 +310,10 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
                     srcTemplateVersionName = templateResource.versionName!!
                 )
             }
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch}) ms to release template($templateId) " +
+                    "version($version) and trigger upgrades"
+            )
         }
     }
 

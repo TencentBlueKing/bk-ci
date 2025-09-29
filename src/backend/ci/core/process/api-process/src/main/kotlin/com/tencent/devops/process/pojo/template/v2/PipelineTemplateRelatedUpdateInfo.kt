@@ -11,13 +11,13 @@ data class PipelineTemplateRelatedUpdateInfo(
     val buildNo: BuildNo? = null,
     @get:Schema(title = "构建参数", required = false)
     val params: List<BuildFormProperty>? = null,
-    @get:Schema(title = "是否软删除", required = true)
+    @get:Schema(title = "是否软删除", required = false)
     val deleted: Boolean? = null,
-    @get:Schema(title = "实例化错误信息", required = true)
+    @get:Schema(title = "实例化错误信息", required = false)
     val instanceErrorInfo: String? = null,
-    @get:Schema(title = "更新人", required = true)
+    @get:Schema(title = "更新人", required = false)
     val updater: String? = null,
-    @get:Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = false)
     val status: TemplatePipelineStatus? = null,
     @get:Schema(title = "合并请求URL", required = false)
     val pullRequestUrl: String? = null,

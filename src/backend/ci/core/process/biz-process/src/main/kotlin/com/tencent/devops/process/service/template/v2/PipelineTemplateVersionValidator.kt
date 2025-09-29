@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.template.JobTemplateModel
@@ -110,71 +111,39 @@ class PipelineTemplateVersionValidator @Autowired constructor(
     /**
      * 检查模板中是否存在已下架、测试中插件(明确版本号)
      */
-    @Suppress("CyclomaticComplexMethod", "NestedBlockDepth")
     private fun checkTemplateAtomsForExplicitVersion(templateModel: ITemplateModel, userId: String) {
-        val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
-        when (templateModel) {
-            is Model -> {
-                templateModel.stages.forEach { stage ->
-                    stage.containers.forEach { container ->
-                        container.elements.forEach nextElement@{ element ->
-                            val atomCode = element.getAtomCode()
-                            val version = element.version
-                            if (version.contains("*")) {
-                                return@nextElement
-                            }
-                            codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
-                        }
-                    }
-                }
-            }
-
-            is StageTemplateModel -> {
-                templateModel.stages.forEach { stage ->
-                    stage.containers.forEach { container ->
-                        container.elements.forEach nextElement@{ element ->
-                            val atomCode = element.getAtomCode()
-                            val version = element.version
-                            if (version.contains("*")) {
-                                return@nextElement
-                            }
-                            codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
-                        }
-                    }
-                }
-            }
-
-            is JobTemplateModel -> {
-                templateModel.containers.forEach { container ->
-                    container.elements.forEach nextElement@{ element ->
-                        val atomCode = element.getAtomCode()
-                        val version = element.version
-                        if (version.contains("*")) {
-                            return@nextElement
-                        }
-                        codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
-                    }
-                }
-            }
-
-            is StepTemplateModel -> {
-                templateModel.container.elements.forEach nextElement@{ element ->
-                    val atomCode = element.getAtomCode()
-                    val version = element.version
-                    if (version.contains("*")) {
-                        return@nextElement
-                    }
-                    codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
-                }
-            }
-        }
-
+        val codeVersions = templateModel.collectExplicitAtomVersions()
         if (codeVersions.isNotEmpty()) {
             AtomUtils.checkTemplateRealVersionAtoms(
                 codeVersions = codeVersions,
                 userId = userId,
                 client = client
             )
+        }
+    }
+
+    /**
+     * 为模板模型添加扩展函数，统一收集需要检查版本的原子
+     */
+    private fun ITemplateModel.collectExplicitAtomVersions(): Set<AtomCodeVersionReqItem> {
+        return when (this) {
+            is Model -> stages.flatMap { it.containers }.collectAtomVersionsFromContainers()
+            is StageTemplateModel -> stages.flatMap { it.containers }.collectAtomVersionsFromContainers()
+            is JobTemplateModel -> containers.collectAtomVersionsFromContainers()
+            is StepTemplateModel -> listOf(container).collectAtomVersionsFromContainers()
+            else -> emptyList()
+        }.toSet()
+    }
+
+    /**
+     * 从容器列表中收集原子版本信息
+     */
+    private fun List<Container>.collectAtomVersionsFromContainers(): List<AtomCodeVersionReqItem> {
+        return this.flatMap { container ->
+            container.elements.mapNotNull { element ->
+                element.takeIf { !it.version.contains("*") }
+                    ?.let { AtomCodeVersionReqItem(it.getAtomCode(), it.version) }
+            }
         }
     }
 }

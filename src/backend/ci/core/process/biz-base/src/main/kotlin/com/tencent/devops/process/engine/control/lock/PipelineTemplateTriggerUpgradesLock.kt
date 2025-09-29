@@ -35,7 +35,7 @@ class PipelineTemplateTriggerUpgradesLock(redisOperation: RedisOperation, templa
         redisOperation = redisOperation,
         lockKey = "pipeline.template.trigger.upgrades.lock.$templateId",
         // 10分钟，防止服务重启，锁未释放
-        expiredTimeInSeconds = 600000
+        expiredTimeInSeconds = 600
     ) {
     override fun decorateKey(key: String): String {
         return key

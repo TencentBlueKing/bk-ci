@@ -35,7 +35,7 @@ class PipelineTemplateInstanceCountLock(redisOperation: RedisOperation, template
         redisOperation = redisOperation,
         lockKey = "pipeline.template.instance.count.lock.$templateId",
         // 10分钟，防止服务重启，锁未释放
-        expiredTimeInSeconds = 600000
+        expiredTimeInSeconds = 600
     ) {
     override fun decorateKey(key: String): String {
         return key

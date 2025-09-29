@@ -294,10 +294,10 @@ class PipelineTemplateMigrateService(
      */
     fun migrateTemplate(projectId: String, templateId: String) {
         val lock = PipelineTemplateModelLock(redisOperation = redisOperation, templateId = templateId)
+        val startEpoch = System.currentTimeMillis()
         try {
             lock.lock()
             logger.info("Migrate template started, projectId={}, templateId={}", projectId, templateId)
-
             // 步骤 1: 准备所有需要的数据，并创建上下文对象
             val context = setupMigrationContext(projectId, templateId)
             // 步骤 2: 遍历所有旧版本，并逐一迁移
@@ -309,6 +309,10 @@ class PipelineTemplateMigrateService(
             logger.info("Migrate template finished successfully, projectId={}, templateId={}", projectId, templateId)
         } finally {
             lock.unlock()
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to migrate template, projectId={}, " +
+                    "templateId={}", projectId, templateId
+            )
         }
     }
 
