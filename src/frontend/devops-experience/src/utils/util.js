@@ -385,5 +385,5 @@ export const platformMap = {
     ANDROID: 'ANDROID',
     IOS: 'IOS',
     HAP: 'HAP',
-    WINDOWS: 'WINDOWS'
+    WIN: 'WIN'
 }

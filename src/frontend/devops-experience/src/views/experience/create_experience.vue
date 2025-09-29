@@ -554,7 +554,7 @@
                 }
             },
             isWindowsPlatform () {
-                return this.createReleaseForm?.platform === platformMap.WINDOWS
+                return this.createReleaseForm?.platform === platformMap.WIN
             },
             appNameRequired () {
                 return this.isWindowsPlatform

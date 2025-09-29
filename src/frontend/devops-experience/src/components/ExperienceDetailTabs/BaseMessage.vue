@@ -123,7 +123,7 @@
         },
         computed: {
             isWindowsExp () {
-                return this.curReleaseDetail.platform === platformMap.WINDOWS
+                return this.curReleaseDetail.platform === platformMap.WIN
             },
             projectId () {
                 return this.$route.params.projectId

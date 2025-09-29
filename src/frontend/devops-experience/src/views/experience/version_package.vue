@@ -175,7 +175,7 @@
                             return extList.slice(1, 2)
                         case platformMap.HAP:
                             return extList.slice(2, 3)
-                        case platformMap.WINDOWS:
+                        case platformMap.WIN:
                             return extList.slice(3, 4)
                         default:
                             return extList
