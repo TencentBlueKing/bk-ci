@@ -382,8 +382,8 @@ export function getQueryString (name) {
 }
 
 export const platformMap = {
-    'ANDROID':'ANDROID',
-    'IOS':'IOS',
-    'HAP':'HAP',
-    'WINDOWS':'WINDOWS'
+    ANDROID: 'ANDROID',
+    IOS: 'IOS',
+    HAP: 'HAP',
+    WINDOWS: 'WINDOWS'
 }

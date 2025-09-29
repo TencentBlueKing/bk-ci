@@ -168,7 +168,18 @@
                 const extList = ['*.apk', '*.ipa', '*.hap', '*.zip']
                 // '*.msix', '*.exe'
                 try {
-                    return extList[this.platform - 1] ? [extList[this.platform - 1]] : extList
+                    switch (this.platform) {
+                        case platformMap.ANDROID:
+                            return extList.slice(0, 1)
+                        case platformMap.IOS:
+                            return extList.slice(1, 2)
+                        case platformMap.HAP:
+                            return extList.slice(2, 3)
+                        case platformMap.WINDOWS:
+                            return extList.slice(3, 4)
+                        default:
+                            return extList
+                    }
                 } catch (error) {
                     return extList
                 }
