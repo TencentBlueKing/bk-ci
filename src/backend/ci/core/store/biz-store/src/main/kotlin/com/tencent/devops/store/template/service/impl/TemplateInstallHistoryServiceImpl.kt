@@ -30,6 +30,7 @@ class TemplateInstallHistoryServiceImpl(
 
     override fun deleteVersions(srcTemplateCode: String, templateCode: String, versions: List<Long>) {
         logger.info("delete template install versions history:$srcTemplateCode|$templateCode|$versions")
+        if (versions.isEmpty()) return
         templateInstallHistoryDao.delete(
             dslContext = dslContext,
             srcTemplateCode = srcTemplateCode,
