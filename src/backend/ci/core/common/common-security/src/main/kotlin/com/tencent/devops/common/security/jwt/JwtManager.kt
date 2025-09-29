@@ -104,7 +104,7 @@ class JwtManager(
 
     init {
         jwtConfig.properties.forEach {
-            addKeyConfig(it.kid, it.publicKey, it.privateKey, it.active)
+            addKeyConfig(kid = it.kid, privateKey = it.privateKey, publicKey = it.publicKey, active = it.active)
         }
     }
 
