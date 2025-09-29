@@ -731,7 +731,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                                 referId = groupToDelete.referId,
                                 referType = groupToDelete.referType,
                                 groupName = groupToDelete.groupName,
-                                version = groupToDelete.version
+                                referVersion = groupToDelete.referVersion
                             )
                             
                             publicVarReferInfoDao.deleteByReferIdAndGroup(
@@ -740,7 +740,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                                 referId = groupToDelete.referId,
                                 referType = groupToDelete.referType,
                                 groupName = groupToDelete.groupName,
-                                version = groupToDelete.version
+                                referVersion = groupToDelete.referVersion
                             )
                         }
                     }

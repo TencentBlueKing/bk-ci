@@ -274,7 +274,7 @@ class PublicVarGroupReferInfoDao {
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         groupName: String,
-        version: Int
+        referVersion: Int
     ) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             dslContext.deleteFrom(this)
@@ -282,7 +282,7 @@ class PublicVarGroupReferInfoDao {
                 .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
                 .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
+                .and(REFER_VERSION.eq(referVersion))
                 .execute()
         }
     }
