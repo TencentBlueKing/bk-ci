@@ -654,14 +654,14 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                      )
                  )
             }
-            publicVarGroupReferInfoDao.batchSave(dslContext, pipelinePublicVarGroupReferPOs)
         }
 
-        // 异步更新引用计数
+        // 异步更新引用计数和批量保存
         asyncUpdateReferenceCountsAfterSave(
             projectId = publicVarGroupReferDTO.projectId,
             historicalReferInfos = historicalReferInfos,
-            publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList()
+            publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
+            newReferInfos = pipelinePublicVarGroupReferPOs
         )
     }
 
@@ -670,18 +670,24 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      * @param projectId 项目ID
      * @param historicalReferInfos 历史引用信息
      * @param publicVarGroupNames 当前变量组名称列表
+     * @param newReferInfos 新的引用信息列表，需要批量保存
      */
     private fun asyncUpdateReferenceCountsAfterSave(
         projectId: String,
         historicalReferInfos: List<PipelinePublicVarGroupReferPO>,
-        publicVarGroupNames: List<String>
+        publicVarGroupNames: List<String>,
+        newReferInfos: List<PipelinePublicVarGroupReferPO> = emptyList()
     ) {
-        if (historicalReferInfos.isEmpty() && publicVarGroupNames.isEmpty()) {
+        if (historicalReferInfos.isEmpty() && publicVarGroupNames.isEmpty() && newReferInfos.isEmpty()) {
             return
         }
 
         java.util.concurrent.Executors.newFixedThreadPool(1).submit {
             try {
+                // 首先批量保存新的引用信息
+                if (newReferInfos.isNotEmpty()) {
+                    publicVarGroupReferInfoDao.batchSave(dslContext, newReferInfos)
+                }
                 data class GroupVersionKey(val groupName: String, val version: Int)
 
                 // 构建历史引用映射
