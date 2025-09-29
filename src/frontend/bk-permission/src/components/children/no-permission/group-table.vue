@@ -12,7 +12,7 @@
       </bk-table-column>
       <bk-table-column :label="t('有效期')" prop="expiredDisplay">
         <template #default="{ row }">
-          <span>{{ row.status === 'EXPIRED' ? row.expiredDisplay : row.expiredDisplay + t('day') }} </span>EXPIRED
+          <span>{{ row.status === 'EXPIRED' ? row.expiredDisplay : row.expiredDisplay + t('天') }} </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="t('状态')" prop="status">
