@@ -27,7 +27,7 @@
         "ANDROID": "Android",
         "IOS": "iOS",
         "HAP": "HarmonyOS Next",
-        "WINDOWS": "Windows"
+        "WIN": "Windows"
     },
     "search_fields": {
         "name": "文件名",

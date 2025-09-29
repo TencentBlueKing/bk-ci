@@ -409,7 +409,7 @@
                     this.totalList = res.map(item => ({
                         ...item,
                         platformLabel: this.$t(`experience.platform_labels.${item.platform}`),
-                        isWindowsExp: platform !== platformMap.WIN,
+                        isWindowsExp: item.platform !== platformMap.WIN,
                         sourceLabel: sourceLabelMap[item.source],
                         formatExpireDate: this.localConvertTime(item.expireDate).split(' ')[0],
                         formatRepoCreateTime: this.localConvertTime(item.repoCreateTime).split(' ')[0],
