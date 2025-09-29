@@ -767,7 +767,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = resource.model,
             referId = pipelineId,
             referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-            referVersion = version
+            referVersion = version,
+            removeFlag = false
         )
         // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(

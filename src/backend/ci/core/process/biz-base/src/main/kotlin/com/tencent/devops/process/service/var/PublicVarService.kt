@@ -206,7 +206,8 @@ class PublicVarService @Autowired constructor(
         model: Model,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int
+        referVersion: Int,
+        removeFlag: Boolean = true
     ) {
         val publicVarGroups = model.publicVarGroups
         if (publicVarGroups.isNullOrEmpty()) return
@@ -247,7 +248,8 @@ class PublicVarService @Autowired constructor(
                     diffResult = diffResult,
                     groupReferInfo = groupReferInfo,
                     latestGroupVars = latestGroupVars,
-                    params = params
+                    params = params,
+                    removeFlag = removeFlag
                 )
             }
         }
@@ -274,7 +276,8 @@ class PublicVarService @Autowired constructor(
         diffResult: VarGroupDiffResult,
         groupReferInfo: PipelinePublicVarGroupReferPO,
         latestGroupVars: List<BuildFormProperty>,
-        params: MutableList<BuildFormProperty>
+        params: MutableList<BuildFormProperty>,
+        removeFlag: Boolean
     ) {
         val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfo = groupReferInfo.positionInfo ?: return
@@ -290,11 +293,24 @@ class PublicVarService @Autowired constructor(
             }
         }
 
-        // 2. 移除不再存在的变量（按索引降序处理，避免索引偏移）
-        diffResult.varsToRemove.mapNotNull { positionInfoMap[it]?.index } // 过滤无效索引
-            .filter { it >= 0 && it < params.size } // 校验索引有效性
-            .sortedDescending() // 降序排序，确保先删序号大的索引
-            .forEach { params.removeAt(it) }
+        if (removeFlag) {
+            // 2. 移除不再存在的变量（按索引降序处理，避免索引偏移）
+            diffResult.varsToRemove.mapNotNull { positionInfoMap[it]?.index } // 过滤无效索引
+                .filter { it >= 0 && it < params.size } // 校验索引有效性
+                .sortedDescending() // 降序排序，确保先删序号大的索引
+                .forEach { params.removeAt(it) }
+        } else {
+            // 3. 保留变量组版本已移除的变量
+            diffResult.varsToRemove.forEach { varName ->
+                positionInfoMap[varName]?.let { pos ->
+                    val newVar = newVarMap[varName]
+                    if (pos.index >= 0 && pos.index < params.size && newVar != null) {
+                        params[pos.index] = newVar
+                        params[pos.index].removeFlag = true
+                    }
+                }
+            }
+        }
 
         // 3. 添加新增的变量到末尾
         diffResult.varsToAdd.mapNotNull { newVarMap[it] } // 过滤无效变量
