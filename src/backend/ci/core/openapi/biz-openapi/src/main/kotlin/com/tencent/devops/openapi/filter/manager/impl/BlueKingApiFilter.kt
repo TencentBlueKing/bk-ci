@@ -3,7 +3,8 @@ package com.tencent.devops.openapi.filter.manager.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.security.jwt.JwtConfig
+import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
 import com.tencent.devops.openapi.filter.manager.ApiFilterFlowState
@@ -11,22 +12,15 @@ import com.tencent.devops.openapi.filter.manager.ApiFilterManager
 import com.tencent.devops.openapi.filter.manager.FilterContext
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
-import io.jsonwebtoken.Jwts
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
-import java.security.Security
 import jakarta.ws.rs.core.Response
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.openssl.PEMParser
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class BlueKingApiFilter constructor(
-    private val apiGatewayUtil: ApiGatewayUtil
+    private val apiGatewayUtil: ApiGatewayUtil,
+    private val apigwJwtProperties: JwtConfig
 ) : ApiFilterManager {
     companion object {
         private val logger = LoggerFactory.getLogger(BlueKingApiFilter::class.java)
@@ -36,6 +30,15 @@ class BlueKingApiFilter constructor(
 
     @Value("\${api.blueKing.enable:#{null}}")
     private val apiFilterEnabled: Boolean? = false
+
+    private val jwtManager = JwtManager(apigwJwtProperties).apply {
+        addKeyConfig(
+            kid = "devops",
+            privateKey = null,
+            publicKey = SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter(),
+            active = true
+        )
+    }
 
     /*返回true时执行check逻辑*/
     override fun canExecute(requestContext: FilterContext): Boolean {
@@ -117,20 +120,17 @@ class BlueKingApiFilter constructor(
         return ApiFilterFlowState.AUTHORIZED
     }
 
-    private fun parseJwt(bkApiJwt: String): Map<String, Any> {
-        var reader: PEMParser? = null
-        try {
-            val key = SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
 
-            Security.addProvider(BouncyCastleProvider())
-            val bais = ByteArrayInputStream(key)
-            reader = PEMParser(InputStreamReader(bais))
-            val publicKeyInfo = reader.readObject() as SubjectPublicKeyInfo
-            val publicKey = JcaPEMKeyConverter().getPublicKey(publicKeyInfo)
-            val jwtParser = Jwts.parser().setSigningKey(publicKey).build()
-            val parse = jwtParser.parse(bkApiJwt)
-            logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
-            return JsonUtil.toMap(parse.body)
+    private fun parseJwt(bkApiJwt: String): Map<String, Any> {
+        try {
+            val result = jwtManager.verifyEnhancedJwt(bkApiJwt)
+
+            if (!result.isValid) {
+                throw IllegalArgumentException("JWT claims validation failed")
+            }
+
+            logger.info("Get the parse body(${result.claims})")
+            return result.claims
         } catch (ignored: Exception) {
             logger.error("BKSystemErrorMonitor| Parse jwt failed.", ignored)
             throw ErrorCodeException(
@@ -138,8 +138,6 @@ class BlueKingApiFilter constructor(
                 defaultMessage = "Parse jwt failed",
                 params = arrayOf(bkApiJwt)
             )
-        } finally {
-            reader?.close()
         }
     }
 }

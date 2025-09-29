@@ -1,0 +1,137 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 Tencent.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.common.security.jwt
+
+/**
+ * JWT安全相关常量定义
+ * 
+ * 用于定义JWT安全增强功能中使用的各种常量，包括算法、Header字段、Claims字段和错误码等
+ */
+object JwtSecurityConstants {
+    
+    /**
+     * JWT算法常量
+     */
+    object JwtAlgorithms {
+        /** RSA SHA-512算法 */
+        const val RS512: String = "RS512"
+        
+        /** 支持的算法列表 */
+        val SUPPORTED_ALGORITHMS: Set<String> = setOf(RS512)
+    }
+    
+    /**
+     * JWT Header常量
+     */
+    object JwtHeaders {
+        /** 算法字段名 */
+        const val ALGORITHM: String = "alg"
+        
+        /** 类型字段名 */
+        const val TYPE: String = "typ"
+        
+        /** 密钥ID字段名 */
+        const val KEY_ID: String = "kid"
+        
+        /** 默认类型值 */
+        const val DEFAULT_TYPE: String = "JWT"
+    }
+    
+    /**
+     * JWT Claims常量
+     */
+    object JwtClaims {
+        /** 签发者字段名 */
+        const val ISSUER: String = "iss"
+        
+        /** 主题字段名 */
+        const val SUBJECT: String = "sub"
+        
+        /** 受众字段名 */
+        const val AUDIENCE: String = "aud"
+        
+        /** 过期时间字段名 */
+        const val EXPIRATION: String = "exp"
+        
+        /** 生效时间字段名 */
+        const val NOT_BEFORE: String = "nbf"
+        
+        /** 签发时间字段名 */
+        const val ISSUED_AT: String = "iat"
+    }
+    
+    /**
+     * JWT错误码常量
+     */
+    object JwtErrorCodes {
+        /** 无效算法错误码 */
+        const val INVALID_ALGORITHM: String = "JWT_INVALID_ALGORITHM"
+        
+        /** 无效密钥ID错误码 */
+        const val INVALID_KID: String = "JWT_INVALID_KID"
+        
+        /** Token过期错误码 */
+        const val EXPIRED_TOKEN: String = "JWT_EXPIRED_TOKEN"
+        
+        /** 无效签名错误码 */
+        const val INVALID_SIGNATURE: String = "JWT_INVALID_SIGNATURE"
+        
+        /** 无效签发者错误码 */
+        const val INVALID_ISSUER: String = "JWT_INVALID_ISSUER"
+        
+        /** 无效受众错误码 */
+        const val INVALID_AUDIENCE: String = "JWT_INVALID_AUDIENCE"
+        
+        /** Token尚未生效错误码 */
+        const val TOKEN_NOT_YET_VALID: String = "JWT_TOKEN_NOT_YET_VALID"
+    }
+    
+    /**
+     * 获取默认的密钥ID
+     * 
+     * @return 默认密钥ID（devops）
+     */
+    fun getDefaultKeyId(): String = "devops"
+    
+    /**
+     * 获取默认的签发者
+     * 
+     * @return 默认签发者（DEVOPS）
+     */
+    fun getDefaultIssuer(): String = "DEVOPS"
+    
+    /**
+     * 检查算法是否被支持
+     * 
+     * @param algorithm 算法名称
+     * @return 是否支持该算法
+     */
+    fun isAlgorithmSupported(algorithm: String): Boolean {
+        return JwtAlgorithms.SUPPORTED_ALGORITHMS.contains(algorithm)
+    }
+}

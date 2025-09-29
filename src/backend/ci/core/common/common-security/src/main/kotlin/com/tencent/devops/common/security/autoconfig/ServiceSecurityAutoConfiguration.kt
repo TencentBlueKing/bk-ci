@@ -27,16 +27,22 @@
 
 package com.tencent.devops.common.security.autoconfig
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.security.jwt.JwtConfig
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.pojo.SecurityJwtInfo
 import com.tencent.devops.common.security.util.EnvironmentUtil
-import org.springframework.beans.factory.annotation.Value
+import java.net.InetAddress
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.Ordered
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
 /**
@@ -49,23 +55,21 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 class ServiceSecurityAutoConfiguration {
     companion object {
         const val JWT_MANAGER_SCHEDULER = "jwtManagerScheduler"
+        private val logger = LoggerFactory.getLogger(ServiceSecurityAutoConfiguration::class.java)
     }
-
-    @Value("\${bkci.security.public-key:#{null}}")
-    private val publicKey: String? = null
-
-    @Value("\${bkci.security.private-key:#{null}}")
-    private val privateKey: String? = null
-
-    @Value("\${bkci.security.enable:#{false}}")
-    private val enable: Boolean = false
 
     @Bean
     fun environmentUtil() = EnvironmentUtil()
 
     @Bean
+    @ConfigurationProperties(prefix = "bkci.security")
+    fun securityJwtProperties(): JwtConfig = JwtConfig()
+
+    @Bean
     @DependsOn("environmentUtil")
-    fun jwtManager() = JwtManager(privateKey, publicKey, enable)
+    fun jwtManager(securityJwtProperties: JwtConfig) = JwtManager(securityJwtProperties).also {
+        refreshToken(it)
+    }
 
     @Bean(name = [JWT_MANAGER_SCHEDULER])
     fun jwtManagerScheduler(): TaskScheduler {
@@ -74,5 +78,20 @@ class ServiceSecurityAutoConfiguration {
         scheduler.setThreadNamePrefix("jwt-scheduler-")
         scheduler.initialize()
         return scheduler
+    }
+
+    @Scheduled(cron = "0 0/4 * * * ?", scheduler = JWT_MANAGER_SCHEDULER)
+    fun refreshToken(jwtManager: JwtManager) {
+        logger.info("refresh token")
+        jwtManager.generateToken(
+            JsonUtil.toJson(
+                SecurityJwtInfo(
+                    ip = InetAddress.getLocalHost().hostAddress,
+                    applicationName = EnvironmentUtil.getApplicationName(),
+                    activeProfile = EnvironmentUtil.getActiveProfile(),
+                    serverPort = EnvironmentUtil.getServerPort()
+                )
+            )
+        )
     }
 }
