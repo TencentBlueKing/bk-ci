@@ -161,12 +161,12 @@
 
 <script>
     import {
-    RESOURCE_ACTION,
-    RESOURCE_TYPE
-} from '@/utils/permission'
-import { mapActions, mapGetters, mapState } from 'vuex'
-import PipelineBreadCrumb from './PipelineBreadCrumb'
-import ReleaseButton from './ReleaseButton'
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
+    } from '@/utils/permission'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import PipelineBreadCrumb from './PipelineBreadCrumb'
+    import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
