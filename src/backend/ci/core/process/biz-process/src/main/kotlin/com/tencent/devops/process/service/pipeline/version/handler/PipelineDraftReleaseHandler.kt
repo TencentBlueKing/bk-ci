@@ -136,6 +136,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
         )
         // 如果当前草稿和正式版本一致则拦截发布
         if (
+            resourceOnlyVersion.version != releaseResource.version &&
             resourceOnlyVersion.pipelineVersion == releaseResource.pipelineVersion &&
             resourceOnlyVersion.triggerVersion == releaseResource.triggerVersion &&
             resourceOnlyVersion.settingVersion == releaseResource.settingVersion
