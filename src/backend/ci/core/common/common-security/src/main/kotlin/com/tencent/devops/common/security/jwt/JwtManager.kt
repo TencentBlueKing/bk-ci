@@ -8,7 +8,6 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 
-
 /**
  * JWT 配置数据类
  *
@@ -215,7 +214,6 @@ class JwtManager(
             }
 
             return result
-
         } catch (e: Exception) {
             logger.warn("JWT verification failed", e)
             return JwtValidationResult(
@@ -322,7 +320,6 @@ class JwtManager(
 
         return rules
     }
-
 
     fun isAuthEnable(): Boolean {
         // 只有authEnable=true，且privateKeyString、publicKeyString不为空的时候，才会验证

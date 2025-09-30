@@ -123,7 +123,8 @@ class JwtClaimsValidator(
                 return JwtValidationResult(
                     isValid = false,
                     errorCode = errorCode,
-                    errorMessage = "Claim validation failed for ${rule.claimName}. Expected: ${rule.expectedValue}, Actual: $claimValue",
+                    errorMessage = "Claim validation failed for ${rule.claimName}. " +
+                        "Expected: ${rule.expectedValue}, Actual: $claimValue",
                     claims = claims
                 )
             }
@@ -297,7 +298,6 @@ class JwtClaimsValidator(
                 claims = claimsMap,
                 kid = parsedHeader.keyId
             )
-
         } catch (e: ExpiredJwtException) {
             logger.warn("JWT token expired", e)
             return JwtValidationResult(

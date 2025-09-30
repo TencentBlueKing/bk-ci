@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.security.jwt.JwtConfig
 import com.tencent.devops.common.security.jwt.JwtManager
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
 import com.tencent.devops.openapi.filter.manager.ApiFilterFlowState
 import com.tencent.devops.openapi.filter.manager.ApiFilterManager
@@ -123,7 +122,6 @@ class BlueKingApiFilter constructor(
         }
         return ApiFilterFlowState.AUTHORIZED
     }
-
 
     private fun parseJwt(bkApiJwt: String): Map<String, Any> {
         try {

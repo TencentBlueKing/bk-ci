@@ -24,7 +24,6 @@ data class JwtKeyConfig(
     val isActive: Boolean = true
 )
 
-
 /**
  * JWT密钥配置管理器
  *
@@ -101,5 +100,4 @@ class JwtKeyConfigManager {
             false
         }
     }
-
 }
