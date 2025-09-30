@@ -93,8 +93,7 @@
             <instance-release-btn
                 v-if="isTemplate && canInstantiate"
                 :perm-data="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
+                    disablePermissionApi: false,
                     permissionData: {
                         projectId,
                         resourceType: RESOURCE_TYPE.PROJECT,

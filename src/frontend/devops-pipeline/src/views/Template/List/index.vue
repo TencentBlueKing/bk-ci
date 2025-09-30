@@ -373,11 +373,9 @@
                         {
                             text: t('copy'), // 复制
                             handler: () => copyTemplate(item),
-                            hasPermission: item.canEdit,
-                            disablePermissionApi: true,
                             disable: item.latestVersionStatus !== 'RELEASED',
                             isShow: true,
-                            permissionData: editPerm
+                            ...addPerm.value
                         },
                         {
                             text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
