@@ -220,5 +220,6 @@
     "触发结果": "Trigger Result",
     "codelibUndeployTitle": "{0} connection service has not been fully deployed",
     "githubUndeployDesc": "To use this feature, please contact the platform administrator to register the GitHub APP",
-    "CodeBuddy（内网版）": "CodeBuddy (internal version)"
+    "CodeBuddy（内网版）": "CodeBuddy (internal version)",
+    "authorizeAccount": "Authorize Account"
 }

@@ -18,11 +18,21 @@
 local redis, err = require("resty.redis")
 _M = {}
 
-local redisConfig = config.redis
-
 function _M:new()
+    local redisConfig = config.redis
+    if config.redis.auto_redis ~= nil then
+        -- 特殊tag处理
+        local tag = specialTagUtil:get_special_tag(ngx.var.project, ngx.var.project_id, nil)
+        if tag == config.redis.auto_redis.tag then
+            redisConfig = config.redis.auto_redis
+        end
+    end
     if not redis then
         ngx.log(ngx.ERR, "redis require error:", err)
+        return nil
+    end
+    if not redisConfig then
+        ngx.log(ngx.ERR, "redisConfig is nil")
         return nil
     end
     local red, err = redis:new()

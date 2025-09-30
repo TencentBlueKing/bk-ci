@@ -42,7 +42,9 @@ data class ManualTriggerElement(
     @get:Schema(title = "是否可跳过插件", required = false)
     var canElementSkip: Boolean? = false,
     @get:Schema(title = "是否使用最近一次的参数进行构建", required = false)
-    var useLatestParameters: Boolean? = false
+    var useLatestParameters: Boolean? = false,
+    @get:Schema(title = "手动触发默认构建信息", required = false)
+    var buildMsg: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualTrigger"

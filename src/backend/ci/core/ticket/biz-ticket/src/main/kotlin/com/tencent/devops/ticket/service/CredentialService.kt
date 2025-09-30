@@ -87,7 +87,8 @@ interface CredentialService {
         buildId: String,
         credentialId: String,
         publicKey: String,
-        taskId: String? = null
+        taskId: String? = null,
+        padding: Boolean
     ): CredentialInfo?
 
     fun buildGetAcrossProject(
@@ -95,14 +96,25 @@ interface CredentialService {
         targetProjectId: String,
         buildId: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CredentialInfo?
 
     fun buildGetDetail(projectId: String, buildId: String, taskId: String?, credentialId: String): Map<String, String>
 
-    fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo?
+    fun serviceGet(
+        projectId: String,
+        credentialId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CredentialInfo?
 
-    fun serviceGetAcrossProject(targetProjectId: String, credentialId: String, publicKey: String): CredentialInfo?
+    fun serviceGetAcrossProject(
+        targetProjectId: String,
+        credentialId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CredentialInfo?
 
     fun serviceGet(projectId: String, credentialId: String): Credential
 
@@ -115,5 +127,10 @@ interface CredentialService {
 
     fun searchByCredentialId(projectId: String, offset: Int, limit: Int, credentialId: String): SQLPage<Credential>
 
-    fun getCredentialItem(projectId: String, credentialId: String, publicKey: String): CredentialItemVo?
+    fun getCredentialItem(
+        projectId: String,
+        credentialId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CredentialItemVo?
 }

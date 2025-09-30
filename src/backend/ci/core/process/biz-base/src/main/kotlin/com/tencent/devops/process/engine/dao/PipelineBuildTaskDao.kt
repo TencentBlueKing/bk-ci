@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.google.common.collect.Lists
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -283,7 +284,9 @@ class PipelineBuildTaskDao {
         projectId: String,
         buildId: String,
         containerId: String?,
-        statusSet: Collection<BuildStatus>?
+        statusSet: Collection<BuildStatus>?,
+        startTaskSeq: Int? = null,
+        endTaskSeq: Int? = null
     ): List<PipelineBuildTask> {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
@@ -292,6 +295,8 @@ class PipelineBuildTaskDao {
             if (!statusSet.isNullOrEmpty()) {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
+            startTaskSeq?.let { where.and(TASK_SEQ.ge(startTaskSeq)) }
+            endTaskSeq?.let { where.and(TASK_SEQ.le(endTaskSeq)) }
             where.orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
@@ -364,14 +369,20 @@ class PipelineBuildTaskDao {
         dslContext: DSLContext,
         projectId: String,
         buildIds: Collection<String>
-    ): Result<Record3<String/*BUILD_ID*/, Int/*STATUS*/, Int/*COUNT*/>> {
+    ): List<Record3<String/*BUILD_ID*/, Int/*STATUS*/, Int/*COUNT*/>> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            return dslContext.select(BUILD_ID, STATUS, count())
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.`in`(buildIds))
-                .groupBy(BUILD_ID, STATUS)
-                .fetch()
+            val result = mutableListOf<Record3<String, Int, Int>>()
+            Lists.partition<String>(buildIds.toList(), 100).forEach { partBuilds ->
+                result.addAll(
+                    dslContext.select(BUILD_ID, STATUS, count())
+                        .from(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(BUILD_ID.`in`(partBuilds))
+                        .groupBy(BUILD_ID, STATUS)
+                        .fetch()
+                )
+            }
+            return result
         }
     }
 

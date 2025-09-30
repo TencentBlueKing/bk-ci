@@ -49,32 +49,38 @@
             return {
                 isLoading: false,
                 rate: 0,
-                comment: '',
-                modifyCommentGenerator: {
-                    atom: (data) => this.requestAtomModifyComment(data),
-                    template: (data) => this.requestTemplateModifyComment(data),
-                    ide: (data) => this.requestIDEModifyComment(data),
-                    image: (data) => this.requestImageModifyComment(data),
-                    service: (data) => this.requestServiceModifyComment(data)
-                },
-                addCommentGenerator: {
-                    atom: (postData) => this.requestAddAtomComment(postData),
-                    template: (postData) => this.requestAddTemplateComment(postData),
-                    ide: (postData) => this.requestAddIDEComment(postData),
-                    image: (postData) => this.requestAddImageComment(postData),
-                    service: (postData) => this.requestAddServiceComment(postData)
-                },
-                getCommentGenerator: {
-                    atom: () => this.requestAtomUserComment(this.commentId),
-                    template: () => this.requestTemplateUserComment(this.commentId),
-                    ide: () => this.requestIDEUserComment(this.commentId),
-                    image: () => this.requestImageUserComment(this.commentId),
-                    service: () => this.requestServiceUserComment(this.commentId)
-                }
+                comment: ''
             }
         },
 
         computed: {
+            modifyCommentGenerator () {
+                return {
+                    atom: this.requestAtomModifyComment,
+                    template: this.requestTemplateModifyComment,
+                    ide: this.requestIDEModifyComment,
+                    image: this.requestImageModifyComment,
+                    service: this.requestServiceModifyComment
+                }
+            },
+            addCommentGenerator () {
+                return {
+                    atom: this.requestAddAtomComment,
+                    template: this.requestAddTemplateComment,
+                    ide: this.requestAddIDEComment,
+                    image: this.requestAddImageComment,
+                    service: this.requestAddServiceComment
+                }
+            },
+            getCommentGenerator () {
+                return {
+                    atom: this.requestAtomUserComment,
+                    template: this.requestTemplateUserComment,
+                    ide: this.requestIDEUserComment,
+                    image: this.requestImageUserComment,
+                    service: this.requestServiceUserComment
+                }
+            },
             type () {
                 return this.$route.params.type
             }
@@ -105,13 +111,14 @@
 
             getComment () {
                 if (this.commentId) {
-                    if (!Object.hasOwnProperty.call(this.getCommentGenerator, this.type) || typeof this.getCommentGenerator[this.type] !== 'function') {
+
+                    if (!Object.keys(this.getCommentGenerator).includes(this.type) || typeof this.getCommentGenerator[this.type] !== 'function') {
                         this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                         return Promise.reject(new Error(this.$t('store.typeError')))
                     }
                     this.isLoading = true
                     const method = this.getCommentGenerator[this.type]
-                    method().then((res) => {
+                    method(this.commentId).then((res) => {
                         this.rate = res.score || 5
                         this.comment = res.commentContent || ''
                     }).catch((err) => {
@@ -165,7 +172,7 @@
                         score: this.rate
                     }
                 }
-                if (!Object.hasOwnProperty.call(this.modifyCommentGenerator, this.type) || typeof this.modifyCommentGenerator[this.type] !== 'function') {
+                if (!Object.keys(this.modifyCommentGenerator).includes(this.type) || typeof this.modifyCommentGenerator[this.type] !== 'function') {
                     return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.modifyCommentGenerator[this.type](data).then(() => ({
@@ -185,7 +192,7 @@
                         score: this.rate
                     }
                 }
-                if (!Object.hasOwnProperty.call(this.addCommentGenerator, this.type) || typeof this.addCommentGenerator[this.type] !== 'function') {
+                if (!Object.keys(this.addCommentGenerator).includes(this.type) || typeof this.addCommentGenerator[this.type] !== 'function') {
                     return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.addCommentGenerator[this.type](data)

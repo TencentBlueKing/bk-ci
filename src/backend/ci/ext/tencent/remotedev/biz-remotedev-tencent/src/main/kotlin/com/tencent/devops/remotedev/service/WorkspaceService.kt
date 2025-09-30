@@ -56,14 +56,17 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_NODE_FOR_ENV_ID
 import com.tencent.devops.remotedev.common.exception.ErrorCode.NOT_FIND_USER_ENV_FOR_ENV_ID
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WhiteListDao
 import com.tencent.devops.remotedev.dao.WindowsGpuResourceDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
@@ -80,6 +83,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
@@ -108,6 +112,7 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusRespV2
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
@@ -115,7 +120,6 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon.Companion.DEFAULT_WAIT_TIME
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -156,7 +160,8 @@ class WorkspaceService @Autowired constructor(
     private val taiService: TaiService,
     private val startCloudClient: StartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val whiteListDao: WhiteListDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -521,7 +526,8 @@ class WorkspaceService @Autowired constructor(
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
             val detail = windowsWorkspaces[it.workspaceName]
-            val status = checkStatus(it, userId)
+            val loginInfo = detail?.hostIp?.let { ip -> loginUserMap[ip] }
+            val status = checkStatus(it, userId, loginInfo)
             records.add(
                 ProjectWorkspace(
                     workspaceId = it.workspaceId,
@@ -549,7 +555,7 @@ class WorkspaceService @Autowired constructor(
                     viewersCN = viewers[it.workspaceName]?.map { viewer ->
                         taiUserCN[viewer] ?: viewer
                     },
-                    currentLoginUsers = detail?.hostIp?.let { ip -> loginUserMap[ip] } ?: emptyList(),
+                    currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
                     ownerType = it.ownerType,
                     expertSupportList = expertMap?.get(it.workspaceName),
                     macAddress = allWindows[it.workspaceName]?.macAddress,
@@ -697,7 +703,7 @@ class WorkspaceService @Autowired constructor(
                 status = res.status.name,
                 displayName = res.displayName,
                 ownerDepartments = depInfo,
-                currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip) }?.toSet() ?: emptySet(),
+                currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip)?.loginUsers }?.toSet() ?: emptySet(),
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
                 zoneType = specZoneConfig[res.zoneId]?.type?.name
@@ -828,11 +834,12 @@ class WorkspaceService @Autowired constructor(
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
             records = result.map {
-                val status = checkStatus(it, userId)
+                val hostIp = windowsWorkspace[it.workspaceName]?.hostIp
+                val loginInfo = hostIp?.let { ip -> loginUserMap[ip] }
+                val status = checkStatus(it, userId, loginInfo)
                 val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
-                val hostIp = windowsWorkspace[it.workspaceName]?.hostIp
                 val zone = if (hostIp != null && it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
                     /*后续直接取windows表中的zoneId，不通过ip进行解析*/
                     val zoneId = hostIp.substringBefore(".")
@@ -860,7 +867,7 @@ class WorkspaceService @Autowired constructor(
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
                     zoneConfig = zone,
-                    currentLoginUsers = hostIp?.let { ip -> loginUserMap[ip] } ?: emptyList()
+                    currentLoginUsers = loginInfo?.loginUsers ?: emptyList()
                 )
             }
         )
@@ -868,13 +875,34 @@ class WorkspaceService @Autowired constructor(
 
     private fun checkStatus(
         it: WorkspaceRecordInf,
-        userId: String
+        userId: String,
+        status: ComputerStatusRespV2?
     ): WorkspaceStatus {
         if (it.status.notOk2doNextAction() && Duration.between(
                 it.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds > DEFAULT_WAIT_TIME
         ) {
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = it.status,
+                mountType = it.workspaceMountType
+            )
+        }
+
+        if (it.status.checkRunning() && status?.status != ComputerStatusEnum.NORMAL) {
+            logger.info("workspace is running but computer status is $status|${it.workspaceName}")
+            workspaceDao.updateWorkspaceStatus(dslContext, it.workspaceName, WorkspaceStatus.EXCEPTION)
+            return workspaceCommon.fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = it.workspaceName,
+                status = WorkspaceStatus.EXCEPTION,
+                mountType = it.workspaceMountType
+            )
+        }
+        // 异常状态恢复后，需要重新检查修正
+        if (it.status.checkException() && status?.status == ComputerStatusEnum.NORMAL) {
             return workspaceCommon.fixUnexpectedStatus(
                 userId = userId,
                 workspaceName = it.workspaceName,
@@ -982,7 +1010,7 @@ class WorkspaceService @Autowired constructor(
         val sharedList = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
 
         val currentLoginUser = if (winInfo != null) {
-            startWorkspaceService.cachingLoginUsers(setOf(winInfo.hostIp)).values.flatten().toSet()
+            startWorkspaceService.cachingLoginUsers(setOf(winInfo.hostIp))[winInfo.hostIp]?.loginUsers?.toSet()
         } else {
             null
         }
@@ -1045,17 +1073,18 @@ class WorkspaceService @Autowired constructor(
             }
             if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
-                    params = arrayOf(workspace.hostIp ?: workspaceName)
+                    errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
+            /*
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
+             */
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
@@ -1068,7 +1097,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            val nodeHashIds = find.nodeHashIds?.toSet() ?: run {
+            val nodeHashIds = find.nodeHashIds?.toSet()?.ifEmpty { null } ?: run {
                 logger.warn("env for $envId has empty public node")
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
@@ -1096,7 +1125,7 @@ class WorkspaceService @Autowired constructor(
             }
 
             val oneReady = public.filter {
-                loginUserMap[it.value2()].isNullOrEmpty() &&
+                loginUserMap[it.value2()]?.loginUsers.isNullOrEmpty() &&
                     workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
                     cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
@@ -1143,7 +1172,7 @@ class WorkspaceService @Autowired constructor(
     fun getEnvs4PublicWorkspace(userId: String): List<WorkspaceEnv> {
         /*提供给查询接口的走缓存*/
         val data = userEnvCache.get(userId) ?: return emptyList()
-        val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet()
+        val nodeHashIds = data.flatMap { it.nodeHashIds ?: emptyList() }.toSet().ifEmpty { return emptyList() }
 
         val public/*<WORKSPACE_NAME, HOST_IP, NODE_HASH_ID>*/ =
             workspaceWindowsDao.batchFetchWorkspaceWindowsInfoWithNodeIds(dslContext, nodeHashIds)
@@ -1170,11 +1199,13 @@ class WorkspaceService @Autowired constructor(
         val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
         return data.map { env ->
             val normalNodeCount =
-                env.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
-                    ?: 0
+                env.nodeHashIds?.count {
+                    workspaceStatus[it] in normalStatuses &&
+                        cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
+                } ?: 0
             val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
             val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
-                nodeLoginMap[nodeHashId] ?: emptyList()
+                nodeLoginMap[nodeHashId]?.loginUsers ?: emptyList()
             } ?: emptyList()
             WorkspaceEnv(
                 projectId = env.projectId,
@@ -1182,8 +1213,9 @@ class WorkspaceService @Autowired constructor(
                 name = env.name,
                 normalNodeCount = normalNodeCount,
                 abnormalNodeCount = max(abnormalNodeCount, 0),
-                inUseNodeCount = env.nodeHashIds?.count { nodeHashId -> !nodeLoginMap[nodeHashId].isNullOrEmpty() }
-                    ?: 0,
+                inUseNodeCount = env.nodeHashIds?.count { nodeHashId ->
+                    !nodeLoginMap[nodeHashId]?.loginUsers.isNullOrEmpty()
+                } ?: 0,
                 nodeHashIds = env.nodeHashIds,
                 currentLoginUsers = currentLoginUsers.mapIndexed { index, user ->
                     if (index >= 3) user.take(1) + "*****" else user
@@ -1206,18 +1238,18 @@ class WorkspaceService @Autowired constructor(
         val userAll = kotlin.runCatching {
             client.get(ServiceTxProjectResource::class).list(userId, null).data
         }.onFailure {
-            logger.error("error in ServiceTxProjectResource::list|$userId", it)
+            logger.warn("error in ServiceTxProjectResource::list|$userId", it)
         }.getOrNull()?.map { it.englishName }?.toSet() ?: kotlin.run {
-            logger.error("fail to get user projects|$userId")
+            logger.warn("fail to get user projects|$userId")
             return emptyList()
         }
         val userHas = all.intersect(userAll)
         return kotlin.runCatching {
             client.get(ServiceDEVXResource::class).getUserDEVXEnv(userId, userHas).data
         }.onFailure {
-            logger.error("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
+            logger.warn("error in ServiceDEVXResource::getUserDEVXEnv|$userId|$userHas", it)
         }.getOrNull() ?: kotlin.run {
-            logger.error("fail to get user env|$userId|$userHas")
+            logger.warn("fail to get user env|$userId|$userHas")
             emptyList()
         }
     }
@@ -1411,12 +1443,27 @@ class WorkspaceService @Autowired constructor(
             logger.debug("projectAccessDevicePermissions ip null")
             return emptyMap()
         }
-        return apiGwService.projectAccessDevicePermissions(
+        val res = apiGwService.projectAccessDevicePermissions(
             mac = macAddress,
             userId = userId,
             projects = projects.joinToString(","),
             ip = ip
         ) ?: emptyMap()
+        res.forEach { (project, v) -> v.checkWhiteList(project, userId) }
+        return res
+    }
+
+    private fun ProjectAccessDevicePermissionsResp.checkWhiteList(projectId: String, userId: String) {
+        if (!hasIpPermissions || !hasMacPermissions) {
+            whiteListDao.get(dslContext, "$projectId::$userId", WhiteListType.PROJECT_ACCESS_DEVICE)?.run {
+                hasIpPermissions = true
+                hasMacPermissions = true
+            }
+        }
+        // 新增逻辑：如果userId非空且是集团员工，并且hasIpPermissions=false，则置为true
+        if (userId.isNotEmpty() && !userId.endsWith("@tai") && !hasIpPermissions) {
+            hasIpPermissions = true
+        }
     }
 
     @Deprecated("不要新增功能，希望废弃该接口")
@@ -1531,10 +1578,28 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    fun getSignatureStatus(userId: String, projectId: String): UserSignatureStatusResponse {
+        logger.info("getSignatureStatus|$userId|$projectId")
+
+        return kotlin.runCatching {
+            client.get(ServiceSignatureManageResource::class).getSignatureStatus(userId, projectId).data
+        }.onFailure {
+            logger.error("error in workspaceService::getSignatureStatus|$userId", it)
+        }.getOrNull() ?: kotlin.run {
+            logger.error("fail to getSignatureStatus|$userId|$projectId")
+            // 获取不到的话就跳过
+            UserSignatureStatusResponse(
+                userId = userId,
+                signed = true
+            )
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
+        private const val DEFAULT_WAIT_TIME = 10
         private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"
 
         private fun String.removeSuffixNumb(): String {

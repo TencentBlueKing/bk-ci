@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
@@ -55,6 +56,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.PUT
+import jakarta.ws.rs.PathParam
 
 @Tag(name = "USER_WORKSPACE", description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -70,6 +72,15 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<RemoteDevSettings>
+
+    @Operation(summary = "获取文件上传网关配置")
+    @GET
+    @Path("/fileGateway")
+    fun getFileGateway(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Map<String, String>>
 
     @Operation(summary = "更新远程开发环境配置")
     @POST
@@ -244,4 +255,16 @@ interface UserRemoteDevResource {
         @Parameter(description = "国际化信息", required = true)
         localeInfo: LocaleInfo
     ): Result<Boolean>
+
+    @GET
+    @Path("/{projectId}/getSignatureStatus")
+    @Operation(summary = "获取项目电子签状态")
+    fun getSignatureStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<UserSignatureStatusResponse>
 }

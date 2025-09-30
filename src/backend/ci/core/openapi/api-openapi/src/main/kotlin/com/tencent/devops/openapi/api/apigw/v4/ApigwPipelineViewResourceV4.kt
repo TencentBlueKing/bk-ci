@@ -30,6 +30,7 @@ package com.tencent.devops.openapi.api.apigw.v4
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -58,6 +59,7 @@ import jakarta.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/pipelineView")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@BkApigwApi(version = "v4")
 interface ApigwPipelineViewResourceV4 {
 
     @Operation(

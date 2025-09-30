@@ -36,6 +36,12 @@ if is_devx then
     if bk_token ~= nil then
         local ticket = oauthUtil:verify_tai_token(bk_token)
         if ticket ~= nil then
+            -- 如果ticket.username不以@tai结尾,则返回302到错误页面
+            if string.find(ticket.username, "@tai") == nil then
+                ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 417,"message": "devx forbidden", "errorCode": 1302403 , "redirectUrl":"/devx.error.html"}'
+                ngx.header["X-DEVOPS-ERROR-STATUS"] = 417
+                ngx.exit(401)
+            end
             ngx.header["x-devops-uid"] = ticket.username
             ngx.header["x-devops-bk-token"] = bk_token
             ngx.exit(200)
@@ -134,8 +140,8 @@ else
         elseif devopsIdentity ~= nil then --- TOF登录(API)
             tof_staffname = aesUtil.decrypt(devopsIdentity, config.itlogin.aseKey)
         else
-            ngx.log(ngx.ERR , "the request must have tof cookie")
-            ngx.header["X-DEVOPS-ERROR-RETURN"] = 'https://'..config.bkci.host
+            ngx.log(ngx.ERR, "the request must have tof cookie")
+            ngx.header["X-DEVOPS-ERROR-RETURN"] = 'https://' .. config.bkci.host
             ngx.header["X-DEVOPS-ERROR-STATUS"] = 302
         end
     end

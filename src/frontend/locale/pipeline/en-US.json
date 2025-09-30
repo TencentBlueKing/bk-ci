@@ -1084,6 +1084,7 @@
     "assignResource": "Build Resource",
     "imageTicket": "Docker Image Ticket",
     "performance": "Model",
+    "performanceDesc": "View Model Description",
     "cpuUnit": "C",
     "workspace": "Workspace",
     "workspaceTips": "If not filled, the it will be saved in [Agent installation directory]/workspace/[pipeline ID]/src by default",
@@ -1406,7 +1407,8 @@
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
     "minutes": "Minutes",
-    "customConditionExpPlaceholder": "e.g., variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'",
+    "paramLengthLimitTips": "Pipeline variable [{0}] length [{1}] exceeds limit [{2}]"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
@@ -1991,6 +1993,7 @@
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"
   },
+  "validVariableFormat": "Please enter a valid variable format",
   "attributeValue": "Attribute Value",
   "attributeName": "Attribute Name",
   "metadataAttributeName": "Metadata Attribute Name",

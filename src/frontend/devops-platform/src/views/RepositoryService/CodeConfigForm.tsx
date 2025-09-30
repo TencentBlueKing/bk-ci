@@ -182,10 +182,11 @@ export default defineComponent({
       }
     }
 
-    const handleChangeProvider = (val) => {
+    const handleChangeProvider = (item) => {
       if (!isCreate.value) return
       configFormData.value = getDefaultFormData()
-      configFormData.value.providerCode = val
+      configFormData.value.providerCode = item.providerCode
+      configFormData.value.scmType = item.scmType
     }
     const getProviderList = async () => {
       try {
@@ -269,7 +270,7 @@ export default defineComponent({
                     {
                       providerList.value.map(item => (
                         <div
-                          onClick={() => handleChangeProvider(item.providerCode)}
+                          onClick={() => handleChangeProvider(item)}
                           class={`flex items-center w-[200px] h-[60px] border pl-[12px] py-[8px] mx-[8px] mb-[16px]
                             ${configFormData.value.providerCode === item.providerCode
                               ? 'border-[#3A84FF] bg-[#E1ECFF]'

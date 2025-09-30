@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryCommitResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +58,7 @@ class ApigwRepositoryCommitResourceV4Impl @Autowired constructor(
     ): Result<List<CommitResponse>> {
         logger.info("OPENAPI_REPOSITORY_COMMIT_V4|$userId|get repository commit|$projectId|$pipelineId|$buildId")
         checkPipelineId(projectId, pipelineId, buildId)
-        return client.get(UserRepositoryResource::class).getCommit(buildId)
+        return client.get(ServiceRepositoryResource::class).getCommit(buildId)
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {

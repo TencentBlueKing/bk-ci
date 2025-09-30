@@ -5,10 +5,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -23,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -52,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -184,9 +188,6 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
-        @Parameter(description = "zoneType", required = false)
-        @QueryParam("zoneType")
-        zoneType: WindowsResourceZoneConfigType?,
         @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
@@ -913,7 +914,7 @@ interface ServiceRemoteDevResource {
         data: SyncVmData
     ): Result<SyncVmResp?>
 
-    @Operation(summary = "注册和初始化CVM", tags = ["v4_app_remotedev_create_cvm"])
+    @Operation(summary = "注册和初始化CVM")
     @POST
     @Path("/cvm/create")
     fun createCvm(
@@ -922,4 +923,66 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: CreateCvmData
     ): Result<CreateCvmResp?>
+
+    @Operation(summary = "白名单注册")
+    @POST
+    @Path("/set_whitelist")
+    fun whitelist(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "白名单类型", required = false)
+        @QueryParam("type")
+        type: WhiteListType,
+        @Parameter(description = "是否是删除", required = false)
+        @QueryParam("delete")
+        delete: Boolean,
+        body: Map<String, String>
+    ): Result<Boolean>
+
+    @Operation(summary = "白名单注册")
+    @POST
+    @Path("/get_whitelist")
+    fun whitelistGet(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "白名单类型", required = false)
+        @QueryParam("type")
+        type: WhiteListType,
+        body: Map<String, String>
+    ): Result<List<IWhiteList>>
+
+    @Operation(summary = "工蜂获取用户是否有OAUTH")
+    @GET
+    @Path("/tgit_get_user_oauth")
+    fun tgitGetUserOauth(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("redirectUrl")
+        redirectUrl: String
+    ): Result<AuthorizeResult>
+
+    @Operation(summary = "工蜂获取绑定的项目列表")
+    @GET
+    @Path("/tgit_get_project_list")
+    fun tgitGetProjectList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工蜂项目ID", required = false)
+        @QueryParam("tGitId")
+        tGitId: Long
+    ): Result<List<String>>
+
+    @Operation(summary = "工蜂仓库绑定蓝盾云研发")
+    @POST
+    @Path("tgit_bind_remotedev_project")
+    fun tgitBindRemotedevProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: TGitBindRemotedevData
+    ): Result<Map<String, Boolean>>
 }

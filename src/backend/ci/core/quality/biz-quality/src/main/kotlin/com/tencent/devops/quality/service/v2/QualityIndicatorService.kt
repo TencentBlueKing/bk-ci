@@ -799,7 +799,8 @@ class QualityIndicatorService @Autowired constructor(
             range = projectId,
             tag = "",
             enable = true,
-            type = IndicatorType.CUSTOM
+            type = IndicatorType.CUSTOM,
+            logPrompt = indicatorCreate.logPrompt ?: ""
         )
     }
 

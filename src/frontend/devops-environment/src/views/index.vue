@@ -1,5 +1,8 @@
 <template>
-    <div class="environment-container">
+    <div
+        class="environment-container"
+        ref="environmentContainer"
+    >
         <div class="biz-header">
             <p class="environment-tit">
                 <img
@@ -46,7 +49,7 @@
             </span>
         </div>
 
-        <router-view class="manage-main"></router-view>
+        <router-view :container-width="containerWidth"></router-view>
     </div>
 </template>
 
@@ -59,7 +62,8 @@
             return {
                 environmentUrl,
                 isEnableDashboard: false,
-                bizId: 0
+                bizId: 0,
+                containerWidth: 0,
             }
         },
 
@@ -85,16 +89,16 @@
                 }))
             },
             activePanel () {
-                const routeMap = {
-                    envList: 'envList',
-                    nodeList: 'nodeList',
-                    createEnv: 'envList',
-                    envDetail: 'envList',
-                    nodeDetail: 'nodeList',
-                    extPage: 'extPage'
+                if (this.$route.name === 'extPage') {
+                    return 'extPage'
+                } else {
+                    const routeMap = {
+                        nodeList: 1,
+                        nodeDetail: 1,
+                        setNodeTag: 1,
+                    }
+                    return routeMap[this.$route.name] === 1 ? 'nodeList' : 'envList'
                 }
-                
-                return routeMap[this.$route.name] || 'envList'
             },
             panels () {
                 return [
@@ -143,12 +147,22 @@
             }
         },
         async mounted () {
+            this.updateContainerWidth()
+            window.addEventListener('resize', this.updateContainerWidth)
             await this.getEnableDashboard()
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateContainerWidth)
         },
         methods: {
             ...mapActions('environment', [
                 'getEnvironmentExtensions'
             ]),
+            updateContainerWidth () {
+                if (this.$refs.environmentContainer) {
+                    this.containerWidth = this.$refs.environmentContainer.clientWidth
+                }
+            },
             async getEnableDashboard () {
                 try {
                     const res = await this.$store.dispatch('environment/checkEnableDashboard', {
@@ -192,7 +206,7 @@
 .environment-container {
     width: 100%;
     box-sizing: border-box;
-    min-height: calc(100vh - 50px);
+    min-height: calc(100% - 210px);
     overflow: hidden;
     .biz-header {
         position: relative;
@@ -209,8 +223,13 @@
         border-bottom: 1px solid rgb(220, 222, 229);
     }
     .environment-tit {
+        display: flex;
+        align-items: center;
         img {
             vertical-align: middle;
+        }
+        span {
+            margin-left: 4px;
         }
     }
 

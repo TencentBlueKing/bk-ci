@@ -888,7 +888,14 @@ export default {
         })
     },
 
-    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+    fetchDevcloudSettings ({ commit }, { projectId, pipelineId, templateId }) {
+        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
+    },
+    getHistoryDevcloudSettings ({ commit }, { projectId, uid }) {
+        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/sawyer/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
+    },
+    
+    fetchDockerSettings ({ commit }, { projectId, buildType }) {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 

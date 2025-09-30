@@ -56,7 +56,10 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
  */
 data class PublicDevCloudDispathcType(
     @JsonProperty("value") var image: String?,
+    // 蓝盾性能配置ID
     var performanceConfigId: String?,
+    // DevCloud性能配置ID
+    var performanceUid: String? = "",
     var persistence: Boolean? = false,
     override var imageType: ImageType? = ImageType.BKDEVOPS,
     override var credentialId: String? = "",
@@ -68,7 +71,8 @@ data class PublicDevCloudDispathcType(
     // 商店镜像名称
     override var imageName: String? = ""
 ) : StoreDispatchType(if (image.isNullOrBlank())
-    imageCode else image, DispatchRouteKeySuffix.DEVCLOUD, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    imageCode else image, DispatchRouteKeySuffix.DEVCLOUD, imageType, credentialId, credentialProject, imageCode,
+    imageVersion, imageName) {
     override fun cleanDataBeforeSave() {
         this.image = this.image?.trim()
         this.credentialId = this.credentialId?.trim()

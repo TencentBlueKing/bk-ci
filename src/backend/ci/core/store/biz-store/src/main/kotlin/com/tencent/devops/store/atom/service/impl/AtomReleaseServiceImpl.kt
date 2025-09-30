@@ -1082,23 +1082,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         latestUpgradeTime = pubTime
                     )
                 )
-                // 查找插件最近一个已经发布的版本
-                val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 1)
-                val newestReleaseAtomRecord = if (releaseAtomRecords.isNullOrEmpty()) {
-                    null
-                } else {
-                    releaseAtomRecords[0]
-                }
-                var newestReleaseFlag = false
-                if (newestReleaseAtomRecord != null) {
-                    // 比较当前版本是否比最近一个已经发布的版本新
-                    val requestVersion = atomReleaseRequest.version
-                    val newestReleaseVersion = newestReleaseAtomRecord.version
-                    newestReleaseFlag = StoreUtils.isGreaterVersion(requestVersion, newestReleaseVersion)
-                }
+                val newestVersionFlag = atomDao.getLatestAtomByCode(context, atomCode)?.let {
+                    StoreUtils.isGreaterVersion(atomReleaseRequest.version, it.version)
+                } ?: true
                 val releaseType = atomReleaseRequest.releaseType
-                val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestReleaseFlag) {
-                    // 历史大版本下的小版本更新不把latestFlag置为true（当前发布的版本不是最新的已发布版本）
+                val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestVersionFlag) {
+                    // 历史大版本下的小版本更新不把latestFlag置为true（利用这种发布方式发布最新版本除外）
                     null
                 } else {
                     // 清空旧版本LATEST_FLAG

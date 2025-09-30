@@ -162,7 +162,8 @@ class TokenBox(
         val credRes = client.get(ServiceCredentialResource::class).get(
             projectId = projectId,
             credentialId = credId,
-            publicKey = encoder.encodeToString(pair.publicKey)
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
         )
         if (credRes.isNotOk()) {
             logger.error("$LOG_UPDATE_TGIT_ACL_TAG|requestCredIdToken|$projectId|$credId get ticket fail", credRes)

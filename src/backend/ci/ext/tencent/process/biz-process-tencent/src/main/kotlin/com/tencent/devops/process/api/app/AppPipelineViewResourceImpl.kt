@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -95,6 +96,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         sortType: PipelineSortType?,
+        collation: PipelineCollation?,
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
@@ -114,6 +116,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize,
             sortType = sortType ?: PipelineSortType.CREATE_TIME,
+            collation = collation ?: PipelineCollation.DEFAULT,
             channelCode = channelCode,
             viewId = finalViewId,
             checkPermission = true,

@@ -45,7 +45,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
         data.forEach {
-            remoteDevSettingService.updateSetting4Op(it)
+            remoteDevSettingService.updateSetting4Op(userId, it)
         }
         return Result(true)
     }
@@ -78,7 +78,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun addGPUWhiteListUser(userId: String, whiteListUser: String): Result<Boolean> {
         return Result(
             whiteListService.addGPUWhiteListUser(
-                userId = userId,
+                operator = userId,
                 whiteListUser = whiteListUser,
                 override = true
             )

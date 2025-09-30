@@ -28,6 +28,7 @@
             v-validate.initial="Object.assign({}, { required: !!curComponent.required })"
             :handle-change="handleChange"
             :value="element[curComponent.key]"
+            :element="element"
             :disabled="disabled"
             v-bind="curComponent"
         />
@@ -78,6 +79,11 @@
                     key: 'repositoryHashId',
                     required: false
                 }
+            }
+        },
+        watch: {
+            'element.scmCode' () {
+                this.handleChange('repositoryHashId', '')
             }
         },
         methods: {

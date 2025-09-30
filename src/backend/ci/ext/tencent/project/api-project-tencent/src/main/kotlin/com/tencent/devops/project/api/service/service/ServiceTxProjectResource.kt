@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectDeptInfo
@@ -473,4 +474,22 @@ interface ServiceTxProjectResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<ProjectProductInfo>>
+
+    @GET
+    @Path("/product/{bgName}/getOperationalProductsByBgName/")
+    @Operation(summary = "根据BG查询运营产品")
+    fun getOperationalProductsByBgName(
+        @Parameter(description = "bg名称", required = true)
+        @PathParam("bgName")
+        bgName: String
+    ): Result<List<OperationalProductVO>>
+
+    @GET
+    @Path("/product/{productId}/getProductByProductId/")
+    @Operation(summary = "根据运营产品ID获取产品信息")
+    fun getProductByProductId(
+        @Parameter(description = "运营产品ID", required = true)
+        @PathParam("productId")
+        productId: Int
+    ): Result<OperationalProductVO?>
 }

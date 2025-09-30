@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WhiteListDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.WhiteList
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -45,23 +47,65 @@ class WhiteListService @Autowired constructor(
         return whiteListDao.delete(dslContext, whiteList.name, whiteList.type) == 1
     }
 
+    fun apiSetWhiteList(
+        userId: String,
+        type: WhiteListType,
+        delete: Boolean,
+        body: Map<String, String>
+    ): Boolean {
+        logger.info("userId($userId) wants to set whiteList($type, $delete, $body)")
+        val whiteList = when (type) {
+            WhiteListType.PROJECT_ACCESS_DEVICE -> {
+                requireNotNull(body["projectId"]) { "projectId is required in body" }
+                requireNotNull(body["userId"]) { "userId is required in body" }
+                WhiteList(name = "${body["projectId"]}::${body["userId"]}", type, userId)
+            }
+
+            else -> null
+        } ?: return false
+        return if (delete) {
+            opDeleteWhiteList(userId, whiteList)
+        } else {
+            opCreateOrUpdateWhiteList(userId, whiteList)
+        }
+    }
+
+    fun apiGetWhiteList(
+        userId: String,
+        type: WhiteListType?,
+        body: Map<String, String>
+    ): List<IWhiteList> {
+        logger.info("userId($userId) wants to get whiteList($type, $body)")
+        val types = type?.let { listOf(type) } ?: listOf(WhiteListType.PROJECT_ACCESS_DEVICE)
+        return types.flatMap { t ->
+            when (t) {
+                WhiteListType.PROJECT_ACCESS_DEVICE -> {
+                    requireNotNull(body["projectId"]) { "projectId is required in body" }
+                    whiteListDao.fetchProjectAccessDevice(dslContext, body["projectId"]!!)
+                }
+
+                else -> emptyList()
+            }
+        }
+    }
+
     fun shareWorkspace(userId: String, whiteListUser: String) {
-        addWhiteListUser(userId = userId, whiteListUser = whiteListUser)
+        addWhiteListUser(operator = userId, whiteListUser = whiteListUser)
         addGPUWhiteListUser(
-            userId = userId,
+            operator = userId,
             whiteListUser = whiteListUser,
             limit = if (whiteListUser.contains(taiUser)) 0 else 1
         )
     }
 
     // 添加客户端白名单用户。目前对接redis配置，后续需要对接权限系统。
-    fun addWhiteListUser(userId: String, whiteListUser: String): Boolean {
-        logger.info("userId($userId) wants to add whiteListUser($whiteListUser)")
+    fun addWhiteListUser(operator: String, whiteListUser: String): Boolean {
+        logger.info("userId($operator) wants to add whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
         if (whiteListUser.isEmpty()) return false
         val whiteListUserArray = whiteListUser.split(";")
         for (user in whiteListUserArray) {
-            if (whiteListDao.add(dslContext, WhiteList(user, WhiteListType.API)) == 1) {
+            if (whiteListDao.add(dslContext, WhiteList(user, WhiteListType.API, operator)) == 1) {
                 logger.info("whiteListUser($user) in the whiteList has add.")
             } else {
                 logger.info("whiteListUser($user) in the whiteList already exists.")
@@ -74,8 +118,8 @@ class WhiteListService @Autowired constructor(
         return cacheService.checkApiWhiteList(user)
     }
 
-    fun removeWhiteListUser(userId: String, whiteListUser: String): Boolean {
-        logger.info("userId($userId) wants to remove whiteListUser($whiteListUser)")
+    fun removeWhiteListUser(operator: String, whiteListUser: String): Boolean {
+        logger.info("userId($operator) wants to remove whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
         if (whiteListUser.isEmpty()) return false
         val whiteListUserArray = whiteListUser.split(";")
@@ -97,6 +141,7 @@ class WhiteListService @Autowired constructor(
                 WhiteList(
                     name = userId,
                     type = WhiteListType.WINDOWS_GPU,
+                    creator = SYSTEM,
                     windowsGpuLimit = limit + get
                 )
             )
@@ -127,12 +172,12 @@ class WhiteListService @Autowired constructor(
     }
 
     fun addGPUWhiteListUser(
-        userId: String,
+        operator: String,
         whiteListUser: String,
         limit: Int = 1,
         override: Boolean = false
     ): Boolean {
-        logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
+        logger.info("userId($operator) wants to add GPU whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
         whiteListUser.apply {
             val whiteListUserArray = this.split(";")
@@ -142,6 +187,7 @@ class WhiteListService @Autowired constructor(
                         WhiteList(
                             name = user,
                             type = WhiteListType.WINDOWS_GPU,
+                            creator = operator,
                             windowsGpuLimit = limit
                         )
                     ) == 1
@@ -153,6 +199,7 @@ class WhiteListService @Autowired constructor(
                         WhiteList(
                             name = user,
                             type = WhiteListType.WINDOWS_GPU,
+                            creator = operator,
                             windowsGpuLimit = limit
                         )
                     ) == 1

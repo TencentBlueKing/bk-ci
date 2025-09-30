@@ -521,6 +521,15 @@ class NodeDao {
         }
     }
 
+    fun batchUpdateNodeCreatedUser(dslContext: DSLContext, nodeIdList: List<Long>, userId: String) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(CREATED_USER, userId)
+                .where(NODE_ID.`in`(nodeIdList))
+                .execute()
+        }
+    }
+
     fun updateDisplayName(
         dslContext: DSLContext,
         nodeId: Long,

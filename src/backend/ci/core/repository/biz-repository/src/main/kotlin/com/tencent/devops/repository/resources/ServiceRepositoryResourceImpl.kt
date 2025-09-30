@@ -46,17 +46,20 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
-import java.net.URLDecoder
 import org.springframework.beans.factory.annotation.Autowired
+import java.net.URLDecoder
 
 @RestResource
 @Suppress("ALL")
 class ServiceRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService,
-    private val repoPipelineService: RepoPipelineService
+    private val repoPipelineService: RepoPipelineService,
+    private val commitService: CommitService
 ) : ServiceRepositoryResource {
 
     @BkTimed(extraTags = ["operate", "create"])
@@ -245,5 +248,9 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
 
     override fun updateStoreRepoProject(userId: String, projectId: String, repositoryId: Long): Result<Boolean> {
         return repositoryService.updateStoreRepoProject(userId, projectId, repositoryId)
+    }
+
+    override fun getCommit(buildId: String): Result<List<CommitResponse>> {
+        return Result(commitService.getCommit(buildId))
     }
 }

@@ -35,6 +35,7 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -181,6 +182,14 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             data = data
+        )
+    }
+
+    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|fetchTag|$projectId")
+        return client.get(ServiceThirdPartyAgentResource::class).fetchTag(
+            userId = userId,
+            projectId = projectId
         )
     }
 

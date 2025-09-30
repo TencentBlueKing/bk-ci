@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceTGitResource
@@ -64,6 +64,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreFileServiceImpl::class.java)
     }
+
     override fun uploadFileToPath(
         userId: String,
         result: MutableMap<String, String>,
@@ -144,8 +145,8 @@ class TxStoreFileServiceImpl : StoreFileService() {
     ) {
         val serviceUrl = client.getServiceUrl(ServiceTGitResource::class)
         val url = "$serviceUrl/service/tgit/downloadGitFile?repoId=$repositoryHashId" +
-                "&filePath=$filePath&authType=${RepoAuthType.OAUTH}&ref=${branch ?: MASTER}"
-        OkhttpUtils.downloadFile(url, file)
+            "&filePath=$filePath&authType=${RepoAuthType.OAUTH}&ref=${branch ?: MASTER}"
+        CommonServiceUtils.downloadFileFromService(url, file)
     }
 
     private fun serviceUploadFile(
@@ -155,8 +156,8 @@ class TxStoreFileServiceImpl : StoreFileService() {
     ): Result<String> {
         val index = file.path.indexOf(BKREPO_STORE_PROJECT_ID)
         val serviceUrl = "$serviceUrlPrefix/service/bkrepo/statics/file/upload" +
-                "?userId=$userId&destPath=${file.path.substring(index)}"
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+            "?userId=$userId&destPath=${file.path.substring(index)}"
+        CommonServiceUtils.uploadFileToService(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 val message = I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.SYSTEM_ERROR)

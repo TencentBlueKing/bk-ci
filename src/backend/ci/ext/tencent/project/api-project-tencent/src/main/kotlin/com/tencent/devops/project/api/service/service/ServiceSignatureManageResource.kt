@@ -58,4 +58,25 @@ interface ServiceSignatureManageResource {
         @PathParam("projectId")
         projectId: String
     ): Result<UserSignatureStatusResponse>
+
+    @GET
+    @Path("/{projectId}/project/getSignatureStatus")
+    @Operation(summary = "获取状态")
+    fun getSignatureStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<UserSignatureStatusResponse>
+
+    @GET
+    @Path("/listSignatureProjects")
+    @Operation(summary = "获取项目列表")
+    fun listSignatureProjects(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<String>>
 }

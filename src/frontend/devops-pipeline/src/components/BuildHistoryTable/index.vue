@@ -320,6 +320,7 @@
                                     ref="remarkInput"
                                     rows="3"
                                     :disabled="isChangeRemark"
+                                    :maxlength="4096"
                                     class="remark-input"
                                     v-model.trim="tempRemark"
                                 />
@@ -354,6 +355,11 @@
                                     v-if="!archiveFlag"
                                     class="devops-icon icon-edit-line remark-entry"
                                     @click.stop="activeRemarkInput(props.row)"
+                                />
+                                <i
+                                    v-if="!archiveFlag && props.row.remark"
+                                    class="bk-icon icon-copy remark-entry"
+                                    @click.stop="coptRemark(props.row)"
                                 />
                             </template>
                         </div>
@@ -516,15 +522,14 @@
                         </span>
                     </p>
                     <div class="build-artifactory-operation">
-                        <bk-button
+                        <artifact-download-button
+                            class="artifact-downLoad-button"
                             v-if="artifactory.artifactoryType !== 'IMAGE'"
-                            text
-                            size="small"
-                            theme="primary"
-                            @click.stop="downloadFile(artifactory)"
-                        >
-                            {{ $t('download') }}
-                        </bk-button>
+                            :output="artifactory"
+                            :has-permission="hasDownloadPermission"
+                            v-bind="artifactory"
+                            :artifactory-type="artifactory.artifactoryType"
+                        />
                         <bk-button
                             v-if="artifactory.artifactoryType === 'PIPELINE'"
                             text
@@ -619,13 +624,14 @@
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import VersionDiffDialog from './VersionDiffDialog'
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
+    import { convertFileSize, convertMStoString, convertTime, flatSearchKey, copyToClipboard } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -646,7 +652,9 @@
             TableColumnSetting,
             ArtifactQuality,
             EmptyException,
-            VersionDiffDialog
+            VersionDiffDialog,
+            ArtifactDownloadButton,
+            EmptyException
         },
         props: {
             showLog: {
@@ -675,7 +683,8 @@
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
                 dialogTopOffset: null,
-                isShowVersionDiffDialog: false
+                isShowVersionDiffDialog: false,
+                hasDownloadPermission: false
             }
         },
         computed: {
@@ -964,6 +973,7 @@
                         count: res.count
                     })
                     this.buildHistories = res.records
+                    this.hasDownloadPermission = res.hasDownloadPermission
                 } catch (err) {
                     if (err.code === 403) {
                         this.hasNoPermission = true
@@ -1031,6 +1041,16 @@
                 this.activeIndex = row.index
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
+            },
+            coptRemark (row) {
+                if (row.remark) {
+                    copyToClipboard(row.remark)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('copySuc'),
+                        limit: 1
+                    })
+                }
             },
             retryable (row) {
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
@@ -1654,6 +1674,12 @@
     .bk-dialog {
         top: 50% !important;
         transform: var(--dialog-top-translateY) !important;
+    }
+}
+.artifact-downLoad-button {
+    .bk-button-text {
+        font-size: 12px;
+        line-height: 26px;
     }
 }
 </style>

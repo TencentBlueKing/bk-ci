@@ -89,10 +89,12 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -102,8 +104,6 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
-import java.time.LocalDateTime
-import java.util.Base64
 import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -111,6 +111,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
 
 @Service
 @Suppress("ALL")
@@ -126,7 +128,8 @@ class RepositoryService @Autowired constructor(
     private val githubService: IGithubService,
     private val client: Client,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val repositoryScmConfigDao: RepositoryScmConfigDao
+    private val repositoryScmConfigDao: RepositoryScmConfigDao,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -510,8 +513,6 @@ class RepositoryService @Autowired constructor(
         content = ActionAuditContent.REPERTORY_CREATE_CONTENT
     )
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
-        // 指定oauth的用户名字只能是登录用户。
-        repository.userName = userId
         validatePermission(
             userId,
             projectId,
@@ -550,6 +551,14 @@ class RepositoryService @Autowired constructor(
                 params = arrayOf(repository.aliasName)
             )
         }
+        // OAUTH 关联是需校验操作人是否有权限使用OAUTH账号
+        val (isOauth, oauthUserId) = RepositoryUtils.getOauthUser(repository)
+        if (isOauth) {
+            val operator = oauth2TokenStoreManager.get(userId = oauthUserId, scmCode = repository.scmCode)?.operator
+            if (userId != operator) {
+                logger.warn("user [$userId] does not have permission to use the OAUTH account [$oauthUserId]")
+            }
+        }
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
@@ -560,6 +569,7 @@ class RepositoryService @Autowired constructor(
         createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         // 新接入的代码源需额外手动设置webhook触发白名单，后续完全灰度完成后，移除此部分逻辑
+        // 参考: com.tencent.devops.process.trigger.scm.PipelineWebHookEventListener.onEvent
         enableWebhookTrigger(repository)
         return repositoryId
     }
@@ -1656,9 +1666,10 @@ class RepositoryService @Autowired constructor(
     }
 
     fun enableWebhookTrigger(repository: Repository) {
-        val scmConfig = repositoryScmConfigDao.get(dslContext, repository.scmCode) ?: return
+        val scmCode = repository.scmCode
+        val scmConfig = repositoryScmConfigDao.get(dslContext, scmCode) ?: return
         // 仅有新接入的仓库需要手动加入白名单
-        val needAddWhitelist = listOf(
+        val needAddWhitelist = !ScmType.values().any { it.name == scmCode } && listOf(
             ScmProviderCodes.TSVN.name,
             ScmProviderCodes.GITEE.name
         ).contains(scmConfig.providerCode)

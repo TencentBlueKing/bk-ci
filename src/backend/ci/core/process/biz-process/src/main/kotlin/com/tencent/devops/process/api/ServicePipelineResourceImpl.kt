@@ -696,6 +696,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    override fun lockPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+
+        pipelineInfoFacadeService.lockPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            enable = enable
+        )
+        return Result(true)
+    }
+
     private fun checkParams(userId: String, projectId: String) {
         checkUserId(userId)
         checkProjectId(projectId)

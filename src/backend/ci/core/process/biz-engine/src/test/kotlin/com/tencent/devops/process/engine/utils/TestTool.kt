@@ -76,6 +76,7 @@ object TestTool {
                 mutexGroup = null
             ),
             cost = containerCost,
+            containPostTaskFlag = null,
             matrixGroupId = null,
             matrixGroupFlag = null
         )

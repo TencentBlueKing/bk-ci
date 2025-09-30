@@ -182,7 +182,7 @@
                     image: () => this.getImageDetail(),
                     service: () => this.getServiceDetail()
                 }
-                if (!Object.hasOwnProperty.call(funObj, type) || typeof funObj[type] !== 'function') {
+                if (!Object.keys(funObj).includes(type) || typeof funObj[type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }

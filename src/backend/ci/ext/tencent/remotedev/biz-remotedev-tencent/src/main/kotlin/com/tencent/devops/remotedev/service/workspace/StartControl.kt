@@ -251,7 +251,7 @@ class StartControl @Autowired constructor(
             }
             if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 logger.warn("computerStatus is not normal, start failed.")
-                workspaceStatus = WorkspaceStatus.EXCEPTION_START_FAILED
+                workspaceStatus = WorkspaceStatus.EXCEPTION_CDS_OFFLINE
             }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)

@@ -72,7 +72,8 @@ import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl(
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val userManageService: UserManageService
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -248,15 +249,23 @@ class AuthDeptServiceImpl(
     }
 
     override fun getUserDeptInfo(userId: String): Set<String> {
-        if (userId.endsWith("@tai"))
+        if (userId.endsWith("@tai")) {
             return emptySet()
-        if (userDeptCache.getIfPresent(userId) != null) {
-            return userDeptCache.getIfPresent(userId)!!
         }
-        val deptFamilyInfo = getUserDeptFamily(userId)
-        val userDeptIds = getUserDeptTreeIds(deptFamilyInfo)
-        userDeptCache.put(userId, userDeptIds)
-        return userDeptIds
+
+        userDeptCache.getIfPresent(userId)?.let {
+            return it
+        }
+        val primaryDeptIds = userManageService.getUserDepartmentPath(userId)
+        val resultDeptIds = primaryDeptIds
+            .takeIf { it.isNotEmpty() }
+            ?.toSet()
+            ?: run {
+                val deptFamilyInfo = getUserDeptFamily(userId)
+                getUserDeptTreeIds(deptFamilyInfo)
+            }
+        userDeptCache.put(userId, resultDeptIds)
+        return resultDeptIds
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
@@ -341,7 +350,7 @@ class AuthDeptServiceImpl(
         }
     }
 
-    private fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+    override fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
         return try {
             val url = getAuthRequestUrl(String.format(USER_INFO, userId))
             val searchEntity = SearchUserAndDeptEntity(
@@ -451,9 +460,17 @@ class AuthDeptServiceImpl(
     }
 
     private fun getUserAndPutInCache(userId: String): UserAndDeptInfoVo? {
-        return getUserInfoFromExternal(
-            userId = userId
-        ).also { if (it != null) userInfoCache.put(userId, it) }
+        return userManageService.getUserInfo(userId)?.let {
+            UserAndDeptInfoVo(
+                id = 0,
+                name = it.userId,
+                displayName = it.userName,
+                type = ManagerScopesEnum.USER,
+                deptInfo = it.departments
+            )
+        } ?: getUserInfoFromExternal(userId).also {
+            if (it != null) userInfoCache.put(userId, it)
+        }
     }
 
     private fun getUserDeptFamily(userId: String): String {

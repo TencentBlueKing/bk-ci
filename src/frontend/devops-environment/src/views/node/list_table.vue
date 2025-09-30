@@ -11,17 +11,19 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
             @sort-change="handleSortChange"
+            @selection-change="handleSelectionChange"
         >
-            <!-- <bk-table-column
-            type="selection"
-            fixed="left"
-            width="40"
-        ></bk-table-column> -->
+            <bk-table-column
+                type="selection"
+                fixed="left"
+                width="40"
+            ></bk-table-column>
             <bk-table-column
                 :label="$t('environment.nodeInfo.displayName')"
                 sortable="custom"
                 prop="displayName"
-                min-width="160"
+                fixed="left"
+                min-width="200"
                 :show-overflow-tooltip="!isEditNodeStatus"
             >
                 <template slot-scope="props">
@@ -113,7 +115,7 @@
                 v-if="allRenderColumnMap.label"
                 :label="$t('environment.tag')"
                 prop="label"
-                :width="200"
+                min-width="200"
                 show-overflow-tooltip
             >
                 <div
@@ -178,7 +180,7 @@
                 :label="`${$t('environment.status')}(${$t('environment.version')})`"
                 sortable="custom"
                 prop="nodeStatus"
-                :width="180"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -279,10 +281,9 @@
             <bk-table-column
                 v-if="allRenderColumnMap.lastModifyTime"
                 :label="$t('environment.nodeInfo.lastModifyTime')"
-                :width="180"
-                prop="lastModifiedTime"
                 sortable="custom"
-                min-width="80"
+                prop="lastModifiedTime"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -292,7 +293,7 @@
             <bk-table-column
                 v-if="allRenderColumnMap.latestBuildPipeline"
                 :label="$t('environment.nodeInfo.lastRunPipeline')"
-                :width="180"
+                min-width="180"
                 sortable="custom"
                 prop="latestBuildPipelineId"
                 show-overflow-tooltip
@@ -308,11 +309,10 @@
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.latestBuildTime"
-                :width="180"
                 :label="$t('environment.nodeInfo.lastRunAs')"
                 prop="latestBuildTime"
                 sortable="custom"
-                min-width="80"
+                min-width="180"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -332,14 +332,14 @@
                                 <span
                                     v-bk-tooltips="{
                                         content: $t('environment.主机负责人已变更，请联系主机负责人重新授权使用'),
-                                        disabled: userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator
+                                        disabled: !(props.row.allOperator.split(';').indexOf(userInfo.username) === -1)
                                     }"
                                 >
                                     <bk-button
-                                        v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                        v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && !props.row.bakOperator.includes(props.row.createdUser))
                                             || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                                         class="mr5"
-                                        :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                        :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
                                         text
                                         @click="changeCreatedUser(props.row)"
                                     >
@@ -350,7 +350,7 @@
                                 <span
                                     v-bk-tooltips="{
                                         content: $t('environment.你不是主机负责人，请联系主机负责人重新导入使用'),
-                                        disabled: userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator
+                                        disabled: !(props.row.allOperator.split(';').indexOf(userInfo.username) === -1)
                                     }"
                                 >
                                     <bk-button
@@ -367,7 +367,7 @@
                                                 action: NODE_RESOURCE_ACTION.EDIT
                                             }
                                         }"
-                                        :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                        :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
                                         @click="handleReImport(props.row)"
                                     >
                                         {{ $t('environment.reImport') }}
@@ -437,8 +437,7 @@
                                 </bk-button>
                             </template>
                             <span
-                                v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                text
+                                v-if="['THIRDPARTY'].includes(props.row.nodeType)"
                                 v-perm="{
                                     hasPermission: props.row.canEdit,
                                     disablePermissionApi: true,
@@ -548,13 +547,14 @@
                             searchable
                             :name="`key_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`key_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`key_${index}`) || getDuplicateTagKeyFlags()[index] }"
                             @change="handleTagKeyChang(index)"
                         >
                             <bk-option
                                 v-for="option in tagKeyIdList"
                                 :key="option.tagKeyId"
                                 :id="option.tagKeyId"
+                                :disabled="setTagForm.some(item => item.tagKeyId === option.tagKeyId)"
                                 :name="option.tagKeyName"
                             >
                             </bk-option>
@@ -566,7 +566,7 @@
                             searchable
                             :name="`value_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`value_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`value_${index}`) || getDuplicateTagKeyFlags()[index] }"
                         >
                             <bk-option
                                 v-for="option in getTagValueIdList(item.tagKeyId)"
@@ -614,6 +614,7 @@
     import dropdownList from '@/components/devops/environment/dropdown-list'
     import EmptyTableStatus from '@/components/empty-table-status'
     import StatusIcon from '@/components/status-icon.vue'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
@@ -658,6 +659,8 @@
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: 'small',
@@ -694,7 +697,7 @@
                     },
                     {
                         id: 'lastModifyBy',
-                        label: this.$t('environment.nodeInfo.lastModifyBy')
+                        label: this.$t('environment.lastModifier')
                     },
                     {
                         id: 'lastModifyTime',
@@ -831,6 +834,9 @@
             handleSortChange (sort) {
                 this.$emit('sort-change', sort)
             },
+            handleSelectionChange (list) {
+                this.$emit('selected-change', list)
+            },
             async saveEdit (node) {
                 const valid = await this.$validator.validate()
                 const displayName = this.curEditNodeDisplayName.trim()
@@ -891,6 +897,8 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
+                    const currentNodeType = this.$route.params.nodeType || ALLNODE
+                    localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                     this.$router.push({
                         name: 'nodeDetail',
                         params: {
@@ -1003,8 +1011,28 @@
                     })
                 })
             },
+            hasDuplicateTagKeys () {
+                const tagKeys = this.setTagForm.map(item => item.tagKeyId)
+                    .filter(key => key !== "")
+
+                return new Set(tagKeys).size !== tagKeys.length
+            },
+            getDuplicateTagKeyFlags () {
+                const tagKeys = this.setTagForm.map(item => item.tagKeyId)
+                return tagKeys.map((key, index) => {
+                    if (key === "") return false
+                    return tagKeys.indexOf(key) !== index
+                })
+            },
             async handleSetConfirm () {
                 try {
+                    if (this.hasDuplicateTagKeys()) {
+                        this.$bkMessage({
+                            message: this.$t('environment.noMultipleValuesPerNode'),
+                            theme: 'error'
+                        })
+                        return
+                    }
                     const isValid = await this.$validator.validateAll()
                     if (isValid) {
                         const params = {
@@ -1122,7 +1150,7 @@
     .bk-table-pagination-wrapper {
         background-color: #fff !important;
     }
-    td:nth-child(1) {
+    td:nth-child(2) {
         position: relative;
         color: $primaryColor;
         .node-name {
@@ -1243,7 +1271,6 @@
         top: 6px;
         display: flex;
         width: 90%;
-        min-width: 280px;
         margin-right: 12px;
         z-index: 2;
         .edit-content {
@@ -1253,7 +1280,7 @@
         .bk-form-input {
             height: 30px;
             font-size: 12px;
-            min-width: 280px;
+            width: 100%;
             padding-right: 74px;
         }
         .error-tips {

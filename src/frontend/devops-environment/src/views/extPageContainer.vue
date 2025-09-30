@@ -81,7 +81,8 @@
         overflow: hidden;
 
         .sub-view-port {
-            height: 100%;
+            height: calc(100% - 60px);
+            padding: 20px;
         }
         .env-header {
             display: flex;

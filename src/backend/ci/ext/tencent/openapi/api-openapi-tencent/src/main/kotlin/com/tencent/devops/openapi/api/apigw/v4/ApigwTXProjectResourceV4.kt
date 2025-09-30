@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.api.apigw.v4
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.project.api.pojo.ProjectProductInfo
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -65,4 +66,34 @@ interface ApigwTXProjectResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<ProjectProductInfo>>
+
+    @Operation(summary = "根据BG名称查询运营产品列表", tags = ["v4_app_get_products_by_bg_name"])
+    @Path("/product/{bgName}/getOperationalProductsByBgName/")
+    @GET
+    fun getProductsByBgName(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "bg名称", required = true)
+        @PathParam("bgName")
+        bgName: String
+    ): Result<List<OperationalProductVO>>
+
+    @GET
+    @Path("/product/{productId}/getProductByProductId/")
+    @Operation(summary = "根据运营产品ID获取产品信息", tags = ["v4_app_get_product_by_product_id"])
+    fun getProductByProductId(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "运营产品ID", required = true)
+        @PathParam("productId")
+        productId: Int
+    ): Result<OperationalProductVO?>
 }

@@ -784,11 +784,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 )
             }
             val repositoryHashId = record[tAtom.REPOSITORY_HASH_ID]
-            val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
-            if (repositoryInfoResult.isNotOk()) {
-                Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
+            var repositoryInfo: Repository? = null
+            try {
+                repositoryInfo = getRepositoryInfo(projectCode, repositoryHashId).data
+            } catch (ignored: Throwable) {
+                logger.warn("atom($atomCode) getAtomVersion|get repository info failed", ignored)
             }
-            val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
             val labelList = atomLabelService.getLabelsByAtomId(atomId) // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
@@ -1596,9 +1597,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
-    override fun updateAtomSensitiveCacheConfig(
+    override fun updateAtomConfigCache(
         atomCode: String,
         atomVersion: String,
+        kProperty: String,
         props: String?
     ) {
         try {
@@ -1608,18 +1610,36 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 props
             }
             if (propsJsonStr.isNullOrBlank()) return
-            val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
-            // 去缓存中获取插件运行时信息
-            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
-            if (!atomRunInfoJson.isNullOrEmpty() && !params.isNullOrEmpty()) {
-                val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                atomRunInfo.sensitiveParams = params.joinToString(",")
-                redisOperation.hset(
-                    key = atomRunInfoKey,
-                    hashKey = atomVersion,
-                    values = JsonUtil.toJson(atomRunInfo)
-                )
+            if (kProperty == AtomRunInfo::sensitiveParams.name) {
+                val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
+                // 去缓存中获取插件运行时信息
+                val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
+                if (!atomRunInfoJson.isNullOrEmpty() && !params.isNullOrEmpty()) {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    atomRunInfo.sensitiveParams = params.joinToString(",")
+                    redisOperation.hset(
+                        key = atomRunInfoKey,
+                        hashKey = atomVersion,
+                        values = JsonUtil.toJson(atomRunInfo)
+                    )
+                }
+            }
+
+            if (kProperty == AtomRunInfo::canPauseBeforeRun.name) {
+                val canPauseBeforeRun = marketAtomCommonService.getAtomCanPauseBeforeRun(propsJsonStr)
+                // 去缓存中获取插件运行时信息
+                val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
+                if (!atomRunInfoJson.isNullOrEmpty() && canPauseBeforeRun) {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    atomRunInfo.canPauseBeforeRun = true
+                    redisOperation.hset(
+                        key = atomRunInfoKey,
+                        hashKey = atomVersion,
+                        values = JsonUtil.toJson(atomRunInfo)
+                    )
+                }
             }
         } catch (e: Exception) {
             logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", e)

@@ -366,10 +366,10 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val storeCode = storeReleaseRequest.storeCode
         val storeType = storeReleaseRequest.storeType
         val status = storeReleaseRequest.status
-        val newestReleaseFlag = getNewestReleaseFlag(storeCode, storeType, storeReleaseRequest)
+        val newestVersionFlag = getNewestVersionFlag(storeCode, storeType, storeReleaseRequest)
         val releaseType = storeReleaseRequest.releaseType
-        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestReleaseFlag) {
-            // 历史大版本下的小版本更新不把latestFlag置为true（当前发布的版本不是最新的已发布版本）
+        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE && !newestVersionFlag) {
+            // 历史大版本下的小版本更新不把latestFlag置为true（利用这种发布方式发布最新版本除外）
             null
         } else {
             true
@@ -427,21 +427,18 @@ class StoreReleaseServiceImpl @Autowired constructor(
         return true
     }
 
-    private fun getNewestReleaseFlag(
+    private fun getNewestVersionFlag(
         storeCode: String,
         storeType: StoreTypeEnum,
         storeReleaseRequest: StoreReleaseRequest
     ): Boolean {
-        // 查找插件最近一个已发布的版本
-        val newestReleaseRecord = storeBaseQueryDao.getReleaseComponentsByCode(
+        val latestRecord = storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = storeType,
-            num = 1
-        )?.firstOrNull()
-
-        return newestReleaseRecord?.let {
-            // 比较当前版本是否比最近一个已发布的版本新
+            storeType = storeType
+        )
+        return latestRecord?.let {
+            // 比较当前版本是否比最近一个最新可用的的版本新
             val requestVersion = storeReleaseRequest.version
             val requestBusNum = storeBaseQueryDao.getMaxBusNumByCode(
                 dslContext = dslContext,
@@ -450,8 +447,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
                 version = requestVersion
             ) ?: 0
 
-            requestBusNum > newestReleaseRecord.busNum
-        } ?: false
+            requestBusNum > latestRecord.busNum
+        } ?: true
     }
 
     override fun offlineComponent(

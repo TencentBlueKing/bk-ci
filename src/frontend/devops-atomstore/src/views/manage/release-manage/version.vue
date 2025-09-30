@@ -86,7 +86,7 @@
                         service: this.requestServiceVersionList,
                     }
 
-                    if (!Object.hasOwnProperty.call(apiMethodMap, type)) {
+                    if (!Object.keys(methodMap).includes(type) || typeof methodMap[type] !== 'function') {
                         this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                         return
                     }

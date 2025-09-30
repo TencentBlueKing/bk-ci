@@ -21,4 +21,17 @@ class ServiceSignatureManageResourceImpl(
             )
         )
     }
+
+    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+        return Result(
+            signatureManageService.getSignatureStatus(
+                projectId = projectId,
+                userId = userId
+            )
+        )
+    }
+
+    override fun listSignatureProjects(userId: String): Result<List<String>> {
+        return Result(signatureManageService.listSignatureProjects())
+    }
 }

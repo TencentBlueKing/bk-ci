@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.service.clientupgrade
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisLock
@@ -9,6 +8,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.remotedev.tables.records.TClientRecord
 import com.tencent.devops.remotedev.dao.ClientDao
 import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
 import org.jooq.DSLContext
@@ -30,7 +30,7 @@ class ClientUpgradeService @Autowired constructor(
             return ClientUpgradeResp.noUpgrade()
         }
         // 即使在列表中时还要校验下，保证实时性
-        val os = OS.parse(record.os) ?: return ClientUpgradeResp.noUpgrade()
+        val os = ClientOS.parse(record.os) ?: return ClientUpgradeResp.noUpgrade()
         val currentClientVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, os)
         val currentStartVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, os)
         if (currentClientVersion.isBlank() && currentStartVersion.isBlank()) {
@@ -97,7 +97,7 @@ class ClientUpgradeService @Autowired constructor(
         // 暂时先全量查询，后续看性能有没有用影响
         val records = clientDao.fetchAll(dslContext, LAST_REQUEST_BEFORE_DAYS)
         records.forEach {
-            val os = OS.parse(it.os) ?: return@forEach
+            val os = ClientOS.parse(it.os) ?: return@forEach
             val clientCurrentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, os)
             val startCurrentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, os)
             if (clientCurrentVersion.isBlank() && startCurrentVersion.isBlank()) {
@@ -139,7 +139,7 @@ class ClientUpgradeService @Autowired constructor(
      * @param noMax 不管最大升级数的限制
      */
     private fun initUpgradeDynamicProps(
-        os: OS,
+        os: ClientOS,
         clientCurrentVersion: String,
         startCurrentVersion: String,
         noMax: Boolean
@@ -227,7 +227,7 @@ class ClientUpgradeService @Autowired constructor(
         // 正常升级
         val currentVersion = (inCurrentVersion ?: (upgradeProps.getCurrentVersion(
             comp = upgradeComp,
-            os = OS.parse(record.os) ?: return null
+            os = ClientOS.parse(record.os) ?: return null
         ))).trim().ifBlank { return null }
         if (!forceUpdate && version == currentVersion) {
             return null

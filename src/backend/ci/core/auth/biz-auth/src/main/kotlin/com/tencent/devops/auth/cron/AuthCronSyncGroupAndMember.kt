@@ -139,7 +139,7 @@ class AuthCronSyncGroupAndMember(
                 expiredTimeInSeconds = 10
             )
             if (redisLock.tryLock()) {
-                userManageService.syncUserInfoData()
+                userManageService.syncAllUserInfoData()
                 userManageService.syncDepartmentInfoData()
                 logger.info("sync user and department regularly |finish")
             } else {

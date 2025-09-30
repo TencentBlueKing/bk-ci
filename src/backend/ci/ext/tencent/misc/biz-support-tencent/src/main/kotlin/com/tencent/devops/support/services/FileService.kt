@@ -33,19 +33,19 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.constant.SupportMessageCode
+import java.io.InputStream
+import java.nio.file.Files
+import java.time.LocalDateTime
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.InputStream
-import java.nio.file.Files
-import java.time.LocalDateTime
 
 @Service
 class FileService @Autowired constructor(private val client: Client) {
@@ -100,7 +100,7 @@ class FileService @Autowired constructor(private val client: Client) {
         val serviceUrl =
             "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
-            OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+            CommonServiceUtils.uploadFileToService(serviceUrl, file).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")

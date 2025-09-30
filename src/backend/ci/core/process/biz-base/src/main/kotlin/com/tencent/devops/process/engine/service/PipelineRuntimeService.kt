@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ElementUtils
@@ -606,7 +607,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } else null,
                 executeTime = executeTime,
                 buildParameters = buildParameters,
-                webHookType = webhookType,
+                webHookType = transferWebhookType(webhookType),
                 webhookInfo = webhookInfo,
                 startType = StartType.transform(trigger, webhookType),
                 recommendVersion = recommendVersion,
@@ -1329,8 +1330,8 @@ class PipelineRuntimeService @Autowired constructor(
                     resourceVersion = resourceVersion, buildId = build.buildId,
                     stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
-                    matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = null, startTime = build.startTime,
+                    containPostTaskFlag = build.containPostTaskFlag, matrixGroupFlag = build.matrixGroupFlag,
+                    matrixGroupId = build.matrixGroupId, status = null, startTime = build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
@@ -1494,7 +1495,7 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 // 刷新历史列表和详情页面
-                refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
+                refreshTypes = RefreshType.RECORD.binary
             ), // 广播构建排队事件
             PipelineBuildQueueBroadCastEvent(
                 source = "startQueue",
@@ -1827,7 +1828,6 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = latestRunningBuild.buildId,
                 // 刷新历史列表、详情、状态页面
                 refreshTypes = RefreshType.HISTORY.binary or
-                    RefreshType.DETAIL.binary or
                     RefreshType.STATUS.binary or
                     RefreshType.RECORD.binary
             )
@@ -1897,9 +1897,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     // 刷新详情、状态页面
                     // #3400 在BuildEnd处会有HISTORY，历史列表此处不需要，减少负载
-                    refreshTypes = RefreshType.DETAIL.binary or
-                        RefreshType.STATUS.binary or
-                        RefreshType.RECORD.binary
+                    refreshTypes = RefreshType.STATUS.binary or RefreshType.RECORD.binary
                 )
             )
             logger.info("[$pipelineId]|finishLatestRunningBuild-$buildId|status=$status")
@@ -2276,5 +2274,11 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             keys = keys
         )
+    }
+
+    fun transferWebhookType(webhookType: String?) = when (webhookType) {
+        CodeType.SCM_GIT.name -> CodeType.GIT.name
+        CodeType.SCM_SVN.name -> CodeType.SVN.name
+        else -> webhookType
     }
 }

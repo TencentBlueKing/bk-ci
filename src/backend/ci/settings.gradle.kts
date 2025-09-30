@@ -256,6 +256,7 @@ include(":ext:tencent:log:biz-log-tencent")
 include(":ext:tencent:log:boot-log-tencent")
 
 include(":ext:tencent:misc")
+include(":ext:tencent:misc:api-misc-tencent")
 include(":ext:tencent:misc:api-image-tencent")
 include(":ext:tencent:misc:api-support-tencent")
 include(":ext:tencent:misc:api-monitoring-tencent")

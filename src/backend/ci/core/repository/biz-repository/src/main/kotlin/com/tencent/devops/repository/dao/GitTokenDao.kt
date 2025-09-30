@@ -101,6 +101,34 @@ class GitTokenDao {
         }
     }
 
+    fun listToken(dslContext: DSLContext, operator: String): List<TRepositoryGitTokenRecord> {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            return dslContext.selectFrom(this)
+                .where(OPERATOR.eq(operator))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listEmptyOperator(dslContext: DSLContext, limit: Int): List<TRepositoryGitTokenRecord> {
+        return with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            dslContext.selectFrom(this)
+                    .where(OPERATOR.isNull())
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(limit)
+                    .fetch()
+        }
+    }
+
+    fun updateOperator(dslContext: DSLContext, userIds: Set<String>) {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            dslContext.update(this)
+                .set(OPERATOR, USER_ID)
+                .where(USER_ID.`in`(userIds))
+                .execute()
+        }
+    }
+
     companion object {
         // oauth授权后的默认token类型
         const val DEFAULT_TOKEN_TYPE = "bearer"

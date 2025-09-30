@@ -363,7 +363,7 @@ class NotifyControl @Autowired constructor(
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
                 operator = bodyParams["operator"] ?: "null",
-                userIds = userIds.joinToString(),
+                userIds = userIds,
                 type = dataType,
                 status = RemoteDevNotifyType.Status.FAIL,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -372,7 +372,7 @@ class NotifyControl @Autowired constructor(
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
                 operator = bodyParams["operator"] ?: "null",
-                userIds = userIds.joinToString(),
+                userIds = userIds,
                 type = dataType,
                 status = RemoteDevNotifyType.Status.SUCCESS,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -400,7 +400,7 @@ class NotifyControl @Autowired constructor(
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
                 operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                userIds = receivers,
                 type = RemoteDevNotifyType.RTX,
                 status = RemoteDevNotifyType.Status.FAIL,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -409,7 +409,7 @@ class NotifyControl @Autowired constructor(
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
                 operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                userIds = receivers,
                 type = RemoteDevNotifyType.RTX,
                 status = RemoteDevNotifyType.Status.SUCCESS,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -447,7 +447,7 @@ class NotifyControl @Autowired constructor(
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
                         operator = bodyParams["operator"] ?: "null",
-                        userIds = user,
+                        userIds = setOf(user),
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.SUCCESS,
                         bodyParams = bodyJson
@@ -456,7 +456,7 @@ class NotifyControl @Autowired constructor(
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
                         operator = bodyParams["operator"] ?: "null",
-                        userIds = user,
+                        userIds = setOf(user),
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.FAIL,
                         bodyParams = bodyJson
@@ -480,7 +480,7 @@ class NotifyControl @Autowired constructor(
         }, { user ->
             user.accountEmail
         })
-        val receivers = userIds.map { taiInfos[it] ?: it }
+        val receivers = userIds.map { taiInfos[it] ?: it }.toMutableSet()
         val notifyTemplateCode = checkNotNull(bodyParams["notifyTemplateCode"])
         logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
         kotlin.runCatching {
@@ -488,7 +488,7 @@ class NotifyControl @Autowired constructor(
                 notifyTemplateCode = notifyTemplateCode,
                 bodyParams = bodyParams,
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
-                receivers = receivers.toMutableSet(),
+                receivers = receivers,
                 cc = cc,
                 markdownContent = false
             )
@@ -496,7 +496,7 @@ class NotifyControl @Autowired constructor(
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
                 operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                userIds = receivers,
                 type = RemoteDevNotifyType.EMAIL,
                 status = RemoteDevNotifyType.Status.FAIL,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -505,7 +505,7 @@ class NotifyControl @Autowired constructor(
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
                 operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                userIds = receivers,
                 type = RemoteDevNotifyType.EMAIL,
                 status = RemoteDevNotifyType.Status.SUCCESS,
                 bodyParams = JsonUtil.toJson(bodyParams)

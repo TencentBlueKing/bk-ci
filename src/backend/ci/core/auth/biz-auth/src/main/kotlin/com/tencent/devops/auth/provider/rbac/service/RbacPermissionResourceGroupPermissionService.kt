@@ -50,6 +50,7 @@ import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.UserProjectPermission
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
@@ -187,8 +188,10 @@ class RbacPermissionResourceGroupPermissionService(
             )
             authorizationScopes.addAll(monitorAuthorizationScopes)
         }
-        logger.info("grant group permissions authorization scopes :{}|{}|{}|{}",
-                    projectCode,iamGroupId,resourceType,JsonUtil.toJson(authorizationScopes))
+        logger.info(
+            "grant group permissions authorization scopes :{}|{}|{}|{}",
+            projectCode, iamGroupId, resourceType, JsonUtil.toJson(authorizationScopes)
+        )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
@@ -775,7 +778,7 @@ class RbacPermissionResourceGroupPermissionService(
             projectCode = projectCode,
             iamGroupId = iamGroupId,
             minExpiredTime = LocalDateTime.now()
-        )
+        ).filterNot { it.memberType == MemberType.TEMPLATE.type }
 
         return members.flatMap { member ->
             actions.map { action ->

@@ -48,6 +48,10 @@ data class Step(
     val continueOnError: String?,
     @JsonProperty("retry-times")
     val retryTimes: Int?,
+    @JsonProperty("can-pause-before-run")
+    var canPauseBeforeRun: Boolean? = null,
+    @JsonProperty("pause-notice-receivers")
+    var pauseNoticeReceivers: List<String>? = null,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
     @get:Schema(title = "run 插件的附加参数")

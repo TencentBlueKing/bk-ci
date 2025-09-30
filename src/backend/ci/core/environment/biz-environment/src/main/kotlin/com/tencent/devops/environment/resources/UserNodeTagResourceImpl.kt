@@ -67,4 +67,13 @@ class UserNodeTagResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun batchEditTag(
+        userId: String,
+        projectId: String,
+        data: List<UpdateNodeTag>
+    ): Result<Boolean> {
+        nodeTagService.batchAddNodeTag(userId = userId, projectId = projectId, data = data)
+        return Result(true)
+    }
 }

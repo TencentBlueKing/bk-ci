@@ -75,10 +75,10 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.core.Response
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
-import jakarta.ws.rs.core.Response
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -146,7 +146,6 @@ class ExperienceAppService(
         val newestPublic = experienceBaseService.getNewestPublic(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val isPublic = !isOuter && experienceBaseService.isPublic(experienceId, false)
         // 移除红点
         removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
@@ -158,6 +157,7 @@ class ExperienceAppService(
             experienceId = newestPublic.recordId
             experience = experienceDao.get(dslContext, experienceId)
         }
+        val isPublic = !isOuter && experienceBaseService.isPublic(experienceId, false)
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
@@ -208,7 +208,7 @@ class ExperienceAppService(
             .setScopeId(projectId)
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return AppExperienceDetail(
-            experienceHashId = experienceHashId,
+            experienceHashId = HashUtil.encodeLongId(experienceId),
             size = experience.size,
             logoUrl = logoUrl,
             shareUrl = shareUrl,
@@ -386,6 +386,7 @@ class ExperienceAppService(
                 createDate = it.createTime.run { if (isOldVersion) timestamp() else timestampmilli() },
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
+                name = it.name,
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier,

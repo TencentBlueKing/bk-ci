@@ -69,7 +69,8 @@ class OpNodeService @Autowired constructor(
                     dslContext = dslContext,
                     nodeId = it.nodeId,
                     nodeName = nodeStringId,
-                    userId = "system"
+                    userId = "system",
+                    projectId = it.projectId
                 )
                 if (count != 1) {
                     logger.warn(

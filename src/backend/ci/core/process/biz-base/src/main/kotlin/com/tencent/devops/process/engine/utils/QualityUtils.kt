@@ -62,11 +62,21 @@ object QualityUtils {
             val id = "T-${UUIDUtil.generate()}"
             if (isBefore) {
                 QualityGateInElement(
-                    I18nUtil.getCodeLanMessage(BK_QUALITY_IN), id, null, element.getAtomCode(), element.name
+                    name = I18nUtil.getCodeLanMessage(BK_QUALITY_IN),
+                    id = id,
+                    status = null,
+                    interceptTask = element.getAtomCode(),
+                    interceptTaskId = element.id,
+                    interceptTaskName = element.name
                 )
             } else {
                 QualityGateOutElement(
-                    I18nUtil.getCodeLanMessage(BK_QUALITY_OUT), id, null, element.getAtomCode(), element.name
+                    name = I18nUtil.getCodeLanMessage(BK_QUALITY_OUT),
+                    id = id,
+                    status = null,
+                    interceptTask = element.getAtomCode(),
+                    interceptTaskId = element.id,
+                    interceptTaskName = element.name
                 )
             }
         } else {

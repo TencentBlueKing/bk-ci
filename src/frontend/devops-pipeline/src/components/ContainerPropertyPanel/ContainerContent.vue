@@ -233,6 +233,7 @@
                         :loading="isLoadingMac"
                         name="systemVersion"
                         v-validate.initial="'required'"
+                        @change="toggleXcode"
                     >
                         <bk-option
                             v-for="item in systemVersionList"
@@ -278,14 +279,23 @@
                 ></select-input>
             </form-field>
 
-            <section v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
+            <section
+                v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+                class="performance"
+            >
+                <span
+                    v-show="isShowPerformance"
+                    class="performance-desc"
+                    @click="goPerformanceDesc"
+                >{{ $t('editPage.performanceDesc') }}</span>
                 <form-field
                     :label="$t('editPage.performance')"
                     v-show="isShowPerformance"
                 >
                     <devcloud-option
                         :disabled="!editable"
-                        :value="container.dispatchType.performanceConfigId"
+                        :value="devcloudValue"
+                        :template-id="templateId"
                         :build-type="buildResourceType"
                         :handle-change="changeBuildResourceWithoutEnv"
                         :change-show-performance="changeShowPerformance"
@@ -529,6 +539,10 @@
                     { label: this.$t('editPage.fromHand'), value: 'THIRD' }
                 ]
             },
+            templateId () {
+                // 实例流水线、模板编辑流水线的templateId
+                return this.pipeline.templateId || this.$route.params.templateId
+            },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)
             },
@@ -595,7 +609,7 @@
                 return this.container.dispatchType.xcodeVersion
             },
             systemVersion () {
-                return this.container.dispatchType.systemVersion
+                return this.container?.dispatchType?.systemVersion
             },
             buildResource () {
                 return this.container.dispatchType.value
@@ -691,6 +705,21 @@
             dockerInfo () {
                 return this.container.dispatchType?.dockerInfo || {}
             },
+            devcloudValue () {
+                if (this.buildResourceType === 'PUBLIC_DEVCLOUD') {
+                    if (this.container.dispatchType.performanceUid && this.container.dispatchType.performanceUid !== '') {
+                        return this.container.dispatchType.performanceUid
+                    }
+                    const enumId = {
+                        '0': 'Standard-S',
+                        '1': 'Standard-S',
+                        '2': 'Standard-M',
+                        '10000': 'HighIO-L'
+                    }
+                    return enumId[this.container.dispatchType.performanceConfigId]
+                }
+                return this.container.dispatchType.performanceConfigId
+            },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
             }
@@ -706,9 +735,6 @@
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
-            },
-            systemVersion () {
-                this.toggleXcode()
             }
         },
         created () {
@@ -949,8 +975,8 @@
                     })
                     .finally(() => (this.isLoadingMac = false))
             },
-            async toggleXcode () {
-                const res = await this.getMacXcodeVersion(this.systemVersion)
+            async toggleXcode (version) {
+                const res = await this.getMacXcodeVersion(version)
                 this.xcodeVersionList = res.data?.versionList.map(i => ({
                     id: i,
                     name: i
@@ -1134,6 +1160,10 @@
             },
             changeShowPerformance (isShow = false) {
                 this.isShowPerformance = isShow
+            },
+            goPerformanceDesc () {
+                const url = 'https://iwiki.woa.com/p/4015974495'
+                window.open(url, '_blank')
             }
         }
     }
@@ -1187,6 +1217,21 @@
         }
         .image-tag {
             flex: 1;
+        }
+    }
+
+    .performance {
+        position: relative;
+
+        .performance-desc {
+            position: absolute;
+            left: 8%;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            color: #62a5fb;
+            cursor: pointer;
+            z-index: 6;
         }
     }
 

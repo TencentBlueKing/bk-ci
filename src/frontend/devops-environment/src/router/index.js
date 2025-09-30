@@ -45,6 +45,9 @@ const extPageContainer = () => import(/* webpackChunkName: 'nodeDetail' */ '../v
 // 脚本执行详情/文件分发详情
 const executionDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/execution-detail/index.vue')
 
+// 批量设置节点标签
+const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/node/set_node_tag')
+
 const routes = [
     {
         path: 'environment/:projectId?',
@@ -123,7 +126,12 @@ const routes = [
                             header: 'environmentManage',
                             to: 'envList'
                         }
-                    }
+                    },
+                    {
+                        path: 'setNodeTag',
+                        name: 'setNodeTag',
+                        component: setNodeTag
+                    },
                 ]
             },
             {

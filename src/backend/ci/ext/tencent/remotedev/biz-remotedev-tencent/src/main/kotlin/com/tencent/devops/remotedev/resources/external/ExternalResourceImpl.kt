@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.resources.external
 
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
@@ -112,14 +113,14 @@ class ExternalResourceImpl @Autowired constructor(
         val cdsMesh = enable.toBooleanStrictOrNull()
         if (cdsMesh == true) {
             whiteListService.opCreateOrUpdateWhiteList(
-                "system",
-                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
+                SYSTEM,
+                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
             )
         }
         if (cdsMesh == false) {
             whiteListService.opDeleteWhiteList(
-                "system",
-                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
+                SYSTEM,
+                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
             )
         }
         if (domain.isNotBlank()) {

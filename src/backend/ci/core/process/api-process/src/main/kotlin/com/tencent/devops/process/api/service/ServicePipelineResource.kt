@@ -648,4 +648,22 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineRemoteToken>
+
+    @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/lock")
+    fun lockPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "开启true/锁定false", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
 }

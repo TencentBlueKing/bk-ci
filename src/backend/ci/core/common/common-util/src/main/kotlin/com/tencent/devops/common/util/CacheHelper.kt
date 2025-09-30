@@ -20,7 +20,7 @@ object CacheHelper {
      * @return 返回一个配置好的Caffeine Cache实例
      */
     fun <K, V> createCache(
-        maxSize: Long = 50000,
+        maxSize: Long = 100000,
         duration: Long = 5,
         unit: TimeUnit = TimeUnit.MINUTES
     ): Cache<K, V> {
@@ -57,7 +57,7 @@ object CacheHelper {
      * @param parts 构成Key的各个部分
      * @return MD5哈希后的字符串Key
      */
-    private fun buildCacheKey(vararg parts: Any?): String {
+    fun buildCacheKey(vararg parts: Any?): String {
         // 过滤掉null值，并用'|'连接，确保不同参数顺序/数量生成不同key
         val key = parts.filterNotNull().joinToString("|")
         return DigestUtils.md5Hex(key)

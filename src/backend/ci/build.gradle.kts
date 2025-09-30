@@ -25,6 +25,7 @@ allprojects {
     // 新增maven 仓库
     repositories {
         add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
+        add(maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") })
     }
 
     // 版本管理
@@ -32,7 +33,8 @@ allprojects {
         setApplyMavenExclusions(false)
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
-            dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcpkix-jdk18on:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcprov-jdk18on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
@@ -154,7 +156,6 @@ allprojects {
         it.exclude("commons-logging", "commons-logging")
         it.exclude("com.vaadin.external.google", "android-json")
         it.exclude("org.apache.shardingsphere", "shardingsphere-test-util")
-        it.exclude("org.bouncycastle", "bcpkix-jdk15on")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

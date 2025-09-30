@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.ClientTips
@@ -77,6 +78,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
+    }
+
+    override fun getFileGateway(userId: String): Result<Map<String, String>> {
+        return Result(remoteDevSettingService.getFileGateway())
     }
 
     override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
@@ -195,5 +200,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun updateUserLocale(userId: String, localeInfo: LocaleInfo): Result<Boolean> {
         return Result(workspaceService.updateUserLocale(userId, localeInfo.language))
+    }
+
+    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+        return Result(workspaceService.getSignatureStatus(userId, projectId))
     }
 }

@@ -141,12 +141,17 @@ class SignatureManageService(
         )
         logger.info("fetch live signature status {}|{}|{}", projectId, platform, userId)
         // 获取用户信息并校验用户是否存在
-        val userNickName = getUserNickname(userId)
+        val userNickName = try {
+            getUserNickname(userId)
+        } catch (ex: Exception) {
+            logger.warn("Failed to get user nickname, use userId instead", ex)
+            userId
+        }
         try {
             // 构建请求
             val request = buildSignatureQueryRequest(
-                userId = userId,
-                nickName = userNickName,
+                userId = userId.removeSuffix("@tai"),
+                nickName = userNickName.removeSuffix("@tai"),
                 platform = platform,
                 nonce = generateRandomString(12),
                 timestamp = System.currentTimeMillis()
@@ -181,10 +186,10 @@ class SignatureManageService(
             )
         } catch (ex: Exception) {
             // 若第三方接口出现故障，不影响用户使用，告警，通知开发人员处理
-            logger.error("fetch Live Signature Status failed! {}|{}|{}", platform, projectId, userId, ex)
+            logger.warn("fetch Live Signature Status failed! {}|{}|{}", platform, projectId, userId, ex)
             return UserSignatureStatusResponse(
                 userId = userId,
-                signed = true
+                signed = false
             )
         }
     }
@@ -393,7 +398,7 @@ class SignatureManageService(
             latestClientDetails.forEach {
                 it.projectIds.forEach { projectId ->
                     val key = String.format(PROJECT_SIGNATURE_PLATFORM_KEY, projectId)
-                    redisOperation.set(key, it.platform)
+                    redisOperation.set(key, it.platform, expired = false)
                 }
             }
             val toAddRecords = latestProjectsVerificationRequired.filter { it !in oldProjectsVerificationRequired }

@@ -127,4 +127,10 @@ interface PermissionResourceGroupService {
         resourceCode: String,
         groupCode: BkAuthGroup
     ): AuthResourceGroup?
+
+    // 查询用户加入的用户组模板
+    fun listProjectMemberGroupTemplateIds(
+        projectCode: String,
+        memberId: String
+    ): List<String>
 }

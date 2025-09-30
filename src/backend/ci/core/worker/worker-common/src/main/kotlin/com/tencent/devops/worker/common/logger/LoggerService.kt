@@ -307,7 +307,8 @@ object LoggerService {
                 this.uploadQueue.put(
                     logMessage.copy(
                         message = "Printed logs cannot exceed $loggingLineLimit lines. " +
-                            "Please download logs to view."
+                            "Please download logs to view.",
+                        logType = LogType.WARN
                     )
                 )
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL

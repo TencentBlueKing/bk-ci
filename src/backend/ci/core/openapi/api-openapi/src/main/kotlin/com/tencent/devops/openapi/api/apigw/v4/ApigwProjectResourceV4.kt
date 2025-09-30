@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -39,9 +41,9 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -58,11 +60,13 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwProjectResourceV4 {
 
     @POST
     @Path("/project_create")
     @Operation(summary = "创建项目", tags = ["v4_app_project_create", "v4_user_project_create"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/project_create")
     fun create(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -83,6 +87,7 @@ interface ApigwProjectResourceV4 {
     @PUT
     @Path("/{projectId}")
     @Operation(summary = "修改项目", tags = ["v4_user_project_edit", "v4_app_project_edit"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}")
     fun update(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -106,6 +111,7 @@ interface ApigwProjectResourceV4 {
     @GET
     @Path("/{projectId}")
     @Operation(summary = "获取项目信息", tags = ["v4_user_project_get", "v4_app_project_get"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}")
     fun get(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -126,7 +132,8 @@ interface ApigwProjectResourceV4 {
 
     @GET
     @Path("/project_list")
-    @Operation(summary = "查询所有项目", tags = ["v4_user_project_list", "v4_app_project_list"])
+    @Operation(summary = "查询当前用户有权限的项目列表", tags = ["v4_user_project_list", "v4_app_project_list"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/project_list")
     fun list(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -157,9 +164,37 @@ interface ApigwProjectResourceV4 {
         pageSize: Int? = 10
     ): Result<List<ProjectVO>>
 
+    @POST
+    @Path("/list/by/conditions/{page}/{pageSize}")
+    @Operation(summary = "根据条件查询项目", tags = ["v4_app_list_projects_by_conditions"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/list/by/conditions/{page}/{pageSize}")
+    fun listByConditions(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO,
+        @Parameter(description = "第几页", required = true, example = "1")
+        @PathParam("page")
+        page: Int,
+        @Parameter(description = "每页条数(默认10)", required = true, example = "10")
+        @PathParam("pageSize")
+        pageSize: Int
+    ): Result<List<ProjectVO>>
+
     @GET
     @Path("/project_name_validation")
-    @Operation(summary = "校验项目名称和项目英文名", tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"])
+    @Operation(
+        summary = "校验项目名称和项目英文名",
+        tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"]
+    )
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/project_name_validation")
     fun validate(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -184,6 +219,7 @@ interface ApigwProjectResourceV4 {
     @POST
     @Path("/{projectId}/project_user")
     @Operation(summary = "添加指定用户到指定项目用户组", tags = ["v4_app_project_create_users"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}/project_user")
     fun createProjectUser(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

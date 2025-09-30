@@ -172,7 +172,7 @@ class BuildStartControl @Autowired constructor(
         watcher.stop()
 
         watcher.start("buildModel")
-        buildModel(buildInfo = buildInfo)
+        buildModel(buildInfo = buildInfo, executeCount = executeCount)
         watcher.stop()
 
         buildLogPrinter.addDebugLine(
@@ -585,8 +585,6 @@ class BuildStartControl @Autowired constructor(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         buildId = buildInfo.buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
@@ -787,8 +785,15 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo) {
-        val model = buildDetailService.getBuildModel(projectId, buildId) ?: run {
+    private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo, executeCount: Int) {
+        val model = pipelineRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = executeCount,
+            debug = buildInfo.debug
+        ) ?: run {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
                     source = TAG, projectId = projectId, pipelineId = pipelineId,

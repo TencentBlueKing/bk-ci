@@ -171,7 +171,10 @@ class ProjectRemoteDevService @Autowired constructor(
         try {
             if (bkrepoDevxDnsIp.isNotBlank()) {
                 val ips = bkrepoDevxDnsIp.split(";").filter { it.isNotBlank() }.map { it.trim() }.toSet()
-                val client = OkhttpUtils.genOkHttpClientSupDns(bkrepoDevxUrl, ips)
+                val client = OkhttpUtils.genOkHttpClientSupDns(
+                    bkrepoDevxUrl.removePrefix("http://").removePrefix("https://"),
+                    ips
+                )
                 client.newCall(request).execute()
             } else {
                 OkhttpUtils.doHttp(request)

@@ -124,7 +124,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission to " +
-                                     "apply for assistance in ${record.workspaceName}"
+                        "apply for assistance in ${record.workspaceName}"
                 )
             )
         }
@@ -295,7 +295,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission" +
-                                     " to apply for assistance in ${record.workspaceName}"
+                        " to apply for assistance in ${record.workspaceName}"
                 )
             )
         }
@@ -1036,7 +1036,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission to" +
-                                     " sync vm in source ${data.sourceWorkspaceName}"
+                        " sync vm in source ${data.sourceWorkspaceName}"
                 )
             )
         }
@@ -1051,7 +1051,7 @@ class ExpertSupportService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
                     "We're sorry but you don't have permission " +
-                                     "to sync vm in target ${data.targetWorkspaceName}"
+                        "to sync vm in target ${data.targetWorkspaceName}"
                 )
             )
         }

@@ -958,10 +958,15 @@ class GitService @Autowired constructor(
         val type = authParams["redirectUrlType"] as? String
         val specRedirectUrl = authParams["redirectUrl"] as? String
         val resetType = authParams["resetType"] as? String
+        // rtx用户名
         val userId = authParams["userId"] as? String
+        // 工蜂远端用户名
+        val username = authParams["username"] as? String
+        // 关联代码库时，使用具体的工蜂授权用户名（可能为公共账号）
+        val finalUserId = username ?: userId
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
             RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
-            RedirectUrlTypeEnum.DEFAULT -> "$redirectUrl?resetType=$resetType&userId=$userId"
+            RedirectUrlTypeEnum.DEFAULT -> "$redirectUrl?resetType=$resetType&userId=$finalUserId"
             else -> {
                 val projectId = authParams["projectId"] as String
                 val repoId = authParams["repoId"] as String

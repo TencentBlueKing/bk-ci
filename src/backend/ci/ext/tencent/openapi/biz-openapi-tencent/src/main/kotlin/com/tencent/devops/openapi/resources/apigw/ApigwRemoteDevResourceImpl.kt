@@ -8,10 +8,12 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.UserOnePassword
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -27,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitBindRemotedevData
 import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -56,6 +59,7 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -146,14 +150,12 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         operator: String,
         owner: String?,
-        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         logger.info("assign workspace|operator|$operator|owner|$owner|data|$data")
         return client.get(ServiceRemoteDevResource::class).assignWorkspace(
             operator = operator,
             owner = owner,
-            zoneType = zoneType,
             data = data
         )
     }
@@ -708,4 +710,43 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).createCvm(userId, data)
     }
 
+    override fun whitelist(
+        userId: String,
+        type: WhiteListType,
+        delete: Boolean,
+        body: Map<String, String>
+    ): Result<Boolean> {
+        logger.info("whitelist |$userId|$type|$delete|$body")
+        return client.get(ServiceRemoteDevResource::class).whitelist(userId, type, delete, body)
+    }
+
+    override fun whitelistGet(
+        userId: String,
+        type: WhiteListType,
+        body: Map<String, String>
+    ): Result<List<IWhiteList>> {
+        logger.info("whitelistGet |$userId|$type|$body")
+        return client.get(ServiceRemoteDevResource::class).whitelistGet(userId, type, body)
+    }
+
+    override fun tgitGetUserOauth(userId: String, redirectUrl: String): Result<AuthorizeResult> {
+        logger.info("tgitGetUserOauth |$userId|$redirectUrl")
+        return client.get(ServiceRemoteDevResource::class).tgitGetUserOauth(userId, redirectUrl)
+    }
+
+    override fun tgitGetProjectList(
+        userId: String,
+        tGitId: Long
+    ): Result<List<String>> {
+        logger.info("tgitGetProjectList |$userId|$tGitId")
+        return client.get(ServiceRemoteDevResource::class).tgitGetProjectList(userId, tGitId)
+    }
+
+    override fun tgitBindRemotedevProject(
+        userId: String,
+        data: TGitBindRemotedevData
+    ): Result<Map<String, Boolean>> {
+        logger.info("tgitBindRemotedevProject |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
+    }
 }

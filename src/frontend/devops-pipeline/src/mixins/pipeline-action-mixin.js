@@ -114,10 +114,10 @@ export default {
                     const archiveObj = {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
-                        updater: item.lastModifyUser,
+                        updater: item.lastModifyUser || item.updater,
                         updateDate: convertTime(item.updateTime),
                         duration: this.calcDuration(item),
-                        latestBuildUserId: item.lastModifyUser,
+                        latestBuildUserId: item.lastModifyUser || item.updater,
                         onlyDraftVersion: isDraft,
                         historyRoute: {
                             name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',

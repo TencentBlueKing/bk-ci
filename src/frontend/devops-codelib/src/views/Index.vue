@@ -101,6 +101,7 @@
         </empty-tips>
         <code-lib-dialog
             :refresh-codelib-list="refreshCodelibList"
+            :oauth-user-list="oauthUserList"
             @updateRepoId="handleUpdateRepo"
         ></code-lib-dialog>
     </div>
@@ -154,11 +155,15 @@
                 sortType: '',
                 isListFlod: false,
                 curRepoId: '',
-                curRepo: {}
+                curRepo: {},
+                oauthUserList: []
             }
         },
 
         computed: {
+            ...mapState({
+                user: 'user'
+            }),
             ...mapState('codelib', ['codelibTypes', 'codelibs', 'showCodelibDialog', 'gitOAuth']),
             projectId () {
                 return this.$route.params.projectId
@@ -244,7 +249,8 @@
                 'updateCodelib',
                 'toggleCodelibDialog',
                 'checkOAuth',
-                'setProviderConfig'
+                'setProviderConfig',
+                'getOauthUserList'
             ]),
 
             init () {
@@ -339,7 +345,21 @@
                 
                 return ''
             },
-
+            
+            async fetchOauthUserList (scmCode) {
+                try {
+                    this.oauthUserList = await this.getOauthUserList({
+                        scmCode
+                    })
+                    const defaultUserName = this.oauthUserList[0].username
+                    const username = this.user.username
+                    const curUserName = this.oauthUserList.find(i => i.username === username)?.username || defaultUserName
+                    return curUserName
+                } catch (err) {
+                    console.error(err)
+                    return this.user.username
+                }
+            },
             getDocUrl (url) {
                 const languageCodeMatch = this.$i18n.locale.match(/^[A-Za-z]{2}/)
                 const lang = (languageCodeMatch && languageCodeMatch[0].toUpperCase()) || ''
@@ -347,6 +367,10 @@
                 return `/markdown/${lang}/Devops${version}${url}`
             },
             async createCodelib (typeLabel, scmCode, isEdit) {
+                const userName = await this.fetchOauthUserList(scmCode)
+                const providerConfig = this.codelibTypes.find(i => i.scmCode === scmCode)
+                const defaultCredentialType = providerConfig?.credentialTypeList[0]
+                this.setProviderConfig(providerConfig)
                 const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
                 if (codelibType?.status === 'DEPLOYING') {
                     this.showUndeployDialog({
@@ -358,9 +382,6 @@
                 }
 
                 if (typeLabel?.startsWith('SCM_')) {
-                    const providerConfig = this.codelibTypes.find(i => i.scmCode === scmCode)
-                    const defaultCredentialType = providerConfig?.credentialTypeList[0]
-                    this.setProviderConfig(providerConfig)
                     const typeName = convertToCamelCase(typeLabel)
                     const CodelibDialog = {
                         showCodelibDialog: true,
@@ -369,7 +390,8 @@
                         svnType: defaultCredentialType.authType,
                         authType: defaultCredentialType.authType,
                         credentialType: defaultCredentialType.credentialType,
-                        scmCode
+                        scmCode,
+                        userName
                     }
                     this.toggleCodelibDialog(CodelibDialog)
                 } else {
@@ -380,7 +402,8 @@
                         credentialTypes,
                         typeName,
                         svnType: 'ssh',
-                        scmCode
+                        scmCode,
+                        userName
                     }
                     if (isGit(typeName) || isGithub(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'OAUTH' })
