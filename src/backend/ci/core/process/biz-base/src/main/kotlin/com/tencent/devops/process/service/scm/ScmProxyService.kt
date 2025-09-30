@@ -28,12 +28,10 @@
 package com.tencent.devops.process.service.scm
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
-import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
@@ -65,8 +63,6 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.ScmGitRepository
 import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
-import com.tencent.devops.repository.pojo.credential.CredentialIdAuthCred
-import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.api.enums.ScmEventType
@@ -1005,40 +1001,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     }
 
     fun getServerRepository(projectId: String, authRepository: AuthRepository): ScmServerRepository {
-        return try {
-            client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                projectId = projectId,
-                authRepository = authRepository
-            ).data!!
-        } catch (exception: RemoteServiceException) {
-            when (exception.httpStatus) {
-                HttpStatus.NOT_FOUND.value -> {
-                    when (val auth = authRepository.auth) {
-                        is UserOauthTokenAuthCred -> {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_SCM_API_REPOSITORY_NOT_FOUND,
-                                params = arrayOf(authRepository.url, auth.userId)
-                            )
-                        }
-
-                        is CredentialIdAuthCred -> {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_SCM_API_REPOSITORY_NOT_FOUND,
-                                params = arrayOf(authRepository.url, auth.credentialId)
-                            )
-                        }
-
-                        else ->
-                            throw exception
-                    }
-                }
-
-                else -> throw handleScmApiException(
-                    authRepository = authRepository,
-                    exception = exception
-                )
-            }
-        }
+        return client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+            projectId = projectId,
+            authRepository = authRepository
+        ).data!!
     }
 
     fun getFileContent(
@@ -1047,27 +1013,12 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         ref: String,
         authRepository: AuthRepository
     ): Content {
-        return try {
-            client.get(ServiceScmFileApiResource::class).getFileContent(
-                projectId = projectId,
-                path = path,
-                ref = ref,
-                authRepository = authRepository
-            ).data!!
-        } catch (exception: RemoteServiceException) {
-            when (exception.httpStatus) {
-                HttpStatus.NOT_FOUND.value ->
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_SCM_API_FILE_NOT_FOUND,
-                        params = arrayOf(authRepository.url, ref, path)
-                    )
-
-                else -> throw handleScmApiException(
-                    authRepository = authRepository,
-                    exception = exception
-                )
-            }
-        }
+        return client.get(ServiceScmFileApiResource::class).getFileContent(
+            projectId = projectId,
+            path = path,
+            ref = ref,
+            authRepository = authRepository
+        ).data!!
     }
 
     fun listFileTree(
@@ -1084,41 +1035,5 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             recursive = recursive,
             authRepository = authRepository
         ).data
-    }
-
-    private fun handleScmApiException(
-        authRepository: AuthRepository,
-        exception: RemoteServiceException
-    ): Exception {
-        return when (exception.httpStatus) {
-            HttpStatus.FORBIDDEN.value -> {
-                when (val auth = authRepository.auth) {
-                    is UserOauthTokenAuthCred -> {
-                        ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_SCM_API_NOT_READ_PERMISSION,
-                            params = arrayOf(auth.userId, authRepository.url)
-                        )
-                    }
-
-                    is CredentialIdAuthCred -> {
-                        ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_SCM_API_NOT_READ_PERMISSION,
-                            params = arrayOf(auth.credentialId, authRepository.url)
-                        )
-                    }
-
-                    else ->
-                        exception
-                }
-            }
-
-            HttpStatus.INTERNAL_SERVER_ERROR.value ->
-                ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_SCM_API_UNKNOWN_EXCEPTION,
-                    params = arrayOf(authRepository.url, exception.message ?: "")
-                )
-
-            else -> exception
-        }
     }
 }

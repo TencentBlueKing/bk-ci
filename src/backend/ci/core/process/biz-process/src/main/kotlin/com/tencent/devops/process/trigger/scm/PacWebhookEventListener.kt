@@ -94,7 +94,7 @@ class PacWebhookEventListener(
                 repository = repository,
                 yamlDiffs = finalYamlDiffs
             )
-            // 获取显示声明依赖的流水线,显示声明的需要动态更新,隐式声明(模版引用不填)的在触发的时候更新
+            // 依赖的变更文件
             val diffDependencies = pipelineYamlDependencyService.analyzeDiffDependencies(
                 projectId = projectId,
                 repoHashId = repository.repoHashId!!,

@@ -46,9 +46,11 @@ class PipelineBuildVersionDiffService(
         )
     }
 
+    @Suppress("CyclomaticComplexMethod")
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
         try {
             with(event) {
+                logger.info("Start to check build version diff|$projectId|$pipelineId|$buildId")
                 val currBuildInfo = pipelineRuntimeService.getBuildInfo(
                     projectId = projectId, pipelineId = pipelineId, buildId = buildId
                 ) ?: throw ErrorCodeException(
@@ -116,10 +118,9 @@ class PipelineBuildVersionDiffService(
                  * 4. 当前流水线模板版本号与先前不同
                  */
                 val refPipelineTemplateVersionChange = currTemplatePipeline.refType == TemplateRefType.PATH &&
-                    prevTemplatePipeline.refType == TemplateRefType.PATH &&
-                    (currTemplatePipeline.templateVersionName == prevTemplatePipeline.templateVersionName ||
-                        currTemplatePipeline.inputTemplateRef == prevTemplatePipeline.inputTemplateRef) &&
-                    currTemplatePipeline.templateVersion != prevTemplatePipeline.templateVersion
+                        prevTemplatePipeline.refType == TemplateRefType.PATH &&
+                        currTemplatePipeline.inputTemplateRef == prevTemplatePipeline.inputTemplateRef &&
+                        currTemplatePipeline.templateVersion != prevTemplatePipeline.templateVersion
                 if (!refPipelineTemplateVersionChange) return
 
                 val currTemplateVersionRef = pipelineYamlVersionDao.getPipelineYamlVersion(
@@ -127,13 +128,25 @@ class PipelineBuildVersionDiffService(
                     projectId = projectId,
                     pipelineId = templateInfo.id,
                     version = currTemplatePipeline.templateVersion.toInt()
-                )!!.commitId
+                )?.commitId ?: run {
+                    logger.warn(
+                        "current template yaml version not found|" +
+                                "$projectId|${templateInfo.id}|${currTemplatePipeline.templateVersion}"
+                    )
+                    return
+                }
                 val prevTemplateVersionRef = pipelineYamlVersionDao.getPipelineYamlVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = templateInfo.id,
                     version = prevTemplatePipeline.templateVersion.toInt()
-                )!!.commitId
+                )?.commitId ?: run {
+                    logger.warn(
+                        "prev template yaml version not found|" +
+                                "$projectId|${templateInfo.id}|${prevTemplatePipeline.templateVersion}"
+                    )
+                    return
+                }
                 pipelineBuildVersionDiffDao.create(
                     dslContext = dslContext,
                     buildVersionDiffInfo = BuildVersionDiffInfo(
@@ -152,7 +165,7 @@ class PipelineBuildVersionDiffService(
                 )
             }
         } catch (ex: Exception) {
-            logger.error("Failed to handle build queue event: $event", ex)
+            logger.warn("Failed to handle build queue event: $event", ex)
         }
     }
 }

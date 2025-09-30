@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Job模板模型")
 data class JobTemplateModel(
-    @Schema(title = "流水线-构建容器信息")
+    @get:Schema(title = "流水线-构建容器信息")
     val containers: List<Container>
 ) : ITemplateModel {
     companion object {

@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -604,7 +604,6 @@ class PipelineVersionGenerator constructor(
             val defaultBranch = targetAction?.takeIf { enablePac && it == CodeTargetAction.COMMIT_TO_BRANCH }?.let {
                 getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
             }
-
             val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
             return instanceReleaseInfos.map { releaseInfo ->
                 // 新增实例化
@@ -625,14 +624,14 @@ class PipelineVersionGenerator constructor(
                         branchName = branchName,
                     )
                 } else {
-                    val instanceModel = PipelineUtils.instanceModel(
-                        templateModel = templateResource.model as Model,
+                    val instanceModel = TemplateInstanceUtil.instanceModel(
+                        templateResource = templateResource,
                         pipelineName = releaseInfo.pipelineName,
-                        buildNo = releaseInfo.buildNo,
-                        param = releaseInfo.param,
-                        instanceFromTemplate = true,
                         defaultStageTagId = defaultStageTagId,
-                        templateId = templateId
+                        buildNo = releaseInfo.buildNo,
+                        params = releaseInfo.param ?: emptyList(),
+                        triggerConfigs = releaseInfo.triggerConfigs,
+                        overrideTemplateField = releaseInfo.overrideTemplateField
                     )
                     generateInstanceVersion(
                         projectId = projectId,

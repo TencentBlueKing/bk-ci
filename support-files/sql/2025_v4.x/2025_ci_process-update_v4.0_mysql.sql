@@ -21,8 +21,8 @@ BEGIN
                     AND COLUMN_NAME = 'PAC') THEN
         ALTER TABLE `T_TEMPLATE_INSTANCE_BASE`
         ADD `PAC` bit(1) DEFAULT b'0' COMMENT '是否开启PAC',
-        ADD `TARGET_ACTION` varchar(64) DEFAULT NULL COMMENT '推送代码库操作',
-        ADD `TYPE` varchar(32) DEFAULT 'UPDATE' COMMENT '推送代码库操作',
+        ADD `TARGET_ACTION` varchar(64) DEFAULT NULL COMMENT '代码库分支操作',
+        ADD `TYPE` varchar(32) DEFAULT 'UPDATE' COMMENT '模版实例化类型,CREATE/UPDATE',
         ADD `REPO_HASH_ID` varchar(64) DEFAULT NULL COMMENT '代码库哈希ID',
         ADD `TARGET_BRANCH` varchar(256) DEFAULT NULL COMMENT '代码库分支',
         ADD `PULL_REQUEST_ID` bigint(11) DEFAULT NULL COMMENT '合并请求ID',

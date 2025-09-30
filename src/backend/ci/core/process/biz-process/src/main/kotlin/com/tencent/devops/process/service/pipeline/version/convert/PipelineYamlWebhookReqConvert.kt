@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.convert
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -118,6 +119,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
+                channelCode = ChannelCode.BS,
                 version = version,
                 model = modelAndSetting.model.copy(
                     name = pipelineName
@@ -132,7 +134,6 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             ).copy(
                 enablePac = true,
                 yamlFileInfo = yamlFileInfo,
-                branchName = branchName,
                 pullRequestUrl = pullRequestUrl,
                 pullRequestId = pullRequestId
             )

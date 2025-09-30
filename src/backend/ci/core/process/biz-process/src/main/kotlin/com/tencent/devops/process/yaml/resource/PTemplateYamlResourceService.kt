@@ -70,7 +70,6 @@ class PTemplateYamlResourceService(
                 DeployPipelineResult(
                     pipelineId = templateId,
                     pipelineName = templateName,
-                    // TODO 这里需要修改
                     version = version.toInt(),
                     versionNum = versionNum,
                     versionName = versionName,
@@ -107,7 +106,6 @@ class PTemplateYamlResourceService(
                 DeployPipelineResult(
                     pipelineId = templateId,
                     pipelineName = templateName,
-                    // TODO 这里需要修改
                     version = version.toInt(),
                     versionNum = versionNum,
                     versionName = versionName,

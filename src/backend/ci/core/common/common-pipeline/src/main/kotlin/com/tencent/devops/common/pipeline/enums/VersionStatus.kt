@@ -28,7 +28,6 @@
 package com.tencent.devops.common.pipeline.enums
 
 enum class VersionStatus(val statusName: String) {
-    INIT("初始化状态"),
     RELEASED("已发布版本"),
     COMMITTING("草稿版本"),
     BRANCH("分支版本"),

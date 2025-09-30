@@ -59,6 +59,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        channelCode: ChannelCode,
         version: Int?,
         model: Model,
         yaml: String?,
@@ -75,6 +76,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                channelCode = channelCode,
                 version = version,
                 model = model,
                 yaml = yaml,
@@ -91,6 +93,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                channelCode = channelCode,
                 version = version,
                 model = model,
                 yaml = yaml,
@@ -107,6 +110,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        channelCode: ChannelCode,
         version: Int?,
         model: Model,
         yaml: String?,
@@ -137,7 +141,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         val pipelineBasicInfo = pipelineResourceFactory.createPipelineBasicInfo(
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
             pipelineDesc = pipelineSettingWithoutVersion.desc,
             pipelineDisable = yaml?.let {
@@ -157,7 +161,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
             userId = userId,
             create = pipelineInfo == null,
             versionStatus = versionStatus,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             pipelineDialect = pipelineDialect
         )
         return PipelineVersionCreateContext(
@@ -178,6 +182,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        channelCode: ChannelCode,
         version: Int?,
         model: Model,
         yaml: String?,
@@ -192,7 +197,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         val pipelineBasicInfo = pipelineResourceFactory.createPipelineBasicInfo(
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
             pipelineDesc = pipelineSettingWithoutVersion.desc,
             pipelineDisable = yaml?.let {
@@ -237,7 +242,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
             userId = userId,
             create = pipelineInfo == null,
             versionStatus = versionStatus,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             pipelineDialect = pipelineDialect
         )
 

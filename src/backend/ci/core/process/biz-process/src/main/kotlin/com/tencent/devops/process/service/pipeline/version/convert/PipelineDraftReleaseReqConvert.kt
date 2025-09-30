@@ -79,7 +79,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 "Start to convert draft release request|$projectId|$pipelineId|" +
                         "$version|$enablePac|$targetAction|${yamlInfo?.repoHashId}|${yamlInfo?.filePath}|$targetBranch"
             )
-            pipelineInfoService.getPipelineInfo(
+            val pipelineInfo = pipelineInfoService.getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId
             ) ?: throw ErrorCodeException(
@@ -125,7 +125,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 }
             }
 
-            val versionStatus = pipelineVersionGenerator.getDraftReleaseStatusAndBranchName(
+            val (versionStatus, branchName) = pipelineVersionGenerator.getDraftReleaseStatusAndBranchName(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
@@ -133,7 +133,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 repoHashId = yamlInfo?.repoHashId,
                 targetAction = targetAction,
                 targetBranch = targetBranch
-            ).first
+            )
 
             val draftSetting = draftResource.settingVersion?.let {
                 pipelineSettingFacadeService.userGetSetting(
@@ -158,12 +158,14 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                channelCode = pipelineInfo.channelCode,
                 version = version,
                 model = draftResource.model,
                 yaml = draftResource.yaml,
                 baseVersion = draftResource.baseVersion,
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
+                branchName = branchName,
                 versionAction = PipelineVersionAction.RELEASE_DRAFT,
                 repoHashId = yamlInfo?.repoHashId
             ).copy(
