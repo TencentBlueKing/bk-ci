@@ -369,6 +369,7 @@ class PipelineVersionGenerator constructor(
             generateVersionWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                draftResource = draftResource,
                 newModel = draftResource.model,
                 repoHashId = repoHashId,
                 targetAction = targetAction,
