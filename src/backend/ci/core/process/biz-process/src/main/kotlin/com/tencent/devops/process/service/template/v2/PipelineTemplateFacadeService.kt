@@ -909,9 +909,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             pipelineId = pipelineId
         )
         if (!instanceFromTemplate) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_RELATED_TEMPLATE
-            )
+            return null
         }
 
         val templatePipelineVersion = pipelineTemplatePipelineVersionService.get(

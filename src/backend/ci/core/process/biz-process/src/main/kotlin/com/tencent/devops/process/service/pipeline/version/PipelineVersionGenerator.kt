@@ -160,7 +160,8 @@ class PipelineVersionGenerator constructor(
     fun generateBranchVersion(
         projectId: String,
         pipelineId: String,
-        branchName: String
+        branchName: String,
+        draftResource: PipelineResourceVersion? = null,
     ): PipelineResourceOnlyVersion {
         val releaseResource = pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext,
@@ -189,9 +190,17 @@ class PipelineVersionGenerator constructor(
             pipelineId = pipelineId,
             branchName = branchName
         )
+        val (version, settingVersion) = if (draftResource == null) {
+            Pair(
+                (latestResource?.version ?: releaseResource.version) + 1,
+                latestSetting?.let { it.version + 1 } ?: 1
+            )
+        } else {
+            Pair(draftResource.version, draftResource.settingVersion)
+        }
         return PipelineResourceOnlyVersion(
-            version = (latestResource?.version ?: releaseResource.version) + 1,
-            settingVersion = latestSetting?.let { it.version + 1 } ?: 1,
+            version = version,
+            settingVersion = settingVersion,
             baseVersion = branchResource?.version ?: releaseResource.version,
             baseVersionName = branchResource?.versionName ?: releaseResource.versionName,
             versionName = branchName,
@@ -389,6 +398,7 @@ class PipelineVersionGenerator constructor(
     fun generateVersionWithPac(
         projectId: String,
         pipelineId: String,
+        draftResource: PipelineResourceVersion? = null,
         newModel: Model,
         repoHashId: String,
         targetAction: CodeTargetAction?,
@@ -402,6 +412,7 @@ class PipelineVersionGenerator constructor(
                 generateReleaseVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    draftResource = draftResource,
                     newModel = newModel
                 )
             }
@@ -413,7 +424,8 @@ class PipelineVersionGenerator constructor(
                 generateBranchVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branchName = checkoutBranch
+                    branchName = checkoutBranch,
+                    draftResource = draftResource
                 )
             }
 
@@ -434,7 +446,8 @@ class PipelineVersionGenerator constructor(
                 generateBranchVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branchName = pipelineVersionSimple.versionName
+                    branchName = pipelineVersionSimple.versionName,
+                    draftResource = draftResource
                 )
             }
 
@@ -450,13 +463,15 @@ class PipelineVersionGenerator constructor(
                     generateReleaseVersion(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        newModel = newModel
+                        newModel = newModel,
+                        draftResource = draftResource
                     )
                 } else {
                     generateBranchVersion(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        branchName = targetBranch
+                        branchName = targetBranch,
+                        draftResource = draftResource
                     )
                 }
             }
