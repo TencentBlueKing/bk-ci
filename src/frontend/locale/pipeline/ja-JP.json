@@ -2100,6 +2100,5 @@
   "refTemplate": "参照テンプレート",
   "preRef": "前のバージョン/前のコミット",
   "currentRef": "現在のバージョン/現在のコミット",
-  "noVariablesAvailable": "利用可能な変数がありません",
-  "validVariableFormat": "有効な変数形式を入力してください"
+  "noVariablesAvailable": "利用可能な変数がありません"
 }
