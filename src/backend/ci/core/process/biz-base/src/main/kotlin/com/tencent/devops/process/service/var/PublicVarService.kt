@@ -303,7 +303,7 @@ class PublicVarService @Autowired constructor(
             // 3. 保留变量组版本已移除的变量
             diffResult.varsToRemove.forEach { varName ->
                 positionInfoMap[varName]?.let { pos ->
-                    val oldVar = params.find { param -> param.name == varName }
+                    val oldVar = params.find { param -> param.id == varName }
                     logger.info("processVarGroupDiff newVar= $oldVar")
                     if (pos.index >= 0 && pos.index < params.size && oldVar != null) {
                         params[pos.index] = oldVar
