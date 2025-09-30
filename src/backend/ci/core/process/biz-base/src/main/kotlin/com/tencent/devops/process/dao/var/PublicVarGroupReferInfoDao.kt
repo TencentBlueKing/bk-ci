@@ -84,7 +84,7 @@ class PublicVarGroupReferInfoDao {
         projectId: String,
         groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?,
-        version: Int? = null,
+        version: Int? = -1,
         page: Int,
         pageSize: Int
     ): List<PipelinePublicVarGroupReferPO> {
@@ -340,7 +340,7 @@ class PublicVarGroupReferInfoDao {
         projectId: String,
         groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?,
-        version: Int? = null
+        version: Int? = -1
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildGroupConditions(this, projectId, groupName, version).apply {
