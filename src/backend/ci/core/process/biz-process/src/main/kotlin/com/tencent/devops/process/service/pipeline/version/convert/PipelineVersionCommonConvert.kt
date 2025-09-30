@@ -101,7 +101,8 @@ class PipelineVersionCommonConvert @Autowired constructor(
                 description = description,
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
-                versionAction = versionAction
+                versionAction = versionAction,
+                branchName = branchName
             )
         }
     }
@@ -118,7 +119,8 @@ class PipelineVersionCommonConvert @Autowired constructor(
         description: String?,
         pipelineSettingWithoutVersion: PipelineSetting,
         versionStatus: VersionStatus,
-        versionAction: PipelineVersionAction
+        versionAction: PipelineVersionAction,
+        branchName: String? = null
     ): PipelineVersionCreateContext {
         val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(
             projectId = projectId,
@@ -174,7 +176,8 @@ class PipelineVersionCommonConvert @Autowired constructor(
             pipelineBasicInfo = pipelineBasicInfo,
             pipelineModelBasicInfo = pipelineModelBasicInfo,
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
-            pipelineSettingWithoutVersion = pipelineSettingWithoutVersion
+            pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
+            branchName = branchName
         )
     }
 
@@ -268,7 +271,8 @@ class PipelineVersionCommonConvert @Autowired constructor(
             pipelineModelBasicInfo = pipelineModelBasicInfo,
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
             pipelineSettingWithoutVersion = instanceSetting,
-            templateInstanceBasicInfo = templateInstanceBasicInfo
+            templateInstanceBasicInfo = templateInstanceBasicInfo,
+            branchName = branchName
         )
     }
 }
