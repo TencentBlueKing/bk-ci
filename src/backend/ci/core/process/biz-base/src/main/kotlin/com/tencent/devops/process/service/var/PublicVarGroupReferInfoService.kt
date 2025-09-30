@@ -328,6 +328,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     fun listVarReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicGroupVarRefDO> {
         val (totalCount, varGroupReferInfo) = queryVarGroupReferInfo(queryReq)
+        logger.info("listVarReferInfo queryReq:{$queryReq }totalCount: $totalCount ${varGroupReferInfo.size}")
         if (totalCount == 0) {
             return Page(
                 count = 0,
@@ -421,21 +422,16 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             }
 
             try {
-                // 过滤掉version为-1的记录
-                val validTemplateReferInfos = templateReferInfos.filter { it.version != -1 }
-                if (validTemplateReferInfos.isEmpty()) {
-                    return@let emptyList()
-                }
 
                 // 批量查询实际引用变量数
                 val actualRefCounts = batchCountActualVarReferences(
                     projectId = queryReq.projectId,
-                    referInfos = validTemplateReferInfos,
+                    referInfos = templateReferInfos,
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE
                 )
 
                 // 批量查询模板信息
-                val templateKeys = validTemplateReferInfos
+                val templateKeys = templateReferInfos
                     .map { Pair(it.referId, it.referVersion.toLong()) }
                     
                 val templateMap = templateKeys.associateWith { (templateId, version) ->
@@ -452,7 +448,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 }.filterValues { it != null }.mapValues { it.value!! }
 
                 // 构建模板引用记录
-                validTemplateReferInfos.mapNotNull { referInfo ->
+                templateReferInfos.mapNotNull { referInfo ->
                     val templateKey = Pair(referInfo.referId, referInfo.referVersion.toLong())
                     val template = templateMap[templateKey]
                     
@@ -507,7 +503,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 groupName = groupName,
                 version = version
             )
-            
+
             if (pipelinePublicVarGroupCount == 0) {
                 return Pair(0, emptyList())
             }
