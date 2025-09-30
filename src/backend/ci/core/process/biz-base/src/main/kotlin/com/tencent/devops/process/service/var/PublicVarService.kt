@@ -47,11 +47,11 @@ import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PublicVarService @Autowired constructor(
@@ -78,12 +78,12 @@ class PublicVarService @Autowired constructor(
         if (segmentIds.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf("Failed to generate segment IDs"))
         }
-        
+
         var index = 0
         val publicVarPOs = publicVarDTO.publicVars.map {
             it.buildFormProperty.varGroupName = groupName
             it.buildFormProperty.varGroupVersion= publicVarDTO.version
-            logger.info("buildFormProperty.varGroupName:${it.buildFormProperty.varGroupName}")
+
             PublicVarPO(
                 id = segmentIds[index++] ?: 0,
                 projectId = projectId,
@@ -303,10 +303,12 @@ class PublicVarService @Autowired constructor(
             // 3. 保留变量组版本已移除的变量
             diffResult.varsToRemove.forEach { varName ->
                 positionInfoMap[varName]?.let { pos ->
-                    val newVar = newVarMap[varName]
-                    if (pos.index >= 0 && pos.index < params.size && newVar != null) {
-                        params[pos.index] = newVar
+                    val oldVar = params.find { param -> param.name == varName }
+                    logger.info("processVarGroupDiff newVar= $oldVar")
+                    if (pos.index >= 0 && pos.index < params.size && oldVar != null) {
+                        params[pos.index] = oldVar
                         params[pos.index].removeFlag = true
+                        logger.info("processVarGroupDiff var:${params[pos.index]}")
                     }
                 }
             }
