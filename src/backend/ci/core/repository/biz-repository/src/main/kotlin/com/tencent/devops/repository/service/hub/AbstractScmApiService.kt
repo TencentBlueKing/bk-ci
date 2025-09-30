@@ -43,6 +43,7 @@ import com.tencent.devops.scm.api.exception.ScmApiException
 import com.tencent.devops.scm.api.pojo.repository.ScmProviderRepository
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 abstract class AbstractScmApiService(
@@ -177,18 +178,19 @@ abstract class AbstractScmApiService(
                 }
             }
 
-            httpStatus!! >= HttpStatus.INTERNAL_SERVER_ERROR.value -> {
+            else -> {
+                logger.info("Failed to invoke scm api|${authRepository.scmCode}|$httpStatus", exception)
                 val scmConfig = repositoryScmConfigService.get(scmCode = authRepository.scmCode)
                 ErrorCodeException(
-                    statusCode = httpStatus,
+                    statusCode = httpStatus!!,
                     errorCode = RepositoryMessageCode.ERROR_SCM_API_UNKNOWN_EXCEPTION,
                     params = arrayOf(scmConfig.name, exception.message ?: "")
                 )
             }
-
-            else -> {
-                exception
-            }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AbstractScmApiService::class.java)
     }
 }
