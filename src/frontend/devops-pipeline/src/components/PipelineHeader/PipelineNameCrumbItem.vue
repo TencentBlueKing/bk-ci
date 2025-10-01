@@ -141,7 +141,9 @@
         },
         created () {
             this.fetchPipelineList()
-            this.handleShowPopover()
+            if (this.instanceFromTemplate) {
+                this.handleShowPopover()
+            }
         },
         methods: {
             ...mapActions({
