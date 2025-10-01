@@ -409,9 +409,6 @@
                 'getBuildResourceTypeList',
                 'failIfVariableInvalid'
             ]),
-            ...mapState('atom', [
-                'pipeline',
-            ]),
             varLengthRule () {
 
                 return Object.assign({
