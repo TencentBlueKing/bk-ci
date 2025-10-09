@@ -93,26 +93,27 @@ class PublicVarGroupReferInfoDao {
             conditions.add(GROUP_NAME.eq(groupName))
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
             conditions.add(VERSION.eq(version))
+
+            // 查找每个REFER_ID对应的CREATE_TIME最大的记录
+            val t2 = this.`as`("t2")
             
-            // 子查询：获取每个REFER_ID对应的最大CREATE_TIME
-            val subQuery = dslContext.select(REFER_ID, DSL.max(CREATE_TIME))
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(conditions)
-                .groupBy(REFER_ID)
+                .and(DSL.notExists(
+                    dslContext.selectOne()
+                        .from(t2)
+                        .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
+                        .and(t2.GROUP_NAME.eq(this.GROUP_NAME))
+                        .and(t2.REFER_ID.eq(this.REFER_ID))
+                        .and(t2.VERSION.eq(this.VERSION))
+                        .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
+                        .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
+                ))
+                .orderBy(REFER_ID.asc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
-
-            return dslContext.selectFrom(this)
-                .where(
-                    DSL.row(REFER_ID, CREATE_TIME).`in`(
-                        subQuery
-                    )
-                )
-                .orderBy(CREATE_TIME.desc())
                 .fetch()
-                .map {
-                    convertPipelinePublicVarGroupReferPO(it)
-                }
+                .map { convertPipelinePublicVarGroupReferPO(it) }
         }
     }
 
