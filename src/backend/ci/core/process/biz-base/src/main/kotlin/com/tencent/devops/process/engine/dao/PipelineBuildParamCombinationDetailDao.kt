@@ -1,0 +1,67 @@
+package com.tencent.devops.process.engine.dao
+
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class PipelineBuildParamCombinationDetailDao {
+    fun save(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        combinationId: Long,
+        combinationName: String,
+        params: List<BuildFormProperty>
+    ) {
+        val now = LocalDateTime.now()
+        with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
+            val addStep = params.map {
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, projectId)
+                    .set(PIPELINE_ID, pipelineId)
+                    .set(COMBINATION_ID, combinationId)
+                    .set(COMBINATION_NAME, combinationName)
+                    .set(VAR_NAME, it.id)
+                    .set(BUILD_FORM_PROPERTY, JsonUtil.toJson(it))
+                    .set(CREATOR, userId)
+                    .set(MODIFIER, userId)
+                    .set(CREATE_TIME, now)
+                    .set(UPDATE_TIME, now)
+                    .onDuplicateKeyIgnore()
+            }
+            dslContext.batch(addStep).execute()
+        }
+    }
+
+    fun delete(dslContext: DSLContext, projectId: String, pipelineId: String, combinationId: Long) {
+        with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(COMBINATION_ID.eq(combinationId))
+                .execute()
+        }
+    }
+
+    fun getParams(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        combinationId: Long
+    ): List<BuildFormProperty> {
+        with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(COMBINATION_ID.eq(combinationId))
+                .fetch().map {
+                    JsonUtil.to(it.get(BUILD_FORM_PROPERTY), BuildFormProperty::class.java)
+                }
+        }
+    }
+}
