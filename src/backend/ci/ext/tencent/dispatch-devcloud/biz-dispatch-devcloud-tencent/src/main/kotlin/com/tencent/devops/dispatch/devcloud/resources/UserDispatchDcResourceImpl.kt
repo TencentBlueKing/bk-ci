@@ -46,7 +46,7 @@ class UserDispatchDcResourceImpl constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        templateId: String
+        templateId: String?
     ): Result<UserPerformanceOptionsV2> {
         return Result(dcPerformanceConfigServiceV2.getDcPerformanceConfigList(
             userId = userId,
