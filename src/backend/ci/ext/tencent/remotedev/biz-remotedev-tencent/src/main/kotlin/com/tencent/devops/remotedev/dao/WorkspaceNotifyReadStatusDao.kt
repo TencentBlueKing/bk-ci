@@ -125,11 +125,12 @@ class WorkspaceNotifyReadStatusDao {
             UserNotifyInfo(
                 id = it.get(historyTable.ID)!!,
                 title = body[UserNotifyInfo::title.name] ?: "",
-                content = body[UserNotifyInfo::content.name],
+                body = body[UserNotifyInfo::body.name],
                 notifyType = RemoteDevNotifyType.valueOf(it.get(historyTable.TYPE)!!),
-                operatorName = it.get(historyTable.OPERATOR) ?: "",
+                operator = it.get(historyTable.OPERATOR) ?: "",
+                operatorCN = body[UserNotifyInfo::operatorCN.name] ?: "",
                 createTime = it.get(historyTable.CREATED_TIME)!!,
-                isRead = ((it.get(readStatusTable.IS_READ) ?: 0.toByte()) == 1.toByte()),
+                read = ((it.get(readStatusTable.IS_READ) ?: 0.toByte()) == 1.toByte()),
                 readTime = it.get(readStatusTable.READ_TIME),
                 category = NotifyCategory.fromValue(body[UserNotifyInfo::category.name])
             )

@@ -150,7 +150,7 @@ class CDIResourceImpl @Autowired constructor(
                 "messageContent" to data.data,
                 "messageStartTime" to data.messageStartTime.toString(),
                 "messageEndTime" to data.messageEndTime.toString(),
-                UserNotifyInfo::content.name to data.data,
+                UserNotifyInfo::body.name to data.data,
                 "notifyTemplateCode" to data.notifyTemplateCode
             )
         )

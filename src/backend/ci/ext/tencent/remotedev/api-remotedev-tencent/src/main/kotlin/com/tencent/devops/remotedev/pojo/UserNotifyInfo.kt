@@ -15,15 +15,17 @@ data class UserNotifyInfo(
     @get:Schema(title = "通知标题")
     val title: String,
     @get:Schema(title = "通知内容")
-    val content: String? = null,
+    val body: String? = null,
     @get:Schema(title = "通知类型")
     val notifyType: RemoteDevNotifyType,
     @get:Schema(title = "操作人姓名")
-    val operatorName: String,
+    val operator: String,
+    @get:Schema(title = "操作人姓名CN")
+    val operatorCN: String,
     @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
     @get:Schema(title = "是否已读")
-    val isRead: Boolean,
+    val read: Boolean,
     @get:Schema(title = "已读时间")
     val readTime: LocalDateTime? = null,
     @get:Schema(title = "通知分类")

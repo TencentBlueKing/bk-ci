@@ -63,6 +63,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import java.nio.charset.StandardCharsets
@@ -90,7 +91,8 @@ class NotifyControl @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val permissionService: PermissionService,
     private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao,
-    private val notificationCenterService: NotificationCenterService
+    private val notificationCenterService: NotificationCenterService,
+    private val configCacheService: ConfigCacheService
 ) {
 
     companion object {
@@ -179,10 +181,10 @@ class NotifyControl @Autowired constructor(
             notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true
         ) {
             workspace.forEach { ws ->
-                bodyParams["operator"] = userId
+                bodyParams[UserNotifyInfo::operator.name] = userId
                 bodyParams["workspaceName"] = ws.workspaceName
                 bodyParams[UserNotifyInfo::title.name] = notifyData.title
-                bodyParams[UserNotifyInfo::content.name] = messageContent
+                bodyParams[UserNotifyInfo::body.name] = messageContent
                 bodyParams["projectId"] = ws.projectId
                 notify4User(
                     userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
@@ -196,7 +198,7 @@ class NotifyControl @Autowired constructor(
         if (notifyData.notifyType == null ||
             notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_MARQUEE) == true
         ) {
-            bodyParams["operator"] = userId
+            bodyParams[UserNotifyInfo::operator.name] = userId
             bodyParams["messageContent"] = messageContent
             notify4User(
                 userIds = userList,
@@ -209,9 +211,9 @@ class NotifyControl @Autowired constructor(
         if (notifyData.notifyType == null ||
             notifyData.notifyType?.contains(RemoteDevNotifyType.EMAIL) == true
         ) {
-            bodyParams["operator"] = userId
-            bodyParams["title"] = notifyData.title
-            bodyParams["body"] = (notifyData.desc ?: "")
+            bodyParams[UserNotifyInfo::operator.name] = userId
+            bodyParams[UserNotifyInfo::title.name] = notifyData.title
+            bodyParams[UserNotifyInfo::body.name] = (notifyData.desc ?: "")
             bodyParams["notifyTemplateCode"] = "REMOTEDEV_NOTIFY"
             notify4User(
                 userIds = userList,
@@ -353,7 +355,7 @@ class NotifyControl @Autowired constructor(
         logger.info("notify4User DESKTOP|$dataType|$userIds|$bodyParams")
         kotlin.runCatching {
             startWorkspaceService.sendMessage(
-                operator = checkNotNull(bodyParams["operator"]),
+                operator = checkNotNull(bodyParams[UserNotifyInfo::operator.name]),
                 userIdList = userIds,
                 dataType = dataType,
                 messageContent = Base64.getEncoder().encodeToString(
@@ -367,7 +369,7 @@ class NotifyControl @Autowired constructor(
         }.onFailure {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                 userIds = userIds,
                 type = dataType,
                 status = RemoteDevNotifyType.Status.FAIL,
@@ -376,7 +378,7 @@ class NotifyControl @Autowired constructor(
         }.onSuccess {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                 userIds = userIds,
                 type = dataType,
                 status = RemoteDevNotifyType.Status.SUCCESS,
@@ -404,7 +406,7 @@ class NotifyControl @Autowired constructor(
         }.onFailure {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                 userIds = receivers,
                 type = RemoteDevNotifyType.RTX,
                 status = RemoteDevNotifyType.Status.FAIL,
@@ -413,7 +415,7 @@ class NotifyControl @Autowired constructor(
         }.onSuccess {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                 userIds = receivers,
                 type = RemoteDevNotifyType.RTX,
                 status = RemoteDevNotifyType.Status.SUCCESS,
@@ -427,9 +429,9 @@ class NotifyControl @Autowired constructor(
         userIds: Set<String>
     ) {
         val notifyTemplateCode = bodyParams["notifyTemplateCode"]
-        val res = bodyParams[UserNotifyInfo::content.name]?.ifBlank { null }
+        val res = bodyParams[UserNotifyInfo::body.name]?.ifBlank { null }
             ?: getMsgFromTemplate(notifyTemplateCode, bodyParams)
-                ?.also { bodyParams[UserNotifyInfo::content.name] = it }
+                ?.also { bodyParams[UserNotifyInfo::body.name] = it }
             ?: kotlin.run {
                 logger.warn("notifyClient fail with null body|$notifyTemplateCode")
                 return
@@ -453,7 +455,7 @@ class NotifyControl @Autowired constructor(
                 val id = if (result) {
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
-                        operator = bodyParams["operator"] ?: "null",
+                        operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                         userId = user,
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.SUCCESS,
@@ -462,7 +464,7 @@ class NotifyControl @Autowired constructor(
                 } else {
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
-                        operator = bodyParams["operator"] ?: "null",
+                        operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                         userId = user,
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.FAIL,
@@ -503,7 +505,7 @@ class NotifyControl @Autowired constructor(
         }.onFailure {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                 userIds = receivers,
                 type = RemoteDevNotifyType.EMAIL,
                 status = RemoteDevNotifyType.Status.FAIL,
@@ -512,7 +514,7 @@ class NotifyControl @Autowired constructor(
         }.onSuccess {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
                 userIds = receivers,
                 type = RemoteDevNotifyType.EMAIL,
                 status = RemoteDevNotifyType.Status.SUCCESS,
@@ -554,6 +556,11 @@ class NotifyControl @Autowired constructor(
                 userIds.filter { !it.contains("@tai") }
             )
         bodyParams.putIfAbsent("receiversNameWithCN", receiversNameWithCN.joinToString())
+        val operator = bodyParams[UserNotifyInfo::operator.name]
+        if (!operator.isNullOrBlank()) {
+            val userNameCN = configCacheService.getUserName(operator)
+            bodyParams.putIfAbsent(UserNotifyInfo::operatorCN.name, userNameCN)
+        }
         return taiUserNames
     }
 

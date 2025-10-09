@@ -246,11 +246,11 @@ class ServiceRemoteDevResourceImpl(
             userIds = notifyData.userIdList,
             notifyType = setOf(notifyData.dataType),
             bodyParams = mutableMapOf(
-                "operator" to notifyData.operator,
+                UserNotifyInfo::operator.name to notifyData.operator,
                 "messageContent" to notifyData.data,
                 "messageStartTime" to notifyData.messageStartTime.toString(),
                 "messageEndTime" to notifyData.messageEndTime.toString(),
-                UserNotifyInfo::content.name to notifyData.data,
+                UserNotifyInfo::body.name to notifyData.data,
                 "notifyTemplateCode" to notifyData.notifyTemplateCode
             )
         )
