@@ -392,7 +392,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                             projectId = queryReq.projectId,
                             referType = referInfo.referType,
                             referId = referInfo.referId,
-                            version = referInfo.version.toLong(),
+                            version = referInfo.referVersion.toLong(),
                         ),
                         referType = referInfo.referType,
                         creator = referInfo.creator,
