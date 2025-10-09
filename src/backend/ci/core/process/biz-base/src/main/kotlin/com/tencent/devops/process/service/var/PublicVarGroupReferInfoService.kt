@@ -435,16 +435,11 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     .map { Pair(it.referId, it.referVersion.toLong()) }
                     
                 val templateMap = templateKeys.associateWith { (templateId, version) ->
-                    try {
-                        templateDao.getTemplate(
-                            dslContext = dslContext,
-                            templateId = templateId,
-                            version = version
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("Failed to get template: $templateId, version: $version", e)
-                        null
-                    }
+                    templateDao.getTemplate(
+                        dslContext = dslContext,
+                        templateId = templateId,
+                        version = version
+                    )
                 }.filterValues { it != null }.mapValues { it.value!! }
 
                 // 构建模板引用记录
