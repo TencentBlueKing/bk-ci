@@ -70,7 +70,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
-        private const val PIPELINE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/%s/history/pipeline"
+        private const val PIPELINE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/%s/history/pipeline/%s"
         private const val TEMPLATE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/template/%s/%s/pipeline"
         
         // 批量操作相关常量
@@ -392,7 +392,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                             projectId = queryReq.projectId,
                             referType = referInfo.referType,
                             referId = referInfo.referId,
-                            version = null
+                            version = referInfo.version.toLong(),
                         ),
                         referType = referInfo.referType,
                         creator = referInfo.creator,
@@ -793,15 +793,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         projectId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         referId: String,
-        version: Long? = null
+        version: Long
     ): String {
-        return when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> 
-                String.format(PIPELINE_CONSOLE_URL_TEMPLATE, projectId, referId)
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
-                String.format(TEMPLATE_CONSOLE_URL_TEMPLATE, projectId, referId, version!!)
-            }
+        val template = when (referType) {
+            PublicVerGroupReferenceTypeEnum.PIPELINE -> PIPELINE_CONSOLE_URL_TEMPLATE
+            PublicVerGroupReferenceTypeEnum.TEMPLATE -> TEMPLATE_CONSOLE_URL_TEMPLATE
         }
+        return String.format(template, projectId, referId, version)
     }
 
     /**
