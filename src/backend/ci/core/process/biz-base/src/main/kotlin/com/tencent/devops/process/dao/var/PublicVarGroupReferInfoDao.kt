@@ -92,7 +92,7 @@ class PublicVarGroupReferInfoDao {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-            conditions.add(VERSION.eq(version))
+            version?.let { conditions.add(VERSION.eq(it)) }
 
             // 查找每个REFER_ID对应的CREATE_TIME最大的记录
             val t2 = this.`as`("t2")
@@ -105,7 +105,7 @@ class PublicVarGroupReferInfoDao {
                         .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
                         .and(t2.GROUP_NAME.eq(this.GROUP_NAME))
                         .and(t2.REFER_ID.eq(this.REFER_ID))
-                        .and(t2.VERSION.eq(this.VERSION))
+                        .and(version?.let { t2.VERSION.eq(it) } ?: DSL.trueCondition())
                         .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
                         .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
                 ))
