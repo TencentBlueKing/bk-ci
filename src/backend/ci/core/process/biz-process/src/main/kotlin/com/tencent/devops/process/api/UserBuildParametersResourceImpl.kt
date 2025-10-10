@@ -359,7 +359,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun listCombinationName(
+    override fun listCombination(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -369,7 +369,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<SQLPage<BuildParamCombination>> {
         return Result(
-            pipelineBuildParamCombinationService.listCombinationName(
+            pipelineBuildParamCombinationService.listCombination(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

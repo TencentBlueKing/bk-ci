@@ -311,8 +311,8 @@ interface UserBuildParametersResource {
 
     @Operation(summary = "列举启动参数组合")
     @GET
-    @Path("{projectId}/{pipelineId}/listCombinationName")
-    fun listCombinationName(
+    @Path("{projectId}/{pipelineId}/listCombination")
+    fun listCombination(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -175,7 +175,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
         }
     }
 
-    fun listCombinationName(
+    fun listCombination(
         userId: String,
         projectId: String,
         pipelineId: String,
