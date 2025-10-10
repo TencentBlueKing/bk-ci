@@ -1352,7 +1352,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_CHECK_RUN`
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION`
 (
-    `ID`               bigint(11)                               NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `ID`               bigint(11)                               NOT NULL COMMENT '主键',
     `PROJECT_ID`       varchar(64)                              not null comment '项目ID',
     `PIPELINE_ID`      varchar(64)                              not null comment '流水线ID',
     `COMBINATION_NAME` varchar(64)                              not null comment '组合名称',
@@ -1364,7 +1364,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION`
     UNIQUE KEY `UNI_PROJECT_PIPELINE_NAME` (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_NAME`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线启动参数组合';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_VALUE`
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL`
 (
     `PROJECT_ID`          varchar(64)                              not null comment '项目ID',
     `PIPELINE_ID`         varchar(64)                              not null comment '流水线ID',
@@ -1379,4 +1379,5 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_VALUE`
     PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_NAME`, `VAR_NAME`),
     INDEX `IDX_PROJECT_PIPELINE_COMBINATION_ID` (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线启动参数组合值详情';
+
 SET FOREIGN_KEY_CHECKS = 1;
