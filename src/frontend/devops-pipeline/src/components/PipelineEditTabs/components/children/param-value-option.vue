@@ -387,11 +387,10 @@
         computed: {
             ...mapGetters('atom', [
                 'osList',
+                'failIfVariableInvalid'
             ]),
             ...mapState('atom', [
-                'pipeline',
-                'getBuildResourceTypeList',
-                'failIfVariableInvalid'
+                'pipeline'
             ]),
             varLengthRule () {
 
