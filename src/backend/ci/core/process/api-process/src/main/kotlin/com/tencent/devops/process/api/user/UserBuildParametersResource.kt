@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
-import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.repository.pojo.enums.Permission
 import io.swagger.v3.oas.annotations.Operation
@@ -250,7 +250,7 @@ interface UserBuildParametersResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @Valid
-        request: BuildParamCombinationReq
+        request: BuildParamCombination
     ): Result<Long>
 
     @Operation(summary = "编辑启动参数组合")
@@ -270,7 +270,7 @@ interface UserBuildParametersResource {
         @PathParam("combinationId")
         combinationId: Long,
         @Valid
-        request: BuildParamCombinationReq
+        request: BuildParamCombination
     ): Result<Boolean>
 
     @Operation(summary = "获取启动参数组合")
@@ -334,7 +334,7 @@ interface UserBuildParametersResource {
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<SQLPage<String>>
+    ): Result<SQLPage<BuildParamCombination>>
 
     @Operation(summary = "从构建中获取启动参数组合")
     @GET

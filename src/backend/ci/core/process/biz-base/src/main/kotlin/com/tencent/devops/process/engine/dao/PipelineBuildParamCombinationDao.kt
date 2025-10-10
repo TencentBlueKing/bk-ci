@@ -93,7 +93,7 @@ class PipelineBuildParamCombinationDao {
         }
     }
 
-    fun listCombinationName(
+    fun listCombinationIds(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -101,11 +101,11 @@ class PipelineBuildParamCombinationDao {
         varName: String?,
         offset: Int,
         limit: Int
-    ): List<String> {
+    ): List<Long> {
         val combination = TPipelineBuildParamCombination.T_PIPELINE_BUILD_PARAM_COMBINATION
         val detail = TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL
 
-        val query = dslContext.select(combination.COMBINATION_NAME).from(combination)
+        val query = dslContext.select(combination.ID).from(combination)
             .where(combination.PROJECT_ID.eq(projectId))
             .and(combination.PIPELINE_ID.eq(pipelineId))
 
@@ -127,10 +127,10 @@ class PipelineBuildParamCombinationDao {
         return query.orderBy(combination.UPDATE_TIME.desc())
             .offset(offset)
             .limit(limit)
-            .fetch(0, String::class.java)
+            .fetch(0, Long::class.java)
     }
 
-    fun countCombinationName(
+    fun countCombinationId(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
