@@ -27,7 +27,7 @@ function _M:get_special_tag(gateway_project, devops_project_id, x_gateway_tag)
         end
         -- 检查项目ID是否匹配任一前缀
         for _, prefix in ipairs(prefixes) do
-            if string.find(devops_project_id, "^" .. prefix) then
+            if devops_project_id:find(prefix, 1, true) == 1 then
                 x_gateway_tag = config.redis.auto_redis.tag
                 break
             end

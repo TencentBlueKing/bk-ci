@@ -9,7 +9,7 @@ function _M:enable()
         end
         -- 检查项目ID是否匹配任一前缀
         for _, prefix in ipairs(prefixes) do
-            if string.find(ngx.var.project_id, "^" .. prefix) then
+            if ngx.var.project_id:find(prefix, 1, true) == 1 then
                 return true
             end
         end
