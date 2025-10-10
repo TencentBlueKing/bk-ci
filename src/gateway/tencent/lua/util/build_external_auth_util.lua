@@ -1,7 +1,7 @@
 local _M = {}
 function _M:enable()
     local isCodecc = ngx.var.project == 'codecc'
-    if isCodecc then
+    if isCodecc and ngx.var.project_id ~= nil and config.kubernetes.auto_prefix ~= nil then
         -- 将前缀字符串分割成表
         local prefixes = {}
         for prefix in string.gmatch(config.kubernetes.auto_prefix, "([^;]+)") do
