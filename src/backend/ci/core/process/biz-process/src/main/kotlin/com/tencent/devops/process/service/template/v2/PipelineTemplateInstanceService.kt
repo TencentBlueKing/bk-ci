@@ -251,8 +251,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 targetBranch = request.targetBranch,
                 description = request.description,
                 templateRefType = request.templateRefType,
-                templateRef = request.templateRef,
-                gray = true
+                templateRef = request.templateRef
             )
             templateInstanceItemDao.createTemplateInstanceItemsV2(
                 dslContext = context,
@@ -332,8 +331,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 repoHashId = request.repoHashId,
                 targetBranch = request.targetBranch,
                 templateRefType = request.templateRefType,
-                templateRef = request.templateRef,
-                gray = true
+                templateRef = request.templateRef
             )
             templateInstanceItemDao.createTemplateInstanceItemsV2(
                 dslContext = context,

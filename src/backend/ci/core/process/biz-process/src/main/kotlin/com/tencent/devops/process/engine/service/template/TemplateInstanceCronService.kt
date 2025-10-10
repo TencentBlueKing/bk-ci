@@ -111,7 +111,6 @@ class TemplateInstanceCronService @Autowired constructor(
                 dslContext = dslContext,
                 statusList = statusList,
                 descFlag = false,
-                gray = false,
                 page = 1,
                 pageSize = 10
             )
