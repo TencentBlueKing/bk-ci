@@ -854,7 +854,7 @@ class BkRepoService @Autowired constructor(
             timeoutInSeconds = ttl.toLong()
         )
 
-        return "${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true"
+        return "${bkRepoClient.getRkRepoIdcHost()}/web/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(
