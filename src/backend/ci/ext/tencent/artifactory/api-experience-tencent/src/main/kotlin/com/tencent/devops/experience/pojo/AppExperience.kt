@@ -70,5 +70,7 @@ data class AppExperience(
     @get:Schema(title = "是否展示红点", required = false)
     val redPointEnabled: Boolean = false,
     @get:Schema(title = "分类标签", required = false)
-    val classify: String = ""
+    val classify: String = "",
+    @get:Schema(title = "APP名字I18n", required = false)
+    val appNameI18n: String?
 )

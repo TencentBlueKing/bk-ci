@@ -235,7 +235,8 @@ class ExperienceAppService(
             lastDownloadHashId = lastDownloadMap[experience.projectId +
                     experience.bundleIdentifier +
                     experience.platform]
-                ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
+                ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+            appNameI18n = experience.appNameI18n
         )
     }
 
@@ -395,7 +396,8 @@ class ExperienceAppService(
                 lastDownloadHashId = lastDownloadRecord?.let { last ->
                     HashUtil.encodeLongId(last.lastDonwloadRecordId)
                 } ?: "",
-                versionTitle = it.versionTitle
+                versionTitle = it.versionTitle,
+                appNameI18n = it.appNameI18n
             )
         }.toList()
     }

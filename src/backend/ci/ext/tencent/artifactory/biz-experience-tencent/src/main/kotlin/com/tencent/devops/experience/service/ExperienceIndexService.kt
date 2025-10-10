@@ -43,13 +43,13 @@ import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
 import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
+import jakarta.ws.rs.NotFoundException
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import jakarta.ws.rs.NotFoundException
 
 @Service
 class ExperienceIndexService @Autowired constructor(
@@ -324,7 +324,8 @@ class ExperienceIndexService @Autowired constructor(
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
             type = it.type,
             version = it.version,
-            downloadTime = it.downloadTime
+            downloadTime = it.downloadTime,
+            appNameI18n = it.appNameI18n
         )
     }
 

@@ -31,12 +31,12 @@ import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
+import java.time.LocalDateTime
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ExperiencePublicDao {
@@ -175,7 +175,8 @@ class ExperiencePublicDao {
         scheme: String,
         type: Int = ExperiencePublicType.FROM_BKCI.id,
         externalUrl: String = "",
-        version: String
+        version: String,
+        appNameI18n: String?
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -197,7 +198,8 @@ class ExperiencePublicDao {
                 SCHEME,
                 TYPE,
                 EXTERNAL_LINK,
-                VERSION
+                VERSION,
+                APP_NAME_I18N
             ).values(
                 recordId,
                 projectId,
@@ -215,7 +217,8 @@ class ExperiencePublicDao {
                 scheme,
                 type,
                 externalUrl,
-                version
+                version,
+                appNameI18n
             ).onDuplicateKeyUpdate()
                 .set(RECORD_ID, recordId)
                 .set(EXPERIENCE_NAME, experienceName)
