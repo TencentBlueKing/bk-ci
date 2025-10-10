@@ -44,7 +44,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
         pipelineId: String,
         request: BuildParamCombination
     ): Long {
-        logger.info("save build param combination|$userId|$projectId|$pipelineId|${request.combinationName}")
+        logger.info("save build param combination|$userId|$projectId|$pipelineId|${request.name}")
         validatePermission(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -60,7 +60,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 combinationId = combinationId,
-                combinationName = request.combinationName
+                combinationName = request.name
             )
             pipelineBuildParamCombinationDetailDao.save(
                 dslContext = transactionContext,
@@ -68,7 +68,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 combinationId = combinationId,
-                combinationName = request.combinationName,
+                combinationName = request.name,
                 params = PipelineUtils.cleanOptions(request.params)
             )
         }
@@ -82,7 +82,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
         combinationId: Long,
         request: BuildParamCombination
     ) {
-        logger.info("edit build param combination|$userId|$projectId|$pipelineId|${request.combinationName}")
+        logger.info("edit build param combination|$userId|$projectId|$pipelineId|${request.name}")
         validatePermission(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -96,7 +96,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 combinationId = combinationId,
-                combinationName = request.combinationName
+                combinationName = request.name
             )
             pipelineBuildParamCombinationDetailDao.delete(
                 dslContext = transactionContext,
@@ -110,7 +110,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 combinationId = combinationId,
-                combinationName = request.combinationName,
+                combinationName = request.name,
                 params = PipelineUtils.cleanOptions(request.params)
             )
         }
@@ -192,14 +192,14 @@ class PipelineBuildParamCombinationService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val count = pipelineBuildParamCombinationDao.countCombinationId(
+        val count = pipelineBuildParamCombinationDao.countCombination(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             combinationName = combinationName,
             varName = varName
         )
-        val combinationIds = pipelineBuildParamCombinationDao.listCombinationIds(
+        val combinationRecords = pipelineBuildParamCombinationDao.listCombination(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -208,18 +208,20 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )
-        val records = pipelineBuildParamCombinationDetailDao.listCombinationDetail(
+        val combinationParamMap = pipelineBuildParamCombinationDetailDao.listCombinationDetail(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            combinationIds = combinationIds
+            combinationIds = combinationRecords.map { it.id }
         ).groupBy(
-            { it.combinationName },
+            { it.combinationId },
             { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
-        ).map {
+        )
+        val records = combinationRecords.map { record ->
             BuildParamCombination(
-                combinationName = it.key,
-                params = it.value
+                id = record.id,
+                name = record.combinationName,
+                params = combinationParamMap[record.id] ?: emptyList()
             )
         }
         return SQLPage(count = count, records = records)

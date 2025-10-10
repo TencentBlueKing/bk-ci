@@ -4,6 +4,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
 import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.records.TPipelineBuildParamCombinationRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -93,7 +94,7 @@ class PipelineBuildParamCombinationDao {
         }
     }
 
-    fun listCombinationIds(
+    fun listCombination(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -101,11 +102,11 @@ class PipelineBuildParamCombinationDao {
         varName: String?,
         offset: Int,
         limit: Int
-    ): List<Long> {
+    ): Result<TPipelineBuildParamCombinationRecord> {
         val combination = TPipelineBuildParamCombination.T_PIPELINE_BUILD_PARAM_COMBINATION
         val detail = TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL
 
-        val query = dslContext.select(combination.ID).from(combination)
+        val query = dslContext.selectFrom(combination)
             .where(combination.PROJECT_ID.eq(projectId))
             .and(combination.PIPELINE_ID.eq(pipelineId))
 
@@ -127,10 +128,10 @@ class PipelineBuildParamCombinationDao {
         return query.orderBy(combination.UPDATE_TIME.desc())
             .offset(offset)
             .limit(limit)
-            .fetch(0, Long::class.java)
+            .fetch()
     }
 
-    fun countCombinationId(
+    fun countCombination(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
