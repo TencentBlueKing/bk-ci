@@ -193,7 +193,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        editMode: Boolean?
     ): Result<PipelineVersionWithModel> {
         val userPipelinePermissionCheckStrategy =
             UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
@@ -209,7 +210,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                editMode = editMode
             )
         )
     }
