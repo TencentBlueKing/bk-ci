@@ -81,7 +81,7 @@
             })
             referenceList.value = res.records.map(i => ({
                 ...i,
-                referTypeName: i.referType === 'PIPELINE' ? proxy.$t('pipeline') : proxy.$t('template')
+                referTypeName: i.referType === 'PIPELINE' ? proxy.$t('pipeline') : proxy.$t('template.template')
             }))
             pagination.value.count = res.count
         } catch (e) {

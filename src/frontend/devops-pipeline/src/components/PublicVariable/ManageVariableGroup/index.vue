@@ -155,8 +155,8 @@
     })
 
     const projectId = computed(() => proxy.$route.params?.projectId)
-    // const pipelineId = computed(() => proxy.$route.params?.pipelineId)
-    // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+    const pipelineId = computed(() => proxy.$route.params?.pipelineId)
+    const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups)
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量
@@ -275,14 +275,18 @@
     }
     async function fetchAllVarGroupByGroupName () {
         try {
+            // console.log(pipelineInfo.value, 123)
             // const res = await proxy.$store.dispatch('publicVar/fetchAllVariableGroupByPipeline', {
             //     pipelineId: pipelineId.value,
             //     referType: 'PIPELINE',
-            //     versionName: pipelineInfo.value?.versionName ?? ''
+            //     referVersion: pipelineInfo.value?.version ?? ''
             // })
+            // console.log(res, 123)
             const list = groupsMap.value.publicVarGroups.map(i => {
-                const groupData = varGroupList.value.find(group => group.groupName === i.groupName)
-                return groupData
+                return {
+                    ...i,
+                    isDeleted: !varGroupList.value.find(group => group.groupName === i.groupName),
+                }
             })
             allVarGroup.value = list.map((data, index) => ({
                 ...data,
