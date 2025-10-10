@@ -45,6 +45,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedSer
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
@@ -65,8 +66,10 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineTemplateInfoService: PipelineTemplateInfoService
-) {
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+
+    ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
         with(context) {
             logger.info(
@@ -149,6 +152,17 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+        if (templateInfo.enablePac) {
+            // 检查yaml是否已经在默认分支删除
+            val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
+                projectId = projectId, pipelineId = templateInfo.id
+            )
+            if (yamlExist) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_DELETE_YAML_TEMPLATE_IN_DEFAULT_BRANCH
+                )
+            }
+        }
         val isTemplateExistInstances = pipelineTemplateRelatedService.isTemplateExistInstances(
             projectId = projectId,
             templateId = templateId

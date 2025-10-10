@@ -1,7 +1,9 @@
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -61,12 +63,23 @@ class PipelineYamlVersionResolver @Autowired constructor(
         val defaultBranch = serverRepository.defaultBranch!!
         val finalRef = ref?.let { trimRef(it) } ?: defaultBranch
         // 这里后续看是否可以改成从T_PIPELINE_YAML_BRANCH_FILE表中获取
-        val fileContent = scmProxyService.getFileContent(
-            projectId = projectId,
-            path = filePath,
-            ref = finalRef,
-            authRepository = authRepository
-        )
+        val fileContent = try {
+            scmProxyService.getFileContent(
+                projectId = projectId,
+                path = filePath,
+                ref = finalRef,
+                authRepository = authRepository
+            )
+        } catch (exception: RemoteServiceException) {
+            if (exception.httpStatus == HttpStatus.NOT_FOUND.value) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
+                    params = arrayOf(finalRef, filePath)
+                )
+            }
+            throw exception
+        }
+
         return getPipelineYamlVersion(
             projectId = projectId,
             repoHashId = repoHashId,

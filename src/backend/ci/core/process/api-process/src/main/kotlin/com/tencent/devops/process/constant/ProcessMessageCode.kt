@@ -436,6 +436,9 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_VERSION_HAS_PUBLISHED = "2101331" // 模板{0}的最新版本已发布
     // variable [xxx][yyy][zzz] 在模版中已定义为常量，不支持实例传入
     const val ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST = "2101332"
+    // 流水线引用的模版文件[{0}]在分支[{1}]不存在或已被删除
+    const val ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND = "2101333"
+    const val ERROR_DELETE_YAML_TEMPLATE_IN_DEFAULT_BRANCH = "2101334" // 已开启PAC模式,不能删除默认分支yaml关联的模版
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
