@@ -155,7 +155,6 @@ class NotifyControl @Autowired constructor(
                 TWorkspace.T_WORKSPACE.CREATOR
             )
         )
-        val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
         notifyDao.add(dslContext, userId, notifyData)
 
@@ -184,7 +183,7 @@ class NotifyControl @Autowired constructor(
                 bodyParams[UserNotifyInfo::operator.name] = userId
                 bodyParams["workspaceName"] = ws.workspaceName
                 bodyParams[UserNotifyInfo::title.name] = notifyData.title
-                bodyParams[UserNotifyInfo::body.name] = messageContent
+                bodyParams[UserNotifyInfo::body.name] = notifyData.desc ?: ""
                 bodyParams["projectId"] = ws.projectId
                 notify4User(
                     userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
@@ -199,7 +198,7 @@ class NotifyControl @Autowired constructor(
             notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_MARQUEE) == true
         ) {
             bodyParams[UserNotifyInfo::operator.name] = userId
-            bodyParams["messageContent"] = messageContent
+            bodyParams["messageContent"] = "${notifyData.title}: ${notifyData.desc}"
             notify4User(
                 userIds = userList,
                 notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
