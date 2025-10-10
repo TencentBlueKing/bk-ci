@@ -125,7 +125,7 @@ class PipelineBuildParamCombinationDao {
             )
         }
 
-        return query.orderBy(combination.UPDATE_TIME.desc())
+        return query.orderBy(combination.COMBINATION_NAME.desc())
             .offset(offset)
             .limit(limit)
             .fetch()
