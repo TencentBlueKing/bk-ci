@@ -60,8 +60,6 @@ import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.TPipelineSubRef
 import com.tencent.devops.model.process.tables.TPipelineTimerBranch
-import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
-import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
@@ -77,7 +75,6 @@ import com.tencent.devops.model.process.tables.TPipelineYamlSync
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.TPipelineYamlView
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
-import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.TTemplatePipeline
@@ -114,8 +111,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSubRefRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTimerBranchRecord
-import com.tencent.devops.model.process.tables.records.TPipelineTriggerDetailRecord
-import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerReviewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -130,7 +125,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineYamlInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineYamlSyncRecord
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineYamlViewRecord
-import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackHistoryRecord
 import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackRecord
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
