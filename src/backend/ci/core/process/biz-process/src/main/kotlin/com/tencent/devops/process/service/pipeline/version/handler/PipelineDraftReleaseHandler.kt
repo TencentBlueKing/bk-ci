@@ -39,6 +39,8 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
@@ -135,14 +137,11 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             params = arrayOf(pipelineId)
         )
         // 如果当前草稿和正式版本一致则拦截发布
-        if (
-            resourceOnlyVersion.version != releaseResource.version &&
-            resourceOnlyVersion.pipelineVersion == releaseResource.pipelineVersion &&
-            resourceOnlyVersion.triggerVersion == releaseResource.triggerVersion &&
-            resourceOnlyVersion.settingVersion == releaseResource.settingVersion
-        ) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
-        )
+        if (isSameVersion(resourceOnlyVersion = resourceOnlyVersion, releaseResource = releaseResource)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
+            )
+        }
 
         var updateBuildNo = false
         draftResource.model.getTriggerContainer().buildNo?.let {
@@ -202,6 +201,14 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             updateBuildNo = updateBuildNo
         )
     }
+
+    private fun isSameVersion(
+        resourceOnlyVersion: PipelineResourceOnlyVersion,
+        releaseResource: PipelineResourceVersion
+    ) = resourceOnlyVersion.version != releaseResource.version &&
+            resourceOnlyVersion.pipelineVersion == releaseResource.pipelineVersion &&
+            resourceOnlyVersion.triggerVersion == releaseResource.triggerVersion &&
+            resourceOnlyVersion.settingVersion == releaseResource.settingVersion
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDraftReleaseHandler::class.java)
