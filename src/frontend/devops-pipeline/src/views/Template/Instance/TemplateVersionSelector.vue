@@ -316,7 +316,8 @@
             templatePipeline.value = {
                 templateId: templateData.resource.templateId,
                 projectId: templateData.resource.projectId,
-                stages: templateData.resource.model.stages
+                stages: templateData.resource.model.stages,
+                name: templateData.setting?.pipelineName
             }
             errorRefMsg.value = ''
         } catch (e) {
