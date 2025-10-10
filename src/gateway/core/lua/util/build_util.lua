@@ -19,8 +19,8 @@ _M = {}
 
 -- 外部认证API调用通用函数
 function _M:call_external_auth_api(auth_type, params)
-    local httpc = http.new()
-    httpc:set_timeout(3000)
+    local max_retries = 3
+    local timeout = 3000 -- 3秒超时
 
     -- 构建请求URL
     local base_url = config.external_auth.base_url
@@ -41,41 +41,67 @@ function _M:call_external_auth_api(auth_type, params)
 
     local full_url = base_url .. api_path .. query_string
 
-    -- 发送HTTP请求
-    local res, err = httpc:request_uri(full_url, {
-        method = "GET",
-        headers = {
-            ["Accept"] = "application/json",
-            ["Content-Type"] = "application/json",
-            ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id
-        },
-        ssl_verify = false
-    })
+    -- 重试逻辑
+    for attempt = 1, max_retries do
+        local httpc = http.new()
+        httpc:set_timeout(timeout)
 
-    httpc:set_keepalive(60000, 5)
+        -- 发送HTTP请求
+        local res, err = httpc:request_uri(full_url, {
+            method = "GET",
+            headers = {
+                ["Accept"] = "application/json",
+                ["Content-Type"] = "application/json",
+                ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id
+            },
+            ssl_verify = false
+        })
 
-    if not res then
-        ngx.log(ngx.ERR, "failed to request external auth API: ", err)
-        return nil, err
+        httpc:set_keepalive(60000, 5)
+
+        if not res then
+            ngx.log(ngx.ERR, "failed to request external auth API (attempt ", attempt, "/", max_retries, "): ", err)
+
+            -- 如果不是最后一次尝试，直接重试
+            if attempt < max_retries then
+                -- 继续下一次循环
+            else
+                return nil, err
+            end
+        else
+            if res.status ~= 200 then
+                ngx.log(ngx.ERR, "external auth API returned status (attempt ", attempt, "/", max_retries, "): ",
+                    res.status, ", body: ", res.body)
+
+                -- 对于HTTP错误状态码，如果不是最后一次尝试则重试
+                if attempt < max_retries then
+                    -- 继续下一次循环
+                else
+                    return nil, "HTTP " .. res.status
+                end
+            else
+                -- 请求成功，解析响应
+                local response_data = json.decode(res.body)
+                if not response_data then
+                    ngx.log(ngx.ERR, "failed to decode external auth API response (attempt ", attempt, "/", max_retries,
+                        ")")
+
+                    if attempt < max_retries then
+                        -- 继续下一次循环
+                    else
+                        return nil, "invalid response"
+                    end
+                else
+                    if response_data.status ~= 0 then
+                        ngx.log(ngx.ERR, "external auth API returned error: ", response_data.message or "unknown error")
+                        return nil, response_data.message or "auth failed"
+                    end
+
+                    return response_data.data, nil
+                end
+            end
+        end
     end
-
-    if res.status ~= 200 then
-        ngx.log(ngx.ERR, "external auth API returned status: ", res.status, ", body: ", res.body)
-        return nil, "HTTP " .. res.status
-    end
-
-    local response_data = json.decode(res.body)
-    if not response_data then
-        ngx.log(ngx.ERR, "failed to decode external auth API response")
-        return nil, "invalid response"
-    end
-
-    if response_data.status ~= 0 then
-        ngx.log(ngx.ERR, "external auth API returned error: ", response_data.message or "unknown error")
-        return nil, response_data.message or "auth failed"
-    end
-
-    return response_data.data, nil
 end
 
 -- 校验第三方构建机
@@ -139,7 +165,7 @@ function _M:auth_agent()
         -- 使用原来的Redis校验逻辑
         local auth_cache = ngx.shared.auth_build_agent
         local cache_key = "third_party_agent_" ..
-        reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId .. "_" .. reqVmSid
+            reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId .. "_" .. reqVmSid
         local cache_value = auth_cache:get(cache_key)
 
         -- 如果没有缓存 , 则从redis里面拿
