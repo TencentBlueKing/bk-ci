@@ -74,7 +74,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             if (exception.httpStatus == HttpStatus.NOT_FOUND.value) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
-                    params = arrayOf(finalRef, filePath)
+                    params = arrayOf(filePath, finalRef)
                 )
             }
             throw exception
