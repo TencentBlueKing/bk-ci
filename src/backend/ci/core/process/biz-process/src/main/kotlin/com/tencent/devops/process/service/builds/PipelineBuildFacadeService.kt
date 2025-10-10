@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -153,10 +154,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -353,7 +354,14 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
+        return pipelineRuntimeService.getBuildParametersFromStartup(
+            projectId = projectId, buildId = buildId, queryDslContext = queryDslContext
+        ).onEach {
+            if (it.sensitive == true) {
+                it.value = HIDDEN_SYMBOL
+                it.defaultValue = HIDDEN_SYMBOL
+            }
+        }
     }
 
     fun retry(
