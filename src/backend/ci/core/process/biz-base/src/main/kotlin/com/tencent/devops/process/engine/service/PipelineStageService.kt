@@ -391,18 +391,16 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun cancelStageBySystem(
+    fun cancelQualityCheck(
         userId: String,
         buildInfo: BuildInfo,
         buildStage: PipelineBuildStage,
         timeout: Boolean? = false
     ) {
-
         val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
             true to buildStage.checkIn,
             false to buildStage.checkOut
         )
-
         checkMap.forEach { (inOrOut, pauseCheck) ->
             // #5654 如果是红线待审核状态则取消红线审核
             if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
@@ -419,8 +417,25 @@ class PipelineStageService @Autowired constructor(
                     timeout = timeout
                 )
             }
+        }
+    }
+
+
+    fun cancelStageBySystem(
+        userId: String,
+        buildInfo: BuildInfo,
+        buildStage: PipelineBuildStage,
+        timeout: Boolean? = false
+    ) {
+
+        val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
+            true to buildStage.checkIn,
+            false to buildStage.checkOut
+        )
+
+        checkMap.forEach { (inOrOut, pauseCheck) ->
             // #5654 如果是待人工审核则取消人工审核
-            else if (pauseCheck?.groupToReview() != null) {
+            if (pauseCheck?.groupToReview() != null) {
                 val pipelineInfo =
                     pipelineRepositoryService.getPipelineInfo(buildStage.projectId, buildStage.pipelineId)
                 cancelStage(
