@@ -42,6 +42,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -299,7 +300,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: BuildParamCombination
+        request: BuildParamCombinationReq
     ): Result<Long> {
         return Result(
             pipelineBuildParamCombinationService.saveCombination(
@@ -316,7 +317,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         combinationId: Long,
-        request: BuildParamCombination
+        request: BuildParamCombinationReq
     ): Result<Boolean> {
         pipelineBuildParamCombinationService.editCombination(
             userId = userId,

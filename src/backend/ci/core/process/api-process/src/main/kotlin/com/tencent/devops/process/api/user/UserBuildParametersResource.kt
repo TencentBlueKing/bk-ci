@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.repository.pojo.enums.Permission
 import io.swagger.v3.oas.annotations.Operation
@@ -250,7 +251,7 @@ interface UserBuildParametersResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @Valid
-        request: BuildParamCombination
+        request: BuildParamCombinationReq
     ): Result<Long>
 
     @Operation(summary = "编辑启动参数组合")
@@ -270,7 +271,7 @@ interface UserBuildParametersResource {
         @PathParam("combinationId")
         combinationId: Long,
         @Valid
-        request: BuildParamCombination
+        request: BuildParamCombinationReq
     ): Result<Boolean>
 
     @Operation(summary = "获取启动参数组合")

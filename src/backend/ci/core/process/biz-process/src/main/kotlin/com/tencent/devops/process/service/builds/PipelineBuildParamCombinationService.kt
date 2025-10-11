@@ -3,7 +3,6 @@ package com.tencent.devops.process.service.builds
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -18,6 +17,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
@@ -42,7 +42,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: BuildParamCombination
+        request: BuildParamCombinationReq
     ): Long {
         logger.info("save build param combination|$userId|$projectId|$pipelineId|${request.name}")
         validatePermission(
@@ -80,7 +80,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         combinationId: Long,
-        request: BuildParamCombination
+        request: BuildParamCombinationReq
     ) {
         logger.info("edit build param combination|$userId|$projectId|$pipelineId|${request.name}")
         validatePermission(
@@ -127,11 +127,17 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             pipelineId = pipelineId,
             userId = userId
         )
-        return pipelineBuildParamCombinationDetailDao.getParams(
+        val params = pipelineBuildParamCombinationDetailDao.getParams(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             combinationId = combinationId
+        )
+        return paramFacadeService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            params = params
         )
     }
 
@@ -199,7 +205,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             combinationName = combinationName,
             varName = varName
         )
-        val combinationRecords = pipelineBuildParamCombinationDao.listCombination(
+        val records = pipelineBuildParamCombinationDao.listCombination(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -207,21 +213,10 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             varName = varName,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        )
-        val combinationParamMap = pipelineBuildParamCombinationDetailDao.listCombinationDetail(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            combinationIds = combinationRecords.map { it.id }
-        ).groupBy(
-            { it.combinationId },
-            { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
-        )
-        val records = combinationRecords.map { record ->
+        ).map { record ->
             BuildParamCombination(
                 id = record.id,
-                name = record.combinationName,
-                params = combinationParamMap[record.id] ?: emptyList()
+                name = record.combinationName
             )
         }
         return SQLPage(count = count, records = records)
