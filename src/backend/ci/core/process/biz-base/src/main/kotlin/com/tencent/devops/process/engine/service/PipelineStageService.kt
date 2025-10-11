@@ -419,8 +419,7 @@ class PipelineStageService @Autowired constructor(
             }
         }
     }
-
-
+    
     fun cancelStageBySystem(
         userId: String,
         buildInfo: BuildInfo,
