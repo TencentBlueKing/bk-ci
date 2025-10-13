@@ -1,1 +1,2 @@
 com.tencent.devops.common.pipeline.CommonPipelineAutoConfiguration
+com.tencent.devops.common.pipeline.ModelAutoConfiguration
