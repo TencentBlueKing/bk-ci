@@ -24,13 +24,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:auth:api-auth"))
-    api("org.apache.httpcomponents:httpclient")
-    api("com.tencent.bk.sdk:iam-java-sdk")
-    api("org.json:json")
-    api("io.github.resilience4j:resilience4j-circuitbreaker")
-}
+
+package com.tencent.devops.dispatch.pojo
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "外部鉴权信息")
+data class AuthBuildInfo(
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+
+    @get:Schema(title = "流水线ID", required = true)
+    val pipelineId: String,
+
+    @get:Schema(title = "构建ID", required = true)
+    val buildId: String,
+
+    @get:Schema(title = "Agent ID", required = false)
+    val agentId: String? = null,
+
+    @get:Schema(title = "VM序列ID", required = false)
+    val vmSeqId: String? = null,
+
+    @get:Schema(title = "VM名称", required = false)
+    val vmName: String? = null,
+
+    @get:Schema(title = "渠道代码", required = false)
+    val channelCode: String? = null,
+
+    @get:Schema(title = "密钥", required = false)
+    val secretKey: String? = null,
+
+    @get:Schema(title = "系统版本", required = false)
+    val systemVersion: String? = null,
+
+    @get:Schema(title = "Xcode版本", required = false)
+    val xcodeVersion: String? = null,
+
+    @get:Schema(title = "原子项目映射", required = false)
+    val atoms: Map<String, String>? = null
+)
