@@ -34,6 +34,7 @@ import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -50,7 +51,7 @@ import java.util.concurrent.TimeUnit
 class RbacPermissionProjectService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
-    private val permissionService: RbacPermissionService,
+    private val permissionService: PermissionService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
