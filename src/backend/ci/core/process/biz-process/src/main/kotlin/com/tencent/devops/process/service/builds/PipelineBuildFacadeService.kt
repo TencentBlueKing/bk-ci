@@ -428,7 +428,10 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
             // 正式版本,必须使用最新版本执行
-            if (version != null && resource.status == VersionStatus.RELEASED && resource.version != version) {
+            if (version != null &&
+                resource.status == VersionStatus.RELEASED &&
+                readyToBuildPipelineInfo.version != version
+            ) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
             }
 
