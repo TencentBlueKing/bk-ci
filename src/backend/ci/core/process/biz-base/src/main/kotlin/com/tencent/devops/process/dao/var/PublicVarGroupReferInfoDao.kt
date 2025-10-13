@@ -41,6 +41,44 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupReferInfoDao {
 
+    /**
+     * 构建基础查询条件
+     */
+    private fun buildBaseConditions(
+        table: TPipelinePublicVarGroupReferInfo,
+        projectId: String
+    ) = mutableListOf(table.PROJECT_ID.eq(projectId))
+
+    /**
+     * 构建引用相关的查询条件
+     */
+    private fun buildReferConditions(
+        table: TPipelinePublicVarGroupReferInfo,
+        projectId: String,
+        referId: String? = null,
+        referType: PublicVerGroupReferenceTypeEnum? = null,
+        referVersion: Int? = null,
+        referVersionName: String? = null
+    ) = buildBaseConditions(table, projectId).apply {
+        referId?.let { add(table.REFER_ID.eq(it)) }
+        referType?.let { add(table.REFER_TYPE.eq(it.name)) }
+        referVersion?.let { add(table.REFER_VERSION.eq(it)) }
+        referVersionName?.let { add(table.REFER_VERSION_NAME.eq(it)) }
+    }
+
+    /**
+     * 构建变量组相关的查询条件
+     */
+    private fun buildGroupConditions(
+        table: TPipelinePublicVarGroupReferInfo,
+        projectId: String,
+        groupName: String? = null,
+        version: Int? = null
+    ) = buildBaseConditions(table, projectId).apply {
+        groupName?.let { add(table.GROUP_NAME.eq(it)) }
+        version?.let { add(table.VERSION.eq(it)) }
+    }
+
     fun listVarGroupReferInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -51,13 +89,8 @@ class PublicVarGroupReferInfoDao {
         pageSize: Int
     ): List<PipelinePublicVarGroupReferPO> {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(GROUP_NAME.eq(groupName))
-            if (referType != null) {
-                conditions.add(REFER_TYPE.eq(referType.name))
-            }
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
+            val conditions = buildGroupConditions(this, projectId, groupName, version).apply {
+                referType?.let { add(REFER_TYPE.eq(it.name)) }
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -79,12 +112,7 @@ class PublicVarGroupReferInfoDao {
         referVersion: Int? = null
     ): List<PipelinePublicVarGroupReferPO> {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(REFER_ID.eq(referId))
-            conditions.add(REFER_TYPE.eq(referType.name))
-            referVersion?.let {
-                conditions.add(REFER_VERSION.eq(referVersion))
-            }
+            val conditions = buildReferConditions(this, projectId, referId, referType, referVersion)
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.asc())
@@ -126,14 +154,8 @@ class PublicVarGroupReferInfoDao {
         referVersionName: String? = null
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(REFER_ID.eq(referId))
-            conditions.add(REFER_TYPE.eq(referType.name))
-            if (groupName != null) {
-                conditions.add(GROUP_NAME.eq(groupName))
-            }
-            if (referVersionName != null) {
-                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            val conditions = buildReferConditions(this, projectId, referId, referType, referVersionName = referVersionName).apply {
+                groupName?.let { add(GROUP_NAME.eq(it)) }
             }
             return dslContext.selectCount()
                 .from(this)
@@ -151,13 +173,11 @@ class PublicVarGroupReferInfoDao {
         excludedGroupNames: List<String>? = null
     ) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(REFER_TYPE.eq(referType.name))
-            conditions.add(REFER_ID.eq(referId))
-            if (!excludedGroupNames.isNullOrEmpty()) {
-                conditions.add(GROUP_NAME.notIn(excludedGroupNames))
+            val conditions = buildReferConditions(this, projectId, referId, referType, referVersionName = referVersionName).apply {
+                if (!excludedGroupNames.isNullOrEmpty()) {
+                    add(GROUP_NAME.notIn(excludedGroupNames))
+                }
             }
-            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
             dslContext.deleteFrom(this)
                 .where(conditions)
                 .execute()
@@ -258,13 +278,8 @@ class PublicVarGroupReferInfoDao {
         version: Int? = null
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(GROUP_NAME.eq(groupName))
-            if (referType != null) {
-                conditions.add(REFER_TYPE.eq(referType.name))
-            }
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
+            val conditions = buildGroupConditions(this, projectId, groupName, version).apply {
+                referType?.let { add(REFER_TYPE.eq(it.name)) }
             }
             return dslContext.select(DSL.countDistinct(REFER_ID))
                 .from(this)
@@ -289,12 +304,8 @@ class PublicVarGroupReferInfoDao {
         updateTime: java.time.LocalDateTime
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(REFER_ID.eq(referId))
-            conditions.add(REFER_TYPE.eq(referType.name))
-            conditions.add(GROUP_NAME.eq(groupName))
-            if (referVersionName != null) {
-                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            val conditions = buildReferConditions(this, projectId, referId, referType, referVersionName = referVersionName).apply {
+                add(GROUP_NAME.eq(groupName))
             }
             
             return dslContext.update(this)

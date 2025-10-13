@@ -2562,6 +2562,9 @@ class TemplateFacadeService @Autowired constructor(
                 }
             }
         }
+        model.projectId = projectId
+        model.templateId = templateId
+        model.latestVersion = version
     }
 
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {

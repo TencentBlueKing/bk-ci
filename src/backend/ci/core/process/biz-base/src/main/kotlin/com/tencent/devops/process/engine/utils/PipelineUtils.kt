@@ -191,6 +191,7 @@ object PipelineUtils {
                 stages.add(stage)
             }
         }
+        model.pipelineId = null
         return model.copy(stages = stages)
     }
 

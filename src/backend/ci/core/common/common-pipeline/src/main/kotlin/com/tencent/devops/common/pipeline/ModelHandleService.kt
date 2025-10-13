@@ -25,32 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.`do`
+package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+interface ModelHandleService {
 
-@Schema(title = "流水线公共变量引用信息")
-data class PublicGroupVarRefDO(
-    @get:Schema(title = "引用ID")
-    val referId: String,
-    @get:Schema(title = "引用名称")
-    val referName: String,
-    @get:Schema(title = "引用链接")
-    val referUrl: String,
-    @get:Schema(title = "引用类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "创建人")
-    val creator: String,
-    @get:Schema(title = "最近更新人")
-    val modifier: String,
-    @get:Schema(title = "最近更新时间")
-    val updateTime: LocalDateTime,
-    @get:Schema(title = "实际引用变量数")
-    val actualRefCount: Int,
-    @get:Schema(title = "实列个数")
-    val instanceCount: Int? = null,
-    @get:Schema(title = "最近一个月的执行次数")
-    val executeCount: Int? = null
-)
+    /**
+     * 处理模型参数
+     * 
+     * 该方法负责对流水线模型参数进行统一处理
+     *
+     * @param projectId 项目ID
+     * @param model 模型对象
+     * @param referId 引用ID，标识参数引用的具体资源或对象
+     * @param referType 引用类型，描述引用ID对应的资源类型（如模板、流水线等）
+     * @param referVersion 引用版本，标识引用资源的版本号
+     */
+    fun handleModelParams(
+        projectId: String,
+        model: Model,
+        referId: String,
+        referType: String,
+        referVersion: Int
+    )
+}

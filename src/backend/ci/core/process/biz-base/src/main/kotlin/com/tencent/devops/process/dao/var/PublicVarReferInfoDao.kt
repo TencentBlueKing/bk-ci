@@ -140,4 +140,38 @@ class PublicVarReferInfoDao {
                 .execute()
         }
     }
+
+    /**
+     * 计算指定引用的实际变量数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param referVersionName 引用版本名称
+     * @return 实际变量引用数量
+     */
+    fun countActualVarReferencesByReferId(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String? = null
+    ): Int {
+        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                REFER_ID.eq(referId),
+                REFER_TYPE.eq(referType.name)
+            )
+            if (referVersionName != null) {
+                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            }
+            return dslContext.selectCount()
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+
 }

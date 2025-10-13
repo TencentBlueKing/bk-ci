@@ -38,6 +38,27 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupDao {
 
+    /**
+     * 将数据库记录转换为PublicVarGroupPO对象的公共方法
+     */
+    private fun mapRecordToPublicVarGroupPO(record: org.jooq.Record): PublicVarGroupPO {
+        return PublicVarGroupPO(
+            id = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.ID),
+            projectId = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.PROJECT_ID),
+            groupName = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.GROUP_NAME),
+            version = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.VERSION),
+            versionName = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.VERSION_NAME),
+            latestFlag = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.LATEST_FLAG),
+            desc = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.DESC),
+            referCount = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.REFER_COUNT),
+            varCount = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.VAR_COUNT),
+            creator = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.CREATOR),
+            modifier = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.MODIFIER),
+            createTime = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.CREATE_TIME),
+            updateTime = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.UPDATE_TIME)
+        )
+    }
+
     fun save(
         dslContext: DSLContext,
         publicVarGroupPO: PublicVarGroupPO
@@ -104,23 +125,7 @@ class PublicVarGroupDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(LATEST_FLAG.eq(true))
-                .fetch { record ->
-                    PublicVarGroupPO(
-                        id = record.id,
-                        projectId = record.projectId,
-                        groupName = record.groupName,
-                        version = record.version,
-                        versionName = record.versionName,
-                        latestFlag = record.latestFlag,
-                        desc = record.desc,
-                        referCount = record.referCount,
-                        varCount = record.varCount,
-                        creator = record.creator,
-                        modifier = record.modifier,
-                        createTime = record.createTime,
-                        updateTime = record.updateTime
-                    )
-                }
+                .fetch { record -> mapRecordToPublicVarGroupPO(record) }
         }
     }
 
@@ -170,23 +175,7 @@ class PublicVarGroupDao {
                 .orderBy(UPDATE_TIME.desc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
-                .fetch { record ->
-                    PublicVarGroupPO(
-                        id = record.id,
-                        projectId = record.projectId,
-                        groupName = record.groupName,
-                        version = record.version,
-                        versionName = record.versionName,
-                        latestFlag = record.latestFlag,
-                        desc = record.desc,
-                        referCount = record.referCount,
-                        varCount = record.varCount,
-                        creator = record.creator,
-                        modifier = record.modifier,
-                        createTime = record.createTime,
-                        updateTime = record.updateTime
-                    )
-                }
+                .fetch { record -> mapRecordToPublicVarGroupPO(record) }
         }
     }
 
@@ -246,23 +235,7 @@ class PublicVarGroupDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetchOne()?.let { record ->
-                    PublicVarGroupPO(
-                        id = record.id,
-                        projectId = record.projectId,
-                        groupName = record.groupName,
-                        version = record.version,
-                        versionName = record.versionName,
-                        latestFlag = record.latestFlag,
-                        desc = record.desc,
-                        referCount = record.referCount,
-                        varCount = record.varCount,
-                        creator = record.creator,
-                        modifier = record.modifier,
-                        createTime = record.createTime,
-                        updateTime = record.updateTime
-                    )
-                }
+                .fetchOne()?.let { record -> mapRecordToPublicVarGroupPO(record) }
         }
     }
 
@@ -348,6 +321,33 @@ class PublicVarGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
                 .execute()
+        }
+    }
+
+    /**
+     * 批量获取变量组的VAR_COUNT
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNames 变量组名称列表
+     * @return Map<String, Int> 变量组名称到VAR_COUNT的映射
+     */
+    fun getVarCountsByGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(GROUP_NAME, VAR_COUNT)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+                .associate { record ->
+                    record.getValue(GROUP_NAME) to record.getValue(VAR_COUNT)
+                }
         }
     }
 }
