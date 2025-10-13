@@ -264,7 +264,7 @@
         getParamsGroupByLabel
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { hashID, randomString } from '@/utils/util'
+    import { randomString } from '@/utils/util'
     import { computed, defineComponent, getCurrentInstance, nextTick, onBeforeMount, onMounted, ref, watch, } from 'vue'
     const UNGROUP_NAME = 'unGrouped'
     export default defineComponent({
@@ -594,8 +594,8 @@
                 isEditing.value = true
             }
 
-            function editParamSet (setIndex) {
-                switchManageSet(setIndex)
+            async function editParamSet (setIndex) {
+                await switchManageSet(setIndex)
                 const set = paramSetList.value[setIndex]
                 if (!set) {
                     return
@@ -606,17 +606,29 @@
                 isEditing.value = true
             }
             async function copyParamSet (set) {
+                const originSet = proxy.$store.state.atom.paramSets.find(item => item.id === set.id)
+                if (!originSet) {
+                    return
+                }
+                const { id, ...restInfo } = originSet
                 const newSet = {
-                    ...set,
-                    id: hashID(),
-                    name: `${set.name}_copy`
+                    ...restInfo,
+                    name: `${set.name}_copy`,
+                    isNew: true
+                }
+                if (!restInfo.params?.length) {
+                    const params = await dispatch('fetchParamSetDetail', {
+                        projectId: proxy.$route.params.projectId,
+                        pipelineId: proxy.$route.params.pipelineId,
+                        paramSetId: id
+                    })
+                    newSet.params = params
                 }
                 dispatch('addParamSet', newSet)
-                await switchManageSet(0)
-                editingSet.value = {
-                    ...newSet
-                }
-                isEditing.value = true
+                
+                nextTick(() => {
+                    editParamSet(0)
+                })
             }
             async function deleteParamSet (setIndex) {
                 const set = paramSetList.value[setIndex]
