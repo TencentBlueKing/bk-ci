@@ -138,12 +138,6 @@ class BuildCancelControl @Autowired constructor(
             }
             cancelAllPendingTask(event = event, model = model)
 
-            measureService?.postCancelData(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = buildId,
-                userId = event.userId
-            )
             if (event.actionType == ActionType.TERMINATE) {
                 // 修改detail model
                 pipelineBuildRecordService.buildCancel(
@@ -185,6 +179,13 @@ class BuildCancelControl @Autowired constructor(
             } else {
                 sendBuildFinishEvent(event)
             }
+
+            measureService?.postCancelData(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = buildId,
+                userId = event.userId
+            )
             true
         } else {
             false
