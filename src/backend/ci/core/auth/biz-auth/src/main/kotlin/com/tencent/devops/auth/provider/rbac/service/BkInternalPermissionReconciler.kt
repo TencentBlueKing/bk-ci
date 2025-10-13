@@ -59,6 +59,12 @@ class BkInternalPermissionReconciler(
             .register(meterRegistry)
     }
 
+    private fun threadPoolTasksRejectedCounter(): Counter {
+        return Counter.builder("permission.thread.pool.tasks.rejected.count")
+            .description("Counts the thread pool tasks rejected")
+            .register(meterRegistry)
+    }
+
     private val threadPoolExecutor = ThreadPoolExecutor(
         corePoolSize ?: 5,
         corePoolSize ?: 5,
@@ -67,6 +73,7 @@ class BkInternalPermissionReconciler(
         LinkedBlockingQueue(500),
         Executors.defaultThreadFactory()
     ) { _, executor ->
+        threadPoolTasksRejectedCounter().increment()
         logger.warn("Permission post processor task rejected. Pool status: {}", executor.toString())
     }
 
