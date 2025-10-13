@@ -24,10 +24,9 @@ import {
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
 } from '@/store/constants'
-import { UI_MODE, CODE_MODE } from '@/utils/pipelineConst'
+import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
-import { hashID, randomString } from '@/utils/util'
-import { areDeeplyEqual } from '../../../utils/util'
+import { areDeeplyEqual, hashID, randomString } from '@/utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import {
     ADD_CONTAINER,
@@ -47,12 +46,12 @@ import {
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOMS_OUTPUT_MAP,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
-    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -63,6 +62,7 @@ import {
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
+    SET_PARAM_SET_LIST,
     SET_PIPELINE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
@@ -993,6 +993,78 @@ export default {
         return request.get(`/${PROCESS_API_URL_PREFIX}/user/scm/${projectId}/${repositoryHashId}/branches`, {
             params: searchParams
         })
-    }
+    },
+    async fetchParamSets ({ commit }, { projectId, pipelineId }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/listCombination`)
+            commit(SET_PARAM_SET_LIST, res.data.records)
+        } catch (error) {
+            throw error
+        }
+    },
+    async fetchParamSetDetail ({ commit, state }, { projectId, pipelineId, paramSetId }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination/${paramSetId}`)
+            const pos = state.paramSets.findIndex(item => item.id === paramSetId)
+            commit(SET_PARAM_SET_LIST, [
+                ...state.paramSets.slice(0, pos),
+                {
+                    ...state.paramSets[pos],
+                    params: res.data
+                },
+                ...state.paramSets.slice(pos + 1)
+            ])
+            return res.data
+        } catch (error) {
+            throw error
+        }
+    },
+    addParamSet ({ commit, state }, paramSet) {
+        commit(SET_PARAM_SET_LIST, [
+            paramSet,
+            ...state.paramSets
+        ])
+    },
+    updateParamSet ({ commit, state }, paramSet) {
 
+        const index = paramSet.isNew ? 0 : state.paramSets.findIndex(item => item.id === paramSet.id)
+        if (index < 0) {
+            return
+        }
+        commit(SET_PARAM_SET_LIST, [
+            ...state.paramSets.slice(0, index),
+            paramSet,
+            ...state.paramSets.slice(index + 1)
+        ])
+    },
+    async deleteParamSet ({ commit, state }, {paramSetId, projectId, pipelineId, isNew = false }) {
+        const index = state.paramSets.findIndex(item => item.id === paramSetId)
+        if (!isNew) {
+            const res = await request.delete(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination/${paramSetId}`)
+            if (res && !res.data) {
+                return
+            }
+        }
+        commit(SET_PARAM_SET_LIST, [
+            ...state.paramSets.slice(0, index),
+            ...state.paramSets.slice(index + 1)
+        ])
+    },
+    async saveParamSet ({ commit, state }, { projectId, pipelineId, paramSet }) {
+        try {
+            const method = !!paramSet.id ? 'put' : 'post'
+            const suffix = !!paramSet.id ? `/${paramSet.id}` : ''
+            return await request[method](`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination${suffix}`, paramSet)
+        } catch (error) {
+            throw error
+        }
+    },
+    async fetchBuildParamsByBuildId ({ commit }, { projectId, pipelineId, buildId }) {
+        try {
+            const result = await request.get(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/${buildId}/getCombinationFromBuild`)
+            return result.data
+        } catch (error) {
+            return []
+        }
+    }
 }

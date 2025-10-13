@@ -13,6 +13,7 @@
                     v-for="key in sortedCategories"
                     :key="key"
                     :name="key"
+                    :vertical="sortCategoryVertical"
                 >
                     <template slot="content">
                         <form-field
@@ -168,6 +169,10 @@
             sortCategory: {
                 type: Boolean,
                 default: false
+            },
+            sortCategoryVertical: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -179,8 +184,8 @@
                             restParam = {
                                 ...restParam,
                                 ...param.payload,
-                                multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
+                                multiSelect: isMultipleParam(param.type),
+                                value: isMultipleParam(param.type) && typeof this.paramValues?.[param.id] === 'string' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
                             }
                         } else {
                             restParam = {

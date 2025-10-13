@@ -7,7 +7,11 @@
                 </div>
                 <i class="devops-icon icon-angle-down"></i>
             </summary>
-            <div class="collapse-content">
+            <div
+                :class="['collapse-content', {
+                    'collapse-content-vertical': vertical
+                }]"
+            >
                 <slot name="content" />
             </div>
         </details>
@@ -21,6 +25,10 @@
             name: {
                 type: String,
                 default: ''
+            },
+            vertical: {
+                type: Boolean,
+                default: false
             }
         }
     }
@@ -52,6 +60,9 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
+        &.collapse-content-vertical {
+            display: block;
+        }
     }
 
     details:not([open]) .collapse-content {

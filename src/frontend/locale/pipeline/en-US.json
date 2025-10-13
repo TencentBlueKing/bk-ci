@@ -1474,7 +1474,12 @@
   "debugParamsTips": "During debugging, the parameter values used in the last debugging will be automatically filled in for you. You can choose to restore to the default values",
   "restoreDetaulParamsTips": "The last build parameter value has been automatically filled in. If you don't need to fill it in, please modify the trigger [manual trigger] plugin configuration",
   "paramChangeTips": "The last build parameter value has been automatically filled in. {0} parameters have changed the default value. Please pay attention to whether the changes meet the expected",
+  "paramSetApplyTips": "Parameter values from combination {0} have been applied, including the following changes. Please check if the changes meet your expectations",
+  "inSetChangedParamTips": "{0} parameters have changed default values; ",
+  "inSetNoRequiredParamTips": "{0} parameters ({1}) are no longer input parameters, ignored and not filled; ",
+  "inSetDeletedParamTips": "{0} parameters ({1}) have been deleted, ignored and not filled.",
   "resetDefault": "Restore Default",
+
   "useLastParams": "Use Last Parameter Values",
   "next": "Next",
   "prev": "Prev",
@@ -1764,5 +1769,19 @@
   "artifactQuality": "Artifact Quality",
   "totalArtifactCount": "Total of {0}",
   "noArchivedPipelines": "No archived pipelines for now, no action needed",
-  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving."
+  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
+  "saveAsParamSet": "Save Current Parameter Set",
+  "oneKeyFill": "One-Click Fill",
+  "manageParamSets": "Manage Parameter Sets",
+  "totalParamSets": "Total {0} sets",
+  "paramSetDescription": "Parameter sets are used to quickly fill parameters with predefined values during manual execution",
+  "searchParamSetPlaceholder": "Set name/Variable name",
+  "paramSetName": "Parameter Set Name",
+  "paramList": "Parameter List",
+  "addParamField": "Add Parameter Field",
+  "noParamsAdded": "No parameters added yet",
+  "newParamSet": "New Parameter Set",
+  "lastUsedParams": "My Last Used Parameter Values",
+  "recentlyUsed": "Recently Used",
+  "paramValueSets": "Parameter Value Sets"
 }

@@ -1,6 +1,7 @@
 <template>
     <div class="bk-param-container">
         <header
+            v-if="showHeader"
             :active="isShow"
             @click="toggleContent"
             class="var-header"
@@ -65,7 +66,7 @@
                                 <div class="var-con">
                                     <div
                                         class="var-names"
-                                        :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc }"
+                                        :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc, 'param-deleted': param.isDeleted }"
                                         v-bk-tooltips="{ content: param.desc, disabled: !param.desc, allowHTML: false }"
                                     >
                                         <span>{{ param.id }}</span>
@@ -81,10 +82,12 @@
                                                 class="read-only"
                                             >{{ $t('readonlyParams') }}</span>
                                             <span
-                                                class="default-value"
+                                                :class="['default-value', {
+                                                    'param-deleted': param.isDeleted
+                                                }]"
                                                 v-bk-overflow-tips
                                             >
-                                                {{ param.defaultValue || '--' }}
+                                                {{ param.defaultValue ?? '--' }}
                                             </span>
                                         </div>
                                         <div
@@ -141,6 +144,10 @@
             vueDraggable
         },
         props: {
+            showHeader: {
+                type: Boolean,
+                default: true
+            },
             showContent: {
                 type: Boolean,
                 default: true
@@ -374,6 +381,11 @@
                         color: #313238;
                         max-width: 350px;
                         @include ellipsis();
+                        
+                    }
+                    .param-deleted {
+                        text-decoration: line-through;
+                        color: #C4C6CC !important;
                     }
                     .desc-param {
                         display: inline;
