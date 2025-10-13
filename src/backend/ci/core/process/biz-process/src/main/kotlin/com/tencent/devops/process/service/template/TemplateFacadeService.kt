@@ -393,6 +393,10 @@ class TemplateFacadeService @Autowired constructor(
         val templateModel: Model = PipelineUtils.fixedTemplateParam(objectMapper.readValue(template))
         checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
+        val templateVersion = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+        templateModel.projectId = projectId
+        templateModel.templateId = templateId
+        templateModel.latestVersion = templateVersion?.toInt() ?: 0
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templateCommonService.checkTemplateName(context, saveAsTemplateReq.templateName, projectId, templateId)
@@ -405,7 +409,7 @@ class TemplateFacadeService @Autowired constructor(
                 userId = userId,
                 template = JsonUtil.toJson(templateModel, formatted = false),
                 storeFlag = false,
-                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
+                version = templateVersion,
                 desc = null
             )
 
@@ -2507,6 +2511,9 @@ class TemplateFacadeService @Autowired constructor(
                 }
             }
         }
+        model.projectId = projectId
+        model.templateId = templateId
+        model.latestVersion = version
     }
 
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
