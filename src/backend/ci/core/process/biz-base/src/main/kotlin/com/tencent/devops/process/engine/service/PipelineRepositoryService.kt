@@ -390,6 +390,8 @@ class PipelineRepositoryService constructor(
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        model.projectId = projectId
+        model.pipelineId = pipelineId
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理

@@ -56,10 +56,14 @@ data class Model(
     val instanceFromTemplate: Boolean? = null,
     @get:Schema(title = "创建人", required = false)
     var pipelineCreator: String? = null,
+    @get:Schema(title = "项目ID", required = false)
+    var projectId: String? = null,
     @get:Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
+    @get:Schema(title = "流水线ID", required = false)
+    var pipelineId: String? = null,
     @get:Schema(title = "提示", required = false)
     var tips: String? = null,
     @get:Schema(title = "流水线事件回调", required = false)
