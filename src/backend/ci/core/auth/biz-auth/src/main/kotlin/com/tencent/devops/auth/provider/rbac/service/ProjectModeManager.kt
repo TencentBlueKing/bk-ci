@@ -3,11 +3,13 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.devops.auth.pojo.enum.RoutingMode
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 /**
  * 项目权限路由模式管理器
  * 专门用于管理 Redis 中的项目模式配置
  */
+@Service
 class ProjectModeManager(private val redisOperation: RedisOperation) {
 
     companion object {
