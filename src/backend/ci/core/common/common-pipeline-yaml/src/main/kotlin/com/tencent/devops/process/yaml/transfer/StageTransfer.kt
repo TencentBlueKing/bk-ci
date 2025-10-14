@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -104,7 +105,7 @@ class StageTransfer @Autowired(required = false) constructor(
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
 
         val params = mutableListOf<BuildFormProperty>()
-        var publicParam: List<BuildFormProperty>? = null
+        var publicParam: List<PublicVarGroupVariable>? = null
         val varGroupRefs = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
             PublicVarGroupRef(groupName = it.name, versionName = it.version)
         }
