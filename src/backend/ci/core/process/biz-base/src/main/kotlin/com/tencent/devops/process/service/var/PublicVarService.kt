@@ -300,15 +300,13 @@ class PublicVarService @Autowired constructor(
                 .sortedDescending() // 降序排序，确保先删序号大的索引
                 .forEach { params.removeAt(it) }
         } else {
-            // 3. 保留变量组版本已移除的变量
+            // 保留变量组版本已移除的变量
             diffResult.varsToRemove.forEach { varName ->
                 positionInfoMap[varName]?.let { pos ->
                     val oldVar = params.find { param -> param.id == varName }
-                    logger.info("processVarGroupDiff newVar= $oldVar")
                     if (pos.index >= 0 && pos.index < params.size && oldVar != null) {
                         params[pos.index] = oldVar
                         params[pos.index].removeFlag = true
-                        logger.info("processVarGroupDiff var:${params[pos.index]}")
                     }
                 }
             }
