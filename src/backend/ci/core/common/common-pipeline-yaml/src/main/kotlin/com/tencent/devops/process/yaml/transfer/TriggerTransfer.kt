@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.transfer
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
