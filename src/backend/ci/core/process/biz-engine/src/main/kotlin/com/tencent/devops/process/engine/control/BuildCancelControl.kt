@@ -62,10 +62,10 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "ComplexCondition", "TooManyFunctions")
 @Service
@@ -137,6 +137,7 @@ class BuildCancelControl @Autowired constructor(
                 setBuildCancelActionRedisFlag(buildId)
             }
             cancelAllPendingTask(event = event, model = model)
+
             if (event.actionType == ActionType.TERMINATE) {
                 // 修改detail model
                 pipelineBuildRecordService.buildCancel(
@@ -147,6 +148,8 @@ class BuildCancelControl @Autowired constructor(
                     cancelUser = event.userId,
                     executeCount = buildInfo.executeCount ?: 1
                 )
+                sendBuildFinishEvent(event)
+                return true
             }
 
             // 排队的则不再获取Pending Stage，防止Final Stage被执行
@@ -156,8 +159,13 @@ class BuildCancelControl @Autowired constructor(
                 } else {
                     pipelineStageService.getPendingStage(event.projectId, buildId)
                 }
-
             if (pendingStage != null) {
+                pipelineStageService.cancelQualityCheck(
+                    userId = event.userId,
+                    buildInfo = buildInfo,
+                    buildStage = pendingStage,
+                    timeout = false
+                )
                 if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
                     pipelineStageService.cancelStageBySystem(
                         userId = event.userId,

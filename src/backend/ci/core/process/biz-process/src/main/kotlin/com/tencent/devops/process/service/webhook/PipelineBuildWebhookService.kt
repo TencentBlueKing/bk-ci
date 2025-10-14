@@ -57,6 +57,7 @@ import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
@@ -93,6 +94,7 @@ import jakarta.ws.rs.core.Response
 class PipelineBuildWebhookService @Autowired constructor(
     private val client: Client,
     private val pipelineWebhookService: PipelineWebhookService,
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
@@ -544,8 +546,19 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
-        val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
+        val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            paramProperties = resource.model.getTriggerContainer().params,
+            paramValues = startParams.mapValues { it.value.toString() }
+        )
+        val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+        pipelineParamMap.putAll(paramMap)
         startParams.forEach {
+            if (paramMap.containsKey(it.key)) {
+                return@forEach
+            }
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
