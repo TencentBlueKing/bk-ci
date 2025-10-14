@@ -24,8 +24,8 @@ const contentTypeMap = {
   text: 'text/plain',
   formData: 'multipart/form-data',
 };
-const methodsWithoutData = ['delete', 'get', 'head', 'options'];
-const methodsWithData = ['post', 'put', 'patch'];
+const methodsWithoutData = ['get', 'head', 'options'];
+const methodsWithData = ['post', 'put', 'patch', 'delete'];
 const allMethods = [...methodsWithoutData, ...methodsWithData];
 
 // 拼装发送请求配置

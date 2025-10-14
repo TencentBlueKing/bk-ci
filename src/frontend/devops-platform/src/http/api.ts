@@ -1,10 +1,7 @@
-import {
-  TargetNetBehavior,
-} from '@/types';
-import { STORE_TYPE, BASE_PREFIX } from '@/common/constants';
 import fetch from './fetch';
 
 const repositoryApiPerfix = '/repository/api/user';
+const projectPerfix = '/project/api/user';
 
 export default {
   // 获取代码库配置
@@ -34,5 +31,17 @@ export default {
     return fetch.post(`${repositoryApiPerfix}/repositories/config/uploadLogo`, formData, {
       disabledResponseType: true
     });
-  }
+  },
+  requestVisibleList (scmCode: string) {
+    return fetch.get(`${repositoryApiPerfix}/repositories/config/${scmCode}/dept`);
+  },
+  setVisibleDept (scmCode: string, param: object) {
+    return fetch.post(`${repositoryApiPerfix}/repositories/config/${scmCode}/dept`, param);
+  },
+  deleteVisibleDept (scmCode: string, param: Array) {
+    return fetch.delete(`${repositoryApiPerfix}/repositories/config/${scmCode}/dept`, param);
+  },
+  getOrganizationsList(type: string, id: string) {
+    return fetch.get(`${projectPerfix}/organizations/types/${type}/ids/${id}`);
+  },
 };

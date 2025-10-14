@@ -98,5 +98,12 @@
     "由英文字母和下划线组成，不超过20个字符": "Consists of English letters and underscores, up to 20 characters",
     "如服务部署在devnet，则应启用代理，默认关闭": "If the service is deployed on devnet, the proxy should be enabled; it is disabled by default.",
     "代理": "Proxy",
-    "已关联代码库，不能删除": "已关联代码库，不能删除"
+    "已关联代码库，不能删除": "Cannot delete - already associated with code repository",
+    "Please select the visibility objects to delete first": "Please select the visibility objects to delete first",
+    "Visibility objects": "Visibility objects",
+    "Visibility scope": "Visibility scope",  
+    "Add": "Add",
+    "Batch delete": "Batch delete",
+    "Confirm deletion": "Confirm deletion",
+    "Are you sure you want to delete the selected visibility objects?": "Are you sure you want to delete the selected visibility objects?"
 }

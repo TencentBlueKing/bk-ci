@@ -1,11 +1,12 @@
 import http from '@/http/api'
-import { watch, computed, defineComponent, onMounted, ref } from 'vue';
+import { watch, computed, defineComponent, onMounted, ref, h } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { providerConfig, repoConfigFromData, UploadLogoResponse } from '@/types/index';
 import { Message, InfoBox } from 'bkui-vue';
 import { deepCopy } from '@/utils/utils';
+import { DeptInfos } from '@/types';
 import useRepoConfigTable from "./useRepoConfigTable";
 import arrowsLeft from '@/css/svg/arrows-left.svg';
 import Info from '@/css/svg/info-line.svg';
@@ -15,6 +16,7 @@ import SvnIcon from '@/css/image/svn.png';
 import GitLabIcon from '@/css/image/gitlab.png';
 import GithubIcon from '@/css/image/github.png';
 import PlatformHeader from '@/components/platform-header';
+import VisibilityDialog from '@/components/VisibilityScopeDialog';
 
 export default defineComponent({
   setup() {
@@ -63,6 +65,20 @@ export default defineComponent({
         }
       ]
     };
+    const tableRef = ref();
+    const deptData = ref([] as any)
+    const pagination = ref({
+      current: 1,
+      count: 0,
+      isLoading: false,
+    })
+    const deleteObj = ref({
+      show: false,
+      loading: false,
+      name: '',
+      id: [] as any,
+    });
+    const showVisibilityDialog = ref(false)
     const configFormData = ref<repoConfigFromData>(getDefaultFormData());
     const initConfigFormData = ref({});
     const isFormDataChanged = computed(() => JSON.stringify(initConfigFormData.value) !== JSON.stringify(configFormData.value))
@@ -79,6 +95,41 @@ export default defineComponent({
       }
       return files;
     })
+
+    const visibleRangeColumns = computed(() => [
+      {
+        type: 'selection',
+        width: 30,
+        align: 'center'
+      },
+      {
+        label: t('可见对象'),
+        field: 'deptName',
+      },
+      {
+        label: t('操作'),
+        width: 400,
+        render ({ cell, row }) {
+          return h(
+              'span',
+              {
+                style: {
+                  cursor: 'pointer',
+                  color: '#3a84ff',
+                },
+                onClick () {
+                  handleDeleteDept(row)
+                },
+              },
+              [
+                cell,
+                t('删除'),
+              ]
+            );
+
+        }
+      }
+    ]);
 
     const repoConfigStore = useRepoConfigTable();
     const {
@@ -138,6 +189,10 @@ export default defineComponent({
         } else {
             res = await http.updateRepoConfig(configFormData.value.scmCode, configFormData.value);
         }
+        await handelSetVisibleDept(configFormData.value.scmCode, deptData.value.map(i => ({
+          deptId: i.deptId,
+          deptName: i.deptName
+        })))
         if (res) {
             Message({
               theme: 'success',
@@ -230,9 +285,90 @@ export default defineComponent({
     const handleChangeName = (value) => {
       configFormData.value.name = value.trim();
     }
-
+    
+    const getVisibleList = async () => {
+      if (isCreate.value) return
+      try {
+        pagination.value.isLoading = true
+        const res = await http.requestVisibleList(curConfig.value.scmCode)
+        deptData.value = res.records
+      } catch (e) {
+        console.error(e)
+      } finally {
+        pagination.value.isLoading = false
+      }
+    }
+    const handleDeleteDept = (row: DeptInfos) => {
+      deleteObj.value = {
+        show: true,
+        loading: false,
+        name: row.deptName,
+        id: [row.deptId]
+      }
+    }
+    const handleAddDept = () => {
+      showVisibilityDialog.value = true
+    }
+    const handleBatchDeleteDept = async () => {
+      const deptIds = tableRef.value?.getSelection()?.map(i => i.deptId)
+      if (deptIds.length === 0) {
+        Message({
+          theme: 'error',
+          message: t('请先选择要删除的可见对象')
+        })
+        return
+      }
+      deleteObj.value = {
+        show: true,
+        loading: false,
+        name: '',
+        id: deptIds
+      }
+    }
+    const handleCancelDelete = () => {
+      deleteObj.value.show = false
+    }
+    const handelSetVisibleDept = async (scmCode, deptData) => {
+      try {
+          await http.setVisibleDept(scmCode, deptData)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    const handleDeleteVisible = async () => {
+      try {
+        deleteObj.value.loading = true
+        if (!isCreate.value) {
+          await http.deleteVisibleDept(curConfig.value.scmCode, deleteObj.value.id)
+        }
+        Message({
+          theme: 'success',
+          message: t('删除成功')
+        })
+        deleteObj.value.show = false
+        deptData.value = deptData.value.filter(item => !deleteObj.value.id?.map(id => String(id)).includes(String(item.deptId)))
+      } catch (e) {
+        console.error(e)
+      } finally {
+        deleteObj.value.loading = false
+      }
+    }
+    const handleConfirmVisibilityDialog = async (deptInfos: DeptInfos[], done) => {
+      deptData.value = [...deptData.value, ...deptInfos].reduce((acc, current) => {
+        if (!acc.some(item => item.deptId === current.deptId)) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+      showVisibilityDialog.value = false
+      done()
+    };
+    const handleCancelVisibilityDialog = () => {
+      showVisibilityDialog.value = false
+    };
     onMounted(async () => {
       await getProviderList()
+      await getVisibleList()
       if (!isCreate.value) {
         configFormData.value = curConfig.value as repoConfigFromData
         configFormData.value.credentialTypeList = curConfig.value?.credentialTypeList?.map((i => i.credentialType))
@@ -367,7 +503,7 @@ export default defineComponent({
                 </div>
               </div>
             </div>
-            <div class="bg-white px-[24px] py-[16px] rounded-[2px]">
+            <div class="bg-white mb-[16px] px-[24px] py-[16px] rounded-[2px]">
               <p class="h-[44px] text-[14px] font-bold text-[#4D4F56]">{t('高级设置')}</p>
               <bk-form-item
                 property="props.apiUrl"
@@ -529,6 +665,23 @@ export default defineComponent({
                 )
               }
             </div>
+            <div class="bg-white px-[24px] py-[16px] rounded-[2px]">
+              <p class="h-[44px] text-[14px] font-bold text-[#4D4F56]">{t('可见范围')}</p>
+              <bk-button theme="primary" class="mr-[10px]" onClick={handleAddDept}>{ t('添加') }</bk-button>
+              <bk-button onClick={handleBatchDeleteDept}>{ t('批量删除') }</bk-button>
+              <bk-loading
+                loading={pagination.value.isLoading}
+              >
+                <bk-table
+                  ref={tableRef}
+                  class="mt-[16px] mb-[16px]"
+                  columns={visibleRangeColumns.value}
+                  show-overflow-tooltip
+                  pagination={pagination.value}
+                  data={deptData.value}
+                />
+              </bk-loading>
+            </div>
           </bk-form>
           <div class="mt-[16px]">
             <bk-button
@@ -548,6 +701,20 @@ export default defineComponent({
             </bk-button>
           </div >
         </bk-loading>
+        <bk-dialog
+            v-model:isShow={deleteObj.value.show}
+            loading={deleteObj.value.loading}
+            onConfirm={handleDeleteVisible}
+            onCancel={handleCancelDelete}
+            title={t('删除')}
+        >
+            { deleteObj.value.name ? `${t('确定删除')}(${deleteObj.value.name})？` : t('确定删除选中的可见对象？') }
+        </bk-dialog>
+        <VisibilityDialog
+          isShow={showVisibilityDialog.value}
+          onConfirm={handleConfirmVisibilityDialog}
+          onCancel={handleCancelVisibilityDialog}
+        ></VisibilityDialog>
       </>
     );
   },
