@@ -118,7 +118,11 @@ export default defineComponent({
                   color: '#3a84ff',
                 },
                 onClick () {
-                  handleDeleteDept(row)
+                  try {
+                    handleDeleteDept(row)
+                  } catch (e) {
+                    console.error(e)
+                  }
                 },
               },
               [

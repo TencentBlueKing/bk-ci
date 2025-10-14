@@ -32,7 +32,7 @@ export default defineComponent({
     /**
      * 弹窗信息提交时的事件
      */
-    async function handleConfirm() {
+    function handleConfirm() {
       if (!checkedDept.value.length) {
         Message({
           theme: 'error',
@@ -52,12 +52,11 @@ export default defineComponent({
 
         emit('confirm', confirmData, () => {
           clearCheckedDept();
-          isFormLoading.value = false;
         });
       } catch (e) {
         console.error(e);
-        isFormLoading.value = false;
       } finally {
+        isFormLoading.value = false;
         searchKey.value = '';
       }
     };
