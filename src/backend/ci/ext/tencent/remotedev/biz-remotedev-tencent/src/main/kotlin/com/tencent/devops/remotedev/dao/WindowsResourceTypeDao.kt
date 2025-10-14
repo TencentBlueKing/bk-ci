@@ -61,7 +61,8 @@ class WindowsResourceTypeDao {
                 SDISK,
                 WEIGHT,
                 DESCRIPTION,
-                SPEC_MODEL
+                SPEC_MODEL,
+                MACHINE_FLAG
             ).values(
                 config.size,
                 config.type ?: "",
@@ -76,7 +77,8 @@ class WindowsResourceTypeDao {
                 config.sdisk,
                 config.weight ?: 0,
                 config.description,
-                config.specModel
+                config.specModel,
+                config.machineFlag ?: ""
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -146,6 +148,7 @@ class WindowsResourceTypeDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(WEIGHT, config.weight ?: 0)
                 .set(SPEC_MODEL, config.specModel)
+                .set(MACHINE_FLAG, config.machineFlag ?: "")
                 .where(ID.eq(id))
                 .execute()
         }
@@ -182,7 +185,8 @@ class WindowsResourceTypeDao {
                     sdisk = sdisk,
                     weight = weight,
                     description = description,
-                    specModel = specModel
+                    specModel = specModel,
+                    machineFlag = machineFlag
                 )
             }
         }

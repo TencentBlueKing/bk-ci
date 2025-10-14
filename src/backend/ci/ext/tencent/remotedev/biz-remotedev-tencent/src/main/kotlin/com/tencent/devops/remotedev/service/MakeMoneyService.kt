@@ -52,6 +52,32 @@ class MakeMoneyService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(MakeMoneyService::class.java)
     }
 
+    /**
+     * CMDB API响应数据类
+     */
+    private data class CmdbAssetResponse(
+        val result: Boolean?,
+        val message: String?,
+        val data: CmdbAssetData?
+    )
+
+    /**
+     * CMDB资产数据类
+     */
+    private data class CmdbAssetData(
+        val info: List<CmdbAssetInfo>?
+    )
+
+    /**
+     * CMDB资产详情类
+     */
+    private data class CmdbAssetInfo(
+        @JsonProperty("bk_inst_name")
+        val bkInstName: String,
+        @JsonProperty("start_date")
+        val startDate: String?
+    )
+
     /*
      * 注意：计算当天是不在计算时间范围内的
      *
@@ -256,7 +282,16 @@ class MakeMoneyService @Autowired constructor(
             val creator: String,
             @JsonProperty("machine_type")
             @get:Schema(title = "机型")
-            val machineType: String
+            val machineType: String,
+            @JsonProperty("hardware_cost")
+            @get:Schema(title = "是否计算硬件成本：0或1")
+            val hardwareCost: Int,
+            @JsonProperty("machine_flag")
+            @get:Schema(title = "机型标识：高配开发机、高配美术机")
+            val machineFlag: String,
+            @JsonProperty("commission_date")
+            @get:Schema(title = "启用日期：YYYY-MM")
+            val commissionDate: String
         )
     }
 
@@ -285,7 +320,99 @@ class MakeMoneyService @Autowired constructor(
         }
     }
 
+    /**
+     * 从CMDB API查询资产详情信息，构建实例名到启用日期的映射
+     * @return Map<String, String> - Key为bk_inst_name（实例名），Value为格式化后的启用日期（YYYY-MM）
+     */
+    private fun fetchCmdbAssetInfo(): Map<String, String> {
+        return try {
+            logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
+            val resultMap = mutableMapOf<String, String>()
+            var start = 0
+            val limit = 500
+            var hasMore = true
+            
+            while (hasMore) {
+                val requestBody = JsonUtil.toJson(
+                    mapOf(
+                        "bk_biz_id" to (bkConfig.ccBizId ?: 0),
+                        "page" to mapOf("start" to start, "limit" to limit),
+                        "fields" to listOf("bk_inst_name", "start_date")
+                    )
+                )
+                
+                OkhttpUtils.doPost(
+                    url = bkConfig.cmdbAssetDetailUrl,
+                    jsonParam = requestBody,
+                    headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
+                ).use { response ->
+                    if (!response.isSuccessful) {
+                        logger.warn("fetchCmdbAssetInfo failed|start: $start|code: ${response.code}|response: ${response.body?.string()}")
+                        hasMore = false
+                        return@use
+                    }
+                    
+                    val responseBody = response.body?.string() ?: ""
+                    logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
+                    val cmdbResponse = JsonUtil.to<CmdbAssetResponse>(responseBody)
+                    
+                    if (cmdbResponse.result != true || cmdbResponse.data?.info == null) {
+                        logger.warn("fetchCmdbAssetInfo result is false or data is null|start: $start")
+                        hasMore = false
+                        return@use
+                    }
+                    
+                    val currentPageData = cmdbResponse.data.info
+                    if (currentPageData.isEmpty()) {
+                        hasMore = false
+                    } else {
+                        currentPageData.forEach { asset ->
+                            resultMap[asset.bkInstName] = formatCommissionDate(asset.startDate)
+                        }
+                        
+                        // 如果返回的数据量小于limit，说明已经是最后一页
+                        if (currentPageData.size < limit) {
+                            hasMore = false
+                        } else {
+                            start += limit
+                        }
+                    }
+                }
+            }
+            
+            logger.info("fetchCmdbAssetInfo completed|total size: ${resultMap.size}")
+            resultMap
+        } catch (e: Exception) {
+            logger.error("fetchCmdbAssetInfo exception", e)
+            emptyMap()
+        }
+    }
+
+    /**
+     * 将CMDB返回的启用日期格式化为YYYY-MM格式
+     * @param startDate CMDB返回的启用日期（格式：YYYY-MM-DD）
+     * @return 格式化后的日期（格式：YYYY-MM），如果输入为空或格式错误则返回空字符串
+     */
+    private fun formatCommissionDate(startDate: String?): String {
+        return try {
+            if (startDate.isNullOrBlank()) return ""
+            val parts = startDate.split("-")
+            if (parts.size >= 2) {
+                "${parts[0]}-${parts[1]}"
+            } else {
+                startDate
+            }
+        } catch (e: Exception) {
+            logger.warn("formatCommissionDate failed|startDate: $startDate", e)
+            startDate ?: ""
+        }
+    }
+
     private fun makeMoneyMonthly(year: Int, month: Int): List<Bill.BillDetail> {
+        // 获取CMDB资产信息
+        val cmdbAssetMap = fetchCmdbAssetInfo()
+        logger.info("fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
+        
         val end = LocalDate.of(year, month, 14)
         val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
         val start = end.plusMonths(-1).plusDays(1)
@@ -330,6 +457,15 @@ class MakeMoneyService @Autowired constructor(
                 val workspace = workspaceInfo[name]
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
+                
+                // 从CMDB数据中匹配硬件成本信息
+                val commissionDate = cmdbAssetMap[name] ?: ""
+                val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
+                
+                // 获取机型标识
+                val winConfigId = allWindows[name]?.winConfigId?.toLong()
+                val machineFlag = winConfigId?.let { allConfig[it]?.machineFlag } ?: ""
+                
                 res.add(
                     Bill.BillDetail(
                         costDate = costData,
@@ -344,7 +480,10 @@ class MakeMoneyService @Autowired constructor(
                         bgName = workspace?.bgName ?: "ERROR",
                         flag = if (workspace?.bgName == "IEG互动娱乐事业群" || workspace?.bgName == "子公司组织") 1 else 0,
                         creator = workspace?.creator ?: "ERROR",
-                        machineType = workspace?.machineType ?: "ERROR"
+                        machineType = workspace?.machineType ?: "ERROR",
+                        hardwareCost = hardwareCost,
+                        machineFlag = machineFlag,
+                        commissionDate = commissionDate
                     )
                 )
             }
@@ -397,6 +536,9 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(10).setCellValue("flag")
             row.createCell(11).setCellValue("creator")
             row.createCell(12).setCellValue("machine_type")
+            row.createCell(13).setCellValue("hardware_cost")
+            row.createCell(14).setCellValue("machine_flag")
+            row.createCell(15).setCellValue("commission_date")
         }
 
         bills.forEachIndexed { index, bill ->
@@ -415,8 +557,11 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(10).setCellValue(bill.flag.toString())
             row.createCell(11).setCellValue(bill.creator)
             row.createCell(12).setCellValue(bill.machineType)
+            row.createCell(13).setCellValue(bill.hardwareCost.toString())
+            row.createCell(14).setCellValue(bill.machineFlag)
+            row.createCell(15).setCellValue(bill.commissionDate)
         }
-        for (i in 0 until 10) {
+        for (i in 0 until 16) {
             sheet.trackAllColumnsForAutoSizing()
             sheet.autoSizeColumn(i)
         }
