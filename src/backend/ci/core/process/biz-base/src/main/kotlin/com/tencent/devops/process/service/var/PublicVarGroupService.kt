@@ -37,11 +37,11 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST
-import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_REFERENCED
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
@@ -282,7 +282,11 @@ class PublicVarGroupService @Autowired constructor(
         )
     }
 
-    fun getGroupYaml(groupName: String, version: Int?, projectId: String): String {
+    fun getGroupYaml(
+        groupName: String,
+        version: Int?,
+        projectId: String
+    ): String {
         val groupInfo = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
             projectId = projectId,
@@ -313,7 +317,11 @@ class PublicVarGroupService @Autowired constructor(
         return TransferMapper.getObjectMapper().writeValueAsString(parserVO)
     }
 
-    fun exportGroup(groupName: String, version: Int?, projectId: String): Response {
+    fun exportGroup(
+        groupName: String,
+        version: Int?,
+        projectId: String)
+    : Response {
         val yaml = getGroupYaml(groupName, version, projectId)
         return YamlCommonUtils.exportToFile(yaml, groupName)
     }
@@ -334,23 +342,6 @@ class PublicVarGroupService @Autowired constructor(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf(groupName)
             )
-
-            // 统计变量组的实际关联引用数量
-            val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                referType = null,
-                version = null
-            )
-            
-            // 检查实际引用计数是否大于0
-            if (actualReferCount > 0) {
-                throw ErrorCodeException(
-                    errorCode = PIPELINE_PUBLIC_VAR_GROUP_REFERENCED,
-                    params = arrayOf(groupName)
-                )
-            }
 
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -426,13 +417,15 @@ class PublicVarGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         varGroupRefs: List<PublicVarGroupRef>
-    ): List<BuildFormProperty> {
+    ): List<PublicVarGroupVariable> {
         if (varGroupRefs.isEmpty()) {
             return emptyList()
         }
 
-        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        val publicVarGroupVariables = mutableListOf<PublicVarGroupVariable>()
         val processedVarNames = mutableSetOf<String>()
+        var currentIndex = 0
+        
         varGroupRefs.forEach { varGroupRef ->
             try {
                 val groupName = varGroupRef.groupName
@@ -454,7 +447,7 @@ class PublicVarGroupService @Autowired constructor(
                     version = groupRecord.version
                 )
 
-                // 转换为BuildFormProperty并检查同名变量
+                // 转换为PublicVarGroupVariable并检查同名变量
                 varPOs.forEach { po ->
                     if (processedVarNames.contains(po.varName)) {
                         throw ErrorCodeException(
@@ -464,7 +457,16 @@ class PublicVarGroupService @Autowired constructor(
                     }
                     val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
                     buildFormProperty.varGroupName = groupName
-                    buildFormProperties.add(buildFormProperty)
+                    buildFormProperty.varGroupVersion = groupRecord.version
+                    
+                    publicVarGroupVariables.add(
+                        PublicVarGroupVariable(
+                            groupName = groupName,
+                            groupVersion = groupRecord.version,
+                            buildFormProperty = buildFormProperty,
+                            originalIndex = currentIndex++
+                        )
+                    )
                     processedVarNames.add(po.varName)
                 }
             } catch (e: Throwable) {
@@ -473,7 +475,7 @@ class PublicVarGroupService @Autowired constructor(
             }
         }
 
-        return buildFormProperties
+        return publicVarGroupVariables
     }
 
     fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): String {

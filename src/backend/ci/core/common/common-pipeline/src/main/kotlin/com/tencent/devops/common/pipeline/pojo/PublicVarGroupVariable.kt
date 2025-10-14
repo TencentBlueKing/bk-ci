@@ -25,40 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.po
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
-@Schema(title = "流水线公共变量组关联信息数据")
-data class PipelinePublicVarGroupReferPO(
-    @get:Schema(title = "主键ID")
-    val id: Long,
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "变量组名称")
+/**
+ * 公共变量组变量信息，包含位置信息
+ */
+data class PublicVarGroupVariable(
+    @get:Schema(title = "所属变量组名称", required = true)
     val groupName: String,
-    @get:Schema(title = "版本号")
-    val version: Int = -1,
-    @get:Schema(title = "关联ID")
-    val referId: String,
-    @get:Schema(title = "引用名称")
-    val referName: String,
-    @get:Schema(title = "关联类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "引用版本号")
-    val referVersion: Int,
-    @get:Schema(title = "引用的版本名称")
-    val referVersionName: String? = null,
-    @get:Schema(title = "变量位置信息")
-    val positionInfo: List<PublicVarPositionPO>? = null,
-    @get:Schema(title = "创建者")
-    val creator: String,
-    @get:Schema(title = "修改者")
-    val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime,
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime
+    @get:Schema(title = "变量组版本", required = false)
+    val groupVersion: Int? = null,
+    @get:Schema(title = "构建表单属性", required = true)
+    val buildFormProperty: BuildFormProperty,
+    @get:Schema(title = "变量在原始参数列表中的位置索引", required = true)
+    val originalIndex: Int
 )
