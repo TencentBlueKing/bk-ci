@@ -70,7 +70,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             }
             logger.info(
                 "Start to convert yaml webhook request|$projectId|$pipelineId|" +
-                        "$branchName|$yamlFileName|$dependencyUpgrade|yaml=$yaml"
+                        "$branchName|$yamlFileName|yaml=$yaml"
             )
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,
@@ -95,14 +95,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 VersionStatus.BRANCH
             }
 
-            val versionAction = if (dependencyUpgrade) {
-                PipelineVersionAction.DEPENDENCY_UPGRADE
+            val versionAction = if (isDefaultBranch) {
+                PipelineVersionAction.CREATE_RELEASE
             } else {
-                if (isDefaultBranch) {
-                    PipelineVersionAction.CREATE_RELEASE
-                } else {
-                    PipelineVersionAction.CREATE_BRANCH
-                }
+                PipelineVersionAction.CREATE_BRANCH
             }
 
             val pipelineAsCodeSettings = modelAndSetting.setting.pipelineAsCodeSettings?.copy(

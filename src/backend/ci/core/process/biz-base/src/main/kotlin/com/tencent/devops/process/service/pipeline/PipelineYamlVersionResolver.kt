@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.yaml.PipelineYamlDependencyDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service
 class PipelineYamlVersionResolver @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val pipelineYamlDependencyDao: PipelineYamlDependencyDao,
     private val client: Client,
     private val scmProxyService: ScmProxyService
 ) {
@@ -109,9 +107,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
         filePath: String,
         ref: String,
         blobId: String,
-        defaultBranch: String,
-        dependentFilePath: String? = null,
-        dependentBlobId: String? = null
+        defaultBranch: String
     ): PipelineYamlVersion? {
         logger.info("get pipeline yaml version|$projectId|$repoHashId|$filePath|$ref|$blobId|$defaultBranch")
         val pipelineBranchVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
@@ -121,9 +117,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             filePath = filePath,
             ref = ref,
             blobId = blobId,
-            branchAction = BranchVersionAction.ACTIVE.name,
-            dependentFilePath = dependentFilePath,
-            dependentBlobId = dependentBlobId
+            branchAction = BranchVersionAction.ACTIVE.name
         )
         return if (ref == defaultBranch) {
             pipelineBranchVersion
@@ -135,67 +129,15 @@ class PipelineYamlVersionResolver @Autowired constructor(
                 filePath = filePath,
                 ref = defaultBranch,
                 blobId = blobId,
-                branchAction = BranchVersionAction.ACTIVE.name,
-                dependentFilePath = dependentFilePath,
-                dependentBlobId = dependentBlobId
+                branchAction = BranchVersionAction.ACTIVE.name
             ) ?: pipelineYamlVersionDao.getPipelineYamlVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId,
-                dependentFilePath = dependentFilePath,
-                dependentBlobId = dependentBlobId
+                blobId = blobId
             )
         }
-    }
-
-    /**
-     * 获取触发时版本
-     */
-    fun getTriggerVersion(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        ref: String,
-        blobId: String,
-        defaultBranch: String,
-        authRepository: AuthRepository
-    ): PipelineYamlVersion? {
-        val dependency = pipelineYamlDependencyDao.getDependency(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            ref = blobId
-        )
-        val dependentBlobId = if (dependency != null) {
-            // 依赖的分支为空,则是用当前默认的分支
-            val finalRef = if (dependency.dependentRef == DEFAULT_DEPENDENT_REF) {
-                ref
-            } else {
-                dependency.dependentRef
-            }
-            // 这里后续看是否可以改成从T_PIPELINE_YAML_BRANCH_FILE表中获取
-            scmProxyService.getFileContent(
-                projectId = projectId,
-                path = dependency.dependentFilePath,
-                ref = finalRef,
-                authRepository = authRepository
-            ).blobId
-        } else {
-            null
-        }
-        return getPipelineYamlVersion(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            ref = ref,
-            blobId = blobId,
-            defaultBranch = defaultBranch,
-            dependentFilePath = dependency?.dependentFilePath,
-            dependentBlobId = dependentBlobId
-        )
     }
 
     private fun trimRef(branch: String): String {
@@ -208,6 +150,5 @@ class PipelineYamlVersionResolver @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlVersionResolver::class.java)
-        private const val DEFAULT_DEPENDENT_REF = "*"
     }
 }

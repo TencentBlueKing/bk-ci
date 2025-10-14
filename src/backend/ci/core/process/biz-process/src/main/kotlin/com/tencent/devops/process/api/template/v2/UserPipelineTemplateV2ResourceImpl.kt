@@ -269,7 +269,7 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<PipelineTemplateDetailsResponse> {
+    ): Result<PipelineTemplateDetailsResponse?> {
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
             userId = userId,

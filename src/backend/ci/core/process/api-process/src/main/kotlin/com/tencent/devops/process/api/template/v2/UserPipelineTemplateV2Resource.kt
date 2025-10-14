@@ -235,7 +235,7 @@ interface UserPipelineTemplateV2Resource {
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
         version: Int
-    ): Result<PipelineTemplateDetailsResponse>
+    ): Result<PipelineTemplateDetailsResponse?>
 
     @Operation(summary = "根据流水线版本查看关联的模版信息")
     @GET

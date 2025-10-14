@@ -54,9 +54,7 @@ class PipelineYamlVersionDao {
         pipelineId: String,
         version: Int,
         commitTime: LocalDateTime,
-        userId: String,
-        dependentFilePath: String? = null,
-        dependentBlobId: String? = null,
+        userId: String
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
@@ -74,9 +72,7 @@ class PipelineYamlVersionDao {
                 VERSION,
                 BRANCH_ACTION,
                 CREATOR,
-                CREATE_TIME,
-                DEPENDENT_FILE_PATH,
-                DEPENDENT_BLOB_ID
+                CREATE_TIME
             ).values(
                 id,
                 projectId,
@@ -90,9 +86,7 @@ class PipelineYamlVersionDao {
                 version,
                 BranchVersionAction.ACTIVE.name,
                 userId,
-                now,
-                dependentFilePath,
-                dependentBlobId
+                now
             ).execute()
         }
     }
@@ -106,9 +100,7 @@ class PipelineYamlVersionDao {
         ref: String? = null,
         commitId: String? = null,
         blobId: String? = null,
-        branchAction: String? = null,
-        dependentFilePath: String? = null,
-        dependentBlobId: String? = null
+        branchAction: String? = null
     ): PipelineYamlVersion? {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             val record = dslContext.selectFrom(this)
@@ -119,12 +111,6 @@ class PipelineYamlVersionDao {
                 .let { if (!commitId.isNullOrBlank()) it.and(COMMIT_ID.eq(ref)) else it }
                 .let { if (!blobId.isNullOrBlank()) it.and(BLOB_ID.eq(blobId)) else it }
                 .let { if (!branchAction.isNullOrBlank()) it.and(BRANCH_ACTION.eq(branchAction)) else it }
-                .let {
-                    if (!dependentFilePath.isNullOrBlank()) it.and(DEPENDENT_FILE_PATH.eq(dependentFilePath)) else it
-                }
-                .let {
-                    if (!dependentBlobId.isNullOrBlank()) it.and(DEPENDENT_BLOB_ID.eq(dependentBlobId)) else it
-                }
                 .orderBy(COMMIT_TIME.desc())
                 .limit(1)
                 .fetchOne()

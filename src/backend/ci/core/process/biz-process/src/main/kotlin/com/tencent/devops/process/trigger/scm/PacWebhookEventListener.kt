@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.trigger.scm
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType.CREATE
@@ -36,12 +37,11 @@ import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.trigger.scm.converter.WebhookYamlDiffConverterManager
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
-import com.tencent.devops.process.yaml.PipelineYamlDependencyService
-import com.tencent.devops.process.yaml.PipelineYamlDiffService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlViewService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
+import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
@@ -57,8 +57,7 @@ class PacWebhookEventListener(
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookYamlDiffConverterManager: WebhookYamlDiffConverterManager,
     private val webhookGrayService: WebhookGrayService,
-    private val pipelineYamlDiffService: PipelineYamlDiffService,
-    private val pipelineYamlDependencyService: PipelineYamlDependencyService
+    private val sampleEventDispatcher: SampleEventDispatcher,
 ) : WebHookEventListener {
 
     companion object {
@@ -94,19 +93,13 @@ class PacWebhookEventListener(
                 repository = repository,
                 yamlDiffs = finalYamlDiffs
             )
-            // 依赖的变更文件
-            val diffDependencies = pipelineYamlDependencyService.analyzeDiffDependencies(
-                projectId = projectId,
-                repoHashId = repository.repoHashId!!,
-                eventId = eventId,
-                yamlDiffs = yamlDiffs
-            )
-            pipelineYamlDiffService.saveAndSend(
-                projectId = projectId,
-                repository = repository,
-                eventId = eventId,
-                yamlDiffs = diffDependencies
-            )
+            finalYamlDiffs.forEach {
+                val yamlFileEvent = PipelineYamlFileEvent(
+                    repository = repository,
+                    yamlDiff = it
+                )
+                sampleEventDispatcher.dispatch(yamlFileEvent)
+            }
         } catch (ignored: Exception) {
             logger.error(
                 "[PAC_PIPELINE]|Failed to dispatch yaml file event|$eventId|" +

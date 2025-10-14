@@ -120,11 +120,9 @@ import com.tencent.devops.process.pojo.template.TemplateOperationMessage
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
-import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
-import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineAsCodeService
@@ -134,7 +132,6 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
-import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
@@ -194,8 +191,7 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineTemplateVersionManager: PipelineTemplateVersionManager,
     private val pipelineTemplateMarketFacadeService: PipelineTemplateMarketFacadeService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val templatePipelineVersionService: PipelineTemplatePipelineVersionService
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -1986,26 +1982,6 @@ class TemplateFacadeService @Autowired constructor(
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 checkTemplate = false
-            )
-
-            templatePipelineVersionService.createOrUpdate(
-                record = PTemplatePipelineVersion(
-                    projectId = projectId,
-                    pipelineId = result.pipelineId,
-                    pipelineVersion = result.version,
-                    pipelineVersionName = result.versionName ?: "",
-                    instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
-                    buildNo = templateInstanceUpdate.buildNo,
-                    params = templateInstanceUpdate.param,
-                    refType = TemplateRefType.ID,
-                    inputTemplateId = templateId,
-                    inputTemplateVersionName = versionName,
-                    templateId = templateId,
-                    templateVersion = templateVersion,
-                    templateVersionName = versionName,
-                    creator = userId,
-                    updater = userId
-                )
             )
             templateInstanceUpdate.buildNo?.let {
                 if (templateInstanceUpdate.resetBuildNo == true) {

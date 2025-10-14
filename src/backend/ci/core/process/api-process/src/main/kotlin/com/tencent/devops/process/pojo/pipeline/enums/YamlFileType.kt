@@ -17,30 +17,6 @@ enum class YamlFileType {
         return this == PIPELINE
     }
 
-    /**
-     * 是否需要通知调度器,唤醒其他等到的文件
-     */
-    fun needNotifyScheduler(): Boolean {
-        return this == TEMPLATE
-    }
-
-    /**
-     * 依赖的类型列表
-     */
-    fun dependencyType(): List<YamlFileType> {
-        return when (this) {
-            PIPELINE -> return listOf(TEMPLATE)
-            else -> emptyList()
-        }
-    }
-
-    fun notifyType(): List<YamlFileType> {
-        return when (this) {
-            TEMPLATE -> return listOf(PIPELINE)
-            else -> emptyList()
-        }
-    }
-
     companion object {
         fun getFileType(filePath: String): YamlFileType {
             return when {

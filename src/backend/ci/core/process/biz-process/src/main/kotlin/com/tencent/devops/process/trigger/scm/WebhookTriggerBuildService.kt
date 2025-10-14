@@ -176,14 +176,13 @@ class WebhookTriggerBuildService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
                 params = arrayOf(eventId.toString())
             )
-            val pipelineYamlVersion = pipelineYamlVersionResolver.getTriggerVersion(
+            val pipelineYamlVersion = pipelineYamlVersionResolver.getPipelineYamlVersion(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
                 ref = ref,
                 blobId = blobId!!,
-                defaultBranch = defaultBranch,
-                authRepository = authRepository!!
+                defaultBranch = defaultBranch
             ) ?: run {
                 logger.info(
                     "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|eventId: $eventId|" +
