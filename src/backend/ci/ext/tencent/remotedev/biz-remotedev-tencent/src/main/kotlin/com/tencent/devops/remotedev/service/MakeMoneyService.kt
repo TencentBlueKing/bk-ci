@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -14,14 +16,14 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 import java.lang.Long.bitCount
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.StreamingOutput
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -178,16 +180,16 @@ class MakeMoneyService @Autowired constructor(
             if (res.isEmpty()) break
             aMap.putAll(
                 res.associateBy({ it.name }, {
-                SaveData(
-                    projectId = it.projectId,
-                    projectName = it.projectName,
-                    status = WorkspaceStatus.load(it.status),
-                    ip = it.ip,
-                    bgName = it.creatorBgName,
-                    creator = it.creator,
-                    machineType = ""
-                )
-            })
+                    SaveData(
+                        projectId = it.projectId,
+                        projectName = it.projectName,
+                        status = WorkspaceStatus.load(it.status),
+                        ip = it.ip,
+                        bgName = it.creatorBgName,
+                        creator = it.creator,
+                        machineType = ""
+                    )
+                })
             )
             page += 1
         }
@@ -331,7 +333,7 @@ class MakeMoneyService @Autowired constructor(
             var start = 0
             val limit = 500
             var hasMore = true
-            
+
             while (hasMore) {
                 val requestBody = JsonUtil.toJson(
                     mapOf(
@@ -340,7 +342,7 @@ class MakeMoneyService @Autowired constructor(
                         "fields" to listOf("bk_inst_name", "start_date")
                     )
                 )
-                
+
                 OkhttpUtils.doPost(
                     url = bkConfig.cmdbAssetDetailUrl,
                     jsonParam = requestBody,
@@ -351,17 +353,17 @@ class MakeMoneyService @Autowired constructor(
                         hasMore = false
                         return@use
                     }
-                    
+
                     val responseBody = response.body?.string() ?: ""
                     logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
-                    val cmdbResponse = JsonUtil.to<CmdbAssetResponse>(responseBody)
-                    
+                    val cmdbResponse: CmdbAssetResponse = jacksonObjectMapper().readValue(responseBody)
+
                     if (cmdbResponse.result != true || cmdbResponse.data?.info == null) {
                         logger.warn("fetchCmdbAssetInfo result is false or data is null|start: $start")
                         hasMore = false
                         return@use
                     }
-                    
+
                     val currentPageData = cmdbResponse.data.info
                     if (currentPageData.isEmpty()) {
                         hasMore = false
@@ -369,7 +371,7 @@ class MakeMoneyService @Autowired constructor(
                         currentPageData.forEach { asset ->
                             resultMap[asset.bkInstName] = formatCommissionDate(asset.startDate)
                         }
-                        
+
                         // 如果返回的数据量小于limit，说明已经是最后一页
                         if (currentPageData.size < limit) {
                             hasMore = false
@@ -379,7 +381,7 @@ class MakeMoneyService @Autowired constructor(
                     }
                 }
             }
-            
+
             logger.info("fetchCmdbAssetInfo completed|total size: ${resultMap.size}")
             resultMap
         } catch (e: Exception) {
@@ -412,7 +414,7 @@ class MakeMoneyService @Autowired constructor(
         // 获取CMDB资产信息
         val cmdbAssetMap = fetchCmdbAssetInfo()
         logger.info("fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
-        
+
         val end = LocalDate.of(year, month, 14)
         val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
         val start = end.plusMonths(-1).plusDays(1)
@@ -457,15 +459,15 @@ class MakeMoneyService @Autowired constructor(
                 val workspace = workspaceInfo[name]
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
-                
+
                 // 从CMDB数据中匹配硬件成本信息
                 val commissionDate = cmdbAssetMap[name] ?: ""
                 val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
-                
+
                 // 获取机型标识
                 val winConfigId = allWindows[name]?.winConfigId?.toLong()
                 val machineFlag = winConfigId?.let { allConfig[it]?.machineFlag } ?: ""
-                
+
                 res.add(
                     Bill.BillDetail(
                         costDate = costData,
