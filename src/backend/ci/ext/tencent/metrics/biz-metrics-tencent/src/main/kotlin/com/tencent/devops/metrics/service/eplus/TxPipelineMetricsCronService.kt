@@ -28,13 +28,14 @@
 package com.tencent.devops.metrics.service.eplus
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -71,7 +72,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val tokenService: ClientTokenService
 ) {
 
     @Value("\${eplus.token}")
@@ -676,9 +678,17 @@ class TxPipelineMetricsCronService @Autowired constructor(
                         .filterNot { disabledPipelines.contains(it.pipelineId) }
                         .map { it.pipelineId }
 
+                    val manager = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                        token = tokenService.getSystemToken(),
+                        projectCode = projectId,
+                        resourceType = ResourceTypeId.PROJECT,
+                        resourceCode = projectId,
+                        group = BkAuthGroup.MANAGER
+                    ).data?.random() ?: return@processProject
+
                     if (pipelineIds.isNotEmpty()) {
                         val result = client.get(ServiceTXPipelineResource::class).lockPipeline(
-                            userId = AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE,
+                            userId = manager,
                             projectId = projectId,
                             pipelineIds = pipelineIds,
                             enable = false
