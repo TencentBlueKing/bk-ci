@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.service.eplus
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -677,7 +678,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
                     if (pipelineIds.isNotEmpty()) {
                         val result = client.get(ServiceTXPipelineResource::class).lockPipeline(
-                            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                            userId = AUTH_HEADER_DEVOPS_REPO_USER_DEFAULT_VALUE,
                             projectId = projectId,
                             pipelineIds = pipelineIds,
                             enable = false
