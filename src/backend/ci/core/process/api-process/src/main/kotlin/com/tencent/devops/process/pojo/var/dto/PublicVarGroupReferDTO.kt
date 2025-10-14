@@ -45,7 +45,7 @@ data class PublicVarGroupReferDTO(
     val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "关联组件名称")
     val referName: String,
-    @get:Schema(title = "关联组件内容")
+    @get:Schema(title = "关联组件版本号")
     val referVersion: Int,
     @get:Schema(title = "关联组件版本名称")
     val referVersionName: String? = null,
