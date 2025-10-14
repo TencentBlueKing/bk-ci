@@ -82,6 +82,7 @@ import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceMembe
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionResourceValidateService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionService
+import com.tencent.devops.auth.provider.rbac.service.ProjectModeManager
 import com.tencent.devops.auth.provider.rbac.service.RoutingStrategyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService
@@ -368,6 +369,13 @@ class RbacAuthConfiguration {
         client = client,
         bkInternalPermissionReconciler = bkInternalPermissionReconciler,
         authProjectUserMetricsService = authProjectUserMetricsService
+    )
+
+    @Bean
+    fun projectModeManager(
+        redisOperation: RedisOperation
+    ) = ProjectModeManager(
+        redisOperation = redisOperation
     )
 
     @Bean
