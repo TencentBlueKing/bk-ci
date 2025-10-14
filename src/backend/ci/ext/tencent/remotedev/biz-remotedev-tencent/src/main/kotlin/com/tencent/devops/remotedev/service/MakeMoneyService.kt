@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -57,6 +58,7 @@ class MakeMoneyService @Autowired constructor(
     /**
      * CMDB API响应数据类
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetResponse(
         val result: Boolean?,
         val message: String?,
@@ -66,6 +68,7 @@ class MakeMoneyService @Autowired constructor(
     /**
      * CMDB资产数据类
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetData(
         val info: List<CmdbAssetInfo>?
     )
@@ -73,6 +76,7 @@ class MakeMoneyService @Autowired constructor(
     /**
      * CMDB资产详情类
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private data class CmdbAssetInfo(
         @JsonProperty("bk_inst_name")
         val bkInstName: String,
