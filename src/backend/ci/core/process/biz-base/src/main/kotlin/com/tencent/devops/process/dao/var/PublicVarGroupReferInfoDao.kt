@@ -247,26 +247,23 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
-    fun deleteByReferIds(
+    fun deleteByReferId(
         dslContext: DSLContext,
         projectId: String,
-        referIds: List<String>,
+        referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String? = null
+        referVersion: Int? = null
     ) {
-        if (referIds.isEmpty()) {
-            return
-        }
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val deleteQuery = dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.`in`(referIds))
+                .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
-            
-            if (referVersionName != null) {
-                deleteQuery.and(REFER_VERSION_NAME.eq(referVersionName))
+
+            if (referVersion != null) {
+                deleteQuery.and(REFER_VERSION.eq(referVersion))
             }
-            
+
             deleteQuery.execute()
         }
     }
@@ -310,6 +307,7 @@ class PublicVarGroupReferInfoDao {
                     po.updateTime
                 ).onDuplicateKeyUpdate()
                     .set(REFER_NAME, po.referName)
+                    .set(REFER_VERSION_NAME, po.referVersionName)
                     .set(POSITION_INFO, po.positionInfo?.let { JsonUtil.toJson(it, false) })
                     .set(MODIFIER, po.modifier)
                     .set(UPDATE_TIME, po.updateTime)
