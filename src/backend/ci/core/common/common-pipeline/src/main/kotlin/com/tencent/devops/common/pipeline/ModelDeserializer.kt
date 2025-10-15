@@ -3,8 +3,6 @@ package com.tencent.devops.common.pipeline
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonNode
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
@@ -19,7 +17,6 @@ class ModelDeserializer : JsonDeserializer<Model>() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelDeserializer::class.java)
-        private val baseMapper = JsonUtil.getObjectMapper()
     }
 
     /**
@@ -33,29 +30,25 @@ class ModelDeserializer : JsonDeserializer<Model>() {
      * 
      * 方法执行流程：
      * 1. 标记反序列化上下文，防止循环引用
-     * 2. 将JSON解析为JsonNode树结构
-     * 3. 将JsonNode转换为Model对象
-     * 4. 处理模型中的触发器容器
-     * 5. 清理标记并返回结果
+     * 2. 转换为Model对象
+     * 3. 处理模型中的触发器容器
+     * 4. 清理标记并返回结果
      */
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Model {
         // 标记反序列化上下文，用于标识当前正在反序列化过程中(防止在反序列化过程中出现循环引用问题)
         ModelDeserializeMarker.markInside()
         logger.info("Start deserializing Model (thread: ${Thread.currentThread().name})")
-        
+
         return try {
-            // 第一步：将JSON输入流解析为JsonNode树结构
-            val node: JsonNode = baseMapper.readTree(p)
-            
-            // 第二步：将JsonNode转换为具体的Model对象
-            val model = baseMapper.treeToValue(node, Model::class.java)
+            // 转换为具体的Model对象
+            val model = ctxt.readValue(p, Model::class.java)
                 ?: throw IllegalStateException("Model deserialization returned null")
-            
+
             logger.info("Model deserialized successfully, stages count: ${model.stages.size}")
-            
-            // 第三步：处理模型中的触发器容器，设置相关参数
+
+            // 处理模型中的触发器容器，设置相关参数
             processTriggerContainers(model)
-            
+
             // 返回反序列化完成的Model对象
             model
         } catch (ignored: Throwable) {
