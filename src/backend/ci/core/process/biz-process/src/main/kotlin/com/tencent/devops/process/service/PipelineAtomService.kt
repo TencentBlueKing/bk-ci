@@ -29,7 +29,6 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
-import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
 import com.tencent.devops.common.api.constant.LATEST_EXECUTOR
 import com.tencent.devops.common.api.constant.LATEST_MODIFIER
@@ -60,8 +59,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineAtomRel
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
-import com.tencent.devops.process.utils.KEY_PIPELINE_ID
-import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreResource

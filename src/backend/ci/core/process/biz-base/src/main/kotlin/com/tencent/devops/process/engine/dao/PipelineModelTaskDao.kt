@@ -39,15 +39,14 @@ import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.groupConcatDistinct
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
