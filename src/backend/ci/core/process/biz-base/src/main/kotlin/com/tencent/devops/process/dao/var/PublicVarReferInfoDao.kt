@@ -43,7 +43,7 @@ class PublicVarReferInfoDao {
         if (pipelinePublicVarReferPOs.isEmpty()) {
             return
         }
-        
+
         with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
             val insertSteps = pipelinePublicVarReferPOs.map { po ->
                 dslContext.insertInto(this)

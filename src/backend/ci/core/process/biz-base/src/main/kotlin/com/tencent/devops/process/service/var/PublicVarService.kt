@@ -240,7 +240,7 @@ class PublicVarService @Autowired constructor(
             val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
             val positionInfo = groupReferInfo?.positionInfo
             positionInfo?.let {
-                val latestGroupVarNames = latestGroupVars.map { it.id  }.toSet()
+                val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
                 val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
                 // 对比版本差异
                 val diffResult = compareVarGroupVersions(
