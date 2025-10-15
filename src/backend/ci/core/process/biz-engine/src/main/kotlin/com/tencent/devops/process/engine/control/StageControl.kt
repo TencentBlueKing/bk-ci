@@ -120,6 +120,14 @@ class StageControl @Autowired constructor(
 
     private fun PipelineBuildStageEvent.execute(watcher: Watcher) {
         watcher.start("init_context")
+        try {
+            executeStageEvent(watcher)
+        } finally {
+            watcher.stop() // 始终执行清理
+        }
+    }
+
+    private fun PipelineBuildStageEvent.executeStageEvent(watcher: Watcher) {
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
@@ -155,7 +163,7 @@ class StageControl @Autowired constructor(
         // #10082 过滤Agent复用互斥的endJob信息
         val mutexJobs = containers.filter {
             it.controlOption.agentReuseMutex?.endJob == true &&
-                    it.controlOption.agentReuseMutex?.reUseJobId != null
+                it.controlOption.agentReuseMutex?.reUseJobId != null
         }.groupBy { it.controlOption.agentReuseMutex?.reUseJobId!! }
             .mapValues { (_, jobs) -> jobs.size }.ifEmpty { null }?.toMutableMap()
         val stageContext = StageContext(
@@ -172,9 +180,8 @@ class StageControl @Autowired constructor(
             agentReuseMutexEndJob = mutexJobs,
             debug = buildInfo.debug
         )
-        watcher.stop()
 
-        val commandList = listOf<StageCmd>(
+        val commandList = listOf(
             commandCache.get(CheckInterruptStageCmd::class.java), // 快速失败或者中断执行的检查
             commandCache.get(CheckConditionalSkipStageCmd::class.java), // 检查Stage条件跳过处理
             commandCache.get(CheckPauseReviewStageCmd::class.java), // Stage暂停&审核事件处理
