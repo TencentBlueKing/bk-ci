@@ -48,10 +48,8 @@ interface PipelineOverviewManageService {
      * @param queryPipelineOverviewDTO 查询流水线概览传输对象
      * @return 流水线趋势信息列表
      */
-    fun queryPipelineTrendInfo(
-        queryPipelineOverviewDTO: QueryPipelineOverviewDTO
-    ): List<PipelineTrendInfoDO>
-    
+    fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO>
+
     /**
      * 批量查询多个流水线最近一月执行次数
      * @param projectId 项目ID

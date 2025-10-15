@@ -239,7 +239,7 @@ class PublicVarGroupService @Autowired constructor(
                 referType = null,
                 version = null
             )
-            
+
             PublicVarGroupDO(
                 groupName = po.groupName,
                 referCount = actualReferCount,

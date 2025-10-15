@@ -154,7 +154,7 @@ class PipelineOverviewDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
-    
+
     /**
      * 批量查询多个流水线近一月内执行次数
      */

@@ -59,7 +59,7 @@ data class TriggerContainer(
     @get:Schema(title = "构建版本号", required = false)
     var buildNo: BuildNo? = null,
     @get:Schema(title = "公共变量序号集合", required = false)
-    var publicParamsIndex:  Map<String, Int?>? = null,
+    var publicParamsIndex: Map<String, Int?>? = null,
     @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,

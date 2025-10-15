@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 
 /**
  * Model对象的JSON反序列化器
- * 
  * 负责将JSON数据反序列化为Model对象，并处理相关的触发器容器逻辑
  * 主要用于CI/CD流水线配置的反序列化处理
  */

@@ -63,7 +63,7 @@ class VariableTransfer {
         return makeVariableFromBuildParams(model.getTriggerContainer().params, true)
     }
 
-    fun makeVariableFromBuildParams(params:  List<BuildFormProperty>, skipPublicVar: Boolean): Map<String, Variable>? {
+    fun makeVariableFromBuildParams(params: List<BuildFormProperty>, skipPublicVar: Boolean): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
         params.forEach {
             if (it.id in ignoredVariable || (skipPublicVar && it.varGroupName != null)) return@forEach

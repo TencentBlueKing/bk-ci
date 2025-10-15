@@ -123,7 +123,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
     }
-    
+
     override fun queryPipelineMonthlyExecCounts(
         projectId: String,
         pipelineIds: List<String>,
@@ -133,7 +133,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         if (pipelineIds.isEmpty()) {
             return emptyMap()
         }
-        
+
         val result = pipelineOverviewDao.queryPipelineMonthlyExecCounts(
             dslContext = dslContext,
             projectId = projectId,

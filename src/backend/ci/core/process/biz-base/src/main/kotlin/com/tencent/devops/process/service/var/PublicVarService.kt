@@ -72,7 +72,7 @@ class PublicVarService @Autowired constructor(
         val projectId = publicVarDTO.projectId
         val userId = publicVarDTO.userId
         val groupName = publicVarDTO.groupName
-        
+
         // 批量生成ID
         val segmentIds = client.get(ServiceAllocIdResource::class)
             .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
@@ -334,7 +334,7 @@ class PublicVarService @Autowired constructor(
             }
         }
     }
-    
+
     /**
      * 批量获取多个组的最新版本
      */
@@ -347,16 +347,16 @@ class PublicVarService @Autowired constructor(
             projectId = projectId,
             groupNames = groupNames
         )
-        
+
         // 检查是否有组名不存在
         val missingGroups = groupNames.filter { it !in versionMap }
         if (missingGroups.isNotEmpty()) {
             throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(missingGroups.first()))
         }
-        
+
         return versionMap
     }
-    
+
     /**
      * 批量获取所有组的最新版本变量
      */
