@@ -44,8 +44,6 @@ class ModelDeserializer : JsonDeserializer<Model>() {
             val model = ctxt.readValue(p, Model::class.java)
                 ?: throw IllegalStateException("Model deserialization returned null")
 
-            logger.info("Model deserialized successfully, stages count: ${model.stages.size}")
-
             // 处理模型中的触发器容器，设置相关参数
             processTriggerContainers(model)
 
