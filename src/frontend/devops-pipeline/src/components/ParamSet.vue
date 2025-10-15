@@ -44,7 +44,7 @@
             </bk-select>
             <bk-button
                 class="param-set-selector-button"
-                :disabled="isApplyed"
+                :disabled="isApplyed || !paramSetId"
                 :loading="isApplying"
                 @click="applyParamSet"
             >
