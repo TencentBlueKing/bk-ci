@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
@@ -599,7 +600,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                         groupName = key.groupName,
                         version = key.version,
                         varName = element.id,
-                        index = index
+                        index = index,
+                        type = if (element.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE
                     )
                 }
             }
