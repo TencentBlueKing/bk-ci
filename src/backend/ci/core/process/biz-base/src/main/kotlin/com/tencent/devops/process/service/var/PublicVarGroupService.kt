@@ -421,52 +421,104 @@ class PublicVarGroupService @Autowired constructor(
         val publicVarGroupVariables = mutableListOf<PublicVarGroupVariable>()
         val processedVarNames = mutableSetOf<String>()
         var currentIndex = 0
+        
         varGroupRefs.forEach { varGroupRef ->
-            try {
-                val groupName = varGroupRef.groupName
-                val versionName = varGroupRef.versionName
-                val groupRecord = publicVarGroupDao.getRecordByGroupName(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    versionName = versionName
-                ) ?: run {
-                    logger.warn("Variable group $groupName not found in project $projectId")
-                    return@forEach
-                }
-                // 获取变量组中的变量
-                val varPOs = publicVarService.getGroupPublicVar(
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = groupRecord.version
-                )
-                // 转换为PublicVarGroupVariable并检查同名变量
-                varPOs.forEach { po ->
-                    if (processedVarNames.contains(po.varName)) {
-                        throw ErrorCodeException(
-                            errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
-                            params = arrayOf(groupName, po.varName)
-                        )
-                    }
-                    val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
-                    buildFormProperty.varGroupName = groupName
-                    buildFormProperty.varGroupVersion = groupRecord.version
-                    publicVarGroupVariables.add(
-                        PublicVarGroupVariable(
-                            groupName = groupName,
-                            groupVersion = groupRecord.version,
-                            buildFormProperty = buildFormProperty,
-                            originalIndex = currentIndex++
-                        )
-                    )
-                    processedVarNames.add(po.varName)
-                }
-            } catch (e: Throwable) {
-                logger.warn("Failed to get variables from group ${varGroupRef.groupName}", e)
-                throw e
-            }
+            currentIndex = processVarGroupRef(
+                projectId = projectId,
+                varGroupRef = varGroupRef,
+                publicVarGroupVariables = publicVarGroupVariables,
+                processedVarNames = processedVarNames,
+                currentIndex = currentIndex
+            )
         }
         return publicVarGroupVariables
+    }
+
+    /**
+     * 处理单个变量组引用
+     */
+    private fun processVarGroupRef(
+        projectId: String,
+        varGroupRef: PublicVarGroupRef,
+        publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
+        processedVarNames: MutableSet<String>,
+        currentIndex: Int
+    ): Int {
+        try {
+            val groupName = varGroupRef.groupName
+            val versionName = varGroupRef.versionName
+            val groupRecord = publicVarGroupDao.getRecordByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                versionName = versionName
+            ) ?: run {
+                logger.warn("Variable group $groupName not found in project $projectId")
+                return currentIndex
+            }
+            
+            // 获取变量组中的变量
+            val varPOs = publicVarService.getGroupPublicVar(
+                projectId = projectId,
+                groupName = groupName,
+                version = groupRecord.version
+            )
+            
+            // 转换为PublicVarGroupVariable并检查同名变量
+            return processVarPOs(
+                varPOs = varPOs,
+                groupName = groupName,
+                groupVersion = groupRecord.version,
+                publicVarGroupVariables = publicVarGroupVariables,
+                processedVarNames = processedVarNames,
+                currentIndex = currentIndex
+            )
+        } catch (e: Throwable) {
+            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", e)
+            throw e
+        }
+    }
+
+    /**
+     * 处理变量PO列表，转换为PublicVarGroupVariable
+     */
+    private fun processVarPOs(
+        varPOs: List<*>,
+        groupName: String,
+        groupVersion: Int,
+        publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
+        processedVarNames: MutableSet<String>,
+        currentIndex: Int
+    ): Int {
+        var index = currentIndex
+        varPOs.forEach { po ->
+            val varName = (po as? com.tencent.devops.process.pojo.`var`.po.PublicVarPO)?.varName ?: return@forEach
+            
+            if (processedVarNames.contains(varName)) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
+                    params = arrayOf(groupName, varName)
+                )
+            }
+            
+            val buildFormProperty = JsonUtil.to(
+                (po as com.tencent.devops.process.pojo.`var`.po.PublicVarPO).buildFormProperty,
+                BuildFormProperty::class.java
+            )
+            buildFormProperty.varGroupName = groupName
+            buildFormProperty.varGroupVersion = groupVersion
+            
+            publicVarGroupVariables.add(
+                PublicVarGroupVariable(
+                    groupName = groupName,
+                    groupVersion = groupVersion,
+                    buildFormProperty = buildFormProperty,
+                    originalIndex = index++
+                )
+            )
+            processedVarNames.add(varName)
+        }
+        return index
     }
 
     fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): String {
