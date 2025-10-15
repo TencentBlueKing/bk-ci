@@ -11,9 +11,11 @@ import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
+import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
 import com.tencent.devops.process.pojo.template.v2.PTemplateSource2Count
@@ -559,4 +561,25 @@ interface UserPipelineTemplateV2Resource {
         @Parameter(description = "升级策略", required = false)
         request: PipelineTemplateStrategyUpdateInfo
     ): Result<Boolean>
+
+    @Operation(summary = "预览模板")
+    @GET
+    @Path("/{templateId}/preview")
+    fun previewTemplate(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "模板版本", required = false)
+        @QueryParam("version")
+        version: Long,
+        @Parameter(description = "高亮类型", required = false)
+        @QueryParam("highlightType")
+        highlightType: HighlightType?
+    ): Result<TemplatePreviewDetail>
 }

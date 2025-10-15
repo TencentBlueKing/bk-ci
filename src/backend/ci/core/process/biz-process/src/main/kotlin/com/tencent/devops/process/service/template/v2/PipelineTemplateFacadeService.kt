@@ -24,6 +24,7 @@ import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.common.service.config.CommonConfig
@@ -45,10 +46,12 @@ import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
+import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
@@ -82,6 +85,7 @@ import com.tencent.devops.process.util.FileExportUtil
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import jakarta.ws.rs.core.Response
@@ -822,6 +826,110 @@ class PipelineTemplateFacadeService @Autowired constructor(
             yamlInvalidMsg = msg
         )
     }
+
+    fun previewTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        highlightType: HighlightType?
+    ): TemplatePreviewDetail {
+        logger.info("previewTemplate|projectId:$projectId|templateId:$templateId|version:$version|userId:$userId")
+
+        // 获取模板资源
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+
+        // 获取模板设置
+        val setting = pipelineTemplateSettingService.get(
+            projectId = projectId,
+            templateId = templateId,
+            settingVersion = templateResource.settingVersion
+        )
+
+        // 检查权限
+        val hasPermission = pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            permission = AuthPermission.VIEW
+        )
+
+        // 转换为 YAML
+        val (yamlSupported, yaml, yamlInvalidMsg) = try {
+            val yaml = templateResource.yaml ?: pipelineTemplateGenerator.transfer(
+                userId = templateResource.creator,
+                projectId = templateResource.projectId,
+                storageType = PipelineStorageType.MODEL,
+                templateType = templateResource.type,
+                templateModel = templateResource.model,
+                params = templateResource.params,
+                templateSetting = setting,
+                yaml = null
+            ).yamlWithVersion?.yamlStr ?: ""
+            Triple(true, yaml, null)
+        } catch (e: PipelineTransferException) {
+            Triple(
+                first = false,
+                second = null,
+                third = I18nUtil.getCodeLanMessage(
+                    messageCode = e.errorCode,
+                    params = e.params,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    defaultMessage = e.defaultMessage
+                )
+            )
+        }
+        val pipelineModelKey = setOf("stages", "jobs", "steps", "finally")
+        // 处理高亮标记
+        val highlightMarkList = mutableListOf<TransferMark>()
+        if (yaml != null && highlightType != null) {
+            run outside@{
+                try {
+                    TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
+                        when {
+                            highlightType == HighlightType.LABEL && key == "label" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
+
+                            highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
+
+                            highlightType == HighlightType.NOTIFY && key == "notices" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
+
+                            highlightType == HighlightType.PIPELINE_MODEL && key in pipelineModelKey -> {
+                                highlightMarkList.add(value)
+                                // pipelineModel 可能多个
+                                return@forEach
+                            }
+                        }
+                    }
+                } catch (ignore: Throwable) {
+                    logger.warn("TRANSFER_YAML|$projectId|$userId|$templateId|$version", ignore)
+                }
+            }
+        }
+
+        return TemplatePreviewDetail(
+            template = templateResource.model,
+            templateYaml = yaml,
+            setting = setting,
+            hasPermission = hasPermission,
+            highlightMarkList = highlightMarkList,
+            yamlSupported = yamlSupported,
+            yamlInvalidMsg = yamlInvalidMsg
+        )
+    }
+
 
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_VIEW,
