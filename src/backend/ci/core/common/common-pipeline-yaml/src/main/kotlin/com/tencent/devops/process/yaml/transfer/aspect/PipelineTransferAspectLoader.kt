@@ -224,29 +224,6 @@ object PipelineTransferAspectLoader {
                 }
             }
         )
-
-        // feat: PAC Code 检测流水线是否使用了命名空间 #11879
-        aspects.add(
-            object : IPipelineTransferAspectElement {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.modelElement() != null &&
-                        jp.modelElement() is MarketBuildAtomElement
-                    ) {
-                        val element = jp.modelElement() as MarketBuildAtomElement
-                        val namespace = element.data["namespace"] as String? ?: return null
-                        if (namespace.isNotBlank()) {
-                            invalidNameSpaceElement.add(
-                                I18nUtil.getCodeLanMessage(
-                                    BK_ELEMENT_NAMESPACE_NOT_SUPPORT,
-                                    params = arrayOf("${element.name}[${element.stepId}]")
-                                )
-                            )
-                        }
-                    }
-                    return null
-                }
-            }
-        )
         return aspects
     }
 }

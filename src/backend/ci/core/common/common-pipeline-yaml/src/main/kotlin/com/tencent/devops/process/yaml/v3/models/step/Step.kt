@@ -41,6 +41,7 @@ data class Step(
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
+    val namespace: String? = null,
     val with: Map<String, Any?>?,
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: String? = null,

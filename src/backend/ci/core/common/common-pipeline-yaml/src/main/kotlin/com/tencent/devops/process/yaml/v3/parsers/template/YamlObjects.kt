@@ -206,6 +206,7 @@ object YamlObjects {
                 ifModifyList.map { it.toString() }.toList()
             } else null,
             uses = step["uses"]?.toString(),
+            namespace = step["namespace"]?.toString(),
             with = if (step["with"] == null) {
                 null
             } else {
