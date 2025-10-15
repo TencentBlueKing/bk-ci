@@ -283,7 +283,8 @@ class RbacAuthConfiguration {
         authUserProjectPermissionDao: AuthUserProjectPermissionDao,
         authResourceMemberDao: AuthResourceGroupMemberDao,
         traceEventDispatcher: TraceEventDispatcher,
-        syncDataTaskDao: AuthSyncDataTaskDao
+        syncDataTaskDao: AuthSyncDataTaskDao,
+        redisOperation: RedisOperation
     ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCommonService = rbacCommonService,
@@ -302,7 +303,8 @@ class RbacAuthConfiguration {
         authUserProjectPermissionDao = authUserProjectPermissionDao,
         authResourceMemberDao = authResourceMemberDao,
         traceEventDispatcher = traceEventDispatcher,
-        syncDataTaskDao = syncDataTaskDao
+        syncDataTaskDao = syncDataTaskDao,
+        redisOperation = redisOperation
     )
 
     @Bean
