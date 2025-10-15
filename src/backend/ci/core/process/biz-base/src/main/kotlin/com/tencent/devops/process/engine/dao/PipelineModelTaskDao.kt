@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineAtomInfo
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineInfo
@@ -235,8 +236,7 @@ class PipelineModelTaskDao {
             val tpi = TPipelineInfo.T_PIPELINE_INFO
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
-                PROJECT_ID.`as`(KEY_PROJECT_ID),
-                groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION)
+                PROJECT_ID.`as`(KEY_PROJECT_ID)
             )
                 .from(this)
                 .join(tpi)
@@ -346,6 +346,88 @@ class PipelineModelTaskDao {
                 .and(CONTAINER_ID.eq(containerId))
                 .and(TASK_ID.eq(taskId))
                 .execute()
+        }
+    }
+
+    fun selectPipelinesByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        projectId: String? = null,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): List<PipelineAtomInfo>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = getListByAtomCodeCond(
+                a = this,
+                atomCode = atomCode,
+                projectId = projectId,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime
+            )
+
+
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            val baseStep = dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                PROJECT_ID.`as`(KEY_PROJECT_ID),
+            )
+                .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
+                .where(condition)
+                .groupBy(PIPELINE_ID)
+                .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
+
+            val allRecords = if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+
+            val pipelineIds = allRecords.map { it[KEY_PIPELINE_ID] }
+            val projectIds = allRecords.map { it[KEY_PROJECT_ID] }
+
+            val versionStep = dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                PROJECT_ID.`as`(KEY_PROJECT_ID),
+                ATOM_VERSION
+            )
+                .from(TPipelineModelTask.T_PIPELINE_MODEL_TASK)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.`in`(projectIds)))
+                .orderBy(PIPELINE_ID.asc(), PROJECT_ID.asc()) // 排序
+
+            val versionInfoList = versionStep.fetch()
+
+            val groupedResults = mutableMapOf<Pair<String, String>, MutableSet<String>>()
+
+            versionInfoList.forEach { record ->
+
+                val atomVersion = record[ATOM_VERSION]
+
+                val key = Pair(record[KEY_PIPELINE_ID] as String, record[KEY_PROJECT_ID] as String)
+
+                if (groupedResults[key] == null) {
+                    groupedResults[key] = mutableSetOf()
+                }
+
+                groupedResults[key]?.add(atomVersion)
+            }
+
+
+            return groupedResults.entries.map { (key, versions) ->
+                val (atomPipelineId, atomProjectId) = key
+                val versionsString = versions.joinToString(",") // 拼接版本号
+
+                PipelineAtomInfo(
+                    pipelineId = atomPipelineId,
+                    projectId = atomProjectId,
+                    versions = versionsString
+                )
+            }
         }
     }
 }

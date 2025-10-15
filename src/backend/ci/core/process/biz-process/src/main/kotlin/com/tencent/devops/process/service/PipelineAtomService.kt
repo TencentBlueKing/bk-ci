@@ -201,7 +201,7 @@ class PipelineAtomService @Autowired constructor(
         val secrecyProjectSet: Set<String>? = getSecrecyProjectSet(pipelineAtomRelCount)
         // 查询使用该插件的流水线信息
         val pipelineAtomRelList =
-            pipelineModelTaskDao.listByAtomCode(
+            pipelineModelTaskDao.selectPipelinesByAtomCode(
                 dslContext = dslContext,
                 atomCode = atomCode,
                 version = version,
@@ -209,16 +209,16 @@ class PipelineAtomService @Autowired constructor(
                 endUpdateTime = convertEndUpdateTime,
                 page = page,
                 pageSize = pageSize
-            )?.map { pipelineModelTask ->
-                val pipelineId = pipelineModelTask[KEY_PIPELINE_ID] as String
-                val projectId = pipelineModelTask[KEY_PROJECT_ID] as String
+            )?.map { pipelineAtomInfo ->
+                val pipelineId = pipelineAtomInfo.pipelineId
+                val projectId = pipelineAtomInfo.projectId
                 val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
                 val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)
                 val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
                 val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, false)
                 PipelineAtomRel(
                     pipelineUrl = pipelineUrl,
-                    atomVersion = pipelineModelTask[KEY_VERSION] as? String,
+                    atomVersion = pipelineAtomInfo.versions,
                     modifier = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord!!.lastModifyUser,
                     updateTime = DateTimeUtil.toDateTime(pipelineInfoRecord!!.updateTime),
                     executor = if (secrecyFlag) HIDDEN_SYMBOL else pipelineBuildSummaryRecord?.latestStartUser,
@@ -299,7 +299,7 @@ class PipelineAtomService @Autowired constructor(
         val dataList = mutableListOf<Array<String?>>()
         var page = 1
         do {
-            val pipelineAtomRelList = pipelineModelTaskDao.listByAtomCode(
+            val pipelineAtomInfoList = pipelineModelTaskDao.selectPipelinesByAtomCode(
                 dslContext = dslContext,
                 atomCode = atomCode,
                 version = version,
@@ -310,14 +310,14 @@ class PipelineAtomService @Autowired constructor(
             )
             val pageDataList = mutableListOf<Array<String?>>()
             val pagePipelineIdSet = mutableSetOf<String>()
-            pipelineAtomRelList?.forEach { pipelineAtomRel ->
-                val pipelineId = pipelineAtomRel[KEY_PIPELINE_ID] as String
-                val projectId = pipelineAtomRel[KEY_PROJECT_ID] as String
+            pipelineAtomInfoList?.forEach { pipelineAtomInfo ->
+                val pipelineId = pipelineAtomInfo.pipelineId
+                val projectId = pipelineAtomInfo.projectId
                 val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
                 pagePipelineIdSet.add(pipelineId)
                 val dataArray = arrayOfNulls<String>(7)
                 dataArray[0] = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, true)
-                dataArray[1] = pipelineAtomRel[KEY_VERSION] as? String
+                dataArray[1] = pipelineAtomInfo.versions
                 dataArray[6] = pipelineId
                 pageDataList.add(dataArray)
             }
@@ -352,7 +352,7 @@ class PipelineAtomService @Autowired constructor(
             }
             dataList.addAll(pageDataList)
             page++
-        } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
+        } while (pipelineAtomInfoList?.size == DEFAULT_PAGE_SIZE)
         val headers = arrayOf(
             I18nUtil.getCodeLanMessage(PIPELINE_URL),
             I18nUtil.getCodeLanMessage(VERSION),
