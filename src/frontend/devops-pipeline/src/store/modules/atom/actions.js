@@ -1052,8 +1052,8 @@ export default {
     },
     async saveParamSet ({ commit, state }, { projectId, pipelineId, paramSet }) {
         try {
-            const method = !!paramSet.id ? 'put' : 'post'
-            const suffix = !!paramSet.id ? `/${paramSet.id}` : ''
+            const method = paramSet.id ? 'put' : 'post'
+            const suffix = paramSet.id ? `/${paramSet.id}` : ''
             return await request[method](`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination${suffix}`, paramSet)
         } catch (error) {
             throw error
