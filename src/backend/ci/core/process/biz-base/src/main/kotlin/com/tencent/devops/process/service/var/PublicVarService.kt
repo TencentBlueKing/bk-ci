@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
@@ -207,7 +208,7 @@ class PublicVarService @Autowired constructor(
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int,
-        removeFlag: Boolean = true
+        viewFlag: Boolean = false
     ) {
         val publicVarGroups = model.publicVarGroups
         if (publicVarGroups.isNullOrEmpty()) return
@@ -249,7 +250,7 @@ class PublicVarService @Autowired constructor(
                     groupReferInfo = groupReferInfo,
                     latestGroupVars = latestGroupVars,
                     params = params,
-                    removeFlag = removeFlag
+                    viewFlag = viewFlag
                 )
             }
         }
@@ -277,7 +278,7 @@ class PublicVarService @Autowired constructor(
         groupReferInfo: PipelinePublicVarGroupReferPO,
         latestGroupVars: List<BuildFormProperty>,
         params: MutableList<BuildFormProperty>,
-        removeFlag: Boolean
+        viewFlag: Boolean
     ) {
         val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfo = groupReferInfo.positionInfo ?: return
@@ -293,28 +294,42 @@ class PublicVarService @Autowired constructor(
             }
         }
 
-        if (removeFlag) {
-            // 2. 移除不再存在的变量（按索引降序处理，避免索引偏移）
-            diffResult.varsToRemove.mapNotNull { positionInfoMap[it]?.index } // 过滤无效索引
-                .filter { it >= 0 && it < params.size } // 校验索引有效性
-                .sortedDescending() // 降序排序，确保先删序号大的索引
-                .forEach { params.removeAt(it) }
-        } else {
-            // 保留变量组版本已移除的变量
-            diffResult.varsToRemove.forEach { varName ->
-                positionInfoMap[varName]?.let { pos ->
-                    val oldVar = params.find { param -> param.id == varName }
-                    if (pos.index >= 0 && pos.index < params.size && oldVar != null) {
-                        params[pos.index] = oldVar
-                        params[pos.index].removeFlag = true
-                    }
-                }
-            }
-        }
+        // 2. 移除不再存在的变量（按索引降序处理，避免索引偏移）
+        diffResult.varsToRemove.mapNotNull { positionInfoMap[it]?.index } // 过滤无效索引
+            .filter { it >= 0 && it < params.size } // 校验索引有效性
+            .sortedDescending() // 降序排序，确保先删序号大的索引
+            .forEach { params.removeAt(it) }
 
-        // 3. 添加新增的变量到末尾
+        // 3.添加新增的变量到末尾
         diffResult.varsToAdd.mapNotNull { newVarMap[it] } // 过滤无效变量
             .forEach { params.add(it) }
+
+        if (viewFlag) {
+            // 从positionInfo读取变量列表，与params进行对比
+            val currentParamNames = params.map { it.id }.toSet()
+            positionInfo.filter { it.varName !in currentParamNames }.forEach { pos ->
+                // 使用positionInfo中的信息创建BuildFormProperty
+                val removedProperty = BuildFormProperty(
+                    id = pos.varName,
+                    required = false,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = "",
+                    options = null,
+                    desc = "",
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null,
+                    varGroupName = groupReferInfo.groupName,
+                    varGroupVersion = groupReferInfo.version
+                ).apply {
+                    this.removeFlag = true
+                }
+                params.add(removedProperty)
+            }
+        }
     }
     
     /**
