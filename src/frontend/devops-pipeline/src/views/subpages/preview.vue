@@ -119,7 +119,10 @@
                         <template #title>
                             <div>
                                 {{ $t('paramSetApplyTips', [applySetDiff.setName]) }}
-                                <ul class="param-set-diff-tips">
+                                <ul
+                                    class="param-set-diff-tips"
+                                    v-if="paramSetDiffTips.length"
+                                >
                                     <li
                                         v-for="(tip, index) in paramSetDiffTips"
                                         :key="index"
@@ -525,6 +528,7 @@
             },
             resetDefaultParams () {
                 if (!this.showChangedParamsAlert) return
+                this.$refs.paramSetSelector?.clear()
                 this.updateParams()
             },
             handleCheckTotalChange (checkedTotal) {

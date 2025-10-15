@@ -449,6 +449,7 @@
 
             ctx.expose({
                 saveAsParamSet,
+                clear,
                 closeParamSetManageSlide
             })
 
@@ -744,6 +745,10 @@
                     return false
                 }
                 return name.toLowerCase().indexOf(keyword.toLowerCase()) > -1
+            }
+
+            function clear () {
+                paramSetId.value = ''
             }
 
             return {
