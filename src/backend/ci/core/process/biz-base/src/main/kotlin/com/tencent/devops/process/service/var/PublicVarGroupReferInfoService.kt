@@ -68,12 +68,10 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarService: PublicVarService,
     private val publicVarDao: PublicVarDao
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
         private const val PIPELINE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/%s/history/pipeline/%s"
         private const val TEMPLATE_CONSOLE_URL_TEMPLATE = "/console/pipeline/%s/template/%s/%s/pipeline"
-        
         // 批量操作相关常量
         private const val DEFAULT_BATCH_SIZE = 100
         private const val MAX_RETRY_TIMES = 3
@@ -621,8 +619,10 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             }
             // 批量保存
             val currentTime = LocalDateTime.now()
-            val segmentIds = client.get(ServiceAllocIdResource::class)
-                .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO", dynamicPublicVarWithPositions.size).data
+            val segmentIds = client.get(ServiceAllocIdResource::class).batchGenerateSegmentId(
+                bizTag = "T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO",
+                number = dynamicPublicVarWithPositions.size
+            ).data
             if (segmentIds.isNullOrEmpty()) {
                 throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
             }
@@ -823,9 +823,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 logger.info("No reference found for referId: $referId with version: $referVersion, skip deletion")
                 return
             }
-            
-            logger.info("Found ${referInfosToDelete.size} references to delete for referId: $referId with version: $referVersion")
-
             // 执行删除操作
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)

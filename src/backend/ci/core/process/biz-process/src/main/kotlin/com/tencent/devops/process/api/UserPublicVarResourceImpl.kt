@@ -63,5 +63,4 @@ class UserPublicVarResourceImpl @Autowired constructor(
     ): Result<List<PublicVarDO>> {
         return Result(publicVarService.getVariables(userId, projectId, groupName, version))
     }
-
 }

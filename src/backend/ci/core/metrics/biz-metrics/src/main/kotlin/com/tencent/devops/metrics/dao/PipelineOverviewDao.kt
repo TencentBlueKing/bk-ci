@@ -165,7 +165,6 @@ class PipelineOverviewDao {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Result<Record2<String, BigDecimal>> {
-        
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             return dslContext.select(PIPELINE_ID, sum(TOTAL_EXECUTE_COUNT))
                 .from(this)

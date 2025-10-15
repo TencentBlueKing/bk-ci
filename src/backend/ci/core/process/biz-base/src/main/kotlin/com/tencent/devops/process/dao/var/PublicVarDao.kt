@@ -44,7 +44,6 @@ class PublicVarDao {
     ) {
         with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
             if (publicVarGroupPOs.isEmpty()) return
-            
             val batchInsert = dslContext.insertInto(
                 this,
                 ID,
@@ -64,7 +63,6 @@ class PublicVarDao {
                 CREATE_TIME,
                 UPDATE_TIME
             )
-            
             publicVarGroupPOs.forEach {
                 batchInsert.values(
                     it.id,
@@ -85,7 +83,6 @@ class PublicVarDao {
                     it.updateTime
                 )
             }
-            
             batchInsert.execute()
         }
     }

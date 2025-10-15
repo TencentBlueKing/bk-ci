@@ -86,7 +86,6 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
-
     companion object {
         const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
         const val EXPIRED_TIME_IN_SECONDS = 5L
@@ -320,8 +319,8 @@ class PublicVarGroupService @Autowired constructor(
     fun exportGroup(
         groupName: String,
         version: Int?,
-        projectId: String)
-    : Response {
+        projectId: String
+    ): Response {
         val yaml = getGroupYaml(groupName, version, projectId)
         return YamlCommonUtils.exportToFile(yaml, groupName)
     }
@@ -411,8 +410,6 @@ class PublicVarGroupService @Autowired constructor(
         )
     }
 
-
-
     fun getProjectPublicParamByRef(
         userId: String,
         projectId: String,
@@ -421,11 +418,9 @@ class PublicVarGroupService @Autowired constructor(
         if (varGroupRefs.isEmpty()) {
             return emptyList()
         }
-
         val publicVarGroupVariables = mutableListOf<PublicVarGroupVariable>()
         val processedVarNames = mutableSetOf<String>()
         var currentIndex = 0
-        
         varGroupRefs.forEach { varGroupRef ->
             try {
                 val groupName = varGroupRef.groupName
@@ -439,14 +434,12 @@ class PublicVarGroupService @Autowired constructor(
                     logger.warn("Variable group $groupName not found in project $projectId")
                     return@forEach
                 }
-
                 // 获取变量组中的变量
                 val varPOs = publicVarService.getGroupPublicVar(
                     projectId = projectId,
                     groupName = groupName,
                     version = groupRecord.version
                 )
-
                 // 转换为PublicVarGroupVariable并检查同名变量
                 varPOs.forEach { po ->
                     if (processedVarNames.contains(po.varName)) {
@@ -458,7 +451,6 @@ class PublicVarGroupService @Autowired constructor(
                     val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
                     buildFormProperty.varGroupName = groupName
                     buildFormProperty.varGroupVersion = groupRecord.version
-                    
                     publicVarGroupVariables.add(
                         PublicVarGroupVariable(
                             groupName = groupName,
@@ -474,21 +466,18 @@ class PublicVarGroupService @Autowired constructor(
                 throw e
             }
         }
-
         return publicVarGroupVariables
     }
 
     fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): String {
         val params = publicVarGroup.publicVars.map { it.buildFormProperty }
         val variables = variableTransfer.makeVariableFromBuildParams(params, false)
-
         val parserVO = PublicVarGroupYamlParser(
             version = "v3.0",
             name = publicVarGroup.groupName,
             desc = publicVarGroup.desc ?: "",
             variables = variables ?: emptyMap()
         )
-
         return TransferMapper.getObjectMapper().writeValueAsString(parserVO)
     }
 

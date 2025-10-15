@@ -4,9 +4,7 @@ interface ModelHandleService {
 
     /**
      * 处理模型参数
-     * 
      * 该方法负责对流水线模型参数进行统一处理
-     *
      * @param projectId 项目ID
      * @param model 模型对象
      * @param referId 引用ID，标识参数引用的具体资源或对象

@@ -31,7 +31,7 @@ import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEn
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量组信息分页查询请求传输对象")
-data class PublicVarGroupInfoQueryReqDTO (
+data class PublicVarGroupInfoQueryReqDTO(
     @get:Schema(description = "项目ID")
     val projectId: String,
     @get:Schema(description = "变量组名称")

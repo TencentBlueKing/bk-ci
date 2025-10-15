@@ -77,13 +77,16 @@ class PublicVarService @Autowired constructor(
         val segmentIds = client.get(ServiceAllocIdResource::class)
             .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
         if (segmentIds.isNullOrEmpty()) {
-            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf("Failed to generate segment IDs"))
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs")
+            )
         }
 
         var index = 0
         val publicVarPOs = publicVarDTO.publicVars.map {
             it.buildFormProperty.varGroupName = groupName
-            it.buildFormProperty.varGroupVersion= publicVarDTO.version
+            it.buildFormProperty.varGroupVersion = publicVarDTO.version
 
             PublicVarPO(
                 id = segmentIds[index++] ?: 0,

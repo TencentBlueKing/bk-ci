@@ -104,7 +104,6 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -166,7 +165,7 @@ class PublicVarGroupDao {
             filterByUpdater?.let {
                 conditions.add(MODIFIER.like("%$it%"))
             }
-            if(!groupNames.isNullOrEmpty()) {
+            if (!groupNames.isNullOrEmpty()) {
                 conditions.add(GROUP_NAME.`in`(groupNames))
             }
 
@@ -337,7 +336,6 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VAR_COUNT)
                 .from(this)
@@ -392,11 +390,9 @@ class PublicVarGroupDao {
     ): Map<Pair<String, Int>, Int> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             if (groupVersions.isEmpty()) return emptyMap()
-            
             val orCondition = groupVersions.map { (groupName, version) ->
                 GROUP_NAME.eq(groupName).and(VERSION.eq(version))
             }.reduce { acc, condition -> acc.or(condition) }
-            
             return dslContext.select(GROUP_NAME, VERSION, VAR_COUNT)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))

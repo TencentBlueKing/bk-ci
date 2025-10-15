@@ -113,5 +113,4 @@ class PublicVarReferInfoService @Autowired constructor(
         }
         return true
     }
-
 }

@@ -191,6 +191,4 @@ class PublicVarReferInfoDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
-
-
 }

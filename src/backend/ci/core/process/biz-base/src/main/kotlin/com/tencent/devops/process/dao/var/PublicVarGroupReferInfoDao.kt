@@ -96,7 +96,6 @@ class PublicVarGroupReferInfoDao {
 
             // 查找每个REFER_ID对应的CREATE_TIME最大的记录
             val t2 = this.`as`("t2")
-            
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .and(DSL.notExists(
@@ -147,7 +146,7 @@ class PublicVarGroupReferInfoDao {
     fun batchListVarGroupReferInfoByReferIds(
         dslContext: DSLContext,
         projectId: String,
-        referinfos:  List<Pair<String, Int>>,
+        referinfos: List<Pair<String, Int>>,
         referType: PublicVerGroupReferenceTypeEnum
     ): List<PipelinePublicVarGroupReferPO> {
         if (referinfos.isEmpty()) {
@@ -203,7 +202,13 @@ class PublicVarGroupReferInfoDao {
         referVersionName: String? = null
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = buildReferConditions(this, projectId, referId, referType, referVersionName = referVersionName).apply {
+            val conditions = buildReferConditions(
+                table = this,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referVersionName = referVersionName
+            ).apply {
                 groupName?.let { add(GROUP_NAME.eq(it)) }
             }
             return dslContext.selectCount()
@@ -222,7 +227,13 @@ class PublicVarGroupReferInfoDao {
         excludedGroupNames: List<String>? = null
     ) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = buildReferConditions(this, projectId, referId, referType, referVersionName = referVersionName).apply {
+            val conditions = buildReferConditions(
+                table = this,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referVersionName = referVersionName
+            ).apply {
                 if (!excludedGroupNames.isNullOrEmpty()) {
                     add(GROUP_NAME.notIn(excludedGroupNames))
                 }
@@ -370,7 +381,13 @@ class PublicVarGroupReferInfoDao {
         updateTime: java.time.LocalDateTime
     ): Int {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = buildReferConditions(this, projectId, referId, referType, referVersionName = referVersionName).apply {
+            val conditions = buildReferConditions(
+                table = this,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referVersionName = referVersionName
+            ).apply {
                 add(GROUP_NAME.eq(groupName))
             }
 

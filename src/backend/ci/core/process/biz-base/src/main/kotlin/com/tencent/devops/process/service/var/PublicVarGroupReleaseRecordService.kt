@@ -58,10 +58,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val userId = publicVarGroupReleaseDTO.userId
         val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
-
         val oldVarDOs = convertPOToDO(oldVarPOs)
         val newVarDOs = convertPOToDO(newVarPOs)
-
         val releaseRecords = generateVarChangeRecords(
             oldVars = oldVarDOs,
             newVars = newVarDOs,
@@ -71,7 +69,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             pubTime = LocalDateTime.now(),
             versionDesc = publicVarGroupReleaseDTO.versionDesc
         )
-
         // 批量生成ID
         val segmentIds = if (releaseRecords.isNotEmpty()) {
             client.get(ServiceAllocIdResource::class)
@@ -79,12 +76,13 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         } else {
             emptyList()
         }
-        
         if (releaseRecords.isNotEmpty() && segmentIds.isNullOrEmpty()) {
             logger.warn("Failed to generate segment IDs for release records, size: ${releaseRecords.size}")
-            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf("Failed to generate segment IDs"))
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs")
+            )
         }
-
         var index = 0
         val records = releaseRecords.map { releaseRecord ->
             PipelinePublicVarGroupReleaseRecordPO(
@@ -102,7 +100,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 updateTime = LocalDateTime.now()
             )
         }
-
         if (records.isNotEmpty()) {
             pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
         }

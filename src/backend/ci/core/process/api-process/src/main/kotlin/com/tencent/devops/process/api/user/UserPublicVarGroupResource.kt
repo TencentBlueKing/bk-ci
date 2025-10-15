@@ -194,7 +194,7 @@ interface UserPublicVarGroupResource {
         referType: PublicVerGroupReferenceTypeEnum? = null,
         @Parameter(description = "版本号", required = false)
         @QueryParam("version")
-        version: Int ?= null,
+        version: Int? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
@@ -298,5 +298,4 @@ interface UserPublicVarGroupResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<PublicVarReleaseDO>>
-
 }
