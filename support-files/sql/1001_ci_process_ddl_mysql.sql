@@ -1371,6 +1371,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL`
     `COMBINATION_ID`      bigint(11)                               NOT NULL comment '组合ID',
     `COMBINATION_NAME`    varchar(64)                              not null comment '组合名称',
     `VAR_NAME`            varchar(64)                              not null comment '变量名称',
+    `VAR_INDEX`           int                                      not null comment '变量顺序',
     `BUILD_FORM_PROPERTY` mediumtext                               not null comment '变量构建模型',
     `CREATOR`             varchar(50)                              not null comment '创建者',
     `MODIFIER`            varchar(50)                              not null comment '修改者',

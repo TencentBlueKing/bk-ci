@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -261,9 +262,14 @@ class PipelineBuildParamCombinationService @Autowired constructor(
 
         // 3. 合并参数
         val params = mutableListOf<BuildFormProperty>()
-        resourceParams.forEach { rParams ->
+        resourceParams.filter { it.constant != true && it.required }.forEach { rParams ->
             val param = buildParamMap[rParams.id]?.let {
-                rParams.copy(defaultValue = it.value)
+                val buildParamValue = if (rParams.type == BuildFormPropertyType.BOOLEAN) {
+                    (it.value as String?).toBoolean()
+                } else {
+                    it.value
+                }
+                rParams.copy(defaultValue = buildParamValue)
             } ?: rParams
             params.add(param)
         }

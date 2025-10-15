@@ -22,13 +22,14 @@ class PipelineBuildParamCombinationDetailDao {
     ) {
         val now = LocalDateTime.now()
         with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
-            val addStep = params.map {
+            val addStep = params.mapIndexed { index, it ->
                 dslContext.insertInto(this)
                     .set(PROJECT_ID, projectId)
                     .set(PIPELINE_ID, pipelineId)
                     .set(COMBINATION_ID, combinationId)
                     .set(COMBINATION_NAME, combinationName)
                     .set(VAR_NAME, it.id)
+                    .set(VAR_INDEX, index)
                     .set(BUILD_FORM_PROPERTY, JsonUtil.toJson(it))
                     .set(CREATOR, userId)
                     .set(MODIFIER, userId)
@@ -61,6 +62,7 @@ class PipelineBuildParamCombinationDetailDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(COMBINATION_ID.eq(combinationId))
+                .orderBy(VAR_INDEX.asc())
                 .fetch().map {
                     JsonUtil.to(it.get(BUILD_FORM_PROPERTY), BuildFormProperty::class.java)
                 }
