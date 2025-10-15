@@ -42,13 +42,10 @@ export default defineComponent({
       }
       try {
         isFormLoading.value = true;
-        const confirmData: DeptItem[] = [];
-        checkedDept.value.forEach((id) => {
-          confirmData.push({
-            deptId: id,
-            deptName: getFullDeptName(id),
-          });
-        });
+        const confirmData: DeptItem[] = checkedDept.value.map((id) => ({
+          deptId: id,
+          deptName: getFullDeptName(id),
+        }));
 
         emit('confirm', confirmData, () => {
           clearCheckedDept();
