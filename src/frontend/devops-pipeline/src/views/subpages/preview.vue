@@ -88,7 +88,7 @@
                         </span>
                         <span
                             :class="['text-link', {
-                                'disabled': !useLastParams
+                                'disabled': !showChangedParamsAlert
                             }]"
                             @click.stop="resetDefaultParams"
                         >
@@ -524,7 +524,7 @@
                 }
             },
             resetDefaultParams () {
-                if (!this.useLastParams) return
+                if (!this.showChangedParamsAlert) return
                 this.updateParams()
             },
             handleCheckTotalChange (checkedTotal) {

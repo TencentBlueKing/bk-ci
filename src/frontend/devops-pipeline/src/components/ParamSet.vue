@@ -335,7 +335,7 @@
             const paramSetList = computed(() => {
                 return filteredSets.value.map(set => ({
                     ...set,
-                    paramIds: set.params?.map(param => param.id),
+                    paramIds: set.params?.filter(param => !allVersionKeyList.includes(param.id)),
                     versionParams: set.params?.filter(param => allVersionKeyList.includes(param.id)).map(version => ({
                         ...version,
                         category: proxy.$t('versionNum'),
@@ -502,27 +502,35 @@
             }
 
             async function switchManageSet (setIndex) {
-                let result = true
-                if (isEditing.value) {
-                    result = await leaveConfirm()
-                }
-                if (!result) {
-                    return false
-                }
-                const originSet = filteredSets.value[setIndex]
-                if (originSet && originSet.params == null) {
-                    isLoading.value = true
-                    await dispatch('fetchParamSetDetail', {
-                        projectId: proxy.$route.params.projectId,
-                        pipelineId: proxy.$route.params.pipelineId,
-                        paramSetId: paramSetList.value[setIndex].id
+                try {
+                    let result = true
+                    if (isEditing.value) {
+                        result = await leaveConfirm()
+                    }
+                    if (!result) {
+                        return false
+                    }
+                    const originSet = filteredSets.value[setIndex]
+                    if (originSet && originSet.params == null) {
+                        isLoading.value = true
+                        await dispatch('fetchParamSetDetail', {
+                            projectId: proxy.$route.params.projectId,
+                            pipelineId: proxy.$route.params.pipelineId,
+                            paramSetId: paramSetList.value[setIndex].id
+                        })
+                    }
+                    activeSetIndex.value = setIndex
+                    isEditing.value = false
+                    editingSet.value = null
+                    return true
+                } catch (error) {
+                    proxy.$bkMessage({
+                        message: error.message,
+                        theme: 'error'
                     })
+                } finally {
                     isLoading.value = false
                 }
-                activeSetIndex.value = setIndex
-                isEditing.value = false
-                editingSet.value = null
-                return true
             }
 
             function beforeCloseSideSlider () {
@@ -554,7 +562,7 @@
                 const newSet = {
                     ...DEFAULT_PARAM_SET,
                     name: props.isStartUp ? `SET_#${props.buildNum}` : `SET_${randomString(6)}`,
-                    params: params.map(param => ( {
+                    params: params.filter(param => param.required && !param.constant).map(param => ( {
                         ...param,
                         value: values?.[param.id] ?? param.value
                     })),
@@ -562,10 +570,9 @@
                 }
                 dispatch('addParamSet', newSet)
                 switchManageSet(0)
-                
                 editingSet.value = {
                     ...newSet,
-                    paramIds: newSet.params.map(param => param.id),
+                    paramIds: newSet.params.filter(param => !allVersionKeyList.includes(param.id)).map(param => param.id),
                     params: newSet.params.filter(param => !allVersionKeyList.includes(param.id)),
                     versionParams: newSet.params.filter(param => allVersionKeyList.includes(param.id))
                 }
