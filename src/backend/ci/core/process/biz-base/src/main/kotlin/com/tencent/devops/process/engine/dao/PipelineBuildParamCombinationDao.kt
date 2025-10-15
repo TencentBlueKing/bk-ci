@@ -79,6 +79,21 @@ class PipelineBuildParamCombinationDao {
         }
     }
 
+    fun getByName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        combinationName: String
+    ): TPipelineBuildParamCombinationRecord? {
+        with(TPipelineBuildParamCombination.T_PIPELINE_BUILD_PARAM_COMBINATION) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(COMBINATION_NAME.eq(combinationName))
+                .fetchOne()
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         projectId: String,

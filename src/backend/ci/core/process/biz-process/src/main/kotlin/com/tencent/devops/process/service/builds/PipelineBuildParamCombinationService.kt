@@ -51,6 +51,18 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             pipelineId = pipelineId,
             userId = userId
         )
+        val combinationRecord = pipelineBuildParamCombinationDao.getByName(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            combinationName = request.name
+        )
+        if (combinationRecord != null) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST,
+                params = arrayOf(request.name)
+            )
+        }
         val combinationId =
             client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_BUILD_PARAM_COMBINATION).data ?: 0
         dslContext.transaction { configuration ->
@@ -69,7 +81,6 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 combinationId = combinationId,
-                combinationName = request.name,
                 params = PipelineUtils.cleanOptions(request.params)
             )
         }
@@ -89,6 +100,18 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             pipelineId = pipelineId,
             userId = userId
         )
+        val combinationRecord = pipelineBuildParamCombinationDao.getByName(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            combinationName = request.name
+        )
+        if (combinationRecord != null && combinationRecord.id != combinationId) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST,
+                params = arrayOf(request.name)
+            )
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineBuildParamCombinationDao.update(
@@ -111,7 +134,6 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 combinationId = combinationId,
-                combinationName = request.name,
                 params = PipelineUtils.cleanOptions(request.params)
             )
         }

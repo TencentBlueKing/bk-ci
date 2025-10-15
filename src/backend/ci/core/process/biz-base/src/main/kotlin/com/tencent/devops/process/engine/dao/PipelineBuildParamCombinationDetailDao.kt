@@ -17,7 +17,6 @@ class PipelineBuildParamCombinationDetailDao {
         pipelineId: String,
         userId: String,
         combinationId: Long,
-        combinationName: String,
         params: List<BuildFormProperty>
     ) {
         val now = LocalDateTime.now()
@@ -27,7 +26,6 @@ class PipelineBuildParamCombinationDetailDao {
                     .set(PROJECT_ID, projectId)
                     .set(PIPELINE_ID, pipelineId)
                     .set(COMBINATION_ID, combinationId)
-                    .set(COMBINATION_NAME, combinationName)
                     .set(VAR_NAME, it.id)
                     .set(VAR_INDEX, index)
                     .set(BUILD_FORM_PROPERTY, JsonUtil.toJson(it))

@@ -395,6 +395,7 @@ object ProcessMessageCode {
 
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
     const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101287" // 入参值组合不存在
+    const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101288" // 入参值组合名已存在
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
