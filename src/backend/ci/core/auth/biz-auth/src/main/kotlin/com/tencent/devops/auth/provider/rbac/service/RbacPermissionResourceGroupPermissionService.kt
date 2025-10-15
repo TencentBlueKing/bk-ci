@@ -57,6 +57,7 @@ import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissi
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.auth.service.lock.SyncGroupPermissionLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -68,6 +69,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.util.CacheHelper
@@ -103,7 +105,8 @@ class RbacPermissionResourceGroupPermissionService(
     private val authUserProjectPermissionDao: AuthUserProjectPermissionDao,
     private val authResourceMemberDao: AuthResourceGroupMemberDao,
     private val traceEventDispatcher: TraceEventDispatcher,
-    private val syncDataTaskDao: AuthSyncDataTaskDao
+    private val syncDataTaskDao: AuthSyncDataTaskDao,
+    private val redisOperation: RedisOperation
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -646,27 +649,33 @@ class RbacPermissionResourceGroupPermissionService(
     }
 
     override fun syncProjectPermissions(projectCode: String): Boolean {
-        logger.info("sync project group permissions:$projectCode")
-        val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
-            dslContext = dslContext,
-            projectCode = projectCode
-        )
-        logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
-        iamGroupIds.forEach {
-            syncGroupPermissions(
+        SyncGroupPermissionLock(redisOperation, projectCode).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("sync group permissions|running:$projectCode")
+                return@use
+            }
+            logger.info("sync project group permissions:$projectCode")
+            val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+                dslContext = dslContext,
+                projectCode = projectCode
+            )
+            logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
+            iamGroupIds.forEach {
+                syncGroupPermissions(
+                    projectCode = projectCode,
+                    iamGroupId = it
+                )
+            }
+            val groupsWithPermissions = resourceGroupPermissionDao.listGroupsWithPermissions(
+                dslContext = dslContext,
+                projectCode = projectCode
+            )
+            val toDeleteGroupIds = groupsWithPermissions.filter { it !in iamGroupIds }
+            deleteByGroupIds(
                 projectCode = projectCode,
-                iamGroupId = it
+                iamGroupIds = toDeleteGroupIds
             )
         }
-        val groupsWithPermissions = resourceGroupPermissionDao.listGroupsWithPermissions(
-            dslContext = dslContext,
-            projectCode = projectCode
-        )
-        val toDeleteGroupIds = groupsWithPermissions.filter { it !in iamGroupIds }
-        deleteByGroupIds(
-            projectCode = projectCode,
-            iamGroupIds = toDeleteGroupIds
-        )
         return true
     }
 
