@@ -69,6 +69,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
@@ -140,62 +141,67 @@ class RbacPermissionResourceGroupPermissionService(
         filterResourceTypes: List<String>,
         filterActions: List<String>
     ): Boolean {
-        val authorizationScopes = mutableListOf<AuthorizationScopes>()
-        val bkCiAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
-            authorizationScopesStr = authorizationScopesStr,
-            projectCode = projectCode,
-            projectName = projectName,
-            iamResourceCode = iamResourceCode,
-            resourceName = resourceName
-        )
-        // 若filterActions不为空，则本次新增的组权限，只和该action有关
-        // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
-        authorizationScopes.addAll(
-            when {
-                filterActions.isNotEmpty() -> {
-                    bkCiAuthorizationScopes.onEach { scope ->
-                        scope.actions.retainAll { action ->
-                            filterActions.contains(action.id)
-                        }
-                    }.filter { it.actions.isNotEmpty() }
-                }
-
-                filterResourceTypes.isNotEmpty() -> {
-                    bkCiAuthorizationScopes.filter { scope ->
-                        val resourceTypeOfScope = scope.resources.firstOrNull()?.type
-                        when {
-                            resourceTypeOfScope == ResourceTypeId.PROJECT -> {
-                                scope.actions.retainAll { action ->
-                                    filterResourceTypes.contains(action.id.substringBeforeLast("_"))
-                                }
-                                scope.actions.isNotEmpty()
+        try {
+            val authorizationScopes = mutableListOf<AuthorizationScopes>()
+            val bkCiAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
+                authorizationScopesStr = authorizationScopesStr,
+                projectCode = projectCode,
+                projectName = projectName,
+                iamResourceCode = iamResourceCode,
+                resourceName = resourceName
+            )
+            // 若filterActions不为空，则本次新增的组权限，只和该action有关
+            // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
+            authorizationScopes.addAll(
+                when {
+                    filterActions.isNotEmpty() -> {
+                        bkCiAuthorizationScopes.onEach { scope ->
+                            scope.actions.retainAll { action ->
+                                filterActions.contains(action.id)
                             }
+                        }.filter { it.actions.isNotEmpty() }
+                    }
 
-                            else -> filterResourceTypes.contains(resourceTypeOfScope)
+                    filterResourceTypes.isNotEmpty() -> {
+                        bkCiAuthorizationScopes.filter { scope ->
+                            val resourceTypeOfScope = scope.resources.firstOrNull()?.type
+                            when {
+                                resourceTypeOfScope == ResourceTypeId.PROJECT -> {
+                                    scope.actions.retainAll { action ->
+                                        filterResourceTypes.contains(action.id.substringBeforeLast("_"))
+                                    }
+                                    scope.actions.isNotEmpty()
+                                }
+
+                                else -> filterResourceTypes.contains(resourceTypeOfScope)
+                            }
                         }
                     }
-                }
 
-                else -> bkCiAuthorizationScopes
-            }
-        )
-        if (resourceType == AuthResourceType.PROJECT.value && registerMonitorPermission) {
-            // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
-            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
-                projectName = projectName,
-                projectCode = projectCode,
-                groupCode = groupCode
+                    else -> bkCiAuthorizationScopes
+                }
             )
-            authorizationScopes.addAll(monitorAuthorizationScopes)
+            if (resourceType == AuthResourceType.PROJECT.value && registerMonitorPermission) {
+                // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
+                val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
+                    projectName = projectName,
+                    projectCode = projectCode,
+                    groupCode = groupCode
+                )
+                authorizationScopes.addAll(monitorAuthorizationScopes)
+            }
+            logger.info(
+                "grant group permissions authorization scopes :{}|{}|{}|{}",
+                projectCode, iamGroupId, resourceType, JsonUtil.toJson(authorizationScopes)
+            )
+            authorizationScopes.forEach { authorizationScope ->
+                RetryUtils.retry(3) {
+                    iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
+                }
+            }
+        } finally {
+            syncGroupPermissions(projectCode, iamGroupId)
         }
-        logger.info(
-            "grant group permissions authorization scopes :{}|{}|{}|{}",
-            projectCode, iamGroupId, resourceType, JsonUtil.toJson(authorizationScopes)
-        )
-        authorizationScopes.forEach { authorizationScope ->
-            iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
-        }
-        syncGroupPermissions(projectCode, iamGroupId)
         return true
     }
 
