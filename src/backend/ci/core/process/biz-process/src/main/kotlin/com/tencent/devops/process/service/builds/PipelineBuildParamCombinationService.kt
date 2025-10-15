@@ -291,7 +291,7 @@ class PipelineBuildParamCombinationService @Autowired constructor(
                 } else {
                     it.value
                 }
-                rParams.copy(defaultValue = buildParamValue)
+                rParams.copy(value = buildParamValue)
             } ?: rParams
             params.add(param)
         }
