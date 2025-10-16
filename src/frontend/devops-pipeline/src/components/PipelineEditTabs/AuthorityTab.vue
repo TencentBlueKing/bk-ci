@@ -1,5 +1,6 @@
 <template>
     <bk-permission
+        class="permission"
         :key="resourceCode"
         :resource-type="resourceType"
         :resource-code="resourceCode"
@@ -35,3 +36,13 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+.permission {
+    ::v-deep .bk-exception-img {
+        height: auto;
+    }
+}
+    
+
+</style>

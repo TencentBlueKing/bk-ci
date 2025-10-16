@@ -13,7 +13,6 @@
                     class="instance-entry-aside"
                 >
                     <bk-button
-                        theme="primary"
                         @click="handleGoBack"
                         outline
                     >

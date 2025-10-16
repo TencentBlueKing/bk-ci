@@ -87,17 +87,16 @@
                     >{{ group.params.length }}</span>
                 </div>
                 <section slot="content">
-                    <template v-for="env in group.params">
-                        <env-item
-                            :key="env.name"
-                            :name="env.name"
-                            :desc="env.desc"
-                            :editable="editable"
-                            :copy-prefix="group.envPrefix"
-                            :disabled-copy="!group.stepId || group.disableHeader"
-                            :disabled-copy-tips="group.disableHeader ? $t('newui.stepUseWarn') : ''"
-                        />
-                    </template>
+                    <env-item
+                        v-for="env in group.params"
+                        :key="env.name"
+                        :name="env.name"
+                        :desc="env.desc"
+                        :editable="editable"
+                        :copy-prefix="group.envPrefix"
+                        :disabled-copy="!group.stepId || group.disableHeader"
+                        :disabled-copy-tips="group.disableHeader ? $t('newui.stepUseWarn') : ''"
+                    />
                 </section>
             </param-group>
         </template>

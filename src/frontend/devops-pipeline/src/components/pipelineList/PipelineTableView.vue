@@ -1102,7 +1102,6 @@
         .template-mode-icon {
             flex-shrink: 0;
             position: relative;
-            top: 2px;
         }
         .exec-pipeline-btn {
             width: 55px;
