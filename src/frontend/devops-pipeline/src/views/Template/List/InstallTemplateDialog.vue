@@ -160,4 +160,8 @@
     .install-template-dialog .bk-dialog-wrapper .bk-dialog-header {
         padding: 0 24px !important;
     }
+    .install-template-dialog .template-list li:hover {
+        box-shadow: none;
+        border: 1px solid #A3C5FD;
+    }
 </style>

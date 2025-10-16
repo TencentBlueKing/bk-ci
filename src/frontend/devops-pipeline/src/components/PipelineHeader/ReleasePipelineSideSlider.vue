@@ -401,6 +401,10 @@
                     v-if="!releaseParams.enablePac || hasOauth"
                     slot="footer"
                     class="release-pipeline-pac-footer"
+                    :style="{
+                        borderTop: `${isFooterFixed ? '1px solid #dcdee5' : 'none'} !important`,
+                        backgroundColor: `${isFooterFixed ? '#fafbfd' : '#fff'} !important`
+                    }"
                 >
                     <bk-button
                         theme="primary"
@@ -525,7 +529,10 @@
                 },
                 newReleaseVersionNameList: [],
                 TARGET_ACTION_ENUM,
-                customVersionName: ''
+                customVersionName: '',
+                currentSidesliderContentHeight: 0,
+                maxSidesliderContentHeight: 0,
+                isFooterFixed: false,
             }
         },
         computed: {
@@ -674,6 +681,11 @@
             value (val) {
                 if (val) {
                     this.init()
+                    this.$nextTick()
+                    const winHeight = window.innerHeight
+                    const headerAndFooterHeight = 48 + 52
+                    this.maxSidesliderContentHeight = winHeight - headerAndFooterHeight
+                    this.$nextTick(this.getSidesliderContentHeight)
                 }
             },
             yamlInfo: {
@@ -798,6 +810,10 @@
                     resourceType: resourceType,
                     action: this.$permissionResourceAction.EDIT
                 })
+            },
+            getSidesliderContentHeight () {
+                this.currentSidesliderContentHeight = document.querySelector('.bk-sideslider-content')?.offsetHeight
+                this.isFooterFixed = this.currentSidesliderContentHeight >= this.maxSidesliderContentHeight
             },
             async init () {
                 try {
@@ -940,6 +956,7 @@
             },
             handlePacEnableChange (val) {
                 this.showPacCodelibSetting = val
+                this.$nextTick(this.getSidesliderContentHeight)
             },
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
@@ -1263,6 +1280,7 @@
                     })
                 } finally {
                     this.refreshing = false
+                    this.$nextTick(this.getSidesliderContentHeight)
                 }
             },
             trimCIPrefix (filePath) {
@@ -1282,6 +1300,12 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+
+.release-pipeline-side-slider {
+    .bk-sideslider-footer {
+        border: none;
+    }
+}
 
 .release-pipeline-side-slider-header {
     display: grid;
@@ -1318,7 +1342,6 @@
 }
 
 .release-pipeline-pac-form {
-    height: calc(100vh - 114px);
     overflow: auto;
 
     .release-pac-pipeline-form-header {
@@ -1376,7 +1399,7 @@
 
     .release-pipeline-pac-setting {
         flex: 1;
-        padding: 24px;
+        padding: 24px 24px 0;
         display: flex;
         flex-direction: column;
         grid-gap: 24px;
@@ -1390,7 +1413,9 @@
 
         .pac-pipeline-dest-branch-radio {
             display: flex;
-            margin-bottom: 8px;
+            &:not(:last-child) {
+                margin-bottom: 8px;
+            }
             .bk-radio-text {
                 @include ellipsis();
                 flex: 1;
@@ -1426,7 +1451,8 @@
 }
 
 .release-pipeline-pac-footer {
-    padding: 0 24px;
+    width: 100%;
+    padding: 8px 24px;
 }
 
 .release-info-dialog {

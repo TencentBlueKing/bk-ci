@@ -21,15 +21,15 @@
                         <li
                             v-for="(item, idx) in searchTab"
                             :key="idx"
+                            :class="[currentMode === item.countKey ? 'active' : '']"
                         >
                             <p
-                                :class="[currentMode === item.countKey ? 'active' : '']"
                                 v-bk-overflow-tips="{ content: `${$t(item.i18nKey)}${countMap[item.countKey] ?? 0}` }"
                                 @click="handleChangeSearchTab(item.countKey)"
                             >
                                 <Logo
                                     :class="item.icon"
-                                    size="13"
+                                    size="14"
                                     :name="item.icon"
                                 />
                                 <span>{{ $t(item.i18nKey) }}</span>
@@ -186,12 +186,12 @@
         },
         {
             i18nKey: CUSTOM_SOURCE,
-            icon: 'template-view',
+            icon: 'template-custom',
             countKey: 'custom'
         },
         {
             i18nKey: MARKET_SOURCE,
-            icon: 'template-view',
+            icon: 'is-store',
             countKey: 'market'
         }
     ])
@@ -541,6 +541,7 @@
 
                 .search-tab {
                     display: flex;
+                    align-items: center;
                     padding: 4px;
                     margin-left: 8px;
                     background: #EAEBF0;
@@ -548,8 +549,9 @@
                     border-radius: 2px;
 
                     li{
+                        display: flex;
+                        align-items: center;
                         height: 24px;
-                        line-height: 24px;
                         font-size: 12px;
                         color: #4D4F56;
                         text-align: center;
@@ -557,7 +559,10 @@
                         cursor: pointer;
 
                         p {
+                            display: flex;
+                            align-items: center;
                             padding: 0 12px;
+                            height: 14px;
                             max-width: 120px;
                             overflow: hidden;
                             text-overflow: ellipsis;
@@ -569,13 +574,20 @@
                             color: #979BA5;
                             margin-right: 4px;
                         }
+
+                        &:not(:last-child) p {
+                            border-right: 1px solid #e0e2e8;
+                        }
                     }
 
                     .active {
-                        padding: 0 12px;
                         background-color: #fff;
                         color: $primaryColor;
                         border-radius: 2px;
+
+                        &:not(:last-child) p {
+                            border-right: none;
+                        }
 
                         svg {
                             color: $primaryColor;

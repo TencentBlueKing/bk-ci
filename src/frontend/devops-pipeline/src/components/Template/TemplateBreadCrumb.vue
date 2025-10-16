@@ -8,7 +8,7 @@
             <template #prefix>
                 <Logo
                     :size="12"
-                    name="template-mode"
+                    name="template-mode-icon"
                 />
             </template>
             <template v-if="!isLoading">
