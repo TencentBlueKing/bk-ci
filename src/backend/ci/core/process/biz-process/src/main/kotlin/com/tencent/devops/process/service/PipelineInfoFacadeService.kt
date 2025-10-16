@@ -1137,7 +1137,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                 projectId = projectId,
                 model = copyMode,
                 channelCode = channelCode,
-                setting = settingInfo
+                setting = settingInfo?.copy(
+                    labels = pipelineCopy.labels
+                )
             ).pipelineId
             return newPipelineId
         } catch (e: JsonParseException) {

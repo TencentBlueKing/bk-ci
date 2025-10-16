@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -60,6 +61,7 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineYamlVersionResolver: PipelineYamlVersionResolver
 ) {
@@ -152,7 +154,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.error(
                 "Failed to trigger by webhook|" +
-                        "projectId: $projectId|pipelineId: $pipelineId|repoHashId: ${repository.repoHashId}",
+                    "projectId: $projectId|pipelineId: $pipelineId|repoHashId: ${repository.repoHashId}",
                 ignored
             )
             webhookTriggerManager.fireError(context, ignored)
@@ -163,8 +165,8 @@ class WebhookTriggerBuildService @Autowired constructor(
         with(event) {
             logger.info(
                 "[PAC_PIPELINE]|Start to trigger yaml pipeline|eventId:$eventId|" +
-                        "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
-                        "ref: $ref|blobId: $blobId"
+                    "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
+                    "ref: $ref|blobId: $blobId"
             )
             val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
                 projectId = projectId, eventId = eventId
@@ -192,9 +194,9 @@ class WebhookTriggerBuildService @Autowired constructor(
             }
             logger.info(
                 "[PAC_PIPELINE]|find yaml pipeline trigger version|eventId:$eventId|" +
-                        "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
-                        "ref: $ref|blobId: $blobId|" +
-                        "pipelineId: ${pipelineYamlVersion.pipelineId}|version: ${pipelineYamlVersion.version}"
+                    "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
+                    "ref: $ref|blobId: $blobId|" +
+                    "pipelineId: ${pipelineYamlVersion.pipelineId}|version: ${pipelineYamlVersion.version}"
             )
             trigger(
                 projectId = projectId,
@@ -223,7 +225,13 @@ class WebhookTriggerBuildService @Autowired constructor(
             userId = userId,
             pipeline = pipelineInfo,
             startType = StartType.WEB_HOOK,
-            pipelineParamMap = convertBuildParameters(startParams),
+            pipelineParamMap = convertBuildParameters(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                triggerContainer = resource.model.getTriggerContainer(),
+                startParams = startParams
+            ),
             channelCode = pipelineInfo.channelCode,
             isMobile = false,
             resource = resource,
@@ -232,7 +240,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         )
         logger.info(
             "success to trigger by webhook|eventId:${context.eventId}|" +
-                    "projectId: $projectId|pipelineId: $pipelineId|version: ${resource.version}"
+                "projectId: $projectId|pipelineId: $pipelineId|version: ${resource.version}"
         )
         context.buildId = buildId
         context.startParams = startParams
@@ -240,17 +248,31 @@ class WebhookTriggerBuildService @Autowired constructor(
         logger.info("$pipelineId|WEBHOOK_TRIGGER|time=${System.currentTimeMillis() - startEpoch}")
     }
 
-    private fun convertBuildParameters(startParams: Map<String, Any>): MutableMap<String, BuildParameters> {
-        val params = mutableMapOf<String, Any>()
+    private fun convertBuildParameters(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        triggerContainer: TriggerContainer,
+        startParams: Map<String, Any>
+    ): MutableMap<String, BuildParameters> {
         val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+        val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            paramProperties = triggerContainer.params,
+            paramValues = startParams.mapValues { it.value.toString() }
+        )
+        pipelineParamMap.putAll(paramMap)
         startParams.forEach {
+            if (paramMap.containsKey(it.key)) {
+                return@forEach
+            }
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
-                params[it.key] = it.value
                 pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value ?: "")
-            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
-                params[newVarName] = it.value
+            } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
                 pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value ?: "")
             }
         }

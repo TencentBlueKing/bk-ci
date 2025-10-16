@@ -138,7 +138,7 @@ class ProcessDataDeleteService @Autowired constructor(
         dslContext: DSLContext,
         projectId: String,
         pipelineIds: MutableList<String>?,
-        broadcastTableDeleteFlag: Boolean? = true,
+        broadcastTableDeleteFlag: Boolean? = false,
         archivePipelineFlag: Boolean? = null
     ) {
         pipelineIds?.forEach { pipelineId ->
