@@ -484,20 +484,20 @@
     
     async function copyAsTemplateInstance (row) {
         try {
-            const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
-                pipelineIds: [row.pipelineId],
-                projectId: projectId.value,
-                templateId: templateId.value
-            })
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
-                {
-                    ...row,
-                    ...res[row.pipelineId],
-                    isRequiredParam: row.required,
-                    pipelineName: (row.pipelineName + '_copy').substring(0, 128),
-                    pipelineId: ''
-                }
-            ])
+            // const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
+            //     pipelineIds: [row.pipelineId],
+            //     projectId: projectId.value,
+            //     templateId: templateId.value
+            // })
+            // proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
+            //     {
+            //         ...row,
+            //         ...res[row.pipelineId],
+            //         isRequiredParam: row.required,
+            //         pipelineName: (row.pipelineName + '_copy').substring(0, 128),
+            //         pipelineId: ''
+            //     }
+            // ])
     
             proxy.$router.push({
                 name: 'instanceEntry',
@@ -505,11 +505,11 @@
                     ...proxy.$route.params,
                     version: row.fromTemplateVersion,
                     type: 'copy'
+                },
+                query: {
+                    from: row.pipelineId,
+                    copyPipelineName: (row.pipelineName + '_copy').substring(0, 128),
                 }
-                // query: {
-                //     from: row.pipelineId,
-                //     pipelineName: (row.pipelineName + '_copy').substring(0, 128),
-                // }
             })
         } catch (e) {
             console.error(e)

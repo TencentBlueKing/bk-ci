@@ -573,7 +573,7 @@
     "reset": "リセット",
     "cancelParticipant": "入力パラメータをキャンセル",
     "setParticipant": "入力パラメータに設定",
-    "useDefaultValue": "デフォルト値を使用",
+    "useDefaultValue": "デフォルト値を一键で入力",
     "disabledReleaseTips": "テンプレートバージョンを選択してください",
     "returnInstanceList": "リストに戻る",
     "releasing": {

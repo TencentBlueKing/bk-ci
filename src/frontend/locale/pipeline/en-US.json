@@ -575,7 +575,7 @@
     "reset": "Reset",
     "cancelParticipant": "Cancel Participant",
     "setParticipant": "Set Participant",
-    "useDefaultValue": "Use Default Value",
+    "useDefaultValue": "Auto-fill default values",
     "disabledReleaseTips": "Please Select the Template Version",
     "returnInstanceList": "Return to List",
     "releasing": {

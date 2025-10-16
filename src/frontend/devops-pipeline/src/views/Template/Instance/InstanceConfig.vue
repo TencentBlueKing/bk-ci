@@ -337,8 +337,8 @@
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
-    // curTemplate 当前选中的某一个版本的模板数据
-    // templateVersion 选中的模板版本号
+    // curTemplateDetail 当前选中的某一个版本的模板数据
+    // curTemplateVersion 选中的模板版本号
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
     const showCompareParamsNum = computed(() => {
@@ -354,7 +354,7 @@
             instance.param = instance.param.map(p => {
                 return {
                     ...p,
-                    readOnlyCheck: false // 取消只读参数的禁用逻辑
+                    // readOnlyCheck: false // 取消只读参数的禁用逻辑
                 }
             })
         }
@@ -401,14 +401,14 @@
         })
 
         // 触发器新增/删除统计
-        curInstance?.value?.triggerConfigs?.forEach(item => {
-            if (item.isNew) {
-                counts.added++
-            }
-            if (item.isDelete) {
-                counts.deleted++
-            }
-        })
+        // curInstance?.value?.triggerConfigs?.forEach(item => {
+        //     if (item.isNew) {
+        //         counts.added++
+        //     }
+        //     if (item.isDelete) {
+        //         counts.deleted++
+        //     }
+        // })
 
         return counts
     })
@@ -485,50 +485,39 @@
         }
     })
     function compareParams (instance, template) {
-        console.log(instance, template, 'compareParams')
         const instanceParams = instance?.param ?? []
         const templateParams = template?.param ?? []
-        // const instanceBuildNo = instance?.buildNo
-        // const templateBuildNo = template?.buildNo
-
-        // 非入参的参数直接赋值模板配置的入参默认值
-        // if (!instanceBuildNo?.required && templateBuildNo?.required) {
-            // instanceParams?.forEach(i => {
-            //     if (allVersionKeyList.includes(i.id)) {
-            //         const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
-            //         i.defaultValue = newValue ?? i.defaultValue
-            //     }
-            // })
-        // }
-
-        instanceParams?.forEach(i => {
-            // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
-            if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
-                i.defaultValue = newValue ?? i.defaultValue
-            }
-        })
-
         const templateParamsMap = templateParams.reduce((acc, item) => {
+            acc[item.id] = item
+            return acc
+        }, {})
+        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1].param.reduce((acc, item) => {
             acc[item.id] = item
             return acc
         }, {})
         for (const item of instanceParams) {
             const templateParamItem = templateParamsMap[item.id]
+            const initialInstanceParamItem = initialInstanceParams[item.id]
+           
             if (!templateParamItem) {
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 item.isDelete = true
             } else {
-                // 对比 defaultValue, 如果不同则标记为isChange
+                // 对比 defaultValue, 如果不相同则标记为isChange
                 // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
                 if (!allVersionKeyList.includes(item.id) && item.isFollowTemplate) {
                     item.defaultValue = templateParamItem.defaultValue
                 } else {
                     const templateDefaultValue = allVersionKeyList.includes(item.id) ? Number(templateParamItem.defaultValue) : templateParamItem.defaultValue
                     const itemDefaultValue = allVersionKeyList.includes(item.id) ? Number(item.defaultValue) : item.defaultValue
-                    item.isChange = isObject(itemDefaultValue)
+                    item.hasChange = isObject(itemDefaultValue)
                         ? !isShallowEqual(itemDefaultValue, templateDefaultValue)
                         : itemDefaultValue !== templateDefaultValue
+                    
+                    const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem.defaultValue) : initialInstanceParamItem.defaultValue
+                    item.isChange = isObject(itemDefaultValue)
+                        ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
+                        : itemDefaultValue !== initialInstanceDefaultValue
                 }
                 if (!item.required && templateParamItem.required) {
                     item.required = true
@@ -536,7 +525,6 @@
                 }
             }
         }
-
         // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
         for (const item of templateParams) {
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
@@ -545,6 +533,24 @@
                 const newItem = { ...item, isNew: true }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
             }
+        }
+        instanceParams?.forEach(i => {
+            // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
+            if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
+                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                i.defaultValue = newValue ?? i.defaultValue
+            }
+        })
+        // 非入参的参数直接赋值模板配置的入参默认值
+        const instanceBuildNo = instance?.buildNo
+        const templateBuildNo = template?.buildNo
+        if (!instanceBuildNo?.required && templateBuildNo?.required) {
+            instanceParams?.forEach(i => {
+                if (allVersionKeyList.includes(i.id)) {
+                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                    i.defaultValue = newValue ?? i.defaultValue
+                }
+            })
         }
         return instanceParams
     }

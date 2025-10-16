@@ -1,253 +1,275 @@
-<script>
+<script setup>
+    import { computed } from 'vue'
     import Logo from '@/components/Logo'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
-    export default {
-        name: 'form-field',
-        components: {
-            NamingConventionTip
-        },
-        props: {
-            label: {
-                type: String,
-                default: ''
-            },
-            inline: {
-                type: Boolean,
-                default: false
-            },
-            required: {
-                type: Boolean,
-                default: false
-            },
-            isError: {
-                type: Boolean,
-                default: false
-            },
-            errorMsg: {
-                type: String,
-                default: ''
-            },
-            hideColon: {
-                type: Boolean,
-                default: false
-            },
-            desc: {
-                type: String,
-                default: ''
-            },
-            docsLink: {
-                type: String,
-                default: ''
-            },
-            descLink: {
-                type: String,
-                default: ''
-            },
-            descLinkText: {
-                type: String,
-                default: ''
-            },
-            type: {
-                type: String
-            },
-            labelWidth: {
-                type: Number
-            },
-            bottomDivider: {
-                type: Boolean,
-                default: false
-            },
-            customDesc: {
-                type: Boolean,
-                default: false
-            },
-            showOperateBtn: {
-                type: Boolean,
-                default: false
-            },
-            isChange: {
-                type: Boolean,
-                default: false
-            },
-            isDelete: {
-                type: Boolean,
-                default: false
-            },
-            isNew: {
-                type: Boolean,
-                default: false
-            },
-            isRequiredParam: {
-                // 是否为入参
-                type: Boolean,
-                default: false
-            },
-            isFollowTemplate: {
-                type: Boolean,
-                default: false
-            },
-            handleUseDefaultValue: {
-                type: Function,
-                default: () => () => {}
-            },
-            handleSetParmaRequired: {
-                type: Function,
-                default: () => () => {}
-            },
-            handleFollowTemplate: {
-                type: Function,
-                default: () => () => {}
-            }
-        },
-        computed: {
-            widthStyle () {
-                if (!this.labelWidth) return {}
-                return {
-                    width: `${this.labelWidth}px`
-                }
-            },
-            statusTagConfig () {
-                let message, theme
-                if (this.isDelete) {
-                    message = this.$t('deleted')
-                    theme = 'danger'
-                }
-                if (this.isNew) {
-                    message = this.$t('new')
-                    theme = 'success'
-                }
-                return {
-                    message,
-                    theme,
-                    isShow: this.isDelete || this.isNew
-                }
-            }
-        },
-        render (h) {
-            const {
-                label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink,
-                descLink, descLinkText, type, widthStyle, bottomDivider, customDesc, showOperateBtn,
-                statusTagConfig, isDelete, isChange, isRequiredParam, isFollowTemplate, $t, handleSetParmaRequired,
-                handleUseDefaultValue, handleFollowTemplate
-            } = this
-            const descMap = desc.split('\n')
-            return (
-                <div class={{
-                    'form-field': true,
-                    'bk-form-item': !inline,
-                    'form-field-group-item': type === 'groupItem',
-                    'bk-form-inline-item': inline,
-                    'is-required': required,
-                    'is-danger': isError
-                }} >
-                    {
-                        label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>
-                            {
-                                <span class={{ deleted: isDelete }}>{label}</span>
-                            }
-                            { hideColon ? '' : '：' }
-                            { docsLink
-                                && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
-                            }
-                            { label.trim() && (desc.trim() || customDesc) && <bk-popover placement={customDesc ? 'top-start' : 'top'} theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
-                                    <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
-                                    <div slot="content">
-                                        {
-                                            customDesc
-                                            ? <NamingConventionTip/>
-                                            : <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
-                                                {
-                                                    descMap.length > 1
-                                                    ? descMap.map(item => (
-                                                        <div>{item}</div>
-                                                    ))
-                                                    : desc
-                                                }
-                                                { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
-                                            </div>
-                                        }
+    import UseInstance from '@/hook/useInstance'
 
-                                    </div>
-                                </bk-popover>
-                            }
-                            {
-                                statusTagConfig.isShow && <span class={['status-tag', statusTagConfig.theme]}>
-                                    {statusTagConfig.message}
-                                </span>
-                            }
-                        </label>
-                    }
-
-                    {
-                        showOperateBtn && !isDelete && <span
-                            class={['operate-btn', {
-                                'show': isRequiredParam || isFollowTemplate
-                            }]}
-                        >
-                            {
-                                isChange && (
-                                    <span class={['icon-item', {
-                                            'show-dot': isChange
-                                        }]}
-                                        onClick={handleUseDefaultValue}
-                                        v-bk-tooltips={$t('template.useDefaultValue')}
-                                    >
-                                        <Logo
-                                            name="use-default"
-                                            size="18"
-                                        />
-                                    </span>
-                                )
-                            }
-                            <span class={['icon-item', {
-                                    'active': isRequiredParam
-                                }]}
-                                v-bk-tooltips={
-                                    isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
-                                }
-                                onClick={handleSetParmaRequired}
-                            >
-                                <Logo
-                                    name={isRequiredParam ? 'set-param-active' : 'set-param-default'}
-                                    size="12"
-                                />
-                            </span>
-                            <span class={['icon-item', {
-                                    'is-follow': isFollowTemplate
-                                }]}
-                                key={'follow'}
-                                v-bk-tooltips={
-                                    {
-                                        content: isFollowTemplate ? $t('template.notFollowTemplateTips') : $t('template.followTemplateTips'),
-                                        width: 320
-                                    }
-                                }
-                                onClick={handleFollowTemplate}
-                            >
-                                <Logo
-                                    name="template-mode"
-                                    size="12"
-                                />
-                            </span>
-                        </span>
-                    }
-
-                    <div class='bk-form-content'>
-                        {$slots.default}
-                        {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
-                    </div>
-                    {
-                        bottomDivider
-                        ? (
-                            <div class="bottom-border-divider"></div>
-                        )
-                        : undefined
-                    }
-                </div>
-            )
+    const props = defineProps({
+        label: {
+            type: String,
+            default: ''
+        },
+        inline: {
+            type: Boolean,
+            default: false
+        },
+        required: {
+            type: Boolean,
+            default: false
+        },
+        isError: {
+            type: Boolean,
+            default: false
+        },
+        errorMsg: {
+            type: String,
+            default: ''
+        },
+        hideColon: {
+            type: Boolean,
+            default: false
+        },
+        desc: {
+            type: String,
+            default: ''
+        },
+        docsLink: {
+            type: String,
+            default: ''
+        },
+        descLink: {
+            type: String,
+            default: ''
+        },
+        descLinkText: {
+            type: String,
+            default: ''
+        },
+        type: {
+            type: String
+        },
+        labelWidth: {
+            type: Number
+        },
+        bottomDivider: {
+            type: Boolean,
+            default: false
+        },
+        customDesc: {
+            type: Boolean,
+            default: false
+        },
+        showOperateBtn: {
+            type: Boolean,
+            default: false
+        },
+        hasChange: {
+            type: Boolean,
+            default: false
+        },
+        isDelete: {
+            type: Boolean,
+            default: false
+        },
+        isNew: {
+            type: Boolean,
+            default: false
+        },
+        isRequiredParam: {
+            type: Boolean,
+            default: false
+        },
+        isFollowTemplate: {
+            type: Boolean,
+            default: false
+        },
+        handleUseDefaultValue: {
+            type: Function,
+            default: () => {}
+        },
+        handleSetParmaRequired: {
+            type: Function,
+            default: () => {}
+        },
+        handleFollowTemplate: {
+            type: Function,
+            default: () => {}
         }
-    }
+    })
+
+    const { proxy } = UseInstance()
+    const widthStyle = computed(() => {
+        if (!props.labelWidth) return {}
+        return {
+            width: `${props.labelWidth}px`
+        }
+    })
+
+    const statusTagConfig = computed(() => {
+        let message, theme
+        if (props.isDelete) {
+            message = proxy.$t('deleted')
+            theme = 'danger'
+        }
+        if (props.isNew) {
+            message = proxy.$t('new')
+            theme = 'success'
+        }
+        return {
+            message,
+            theme,
+            isShow: props.isDelete || props.isNew
+        }
+    })
+
 </script>
+
+<template>
+    <div
+        :class="[
+            'form-field',
+            {
+                'bk-form-item': !props.inline,
+                'form-field-group-item': props.type === 'groupItem',
+                'bk-form-inline-item': props.inline,
+                'is-required': props.required,
+                'is-danger': props.isError
+            }
+        ]"
+    >
+        <label
+            v-if="props.label"
+            :title="props.label"
+            class="bk-label atom-form-label"
+            :style="widthStyle"
+        >
+            <span :class="{ deleted: props.isDelete }">{{ props.label }}</span>
+            {{ props.hideColon ? '' : '：' }}
+            <a
+                v-if="props.docsLink"
+                target="_blank"
+                :href="props.docsLink"
+            >
+                <i class="bk-icon icon-question-circle"></i>
+            </a>
+            <bk-popover
+                v-if="props.label.trim() && (props.desc.trim() || props.customDesc)"
+                :placement="props.customDesc ? 'top-start' : 'top'"
+                :theme="props.customDesc ? 'light' : 'dark'"
+                :width="props.customDesc ? 892 : 'auto'"
+            >
+                <i
+                    :class="{
+                        'bk-icon': true,
+                        'icon-info-circle': true
+                    }"
+                    :style="{
+                        'margin-left': props.hideColon ? '4px' : '0',
+                        color: props.hideColon ? '#979BA5' : ''
+                    }"
+                />
+                <template #content>
+                    <template v-if="props.customDesc">
+                        <NamingConventionTip />
+                    </template>
+                    <template v-else>
+                        <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
+                            <template v-if="props.desc.split('\n').length > 1">
+                                <div
+                                    v-for="(item, index) in props.desc.split('\n')"
+                                    :key="index"
+                                >{{ item }}</div>
+                            </template>
+                            <template v-else>
+                                {{ props.desc }}
+                            </template>
+                            <a
+                                v-if="props.descLink"
+                                class="desc-link"
+                                target="_blank"
+                                :href="props.descLink"
+                            >{{ props.descLinkText }}</a>
+                        </div>
+                    </template>
+                </template>
+            </bk-popover>
+            <span
+                v-if="statusTagConfig.isShow"
+                :class="['status-tag', statusTagConfig.theme]"
+            >
+                {{ statusTagConfig.message }}
+            </span>
+        </label>
+
+        <span
+            v-if="props.showOperateBtn && !props.isDelete"
+            :class="[
+                'operate-btn',
+                { show: props.isRequiredParam || props.hasChange || props.isFollowTemplate }
+            ]"
+        >
+            <span
+                v-if="props.hasChange"
+                :class="[
+                    'icon-item',
+                    { 'show-dot': props.hasChange }
+                ]"
+                @click="props.handleUseDefaultValue"
+                v-bk-tooltips="{
+                    theme: 'light',
+                    content: $t('template.useDefaultValue')
+                }"
+            >
+                <Logo
+                    name="use-default"
+                    size="18"
+                />
+            </span>
+            <span
+                :class="[
+                    'icon-item',
+                    { active: props.isRequiredParam }
+                ]"
+                v-bk-tooltips="props.isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')"
+                @click="props.handleSetParmaRequired"
+            >
+                <Logo
+                    :name="props.isRequiredParam ? 'set-param-active' : 'set-param-default'"
+                    size="12"
+                />
+            </span>
+            <span
+                :class="[
+                    'icon-item',
+                    { 'is-follow': props.isFollowTemplate }
+                ]"
+                v-bk-tooltips="{
+                    content: props.isFollowTemplate ? $t('template.notFollowTemplateTips') : $t('template.followTemplateTips'),
+                    width: 320
+                }"
+                @click="props.handleFollowTemplate"
+            >
+                <Logo
+                    name="template-mode"
+                    size="12"
+                />
+            </span>
+        </span>
+
+        <div class="bk-form-content">
+            <slot></slot>
+            <template v-if="props.isError">
+                <slot name="errorTip">
+                    <p class="bk-form-help is-danger">{{ props.errorMsg }}</p>
+                </slot>
+            </template>
+        </div>
+        <div
+            v-if="props.bottomDivider"
+            class="bottom-border-divider"
+        ></div>
+    </div>
+</template>
 
 <style lang="scss">
     .form-field {

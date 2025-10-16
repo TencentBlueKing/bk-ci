@@ -4,7 +4,7 @@
             <bk-button
                 v-if="isInstanceCreateType"
                 icon="plus"
-                :disabled="!curTemplateVersion || editingIndex > -1"
+                :disabled="!currentVersion || editingIndex > -1"
                 @click="handleShowInstanceCreate"
             >
                 {{ $t('new') }}
@@ -145,20 +145,19 @@
     const showInstanceCreate = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
-    const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
-    const currentVersionId = computed(() => proxy?.$route.params?.version)
-    const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
+    const currentVersion = computed(() => proxy?.$route.params?.version)
+    const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
+    const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
+    const instanceViewType = computed(() => proxy.$route.params?.type)
+    const isInstanceCreateType = computed(() => instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE)
     const renderInstanceList = computed(() => {
         return instanceList.value
     })
+    const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
+    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
-    const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
-    const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
-    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
-    const instanceViewType = computed(() => proxy.$route.params?.type)
-    const isInstanceCreateType = computed(() => instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE)
     watch(() => curTemplateDetail.value, (val) => {
         if (pipelineName.value) {
             handleAddInstance()
@@ -246,6 +245,7 @@
                 return {
                     ...i,
                     ...res[i.pipelineId],
+                    pipelineName: proxy.$route.query.copyPipelineName || i.pipelineName,
                     ...(
                         triggerElements?.length ? {
                             triggerConfigs: triggerElements.map(trigger => {
@@ -309,17 +309,27 @@
                 name: 'TemplateOverview',
                 params: {
                     type: 'instanceList',
-                    version: currentVersionId.value
+                    version: currentVersion.value
                 }
             })
             return
         }
-        if (!isInstanceCreateType.value) {
+        if ([INSTANCE_OPERATE_TYPE.UPGRADE, INSTANCE_OPERATE_TYPE.COPY].includes(instanceViewType.value)) {
+            if (instanceViewType.value === INSTANCE_OPERATE_TYPE.COPY) {
+                const { from, copyPipelineName } = proxy.$route.query
+                proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
+                    {
+                        pipelineName: copyPipelineName?.substring(0, 128),
+                        pipelineId: from
+                    }
+                ])
+            }
             await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })
         }
+       
     }
     function handleBatchEdit () {
         if (editingIndex.value > -1) return
