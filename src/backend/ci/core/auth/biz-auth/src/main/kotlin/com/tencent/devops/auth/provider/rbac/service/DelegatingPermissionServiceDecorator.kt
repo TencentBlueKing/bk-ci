@@ -383,7 +383,7 @@ class DelegatingPermissionServiceDecorator(
         return try {
             circuitBreaker.executeCallable(externalCall)
         } catch (e: CallNotPermittedException) {
-            logger.error(
+            logger.warn(
                 "[AUTH_CIRCUIT_BREAKER_OPEN] Circuit breaker '{}' for context '{}' is open." +
                     " Falling back to internal call. Error: {}",
                 e.causingCircuitBreakerName,
