@@ -43,7 +43,7 @@
                         {{ row.name }}
                     </span>
                     <bk-tag
-                        v-if="props.row.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING"
+                        v-if="row.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING"
                         theme="success"
                         class="draft-tag"
                     >
