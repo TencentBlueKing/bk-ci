@@ -30,10 +30,10 @@ package com.tencent.devops.process.service.template.v2
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class PipelineTemplateInstanceLock(redisOperation: RedisOperation, baseId: String) :
+class PipelineTemplateInstanceLock(redisOperation: RedisOperation, templateId: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "pipeline.template.instance.lock.$baseId",
+        lockKey = "pipeline.template.instance.lock.$templateId",
         // 10分钟，防止服务重启，锁未释放
         expiredTimeInSeconds = 600000
     ) {

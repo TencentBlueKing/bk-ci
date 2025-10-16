@@ -228,8 +228,7 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 templateSettingVersion = templateResource.settingVersion,
-                enablePac = enablePac,
-                overrideTemplateField = overrideTemplateField
+                enablePac = enablePac
             )
             // 转换成yaml
             val newYaml = pipelineVersionGenerator.model2yaml(
@@ -330,8 +329,7 @@ class PipelineTemplateInstanceReqConverter(
         projectId: String,
         pipelineId: String,
         templateSettingVersion: Int,
-        enablePac: Boolean,
-        overrideTemplateField: TemplateInstanceField? = null
+        enablePac: Boolean
     ): PipelineSetting {
         val templateSetting = pipelineTemplateSettingService.get(
             projectId = projectId,
@@ -344,7 +342,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineName = pipelineName
             )
         } else {
-            val setting = pipelineRepositoryService.getSetting(
+            pipelineRepositoryService.getSetting(
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.copy(
@@ -354,11 +352,6 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
                 channelCode = ChannelCode.BS
-            )
-            TemplateInstanceUtil.instanceSetting(
-                templateSetting = templateSetting,
-                setting = setting,
-                overrideTemplateField = overrideTemplateField
             )
         }
         val pacSetting = enablePac.takeIf { it }?.let {

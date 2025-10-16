@@ -13,7 +13,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
@@ -77,7 +77,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val pipelineIdGenerator: PipelineIdGenerator,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val sampleEventDispatcher: SampleEventDispatcher,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineResourceDao: PipelineResourceDao,
@@ -262,12 +262,10 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 userId = userId
             )
         }
-        pipelineEventDispatcher.dispatch(
+        sampleEventDispatcher.dispatch(
             PipelineTemplateInstanceEvent(
-                projectId = projectId,
-                source = "PIPELINE_TEMPLATE_INSTANCE_CREATE",
-                pipelineId = "",
                 userId = userId,
+                projectId = projectId,
                 templateId = templateId,
                 baseId = baseId,
                 templateInstanceType = TemplateInstanceType.CREATE
@@ -348,12 +346,10 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 status = TemplatePipelineStatus.UPDATING
             )
         }
-        pipelineEventDispatcher.dispatch(
+        sampleEventDispatcher.dispatch(
             PipelineTemplateInstanceEvent(
-                projectId = projectId,
-                source = "PIPELINE_TEMPLATE_INSTANCE_UPDATE",
-                pipelineId = "",
                 userId = userId,
+                projectId = projectId,
                 templateId = templateId,
                 baseId = baseId,
                 templateInstanceType = TemplateInstanceType.UPDATE
