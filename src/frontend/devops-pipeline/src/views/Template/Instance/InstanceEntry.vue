@@ -48,7 +48,6 @@
                     <InstanceAside
                         slot="aside"
                         :is-editing.sync="isEditing"
-                        :is-instance-create-type="isInstanceCreateViewType"
                         @batchEdit="handleBatchEdit"
                     />
                     <bk-exception
@@ -95,7 +94,8 @@
         SET_RELEASE_BASE_ID,
         SET_RELEASE_ING,
         UPDATE_TEMPLATE_REF,
-        UPDATE_TEMPLATE_REF_TYPE
+        UPDATE_TEMPLATE_REF_TYPE,
+        INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import BatchEditConfig from './BatchEditConfig'
@@ -116,7 +116,7 @@
     const showTaskDetail = computed(() => proxy.$store?.state?.templates?.showTaskDetail)
     const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version) // 路径上的模板版本号
     const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
-    const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
+    const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === INSTANCE_OPERATE_TYPE.CREATE)
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)

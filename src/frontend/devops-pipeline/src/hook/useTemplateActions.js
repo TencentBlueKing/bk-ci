@@ -10,7 +10,7 @@ export default function useTemplateActions () {
     const isTableLoading = ref(false)
     const copyTemp = ref({
         isShow: false,
-        title: t('template.saveAsTemplate'),
+        title: t('template.copyTemplate'),
         closeIcon: false,
         quickClose: true,
         padding: '0 20px',

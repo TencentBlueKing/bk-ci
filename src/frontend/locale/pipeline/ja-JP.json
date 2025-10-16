@@ -511,7 +511,7 @@
     "viewDetails": "詳細を表示",
     "upgradedVersion": "アップグレードバージョン",
     "selectPipelineNum": "{0}本のパイプラインが選択されました",
-    "batchEdit": "一括編集",
+    "batchEditParams": "入力パラメータを一括編集",
     "batchUpdateInstance": "一括アップグレード",
     "batchUpdateTip1": "・PACを有効にしたパイプラインインスタンスとPACを有効にしていないパイプラインインスタンスは、別々にアップグレードしてください",
     "batchUpdateTip2": "・PACを有効にし、YAMLファイルを格納するコードリポジトリが異なるパイプラインインスタンスは、別々にアップグレードしてください",
@@ -529,7 +529,7 @@
     "STEP": "Stepテンプレート",
     "selectTemplateUpgradedVersion": "アップグレードするバージョンを選択してください",
     "repositoryPlaceholder": "コードリポジトリを選択してください",
-    "addField": "フィールドを追加",
+    "addField": "一括編集用の入力パラメータを追加",
     "keyword": "名前キーワードを入力してください",
     "selectAll": "すべて選択",
     "pleaseSelectTemplateVersion": "テンプレートバージョンを選択し、新しいインスタンスを追加してください",
@@ -605,7 +605,7 @@
     },
     "modifyConfig": "設定を変更",
     "batchEditInstance": "インスタンスを一括編集",
-    "batchEditInstanceTips": "追加されたフィールド設定はすべてのインスタンスに適用されます。入力されていない場合は、そのフィールドの値がクリアされます",
+    "batchEditInstanceTips": "変更はすべてのインスタンスに一括で適用されます。入力パラメータの値が設定されていない場合、確認後、対応するフィールドの値は空欄になります。",
     "releaseTaskHeaderTips": "{0}個のリリースタスクが進行中です",
     "views": "表示",
     "from": "テンプレートのバージョン由来: ",
@@ -665,8 +665,9 @@
     "withSettingCompareTips": "チェックすると、テンプレートのラベル、説明、実行設定、通知などの設定情報を使用して差異比較を行います",
     "fromTemplateVersion": "ソーステンプレートバージョン: {0}",
     "parsedYaml": "解析後のYAML",
-    "triggersUpdateTips": "Step ID を設定したトリガーのみが表示されます。Step ID が設定されていないトリガーは、インスタンスで有効または無効にする設定を行うことができません。"
-
+    "triggersUpdateTips": "Step ID を設定したトリガーのみが表示されます。Step ID が設定されていないトリガーは、インスタンスで有効または無効にする設定を行うことができません。",
+    "referenceTemplateVersion": "参照テンプレートのバージョン",
+    "copyTemplate": "テンプレート複製"
   },
   "newlist": {
     "exportJsonTip": "インポート機能を使用すると、パイプラインをすばやく作成したり、クロスプロジェクト、クロス藍盾プラットフォームのパイプラインインポートを実現したりすることができます。",

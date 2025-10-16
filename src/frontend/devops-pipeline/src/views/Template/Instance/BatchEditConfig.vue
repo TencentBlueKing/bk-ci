@@ -2,7 +2,7 @@
     <bk-sideslider
         :is-show.sync="value"
         :width="1000"
-        :title="$t('template.batchEditInstance')"
+        :title="$t('template.batchEditParams')"
         @shown="showBatchEditSlider"
         @hidden="hideBatchEditSlider"
         ext-cls="batch-edit-side-slider"

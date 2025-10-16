@@ -30,7 +30,7 @@
                     style="fill:#3c96ff;position:relative;top:2px;"
                 />
                 <span>
-                    {{ $t('template.batchEdit') }}
+                    {{ $t('template.batchEditParams') }}
                 </span>
             </div>
         </div>
@@ -94,7 +94,7 @@
                                 :content="$t('template.deleteInstanceContentTips')"
                                 width="288"
                                 trigger="click"
-                                @confirm="handelDeleteInstance(instanceIndex)"
+                                @confirm="handleDeleteInstance(instanceIndex)"
                             >
                                 <bk-icon
                                     type="delete"
@@ -126,14 +126,14 @@
     import {
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
-        UPDATE_USE_TEMPLATE_SETTING
+        UPDATE_USE_TEMPLATE_SETTING,
+        INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     import InstancePipelineName from '@/components/Template/instance-pipeline-name'
     const props = defineProps({
-        isInstanceCreateType: Boolean,
         isEditing: Boolean
     })
     const { proxy } = UseInstance()
@@ -157,6 +157,8 @@
     const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
     const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const instanceViewType = computed(() => proxy.$route.params?.type)
+    const isInstanceCreateType = computed(() => instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE)
     watch(() => curTemplateDetail.value, (val) => {
         if (pipelineName.value) {
             handleAddInstance()
@@ -188,6 +190,7 @@
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
+                ...proxy.$route.query,
                 index: instanceActiveIndex.value + 1
             }
         })
@@ -217,7 +220,7 @@
         })
         proxy.$emit('update:isEditing', true)
     }
-    function handelDeleteInstance (index) {
+    function handleDeleteInstance (index) {
         instanceList.value.splice(index, 1)
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         handleInstanceClick(instanceList.value.length - 1)
@@ -301,7 +304,7 @@
         }, 3000)
     }
     async function init () {
-        if (!props.isInstanceCreateType && !instanceList.value.length) {
+        if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
             proxy.$router.push({
                 name: 'TemplateOverview',
                 params: {
@@ -311,7 +314,7 @@
             })
             return
         }
-        if (!props.isInstanceCreateType) {
+        if (!isInstanceCreateType.value) {
             await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)

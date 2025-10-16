@@ -24,7 +24,6 @@
                         v-model="pipelineName"
                         v-focus="isFocus()"
                         v-validate="{
-                            required: true,
                             max: 128
                         }"
                         :class="{ 'is-danger': errors.has('pipelineName') }"

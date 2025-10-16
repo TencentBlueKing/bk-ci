@@ -1,6 +1,6 @@
 <template>
     <bk-resize-layout
-        ref="resizeLayout"
+        ref="resizeLayoutRef"
         class="template-group-section"
         collapsible
         :min="280"
@@ -16,24 +16,24 @@
 
 <script setup>
     import {
-        PIPELINE_ASIDE_PANEL_TOGGLE,
-        PIPELINE_GROUP_ASIDE_WIDTH_CACHE
-    } from '@/store/constants'
+        TEMPLATE_ASIDE_PANEL_TOGGLE,
+        TEMPLATE_ASIDE_WIDTH_CACHE
+    } from '@/store/modules/templates/constants'
     import { onMounted, ref } from 'vue'
     import TemplateGroupAside from './TemplateGroupAside'
-
-    const initialDivide = ref(Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280)
+    const resizeLayoutRef = ref(null)
+    const initialDivide = ref(Number(localStorage.getItem(TEMPLATE_ASIDE_WIDTH_CACHE)) || 280)
     function handleCollapseChange (val) {
-        localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
+        localStorage.setItem(TEMPLATE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
     }
-
     function afterResize (width) {
-        localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
+        localStorage.setItem(TEMPLATE_ASIDE_WIDTH_CACHE, JSON.stringify(width))
     }
 
     onMounted(() => {
-        if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
-            this.$refs.resizeLayout.setCollapse(true)
+        if (localStorage.getItem(TEMPLATE_ASIDE_PANEL_TOGGLE) === 'true') {
+            console.log(resizeLayoutRef.value, 'resizeLayoutRef.value')
+            resizeLayoutRef.value.setCollapse(true)
         }
     })
 </script>

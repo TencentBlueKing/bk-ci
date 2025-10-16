@@ -62,7 +62,7 @@
                     <bk-table-column
                         :label="$t('template.pipelineInstanceName')"
                         prop="pipelineName"
-                        :width="400"
+                        :width="250"
                     >
                         <template slot-scope="{ row }">
                             <span
@@ -80,17 +80,11 @@
                     <bk-table-column
                         :label="$t('template.currentVision')"
                         prop="pipelineVersionName"
-                        :width="300"
+                        :width="250"
                     >
                         <template slot-scope="{ row }">
                             <div class="version-wrapper">
                                 {{ row.pipelineVersionName }}
-                                <span
-                                    class="template-version"
-                                    v-if="[TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE, TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED].includes(row.status)"
-                                >
-                                    {{ $t('template.fromTemplateVersion') }} {{ row.fromTemplateVersionName }}
-                                </span>
 
                                 <template v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE">
                                     <logo
@@ -136,7 +130,7 @@
                                         {{ $t('template.UpgradeFailed') }}
                                         <logo
                                             v-bk-tooltips="{
-                                                content: JSON.parse(row.instanceErrorInfo).message ?? '--'
+                                                content: (row?.instanceErrorInfo && JSON.parse(row?.instanceErrorInfo).message) ?? '--'
                                             }"
                                             class="status-failed-icon"
                                             name="circle-alert-filled"
@@ -146,6 +140,12 @@
                                 </template>
                             </div>
                         </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('template.referenceTemplateVersion')"
+                        prop="fromTemplateVersionName"
+                        :width="250"
+                    >
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('template.newestVersion')"
@@ -195,7 +195,7 @@
                                 {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
-                                v-else-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE"
+                                v-else-if="row.status !== TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -349,7 +349,7 @@
                 ]
             },
             {
-                name: proxy.$t('versionNum'),
+                name: proxy.$t('template.currentVision'),
                 id: 'templateVersion',
                 remoteMethod:
                     async (search) => {
@@ -506,9 +506,13 @@
                     version: row.fromTemplateVersion,
                     type: 'copy'
                 }
+                // query: {
+                //     from: row.pipelineId,
+                //     pipelineName: (row.pipelineName + '_copy').substring(0, 128),
+                // }
             })
         } catch (e) {
-            console.err(e)
+            console.error(e)
         }
     }
     function toPipelineHistory (pipelineId) {
