@@ -55,7 +55,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.`var`.PublicVarService
@@ -215,14 +214,6 @@ class PipelineBuildService(
             }
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
-
-            publicVarService.handleModelParams(
-                projectId = resource.projectId,
-                model = resource.model,
-                referId = pipeline.pipelineId,
-                referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                referVersion = pipeline.version
-            )
             initPipelineParamMap(
                 buildId = buildId,
                 startType = startType,
