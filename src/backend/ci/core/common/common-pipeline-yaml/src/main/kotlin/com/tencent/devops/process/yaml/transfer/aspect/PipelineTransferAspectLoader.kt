@@ -1,14 +1,11 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ELEMENT_NAMESPACE_NOT_SUPPORT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
@@ -168,44 +165,7 @@ object PipelineTransferAspectLoader {
         defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
-        // val repoName = lazy { defaultRepo() }
-        /*aspects.add(
-            object : IPipelineTransferAspectTrigger {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
-                        jp.yamlTriggerOn()!!.repoName = repoName.value
-                    }
-                    return null
-                }
-            }
-        )*/
-        /*checkout 新增 self类型，此处暂时去掉转换 */
-//        aspects.add(
-//            object : IPipelineTransferAspectElement {
-//                override fun before(jp: PipelineTransferJoinPoint): Any? {
-//                    if (jp.yamlStep() != null && jp.yamlStep()!!.checkout == "self") {
-//                        jp.yamlStep()!!.checkout = repoName.value
-//                    }
-//                    return null
-//                }
-//            }
-//        )
-        /*aspects.add(
-            // 一个触发器时，如果为默认仓库则忽略repoName和type
-            object : IPipelineTransferAspectModel {
-                override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yaml() is PreTemplateScriptBuildYamlV3 &&
-                        (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn is PreTriggerOnV3
-                    ) {
-                        val triggerOn = (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn as PreTriggerOnV3
-                        if (triggerOn.repoName == repoName.value) {
-                            triggerOn.repoName = null
-                            triggerOn.type = null
-                        }
-                    }
-                }
-            }
-        )*/
+        // 可以在此添加公共策略
         return aspects
     }
 
