@@ -285,15 +285,18 @@ class PipelineModelTaskDao {
         projectId: String? = null,
         version: String? = null,
         startUpdateTime: LocalDateTime? = null,
-        endUpdateTime: LocalDateTime? = null
+        endUpdateTime: LocalDateTime? = null,
+        isCheckTpi: Boolean = true
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.ATOM_CODE.eq(atomCode))
-        val tpi = TPipelineInfo.T_PIPELINE_INFO
-        if (!projectId.isNullOrEmpty()) {
-            condition.add(tpi.PROJECT_ID.eq(projectId))
+        if (isCheckTpi) {
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            if (!projectId.isNullOrEmpty()) {
+                condition.add(tpi.PROJECT_ID.eq(projectId))
+            }
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
         }
-        condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
         if (!version.isNullOrEmpty()) {
             condition.add(a.ATOM_VERSION.contains(version))
         }
@@ -388,16 +391,23 @@ class PipelineModelTaskDao {
 
             val pipelineIds = allRecords.map { it[KEY_PIPELINE_ID] as String }.toSet()
 
+            val queryPipelineModeCondition = getListByAtomCodeCond(
+                a = this,
+                atomCode = atomCode,
+                projectId = projectId,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime,
+                isCheckTpi = false
+            )
+
             val versionStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 ATOM_VERSION
             )
                 .from(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .and(
-                    PIPELINE_ID.`in`(pipelineIds).and(UPDATE_TIME.ge(startUpdateTime))
-                        .and(UPDATE_TIME.le(endUpdateTime))
-                )
+                .where(queryPipelineModeCondition)
+                .and(PIPELINE_ID.`in`(pipelineIds))
 
             val versionInfoList = versionStep.fetch()
 
