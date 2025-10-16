@@ -1,21 +1,15 @@
 <template>
-    <bk-collapse
-        class="info-collapse-panel"
-        v-model="activeName"
-    >
-        <bk-collapse-item
-            hide-arrow
-            ext-cls="no-animation-collapse"
+    <div class="info-collapse-panel">
+        <div
             v-for="panel in panels"
             :key="panel.name"
-            :name="panel.name"
+            class="no-animation-collapse"
         >
             <header class="pipeline-base-config-panel-header">
                 {{ $t(panel.name) }}
             </header>
             <div
                 class="base-info-panel-content"
-                slot="content"
             >
                 <p
                     v-for="row in panel.rows"
@@ -81,8 +75,8 @@
                     </template>
                 </p>
             </div>
-        </bk-collapse-item>
-    </bk-collapse>
+        </div>
+    </div>
 </template>
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
@@ -294,4 +288,9 @@
 
 <style lang="scss">
     @import url('@/scss/info-collapsed.scss');
+</style>
+<style lang="scss" scoped>
+.pipeline-base-config-panel-header {
+    margin: 0 10px 18px;
+}
 </style>
