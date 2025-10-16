@@ -827,6 +827,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     fun previewTemplate(
         userId: String,
         projectId: String,

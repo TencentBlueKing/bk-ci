@@ -67,7 +67,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdat
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
