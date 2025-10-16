@@ -428,6 +428,7 @@ class PipelineTemplateResourceDao {
                 if (settingVersion != null) conditions.add(SETTING_VERSION.eq(settingVersion))
                 if (number != null) conditions.add(NUMBER.eq(number))
                 if (versionName != null && versionName!!.isNotBlank()) conditions.add(VERSION_NAME.eq(versionName))
+                if (!fuzzyVersionName.isNullOrBlank()) conditions.add(VERSION_NAME.like("${fuzzyVersionName}%"))
                 if (settingVersionNum != null) conditions.add(SETTING_VERSION_NUM.eq(settingVersionNum))
                 if (versionNum != null) conditions.add(VERSION_NUM.eq(versionNum))
                 if (pipelineVersion != null) conditions.add(PIPELINE_VERSION.eq(pipelineVersion))
