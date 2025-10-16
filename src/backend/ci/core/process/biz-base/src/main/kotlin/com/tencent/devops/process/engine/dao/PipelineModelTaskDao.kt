@@ -368,7 +368,6 @@ class PipelineModelTaskDao {
                 endUpdateTime = endUpdateTime
             )
 
-
             val tpi = TPipelineInfo.T_PIPELINE_INFO
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
@@ -387,40 +386,40 @@ class PipelineModelTaskDao {
                 baseStep.fetch()
             }
 
-            val pipelineIds = allRecords.map { it[KEY_PIPELINE_ID] }
-            val projectIds = allRecords.map { it[KEY_PROJECT_ID] }
+            val pipelineIds = allRecords.map { it[KEY_PIPELINE_ID] as String }.toSet()
 
             val versionStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
-                PROJECT_ID.`as`(KEY_PROJECT_ID),
                 ATOM_VERSION
             )
-                .from(TPipelineModelTask.T_PIPELINE_MODEL_TASK)
-                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.`in`(projectIds)))
-                .orderBy(PIPELINE_ID.asc(), PROJECT_ID.asc()) // 排序
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(
+                    PIPELINE_ID.`in`(pipelineIds).and(UPDATE_TIME.ge(startUpdateTime))
+                        .and(UPDATE_TIME.le(endUpdateTime))
+                )
 
             val versionInfoList = versionStep.fetch()
 
-            val groupedResults = mutableMapOf<Pair<String, String>, MutableSet<String>>()
+            val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
 
             versionInfoList.forEach { record ->
 
-                val atomVersion = record[ATOM_VERSION]
+                val atomVersion = record[ATOM_VERSION] as String
 
-                val key = Pair(record[KEY_PIPELINE_ID] as String, record[KEY_PROJECT_ID] as String)
+                val key = record[KEY_PIPELINE_ID] as String
 
-                if (groupedResults[key] == null) {
-                    groupedResults[key] = mutableSetOf()
+                if (pipelineAtomVersionInfo[key] == null) {
+                    pipelineAtomVersionInfo[key] = mutableSetOf()
                 }
 
-                groupedResults[key]?.add(atomVersion)
+                pipelineAtomVersionInfo[key]?.add(atomVersion)
             }
-
-
-            return groupedResults.entries.map { (key, versions) ->
-                val (atomPipelineId, atomProjectId) = key
-                val versionsString = versions.joinToString(",") // 拼接版本号
-
+            return allRecords.map { record ->
+                val atomPipelineId = record[KEY_PIPELINE_ID] as String
+                val atomProjectId = record[KEY_PROJECT_ID] as String
+                val versions = pipelineAtomVersionInfo[atomPipelineId]
+                val versionsString = versions?.joinToString(",") ?: ""
                 PipelineAtomInfo(
                     pipelineId = atomPipelineId,
                     projectId = atomProjectId,
