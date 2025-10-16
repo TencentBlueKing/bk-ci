@@ -12,6 +12,8 @@
                 :id="option.id"
                 :name="option.label"
                 :disabled="option.disabled"
+                class="ref-type-option"
+                :title="option.label"
             >
                 {{ option.label }}
                 <i
@@ -22,7 +24,10 @@
             </bk-option>
         </bk-select>
         <template v-if="templateRefTypeById">
-            <span class="selector-prepend">
+            <span
+                class="selector-prepend"
+                v-bk-overflow-tips
+            >
                 {{ !isInstanceUpgradeType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
             </span>
             <VersionSelector
@@ -138,6 +143,7 @@
         </bk-checkbox>
         <pipeline-template-preview
             v-model="isShowPreview"
+            :template-version="versionValue"
             :template-pipeline="templatePipeline"
         />
     </div>
@@ -177,14 +183,14 @@
         {
             id: 'ID',
             label: proxy.$t('template.referenceById')
-        },
-        ...(
-            pacEnabled.value ? [{
-                id: 'PATH',
-                label: proxy.$t('template.referenceByPath'),
-                tips: proxy.$t('template.referenceByPathTips'),
-            }] : []
-        )
+        }
+        // ...(
+        //     pacEnabled.value ? [{
+        //         id: 'PATH',
+        //         label: proxy.$t('template.referenceByPath'),
+        //         tips: proxy.$t('template.referenceByPathTips'),
+        //     }] : []
+        // )
     ]))
     const isCommitPullMode = computed(() => pullMode.value === 'commit')
     const pullModeList = computed(() => ([
@@ -261,6 +267,13 @@
                 stages: templateData.resource?.model.stages,
                 name: templateData.setting?.pipelineName
             }
+
+            proxy.$router.replace({
+                params: {
+                    ...proxy.$route.params,
+                    version: value
+                }
+            })
         } catch (e) {
             console.error(e)
         } finally {
@@ -376,9 +389,6 @@
         font-size: 12px;
         box-shadow: 0 2px 6px 0 #0000001f;
         background-color: #fff;
-        .ref-type-select {
-            width: 150px;
-        }
         .ref-input {
             width: 200px;
             margin-right: 20px;
@@ -406,6 +416,9 @@
             border-right: none;
             border-left: none;
             background-color: #FAFBFD;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .version-selector {
             width: 260px;
@@ -442,6 +455,16 @@
             cursor: pointer;
             position: relative;
             bottom: 1px;
+        }
+    }
+    .ref-type-select {
+        width: 150px;
+    }
+    .ref-type-option {
+        .bk-option-content {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
 </style>

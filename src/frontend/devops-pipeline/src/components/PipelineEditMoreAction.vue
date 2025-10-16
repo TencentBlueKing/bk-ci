@@ -259,6 +259,7 @@
     .manage-icon-more-fill {
         font-size: 20px;
         padding: 3px;
+        cursor: pointer;
 
         &:hover,
         &.active {

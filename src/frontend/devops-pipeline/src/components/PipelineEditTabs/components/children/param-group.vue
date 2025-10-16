@@ -49,8 +49,7 @@
                             <div
                                 v-for="(param) in listMap[key]"
                                 :key="param.id"
-                                :class="['variable-item', {
-                                    'variable-item-editable': editable,
+                                :class="['variable-item variable-item-editable', {
                                     'variable-item-invalid': param.isInvalid
                                 }]"
                                 @click="handleEdit(param.id)"

@@ -69,6 +69,7 @@
                 default: ''
             },
             templatePipeline: Object,
+            templateVersion: String,
             isTemplate: {
                 type: Boolean,
                 default: false
@@ -174,6 +175,7 @@
             ...mapActions({
                 updatePipelineMode: 'updatePipelineMode',
                 requestTemplatePreview: 'pipelines/requestTemplatePreview',
+                requestTemplatePreviewByVersion: 'templates/requestTemplatePreviewByVersion',
                 templatePreviewDetail: 'templates/templatePreviewDetail'
             }),
             async getTemplatePreviewDetail () {
@@ -183,6 +185,14 @@
                 })
             },
             async getRequestTemplatePreview () {
+                if (this.templateVersion) {
+                    return this.requestTemplatePreviewByVersion({
+                        projectId: this.templatePipeline.projectId,
+                        templateId: this.templatePipeline.templateId,
+                        version: this.templateVersion,
+                        highlightType: this.highlightType
+                    })
+                }
                 return this.requestTemplatePreview({
                     projectId: this.templatePipeline.projectId,
                     templateId: this.templatePipeline.templateId,

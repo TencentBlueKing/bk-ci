@@ -278,7 +278,7 @@
                         },
                         page: nextPage,
                         pageSize: pagination.limit,
-                        versionName: this.searchKeyword,
+                        fuzzyVersionName: this.searchKeyword,
                         includeDraft: this.includeDraft,
                         buildOnly: this.buildOnly,
                         archiveFlag: this.$route.query.archiveFlag
