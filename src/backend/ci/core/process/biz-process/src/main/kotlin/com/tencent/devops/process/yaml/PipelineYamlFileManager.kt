@@ -183,7 +183,7 @@ class PipelineYamlFileManager @Autowired constructor(
         }
     }
 
-    fun createOrUpdateYamlFile(event: PipelineYamlFileEvent) {
+    fun createOrUpdateYamlFile(event: PipelineYamlFileEvent): Boolean {
         with(event) {
             checkParam()
             logger.info(
@@ -206,9 +206,15 @@ class PipelineYamlFileManager @Autowired constructor(
                 lock.lock()
                 createOrUpdateYamlPipeline(context = context)
                 webhookTriggerManager.fireChangeSuccess(context = context)
+                true
             } catch (ignored: Exception) {
+                logger.error(
+                    "[PAC_PIPELINE]|Failed to create or update yaml pipeline|$eventId|" +
+                            "$projectId$repoHashId|$filePath|$ref|${commit.commitId}|$blobId",
+                    ignored
+                )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
-                throw ignored
+                false
             } finally {
                 lock.unlock()
             }
@@ -224,7 +230,7 @@ class PipelineYamlFileManager @Autowired constructor(
      *   - 否则删除流水线
      *
      */
-    fun deleteYamlFile(event: PipelineYamlFileEvent) {
+    fun deleteYamlFile(event: PipelineYamlFileEvent): Boolean {
         with(event) {
             logger.info(
                 "[PAC_PIPELINE]|delete pipeline yaml|$eventId|$projectId|$repoHashId|$filePath|$ref"
@@ -245,9 +251,15 @@ class PipelineYamlFileManager @Autowired constructor(
                 lock.lock()
                 deletePipelineOrBranchVersion(context = context)
                 webhookTriggerManager.fireChangeSuccess(context = context)
+                true
             } catch (ignored: Exception) {
+                logger.error(
+                    "[PAC_PIPELINE]|Failed to delete pipeline yaml|$eventId|" +
+                            "$projectId|$repoHashId|$filePath|$ref",
+                    ignored
+                )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
-                throw ignored
+                false
             } finally {
                 lock.unlock()
             }
@@ -268,8 +280,9 @@ class PipelineYamlFileManager @Autowired constructor(
                 return
             }
             val oldFileEvent = event.copy(filePath = oldFilePath)
-            deleteYamlFile(event = oldFileEvent)
-            createOrUpdateYamlFile(event = event)
+            if (deleteYamlFile(event = oldFileEvent)) {
+                createOrUpdateYamlFile(event = event)
+            }
         }
     }
 
