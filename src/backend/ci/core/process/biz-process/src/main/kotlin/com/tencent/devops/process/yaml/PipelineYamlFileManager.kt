@@ -849,6 +849,14 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline or branch version|eventId:$eventId|" +
                     "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
         )
+        // 先删除分支文件信息
+        pipelineYamlFileService.deleteBranchFile(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            branch = ref,
+            filePath = filePath,
+            softDelete = ref == defaultBranch
+        )
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -888,16 +896,6 @@ class PipelineYamlFileManager @Autowired constructor(
                 "[PAC_PIPELINE]|branch version has deleted|eventId:$eventId|" +
                         "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
             }
-        }
-        if (shouldDeletePipeline || shouldDeleteVersion) {
-            // 默认分支软删除,为了判断默认分支删除后,流水线已被删除,其他分支又修改,导致又创建新的流水线
-            pipelineYamlFileService.deleteBranchFile(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                branch = ref,
-                filePath = filePath,
-                softDelete = ref == defaultBranch
-            )
         }
     }
 
