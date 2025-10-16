@@ -7,8 +7,9 @@
         >
             <template #prefix>
                 <Logo
-                    :size="12"
+                    :size="14"
                     name="template-mode-icon"
+                    class="template-mode-icon"
                 />
             </template>
             <template v-if="!isLoading">
@@ -125,6 +126,9 @@
 
     .gap-line {
         color: #DCDEE5;
+    }
+    .template-mode-icon {
+        vertical-align: middle;
     }
 }
 </style>
