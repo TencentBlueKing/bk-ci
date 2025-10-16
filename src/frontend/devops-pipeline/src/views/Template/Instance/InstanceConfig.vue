@@ -550,13 +550,13 @@
 
     function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
         function createTriggerMap (configs) {
-            return new Map(configs.filter(i => !!i.stepId)?.map(item => [item.stepId, item]))
+            return new Map(configs?.filter(i => !!i.stepId)?.map(item => [item.stepId, item]))
         }
 
         const instanceTriggerMap = createTriggerMap(instanceTriggerConfigs)
         const templateTriggerMap = createTriggerMap(templateTriggerConfigs)
 
-        const result = templateTriggerConfigs.filter(i => !!i.stepId)?.reduce((acc, item) => {
+        const result = templateTriggerConfigs?.filter(i => !!i.stepId)?.reduce((acc, item) => {
             if (!instanceTriggerMap.has(item.stepId)) {
                 acc.push({ ...item, isNew: true })
             } else {
@@ -566,7 +566,7 @@
             return acc
         }, [])
 
-        instanceTriggerConfigs.filter(i => !!i.stepId).forEach(item => {
+        instanceTriggerConfigs?.filter(i => !!i.stepId).forEach(item => {
             if (!templateTriggerMap.has(item.stepId)) {
                 result.push({ ...item, isDelete: true })
             }

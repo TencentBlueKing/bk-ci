@@ -42,6 +42,13 @@
                     >
                         {{ row.name }}
                     </span>
+                    <bk-tag
+                        v-if="props.row.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING"
+                        theme="success"
+                        class="draft-tag"
+                    >
+                        {{ $t('draft') }}
+                    </bk-tag>
                     <PacTag
                         v-if="row.enablePac"
                         class="pac-code-icon"
@@ -143,6 +150,7 @@
         RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { computed, defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
     const { proxy, t } = UseInstance()
