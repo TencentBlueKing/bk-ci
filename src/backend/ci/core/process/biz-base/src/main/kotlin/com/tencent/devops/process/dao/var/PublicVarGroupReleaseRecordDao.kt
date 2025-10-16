@@ -37,23 +37,27 @@ import org.springframework.stereotype.Repository
 class PublicVarGroupReleaseRecordDao {
 
     fun batchInsert(dslContext: DSLContext, records: List<PipelinePublicVarGroupReleaseRecordPO>) {
+        if (records.isEmpty()) return
+        
         with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
-            val insertValuesStep = records.map { record ->
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    PROJECT_ID,
-                    GROUP_NAME,
-                    VERSION,
-                    PUBLISHER,
-                    PUB_TIME,
-                    DESC,
-                    CONTENT,
-                    CREATOR,
-                    MODIFIER,
-                    CREATE_TIME,
-                    UPDATE_TIME
-                ).values(
+            val insertStep = dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                GROUP_NAME,
+                VERSION,
+                PUBLISHER,
+                PUB_TIME,
+                DESC,
+                CONTENT,
+                CREATOR,
+                MODIFIER,
+                CREATE_TIME,
+                UPDATE_TIME
+            )
+            
+            records.forEach { record ->
+                insertStep.values(
                     record.id,
                     record.projectId,
                     record.groupName,
@@ -68,7 +72,8 @@ class PublicVarGroupReleaseRecordDao {
                     record.updateTime
                 )
             }
-            dslContext.batch(insertValuesStep).execute()
+            
+            insertStep.execute()
         }
     }
 
