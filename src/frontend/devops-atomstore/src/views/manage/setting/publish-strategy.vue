@@ -21,6 +21,8 @@
                 </bk-select>
                 <bk-button
                     text
+                    :loading="isConfirmLoading"
+                    :disabled="isConfirmLoading"
                     @click="handleStrategyChange"
                     theme="primary"
                 >
@@ -28,6 +30,7 @@
                 </bk-button>
                 <bk-button
                     text
+                    :disabled="isConfirmLoading"
                     @click="cancelEditing"
                 >
                     {{ $t('cancel') }}
@@ -58,6 +61,7 @@
             const vm = getCurrentInstance()
             const strategy = computed(() => vm.proxy.$store.getters['store/getDetail']?.publishStrategy ?? 'AUTO')
             const editing = ref(false)
+            const isConfirmLoading = ref(false)
             const publishStrategy = ref(strategy.value)
 
             const strategyLabel = computed(() => vm.proxy.$t(`store.${strategy.value}`))
@@ -87,6 +91,7 @@
                 }
 
                 try {
+                    isConfirmLoading.value = true
                     const { code } = vm.proxy.$route.params
                     await vm.proxy.$store.dispatch('store/updatePublishStrategy', {
                         templateCode: code,
@@ -103,10 +108,12 @@
                     console.error(error.message)
                 } finally {
                     cancelEditing()
+                    isConfirmLoading.value = false
                 }
             }
             return {
                 editing,
+                isConfirmLoading,
                 strategyOptions,
                 strategyLabel,
                 strategyDesc,
