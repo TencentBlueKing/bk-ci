@@ -293,6 +293,7 @@ class PipelineYamlFileManager @Autowired constructor(
      * 发布流水线
      *
      */
+    @Suppress("CyclomaticComplexMethod")
     fun releaseYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
             logger.info(
@@ -326,6 +327,13 @@ class PipelineYamlFileManager @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
                     )
                 }
+                pipelineYamlViewService.createYamlViewIfAbsent(
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    aliasName = repository.aliasName,
+                    directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
+                )
                 lock.lock()
                 val defaultBranch = serverRepository.defaultBranch!!
                 val ref = when {
@@ -522,6 +530,13 @@ class PipelineYamlFileManager @Autowired constructor(
                     PipelineYamlStatus.UN_MERGED.name
                 },
                 version = version,
+                userId = userId
+            )
+            pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                creator = userId,
                 userId = userId
             )
         } else {
