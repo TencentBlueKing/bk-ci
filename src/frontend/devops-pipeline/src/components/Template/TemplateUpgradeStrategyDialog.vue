@@ -185,5 +185,8 @@
     .bk-form-item .bk-label {
         margin-bottom: 2px;
     }
+    .bk-form-content {
+        line-height: 1;
+    }
 }
 </style>
