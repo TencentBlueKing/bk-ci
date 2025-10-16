@@ -183,7 +183,14 @@ const actions = {
     },
     updateInstancePageLoading ({ commit} , value) {
         commit(UPDATE_INSTANCE_PAGE_LOADING, value)
-    }
+    },
+    requestTemplatePreviewByVersion (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/preview`, {
+            params
+        }).then(response => {
+            return response.data
+        })
+    },
 }
 
 export default actions

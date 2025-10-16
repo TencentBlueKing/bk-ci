@@ -360,7 +360,7 @@
         }
         // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
         let instanceParams, instanceBuildNo, instanceTriggerConfigs
-        if (!props.isInstanceCreateType && instance && (curTemplateVersion.value || templateRef.value)) {
+        if (instance && (curTemplateVersion.value || templateRef.value)) {
             if (curTemplateDetail.value?.param) {
                 instanceParams = compareParams(instance, curTemplateDetail.value)
             }
@@ -485,20 +485,21 @@
         }
     })
     function compareParams (instance, template) {
+        console.log(instance, template, 'compareParams')
         const instanceParams = instance?.param ?? []
         const templateParams = template?.param ?? []
-        const instanceBuildNo = instance?.buildNo
-        const templateBuildNo = template?.buildNo
+        // const instanceBuildNo = instance?.buildNo
+        // const templateBuildNo = template?.buildNo
 
         // 非入参的参数直接赋值模板配置的入参默认值
-        if (!instanceBuildNo?.required && templateBuildNo?.required) {
-            instanceParams?.forEach(i => {
-                if (allVersionKeyList.includes(i.id)) {
-                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
-                    i.defaultValue = newValue ?? i.defaultValue
-                }
-            })
-        }
+        // if (!instanceBuildNo?.required && templateBuildNo?.required) {
+            // instanceParams?.forEach(i => {
+            //     if (allVersionKeyList.includes(i.id)) {
+            //         const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+            //         i.defaultValue = newValue ?? i.defaultValue
+            //     }
+            // })
+        // }
 
         instanceParams?.forEach(i => {
             // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
@@ -591,7 +592,7 @@
             if (instanceBuildNo && templateBuildNo) {
                 return {
                     ...instanceBuildNo,
-                    required: templateBuildNo.required
+                    // required: templateBuildNo.required
                 }
             }
             return instanceBuildNo
@@ -739,10 +740,8 @@
                             paramIds
                         },
                         buildNo: {
-                            ...curTemplateDetail.value?.buildNo,
+                            ...curInstance.value?.buildNo,
                             isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate,
-                            isRequiredParam: curInstance.value?.buildNo?.isRequiredParam,
-                            currentBuildNo: curInstance.value?.buildNo?.currentBuildNo
                         }
                     }
                 })

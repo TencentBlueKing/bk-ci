@@ -35,12 +35,13 @@
                                 ({{ row.grayDesc }})
                             </span>
                             <bk-link
-                                v-if="row.link"
+                                v-if="row?.link?.show"
                                 theme="primary"
                                 :href="row.link.url"
                                 target="_blank"
-                                icon="devops-icon icon-jump-link"
+                                :icon="row.link.icon"
                                 icon-placement="right"
+                                @click="row.link.handler"
                             >
                                 {{ row.link.text }}
                             </bk-link>
@@ -59,6 +60,13 @@
             </bk-collapse-item>
         </bk-collapse>
         <TemplateUpgradeStrategyDialog ref="upgradeStrategyDialog" />
+        <UpgradeFromStoreDialog
+            v-model="showTemplateUpgradeDialog"
+            :template-id="templateId"
+            :project-id="projectId"
+            @confirm="upgradeTemplate"
+            @cancel="hideUpgradeDialog"
+        />
     </section>
 </template>
 <script>
@@ -67,14 +75,19 @@
     import dayjs from 'dayjs'
     import { computed, defineComponent, ref } from 'vue'
     import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
+    import UpgradeFromStoreDialog from '@/views/Template/List/UpgradeFromStoreDialog.vue'
 
     export default defineComponent({
         components: {
-            TemplateUpgradeStrategyDialog
+            TemplateUpgradeStrategyDialog,
+            UpgradeFromStoreDialog
         },
         setup () {
             const { proxy, t } = useInstance()
             const upgradeStrategyDialog = ref(null)
+            const showTemplateUpgradeDialog = ref(false)
+            const projectId = computed(() => proxy.$route.params.projectId)
+            const templateId = computed(() => proxy.$route.params.templateId)
             const relatedInfo = computed(() => {
                 return proxy.$store.state.atom.pipelineInfo?.pipelineTemplateMarketRelatedInfo ?? {}
             })
@@ -104,21 +117,27 @@
                                 value: srcMarketTemplateName
                             },
                             {
+                                key: 'srcMarketTemplateLatestVersionName',
+                                value: t('template.latestVersionTitle', [srcMarketTemplateLatestVersionName]),
+                                grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
+                                link: srcMarketTemplateLatestVersionName === latestInstalledVersionName ? {
+                                    show: true,
+                                    text: t('template.goStore'),
+                                    url: storeTemplateUrl.value,
+                                    icon: 'devops-icon icon-jump-link'
+                                } : {
+                                    show: upgradeStrategy === STRATEGY_ENUM.MANUAL,
+                                    text: t('template.install'),
+                                    handler: hanleShowTemplateUpgradeDialog
+                                }
+                            },
+                            {
                                 key: 'latestInstalledVersionName',
                                 value: t('template.latestInstallVersionTitle', [
                                     latestInstalledVersionName,
                                     isAutoUpgrade.value ? '' : `${t('editPage.by')} ${latestInstaller} `,
                                     dayjs(latestInstalledTime).format('YYYY-MM-DD HH:mm:ss')
                                 ])
-                            },
-                            {
-                                key: 'srcMarketTemplateLatestVersionName',
-                                value: t('template.latestVersionTitle', [srcMarketTemplateLatestVersionName]),
-                                grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
-                                link: {
-                                    text: t('template.goStore'),
-                                    url: storeTemplateUrl.value
-                                }
                             }
                         ]
                     },
@@ -145,13 +164,61 @@
             function showUpgradeStrategyDialog () {
                 upgradeStrategyDialog.value?.show?.()
             }
+
+            function hanleShowTemplateUpgradeDialog () {
+                showTemplateUpgradeDialog.value = true
+            }
+            function upgradeTemplate () {
+
+            }
+            function hideUpgradeDialog () {
+                showTemplateUpgradeDialog.value = false
+            }
+            async function upgradeTemplate (version, done) {
+                try {
+                    await proxy.$store.dispatch('templates/importTemplateFromStore', {
+                        projectId: projectId.value,
+                        templateId: templateId.value,
+                        params: {
+                            marketTemplateId: relatedInfo.value.srcMarketTemplateId,
+                            marketTemplateProjectId: relatedInfo.value.srcMarketProjectId,
+                            marketTemplateVersion: version,
+                            copySettings: true
+                        }
+                    })
+
+                    proxy.$bkMessage({
+                        theme: 'success',
+                        message: t('template.templateUpgradeSuccess')
+                    })
+                    hideUpgradeDialog()
+                    done()
+                    proxy.$store.dispatch('atom/requestTemplateSummary', {
+                        projectId: projectId.value,
+                        templateId: templateId.value
+                    })
+                } catch (error) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                    done()
+                    hideUpgradeDialog()
+                }
+            }
             return {
+                showTemplateUpgradeDialog,
                 upgradeStrategyDialog,
                 showUpgradeStrategyDialog,
+                hanleShowTemplateUpgradeDialog,
+                projectId,
+                templateId,
                 panels,
                 activeName,
                 relatedInfo,
-                storeTemplateUrl
+                storeTemplateUrl,
+                upgradeTemplate,
+                hideUpgradeDialog
             }
         }
     })

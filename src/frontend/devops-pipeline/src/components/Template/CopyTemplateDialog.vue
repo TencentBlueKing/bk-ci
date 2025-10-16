@@ -35,29 +35,6 @@
                         {{ $t('template.nameErrTips') }}
                     </p>
                 </div>
-
-                <div class="bk-form-item">
-                    <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
-                        <span
-                            v-bk-tooltips.bottom-end="$t('template.tipsSetting')"
-                            class="bottom-end"
-                        >
-                            <i class="bk-icon icon-info-circle"></i>
-                        </span>
-                    </label>
-                    <div class="bk-form-content">
-                        <bk-radio-group v-model="copyTemp.isCopySetting">
-                            <bk-radio
-                                v-for="(entry, key) in copySettings"
-                                :key="key"
-                                :value="entry.value"
-                                class="form-radio"
-                            >
-                                {{ entry.label }}
-                            </bk-radio>
-                        </bk-radio-group>
-                    </div>
-                </div>
             </section>
         </template>
     </bk-dialog>

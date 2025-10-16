@@ -511,7 +511,7 @@
     "viewDetails": "查看详情",
     "upgradedVersion": "升级版本",
     "selectPipelineNum": "已选择{0}条流水线",
-    "batchEdit": "批量编辑",
+    "batchEditParams": "批量编辑入参",
     "batchUpdateInstance": "批量升级",
     "batchUpdateTip1": "· 开启了 PAC 的流水线实例和未开启 PAC 的流水线实例，请分批升级",
     "batchUpdateTip2": "· 开启了 PAC，且存储 YAML 文件的代码库不一致的流水线实例，请分批升级",
@@ -529,7 +529,7 @@
     "STEP": "Step模板",
     "selectTemplateUpgradedVersion": "请选择升级的版本",
     "repositoryPlaceholder": "请选择代码库",
-    "addField": "添加字段",
+    "addField": "添加批量编辑的入参",
     "keyword": "请输入名称关键字",
     "selectAll": "全选",
     "pleaseSelectTemplateVersion": "请选择模板版本并新增一个实例",
@@ -605,7 +605,7 @@
     },
     "modifyConfig": "修改配置",
     "batchEditInstance": "批量编辑实例",
-    "batchEditInstanceTips": "添加的字段配置将会应用于所有实例，如未填写，则默认为清空该字段值",
+    "batchEditInstanceTips": "变更将批量应用到所有实例。若入参值未设置，确认后将清空对应字段值。",
     "releaseTaskHeaderTips": "有 {0} 个发布任务进行中",
     "views": "查看",
     "Upgrading": "升级中",
@@ -664,7 +664,9 @@
     "withSettingCompareTips": "勾选后，将使用模板的标签、描述、运行设置、通知等设置信息进行差异对比",
     "fromTemplateVersion": "来源模板版本：{0}",
     "parsedYaml": "解析后 YAML",
-    "triggersUpdateTips": "仅列出配置了Step ID 的触发器，未配置 Step ID 时无法设置在实例中是否禁用"
+    "triggersUpdateTips": "仅列出配置了Step ID 的触发器，未配置 Step ID 时无法设置在实例中是否禁用",
+    "referenceTemplateVersion": "引用的模版版本",
+    "copyTemplate": "复制模板"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

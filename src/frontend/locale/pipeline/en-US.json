@@ -513,7 +513,7 @@
     "viewDetails": "Details",
     "upgradedVersion": "Upgraded version",
     "selectPipelineNum": "{0} pipeline selected",
-    "batchEdit": "Batch Edit",
+    "batchEditParams": "Batch Edit Params",
     "batchUpdateInstance": "Batch Upgrade",
     "batchUpdateTip1": "· For pipeline instances with PAC enabled and those without PAC enabled, please upgrade in batches.",
     "batchUpdateTip2": "· For pipeline instances with PAC enabled, and whose code repositories storing YAML files are inconsistent, please upgrade in batches.",
@@ -531,7 +531,7 @@
     "STEP": "Step",
     "selectTemplateUpgradedVersion": "Please select the upgraded version",
     "repositoryPlaceholder": "Please select the code repository",
-    "addField": "Add Field",
+    "addField": "Add parameter for batch editing",
     "keyword": "Please enter name keyword",
     "selectAll": "Select All",
     "pleaseSelectTemplateVersion": "Please select a template version and add a new instance.",
@@ -603,7 +603,7 @@
     },
     "modifyConfig": "Modify Configuration",
     "batchEditInstance": "Batch Edit Instance",
-    "batchEditInstanceTips": "The added field configuration will apply to all instances. If left blank, the field value will be cleared by default.", 
+    "batchEditInstanceTips": "Changes will be applied to all instances in batch. Unset parameter values will be cleared upon confirmation.",
     "releaseTaskHeaderTips": "{0} release tasks are in progress.",
     "views": "Views",
     "from": "Src Template Ver:",
@@ -663,7 +663,9 @@
     "withSettingCompareTips": "When checked, template labels, descriptions, run settings, notifications and other configuration information will be used for difference comparison",
     "fromTemplateVersion": "From Template Version: {0}",
     "parsedYaml": "Parsed YAML",
-    "triggersUpdateTips": "Lists only triggers with Step ID. Those without can't control instance enablement."
+    "triggersUpdateTips": "Lists only triggers with Step ID. Those without can't control instance enablement.",
+    "referenceTemplateVersion": "Referenced Template Version",
+    "copyTemplate": "Copy Template"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
