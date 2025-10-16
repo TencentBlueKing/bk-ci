@@ -390,7 +390,6 @@ class PipelineModelTaskDao {
             }
 
             val pipelineIds = allRecords.map { it[KEY_PIPELINE_ID] as String }.toSet()
-
             val queryPipelineModeCondition = getListByAtomCodeCond(
                 a = this,
                 atomCode = atomCode,
