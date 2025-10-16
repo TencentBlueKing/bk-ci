@@ -150,7 +150,7 @@ export default function useTemplateActions () {
     }
 
     function goTemplateOverview (data) {
-        if (!data.canView) return
+        if (data?.canView === false) return
         if (!isInstanceList.value) {
             proxy.$router.push({
                 name: 'TemplateOverview',
