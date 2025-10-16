@@ -128,7 +128,7 @@
         color: #DCDEE5;
     }
     .template-mode-icon {
-        vertical-align: middle;
+        margin-top: 5px;
     }
 }
 </style>

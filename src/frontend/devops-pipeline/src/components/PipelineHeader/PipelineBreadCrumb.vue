@@ -161,7 +161,7 @@
             font-size: 12px;
         }
         .icon-pipeline {
-            margin-top: 2px;
+            margin-top: 5px;
         }
         .build-num-switcher-wrapper {
             display: grid;
