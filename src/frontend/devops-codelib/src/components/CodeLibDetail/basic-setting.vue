@@ -12,28 +12,11 @@
                     />
                     <div slot="content">
                         <template v-if="isGit || isTGit">
-                            <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
-                            <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
-                            <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                            <p>{{ $t('codelib.此授权用于平台和代码库进行交互，涉及如下功能：') }}</p>
+                            <p>1.{{ $t('codelib.注册 Webhook 到代码库，用于事件触发场景') }}</p>
+                            <p>2.{{ $t('codelib.回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景') }}</p>
                             <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                            <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
-                        </template>
-                        <template v-if="isGithub">
-                            <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
-                            <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
-                            <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                            <p>{{ $t('codelib.需拥有代码库 Push 权限') }}</p>
-                        </template>
-                        <template v-if="isSvn">
-                            <p>{{ $t('codelib.此授权用于平台和 SVN 代码库进行交互，用于如下场景：') }}</p>
-                            <p>1.{{ $t('codelib.注册 Webhook 到代码库') }}</p>
-                            <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                            <p>{{ $t('codelib.需拥有代码库 Write 权限') }}</p>
-                        </template>
-                        <template v-if="isP4">
-                            <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
-                            <p>1.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                            <p>{{ $t('codelib.需拥有代码库 Read 权限') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库注册 Webhook 权限') }}</p>
                         </template>
                     </div>
                 </bk-popover>
@@ -313,11 +296,11 @@
                 class="oauth-confirm-tips"
             >
                 <p>{{ $t('codelib.尚未授权，请先点击按钮授权。') }}</p>
-                <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
-                <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
-                <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                <p>{{ $t('codelib.此授权用于平台和代码库进行交互，涉及如下功能：') }}</p>
+                <p>1.{{ $t('codelib.注册 Webhook 到代码库，用于事件触发场景') }}</p>
+                <p>2.{{ $t('codelib.回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景') }}</p>
                 <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+                <p>{{ $t('codelib.需拥有代码库注册 Webhook 权限') }}</p>
             </span>
             <bk-button
                 class="ml10"
