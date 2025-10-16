@@ -59,12 +59,12 @@ import org.springframework.stereotype.Service
  * 流水线草稿保存转换器
  */
 @Service
-class PipelineDraftSaveReqConvert(
+class PipelineDraftSaveReqConverter(
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val pipelineResourceFactory: PipelineResourceFactory,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineVersionCommonConvert: PipelineVersionCommonConvert,
+    private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
@@ -134,7 +134,7 @@ class PipelineDraftSaveReqConvert(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
-            return pipelineVersionCommonConvert.convert(
+            return pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
@@ -228,6 +228,6 @@ class PipelineDraftSaveReqConvert(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineDraftSaveReqConvert::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineDraftSaveReqConverter::class.java)
     }
 }

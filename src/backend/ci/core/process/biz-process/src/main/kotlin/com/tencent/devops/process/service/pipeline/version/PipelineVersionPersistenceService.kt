@@ -72,7 +72,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     @Lazy
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val versionCreateListeners: List<PipelineVersionCreatePostProcessor>
+    private val versionCreatePostProcessors: List<PipelineVersionCreatePostProcessor>
 ) {
 
     fun initializePipeline(
@@ -670,7 +670,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineResourceVersion: PipelineResourceVersion,
         pipelineSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessBeforeVersionCreate(
                 context = context,
                 pipelineResourceVersion = pipelineResourceVersion,
@@ -685,7 +685,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineResourceVersion: PipelineResourceVersion,
         pipelineSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessInTransactionVersionCreate(
                 transactionContext = transactionContext,
                 context = context,
@@ -700,7 +700,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineResourceVersion: PipelineResourceVersion,
         pipelineSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessAfterVersionCreate(
                 context = context,
                 pipelineResourceVersion = pipelineResourceVersion,

@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 class PipelineYamlWebhookReqConvert @Autowired constructor(
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
-    private val pipelineVersionCommonConvert: PipelineVersionCommonConvert
+    private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineYamlWebhookReq
@@ -111,7 +111,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             )
 
-            return pipelineVersionCommonConvert.convert(
+            return pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,

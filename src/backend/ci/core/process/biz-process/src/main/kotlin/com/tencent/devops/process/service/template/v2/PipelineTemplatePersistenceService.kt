@@ -70,7 +70,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val client: Client,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val versionCreateListeners: List<PTemplateVersionCreatePostProcessor>
+    private val versionCreatePostProcessors: List<PTemplateVersionCreatePostProcessor>
 ) {
 
     /**
@@ -748,7 +748,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessBeforeVersionCreate(
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,
@@ -763,7 +763,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessInTransactionVersionCreate(
                 transactionContext = transactionContext,
                 context = context,
@@ -778,7 +778,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessAfterVersionCreate(
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,

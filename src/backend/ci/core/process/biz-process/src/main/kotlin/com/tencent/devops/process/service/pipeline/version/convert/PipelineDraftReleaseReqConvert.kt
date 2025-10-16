@@ -53,7 +53,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
-    private val pipelineVersionCommonConvert: PipelineVersionCommonConvert
+    private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineVersionReleaseRequest
@@ -154,7 +154,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
             }
             val pipelineSettingWithoutVersion = draftSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
 
-            return pipelineVersionCommonConvert.convert(
+            return pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

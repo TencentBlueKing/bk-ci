@@ -47,7 +47,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class PipelineVersionCommonConvert @Autowired constructor(
+class PipelineVersionCreateContextFactory @Autowired constructor(
     private val pipelineResourceFactory: PipelineResourceFactory,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
@@ -55,7 +55,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
     private val pipelineTemplateSettingService: PipelineTemplateSettingService
 ) {
 
-    fun convert(
+    fun create(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -72,7 +72,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         branchName: String? = null
     ): PipelineVersionCreateContext {
         return if (model.template != null) {
-            convertFromTemplate(
+            createFromTemplate(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -89,7 +89,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
                 branchName = branchName
             )
         } else {
-            convertFromNonTemplate(
+            createFromNonTemplate(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -107,7 +107,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         }
     }
 
-    private fun convertFromNonTemplate(
+    private fun createFromNonTemplate(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -181,7 +181,7 @@ class PipelineVersionCommonConvert @Autowired constructor(
         )
     }
 
-    private fun convertFromTemplate(
+    private fun createFromTemplate(
         userId: String,
         projectId: String,
         pipelineId: String,
