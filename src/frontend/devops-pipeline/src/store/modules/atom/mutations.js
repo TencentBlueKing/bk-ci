@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 import Vue from 'vue'
 import {
     diffAtomVersions,
@@ -266,8 +266,6 @@ export default {
             const canPause = atomModal.props.config?.canPauseBeforeRun === true
 
             atom = {
-                id: `e-${hashID(32)}`,
-                '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 name: isChangeAtom ? atomModal.name : preVerEle.name,
                 version,
@@ -292,11 +290,7 @@ export default {
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
-            console.log(atomModal)
             atom = {
-                id: `e-${hashID(32)}`,
-                '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
-                atomCode,
                 version,
                 name: isChangeAtom ? atomModal.name : preVerEle.name,
                 ...getAtomDefaultValue(atomModal.props),
@@ -311,6 +305,9 @@ export default {
         }, 5000)
         container.elements.splice(atomIndex, 1, {
             ...atom,
+            id: `e-${hashID(32)}`,
+            '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
+            stepId: randomString(6),
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
             logoUrl: atomModal.logoUrl,

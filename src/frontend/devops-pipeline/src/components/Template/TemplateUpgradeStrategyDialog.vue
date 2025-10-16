@@ -171,10 +171,22 @@
     .strategy-block-radio {
         display: flex;
         align-items: center;
-        margin-bottom: 12px !important;
+        margin-bottom: 6px !important;
+        &:not(:last-child) {
+            margin-bottom: 12px !important;
+        }
     }
     .bk-alert {
         margin-bottom: 12px;
+    }
+    .bk-label-text {
+        font-size: 12px;
+    }
+    .bk-form-item .bk-label {
+        margin-bottom: 2px;
+    }
+    .bk-form-content {
+        line-height: 1;
     }
 }
 </style>

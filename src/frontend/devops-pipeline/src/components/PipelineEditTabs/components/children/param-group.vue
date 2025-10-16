@@ -237,7 +237,6 @@
         }
     }
     .bk-param-container {
-        margin-bottom: 16px;
         .var-header {
             display: flex;
             align-items: center;
@@ -439,6 +438,10 @@
                     }
                 }
             }
+        }
+
+        &:not(:last-child) {
+            margin-bottom: 16px;
         }
     }
 

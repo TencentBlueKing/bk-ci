@@ -417,6 +417,7 @@
                 > span {
                     flex-shrink: 0;
                     font-size: 16px;
+                    line-height: 16px;
                 }
                 &.active-version-name .icon-check-circle {
                     color: #2DCB56;

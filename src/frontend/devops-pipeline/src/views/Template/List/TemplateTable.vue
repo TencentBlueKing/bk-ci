@@ -22,6 +22,7 @@
             :key="col.id"
             :prop="col.id"
             :width="col.width"
+            :min-width="col.minWidth"
             :show-overflow-tooltip="col.showOverflowTooltip"
             :sortable="col.sortable"
             :formatter="col.formatter"
@@ -176,7 +177,7 @@
         {
             id: 'name',
             label: t('template.name'),
-            width: 220,
+            minWidth: 220,
             disabled: true,
             sortable: true,
             showOverflowTooltip: true
@@ -225,7 +226,8 @@
         {
             id: 'operate',
             disabled: true,
-            label: t('operate')
+            label: t('operate'),
+            width: 96
         }
     ]
     const tableColumnMap = tableColumns.reduce((acc, cur) => {

@@ -1,15 +1,10 @@
 <template>
     <section>
-        <bk-collapse
-            v-model="activeName"
-            class="store-template-related info-collapse-panel"
-        >
-            <bk-collapse-item
-                hide-arrow
+        <div class="store-template-related info-collapse-panel">
+            <div
                 v-for="panel in panels"
                 ext-cls="no-animation-collapse"
                 :key="panel.name"
-                :name="panel.name"
             >
                 <header class="pipeline-base-config-panel-header">
                     {{ $t(`template.${panel.name}`) }}
@@ -25,7 +20,7 @@
                         <label class="base-info-block-row-label">
                             {{ $t(`template.${row.key}`) }}
                         </label>
-
+    
                         <span class="base-info-block-row-value">
                             <span v-html="row.value || '--'" />
                             <span
@@ -57,8 +52,8 @@
                         </span>
                     </p>
                 </div>
-            </bk-collapse-item>
-        </bk-collapse>
+            </div>
+        </div>
         <TemplateUpgradeStrategyDialog ref="upgradeStrategyDialog" />
         <UpgradeFromStoreDialog
             v-model="showTemplateUpgradeDialog"
@@ -234,4 +229,9 @@
             }
         }
     }
+</style>
+<style lang="scss" scoped>
+.pipeline-base-config-panel-header {
+    margin: 0 10px 18px;
+}
 </style>

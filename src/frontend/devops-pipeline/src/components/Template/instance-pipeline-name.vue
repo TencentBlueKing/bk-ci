@@ -13,7 +13,7 @@
                     isLoading: instanceDialogConfig.loading
                 }"
             >
-                <div class="info-title">{{ $t('template.newPipelineName') }}</div>
+                <div class="info-title">{{ $t('template.createInstance') }}</div>
                 <div class="bk-form create-form">
                     <div class="item-label">{{ $t('pipelineName') }}</div>
                     <input
