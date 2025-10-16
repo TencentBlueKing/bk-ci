@@ -390,7 +390,5 @@
     .params-desc-styles {
         margin-top: 32px;
     }
-    .is-diff-param {
-        border-color: #FF9C01 !important;
-    }
+    
 </style>

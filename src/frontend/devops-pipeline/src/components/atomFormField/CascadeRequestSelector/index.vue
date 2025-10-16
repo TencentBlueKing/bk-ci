@@ -53,8 +53,8 @@
 </template>
 
 <script>
-    import atomFieldMixin from '../atomFieldMixin'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'selector',
         components: {
@@ -273,8 +273,5 @@
                 color: $primaryColor !important;
             }
         }
-    }
-    .is-diff-param {
-        border-color: #FF9C01 !important;
     }
 </style>

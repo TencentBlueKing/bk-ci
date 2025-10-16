@@ -399,8 +399,4 @@
 .is-not-Preview {
     display: grid;
 }
-
-.is-diff-param {
-    border-color: #FF9C01 !important;
-}
 </style>
