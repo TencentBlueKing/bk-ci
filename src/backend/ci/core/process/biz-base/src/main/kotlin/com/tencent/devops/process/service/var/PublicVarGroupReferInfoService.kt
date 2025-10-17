@@ -599,7 +599,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                         version = key.version,
                         varName = element.id,
                         index = index,
-                        type = if (element.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE
+                        type = if (element.constant == true) PublicVarTypeEnum.CONSTANT else PublicVarTypeEnum.VARIABLE,
+                        required = element.required
                     )
                 }
             }

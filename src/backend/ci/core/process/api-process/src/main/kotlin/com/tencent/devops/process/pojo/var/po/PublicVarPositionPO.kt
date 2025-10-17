@@ -41,5 +41,7 @@ data class PublicVarPositionPO(
     @get:Schema(title = "序号 ")
     val index: Int,
     @get:Schema(title = "变量组件类型(常量/变量)")
-    val type: PublicVarTypeEnum
+    val type: PublicVarTypeEnum,
+    @get:Schema(title = "是否必须（新前端的入参标识）")
+    var required: Boolean
 )
