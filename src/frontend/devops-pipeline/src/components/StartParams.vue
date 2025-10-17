@@ -3,6 +3,13 @@
         class="startup-parameter-box"
         v-bkloading="{ isLoading }"
     >
+        <param-set
+            only-save-as-set
+            ref="paramSet"
+            is-start-up
+            :build-num="execDetail?.buildNum"
+            :all-params="allParams"
+        />
         <div class="startup-parameter-wrapper">
             <div
                 ref="parent"
@@ -69,8 +76,12 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import ParamSet from '@/components/ParamSet.vue'
+    import { mapActions, mapGetters } from 'vuex'
     export default {
+        components: {
+            ParamSet
+        },
         data () {
             return {
                 isLoading: false,
@@ -78,13 +89,30 @@
                 defaultParamMap: {},
                 activeParam: null,
                 isDetailShow: false,
-                overflowSpan: []
+                overflowSpan: [],
+                buildParamProperities: []
             }
         },
         computed: {
+            ...mapGetters('atom', {
+                execDetail: 'getExecDetail'
+            }),
             archiveFlag () {
                 return this.$route.query.archiveFlag
+            },
+            allParams () {
+                const valueMap = this.params.reduce((acc, item) => {
+                    acc[item.key] = item.value
+                    return acc
+                }, {})
+                return this.buildParamProperities.map(item => {
+                    return {
+                        ...item,
+                        value: valueMap[item.id]
+                    }
+                })
             }
+            
         },
         watch: {
             '$route.params.buildNo': function () {
@@ -95,7 +123,7 @@
             this.init()
         },
         methods: {
-            ...mapActions('atom', ['requestBuildParams']),
+            ...mapActions('atom', ['requestBuildParams', 'fetchBuildParamsByBuildId']),
             showDetail (param) {
                 this.isDetailShow = true
                 this.activeParam = param
@@ -113,8 +141,11 @@
                         buildId,
                         ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                     }
-                    const res = await this.requestBuildParams(urlParams)
-
+                    const [res, buildParamProperities] = await Promise.all([
+                        this.requestBuildParams(urlParams),
+                        this.fetchBuildParamsByBuildId(urlParams)
+                    ])
+                    this.buildParamProperities = buildParamProperities
                     this.defaultParamMap = res.reduce((acc, item) => {
                         acc[item.key] = item.defaultValue
                         return acc
@@ -162,6 +193,7 @@
   border-radius: 2px;
   width: fit-content;
   width: 100%;
+  margin-top: 12px;
   .build-param-row {
     display: flex;
     align-items: center;

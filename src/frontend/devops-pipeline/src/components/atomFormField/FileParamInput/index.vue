@@ -235,9 +235,7 @@
             border-radius: 0 2px 2px 0;
         }
     }
-    .is-diff-param {
-        border-color: #FF9C01 !important;
-    }
+
     .upload-tips {
         font-size: 12px;
     }

@@ -33,6 +33,7 @@ export function urlJoin (...args) {
 }
 
 export function isShallowEqual (obj1, obj2) {
+    if (obj1 === obj2) return true
     if (!isObject(obj1) || !isObject(obj2)) {
         return false
     }

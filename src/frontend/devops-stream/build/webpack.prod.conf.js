@@ -148,13 +148,17 @@ const prodConf = merge(baseConf, {
 
         new ReplaceCssStaticUrl({}),
 
-        new CopyWebpackPlugin([
-            {
-                from: resolve(__dirname, '../static'),
-                to: resolve(config.build.assetsRoot, 'static'),
-                ignore: ['.*']
-            }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: resolve(__dirname, '../static'),
+                    to: resolve(config.build.assetsRoot, 'static'),
+                    globOptions: {
+                        ignore: ['.*']
+                    }
+                }
+            ]
+        })
     ]
 })
 
