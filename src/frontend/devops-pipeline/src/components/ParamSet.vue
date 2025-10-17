@@ -708,7 +708,8 @@
                     isEditing.value = false
                     
                     dispatch('updateParamSet', editingSet.value.isNew ? Object.assign(newSet, {
-                        id
+                        id,
+                        isNew: false
                     }) : newSet)
                     nextTick(() => {
                         switchManageSet(activeSetIndex.value)
