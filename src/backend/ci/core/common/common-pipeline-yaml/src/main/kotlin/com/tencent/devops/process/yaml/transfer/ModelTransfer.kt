@@ -338,7 +338,7 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeStages(modelInput: ModelTransferInput): MutableList<PreStage> {
         val stages = mutableListOf<PreStage>()
-        if (modelInput.model.template != null) return mutableListOf()
+        if (modelInput.fromTemplate()) return mutableListOf()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
             modelInput.aspectWrapper.setModelStage4Model(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -358,7 +358,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeFinally(modelInput: ModelTransferInput): LinkedHashMap<String, Any>? {
-        if (modelInput.model.template != null) return LinkedHashMap()
+        if (modelInput.fromTemplate()) return LinkedHashMap()
         val lastStage = modelInput.model.stages.lastOrNull()
         val finally = if (lastStage != null && lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -413,6 +413,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     fun getTriggerContainer(modelInput: ModelTransferInput): TriggerContainer? {
+        if (modelInput.fromTemplate()) return null
         return modelInput.model.stages.firstOrNull()?.containers?.firstOrNull() as TriggerContainer?
     }
 
