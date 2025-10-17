@@ -1653,6 +1653,7 @@ class PipelineListFacadeService @Autowired constructor(
                         else -> null
                     }
                 }
+                it.latestBuildStageStatus = lastBuild.stageStatus
             }
             it.lastBuildFinishCount = buildTaskFinishCountMap.getOrDefault(pipelineId, 0)
             it.lastBuildTotalCount = buildTaskTotalCountMap.getOrDefault(pipelineId, 0)

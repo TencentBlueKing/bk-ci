@@ -133,5 +133,7 @@ data class Pipeline(
     @get:Schema(title = "yaml在默认分支是否存在", required = false)
     var yamlExist: Boolean? = false,
     @get:Schema(title = "是否处于归档中", required = false)
-    var archivingFlag: Boolean? = null
+    var archivingFlag: Boolean? = null,
+    @get:Schema(title = "最后一次构建各阶段状态", required = true)
+    var latestBuildStageStatus: List<BuildStageStatus>? = null
 )

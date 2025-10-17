@@ -102,19 +102,15 @@ class PipelineYamlBranchFileDao {
         projectId: String,
         repoHashId: String,
         branch: String,
-        filePath: String,
-        includeDeleted: Boolean = false
+        filePath: String
     ): TPipelineYamlBranchFileRecord? {
-        with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
-            val query = dslContext.selectFrom(this)
+        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))
                 .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
-            if (!includeDeleted) {
-                query.and(DELETED.eq(false))
-            }
-            return query.fetchOne()
+                .fetchOne()
         }
     }
 
