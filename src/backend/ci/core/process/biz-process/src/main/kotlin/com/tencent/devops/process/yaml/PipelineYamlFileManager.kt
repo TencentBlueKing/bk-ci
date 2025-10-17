@@ -566,8 +566,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 branch = defaultBranch,
-                filePath = filePath,
-                includeDeleted = true
+                filePath = filePath
             )?.deleted ?: false
             if (defaultBranchDeleted) {
                 throw ErrorCodeException(
