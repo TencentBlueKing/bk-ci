@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
-import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -233,50 +232,18 @@ class VariableTransfer {
         return res
     }
 
-    private fun check(key: String, variable: Variable) {
-        if (key.length > 64) {
-            throw PipelineTransferException(
-                YAML_NOT_VALID,
-                arrayOf("variable key no more than 64 characters. variable: $key")
-            )
-        }
-
-        if (variable.const == true && variable.readonly == false) {
-            throw PipelineTransferException(
-                YAML_NOT_VALID,
-                arrayOf("When the const attribute is set to true, readonly must be true. variable: $key")
-            )
-        }
-        if (variable.const == true && variable.allowModifyAtStartup != null) {
-            throw PipelineTransferException(
-                YAML_NOT_VALID,
-                arrayOf(
-                    "The const attribute and the allow-modify-at-startup attribute are mutually exclusive. " +
-                        "If configured at the same time, the verification will fail. variable: $key"
-                )
-            )
-        }
-
-        if (variable.const == true && variable.readonly == null) {
-            variable.readonly = true
-        }
-    }
-
     fun makeVariableFromYaml(
-        variables: Map<String, Variable>?,
-        publicParam: List<PublicVarGroupVariable>? = null
-    ): List<BuildFormProperty> {
+        variables: Map<String, Variable>?
+    ): MutableList<BuildFormProperty> {
         if (variables.isNullOrEmpty()) {
-            return publicParam?.map { it.buildFormProperty } ?: emptyList()
+            return mutableListOf()
         }
-
-        // 如果没有公共参数，直接处理变量
-        if (publicParam.isNullOrEmpty()) {
-            return variables.map { (key, variable) ->
-                val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
-                    ?: BuildFormPropertyType.STRING
-                check(key, variable)
-
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        variables.forEach { (key, variable) ->
+            val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
+                ?: BuildFormPropertyType.STRING
+            check(key, variable)
+            buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.props?.label,
@@ -317,102 +284,37 @@ class VariableTransfer {
                     payload = variable.props?.payload,
                     displayCondition = variable.ifCondition ?: emptyMap()
                 )
-            }
+            )
         }
-
-        // 有公共参数时，使用合并算法
-        return mergeVariablesWithPublicParams(variables, publicParam)
+        return buildFormProperties
     }
 
-    /**
-     * 变量与公共参数合并
-     * 在保证publicParam位置的基础上保证variables的顺序
-     */
-    private fun mergeVariablesWithPublicParams(
-        variables: Map<String, Variable>,
-        publicParam: List<PublicVarGroupVariable>
-    ): List<BuildFormProperty> {
-        // 计算最终数组大小
-        val totalSize = variables.size + publicParam.size
-        val result = arrayOfNulls<BuildFormProperty>(totalSize)
-
-        // 先将公共参数按位置放入结果数组
-        publicParam.forEach { param ->
-            val index = param.originalIndex
-            if (index < totalSize) {
-                val buildFormProperty = param.buildFormProperty.copy()
-                buildFormProperty.index = index
-                result[index] = buildFormProperty
-            }
-        }
-
-        // 将variables转换为有序列表，保持原始顺序
-        val variablesList = variables.map { (key, variable) ->
-            val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
-                ?: BuildFormPropertyType.STRING
-            check(key, variable)
-
-            BuildFormProperty(
-                id = key,
-                name = variable.props?.label,
-                required = variable.allowModifyAtStartup ?: true,
-                constant = variable.const ?: false,
-                type = type,
-                defaultValue = when {
-                    type == BuildFormPropertyType.BOOLEAN ->
-                        (variable.value as String?)?.toBoolean() ?: false
-
-                    CascadePropertyUtils.supportCascadeParam(type) ->
-                        variable.value ?: mapOf<String, String>()
-
-                    else -> variable.value ?: ""
-                },
-                options = variable.props?.options?.map {
-                    BuildFormValue(key = it.id.toString(), value = it.label ?: it.id.toString())
-                },
-                desc = variable.props?.description,
-                category = variable.props?.group,
-                repoHashId = variable.props?.repoHashId,
-                relativePath = variable.props?.relativePath,
-                scmType = ScmType.parse(variable.props?.scmType),
-                containerType = with(variable.props?.containerType) {
-                    this?.let {
-                        BuildContainerType(
-                            buildType, os
-                        )
-                    }
-                },
-                enableVersionControl = variable.props?.versionControl,
-                glob = variable.props?.glob,
-                properties = variable.props?.properties,
-                readOnly = if (variable.const == true) true else {
-                    variable.readonly ?: false
-                },
-                valueNotEmpty = variable.props?.required ?: false,
-                payload = variable.props?.payload,
-                displayCondition = variable.ifCondition ?: emptyMap()
+    private fun check(key: String, variable: Variable) {
+        if (key.length > 64) {
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf("variable key no more than 64 characters. variable: $key")
             )
         }
 
-        // 按顺序将YAML变量填入空位，保持variables的原始顺序
-        var nextAvailableIndex = 0
-        var variableIndex = 0
-
-        while (variableIndex < variablesList.size && nextAvailableIndex < totalSize) {
-            // 找到下一个可用位置
-            while (nextAvailableIndex < totalSize && result[nextAvailableIndex] != null) {
-                nextAvailableIndex++
-            }
-
-            // 如果还有可用位置，放入下一个变量
-            if (nextAvailableIndex < totalSize) {
-                result[nextAvailableIndex] = variablesList[variableIndex]
-                nextAvailableIndex++
-                variableIndex++
-            }
+        if (variable.const == true && variable.readonly == false) {
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf("When the const attribute is set to true, readonly must be true. variable: $key")
+            )
+        }
+        if (variable.const == true && variable.allowModifyAtStartup != null) {
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf(
+                    "The const attribute and the allow-modify-at-startup attribute are mutually exclusive. " +
+                            "If configured at the same time, the verification will fail. variable: $key"
+                )
+            )
         }
 
-        // 过滤掉null值并返回列表
-        return result.filterNotNull()
+        if (variable.const == true && variable.readonly == null) {
+            variable.readonly = true
+        }
     }
 }

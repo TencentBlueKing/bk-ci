@@ -51,4 +51,11 @@ data class PublicVarGroupReferDTO(
     val referVersionName: String? = null,
     @get:Schema(title = "变量组引用列表,key为变量名，value为变量组版本号")
     var publicVarGroupRefs: Map<String, Int?> = emptyMap()
-)
+) {
+    override fun toString(): String {
+        return "PublicVarGroupReferDTO(userId='$userId', projectId='$projectId', " +
+            "referId='$referId', referType=$referType, referName='$referName', " +
+            "referVersion=$referVersion, referVersionName=$referVersionName, " +
+            "publicVarGroupRefs=$publicVarGroupRefs)"
+    }
+}

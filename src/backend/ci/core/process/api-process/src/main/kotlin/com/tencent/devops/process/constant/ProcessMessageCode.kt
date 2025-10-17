@@ -402,6 +402,7 @@ object ProcessMessageCode {
     // 流水线配置流水线公共变量组{0}中存在冲突变量{1}，请调整变量组配置
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101289"
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101290" // 变量组引用更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101291" // 变量组 {0} 不存在
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

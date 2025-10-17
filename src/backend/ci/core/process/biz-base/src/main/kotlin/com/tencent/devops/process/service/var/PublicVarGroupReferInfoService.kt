@@ -30,10 +30,13 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
@@ -547,13 +550,12 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     fun handleVarGroupReferBus(
         publicVarGroupReferDTO: PublicVarGroupReferDTO
     ) {
-        logger.info("handleVarGroupBus publicVarGroupReferDTO:$publicVarGroupReferDTO")
         val model = publicVarGroupReferDTO.model
         val params = model.getTriggerContainer().params
         if (params.isEmpty()) {
             return
         }
-
+        logger.info("handleVarGroupBus publicVarGroupReferDTO:${publicVarGroupReferDTO.toString()}")
         // 检查参数ID是否存在重复名称参数
         val seenIds = HashSet<String>(params.size)
         val duplicateIds = mutableSetOf<String>()
@@ -853,5 +855,60 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
         }
     }
-
+    
+    fun handleVarGroupReferByVersionName(
+        publicVarGroupReferDTO: PublicVarGroupReferDTO
+    ) {
+        val model = publicVarGroupReferDTO.model
+        val publicVarGroups = model.publicVarGroups
+        logger.info("handleVarGroupReferByVersionName publicVarGroups:$publicVarGroups")
+        if (publicVarGroups.isNullOrEmpty()) {
+            return
+        }
+        val params = model.getTriggerContainer().params
+        
+        // 查出params中已存在的变量组名称
+        val existingGroupNames = params
+            .mapNotNull { it.varGroupName }
+            .toSet()
+        // 对比publicVarGroups，找出params中不存在的变量组
+        val groupsToAdd = publicVarGroups.filter { publicVarGroup ->
+            !existingGroupNames.contains(publicVarGroup.groupName)
+        }
+        if (groupsToAdd.isEmpty()) {
+            handleVarGroupReferBus(publicVarGroupReferDTO)
+            return
+        }
+        // 查询这些变量组的变量并添加到params末尾
+        groupsToAdd.forEach { publicVarGroup ->
+            val groupName = publicVarGroup.groupName
+            val versionName = publicVarGroup.versionName
+            val version = publicVarGroup.version
+            
+            // 查询变量组信息
+            val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
+                dslContext = dslContext,
+                projectId = publicVarGroupReferDTO.projectId,
+                groupName = groupName,
+                version = version,
+                versionName = versionName
+            ) ?: throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
+                params = arrayOf(groupName)
+            )
+            val groupVars = publicVarDao.listVarByGroupName(
+                dslContext = dslContext,
+                projectId = publicVarGroupReferDTO.projectId,
+                groupName = groupName,
+                version = varGroupRecord.version
+            )
+            groupVars.forEach { varPO ->
+                val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
+                buildFormProperty.varGroupName = groupName
+                buildFormProperty.varGroupVersion = if (version != null && version != -1) version else null
+                params.add(buildFormProperty)
+            }
+        }
+        handleVarGroupReferBus(publicVarGroupReferDTO)
+    }
 }

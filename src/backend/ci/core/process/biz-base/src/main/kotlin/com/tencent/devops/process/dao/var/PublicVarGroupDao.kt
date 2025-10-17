@@ -69,6 +69,7 @@ class PublicVarGroupDao {
                 .set(PROJECT_ID, publicVarGroupPO.projectId)
                 .set(GROUP_NAME, publicVarGroupPO.groupName)
                 .set(VERSION, publicVarGroupPO.version)
+                .set(VERSION_NAME, publicVarGroupPO.versionName)
                 .set(LATEST_FLAG, publicVarGroupPO.latestFlag)
                 .set(DESC, publicVarGroupPO.desc)
                 .set(REFER_COUNT, publicVarGroupPO.referCount)

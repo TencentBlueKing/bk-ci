@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -170,7 +171,9 @@ class ModelTransfer @Autowired constructor(
             pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
-
+        model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
+            PublicVarGroupRef(groupName = it.name, versionName = it.version)
+        }
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         var stageIndex = 1
         stageList.add(modelStage.yaml2TriggerStage(yamlInput, stageIndex++))
