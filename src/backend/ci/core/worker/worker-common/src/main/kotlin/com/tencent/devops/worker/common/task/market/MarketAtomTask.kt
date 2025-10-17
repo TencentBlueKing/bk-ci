@@ -48,6 +48,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -119,10 +120,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -163,7 +164,7 @@ open class MarketAtomTask : ITask() {
         val namespace: String? = map["namespace"] as String?
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                    "|workspace=$workspacePath"
+                "|workspace=$workspacePath"
         )
 
         // 获取插件基本信息
@@ -368,6 +369,7 @@ open class MarketAtomTask : ITask() {
                             taskId = buildTask.taskId
                         )
                     }
+
                     OSType.LINUX, OSType.MAC_OS -> {
                         val script = runCmds.joinToString(
                             separator = "\n"
@@ -385,6 +387,7 @@ open class MarketAtomTask : ITask() {
                             taskId = buildTask.taskId
                         )
                     }
+
                     else -> {
                     }
                 }
@@ -627,6 +630,7 @@ open class MarketAtomTask : ITask() {
                     executeCount = buildTask.executeCount ?: 1
                 )
             }
+
             BuildType.WORKER -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
@@ -730,6 +734,15 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 对windows市场插件bat启动脚本执行失败进行监控
+        if (BatScriptUtil.retry() > 0) {
+            val extData: MutableMap<String, Any> = getMonitorData()[AtomMonitorData::extData.name]?.let {
+                JsonUtil.toMutableMap(it)
+            } ?: mutableMapOf()
+            extData["market-atom-start-bat-auto-retry"] = BatScriptUtil.retry()
+            addMonitorData(mapOf(AtomMonitorData::extData.name to extData))
+            BatScriptUtil.retryClean()
+        }
         // 校验插件对接平台错误码信息失败
         val platformCode = atomResult?.platformCode
         if (!platformCode.isNullOrBlank()) {
@@ -805,6 +818,7 @@ open class MarketAtomTask : ITask() {
                         buildVariables = buildVariables,
                         atomWorkspace = bkWorkspace
                     )
+
                     ARTIFACT -> env[key] = archiveArtifact(
                         buildTask = buildTask,
                         varKey = varKey,
@@ -825,7 +839,7 @@ open class MarketAtomTask : ITask() {
                     env[contextKey] = value
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
                     if (
-                        // TODO 暂时只对stream进行拦截原key
+                    // TODO 暂时只对stream进行拦截原key
                         buildVariables.variables[BK_CI_RUN] == "true" &&
                         buildVariables.pipelineAsCodeSettings?.enable == true
                     ) env.remove(key)
