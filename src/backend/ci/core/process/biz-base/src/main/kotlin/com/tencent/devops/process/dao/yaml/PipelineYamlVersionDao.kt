@@ -193,6 +193,19 @@ class PipelineYamlVersionDao {
         }
     }
 
+    fun deleteByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun convert(record: TPipelineYamlVersionRecord): PipelineYamlVersion {
         return with(record) {
             PipelineYamlVersion(
