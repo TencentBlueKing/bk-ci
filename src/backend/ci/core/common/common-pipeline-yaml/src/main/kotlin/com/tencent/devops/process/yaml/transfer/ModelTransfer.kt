@@ -68,10 +68,10 @@ import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 @Suppress("ComplexMethod")
@@ -338,6 +338,7 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeStages(modelInput: ModelTransferInput): MutableList<PreStage> {
         val stages = mutableListOf<PreStage>()
+        if (modelInput.model.template != null) return mutableListOf()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
             modelInput.aspectWrapper.setModelStage4Model(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -357,6 +358,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeFinally(modelInput: ModelTransferInput): LinkedHashMap<String, Any>? {
+        if (modelInput.model.template != null) return LinkedHashMap()
         val lastStage = modelInput.model.stages.lastOrNull()
         val finally = if (lastStage != null && lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
