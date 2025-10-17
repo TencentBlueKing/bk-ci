@@ -95,15 +95,30 @@
                     }]"
                 />
                 <p class="pipeline-version-name">
-                    <span v-bk-overflow-tips>
-                        {{ item.displayName }}
+                    <span>
+                        <span v-bk-overflow-tips>
+                            {{ item.displayName }}
+                        </span>
+                        <i
+                            v-if="isCurrentVersion(item)"
+                            class="pipeline-release-version-tag"
+                        >
+                            {{ $t('latest') }}
+                        </i>
                     </span>
-                    <i
-                        v-if="isCurrentVersion(item)"
-                        class="pipeline-release-version-tag"
+                    <span
+                        v-bk-overflow-tips
+                        class="src-template-version-name"
+                        v-if="item.srcTemplateVersionName"
                     >
-                        {{ $t('latest') }}
-                    </i>
+                        [
+                        <logo
+                            class="main-branch-icon"
+                            size="14"
+                            name="main-branch"
+                        /> {{ item.srcTemplateVersionName }}
+                        ]
+                    </span>
                 </p>
                 <!-- <span class="pipeline-version-main-branch">
                                 [{{ $t('mainBranch') }}]
@@ -472,11 +487,23 @@
 
         .pipeline-version-name {
             display: flex;
+            justify-content: space-between;
             grid-gap: 8px;
             overflow: hidden;
             > span {
                 font-weight: 700;
                 @include ellipsis();
+            }
+            
+            .src-template-version-name {
+                display: flex;
+                align-items: center;
+                color: #979BA5;
+                font-weight: 400;
+                max-width: 100px;
+            }
+            .main-branch-icon {
+                margin-right: 4px;
             }
         }
     }
