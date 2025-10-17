@@ -49,6 +49,7 @@ data class PreStep(
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
+    val namespace: String? = null,
     val with: Map<String, Any?>?,
     @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
