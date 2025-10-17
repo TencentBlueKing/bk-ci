@@ -379,6 +379,15 @@ object PipelineVarUtil {
     }
 
     /**
+     * 获取variable变量名
+     */
+    fun getVariableKey(key: String) = if (key.startsWith(CONTEXT_PREFIX)) {
+        key
+    } else {
+        CONTEXT_PREFIX + key
+    }
+
+    /**
      * 从新变量前缀的变量中查出并增加旧变量，会做去重
      * @param vars 变量Map
      * @return 包含新旧变量的Map
