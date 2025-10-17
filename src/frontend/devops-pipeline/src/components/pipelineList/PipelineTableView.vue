@@ -300,6 +300,7 @@
                 :width="tableWidthMap.latestExec"
                 min-width="180"
                 :label="$t('latestExec')"
+                :render-header="latestExecHeader"
                 prop="latestExec"
             >
                 <span
@@ -334,7 +335,18 @@
                             >
                                 <b>#{{ props.row.latestBuildNum }}</b>
                                 |
-                                <span>{{ props.row.lastBuildMsg }}</span>
+                                <span v-if="!latestExecIsStageProgress">{{ props.row.lastBuildMsg }}</span>
+                                <div
+                                    v-else
+                                    style="display: inline-block;"
+                                >
+                                    <stage-steps
+                                        v-if="props.row.latestBuildStageStatus"
+                                        :steps="props.row.latestBuildStageStatus"
+                                        :build-id="props.row.latestBuildId"
+                                    ></stage-steps>
+                                    <span v-else>--</span>
+                                </div>
                             </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
@@ -587,7 +599,8 @@
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
+    import StageSteps from '@/components/StageSteps'
+    import { convertTime, isShallowEqual, convertMStoString, prettyDateTimeFormat } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 
     export default {
@@ -595,6 +608,7 @@
             Logo,
             ExtMenu,
             PipelineStatusIcon,
+            StageSteps,
             PipelineListEmpty
         },
         mixins: [pipelineActionMixin],
@@ -628,7 +642,8 @@
                 selectedTableColumn: [],
                 showCollectIndex: -1,
                 visibleLabelCountList: {},
-                isShowDeleteMigrateArchiveDialog: false
+                isShowDeleteMigrateArchiveDialog: false,
+                latestExecIsStageProgress: false,
             }
         },
         computed: {
@@ -706,6 +721,15 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            statusIconMap () {
+                return {
+                    SUCCEED: 'check-circle-shape',
+                    FAILED: 'close-circle-shape',
+                    RUNNING: 'circle-2-1',
+                    PAUSE: 'play-circle-shape',
+                    SKIP: 'redo-arrow'
+                }
+            },
             allRenderColumnMap () {
                 return this.selectedTableColumn.reduce((result, item) => {
                     result[item.id] = true
@@ -747,6 +771,7 @@
             }
         },
         mounted () {
+            this.latestExecIsStageProgress = localStorage.getItem('latestExecIsStageProgress') || false
             const { pageSize } = this.$route.query
             const tableLimit = JSON.parse(localStorage.getItem(PIPELINE_TABLE_LIMIT_CACHE)) || 50
             pageSize ? this.pagination.limit = parseInt(pageSize) : this.pagination.limit = tableLimit
@@ -828,6 +853,48 @@
         },
         methods: {
             prettyDateTimeFormat,
+            latestExecHeader () {
+                const h = this.$createElement
+                return h('div',{style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                }}, [
+                    h('span',
+                      this.$t('latestExec')
+                    ),
+                    h('p',{
+                        on: {
+                            click: this.switchExecView
+                        },
+                        style: {
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#3a84ff',
+                            cursor: 'pointer',
+                            margin: '0 10px'
+                        }
+                    },[
+                        h('i', {
+                            style: {
+                                paddingBottom: '10px',
+                                margin: '0 10px',
+                                marginRight: '15px',
+                                borderBottom: '1px solid #C4C6CC',
+                                transform: 'rotate(90deg)',
+                            },
+                            attrs: {
+                                class: 'bk-icon icon-sort'
+                            }
+                        }),
+                        h('span', {}, `${this.latestExecIsStageProgress ? this.$t('showStageProgress') : this.$t('showBuildInfo')}`)
+                    ]
+                    ),
+                ])
+            },
+            async switchExecView () {
+                this.latestExecIsStageProgress = !this.latestExecIsStageProgress
+                localStorage.setItem('latestExecIsStageProgress', this.latestExecIsStageProgress)
+            },
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -898,6 +965,16 @@
                     })
                 }
             },
+            getStageTooltip (stage) {
+                switch (true) {
+                    case !!stage.elapsed:
+                        return `${stage.name}: ${convertMStoString(stage.elapsed)}`
+                    case stage.status === 'PAUSE':
+                        return this.$t('editPage.toCheck')
+                    case stage.status === 'SKIP':
+                        return this.$t('skipStageDesc')
+                }
+            },
             async requestList (query = {}) {
                 this.isLoading = true
 
@@ -914,7 +991,21 @@
                         count,
                         current: page
                     })
-                    this.pipelineList = records
+                    this.pipelineList = records.map(item => {
+                        const latestBuildStageStatus = item.latestBuildStageStatus
+                            ? item.latestBuildStageStatus.slice(1).map((stage) => ({
+                                ...stage,
+                                tooltip: this.getStageTooltip(stage),
+                                icon: this.statusIconMap[stage.status] || 'circle',
+                                statusCls: stage.status
+                            }))
+                            : null
+                        
+                        return {
+                            ...item,
+                            latestBuildStageStatus
+                        }
+                    })
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPosGroup, 100)
