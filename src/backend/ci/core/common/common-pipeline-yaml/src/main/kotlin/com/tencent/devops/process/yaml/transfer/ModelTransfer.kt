@@ -325,7 +325,7 @@ class ModelTransfer @Autowired constructor(
         yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
         yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
         yaml.extends = makeExtend(modelInput.model)
-        yaml.finally = makeFinally(modelInput)
+        yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
         yaml.concurrency = makeConcurrency(modelInput)
         yaml.customBuildNum = makeBuildNum(modelInput)
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(getTriggerContainer(modelInput))
@@ -384,7 +384,7 @@ class ModelTransfer @Autowired constructor(
                     variables = templateVariables?.associateBy(
                         { it.key },
                         { PreTemplateVariable(it.value, it.allowModifyAtStartup) }
-                    ),
+                    )?.ifEmpty { null },
                     triggerConfig = triggerConfigs?.filter { it.stepId != null }?.associateBy(
                         { it.stepId!! },
                         {
@@ -394,7 +394,7 @@ class ModelTransfer @Autowired constructor(
                                 variables = it.variables
                             )
                         }
-                    ),
+                    )?.ifEmpty { null },
                     recommendedVersion = recommendedVersion?.let {
                         RecommendedVersion(
                             enabled = it.enabled,
