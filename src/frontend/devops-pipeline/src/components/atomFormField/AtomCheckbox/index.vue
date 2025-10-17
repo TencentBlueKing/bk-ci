@@ -18,7 +18,23 @@
                 slot="content"
                 style="white-space: pre-wrap;max-width: 300px"
             >
-                <div :class="{ 'disabled-color': disabled }"> {{ desc }} </div>
+                <div
+                    v-if="!customTip"
+                    :class="{ 'checkbox-tips-content': true,'disabled-color': disabled }"
+                >
+                    {{ desc }}
+                </div>
+                <div
+                    v-else
+                    class="checkbox-tips-content"
+                >
+                    <p
+                        v-for="(tip, index) in desc"
+                        :key="index"
+                    >
+                        {{ tip }}
+                    </p>
+                </div>
             </div>
         </bk-popover>
     </bk-checkbox>
@@ -39,10 +55,14 @@
                 type: String
             },
             desc: {
-                type: String,
+                type: [String, Array],
                 default: ''
             },
             disabled: {
+                type: Boolean,
+                default: false
+            },
+            customTip: {
                 type: Boolean,
                 default: false
             }
@@ -64,5 +84,8 @@
     }
     .disabled-color {
         color: #ccc;
+    }
+    .checkbox-tips-content {
+        white-space: normal;
     }
 </style>
