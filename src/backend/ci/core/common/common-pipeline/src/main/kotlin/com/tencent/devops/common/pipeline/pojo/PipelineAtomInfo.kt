@@ -7,6 +7,8 @@ data class PipelineAtomInfo (
     val projectId:String,
     @Schema(title = "流水线id")
     val pipelineId:String,
+    @Schema(title = "插件Code")
+    val atomCode:String,
     @Schema(title = "插件版本号")
     val versions:String,
 )

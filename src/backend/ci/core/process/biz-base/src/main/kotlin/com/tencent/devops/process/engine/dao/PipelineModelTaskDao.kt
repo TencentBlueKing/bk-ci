@@ -286,11 +286,11 @@ class PipelineModelTaskDao {
         version: String? = null,
         startUpdateTime: LocalDateTime? = null,
         endUpdateTime: LocalDateTime? = null,
-        isCheckTpi: Boolean = true
+        includePipelineInfoCondition: Boolean = true
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.ATOM_CODE.eq(atomCode))
-        if (isCheckTpi) {
+        if (includePipelineInfoCondition) {
             val tpi = TPipelineInfo.T_PIPELINE_INFO
             if (!projectId.isNullOrEmpty()) {
                 condition.add(tpi.PROJECT_ID.eq(projectId))
@@ -351,21 +351,19 @@ class PipelineModelTaskDao {
         }
     }
 
-    fun selectPipelinesByAtomCode(
+    fun selectPipelineInfosByAtomCode(
         dslContext: DSLContext,
         atomCode: String,
-        projectId: String? = null,
         version: String? = null,
         startUpdateTime: LocalDateTime? = null,
         endUpdateTime: LocalDateTime? = null,
-        page: Int? = null,
-        pageSize: Int? = null
-    ): List<PipelineAtomInfo>? {
+        page: Int,
+        pageSize: Int
+    ): Result<out Record>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = getListByAtomCodeCond(
                 a = this,
                 atomCode = atomCode,
-                projectId = projectId,
                 version = version,
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime
@@ -382,59 +380,39 @@ class PipelineModelTaskDao {
                 .where(condition)
                 .groupBy(PIPELINE_ID)
                 .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
+            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        }
+    }
 
-            val allRecords = if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-            } else {
-                baseStep.fetch()
-            }
 
-            val pipelineIds = allRecords.map { it[KEY_PIPELINE_ID] as String }.toSet()
+    fun selectAtomVersionsByPipelineIdsAndAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null,
+        pipelineIds: Set<String>,
+        projectIds: Set<String>,
+    ): Result<out Record>? {
+
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val queryPipelineModeCondition = getListByAtomCodeCond(
                 a = this,
                 atomCode = atomCode,
-                projectId = projectId,
                 version = version,
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime,
-                isCheckTpi = false
+                includePipelineInfoCondition = false
             )
-
-            val versionStep = dslContext.select(
+            return dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
-                ATOM_VERSION
+                ATOM_VERSION.`as`(KEY_VERSION)
             )
                 .from(this)
                 .where(queryPipelineModeCondition)
-                .and(PIPELINE_ID.`in`(pipelineIds))
-
-            val versionInfoList = versionStep.fetch()
-
-            val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
-
-            versionInfoList.forEach { record ->
-
-                val atomVersion = record[ATOM_VERSION] as String
-
-                val key = record[KEY_PIPELINE_ID] as String
-
-                if (pipelineAtomVersionInfo[key] == null) {
-                    pipelineAtomVersionInfo[key] = mutableSetOf()
-                }
-
-                pipelineAtomVersionInfo[key]?.add(atomVersion)
-            }
-            return allRecords.map { record ->
-                val atomPipelineId = record[KEY_PIPELINE_ID] as String
-                val atomProjectId = record[KEY_PROJECT_ID] as String
-                val versions = pipelineAtomVersionInfo[atomPipelineId]
-                val versionsString = versions?.joinToString(",") ?: ""
-                PipelineAtomInfo(
-                    pipelineId = atomPipelineId,
-                    projectId = atomProjectId,
-                    versions = versionsString
-                )
-            }
+                .and(
+                    PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.`in`(projectIds))
+                ).fetch()
         }
     }
 }
