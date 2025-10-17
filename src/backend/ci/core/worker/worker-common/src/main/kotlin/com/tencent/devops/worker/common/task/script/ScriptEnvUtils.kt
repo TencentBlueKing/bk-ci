@@ -87,7 +87,7 @@ object ScriptEnvUtils {
         val flagFile = File(workspace, getFlagFile(buildId))
         if (flagFile.exists()) {
             val flag = flagFile.readText()
-            logger.debug("Flag: ${flag.replace("\r", "").replace("\n", " ")}")
+            logger.info("Flag: ${flag.replace("\r", "").replace("\n", " ")}")
             return flag
         }
         return ""
