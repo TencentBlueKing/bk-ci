@@ -650,7 +650,7 @@
                 showCollectIndex: -1,
                 visibleLabelCountList: {},
                 isShowDeleteMigrateArchiveDialog: false,
-                latestExecIsStageProgress: false,
+                latestExecIsStageProgress: localStorage.getItem('latestExecIsStageProgress') === 'true' || false,
             }
         },
         computed: {
@@ -778,7 +778,6 @@
             }
         },
         mounted () {
-            this.latestExecIsStageProgress = localStorage.getItem('latestExecIsStageProgress') || false
             const { pageSize } = this.$route.query
             const tableLimit = JSON.parse(localStorage.getItem(PIPELINE_TABLE_LIMIT_CACHE)) || 50
             pageSize ? this.pagination.limit = parseInt(pageSize) : this.pagination.limit = tableLimit
