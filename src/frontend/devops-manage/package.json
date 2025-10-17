@@ -22,7 +22,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "0.30.0",
+    "axios": "1.12.2",
     "bk-permission": "workspace:bk-permission",
     "bkui-vue": "2.0.2-beta.49",
     "dayjs": "^1.11.2",

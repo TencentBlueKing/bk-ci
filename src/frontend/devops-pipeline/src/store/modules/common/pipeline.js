@@ -157,11 +157,12 @@ export const actions = {
     // 新增流水线时拉取模板
     requestPipelineTemplate: async ({ commit }, { projectId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
+            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/allTemplates`)
             const pipelineTemplateMap = new Map()
             for (const key in (response?.data?.templates ?? {})) {
                 const item = response.data.templates[key]
-                pipelineTemplateMap.set(key, {
+                const id = item.srcTemplateId || key
+                pipelineTemplateMap.set(id, {
                     ...item,
                     isStore: item.templateType === 'CONSTRAINT'
                 })

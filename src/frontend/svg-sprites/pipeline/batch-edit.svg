@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icon/2 线性图标/批量编辑</title>
+    <g id="模板管理" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="模板实例化-交互说明" transform="translate(-260, -3218)" fill="#3A84FF" fill-rule="nonzero">
+            <g id="编组-6" transform="translate(50, 3028)">
+                <g id="编组-30" transform="translate(0, 163)">
+                    <g id="编组-4" transform="translate(208, 23)">
+                        <g id="Icon/2-线性图标/批量编辑" transform="translate(2.5, 4)">
+                            <path d="M11,4.5 L11,11.53125 C11,11.79 10.7884444,12 10.5277778,12 L2.97222222,12 C2.71155556,12 2.5,11.79 2.5,11.53125 L2.5,11.0625 L10.0555556,11.0625 L10.0555556,4.5 L11,4.5 Z M6.46153846,1 L6.46153846,1.9 L0.923076923,1.9 L0.923076923,9.1 L8.07692308,9.1 L8.07692308,6.175 L9,6.175 L9,9.55 C9,9.7984 8.79323077,10 8.53846154,10 L0.461538462,10 C0.206769231,10 0,9.7984 0,9.55 L0,1.45 C0,1.2016 0.206769231,1 0.461538462,1 L6.46153846,1 Z M9.36235604,0 L10,0.686693492 L4.13764396,7 L3.5,6.31330651 L9.36235604,0 Z" id="蒙版"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
