@@ -318,7 +318,7 @@
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
                             <span
-                                class="pipeline-cell-link pipeline-exec-msg-title"
+                                class="pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
                                 v-perm="{
                                     hasPermission: (props.row.permissions && props.row.permissions.canView) || isArchiveView,
@@ -333,20 +333,27 @@
                                 :event="props.row.permissions && props.row.permissions.canView ? 'click' : ''"
                                 @click="$router.push(props.row.latestBuildRoute)"
                             >
-                                <b>#{{ props.row.latestBuildNum }}</b>
-                                |
-                                <span v-if="!latestExecIsStageProgress">{{ props.row.lastBuildMsg }}</span>
-                                <div
+                                <b class="pipeline-cell-link">#{{ props.row.latestBuildNum }}</b>
+                                <b
+                                    class="pipeline-cell-link"
+                                    style="width: 10px; text-align: center;"
+                                >|</b>
+                                <span
+                                    v-if="!latestExecIsStageProgress"
+                                    class="last-build-msg"
+                                >{{ props.row.lastBuildMsg }}</span>
+                                <span
                                     v-else
                                     style="display: inline-block;"
                                 >
                                     <stage-steps
+                                        class="latest-stage-status"
                                         v-if="props.row.latestBuildStageStatus"
                                         :steps="props.row.latestBuildStageStatus"
                                         :build-id="props.row.latestBuildId"
                                     ></stage-steps>
                                     <span v-else>--</span>
-                                </div>
+                                </span>
                             </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
@@ -1233,12 +1240,20 @@
                     @include ellipsis();
                     flex: 1;
                     cursor: pointer;
-                    > span {
+                    display: inline-flex;
+                    align-items: center;
+                    vertical-align: middle;
+                    line-height: normal;
+
+                    .last-build-msg {
                         color: #63656e;
                         &:hover {
                             color: $primaryColor;
                         }
                     }
+                }
+                .latest-stage-status {
+                    line-height: 1;
                 }
                 .pipeline-exec-msg-desc {
                     display: grid;
