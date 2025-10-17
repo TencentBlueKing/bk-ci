@@ -9,8 +9,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
@@ -313,7 +313,7 @@ interface UserPipelineTemplateV2Resource {
         templateId: String,
         @Parameter(description = "请求体", required = false)
         request: PipelineTemplateResourceCommonCondition
-    ): Result<Page<PipelineVersionSimple>>
+    ): Result<Page<PipelineTemplateVersionSimple>>
 
     @Operation(summary = "版本对比")
     @GET

@@ -42,9 +42,9 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelinePermissions
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -1284,36 +1284,49 @@ class PipelineTemplateFacadeService @Autowired constructor(
         projectId: String,
         templateId: String,
         commonCondition: PipelineTemplateResourceCommonCondition
-    ): Page<PipelineVersionSimple> {
-        with(commonCondition) {
-            val finCondition = upgradableVersionsQuery?.takeIf { it }?.let {
-                client.get(ServiceTemplateResource::class).getLatestInstalledVersion(
-                    templateCode = templateId
-                ).data?.let { latestInstalled ->
-                    PipelineTemplateResourceCommonCondition(
-                        projectId = latestInstalled.srcMarketTemplateProjectCode,
-                        templateId = latestInstalled.srcMarketTemplateCode,
-                        gtNumber = latestInstalled.number,
-                        status = VersionStatus.RELEASED,
-                        storeStatus = TemplateStatusEnum.RELEASED
-                    )
-                } ?: return Page(page = -1, pageSize = -1, records = emptyList(), count = 0)
-            } ?: commonCondition  // 默认使用原始条件
-            val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
-            val records = pipelineTemplateResourceService.getTemplateVersions(finCondition).map {
-                if (it.version == templateInfo.releasedVersion.toInt()) {
-                    it.latestReleasedFlag = true
-                }
-                it
-            }
-            val count = pipelineTemplateResourceService.count(finCondition)
-            return Page(
-                page = commonCondition.page ?: -1,
-                pageSize = commonCondition.pageSize ?: -1,
-                records = records,
-                count = count.toLong()
-            )
+    ): Page<PipelineTemplateVersionSimple> {
+        val finalCondition = if (commonCondition.upgradableVersionsQuery == true) {
+            client.get(ServiceTemplateResource::class).getLatestInstalledVersion(
+                templateCode = templateId
+            ).data?.let { latestInstalled ->
+                PipelineTemplateResourceCommonCondition(
+                    projectId = latestInstalled.srcMarketTemplateProjectCode,
+                    templateId = latestInstalled.srcMarketTemplateCode,
+                    gtNumber = latestInstalled.number,
+                    status = VersionStatus.RELEASED,
+                    storeStatus = TemplateStatusEnum.RELEASED
+                )
+            } ?: return Page(page = -1, pageSize = -1, records = emptyList(), count = 0)
+        } else {
+            commonCondition  // 默认使用原始条件
         }
+
+        val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
+        val templateRecords = pipelineTemplateResourceService.getTemplateVersions(finalCondition)
+        // 处理约束模板的源模板版本信息
+        val srcTemplateVersions = takeIf { templateInfo.mode == TemplateType.CONSTRAINT }?.let {
+            pipelineTemplateResourceService.getTemplateVersions(
+                PipelineTemplateResourceCommonCondition(
+                    projectId = templateInfo.srcTemplateProjectId!!,
+                    templateId = templateInfo.srcTemplateId!!,
+                    versions = templateRecords.mapNotNull { it.srcTemplateVersion?.toLong() }
+                )
+            ).associateBy { it.version }
+        } ?: emptyMap()
+
+        val records = templateRecords.map { templateRecord ->
+            templateRecord.latestReleasedFlag = templateRecord.version == templateInfo.releasedVersion.toInt()
+            templateRecord.srcTemplateVersionName = srcTemplateVersions[templateRecord.srcTemplateVersion]?.versionName
+            templateRecord
+        }
+
+        val count = pipelineTemplateResourceService.count(finalCondition)
+        return Page(
+            page = commonCondition.page ?: -1,
+            pageSize = commonCondition.pageSize ?: -1,
+            records = records,
+            count = count.toLong()
+        )
     }
 
     // 模板版本对比

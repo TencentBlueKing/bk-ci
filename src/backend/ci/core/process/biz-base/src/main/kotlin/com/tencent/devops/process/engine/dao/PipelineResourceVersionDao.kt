@@ -624,8 +624,8 @@ class PipelineResourceVersionDao {
                 val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
-                val versionName = record.versionName.takeIf {
-                    name -> name != "init"
+                val versionName = record.versionName.takeIf { name ->
+                    name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: "V$versionNum(${record.versionName})"
@@ -671,8 +671,8 @@ class PipelineResourceVersionDao {
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
                 // 如果名称已经为init的则尝试计算新版本名，如果获取不到新的版本名称则保持init
-                val versionName = record.versionName?.takeIf {
-                    name -> name != "init"
+                val versionName = record.versionName?.takeIf { name ->
+                    name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: "V$versionNum(${record.versionName ?: "init"})"
@@ -691,7 +691,6 @@ class PipelineResourceVersionDao {
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
                     status = status,
-                    branchAction = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion,
                     description = record.description,

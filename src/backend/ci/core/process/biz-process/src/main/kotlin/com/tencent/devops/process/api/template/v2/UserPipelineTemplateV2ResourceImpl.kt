@@ -42,8 +42,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
@@ -369,7 +369,7 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         templateId: String,
         request: PipelineTemplateResourceCommonCondition
-    ): Result<Page<PipelineVersionSimple>> {
+    ): Result<Page<PipelineTemplateVersionSimple>> {
         logger.info("get template versions {}|{}|{}|{}", userId, projectId, templateId, request)
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,

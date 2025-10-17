@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDetailsResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoResponse
@@ -200,7 +200,7 @@ interface ServicePipelineTemplateV2Resource {
     fun listLatestReleasedVersions(
         @Parameter(description = "模板ID列表", required = true)
         templateIds: List<String>
-    ): Result<List<PipelineVersionSimple>>
+    ): Result<List<PipelineTemplateVersionSimple>>
 
     @Operation(summary = "获取模板最新版本")
     @POST

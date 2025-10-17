@@ -12,7 +12,7 @@ import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.model.process.tables.TPipelineTemplateResourceVersion
 import com.tencent.devops.model.process.tables.records.TPipelineTemplateResourceVersionRecord
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
@@ -227,7 +227,7 @@ class PipelineTemplateResourceDao {
     fun getVersions(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition
-    ): List<PipelineVersionSimple> {
+    ): List<PipelineTemplateVersionSimple> {
         return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
             dslContext.select(
                 TEMPLATE_ID,
@@ -239,6 +239,8 @@ class PipelineTemplateResourceDao {
                 TRIGGER_VERSION,
                 BASE_VERSION,
                 BASE_VERSION_NAME,
+                SRC_TEMPLATE_PROJECT_ID,
+                SRC_TEMPLATE_ID,
                 SRC_TEMPLATE_VERSION,
                 STATUS,
                 DESCRIPTION,
@@ -252,7 +254,7 @@ class PipelineTemplateResourceDao {
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc())
                 .fetch()
                 .map {
-                    PipelineVersionSimple(
+                    PipelineTemplateVersionSimple(
                         pipelineId = it.value1(),
                         settingVersion = it.value2(),
                         version = it.value3().toInt(),
@@ -262,15 +264,16 @@ class PipelineTemplateResourceDao {
                         triggerVersion = it.value7(),
                         baseVersion = it.value8()?.toInt(),
                         baseVersionName = it.value9(),
-                        srcTemplateVersion = it.value10()?.toInt(),
-                        status = VersionStatus.get(it.value11()),
-                        description = it.value12(),
-                        creator = it.value13(),
-                        updater = it.value14(),
-                        createTime = it.value15().timestampmilli(),
-                        updateTime = it.value16().timestampmilli(),
-                        yamlVersion = null,
-                        storeFlag = it.value17() == TemplateStatusEnum.RELEASED.name
+                        srcTemplateProjectId = it.value10(),
+                        srcTemplateId = it.value11(),
+                        srcTemplateVersion = it.value12()?.toInt(),
+                        status = VersionStatus.get(it.value13()),
+                        description = it.value14(),
+                        creator = it.value15(),
+                        updater = it.value16(),
+                        createTime = it.value17().timestampmilli(),
+                        updateTime = it.value18().timestampmilli(),
+                        storeFlag = it.value19() == TemplateStatusEnum.RELEASED.name
                     )
                 }
         }
@@ -331,7 +334,7 @@ class PipelineTemplateResourceDao {
     fun listLatestReleasedVersions(
         dslContext: DSLContext,
         templateIds: List<String>
-    ): List<PipelineVersionSimple> {
+    ): List<PipelineTemplateVersionSimple> {
         return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
             // 子查询获取每个模板的最大NUMBER
             val maxNumbers = dslContext.select(TEMPLATE_ID, DSL.max(NUMBER).`as`("max_number"))
@@ -367,7 +370,7 @@ class PipelineTemplateResourceDao {
                     NUMBER.eq(maxNumbers.field("max_number", Int::class.java))
                 )
                 .fetch().map {
-                    PipelineVersionSimple(
+                    PipelineTemplateVersionSimple(
                         pipelineId = it.value1(),
                         settingVersion = it.value2(),
                         version = it.value3().toInt(),
@@ -384,7 +387,6 @@ class PipelineTemplateResourceDao {
                         updater = it.value14(),
                         createTime = it.value15().timestampmilli(),
                         updateTime = it.value16().timestampmilli(),
-                        yamlVersion = null,
                         number = it.value17()
                     )
                 }
@@ -428,7 +430,7 @@ class PipelineTemplateResourceDao {
                 if (settingVersion != null) conditions.add(SETTING_VERSION.eq(settingVersion))
                 if (number != null) conditions.add(NUMBER.eq(number))
                 if (versionName != null && versionName!!.isNotBlank()) conditions.add(VERSION_NAME.eq(versionName))
-                if (!fuzzyVersionName.isNullOrBlank()) conditions.add(VERSION_NAME.like("$fuzzyVersionName%"))
+                if (!fuzzyVersionName.isNullOrBlank()) conditions.add(VERSION_NAME.like("%$fuzzyVersionName%"))
                 if (settingVersionNum != null) conditions.add(SETTING_VERSION_NUM.eq(settingVersionNum))
                 if (versionNum != null) conditions.add(VERSION_NUM.eq(versionNum))
                 if (pipelineVersion != null) conditions.add(PIPELINE_VERSION.eq(pipelineVersion))
