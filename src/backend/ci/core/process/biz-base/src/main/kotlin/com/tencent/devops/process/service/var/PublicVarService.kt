@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
@@ -326,7 +327,8 @@ class PublicVarService @Autowired constructor(
                     glob = null,
                     properties = null,
                     varGroupName = groupReferInfo.groupName,
-                    varGroupVersion = groupReferInfo.version
+                    varGroupVersion = groupReferInfo.version,
+                    constant = if (pos.type == PublicVarTypeEnum.CONSTANT) true else false
                 ).apply {
                     this.removeFlag = true
                 }
