@@ -79,7 +79,7 @@ interface ServiceTXPipelineResource {
     @POST
     @Path("/projects/{projectId}/pipeline/lock")
     fun lockPipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
         @Parameter(description = "项目ID", required = true)
