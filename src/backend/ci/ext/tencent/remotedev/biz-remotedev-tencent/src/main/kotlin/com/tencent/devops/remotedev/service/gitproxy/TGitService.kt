@@ -41,7 +41,7 @@ class TGitService @Autowired constructor(
                 projectTGitLinkDao.batchAdd(
                     dslContext = dslContext,
                     projectId = projectId,
-                    data = result.map {
+                    data = listOf(
                         TGitRepoDaoData(
                             tgitId = tGitId,
                             status = TGitRepoStatus.TO_BE_MIGRATED,
@@ -56,7 +56,7 @@ class TGitService @Autowired constructor(
                             cred = userId,
                             credType = TGitCredType.OAUTH_USER
                         )
-                    }
+                    )
                 )
                 val res = gitProxyTGitService.linkTGit(projectId, setOf(tGitId)).values.firstOrNull() ?: false
                 result[projectId] = res
