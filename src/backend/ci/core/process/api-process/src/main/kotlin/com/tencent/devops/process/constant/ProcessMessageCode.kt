@@ -394,6 +394,15 @@ object ProcessMessageCode {
     const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101286"
 
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
+
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101286" // 流水线公共变量组中存在变量[{0}]名称重复
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101287" // 流水线公共变量组中变量名称格式错误
+    const val PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST = "2101288" // 流水线公共变量组({0})已存在
+    const val PIPELINE_PUBLIC_VAR_GROUP_REFERENCED = "2124007" // 流水线公共变量组({0})已被引用，无法删除
+    // 流水线配置流水线公共变量组{0}中存在冲突变量{1}，请调整变量组配置
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101289"
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101290" // 变量组引用更新失败
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
@@ -625,4 +634,6 @@ object ProcessMessageCode {
     const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
+
+    const val BK_PIPELINE_YAML_PUB_VAR_GROUP_ID = "template"
 }
