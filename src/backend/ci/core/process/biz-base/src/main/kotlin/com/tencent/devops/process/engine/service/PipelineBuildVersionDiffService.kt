@@ -3,8 +3,6 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineBuildVersionDiffDao
-import com.tencent.devops.process.pojo.BuildVersionDiffInfo
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -13,24 +11,10 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineBuildVersionDiffService(
     val dslContext: DSLContext,
-    val pipelineBuildVersionDiffDao: PipelineBuildVersionDiffDao,
     val pipelineRuntimeService: PipelineRuntimeService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildVersionDiffService::class.java)
-    }
-
-    fun list(
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): List<BuildVersionDiffInfo> {
-        return pipelineBuildVersionDiffDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId
-        )
     }
 
     @Suppress("CyclomaticComplexMethod")

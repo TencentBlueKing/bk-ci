@@ -103,7 +103,6 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.service.PipelineBuildVersionDiffService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -188,8 +187,7 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildRetryService: PipelineBuildRetryService,
-    private val pipelineBuildVersionDiffService: PipelineBuildVersionDiffService
+    private val pipelineBuildRetryService: PipelineBuildRetryService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -3051,17 +3049,12 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildNum = currBuildInfo.buildNum - 1
         )
-        val buildVersionDiffs = pipelineBuildVersionDiffService.list(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId
-        )
         return BuildVersionDiff(
             currVersion = currBuildInfo.version,
             currVersionName = currBuildInfo.versionName,
             prevVersion = prevBuildInfo?.version,
             prevVersionName = prevBuildInfo?.versionName,
-            buildVersionDiffs = buildVersionDiffs
+            buildVersionDiffs = emptyList()
         )
     }
 
