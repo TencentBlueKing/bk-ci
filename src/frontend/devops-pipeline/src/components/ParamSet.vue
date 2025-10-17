@@ -699,17 +699,15 @@
                         isNew: editingSet.value.isNew
                     }
                     isLoading.value = true
-                    const id = await dispatch('saveParamSet', {
+                    const { data: id } = await dispatch('saveParamSet', {
                         projectId: proxy.$route.params.projectId,
                         pipelineId: proxy.$route.params.pipelineId,
                         paramSet: newSet
                     })
                     isLoading.value = false
                     isEditing.value = false
-                    
                     dispatch('updateParamSet', editingSet.value.isNew ? Object.assign(newSet, {
                         id,
-                        isNew: false
                     }) : newSet)
                     nextTick(() => {
                         switchManageSet(activeSetIndex.value)

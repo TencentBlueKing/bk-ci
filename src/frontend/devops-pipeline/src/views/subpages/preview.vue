@@ -86,6 +86,10 @@
                                 @change="updateParamsValues"
                             />
                         </span>
+                        <i
+                            class="devops-icon icon-question-circle"
+                            v-bk-tooltips="$t('paramSetTips')"
+                        />
                         <span
                             :class="['text-link', {
                                 'disabled': !showChangedParamsAlert
@@ -93,10 +97,6 @@
                             @click.stop="resetDefaultParams"
                         >
                             {{ $t('resetDefault') }}
-                            <i
-                                class="devops-icon icon-question-circle"
-                                v-bk-tooltips="resetDefaultParamsTips"
-                            />
                         </span>
                         <span class="collapse-trigger-divider">|</span>
                         <span
@@ -402,9 +402,6 @@
             },
             hasPipelineParams () {
                 return this.pipelineParams.length
-            },
-            resetDefaultParamsTips () {
-                return this.$t(this.isDebugPipeline ? 'debugParamsTips' : 'restoreDetaulParamsTips')
             },
             canElementSkip () {
                 return this.isDebugPipeline || (this.startupInfo?.canElementSkip ?? false)
@@ -911,11 +908,11 @@ $header-height: 36px;
             ;
             font-weight: normal;
 
-            .icon-question-circle {
-                display: inline-block;
-                color: #979BA5;
-                margin-left: 4px;
-            }
+        }
+        .icon-question-circle {
+            display: inline-block;
+            color: #979BA5;
+            margin-left: 4px;
         }
     }
 

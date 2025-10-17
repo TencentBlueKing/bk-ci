@@ -1025,12 +1025,12 @@ export default {
             ...state.paramSets
         ])
     },
-    updateParamSet ({ commit, state }, paramSet) {
-
-        const index = paramSet.isNew ? 0 : state.paramSets.findIndex(item => item.id === paramSet.id)
+    updateParamSet ({ commit, state }, { isNew, ...paramSet }) {
+        const index = isNew ? 0 : state.paramSets.findIndex(item => item.id === paramSet.id)
         if (index < 0) {
             return
         }
+        
         commit(SET_PARAM_SET_LIST, [
             ...state.paramSets.slice(0, index),
             paramSet,
