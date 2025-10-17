@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
+import com.tencent.devops.process.dao.yaml.PipelineYamlBranchFileDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
-import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
@@ -433,14 +433,17 @@ class PipelineYamlService(
         ref: String,
         branchAction: String
     ) {
-        pipelineYamlVersionDao.updateBranchAction(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            ref = ref,
-            branchAction = branchAction
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlVersionDao.updateBranchAction(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                ref = ref,
+                branchAction = branchAction
+            )
+        }
     }
 
     fun getPipelineYamlVo(
@@ -625,6 +628,17 @@ class PipelineYamlService(
             projectId = projectId,
             repoHashId = repoHashId,
             branch = branch
+        )
+    }
+
+    fun listByPipelineIds(
+        projectId: String,
+        pipelineIds: List<String>
+    ): List<PipelineYamlInfo> {
+        return pipelineYamlInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
         )
     }
 }

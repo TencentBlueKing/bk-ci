@@ -29,6 +29,8 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -41,10 +43,21 @@ data class TemplateInstanceParams(
     val pipelineId: String,
     @get:Schema(title = "流水线名称", required = false)
     val pipelineName: String,
-    @get:Schema(title = "构建号，不建议使用", required = false)
+    @get:Schema(title = "构建号", required = false)
     val buildNo: BuildNo?,
     @get:Schema(title = "流水线变量列表", required = false)
     val param: List<BuildFormProperty>,
     @get:Schema(title = "是否更新了推荐版本号基准值", required = false)
-    val updateBuildNo: Boolean? = null
+    val updateBuildNo: Boolean? = null,
+    @get:Schema(title = "yaml文件代码库hashId", required = false)
+    val repoHashId: String? = null,
+    @get:Schema(title = "yaml文件路径", required = false)
+    val filePath: String? = null,
+    @get:Schema(title = "触发器", required = false)
+    val triggerElements: List<Element>? = null,
+    /**
+     * 流水线覆盖模版字段
+     */
+    @get:Schema(title = "覆盖模版字段", required = false)
+    var overrideTemplateField: TemplateInstanceField? = null
 )

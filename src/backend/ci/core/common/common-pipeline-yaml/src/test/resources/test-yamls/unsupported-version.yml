@@ -1,0 +1,8 @@
+version: v1.0
+name: test-pipeline
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        steps:
+          - run: echo hello

@@ -41,5 +41,13 @@ enum class PipelineInstanceTypeEnum(val type: String) {
                 else -> PipelineInstanceTypeEnum.FREEDOM.name
             }
         }
+
+        fun get(type: String): PipelineInstanceTypeEnum {
+            return when (type) {
+                FREEDOM.type -> FREEDOM
+                CONSTRAINT.type -> CONSTRAINT
+                else -> throw IllegalArgumentException("No enum for constant $type")
+            }
+        }
     }
 }

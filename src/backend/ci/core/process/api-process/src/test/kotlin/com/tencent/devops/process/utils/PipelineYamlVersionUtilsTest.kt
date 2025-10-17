@@ -30,14 +30,18 @@ package com.tencent.devops.process.utils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
+import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -260,6 +264,218 @@ class PipelineYamlVersionUtilsTest {
         assertEquals(version + 1, PipelineVersionUtils.getTriggerVersion(version, model, diffTrigger))
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel2, diffModel3))
         assertEquals(version + 1, PipelineVersionUtils.getPipelineVersion(version, diffModel3, diffModel4))
+    }
+
+    @Test
+    fun getVersionsFromTemplate() {
+        val model = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1"
+            ),
+            pipelineCreator = "userId"
+        )
+        val sameModel = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1"
+            ),
+            pipelineCreator = "userId"
+        )
+        val diffModel1 = Model(
+            name = "name1",
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = "stage-1",
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "trigger",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    id = "T-1-1-1",
+                                    name = "t1"
+                                )
+                            )
+                        )
+                    )
+                ),
+                Stage(
+                    id = "stage-2",
+                    containers = listOf(
+                        NormalContainer()
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val variablesDiffModel = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value1"
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val variablesDiffModel2 = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value2"
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val triggerDiffModel = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = false
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val triggerDiffModel2 = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = true
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val paramAndTriggerModel = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value1"
+                    )
+                ),
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = true
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+        val paramAndTriggerModel2 = Model(
+            name = "name1",
+            desc = "",
+            stages = emptyList(),
+            template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = "pt1",
+                templateVersionName = "v1",
+                templateVariables = listOf(
+                    TemplateVariable(
+                        "key1",
+                        value = "value1"
+                    )
+                ),
+                triggerConfigs = listOf(
+                    TemplateInstanceTriggerConfig(
+                        stepId = "step1",
+                        disabled = true
+                    )
+                )
+            ),
+            pipelineCreator = "userId"
+        )
+
+        val version = 1
+        assertEquals(PipelineVersionUtils.getPipelineVersion(version, model, sameModel), version)
+        assertEquals(PipelineVersionUtils.getTriggerVersion(version, model, sameModel), version)
+        assertEquals(
+            version + 1,
+            PipelineVersionUtils.getPipelineVersion(version, model, diffModel1)
+        )
+        assertEquals(
+            version + 1,
+            PipelineVersionUtils.getPipelineVersion(version, model, variablesDiffModel)
+        )
+        assertEquals(
+            version + 1,
+            PipelineVersionUtils.getTriggerVersion(version, model, triggerDiffModel)
+        )
+        assertEquals(
+            version + 1,
+            PipelineVersionUtils.getTriggerVersion(version, model, paramAndTriggerModel)
+        )
+        assertEquals(
+            version + 1,
+            PipelineVersionUtils.getPipelineVersion(version, variablesDiffModel, variablesDiffModel2)
+        )
+        assertEquals(
+            version,
+            PipelineVersionUtils.getTriggerVersion(version, variablesDiffModel, variablesDiffModel2)
+        )
+        assertEquals(
+            version,
+            PipelineVersionUtils.getPipelineVersion(version, triggerDiffModel, triggerDiffModel2)
+        )
+        assertEquals(
+            version + 1,
+            PipelineVersionUtils.getTriggerVersion(version, triggerDiffModel, triggerDiffModel2)
+        )
+        assertEquals(
+            version,
+            PipelineVersionUtils.getPipelineVersion(version, paramAndTriggerModel, paramAndTriggerModel2)
+        )
+        assertEquals(
+            version,
+            PipelineVersionUtils.getTriggerVersion(version, paramAndTriggerModel, paramAndTriggerModel2)
+        )
     }
 
     @Test
