@@ -239,7 +239,6 @@ class PipelineAtomService @Autowired constructor(
                 totalPages = totalPages,
                 records = pipelineAtomRelList
             )
-
         }
         return Result(resultPage)
     }
