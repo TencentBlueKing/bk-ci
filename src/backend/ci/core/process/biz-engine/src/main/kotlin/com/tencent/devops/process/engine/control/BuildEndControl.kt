@@ -77,7 +77,9 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MetricsService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.report.service.ReportService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ARTIFACT
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
@@ -109,7 +111,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRedisService: PipelineRedisService,
     private val meterRegistry: MeterRegistry,
     private val metricsService: MetricsService,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val reportService: ReportService
 ) {
 
     companion object {
@@ -508,6 +511,18 @@ class BuildEndControl @Autowired constructor(
             varName = PIPELINE_TIME_DURATION,
             varValue = duration
         )
+
+        // 存储流水线执行完后构建的产物
+        val reportUrls = reportService.listReportUrl(this.projectId, this.pipelineId, this.buildId)
+        if (reportUrls.isNotEmpty()) {
+            buildVariableService.setVariable(
+                projectId = this.projectId,
+                pipelineId = this.pipelineId,
+                buildId = this.buildId,
+                varName = PIPELINE_BUILD_ARTIFACT,
+                varValue = reportUrls.joinToString(",")
+            )
+        }
     }
 
     // 子流水线回调父流水线
