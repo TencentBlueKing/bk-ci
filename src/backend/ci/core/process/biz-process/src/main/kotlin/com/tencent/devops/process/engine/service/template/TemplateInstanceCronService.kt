@@ -86,9 +86,16 @@ class TemplateInstanceCronService @Autowired constructor(
     @Value("\${template.maxErrorReasonLength:200}")
     private val maxErrorReasonLength: Int = 200
 
+    @Value("\${template.enableTemplateInstanceCron:false}")
+    private val enableTemplateInstanceCron: Boolean = false
+
     // todo 新版本上线后，停止该定时
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
+        if (!enableTemplateInstanceCron) {
+            logger.info("template instance cron is disabled")
+            return
+        }
         val profile = SpringContextUtil.getBean(Profile::class.java)
         val activeProfiles = profile.getActiveProfiles()
         val key = if (activeProfiles.size > 1) {
