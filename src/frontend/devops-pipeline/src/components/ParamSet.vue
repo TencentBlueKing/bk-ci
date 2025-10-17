@@ -198,7 +198,6 @@
                                                 ref="versionParamForm"
                                                 :show-baseline="false"
                                                 :handle-version-change="handleVersionChange"
-                                                highlight-changed-param
                                                 :version-param-values="versionParamValues"
                                                 :version-param-list="editingSet.versionParams"
                                             />
@@ -339,7 +338,6 @@
                     versionParams: set.params?.filter(param => allVersionKeyList.includes(param.id)).map(version => ({
                         ...version,
                         category: proxy.$t('versionNum'),
-
                         isDeleted: !props.isVisibleVersion,
                         defaultValue: version.value,
                     })),
@@ -461,11 +459,16 @@
             }
 
             async function applyParamSet () {
-                const set = paramSetId.value === LAST_USED_SET.id ? LAST_USED_SET : paramSetList.value.find(item => item.id === paramSetId.value)
+                const isLastUsed = paramSetId.value === LAST_USED_SET.id
+                const set = isLastUsed ? {
+                    ...LAST_USED_SET,
+                    params: LAST_USED_SET.params.filter(param => !allVersionKeyList.includes(param.id)),
+                    versionParams: props.allParams.filter(param => allVersionKeyList.includes(param.id))
+                } : paramSetList.value.find(item => item.id === paramSetId.value)
                 if (!set) {
                     return
                 }
-                if (!set.params?.length) {
+                if (!isLastUsed && !set.params?.length) {
                     isApplying.value = true
                     const allParams = await dispatch('fetchParamSetDetail', {
                         projectId: proxy.$route.params.projectId,
@@ -563,7 +566,7 @@
                 const newSet = {
                     ...DEFAULT_PARAM_SET,
                     name: props.isStartUp ? `SET_#${props.buildNum}` : `SET_${randomString(6)}`,
-                    params: params.filter(param => param.required && !param.constant).map(param => ( {
+                    params: params.map(param => ( {
                         ...param,
                         value: values?.[param.id] ?? param.value
                     })),
@@ -571,10 +574,11 @@
                 }
                 dispatch('addParamSet', newSet)
                 switchManageSet(0)
+                const inputParams = newSet.params.filter(param => !allVersionKeyList.includes(param.id) && param.required && !param.constant)
                 editingSet.value = {
                     ...newSet,
-                    paramIds: newSet.params.filter(param => !allVersionKeyList.includes(param.id)).map(param => param.id),
-                    params: newSet.params.filter(param => !allVersionKeyList.includes(param.id)),
+                    paramIds: inputParams.map(param => param.id),
+                    params: inputParams,
                     versionParams: newSet.params.filter(param => allVersionKeyList.includes(param.id))
                 }
                 isEditing.value = true
