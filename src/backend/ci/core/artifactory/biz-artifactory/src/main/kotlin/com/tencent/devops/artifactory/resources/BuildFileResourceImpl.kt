@@ -129,6 +129,30 @@ class BuildFileResourceImpl @Autowired constructor(
         return Result(urls)
     }
 
+    override fun archiveFileToParentPipeline(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        fileType: FileTypeEnum,
+        customFilePath: String?,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        val userId = getLastModifyUser(projectCode, pipelineId)
+        val url = archiveFileService.archiveFile(
+            userId = userId,
+            projectId = projectCode,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            fileType = fileType,
+            customFilePath = customFilePath,
+            inputStream = inputStream,
+            disposition = disposition,
+            fileChannelType = FileChannelTypeEnum.BUILD
+        )
+        return Result(url)
+    }
+
     private fun getLastModifyUser(projectId: String, pipelineId: String): String {
         // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
         return try {
