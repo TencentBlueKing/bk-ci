@@ -1764,5 +1764,7 @@
   "artifactQuality": "Artifact Quality",
   "totalArtifactCount": "Total of {0}",
   "noArchivedPipelines": "No archived pipelines for now, no action needed",
-  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving."
+  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
+  "showStageProgress": "Show Stage Progress",
+  "showBuildInfo": "Show Build Information"
 }
