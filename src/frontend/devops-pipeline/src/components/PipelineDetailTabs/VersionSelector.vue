@@ -111,7 +111,13 @@
                         class="src-template-version-name"
                         v-if="item.srcTemplateVersionName"
                     >
-                        [-> {{ item.srcTemplateVersionName }}]
+                        [
+                        <logo
+                            class="main-branch-icon"
+                            size="14"
+                            name="main-branch"
+                        /> {{ item.srcTemplateVersionName }}
+                        ]
                     </span>
                 </p>
                 <!-- <span class="pipeline-version-main-branch">
@@ -490,8 +496,14 @@
             }
             
             .src-template-version-name {
+                display: flex;
+                align-items: center;
                 color: #979BA5;
                 font-weight: 400;
+                max-width: 100px;
+            }
+            .main-branch-icon {
+                margin-right: 4px;
             }
         }
     }
