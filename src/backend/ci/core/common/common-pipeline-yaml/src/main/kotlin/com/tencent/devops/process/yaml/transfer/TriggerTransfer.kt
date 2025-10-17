@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.transfer
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
@@ -306,11 +305,22 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ) else null,
                     skipWip = git.skipWip
                 )
-                CodeEventType.MERGE_REQUEST_ACCEPT ->
-                    throw PipelineTransferException(
-                        errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,
-                        params = arrayOf(git.name)
-                    )
+                CodeEventType.MERGE_REQUEST_ACCEPT -> nowExist.mr = MrRule(
+                    name = git.name.nullIfDefault(defaultName),
+                    enable = git.enable.nullIfDefault(true),
+                    targetBranches = git.branchName?.disjoin(),
+                    targetBranchesIgnore = git.excludeBranchName?.disjoin(),
+                    sourceBranches = git.includeSourceBranchName?.disjoin(),
+                    sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
+                    action = listOf(TGitMrEventAction.MERGE.value),
+                    skipWip = git.skipWip
+                )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
                     name = git.name.nullIfDefault(defaultName),
