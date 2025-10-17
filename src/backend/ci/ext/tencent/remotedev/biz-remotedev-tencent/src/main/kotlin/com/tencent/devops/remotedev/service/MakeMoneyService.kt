@@ -330,6 +330,7 @@ class MakeMoneyService @Autowired constructor(
      * 从CMDB API查询资产详情信息，构建实例名到启用日期的映射
      * @return Map<String, String> - Key为bk_inst_name（实例名），Value为格式化后的启用日期（YYYY-MM）
      */
+    @Suppress("NestedBlockDepth")
     private fun fetchCmdbAssetInfo(): Map<String, String> {
         return try {
             logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
@@ -353,7 +354,10 @@ class MakeMoneyService @Autowired constructor(
                     headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
                 ).use { response ->
                     if (!response.isSuccessful) {
-                        logger.warn("fetchCmdbAssetInfo failed|start: $start|code: ${response.code}|response: ${response.body?.string()}")
+                        logger.warn(
+                            "fetchCmdbAssetInfo failed|start: $start|" +
+                                "code: ${response.code}|response: ${response.body?.string()}"
+                        )
                         hasMore = false
                         return@use
                     }
