@@ -117,6 +117,7 @@
                                         show-follow-template-btn
                                         show-set-required-btn
                                         v-bind="versionParams"
+                                        config-type="introVersion"
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
                                         :handle-set-required="handleSetBuildNoRequired"
@@ -272,6 +273,7 @@
                                 follow-template-key="trigger"
                                 check-step-id
                                 v-bind="trigger"
+                                config-type="trigger"
                                 :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
                             >
                                 <template slot="content">
@@ -495,36 +497,6 @@
             acc[item.id] = item
             return acc
         }, {})
-        for (const item of instanceParams) {
-            const templateParamItem = templateParamsMap[item.id]
-            const initialInstanceParamItem = initialInstanceParams[item.id]
-           
-            if (!templateParamItem) {
-                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
-                item.isDelete = true
-            } else {
-                // 对比 defaultValue, 如果不相同则标记为isChange
-                // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
-                if (!allVersionKeyList.includes(item.id) && item.isFollowTemplate) {
-                    item.defaultValue = templateParamItem.defaultValue
-                } else {
-                    const templateDefaultValue = allVersionKeyList.includes(item.id) ? Number(templateParamItem.defaultValue) : templateParamItem.defaultValue
-                    const itemDefaultValue = allVersionKeyList.includes(item.id) ? Number(item.defaultValue) : item.defaultValue
-                    item.hasChange = isObject(itemDefaultValue)
-                        ? !isShallowEqual(itemDefaultValue, templateDefaultValue)
-                        : itemDefaultValue !== templateDefaultValue
-                    
-                    const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem.defaultValue) : initialInstanceParamItem.defaultValue
-                    item.isChange = isObject(itemDefaultValue)
-                        ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
-                        : itemDefaultValue !== initialInstanceDefaultValue
-                }
-                if (!item.required && templateParamItem.required) {
-                    item.required = true
-                    item.isRequiredParam = true
-                }
-            }
-        }
         // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
         for (const item of templateParams) {
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
@@ -541,6 +513,39 @@
                 i.defaultValue = newValue ?? i.defaultValue
             }
         })
+        for (const item of instanceParams) {
+            const templateParamItem = templateParamsMap[item.id]
+            const initialInstanceParamItem = initialInstanceParams[item.id]
+           
+            if (!templateParamItem) {
+                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
+                item.isDelete = true
+            } else {
+                // 对比 defaultValue, 如果不相同则标记为isChange
+                // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
+                if (!allVersionKeyList.includes(item.id) && item.isFollowTemplate && item.defaultValue !== templateParamItem.defaultValue) {
+                    item.defaultValue = templateParamItem.defaultValue
+                    item.isChange = true
+                } else {
+                    const templateDefaultValue = allVersionKeyList.includes(item.id) ? Number(templateParamItem.defaultValue) : templateParamItem.defaultValue
+                    const itemDefaultValue = allVersionKeyList.includes(item.id) ? Number(item.defaultValue) : item.defaultValue
+                    item.hasChange = isObject(itemDefaultValue)
+                        ? !isShallowEqual(itemDefaultValue, templateDefaultValue)
+                        : itemDefaultValue !== templateDefaultValue
+                    
+                    if (!item.isNew) {
+                        const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem?.defaultValue) : initialInstanceParamItem?.defaultValue
+                        item.isChange =  isObject(itemDefaultValue)
+                            ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
+                            : itemDefaultValue !== initialInstanceDefaultValue
+                    }
+                }
+                if (!item.required && templateParamItem.required) {
+                    item.required = true
+                    item.isRequiredParam = true
+                }
+            }
+        }
         // 非入参的参数直接赋值模板配置的入参默认值
         const instanceBuildNo = instance?.buildNo
         const templateBuildNo = template?.buildNo
@@ -809,7 +814,7 @@
                             ...p,
                             defaultValue: p.id === id && !p.isFollowTemplate ? temDefaultValue : p.defaultValue,
                             isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate,
-                            isChange: false
+                            hasChange: false
                         }))
                     }
                 })

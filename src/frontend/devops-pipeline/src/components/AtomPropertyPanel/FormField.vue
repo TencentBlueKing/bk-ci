@@ -1,8 +1,10 @@
 <script setup>
-    import { computed } from 'vue'
+    import { computed, defineProps } from 'vue'
     import Logo from '@/components/Logo'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
     import UseInstance from '@/hook/useInstance'
+    import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
+    import ToggleFollowTemplatePopover from '@/components/ToggleFollowTemplatePopover.vue'
 
     const props = defineProps({
         label: {
@@ -168,12 +170,12 @@
                         color: props.hideColon ? '#979BA5' : ''
                     }"
                 />
-                <template #content>
+                <template slot="content">
                     <template v-if="props.customDesc">
                         <NamingConventionTip />
                     </template>
                     <template v-else>
-                        <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
+                        <div style="font-size: 12px; max-width: 500px;">
                             <template v-if="props.desc.split('\n').length > 1">
                                 <div
                                     v-for="(item, index) in props.desc.split('\n')"
@@ -225,35 +227,15 @@
                     size="18"
                 />
             </span>
-            <span
-                :class="[
-                    'icon-item',
-                    { active: props.isRequiredParam }
-                ]"
-                v-bk-tooltips="props.isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')"
-                @click="props.handleSetParmaRequired"
-            >
-                <Logo
-                    :name="props.isRequiredParam ? 'set-param-active' : 'set-param-default'"
-                    size="12"
-                />
-            </span>
-            <span
-                :class="[
-                    'icon-item',
-                    { 'is-follow': props.isFollowTemplate }
-                ]"
-                v-bk-tooltips="{
-                    content: props.isFollowTemplate ? $t('template.notFollowTemplateTips') : $t('template.followTemplateTips'),
-                    width: 320
-                }"
-                @click="props.handleFollowTemplate"
-            >
-                <Logo
-                    name="template-mode"
-                    size="12"
-                />
-            </span>
+            <ToggleRequiredParamPopover
+                :is-required-param="props.isRequiredParam"
+                :handle-change="props.handleSetParmaRequired"
+            />
+            <ToggleFollowTemplatePopover
+                :is-follow-template="props.isFollowTemplate"
+                :handle-change="props.handleFollowTemplate"
+                type="defaultValue"
+            />
         </span>
 
         <div class="bk-form-content">
@@ -367,12 +349,15 @@
             border-radius: 2px;
             margin-left: 6px;
             cursor: pointer;
-            &.is-follow {
-                background: #CDDFFE;
-                color: #3A84FF;
+            &.is-follow,
+            &.active{
+                background: #E1ECFF;
+                &:hover {
+                    background: #CDDFFE !important;
+                }
             }
-            &.active {
-                background: #CDDFFE;
+            &:hover {
+                background: #DCDEE5;
             }
         }
         .show-dot {

@@ -95,15 +95,24 @@
                     }]"
                 />
                 <p class="pipeline-version-name">
-                    <span v-bk-overflow-tips>
-                        {{ item.displayName }}
+                    <span>
+                        <span v-bk-overflow-tips>
+                            {{ item.displayName }}
+                        </span>
+                        <i
+                            v-if="isCurrentVersion(item)"
+                            class="pipeline-release-version-tag"
+                        >
+                            {{ $t('latest') }}
+                        </i>
                     </span>
-                    <i
-                        v-if="isCurrentVersion(item)"
-                        class="pipeline-release-version-tag"
+                    <span
+                        v-bk-overflow-tips
+                        class="src-template-version-name"
+                        v-if="item.srcTemplateVersionName"
                     >
-                        {{ $t('latest') }}
-                    </i>
+                        [-> {{ item.srcTemplateVersionName }}]
+                    </span>
                 </p>
                 <!-- <span class="pipeline-version-main-branch">
                                 [{{ $t('mainBranch') }}]
@@ -472,11 +481,17 @@
 
         .pipeline-version-name {
             display: flex;
+            justify-content: space-between;
             grid-gap: 8px;
             overflow: hidden;
             > span {
                 font-weight: 700;
                 @include ellipsis();
+            }
+            
+            .src-template-version-name {
+                color: #979BA5;
+                font-weight: 400;
             }
         }
     }

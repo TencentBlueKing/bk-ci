@@ -349,7 +349,7 @@
                 ]
             },
             {
-                name: proxy.$t('template.currentVision'),
+                name: proxy.$t('template.referenceTemplateVersion'),
                 id: 'templateVersion',
                 remoteMethod:
                     async (search) => {
@@ -484,21 +484,6 @@
     
     async function copyAsTemplateInstance (row) {
         try {
-            // const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
-            //     pipelineIds: [row.pipelineId],
-            //     projectId: projectId.value,
-            //     templateId: templateId.value
-            // })
-            // proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
-            //     {
-            //         ...row,
-            //         ...res[row.pipelineId],
-            //         isRequiredParam: row.required,
-            //         pipelineName: (row.pipelineName + '_copy').substring(0, 128),
-            //         pipelineId: ''
-            //     }
-            // ])
-    
             proxy.$router.push({
                 name: 'instanceEntry',
                 params: {

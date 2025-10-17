@@ -341,6 +341,7 @@
     align-items: center;
     grid-gap: 6px;
     height: 36px;
+    line-height: 1;
     .store-source-flag {
         font-size: 0;
     }
