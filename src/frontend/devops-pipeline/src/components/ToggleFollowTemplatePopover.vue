@@ -128,12 +128,14 @@
         justify-content: space-around;
         width: 22px;
         height: 22px;
+        color: #4D4F56;
         background: #EAEBF0;
         border-radius: 2px;
         margin-left: 6px;
         cursor: pointer;
         &.is-follow,
         &.active{
+            color: #3A84FF;
             background: #E1ECFF;
             &:hover {
                 background: #CDDFFE !important;
