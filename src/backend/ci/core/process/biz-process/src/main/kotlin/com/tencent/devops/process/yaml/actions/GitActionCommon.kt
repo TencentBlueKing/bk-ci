@@ -160,10 +160,11 @@ object GitActionCommon {
     }
 
     fun getYamlResourceType(filePath: String, fileContent: String): YamlResourceType {
-        return if (isCiFile(filePath)) {
-            YamlResourceType.PIPELINE
-        } else {
+        // TODO PAC 局部模版时,需要读取文件内容判断
+        return if (isTemplateFile(filePath)) {
             YamlResourceType.PIPELINE_TEMPLATE
+        } else {
+            YamlResourceType.PIPELINE
         }
     }
 }
