@@ -949,7 +949,7 @@
                 flex: 1;
                 padding-right: 12px;
                 overflow-y: auto;
-                scrollbar-gutter: stable both-edges;
+                scrollbar-gutter: stable;
             }
         }
     }

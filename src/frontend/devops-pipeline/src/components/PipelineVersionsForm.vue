@@ -308,7 +308,6 @@
         grid-gap: 16px;
         width: 222px;
         margin-right: 20px;
-
         .execute-build-version-input:not(:last-child) {
             position: relative;
 

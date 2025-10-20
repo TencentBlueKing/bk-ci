@@ -7,6 +7,7 @@
             only-save-as-set
             ref="paramSet"
             is-start-up
+            :is-visible-version="isVisibleVersion"
             :build-num="execDetail?.buildNum"
             :all-params="allParams"
         />
@@ -77,6 +78,7 @@
 
 <script>
     import ParamSet from '@/components/ParamSet.vue'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapActions, mapGetters } from 'vuex'
     export default {
         components: {
@@ -90,7 +92,8 @@
                 activeParam: null,
                 isDetailShow: false,
                 overflowSpan: [],
-                buildParamProperities: []
+                buildParamProperities: [],
+                isVisibleVersion: false
             }
         },
         computed: {
@@ -146,6 +149,7 @@
                         this.fetchBuildParamsByBuildId(urlParams)
                     ])
                     this.buildParamProperities = buildParamProperities
+                    this.isVisibleVersion = buildParamProperities.some(item => allVersionKeyList.includes(item.id))
                     this.defaultParamMap = res.reduce((acc, item) => {
                         acc[item.key] = item.defaultValue
                         return acc
