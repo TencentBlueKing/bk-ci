@@ -18,36 +18,13 @@
                     {{ label }}
                 </label>
             </slot>
-            <bk-popover
+            <ToggleFollowTemplatePopover
                 v-if="instanceFromTemplate && $route.meta.edit"
-                ref="constraintTips"
-                transfer
-            >
-                <span
-                    :class="['template-constraint-mode-icon', {
-                        'is-override': isOverrideField,
-                        'constraint-togglable': !disabled || !$route.meta.edit
-                    }]"
-                    @click="toggleConstraint"
-                >
-                    <span
-                        v-if="reverting"
-                        class="bk-icon icon-circle-2-1 spin-icon"
-                    >
-                    </span>
-                    <logo
-                        v-else
-                        name="template-mode"
-                        size="12"
-                    />
-                </span>
-                <div
-                    class="template-constraint-tips"
-                    slot="content"
-                >
-                    {{ constraintTipsContent }}
-                </div>
-            </bk-popover>
+                :is-follow-template="!isOverrideField"
+                :handle-change="toggleConstraint"
+                :classify-label="classifyLabel"
+                :is-loading="reverting"
+            />
         </div>
         <div
             v-if="showConstraintArea"
@@ -66,14 +43,16 @@
 </template>
 
 <script>
-    import Logo from '@/components/Logo/index.vue'
+    // import Logo from '@/components/Logo/index.vue'
+    import ToggleFollowTemplatePopover from '@/components/ToggleFollowTemplatePopover.vue'
     import useTemplateConstraint, { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { computed, getCurrentInstance, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n-bridge'
     export default {
         emits: ['toggleConstraint'],
         components: {
-            Logo
+            // Logo,
+            ToggleFollowTemplatePopover
         },
         props: {
             disabled: {
@@ -109,7 +88,6 @@
             const { isOverrideTemplate, toggleConstraint, fieldMap, labelMap, reverting } = useTemplateConstraint()
             const vm = getCurrentInstance()
             const { t } = useI18n()
-            const constraintTips = ref(null)
             
             const instanceFromTemplate = computed(() => {
                 return vm.proxy.$store.getters['atom/instanceFromTemplate'] ?? false
@@ -136,14 +114,14 @@
                 return props.classify === CLASSIFY_ENUM.TRIGGER
             })
 
-            const constraintTipsContent = computed(() => {
-                const prefix = isOverrideField.value ? 'to' : 'un'
-                if (isTriggerClassify.value) {
-                    return t(`${prefix}TriggerConstraintTips`)
-                }
+            // const constraintTipsContent = computed(() => {
+            //     const prefix = isOverrideField.value ? 'to' : 'un'
+            //     if (isTriggerClassify.value) {
+            //         return t(`${prefix}TriggerConstraintTips`)
+            //     }
                 
-                return t(`${prefix}ConstraintTips`, [classifyLabel.value])
-            })
+            //     return t(`${prefix}ConstraintTips`, [classifyLabel.value])
+            // })
 
             watch(() => isOverrideField.value, (isOverride) => {
                 ctx.emit('toggleConstraint', isOverride)
@@ -168,10 +146,10 @@
                     
                 },
                 instanceFromTemplate,
-                constraintTips,
                 isOverrideField,
-                constraintTipsContent,
-                reverting
+                // constraintTipsContent,
+                reverting,
+                classifyLabel
             }
         }
     }

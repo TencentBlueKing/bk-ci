@@ -3,6 +3,7 @@
         placement="top"
         max-width="300"
         theme="light toggle-required"
+        transfer
         class="toggle-required-param-popover"
     >
         <span
@@ -15,7 +16,13 @@
             ]"
             @click.stop="handleChangeStatus"
         >
+            <span
+                v-if="isLoading"
+                class="bk-icon icon-circle-2-1 spin-icon"
+            >
+            </span>
             <Logo
+                v-else
                 :name="props.isRequiredParam ? 'set-param-active' : 'set-param-default'"
                 size="12"
             />
@@ -50,6 +57,7 @@
 </template>
 <script setup name="ToggleRequiredParamPopover">
     import { ref, defineProps } from 'vue'
+    import Logo from '@/components/Logo'
     const props = defineProps({
         isCollapsed: {
             type: Boolean,
@@ -72,7 +80,7 @@
         props.handleChange(!props.isRequiredParam)
         setTimeout(() => {
             isLoading.value = false
-        }, 100)
+        }, 200)
     }
 </script>
 
