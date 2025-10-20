@@ -17,15 +17,17 @@
                 :param-values="paramValues"
                 v-bind="model"
             ></parameter-input>
-            <i
-                class="bk-icon icon-plus-circle"
-                @click="plusParam(parameter, paramIndex)"
-            ></i>
-            <i
-                class="bk-icon icon-minus-circle"
-                v-if="parameters.length > 1"
-                @click="minusParam(paramIndex)"
-            ></i>
+            <div>
+                <i
+                    class="bk-icon icon-plus-circle"
+                    @click="plusParam(parameter, paramIndex)"
+                ></i>
+                <i
+                    class="bk-icon icon-minus-circle"
+                    v-if="parameters.length > 1"
+                    @click="minusParam(paramIndex)"
+                ></i>
+            </div>
         </li>
     </ul>
 </template>
@@ -184,7 +186,6 @@
             grid-auto-flow: column;
             .input-com {
                 min-width: 0;
-                display: block;
             }
         }
     }
