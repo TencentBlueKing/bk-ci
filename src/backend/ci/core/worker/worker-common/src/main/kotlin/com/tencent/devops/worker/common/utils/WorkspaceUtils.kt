@@ -127,21 +127,47 @@ object WorkspaceUtils {
         }
     }
 
-    fun getPipelineLogDir(pipelineId: String): File {
+    /**
+     * 在临时目录下生成一个目录名DEVOPS_BUILD_LOGS_[pipelineId]_{{System.nanoTime}}_{{attempt}}的文件夹并返回。
+     * 当发生错误时，每隔100*attempt毫秒进行重试，以3次重试为例，则间隔100、200、300毫秒
+     *
+     * attempt 代表重试了多少次。最大3次重试
+     * System.nanoTime 代表当前时间戳纳秒。
+     *
+     * @return File
+     * @throws IOException 当无权限创建失败等情况
+     *
+     */
+    fun getPipelineLogDir(pipelineId: String, maxRetries: Int = 3): File {
         val prefix = "DEVOPS_BUILD_LOGS_${pipelineId}_"
-        var tmpDir = System.getProperty("java.io.tmpdir")
-        val errorMsg = try {
-            val dir = File.createTempFile(prefix, null, null)
-            dir.delete()
-            if (dir.mkdir()) {
-                return dir
+        val tmpDir = System.getProperty("java.io.tmpdir")
+        var errorMsg = ""
+        repeat(maxRetries) { attempt ->
+            try {
+                val dir = File(tmpDir, "$prefix${System.nanoTime()}_${attempt}")
+                // 如果不是文件夹，则先做删除
+                if (dir.exists() && !dir.isDirectory && !dir.delete()) {
+                    errorMsg = "failed to delete temporary file [${dir.absolutePath}]"
+                    if (attempt < maxRetries - 1) {
+                        Thread.sleep(/* millis = */ 100L * (attempt + 1))
+                    }
+                    return@repeat
+                }
+                // 如果文件夹创建成功或者已经存在，则直接返回
+                if (dir.mkdir() || dir.exists()) {
+                    return dir
+                }
+
+                errorMsg = "temporary directory create failed [${dir.absolutePath}]"
+                if (attempt < maxRetries - 1) {
+                    Thread.sleep(/* millis = */ 100L * (attempt + 1))
+                }
+            } catch (ioe: IOException) {
+                errorMsg = ioe.message ?: "temporary directory create failed"
+                if (attempt < maxRetries - 1) {
+                    Thread.sleep(/* millis = */ 100L * (attempt + 1))
+                }
             }
-            if (!dir.startsWith(tmpDir)) { // #5046 做一次修正
-                tmpDir = dir.parent
-            }
-            "temporary directory create failed"
-        } catch (ioe: IOException) {
-            ioe.message
         }
         throw IOException("$tmpDir: $errorMsg")
     }
