@@ -428,7 +428,10 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
             // 正式版本,必须使用最新版本执行
-            if (version != null && resource.status == VersionStatus.RELEASED && resource.version != version) {
+            if (version != null &&
+                resource.status == VersionStatus.RELEASED &&
+                readyToBuildPipelineInfo.version != version
+            ) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
             }
 
@@ -592,7 +595,7 @@ class PipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        parameters: Map<String, Any> = emptyMap(),
+        parameters: Map<String, String> = emptyMap(),
         checkPermission: Boolean = true,
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
@@ -636,22 +639,30 @@ class PipelineBuildFacadeService(
              * 验证流水线参数构建启动参数
              */
             val triggerContainer = resource.model.getTriggerContainer()
-
+            val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                paramProperties = triggerContainer.params,
+                paramValues = parameters.plus(
+                    userParameters?.associateBy({ it.key }, { it.value.toString() }) ?: emptyMap()
+                )
+            )
             val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+            pipelineParamMap.putAll(paramMap)
             parameters.forEach { (key, value) ->
+                if (paramMap.containsKey(key)) {
+                    return@forEach
+                }
                 pipelineParamMap[key] = BuildParameters(key, value)
             }
 
             // 添加用户自定义参数
             userParameters?.forEach { param ->
-                pipelineParamMap[param.key] = param
-            }
-
-            triggerContainer.params.forEach {
-                if (pipelineParamMap.contains(it.id)) {
+                if (paramMap.containsKey(param.key)) {
                     return@forEach
                 }
-                pipelineParamMap[it.id] = BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly)
+                pipelineParamMap[param.key] = param
             }
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
