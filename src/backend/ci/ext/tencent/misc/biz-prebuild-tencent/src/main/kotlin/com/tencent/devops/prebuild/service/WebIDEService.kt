@@ -223,10 +223,9 @@ class WebIDEService @Autowired constructor(
         val agent = client.get(ServicePreBuildAgentResource::class)
             .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp, null)
 
-        // client.get(UserThirdPartyAgentResource::class).generateLink(userId, projectId, OS.valueOf(operationSystem), zoneName)
-
         if (agent.isNotOk()) {
-            logger.error("create agent link failed, userId:$userId, projectId:$projectId, opsys:$operationSystem, zoneName:$zoneName")
+            logger.error("create agent link failed, userId:" +
+                    "$userId, projectId:$projectId, opsys:$operationSystem, zoneName:$zoneName")
             throw OperationException("create agent link failed")
         }
         logger.info("create agent link success:${agent.data!!.link}")
@@ -323,7 +322,8 @@ class WebIDEService @Autowired constructor(
         sb.appendln("sleep 2")
         sb.appendln("curl -o bkvscode.tgz 'http://dev.gw.devops.oa.com/webide/bkvscode/bkvscode.tgz'")
         sb.appendln("tar xzvf bkvscode.tgz")
-        sb.appendln("BUILD_ID=dontKillMe nohup ./bkvscode --owner=$userId --id=$id --port=58998 --dev > myout.file 2>&1 & disown")
+        sb.appendln("BUILD_ID=dontKillMe nohup ./bkvscode --owner=$userId " +
+                "--id=$id --port=58998 --dev > myout.file 2>&1 & disown")
 
         val linuxScriptElement = LinuxScriptElement(
             name = "Script Task",
