@@ -41,6 +41,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -95,7 +96,8 @@ class PipelineYamlService(
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = status,
-                userId = userId
+                userId = userId,
+                resourceType = YamlResourceType.PIPELINE
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -109,7 +111,8 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = YamlResourceType.PIPELINE
             )
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
@@ -141,7 +144,8 @@ class PipelineYamlService(
         commitId: String,
         commitTime: LocalDateTime,
         ref: String,
-        version: Int
+        version: Int,
+        resourceType: YamlResourceType
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
         dslContext.transaction { configuration ->
@@ -155,7 +159,8 @@ class PipelineYamlService(
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = status,
-                userId = userId
+                userId = userId,
+                resourceType = resourceType
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -169,7 +174,8 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = resourceType
             )
             pipelineYamlBranchFileDao.save(
                 dslContext = transactionContext,
@@ -221,7 +227,8 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = YamlResourceType.PIPELINE
             )
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
@@ -259,7 +266,8 @@ class PipelineYamlService(
         commitTime: LocalDateTime,
         ref: String,
         defaultBranch: String?,
-        version: Int
+        version: Int,
+        resourceType: YamlResourceType
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
         dslContext.transaction { configuration ->
@@ -284,7 +292,8 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = resourceType
             )
             pipelineYamlBranchFileDao.save(
                 dslContext = transactionContext,

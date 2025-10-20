@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -50,5 +51,7 @@ data class PipelineYamlVersion(
     @get:Schema(title = "流水线版本")
     val version: Int,
     @get:Schema(title = "提交时间")
-    val commitTime: LocalDateTime
+    val commitTime: LocalDateTime,
+    @get:Schema(title = "资源类型")
+    val resourceType: YamlResourceType
 )

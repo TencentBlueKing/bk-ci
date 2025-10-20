@@ -1,5 +1,6 @@
 package com.tencent.devops.process.yaml.actions
 
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
@@ -156,5 +157,13 @@ object GitActionCommon {
 
     fun isTemplateFile(filePath: String): Boolean {
         return filePath.startsWith(".ci/templates")
+    }
+
+    fun getYamlResourceType(filePath: String, fileContent: String): YamlResourceType {
+        return if (isCiFile(filePath)) {
+            YamlResourceType.PIPELINE
+        } else {
+            YamlResourceType.PIPELINE_TEMPLATE
+        }
     }
 }

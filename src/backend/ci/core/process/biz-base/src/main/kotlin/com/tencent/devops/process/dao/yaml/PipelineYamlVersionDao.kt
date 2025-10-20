@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -54,7 +55,8 @@ class PipelineYamlVersionDao {
         pipelineId: String,
         version: Int,
         commitTime: LocalDateTime,
-        userId: String
+        userId: String,
+        resourceType: YamlResourceType
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
@@ -72,7 +74,9 @@ class PipelineYamlVersionDao {
                 VERSION,
                 BRANCH_ACTION,
                 CREATOR,
-                CREATE_TIME
+                CREATE_TIME,
+                RESOURCE_ID,
+                RESOURCE_TYPE
             ).values(
                 id,
                 projectId,
@@ -86,7 +90,9 @@ class PipelineYamlVersionDao {
                 version,
                 BranchVersionAction.ACTIVE.name,
                 userId,
-                now
+                now,
+                pipelineId,
+                resourceType.name
             ).execute()
         }
     }
@@ -218,6 +224,7 @@ class PipelineYamlVersionDao {
                 pipelineId = pipelineId,
                 version = version,
                 commitTime = commitTime,
+                resourceType = YamlResourceType.valueOf(resourceType)
             )
         }
     }

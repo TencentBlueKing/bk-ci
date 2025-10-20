@@ -87,6 +87,28 @@ BEGIN
     ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
         ADD`VERSION_CHANGE` BIT DEFAULT NULL comment '是否发生版本变更';
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                AND COLUMN_NAME = 'RESOURCE_ID') THEN
+    ALTER TABLE `T_PIPELINE_YAML_INFO`
+        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID';
+    ALTER TABLE `T_PIPELINE_YAML_INFO`
+        ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
+                AND COLUMN_NAME = 'RESOURCE_ID') THEN
+    ALTER TABLE `T_PIPELINE_YAML_VERSION`
+        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID';
+    ALTER TABLE `T_PIPELINE_YAML_VERSION`
+        ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
+    END IF;
 COMMIT;
 
 END <CI_UBF>

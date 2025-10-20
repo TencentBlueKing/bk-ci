@@ -567,6 +567,10 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath
         )
+        val resourceType = GitActionCommon.getYamlResourceType(
+            filePath = filePath,
+            fileContent = content.content
+        )
         if (pipelineYamlInfo == null) {
             pipelineYamlService.save(
                 projectId = projectId,
@@ -585,7 +589,8 @@ class PipelineYamlFileManager @Autowired constructor(
                     PipelineYamlStatus.UN_MERGED.name
                 },
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = resourceType
             )
         } else {
             pipelineYamlService.update(
@@ -599,7 +604,8 @@ class PipelineYamlFileManager @Autowired constructor(
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = resourceType
             )
         }
     }
@@ -629,6 +635,10 @@ class PipelineYamlFileManager @Autowired constructor(
             ref = commit!!.commitId,
             authRepository = authRepository!!
         )
+        val resourceType = GitActionCommon.getYamlResourceType(
+            filePath = filePath,
+            fileContent = content.content
+        )
         val deployPipelineResult = pipelineYamlResourceManager.createYamlPipeline(
             userId = authUser,
             projectId = projectId,
@@ -654,7 +664,8 @@ class PipelineYamlFileManager @Autowired constructor(
                 PipelineYamlStatus.UN_MERGED.name
             },
             version = version,
-            userId = userId
+            userId = userId,
+            resourceType = resourceType
         )
         pipelineViewGroupService.updateGroupAfterPipelineUpdate(
             projectId = projectId,
@@ -848,6 +859,10 @@ class PipelineYamlFileManager @Autowired constructor(
             yaml = content.content,
             event = this
         )
+        val resourceType = GitActionCommon.getYamlResourceType(
+            filePath = filePath,
+            fileContent = content.content
+        )
         pipelineYamlService.update(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -859,7 +874,8 @@ class PipelineYamlFileManager @Autowired constructor(
             defaultBranch = defaultBranch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
-            userId = userId
+            userId = userId,
+            resourceType = resourceType
         )
         logger.info(
             "[PAC_PIPELINE]|update pipeline version|$eventId|" +
@@ -1031,7 +1047,6 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$pipelineId"
         )
-        val isTemplate = GitActionCommon.isTemplateFile(filePath)
         pipelineYamlResourceManager.deletePipeline(
             userId = userId,
             projectId = projectId,

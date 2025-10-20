@@ -31,6 +31,7 @@ package com.tencent.devops.process.dao.yaml
 import com.tencent.devops.model.process.tables.TPipelineYamlInfo
 import com.tencent.devops.model.process.tables.records.TPipelineYamlInfoRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -50,7 +51,8 @@ class PipelineYamlInfoDao {
         pipelineId: String,
         status: String,
         defaultBranch: String?,
-        userId: String
+        userId: String,
+        resourceType: YamlResourceType
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
@@ -66,7 +68,9 @@ class PipelineYamlInfoDao {
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                RESOURCE_ID,
+                RESOURCE_TYPE
             ).values(
                 projectId,
                 repoHashId,
@@ -78,7 +82,9 @@ class PipelineYamlInfoDao {
                 userId,
                 userId,
                 now,
-                now
+                now,
+                pipelineId,
+                resourceType.name
             ).onDuplicateKeyIgnore()
                 .execute()
         }
@@ -272,7 +278,8 @@ class PipelineYamlInfoDao {
                 pipelineId = pipelineId,
                 status = status,
                 creator = creator,
-                defaultBranch = defaultBranch
+                defaultBranch = defaultBranch,
+                resourceType = YamlResourceType.valueOf(resourceType)
             )
         }
     }

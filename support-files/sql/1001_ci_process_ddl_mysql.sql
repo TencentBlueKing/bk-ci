@@ -1219,6 +1219,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
     `MODIFIER`     varchar(64)                            NOT NULL COMMENT '修改人',
     `CREATE_TIME`  timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
     `UPDATE_TIME`  timestamp    default CURRENT_TIMESTAMP not null comment '修改时间',
+    `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
+    `RESOURCE_TYPE`  varchar(32) default 'PIPELINE'  not null comment '资源类型,流水线/模版',
     PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`),
     UNIQUE UQE_PIPELINE (`PROJECT_ID`, `PIPELINE_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml信息表';
@@ -1238,6 +1240,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `BRANCH_ACTION`  varchar(32)   NOT NULL DEFAULT 'ACTIVE' COMMENT '分支状态',
     `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
     `CREATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
+    `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
+    `RESOURCE_TYPE`  varchar(32) default 'PIPELINE'  not null comment '资源类型,流水线/模版',
     PRIMARY KEY(`ID`),
     INDEX `IDX_PROJECT_PIPELINE_VERSION`(`PROJECT_ID`, `PIPELINE_ID`, `VERSION`),
     INDEX `IDX_PROJECT_REPO_FILE`(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`)
