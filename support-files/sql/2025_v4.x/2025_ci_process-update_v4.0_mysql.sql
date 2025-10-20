@@ -53,7 +53,7 @@ BEGIN
         ADD `ERROR_MESSAGE` text COMMENT '错误信息',
         ADD `FILE_PATH` text COMMENT 'yaml文件路径',
         ADD `TRIGGER_CONFIGS` mediumtext COMMENT '触发器配置',
-        ADD `OVERRIDE_TEMPLATE_FIELD` mediumtext COMMENT '覆盖模版字段';
+        ADD `OVERRIDE_TEMPLATE_FIELD` mediumtext COMMENT '覆盖模版字段',
         ADD `RESET_BUILD_NO` bit default 0 comment '重置实例推荐版本为基准值';
     END IF;
 
@@ -66,7 +66,7 @@ BEGIN
                     AND COLUMN_NAME = 'STATUS') THEN
         ALTER TABLE `T_TEMPLATE_PIPELINE`
         ADD `STATUS` varchar(32) default 'UPDATED' not null comment '状态',
-        ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接';
+        ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接',
         ADD `PULL_REQUEST_ID` bigint null comment '合并请求ID';
     END IF;
 
@@ -94,8 +94,7 @@ BEGIN
                 AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
                 AND COLUMN_NAME = 'RESOURCE_ID') THEN
     ALTER TABLE `T_PIPELINE_YAML_INFO`
-        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID';
-    ALTER TABLE `T_PIPELINE_YAML_INFO`
+        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
         ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
     END IF;
 
@@ -105,8 +104,7 @@ BEGIN
                 AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
                 AND COLUMN_NAME = 'RESOURCE_ID') THEN
     ALTER TABLE `T_PIPELINE_YAML_VERSION`
-        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID';
-    ALTER TABLE `T_PIPELINE_YAML_VERSION`
+        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
         ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
     END IF;
 COMMIT;
