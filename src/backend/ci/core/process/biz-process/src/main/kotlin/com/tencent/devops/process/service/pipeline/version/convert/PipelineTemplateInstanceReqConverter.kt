@@ -148,7 +148,8 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = newPipelineId,
                 channelCode = ChannelCode.BS,
                 pipelineName = pipelineName,
-                pipelineDesc = null
+                pipelineDesc = null,
+                pipelineDisable = pipelineInfo?.locked
             )
 
             // 获取版本状态
