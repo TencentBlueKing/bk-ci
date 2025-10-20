@@ -221,7 +221,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     )
                     val model = modelTransfer.yaml2Model(input)
                     pipelineInfo?.let {
-                        publicVarGroupReferInfoService.handleVarGroupReferBus(
+                        publicVarGroupReferInfoService.handleVarGroupReferByVersionName(
                             PublicVarGroupReferDTO(
                                 userId = userId,
                                 projectId = projectId,
