@@ -9,7 +9,7 @@
                 <Logo
                     :size="16"
                     class="icon-pipeline"
-                    name="pipeline-template"
+                    name="template-pipeline"
                 />
             </template>
             <template v-if="!isLoading">
@@ -162,6 +162,7 @@
         }
         .icon-pipeline {
             margin-top: 5px;
+            color: #3A84FF;
         }
         .build-num-switcher-wrapper {
             display: grid;

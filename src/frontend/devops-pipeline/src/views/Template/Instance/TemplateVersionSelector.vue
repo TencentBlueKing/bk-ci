@@ -161,7 +161,7 @@
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
     import { debounce } from '@/utils/util'
-    import { computed, defineProps, onMounted, ref, watch } from 'vue'
+    import { computed, onMounted, ref, watch } from 'vue'
     const isShowPreview = ref(false)
     const templatePipeline = ref({})
     const errorRefMsg = ref('')
@@ -173,7 +173,7 @@
     const templateId = computed(() => proxy.$route.params?.templateId)
     const isInstanceUpgradeType = computed(() => proxy.$route.params?.type === 'upgrade')
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
-    const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
+    // const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef?.value ?? '')
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
@@ -272,6 +272,9 @@
                 params: {
                     ...proxy.$route.params,
                     version: value
+                },
+                query: {
+                    ...proxy.$route.query
                 }
             })
         } catch (e) {

@@ -403,7 +403,8 @@
                     class="release-pipeline-pac-footer"
                     :style="{
                         borderTop: `${isFooterFixed ? '1px solid #dcdee5' : 'none'} !important`,
-                        backgroundColor: `${isFooterFixed ? '#fafbfd' : '#fff'} !important`
+                        backgroundColor: `${isFooterFixed ? '#fafbfd' : '#fff'} !important`,
+                        height: `${isFooterFixed ? '47' : '48'}px`
                     }"
                 >
                     <bk-button

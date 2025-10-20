@@ -575,9 +575,7 @@
     "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
     "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
     "reset": "Reset",
-    "cancelParticipant": "Cancel Participant",
-    "setParticipant": "Set Participant",
-    "useDefaultValue": "Use Default Value",
+    "useDefaultValue": "Auto-fill default values",
     "disabledReleaseTips": "Please Select the Template Version",
     "returnInstanceList": "Return to List",
     "releasing": {
@@ -645,8 +643,6 @@
       "tips4": "- If only the source or target branch modified the template, orchestration uses the modified version",
       "tips5": "- If both branches modified the template/pipeline configuration, changes must first be synchronized from the target branch to the source branch. After synchronization, the source branch version will be used"
     },
-    "followTemplateTips": "Switch to follow template:<br/>During instance upgrades, if a new template version modifies default variable values, the instance will automatically update to match template defaults.",
-    "notFollowTemplateTips": "Disable template following:<br/>During instance upgrades, default values will not automatically update with template changes. Manually update as needed.",
     "customVersionName": "Version Name",
     "triggers": "Triggers",
     "triggerEnabled": "Enable Trigger",
@@ -667,7 +663,22 @@
     "parsedYaml": "Parsed YAML",
     "triggersUpdateTips": "Lists only triggers with Step ID. Those without can't control instance enablement.",
     "referenceTemplateVersion": "Referenced Template Version",
-    "copyTemplate": "Copy Template"
+    "copyTemplate": "Copy Template",
+    "currentStatus": "Current Status",
+    "buildParam": "Input Parameter", 
+    "notBuildParam": "Non-parameter",
+    "currentInstance": "Current Instance",
+    "cancelParticipant": "Click to deselect parameter",
+    "setParticipant": "Click to set as parameter",
+    "unfollow": "Detach from template",
+    "follow": "Sync with template",
+    "setFollow": "Click to disable template sync",
+    "setUnfollow": "Click to enable template sync",
+    "defaultValue": "default value",
+    "triggerSettings": "trigger settings",
+    "recommendVersion": "recommended version",
+    "followTemplateTips": "Will automatically sync {0} changes from new template versions during instance upgrades.",
+    "unfollowTemplateTips": "Will NOT automatically sync {0} changes from new template versions - manual updates required when upgrading."
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",

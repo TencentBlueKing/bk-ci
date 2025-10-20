@@ -35,9 +35,7 @@
                 </aside>
             </header>
             <main class="instance-contents">
-                <template-version-selector
-                    :is-instance-create-type="isInstanceCreateViewType"
-                />
+                <template-version-selector />
                 <bk-resize-layout
                     class="instance-contents-layout"
                     :initial-divide="300"
