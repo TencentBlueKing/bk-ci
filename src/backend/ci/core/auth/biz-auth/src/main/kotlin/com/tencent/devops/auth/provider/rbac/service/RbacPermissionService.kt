@@ -40,6 +40,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
+import com.tencent.devops.auth.service.AuthResourceGroupFactory
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.HashUtil
@@ -52,7 +53,6 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -68,7 +68,8 @@ class RbacPermissionService(
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
     private val bkInternalPermissionReconciler: BkInternalPermissionReconciler,
-    private val authProjectUserMetricsService: AuthProjectUserMetricsService
+    private val authProjectUserMetricsService: AuthProjectUserMetricsService,
+    private val authResourceGroupFactory: AuthResourceGroupFactory
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -444,38 +445,25 @@ class RbacPermissionService(
                             resourceType = resourceType
                         )
 
-                    resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
-                        val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { viewIds ->
-                            client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
-                                projectId = projectCode,
-                                viewIdsEncode = viewIds
-                            ).data
-                        } ?: emptyList()
-
-                        val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
-                        val pipelineIds = mutableSetOf<String>().apply {
-                            addAll(authViewPipelineIds)
-                            addAll(
-                                getFinalResourceCodes(
-                                    projectCode = projectCode,
-                                    resourceType = resourceType,
-                                    iamResourceCodes = authPipelineIamIds,
-                                    createUser = userId
-                                )
-                            )
-                        }
-                        pipelineIds.toList()
-                    }
-
-                    // 返回具体资源列表
                     else -> {
+                        // 获取资源的上级资源类型组（流水线组/云桌面组）
+                        val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+                        // 获取资源组（流水线组/云桌面组）下的资源
+                        val resourcesUnderGroup = resourceGroupType?.let {
+                            authResourceGroupFactory.getResourcesUnderGroup(
+                                projectCode = projectCode,
+                                resourceGroupType = resourceGroupType,
+                                resourceGroupIds = instanceMap[resourceGroupType] ?: emptyList()
+                            )
+                        } ?: emptyList()
                         val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
-                        getFinalResourceCodes(
+                        val resourceCodes = getFinalResourceCodes(
                             projectCode = projectCode,
                             resourceType = resourceType,
                             iamResourceCodes = iamResourceCodes,
                             createUser = userId
                         )
+                        (resourcesUnderGroup + resourceCodes).distinct()
                     }
                 }
             }

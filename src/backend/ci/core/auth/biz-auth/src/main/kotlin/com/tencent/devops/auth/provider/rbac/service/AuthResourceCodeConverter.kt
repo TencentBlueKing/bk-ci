@@ -147,9 +147,10 @@ class AuthResourceCodeConverter @Autowired constructor(
      */
     private fun needConvert(resourceType: String): Boolean {
         return resourceType == AuthResourceType.TICKET_CREDENTIAL.value ||
-                resourceType == AuthResourceType.TICKET_CERT.value ||
-                resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-                resourceType == AuthResourceType.PIPELINE_TEMPLATE.value ||
-                resourceType == AuthResourceType.CODE_REPERTORY.value
+            resourceType == AuthResourceType.TICKET_CERT.value ||
+            resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
+            resourceType == AuthResourceType.PIPELINE_TEMPLATE.value ||
+            resourceType == AuthResourceType.CODE_REPERTORY.value ||
+            resourceType == AuthResourceType.CGS.value
     }
 }

@@ -387,6 +387,42 @@
         },
         "version": 1
       }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cgs_group",
+        "name": "云桌面组",
+        "name_en": "Cgs Group",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "public_variable",
+        "name": "公共变量组",
+        "name_en": "Public Variable",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
     }
   ]
 }

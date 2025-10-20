@@ -56,10 +56,10 @@ import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.auth.service.AuthResourceGroupFactory
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.lock.SyncGroupPermissionLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -74,7 +74,6 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
@@ -106,7 +105,8 @@ class RbacPermissionResourceGroupPermissionService(
     private val authResourceMemberDao: AuthResourceGroupMemberDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val syncDataTaskDao: AuthSyncDataTaskDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val authResourceGroupFactory: AuthResourceGroupFactory
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -129,7 +129,7 @@ class RbacPermissionResourceGroupPermissionService(
         )
     }
 
-    private val projectCodeAndPipelineId2ViewIds = CacheHelper.createCache<String, List<String>>(duration = 10)
+    private val resourceGroupCache = CacheHelper.createCache<String, List<String>>(duration = 10)
 
     override fun grantGroupPermission(
         authorizationScopesStr: String,
@@ -334,9 +334,10 @@ class RbacPermissionResourceGroupPermissionService(
         } else {
             relatedResourceType
         }
-        val pipelineGroupIds = listPipelineGroupIds(
+        val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+        val resourceGroupIds = listResourceGroupIds(
             projectCode = projectCode,
-            resourceType = resourceType,
+            resourceGroupType = resourceGroupType,
             relatedResourceCode = relatedResourceCode
         )
         return resourceGroupPermissionDao.listByConditions(
@@ -345,7 +346,8 @@ class RbacPermissionResourceGroupPermissionService(
             filterIamGroupIds = filterIamGroupIds,
             resourceType = resourceType,
             resourceCode = relatedResourceCode,
-            pipelineGroupIds = pipelineGroupIds,
+            resourceGroupType = resourceGroupType,
+            resourceGroupIds = resourceGroupIds,
             action = action
         )
     }
@@ -367,9 +369,10 @@ class RbacPermissionResourceGroupPermissionService(
             )
         }
         val resourceType = rbacCommonService.getActionInfo(action).relatedResourceType
-        val pipelineGroupIds = listPipelineGroupIds(
+        val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+        val resourceGroupIds = listResourceGroupIds(
             projectCode = projectCode,
-            resourceType = resourceType,
+            resourceGroupType = resourceGroupType,
             relatedResourceCode = relatedResourceCode
         )
         return resourceGroupPermissionDao.isGroupsHasPermission(
@@ -378,7 +381,8 @@ class RbacPermissionResourceGroupPermissionService(
             filterIamGroupIds = filterIamGroupIds,
             resourceType = resourceType,
             resourceCode = relatedResourceCode,
-            pipelineGroupIds = pipelineGroupIds,
+            resourceGroupType = resourceGroupType,
+            resourceGroupIds = resourceGroupIds,
             action = action
         )
     }
@@ -444,34 +448,36 @@ class RbacPermissionResourceGroupPermissionService(
                 )
             }
 
-            resourceType == ResourceTypeId.PIPELINE -> {
-                val authViewPipelineIds = resourceType2Resources[ResourceTypeId.PIPELINE_GROUP]?.let { authViewIds ->
-                    client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
-                        projectId = projectCode,
-                        viewIdsEncode = authViewIds
-                    ).data
-                } ?: emptyList()
-                val pipelineIds = resourceType2Resources[ResourceTypeId.PIPELINE] ?: emptyList()
-                (authViewPipelineIds + pipelineIds).toMutableSet().toList()
-            }
-
             else -> {
-                resourceType2Resources[resourceType] ?: emptyList()
+                // 获取资源的上级资源类型组（流水线组/云桌面组）
+                val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+                // 获取资源组（流水线组/云桌面组）下的资源
+                val resourcesUnderGroup = resourceGroupType?.let {
+                    authResourceGroupFactory.getResourcesUnderGroup(
+                        projectCode = projectCode,
+                        resourceGroupType = it,
+                        resourceGroupIds = resourceType2Resources[resourceGroupType] ?: emptyList()
+                    )
+                } ?: emptyList()
+                val resourceCodes = resourceType2Resources[resourceType] ?: emptyList()
+                (resourcesUnderGroup + resourceCodes).distinct()
             }
         }
     }
 
-    private fun listPipelineGroupIds(
+    private fun listResourceGroupIds(
         projectCode: String,
-        resourceType: String,
+        resourceGroupType: String?,
+        // 流水线ID/cgsId
         relatedResourceCode: String?
     ): List<String> {
-        return if (relatedResourceCode != null && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-            CacheHelper.getOrLoad(projectCodeAndPipelineId2ViewIds, projectCode, relatedResourceCode) {
-                client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
-                    projectId = projectCode,
-                    pipelineId = relatedResourceCode
-                ).data?.map { HashUtil.encodeLongId(it) } ?: emptyList()
+        return if (resourceGroupType != null && relatedResourceCode != null) {
+            CacheHelper.getOrLoad(resourceGroupCache, projectCode, resourceGroupType, relatedResourceCode) {
+                authResourceGroupFactory.getResourceGroupsByResource(
+                    projectCode = projectCode,
+                    resourceGroupType = resourceGroupType,
+                    resourceCode = relatedResourceCode
+                )
             }
         } else {
             emptyList()
