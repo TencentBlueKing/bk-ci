@@ -3,6 +3,7 @@
         placement="top"
         max-width="400"
         theme="light toggle-required"
+        transfer
         class="toggle-required-param-popover"
     >
         <span
@@ -15,7 +16,13 @@
             ]"
             @click.stop="handleChangeStatus"
         >
+            <span
+                v-if="props.isLoading || initLoading"
+                class="bk-icon icon-circle-2-1 spin-icon"
+            >
+            </span>
             <Logo
+                v-else
                 name="template-mode"
                 size="12"
             />
@@ -24,7 +31,7 @@
             <div
                 class="follow-popover-content"
                 v-bkloading="{
-                    isLoading,
+                    isLoading: props.isLoading || initLoading,
                     theme: 'primary',
                     size: 'small'
                 }"
@@ -36,8 +43,8 @@
                         <div class="sub-title">
                             {{
                                 props.isFollowTemplate
-                                    ? $t('template.followTemplateTips', [displayTypeText])
-                                    : $t('template.unfollowTemplateTips', [displayTypeText])
+                                    ? $t('template.followTemplateTips', [classifyLabel || displayTypeText])
+                                    : $t('template.unfollowTemplateTips', [classifyLabel || displayTypeText])
                           
                             }}
                         </div>
@@ -51,8 +58,8 @@
                     <div class="sub-title">
                         {{
                             !props.isFollowTemplate
-                                ? $t('template.followTemplateTips', [displayTypeText])
-                                : $t('template.unfollowTemplateTips', [displayTypeText])
+                                ? $t('template.followTemplateTips', [classifyLabel || displayTypeText])
+                                : $t('template.unfollowTemplateTips', [classifyLabel || displayTypeText])
                         }}
                     </div>
                 </div>
@@ -63,6 +70,7 @@
 <script setup name="ToggleRequiredParamPopover">
     import { ref, defineProps, computed } from 'vue'
     import UseInstance from '@/hook/useInstance'
+    import Logo from '@/components/Logo'
     const { proxy } = UseInstance()
     const props = defineProps({
         isCollapsed: {
@@ -81,24 +89,34 @@
             type: String,
             required: true,
             default: 'defaultValue'
+        },
+        classifyLabel: {
+            type: String,
+            required: false,
+            default: ''
+        },
+        isLoading: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     })
-    const isLoading = ref(false)
+    const initLoading = ref(false)
     const displayTypeText = computed(() => {
         const typeMap = {
-            'defaultValue': proxy.$t('template.defaultValue'),
-            'trigger': proxy.$t('template.triggerSettings'),
-            'introVersion': proxy.$t('template.recommendVersion')
+            'defaultValue': proxy.$t('paramDefaultValue'),
+            'trigger': proxy.$t('triggerSetting'),
+            'introVersion': proxy.$t('template.versionSetting')
         }
         return typeMap[props.type] || typeMap.defaultValue
     })
     function handleChangeStatus (event) {
         event.preventDefault()
-        isLoading.value = true
+        initLoading.value = true
         props.handleChange(!props.isFollowTemplate)
         setTimeout(() => {
-            isLoading.value = false
-        }, 100)
+            initLoading.value = false
+        }, 200)
     }
 </script>
 

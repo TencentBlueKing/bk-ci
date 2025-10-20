@@ -94,7 +94,7 @@
     } from '@/utils/permission'
     import { getTemplateCacheViewId } from '@/utils/util'
     import Instance from '@/views/Template/InstanceList'
-    import { computed } from 'vue'
+    import { computed, onMounted } from 'vue'
     import { RESOURCE_TYPE } from '../../utils/permission'
     import ExtMenu from './List/extMenu'
 
@@ -306,6 +306,12 @@
             }
         })
     }
+
+    onMounted(() => {
+        if (pipelineInfo.value) {
+            proxy.$updateTabTitle?.(`${pipelineInfo.value.name || ''} | ${proxy.$t('template.template')}`)
+        }
+    })
 
 </script>
 
