@@ -1021,7 +1021,7 @@ open class BkRepoDownloadService(
             )
         } catch (e: Exception) {
             logger.warn("user $userId download project $projectId pipeline $pipelineId failed, error: $e")
-            AllowDownload(
+            return AllowDownload(
                 false,
                 "用户没有下载该构件的权限,请联系项目管理员处理"
             )
