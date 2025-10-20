@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TGitBindRemotedevData(
-    @JsonProperty("tGitId")
-    val tGitId: Long,
-    @JsonProperty("tGitUrl")
-    val tGitUrl: String,
+    val tgitId: Long,
+    val tgitUrl: String,
     val projectIds: List<String>
 )
