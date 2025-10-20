@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -20,6 +19,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
 import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -270,12 +270,6 @@ class PipelineBuildParamCombinationService @Autowired constructor(
             projectId = projectId, pipelineId = pipelineId, version = buildInfo.version
         ).second
         val triggerContainer = resource.model.getTriggerContainer()
-        val resourceParams = paramFacadeService.filterParams(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            params = triggerContainer.params
-        )
         // 2. 获取触发时的参数
         val buildParamMap = pipelineRuntimeService.getBuildParametersFromStartup(
             projectId = projectId,
@@ -284,18 +278,35 @@ class PipelineBuildParamCombinationService @Autowired constructor(
 
         // 3. 合并参数
         val params = mutableListOf<BuildFormProperty>()
-        resourceParams.filter { it.constant != true && it.required }.forEach { rParams ->
-            val param = buildParamMap[rParams.id]?.let {
-                val buildParamValue = if (rParams.type == BuildFormPropertyType.BOOLEAN) {
-                    (it.value as String?).toBoolean()
-                } else {
-                    it.value
+        triggerContainer.params.forEach { param ->
+            val buildParam = buildParamMap[param.id]
+            // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
+            // 当值是boolean类型的时候，需要转为boolean类型
+            param.value = when {
+                // 常量和非入参的参数不添加到参数组合中
+                param.constant == true || (!param.required && !recommendVersionKey(param.id)) -> {
+                    return@forEach
                 }
-                rParams.copy(value = buildParamValue)
-            } ?: rParams
+
+                param.defaultValue is Boolean -> {
+                    buildParam?.value?.toString()?.toBoolean()
+                }
+
+                else -> {
+                    buildParam?.value
+                }
+            } ?: param.defaultValue
+            // 如果上次构建指定了最新的目录随机字符串，则填充到构建预览信息
+            param.latestRandomStringInPath =
+                buildParam?.latestRandomStringInPath ?: param.randomStringInPath
             params.add(param)
         }
-        return params
+        return paramFacadeService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            params = triggerContainer.params
+        )
     }
 
     private fun validatePermission(
