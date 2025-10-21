@@ -30,20 +30,55 @@ package com.tencent.devops.process.permission.template
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.model.process.tables.TTemplate
+import com.tencent.devops.process.engine.dao.template.TemplateDao
+import org.jooq.DSLContext
 
-class MockPipelineTemplatePermissionService constructor(
+class MockPipelineTemplatePermissionService(
     authProjectApi: AuthProjectApi,
-    pipelineAuthServiceCode: PipelineAuthServiceCode
+    pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val templateDao: TemplateDao,
+    private val dslContext: DSLContext
 ) : AbstractPipelineTemplatePermissionService(
     authProjectApi = authProjectApi,
     pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
+    override fun checkPipelineTemplatePermission(userId: String, projectId: String, permission: AuthPermission, templateId: String?): Boolean {
+        return true
+    }
+
+    override fun checkPipelineTemplatePermissionWithMessage(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        templateId: String?
+    ): Boolean {
+        return true
+    }
+
+    override fun hasCreateTemplateInstancePermission(userId: String, projectId: String): Boolean {
+        return true
+    }
+
     override fun getResourcesByPermission(
         userId: String,
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val templateIds = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = false,
+            templateType = null,
+            templateIdList = null,
+            storeFlag = null,
+            orderBy = null,
+            offset = null,
+            limit = null,
+            queryModelFlag = false
+        )?.asSequence()?.map { it[TTemplate.T_TEMPLATE.ID] }?.toList() ?: emptyList()
+
+        return permissions.associateWith { templateIds }
     }
 
     override fun createResource(

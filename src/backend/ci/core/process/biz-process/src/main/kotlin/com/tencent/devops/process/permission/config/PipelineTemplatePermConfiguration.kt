@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.MockPipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
@@ -84,9 +85,13 @@ class PipelineTemplatePermConfiguration {
     @ConditionalOnMissingBean(PipelineTemplatePermissionService::class)
     fun mockPipelineTemplatePermissionService(
         authProjectApi: AuthProjectApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        templateDao: TemplateDao,
+        dslContext: DSLContext
     ) = MockPipelineTemplatePermissionService(
         authProjectApi = authProjectApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        templateDao = templateDao,
+        dslContext = dslContext
     )
 }
