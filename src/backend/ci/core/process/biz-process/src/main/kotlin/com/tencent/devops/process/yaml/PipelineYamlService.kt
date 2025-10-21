@@ -403,13 +403,19 @@ class PipelineYamlService(
             if (yamlInfo == null || yamlInfo.defaultBranch.isNullOrBlank()) {
                 false
             } else {
-                pipelineYamlBranchFileDao.get(
+                val branchYamlFile = pipelineYamlBranchFileDao.get(
                     dslContext = dslContext,
                     projectId = projectId,
                     repoHashId = yamlInfo.repoHashId,
                     branch = yamlInfo.defaultBranch!!,
                     filePath = yamlInfo.filePath
-                ) != null
+                )
+                if (branchYamlFile == null) {
+                    false
+                } else {
+                    // 默认分支删除,是软删除,不会直接删除
+                    !branchYamlFile.deleted
+                }
             }
         }
     }

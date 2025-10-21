@@ -1032,6 +1032,7 @@
       "paramKey": "Parameter key",
       "paramValue": "Parameter value",
       "inputTips": "Please enter",
+      "URLTips": "URLs support placeholder substitution with pipeline variables via {'{var}'}.",
       "toArtifactory": "View artifact repository",
       "enableUpgrade": " Enable batch upgrade?",
       "otherChoices": "Other options",
