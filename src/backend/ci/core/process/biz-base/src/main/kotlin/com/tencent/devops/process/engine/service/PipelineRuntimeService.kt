@@ -1806,12 +1806,15 @@ class PipelineRuntimeService @Autowired constructor(
                 startTime = if (latestRunningBuild.executeCount == 1) startTime else null,
                 debug = latestRunningBuild.debug
             )
-            pipelineInfoDao.updateLatestStartTime(
-                dslContext = transactionContext,
-                projectId = latestRunningBuild.projectId,
-                pipelineId = latestRunningBuild.pipelineId,
-                startTime = startTime
-            )
+            // debug下,不更新最近执行时间
+            if (!latestRunningBuild.debug) {
+                pipelineInfoDao.updateLatestStartTime(
+                    dslContext = transactionContext,
+                    projectId = latestRunningBuild.projectId,
+                    pipelineId = latestRunningBuild.pipelineId,
+                    startTime = startTime
+                )
+            }
             pipelineBuildSummaryDao.startLatestRunningBuild(
                 dslContext = transactionContext,
                 latestRunningBuild = latestRunningBuild,
