@@ -318,8 +318,10 @@
                         this.versionList = versions
                         const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
                         if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
-                            this.requestPipelineSummary(this.$route.params)
+                            await this.requestPipelineSummary(this.$route.params)
+                            this.switchVersion(this.activeVersion.version)
                         }
+                        
                     } else {
                         this.versionList.push(...versions)
                     }
