@@ -950,6 +950,11 @@
                 padding-right: 12px;
                 overflow-y: auto;
                 scrollbar-gutter: stable;
+                .bk-form-item {
+                    &+.bk-form-item {
+                        margin-top: 0 !important;
+                    }
+                }
             }
         }
     }
