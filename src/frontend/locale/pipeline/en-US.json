@@ -1032,7 +1032,7 @@
       "paramKey": "Parameter key",
       "paramValue": "Parameter value",
       "inputTips": "Please enter",
-      "URLTips": "URL では、{変数名} の形式で現在のパイプラインに定義されているグローバル変数を参照できます",
+      "URLTips": "URLs support placeholder substitution with pipeline variables via {'{var}'}.",
       "toArtifactory": "View artifact repository",
       "enableUpgrade": " Enable batch upgrade?",
       "otherChoices": "Other options",
