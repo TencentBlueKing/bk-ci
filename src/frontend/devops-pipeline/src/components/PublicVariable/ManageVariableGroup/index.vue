@@ -12,81 +12,85 @@
             slot="content"
             class="var-group-wrapper"
         >
-            <bk-button
-                icon="plus"
-                :disabled="showAddComp"
-                @click="handleAddGroup"
-            >
-                {{ $t('publicVar.addVarGroup') }}
-            </bk-button>
-            <div
-                v-if="showAddComp"
-                class="group-select-wrapper"
-            >
-                <div class="header-top">
-                    <span
-                        class="label"
-                        :title="$t('publicVar.varGroup')"
-                    >
-                        {{ $t('publicVar.varGroup') }}
-                    </span>
-                    <bk-select
-                        class="group-select"
-                        @selected="chooseGroup"
-                        @scroll-end="fetchVarGroupList"
-                    >
-                        <bk-option
-                            v-for="item in renderVarGroupList"
-                            :key="item.groupName"
-                            :id="item.groupName"
-                            :name="item.groupName"
-                            :disabled="item.disabled"
+            <template v-if="editable">
+                <bk-button
+                    icon="plus"
+                    :disabled="showAddComp"
+                    @click="handleAddGroup"
+                >
+                    {{ $t('publicVar.addVarGroup') }}
+                </bk-button>
+                <div
+                    v-if="showAddComp"
+                    class="group-select-wrapper"
+                >
+                    <div class="header-top">
+                        <span
+                            class="label"
+                            :title="$t('publicVar.varGroup')"
                         >
-                            {{ item.groupName }}
-                            <span class="manage-var-page-group-desc">{{ item.desc }}</span>
-                        </bk-option>
-                    </bk-select>
-                    <bk-button
-                        class="mr10"
-                        text
-                        :disabled="!selectedVarGroupData.groupName"
-                        @click="handleAppend"
-                    >
-                        {{ $t('publicVar.append') }}
-                    </bk-button>
-                    <bk-button
-                        text
-                        @click="handelCancelAppend"
-                    >
-                        {{ $t('cancel') }}
-                    </bk-button>
-                </div>
-                <div v-if="selectedVarGroupData.groupName">
-                    <div class="group-desc">
-                        {{ selectedVarGroupData.desc }}
+                            {{ $t('publicVar.varGroup') }}
+                        </span>
+                        <bk-select
+                            class="group-select"
+                            @selected="chooseGroup"
+                            @scroll-end="fetchVarGroupList"
+                        >
+                            <bk-option
+                                v-for="item in renderVarGroupList"
+                                :key="item.groupName"
+                                :id="item.groupName"
+                                :name="item.groupName"
+                                :disabled="item.disabled"
+                            >
+                                {{ item.groupName }}
+                                <span class="manage-var-page-group-desc">{{ item.desc }}</span>
+                            </bk-option>
+                        </bk-select>
+                        <bk-button
+                            class="mr10"
+                            text
+                            :disabled="!selectedVarGroupData.groupName"
+                            @click="handleAppend"
+                        >
+                            {{ $t('publicVar.append') }}
+                        </bk-button>
+                        <bk-button
+                            text
+                            @click="handelCancelAppend"
+                        >
+                            {{ $t('cancel') }}
+                        </bk-button>
                     </div>
-                    <div
-                        class="variable-list"
-                        v-for="data in renderSelectedVariableList"
-                        :key="data.key"
-                    >
-                        <variable-table
-                            :data="data"
-                        />
+                    <div v-if="selectedVarGroupData.groupName">
+                        <div class="group-desc">
+                            {{ selectedVarGroupData.desc }}
+                        </div>
+                        <div
+                            class="variable-list"
+                            v-for="data in renderSelectedVariableList"
+                            :key="data.key"
+                        >
+                            <variable-table
+                                :data="data"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            </template>
             <render-var-group
-                v-for="(data, index) in allVarGroup"
+                v-for="(data, index) in allProjectVarGroup"
                 :key="data.groupName"
                 class="mt10"
                 :data="data"
                 :index="index"
+                :editable="editable"
                 @delete="handleDeleteVarGroup"
                 @updateData="handleUpdataVarGroup"
             />
         </div>
         <footer
+            v-if="editable"
             slot="footer"
             class="var-group-footer"
         >
@@ -133,11 +137,15 @@
         groupName: {
             type: String,
             default: ''
+        },
+        editable: {
+            type: Boolean,
+            default: true
         }
     })
     const showAddComp = ref(false)
-    const varGroupList = ref([]) // 公共变量组
-    const allVarGroup = ref([]) // 项目下使用的变量组
+    const varGroupList = ref([]) // 公共变量组,用于下拉选择数据源
+    const allProjectVarGroup = ref([]) // 项目下使用的变量组
     const pagination = ref({
         page: 1,
         pageSize: 2000,
@@ -150,13 +158,13 @@
 
     const groupsMap = ref({
         // 用于存储新增的变量组数据
-        publicVarGroups: [],
+        varGroups: [],
         variableList: []
     })
 
     const projectId = computed(() => proxy.$route.params?.projectId)
-    const pipelineId = computed(() => proxy.$route.params?.pipelineId)
-    const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+    // const pipelineId = computed(() => proxy.$route.params?.pipelineId)
+    // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups)
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量
@@ -197,7 +205,7 @@
     const renderVarGroupList = computed(() => {
         return varGroupList.value.map(i => ({
             ...i,
-            disabled: allVarGroup.value.some(group => group.groupName === i.groupName) || groupsMap.value.publicVarGroups.some(group => group.groupName === i.groupName)
+            disabled: allProjectVarGroup.value.some(group => group.groupName === i.groupName) || groupsMap.value.varGroups.some(group => group.groupName === i.groupName)
         }))
     })
     watch(() => showAddComp.value, (val) => {
@@ -213,9 +221,14 @@
     })
     watch(() => props.isShow, async (val) => {
         if (val) {
-            groupsMap.value.publicVarGroups = JSON.parse(JSON.stringify(publicVarGroups.value))
-            groupsMap.value.variableList = props.globalParams
             await fetchVarGroupList()
+            groupsMap.value.varGroups = JSON.parse(JSON.stringify(publicVarGroups.value)).map(i => {
+                return {
+                    ...i,
+                    desc: varGroupList.value.find(group => group.groupName === i.groupName)?.desc || ''
+                }
+            })
+            groupsMap.value.variableList = props.globalParams
             await fetchAllVarGroupByGroupName()
         } else {
             pagination.value.page = 1
@@ -245,7 +258,7 @@
         return false
     }
     function beforeHiddenFn () {
-        if (varGroupsEqualByGroupName(publicVarGroups.value, groupsMap.value.publicVarGroups)) {
+        if (varGroupsEqualByGroupName(publicVarGroups.value, groupsMap.value.varGroups)) {
             proxy.$bkInfo({
                 title: proxy.$t('确认离开当前页？'),
                 subHeader: proxy.$createElement('p', {
@@ -275,20 +288,13 @@
     }
     async function fetchAllVarGroupByGroupName () {
         try {
-            // console.log(pipelineInfo.value, 123)
-            // const res = await proxy.$store.dispatch('publicVar/fetchAllVariableGroupByPipeline', {
-            //     pipelineId: pipelineId.value,
-            //     referType: 'PIPELINE',
-            //     referVersion: pipelineInfo.value?.version ?? ''
-            // })
-            // console.log(res, 123)
-            const list = groupsMap.value.publicVarGroups.map(i => {
+            const list = groupsMap.value.varGroups.map(i => {
                 return {
                     ...i,
                     isDeleted: !varGroupList.value.find(group => group.groupName === i.groupName),
                 }
             })
-            allVarGroup.value = list.map((data, index) => ({
+            allProjectVarGroup.value = list.map((data, index) => ({
                 ...data,
                 variableList: [],
                 isOpen: props.groupName ? data.groupName === props.groupName : index === 0,
@@ -317,7 +323,7 @@
     }
     function handleUpdataVarGroup (payload) {
         const { index, data } = payload
-        allVarGroup.value = allVarGroup.value.map((group, idx) => {
+        allProjectVarGroup.value = allProjectVarGroup.value.map((group, idx) => {
             if (idx === index) {
                 return {
                     ...group,
@@ -328,13 +334,11 @@
         })
     }
     function handleDeleteVarGroup (groupName) {
-        const curVariableList = allVarGroup.value.find(group => group.groupName === groupName)?.variableList.map(i => ({
-            ...i.buildFormProperty
-        }))
+        const curVariableList = groupsMap.value.variableList.filter(group => group?.varGroupName === groupName)
         const ids = new Set(curVariableList.map(item => item.id))
-        groupsMap.value.publicVarGroups = groupsMap.value.publicVarGroups.filter(group => group.groupName !== groupName)
+        groupsMap.value.varGroups = groupsMap.value.varGroups.filter(group => group.groupName !== groupName)
         groupsMap.value.variableList = groupsMap.value.variableList.filter(i => !ids.has(i.id))
-        allVarGroup.value = allVarGroup.value.filter(group => group.groupName !== groupName)
+        allProjectVarGroup.value = allProjectVarGroup.value.filter(group => group.groupName !== groupName)
     }
     function handleAddGroup () {
         showAddComp.value = true
@@ -342,13 +346,13 @@
     function handleAppend () {
         showAddComp.value = false
         try {
-            groupsMap.value.publicVarGroups.push(newGroups.value)
+            groupsMap.value.varGroups.push(newGroups.value)
             groupsMap.value.variableList = [...groupsMap.value.variableList, ...selectedVariableList.value.map(i => ({
                 ...i.buildFormProperty
             }))]
 
             const newVarGroupData = varGroupList.value.find(i => i.groupName === newGroups.value.groupName)
-            allVarGroup.value.push({
+            allProjectVarGroup.value.push({
                 ...newVarGroupData,
                 variableList: selectedVariableList.value,
                 isOpen: true,
@@ -364,7 +368,7 @@
     }
     function handleConfirmAdd () {
         proxy.$store.dispatch('atom/setPipelineEditing', true)
-        proxy.$store.dispatch('atom/updatePipelinePublicVarGroups', groupsMap.value.publicVarGroups)
+        proxy.$store.dispatch('atom/updatePipelinePublicVarGroups', groupsMap.value.varGroups)
         props.saveVariable(groupsMap.value.variableList)
         proxy.$emit('update:isShow', false)
     }

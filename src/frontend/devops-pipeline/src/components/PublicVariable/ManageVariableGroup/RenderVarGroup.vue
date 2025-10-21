@@ -13,33 +13,34 @@
                 </div>
                 <div>
                     <p class="group-name">{{ data.groupName }}</p>
-                    <p class="group-desc">{{ data.desc }}</p>
+                    <p class="group-desc">{{ data.desc || '--' }}</p>
                 </div>
-                <div
-                    v-if="hasRefNum"
-                    class="delete-icon"
-                >
-                    <i
-                        class="devops-icon icon-minus-circle"
-                        @click="handleDelete"
-                        v-bk-tooltips="$t('publicVar.hasRefNumTips')"
-                    />
-                </div>
-                <bk-popconfirm
-                    v-else
-                    trigger="click"
-                    class="delete-icon-popconfirm"
-                    :title="$t('publicVar.deleteGroupTitle')"
-                    :content="$t('publicVar.deleteGroupTips')"
-                    :confirm-text="$t('publicVar.remove')"
-                    width="288"
-                    @confirm="confirmRemove"
-                >
-                    <i
-                        class="devops-icon icon-minus-circle"
-                        @click="handleDelete"
-                    />
-                </bk-popconfirm>
+                <template v-if="editable">
+                    <div
+                        v-if="hasRefNum"
+                        class="delete-icon"
+                    >
+                        <i
+                            class="devops-icon icon-minus-circle"
+                            v-bk-tooltips="$t('publicVar.hasRefNumTips')"
+                        />
+                    </div>
+                    <bk-popconfirm
+                        v-else
+                        trigger="click"
+                        class="delete-icon-popconfirm"
+                        :title="$t('publicVar.deleteGroupTitle')"
+                        :content="$t('publicVar.deleteGroupTips')"
+                        :confirm-text="$t('publicVar.remove')"
+                        width="288"
+                        @confirm="confirmRemove"
+                    >
+                        <i
+                            class="devops-icon icon-minus-circle"
+                            @click="handleDelete"
+                        />
+                    </bk-popconfirm>
+                </template>
             </summary>
             <div
                 class="collapse-content"
@@ -78,6 +79,10 @@
         index: {
             type: String,
             default: 0
+        },
+        editable: {
+            type: Boolean,
+            default: true
         }
     })
     const isLoading = ref(false)

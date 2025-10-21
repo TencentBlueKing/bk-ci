@@ -50,10 +50,24 @@
                                 v-for="(param) in listMap[key]"
                                 :key="param.id"
                                 :class="['variable-item', {
-                                    'variable-item-editable': editable
+                                    'variable-item-editable': editable,
+                                    'is-removed': param?.removeFlag
                                 }]"
-                                @click="handleEdit(param.id)"
+                                @click="handleEdit(param)"
                             >
+                                <div
+                                    class="removed-overlay"
+                                    v-if="param?.removeFlag"
+                                >
+                                    <p>{{ $t('publicVar.paramRemoveByGroupTips', [param?.varGroupName]) }}</p>
+                                    <bk-button
+                                        text
+                                        size="small"
+                                        @click="handleUpdate(param.id)"
+                                    >
+                                        {{ $t('publicVar.removeParamInPipeline') }}
+                                    </bk-button>
+                                </div>
                                 <div
                                     v-if="editable"
                                     class="drag-area"
@@ -355,6 +369,30 @@
                     .drag-area {
                         display: flex;
                     }
+                }
+                &.is-removed {
+                    &:hover {
+                        .drag-area, .var-operate {
+                            display: none !important;
+                        }
+                        border-color: #DCDEE5 !important;
+                    }
+                }
+                
+                .removed-overlay {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 62px;
+                    background: rgba(255, 232, 195, .7);
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-direction: column;
+                    cursor: default;
+                    z-index: 1000;
                 }
                 .drag-area {
                     display: none;

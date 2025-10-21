@@ -113,6 +113,7 @@
         </div>
         <manage-variable-group
             :is-show.sync="showManageVarGroupSlider"
+            :editable="editable"
             :global-params="globalParams"
             :group-name="groupName"
             :save-variable="handleSaveVariableByGroup"
@@ -274,8 +275,8 @@
                 this.sliderEditItem = {}
                 this.paramType = type
             },
-            handleEdit (paramId) {
-                if (!this.canEditParam) return
+            handleEdit ({ paramId, removeFlag }) {
+                if (!this.canEditParam || removeFlag) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
