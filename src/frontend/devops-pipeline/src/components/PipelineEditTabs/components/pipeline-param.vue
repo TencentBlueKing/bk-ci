@@ -275,11 +275,11 @@
                 this.sliderEditItem = {}
                 this.paramType = type
             },
-            handleEdit ({ paramId, removeFlag }) {
+            handleEdit ({ id, removeFlag }) {
                 if (!this.canEditParam || removeFlag) return
                 this.showSlider = true
-                this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
-                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
+                this.editIndex = this.globalParams.findIndex(item => item.id === id)
+                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === id) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             async validParamOptions () {
