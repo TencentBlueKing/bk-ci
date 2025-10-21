@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM
 import com.tencent.devops.process.dao.label.PipelineLabelDao
@@ -1601,17 +1602,17 @@ class PipelineTemplateFacadeService @Autowired constructor(
         )
         if (templateInfo.upgradeStrategy == UpgradeStrategyEnum.MANUAL &&
             request.upgradeStrategy == UpgradeStrategyEnum.AUTO) {
-            val srcTemplateResource = pipelineTemplateResourceService.getLatestReleasedResource(
-                projectId = templateInfo.srcTemplateProjectId!!,
-                templateId = templateInfo.srcTemplateId!!
-            )!!
+            // 获取研发商店模板最新发布版本
+            val srcTemplateResource = client.get(ServiceTemplateResource::class).getLatestMarketPublishedVersion(
+                templateCode = templateInfo.srcTemplateId!!
+            ).data ?: throw ErrorCodeException(errorCode = ERROR_SOURCE_TEMPLATE_NOT_EXISTS)
             pipelineTemplateMarketFacadeService.installNewVersion(
                 templateInfo = templateInfo,
-                srcTemplateProjectId = srcTemplateResource.projectId,
-                srcTemplateId = srcTemplateResource.templateId,
+                srcTemplateProjectId = srcTemplateResource.projectCode,
+                srcTemplateId = srcTemplateResource.templateCode,
                 srcTemplateVersion = srcTemplateResource.version,
                 srcTemplateNumber = srcTemplateResource.number,
-                srcTemplateVersionName = srcTemplateResource.versionName!!
+                srcTemplateVersionName = srcTemplateResource.versionName
             )
         }
         return true
