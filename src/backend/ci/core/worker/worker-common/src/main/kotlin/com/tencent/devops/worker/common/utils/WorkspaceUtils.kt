@@ -131,10 +131,10 @@ object WorkspaceUtils {
 
     /**
      * 在临时目录下生成一个目录名DEVOPS_BUILD_LOGS_[pipelineId]_{{System.nanoTime}}_{{attempt}}的文件夹并返回。
-     * 当发生错误时，每隔100*attempt毫秒进行重试，以3次重试为例，则间隔100、200、300毫秒
+     * 当发生错误时，每隔10 * attempt毫秒进行重试，以3次重试为例，则间隔10、20、30毫秒
      *
      * attempt 代表重试了多少次。最大3次重试
-     * System.nanoTime 代表当前时间戳纳秒。
+     * System.nanoTime 代表当前时间戳纳秒，出错时每次重试都会重新获取最新时间以尽可能避免因时间相同导致的冲突失败。
      *
      * @return File
      * @throws IOException 当无权限创建失败等情况
