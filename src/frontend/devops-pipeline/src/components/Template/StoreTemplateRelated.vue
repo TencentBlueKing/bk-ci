@@ -109,22 +109,22 @@
                         rows: [
                             {
                                 key: 'srcMarketTemplateName',
-                                value: srcMarketTemplateName
+                                value: srcMarketTemplateName,
+                                link: {
+                                    show: true,
+                                    url: storeTemplateUrl.value,
+                                    icon: 'devops-icon icon-jump-link'
+                                }
                             },
                             {
                                 key: 'srcMarketTemplateLatestVersionName',
                                 value: t('template.latestVersionTitle', [srcMarketTemplateLatestVersionName]),
-                                grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
-                                link: srcMarketTemplateLatestVersionName === latestInstalledVersionName ? {
+                                // grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
+                                link: (srcMarketTemplateLatestVersionName !== latestInstalledVersionName) && (upgradeStrategy === STRATEGY_ENUM.MANUAL) ? {
                                     show: true,
-                                    text: t('template.goStore'),
-                                    url: storeTemplateUrl.value,
-                                    icon: 'devops-icon icon-jump-link'
-                                } : {
-                                    show: upgradeStrategy === STRATEGY_ENUM.MANUAL,
                                     text: t('template.install'),
                                     handler: hanleShowTemplateUpgradeDialog
-                                }
+                                } : {}
                             },
                             {
                                 key: 'latestInstalledVersionName',
