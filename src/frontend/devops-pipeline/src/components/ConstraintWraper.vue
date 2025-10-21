@@ -24,6 +24,7 @@
                 :handle-change="toggleConstraint"
                 :classify-label="classifyLabel"
                 :is-loading="reverting"
+                :show-label="showLabel"
             />
         </div>
         <div
@@ -82,6 +83,10 @@
             field: {
                 type: String,
                 default: ''
+            },
+            showLabel: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {

@@ -9,7 +9,7 @@
                 <Logo
                     :size="16"
                     class="icon-pipeline"
-                    name="template-pipeline"
+                    name="pipeline"
                 />
             </template>
             <template v-if="!isLoading">

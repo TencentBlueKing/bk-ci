@@ -314,7 +314,7 @@ export default {
             ...atom,
             id: `e-${hashID(32)}`,
             '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
-            stepId: randomString(6),
+            stepId: randomString(6, true),
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
             logoUrl: atomModal.logoUrl,
