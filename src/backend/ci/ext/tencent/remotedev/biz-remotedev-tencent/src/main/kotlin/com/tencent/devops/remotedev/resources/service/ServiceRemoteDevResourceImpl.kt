@@ -904,6 +904,6 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>> {
-        return Result(tGitBindService.bindTGitProject(data.tGitId, data.projectIds))
+        return Result(tGitBindService.bindTGitProject(userId, data.tgitId, data.tgitUrl, data.projectIds))
     }
 }
