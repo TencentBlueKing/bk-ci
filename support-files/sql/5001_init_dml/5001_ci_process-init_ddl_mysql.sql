@@ -4,8 +4,25 @@ USE devops_ci_process;
 -- 空白流水线模板
 REPLACE INTO `T_TEMPLATE` (`VERSION`, `ID`, `TEMPLATE_NAME`, `PROJECT_ID`, `VERSION_NAME`, `CREATOR`, `CREATED_TIME`, `TEMPLATE`, `TYPE`, `CATEGORY`, `LOGO_URL`, `SRC_TEMPLATE_ID`, `STORE_FLAG`, `WEIGHT`, `DESC`) VALUES
   (1, '072d516d300b4812a4f652f585eacc36', 'Default', '', 'init', '', '2019-05-23 16:24:02', '{\n  \"name\" : \"Default\",\n  \"desc\" : \"\",\n  \"stages\" : [ {\n    \"containers\" : [ {\n      \"@type\" : \"trigger\",\n      \"name\" : \"Trigger\",\n      \"elements\" : [ {\n        \"@type\" : \"manualTrigger\",\n        \"name\" : \"Manual\",\n        \"id\" : \"T-1-1-1\",\n        \"properties\" : [ ]\n      } ]\n    } ],\n    \"id\" : \"stage-1\"\n  }]\n}', 'PUBLIC', '', NULL, NULL, 0, 100, 'This is an empty pipeline.');
-REPLACE INTO `T_PIPELINE_SETTING` (PIPELINE_ID, `DESC`, RUN_TYPE, NAME, SUCCESS_RECEIVER, FAIL_RECEIVER, SUCCESS_GROUP, FAIL_GROUP, SUCCESS_TYPE, FAIL_TYPE, PROJECT_ID, SUCCESS_WECHAT_GROUP_FLAG, SUCCESS_WECHAT_GROUP, FAIL_WECHAT_GROUP_FLAG, FAIL_WECHAT_GROUP, RUN_LOCK_TYPE, SUCCESS_DETAIL_FLAG, FAIL_DETAIL_FLAG, SUCCESS_CONTENT, FAIL_CONTENT, WAIT_QUEUE_TIME_SECOND, MAX_QUEUE_SIZE, IS_TEMPLATE, SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, FAIL_WECHAT_GROUP_MARKDOWN_FLAG, MAX_PIPELINE_RES_NUM, MAX_CON_RUNNING_QUEUE_SIZE, BUILD_NUM_RULE, CONCURRENCY_GROUP, CONCURRENCY_CANCEL_IN_PROGRESS, CLEAN_VARIABLES_WHEN_RETRY, PIPELINE_AS_CODE_SETTINGS, VERSION, SUCCESS_SUBSCRIPTION, FAILURE_SUBSCRIPTION, FAIL_IF_VARIABLE_INVALID) VALUES
-  ('072d516d300b4812a4f652f585eacc36', '', NULL, 'Default', '${pipeline.start.user.name}', '${pipeline.start.user.name}', '', '', 'EMAIL,RTX', 'EMAIL,RTX', '', 0, '', 0, '', 1, 0, 0, '[${project.name.english}] - [${pipeline.name}]#${pipeline.build.num} execution failed, time elapsed: ${pipeline.time.duration}, triggered by: ${pipeline.start.user.name}.', 7200, 10, 1, 0, 0, 50, 50, NULL, NULL, 0, 0, NULL, 1, NULL, NULL, NULL);
+REPLACE INTO `T_PIPELINE_SETTING` (
+    PIPELINE_ID, `DESC`, RUN_TYPE, NAME, SUCCESS_RECEIVER, FAIL_RECEIVER,
+    SUCCESS_GROUP, FAIL_GROUP, SUCCESS_TYPE, FAIL_TYPE, PROJECT_ID,
+    SUCCESS_WECHAT_GROUP_FLAG, SUCCESS_WECHAT_GROUP, FAIL_WECHAT_GROUP_FLAG,
+    FAIL_WECHAT_GROUP, RUN_LOCK_TYPE, SUCCESS_DETAIL_FLAG, FAIL_DETAIL_FLAG,
+    SUCCESS_CONTENT, FAIL_CONTENT, WAIT_QUEUE_TIME_SECOND, MAX_QUEUE_SIZE,
+    IS_TEMPLATE, SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG,
+    FAIL_WECHAT_GROUP_MARKDOWN_FLAG, MAX_PIPELINE_RES_NUM,
+    MAX_CON_RUNNING_QUEUE_SIZE, BUILD_NUM_RULE, CONCURRENCY_GROUP,
+    CONCURRENCY_CANCEL_IN_PROGRESS, CLEAN_VARIABLES_WHEN_RETRY,
+    PIPELINE_AS_CODE_SETTINGS, VERSION, SUCCESS_SUBSCRIPTION,
+    FAILURE_SUBSCRIPTION, FAIL_IF_VARIABLE_INVALID
+) VALUES (
+    '072d516d300b4812a4f652f585eacc36', '', NULL, 'Default',
+    '${pipeline.start.user.name}', '${pipeline.start.user.name}',
+    '', '', 'EMAIL,RTX', 'EMAIL,RTX', '', 0, '', 0, '', 1, 0, 0,
+    '[${project.name.english}] - [${pipeline.name}]#${pipeline.build.num} execution failed, time elapsed: ${pipeline.time.duration}, triggered by: ${pipeline.start.user.name}.',
+    '', 7200, 10, 1, 0, 0, 50, 50, NULL, NULL, 0, 0, NULL, 1, NULL, NULL, NULL
+);
 
 -- Stage预置标签
 INSERT IGNORE INTO `T_PIPELINE_STAGE_TAG` (`ID`, `STAGE_TAG_NAME`, `WEIGHT`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`) VALUES
