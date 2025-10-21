@@ -30,14 +30,13 @@ package com.tencent.devops.process.permission.template
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.model.process.tables.TTemplate
-import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import org.jooq.DSLContext
 
 class MockPipelineTemplatePermissionService(
     authProjectApi: AuthProjectApi,
     pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val templateDao: TemplateDao,
+    private val templateDao: PipelineTemplateInfoDao,
     private val dslContext: DSLContext
 ) : AbstractPipelineTemplatePermissionService(
     authProjectApi = authProjectApi,
@@ -65,19 +64,10 @@ class MockPipelineTemplatePermissionService(
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val templateIds = templateDao.listTemplate(
+        val templateIds = templateDao.listAllIds(
             dslContext = dslContext,
-            projectId = projectId,
-            includePublicFlag = false,
-            templateType = null,
-            templateIdList = null,
-            storeFlag = null,
-            orderBy = null,
-            offset = null,
-            limit = null,
-            queryModelFlag = false
-        )?.asSequence()?.map { it[TTemplate.T_TEMPLATE.ID] }?.toList() ?: emptyList()
-
+            projectId = projectId
+        )
         return permissions.associateWith { templateIds }
     }
 
