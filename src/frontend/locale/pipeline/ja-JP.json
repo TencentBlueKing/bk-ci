@@ -1027,6 +1027,7 @@
       "paramKey": "パラメータkey",
       "paramValue": "パラメータvalue",
       "inputTips": "入力してください",
+      "URLTips": "URL 中可以通过 {变量名} 的方式引用当前流水线中已定义好的全局变量",
       "toArtifactory": "リポジトリを表示",
       "enableUpgrade": "バッチアップグレードを有効にするかどうか",
       "otherChoices": "その他のオプション",

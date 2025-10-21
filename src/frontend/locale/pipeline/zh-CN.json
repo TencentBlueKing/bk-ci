@@ -1027,6 +1027,7 @@
       "paramKey": "参数key",
       "paramValue": "参数value",
       "inputTips": "请输入",
+      "URLTips": "URL 中可以通过 {变量名} 的方式引用当前流水线中已定义好的全局变量",
       "toArtifactory": "查看仓库",
       "enableUpgrade": "是否启用分批升级",
       "otherChoices": "其它选项",
