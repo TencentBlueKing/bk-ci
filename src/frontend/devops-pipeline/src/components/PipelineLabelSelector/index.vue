@@ -171,7 +171,7 @@
              * 跳转到标签管理
              */
             handleGoPipelinesGroup () {
-                window.open(`${window.location.origin}/console/pipeline/${this.projectId}/list/group`, '_blank')
+                window.open(`${window.location.origin}/console/pipeline/${this.projectId}/group`, '_blank')
             },
             handleToggleSelectTagGroup (val) {
                 if (val && !this.tagGroupList.length) {

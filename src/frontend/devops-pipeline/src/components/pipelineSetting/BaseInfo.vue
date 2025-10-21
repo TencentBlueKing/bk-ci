@@ -205,7 +205,7 @@
                 this.handleBaseInfoChange('labels', labels)
             },
             toManageLabel () {
-                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/list/group`
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/group`
                 window.open(url, '_blank')
             },
             inheritedChange (value) {
