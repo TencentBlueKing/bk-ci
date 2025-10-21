@@ -275,29 +275,22 @@ input[disabled="disabled"] {
         color: #699df4;
     }
 }
-.is-diff-param,
-.bk-form-input.is-diff-param {
+.is-diff-param {
     background-color: #FDF4E8 !important;
 }
 
-.is-new-param,
-.bk-form-input.is-new-param {
+.is-new-param {
     background: #EBFAF0 !important;
 }
-.is-change-param,
-.bk-form-input.is-change-param {
+.is-change-param {
     background: #FDF4E8 !important;
 }
-.is-delete-param,
-.bk-form-input.is-delete-param {
+.is-delete-param {
     background: #FFF0F0 !important;
 }
 .is-new-param,
 .is-delete-param,
-.is-change-param,
-.bk-form-input.is-new-param,
-.bk-form-input.is-delete-param,
-.bk-form-input.is-change-param {
+.is-change-param {
     &:focus {
         background: #FFF !important;
     }

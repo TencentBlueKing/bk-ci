@@ -157,4 +157,7 @@
     .params-desc-styles {
         margin-top: 32px;
     }
+    .is-change-param {
+        background: #FDF4E8 !important;
+    }
 </style>

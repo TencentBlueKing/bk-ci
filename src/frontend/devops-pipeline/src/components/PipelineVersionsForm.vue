@@ -422,4 +422,8 @@
 .is-not-Preview {
     display: grid;
 }
+
+.is-change-param {
+    background: #FDF4E8 !important;
+}
 </style>
