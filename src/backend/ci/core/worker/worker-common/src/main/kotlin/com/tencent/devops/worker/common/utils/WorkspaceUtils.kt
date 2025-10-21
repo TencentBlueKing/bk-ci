@@ -79,6 +79,7 @@ object WorkspaceUtils {
 
                 return workspaceDir
             }
+
             BuildType.AGENT -> {
                 val replaceWorkspace = if (workspace.isNotBlank()) {
                     ReplacementUtils.replace(
@@ -116,6 +117,7 @@ object WorkspaceUtils {
 
                 return workspaceDir
             }
+
             else -> {
                 throw IllegalArgumentException(
                     MessageUtil.getMessageByLocale(
@@ -138,18 +140,18 @@ object WorkspaceUtils {
      * @throws IOException 当无权限创建失败等情况
      *
      */
+    @Suppress("MagicNumber", "NestedBlockDepth")
     fun getPipelineLogDir(pipelineId: String, maxRetries: Int = 3): File {
-        val prefix = "DEVOPS_BUILD_LOGS_${pipelineId}_"
         val tmpDir = System.getProperty("java.io.tmpdir")
         var errorMsg = ""
-        repeat(maxRetries) { attempt ->
+        repeat(times = maxRetries) { attempt ->
             try {
-                val dir = File(tmpDir, "$prefix${System.nanoTime()}_${attempt}")
+                val dir = File(tmpDir, "DEVOPS_BUILD_LOGS_${pipelineId}_${System.nanoTime()}_$attempt")
                 // 如果不是文件夹，则先做删除
                 if (dir.exists() && !dir.isDirectory && !dir.delete()) {
-                    errorMsg = "failed to delete temporary file [${dir.absolutePath}]"
+                    errorMsg = "temporary file delete failed [${dir.absolutePath}]"
                     if (attempt < maxRetries - 1) {
-                        Thread.sleep(/* millis = */ 100L * (attempt + 1))
+                        Thread.sleep(/* millis = */ 10L * (attempt + 1))
                     }
                     return@repeat
                 }
@@ -160,12 +162,19 @@ object WorkspaceUtils {
 
                 errorMsg = "temporary directory create failed [${dir.absolutePath}]"
                 if (attempt < maxRetries - 1) {
-                    Thread.sleep(/* millis = */ 100L * (attempt + 1))
+                    Thread.sleep(/* millis = */ 10L * (attempt + 1))
                 }
-            } catch (ioe: IOException) {
-                errorMsg = ioe.message ?: "temporary directory create failed"
-                if (attempt < maxRetries - 1) {
-                    Thread.sleep(/* millis = */ 100L * (attempt + 1))
+            } catch (ise: Exception) {
+                when (ise) {
+                    is IOException,
+                    is SecurityException -> {
+                        errorMsg = ise.message ?: "temporary directory create failed"
+                        if (attempt < maxRetries - 1) {
+                            Thread.sleep(/* millis = */ 10L * (attempt + 1))
+                        }
+                    }
+
+                    else -> throw ise
                 }
             }
         }
