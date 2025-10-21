@@ -478,12 +478,18 @@ export const hashID = () => {
     const uuid = uuidv4().replace(/-/g, '')
     return uuid
 }
+// 随机字符串
+export const randomString = (len, startWithAplha = false) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-export const randomString = (len) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
     const tempLen = chars.length
     let tempStr = ''
     for (let i = 0; i < len; ++i) {
+        if (i === 0 && startWithAplha) {
+            const alphaChars = chars.replace(/\d/g, '')
+            tempStr += alphaChars.charAt(Math.floor(Math.random() * alphaChars.length))
+            continue
+        }
         tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
     }
     return tempStr
