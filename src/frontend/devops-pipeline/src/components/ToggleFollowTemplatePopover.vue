@@ -11,7 +11,8 @@
                 'icon-item',
                 {
                     'is-follow': props.isFollowTemplate,
-                    'is-collapsed': props.isCollapsed
+                    'is-collapsed': props.isCollapsed,
+                    'is-show-label': showLabel
                 }
             ]"
             @click.stop="handleChangeStatus"
@@ -26,6 +27,12 @@
                 name="template-mode"
                 size="12"
             />
+            <span
+                v-if="showLabel"
+                class="label-text"
+            >
+                {{ $t('template.follow') }}
+            </span>
         </span>
         <template slot="content">
             <div
@@ -99,6 +106,10 @@
             type: Boolean,
             required: false,
             default: false
+        },
+        showLabel: {
+            type: Boolean,
+            default: false
         }
     })
     const initLoading = ref(false)
@@ -126,23 +137,32 @@
         display: flex;
         align-items: center;
         justify-content: space-around;
-        width: 22px;
-        height: 22px;
-        color: #4D4F56;
+        min-width: 22px;
+        min-height: 22px;
+        color: #63656E;
         background: #EAEBF0;
         border-radius: 2px;
         margin-left: 6px;
         cursor: pointer;
         &.is-follow,
         &.active{
-            color: #3A84FF;
+            color: #3A84FF !important;
             background: #E1ECFF;
             &:hover {
                 background: #CDDFFE !important;
             }
         }
+        &.is-show-label {
+            min-width: 24px;
+            min-height: 24px;
+            padding-left: 5px;
+        }
         &:hover {
             background: #DCDEE5;
+        }
+        .label-text {
+            margin: 0 8px;
+            font-size: 12px;
         }
     }
     .is-collapsed {
@@ -151,9 +171,6 @@
         &.active{
             background: #CDDFFE !important;
         }
-        // &:hover {
-        //     background: #CDDFFE !important;
-        // }
     }
    
 </style>

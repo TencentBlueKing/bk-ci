@@ -422,27 +422,4 @@
 .is-not-Preview {
     display: grid;
 }
-
-.is-diff-param {
-    border-color: #FF9C01 !important;
-}
-
-.is-new-param {
-    background: #EBFAF0 !important;
-}
-
-.is-change-param {
-    background: #FDF4E8 !important;
-}
-
-.is-delete-param {
-    background: #FFF0F0 !important;
-}
-.is-new-param,
-.is-delete-param,
-.is-change-param {
-    &:focus {
-        background: #FFF !important;
-    }
-}
 </style>
