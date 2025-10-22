@@ -1027,6 +1027,7 @@
       "paramKey": "パラメータkey",
       "paramValue": "パラメータvalue",
       "inputTips": "入力してください",
+      "URLTips": "URL では、{'{変数名}'} の形式で現在のパイプラインに定義されているグローバル変数を参照できます",
       "toArtifactory": "リポジトリを表示",
       "enableUpgrade": "バッチアップグレードを有効にするかどうか",
       "otherChoices": "その他のオプション",

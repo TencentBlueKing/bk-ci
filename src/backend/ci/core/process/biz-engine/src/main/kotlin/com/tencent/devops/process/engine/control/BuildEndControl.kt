@@ -193,7 +193,11 @@ class BuildEndControl @Autowired constructor(
         val retryFlag = buildInfo.executeCount?.let { it > 1 } == true
         if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
             setBuildNoWhenBuildSuccess(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId, debug = buildInfo.debug
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = buildInfo.debug,
+                executeCount = buildInfo.executeCount
             )
         }
 
@@ -299,12 +303,19 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
-        val triggerRecordContainer = containerBuildRecordService.getRecord(
+    private fun setBuildNoWhenBuildSuccess(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean,
+        executeCount: Int
+    ) {
+        val triggerRecordContainer = containerBuildRecordService.getLatestRecord(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = "0"
+            containerId = "0",
+            executeCount = executeCount
         ) ?: return
         val buildNoMap =
             triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *> ?: return
@@ -446,11 +457,12 @@ class BuildEndControl @Autowired constructor(
             }
 
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
-            val triggerRecordContainer = containerBuildRecordService.getRecord(
+            val triggerRecordContainer = containerBuildRecordService.getLatestRecord(
                 projectId = nextBuild.projectId,
                 pipelineId = nextBuild.pipelineId,
                 buildId = nextBuild.buildId,
-                containerId = "0"
+                containerId = "0",
+                executeCount = nextBuild.executeCount
             ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(nextBuild.buildId)
             )
