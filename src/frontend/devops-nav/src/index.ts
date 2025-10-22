@@ -51,7 +51,7 @@ declare module 'vue/types/vue' {
 }
 
 Vue.use(bkMagic)
-Vue.use(PermissionDirective(handleProjectNoPermission, `https://devops.bk-tenant-dev.woa.com`))
+Vue.use(PermissionDirective(handleProjectNoPermission))
 
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
