@@ -79,11 +79,14 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         private const val MAX_RETRY_TIMES = 3
     }
 
-    @Value("\${pipeline.publicVarGroup.pipelineConsoleUrlTemplate:#{null}}")
-    val pipelineConsoleUrlTemplate: String = ""
+    @Value("\${publicVarGroup.urlTemplates.base:#{null}}")
+    val basePath: String = ""
 
-    @Value("\${pipeline.publicVarGroup.templateConsoleUrlTemplate:#{null}}")
-    val templateConsoleUrlTemplate: String = ""
+    @Value("\${publicVarGroup.urlTemplates.pipeline:#{null}}")
+    val pipelinePath: String = ""
+
+    @Value("\${publicVarGroup.urlTemplates.template:#{null}}")
+    val templatePath: String = ""
 
     private fun updateReferenceCounts(
         context: DSLContext,
@@ -727,8 +730,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         version: Long
     ): String {
         val template = when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> pipelineConsoleUrlTemplate
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> templateConsoleUrlTemplate
+            PublicVerGroupReferenceTypeEnum.PIPELINE -> basePath + pipelinePath
+            PublicVerGroupReferenceTypeEnum.TEMPLATE -> basePath + templatePath
         }
         return String.format(template, projectId, referId, version)
     }
