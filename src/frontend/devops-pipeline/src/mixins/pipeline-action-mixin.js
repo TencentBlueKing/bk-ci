@@ -116,14 +116,7 @@ export default {
                         duration: this.calcDuration(item),
                         latestBuildUserId: item.lastModifyUser,
                         onlyDraftVersion: isDraft,
-                        latestBuildStageStatus: item.latestBuildStageStatus
-                            ? item.latestBuildStageStatus.slice(1).map((stage) => ({
-                                ...stage,
-                                tooltip: this.getStageTooltip(stage),
-                                icon: this.statusIconMap[stage.status] || 'circle',
-                                statusCls: stage.status
-                            }))
-                            : null,
+                        latestBuildStageStatus: this.getLatestBuildStageStatus(item),
                         historyRoute: {
                             name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',
                             params: {
@@ -574,6 +567,14 @@ export default {
                 return false
             }
         },
+        getLatestBuildStageStatus (item) {
+            return item.latestBuildStageStatus ? item.latestBuildStageStatus.slice(1).map((stage) => ({
+                ...stage,
+                tooltip: this.getStageTooltip(stage),
+                icon: this.statusIconMap[stage.status] || 'circle',
+                statusCls: stage.status
+            })) : null
+        },
         updatePipelineStatus (data, isFirst = false) {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
@@ -583,7 +584,8 @@ export default {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
                         duration: this.calcDuration(item),
-                        progress: this.calcProgress(item)
+                        progress: this.calcProgress(item),
+                        latestBuildStageStatus: this.getLatestBuildStageStatus(item)
                     })
                 }
             })
