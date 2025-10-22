@@ -3,7 +3,6 @@
     theme="light"
     :width="900"
     extCls="dialect-popover"
-    show-overflow-tooltip
     :componentEventDelay="300"
     autoPlacement
   >

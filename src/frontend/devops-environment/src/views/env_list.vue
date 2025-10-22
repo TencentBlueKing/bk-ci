@@ -1,27 +1,34 @@
 <template>
     <div class="environment-list-wrapper">
-        <content-header class="env-header">
-            <div slot="left">{{ $t('environment.environment') }}</div>
-            <div
-                slot="right"
-                v-if="showContent && envList.length"
+        <div
+            class="filter-bar"
+            v-if="showContent && (envList.length || searchValue.length || isRequesting)"
+        >
+            <bk-button
+                :key="projectId"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: ENV_RESOURCE_ACTION.CREATE
+                    }
+                }"
+                theme="primary"
+                @click="toCreateEnv"
             >
-                <bk-button
-                    v-perm="{
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: ENV_RESOURCE_TYPE,
-                            resourceCode: projectId,
-                            action: ENV_RESOURCE_ACTION.CREATE
-                        }
-                    }"
-                    theme="primary"
-                    @click="toCreateEnv"
-                >
-                    {{ $t('environment.new') }}
-                </bk-button>
-            </div>
-        </content-header>
+                {{ $t('environment.new') }}
+            </bk-button>
+            <SearchSelect
+                class="search-input ml15"
+                v-model="searchValue"
+                :placeholder="filterPlaceHolder"
+                :data="filterData"
+                :show-condition="false"
+                clearable
+                key="search"
+            ></SearchSelect>
+        </div>
 
         <section
             class="sub-view-port"
@@ -31,7 +38,7 @@
             }"
         >
             <bk-table
-                v-if="showContent && envList.length"
+                v-if="showContent && (envList.length || searchValue.length || isRequesting)"
                 size="small"
                 :data="envList"
                 row-class-name="env-item-row"
@@ -101,10 +108,16 @@
                         </template>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus
+                        :type="searchValue.length ? 'search-empty' : 'empty'"
+                        @clear="clearFilter"
+                    />
+                </template>
             </bk-table>
 
             <empty-node
-                v-if="showContent && !envList.length"
+                v-if="showContent && !envList.length && !searchValue.length && !isRequesting"
                 :is-env="true"
                 :to-create-node="toCreateEnv"
                 :empty-info="emptyInfo"
@@ -117,10 +130,15 @@
     import emptyNode from './empty_node'
     import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    import EmptyTableStatus from '@/components/empty-table-status'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         components: {
-            emptyNode
+            emptyNode,
+            SearchSelect,
+            EmptyTableStatus
         },
         data () {
             return {
@@ -135,57 +153,97 @@
                 emptyInfo: {
                     title: this.$t('environment.envInfo.emptyEnv'),
                     desc: this.$t('environment.envInfo.emptyEnvTips')
-                }
+                },
+                searchValue: [],
+                isRequesting: false,
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            filterData () {
+                const data = [
+                    {
+                        name: this.$t('environment.environmentName'),
+                        id: 'envName',
+                        default: true
+                    },
+                    {
+                        name: this.$t('environment.environmentType'),
+                        id: 'envType',
+                        children: [
+                            {
+                                id: 'DEV',
+                                name: this.$t('environment.envInfo.devEnvType')
+                            },
+                            {
+                                id: 'PROD',
+                                name: this.$t('environment.envInfo.testEnvType')
+                            },
+                            {
+                                id: 'BUILD',
+                                name: this.$t('environment.envInfo.buildEnvType')
+                            }
+                        ]
+                    },
+                    {
+                        name: this.$t('environment.node'),
+                        id: 'nodeHashId',
+                        remoteMethod:
+                            async (search) => {
+                                const nodeList = await this.$store.dispatch('environment/requestNodeList', {
+                                    projectId: this.projectId,
+                                    params: {
+                                        displayName: search
+                                    }
+                                })
+                                return nodeList.records.map(item => ({
+                                    name: item.displayName,
+                                    id: item.nodeHashId
+                                }))
+                            },
+                        inputInclude: true
+                    }
+                ]
+                return data.filter(data => {
+                    return !this.searchValue.find(val => val.id === data.id)
+                })
+            },
+            filterPlaceHolder () {
+                return this.filterData.map(item => item.name).join(' / ')
             }
         },
         watch: {
             projectId: async function (val) {
-                await this.init()
+                this.searchValue = []
+                await this.requestList()
+            },
+            searchValue (val) {
+                const requestParams = {}
+                val?.forEach(i => {
+                    if (i.values?.length) requestParams[i.id] = i.values[0].id
+                })
+                this.requestList(requestParams)
             }
         },
         async mounted () {
-            await this.init()
+            await this.requestList()
         },
         methods: {
-            async init () {
-                const {
-                    loading
-                } = this
-
-                loading.isLoading = true
-                loading.title = this.$t('environment.loadingTitle')
-
-                try {
-                    this.requestList()
-                } catch (err) {
-                    this.$bkMessage({
-                        message: err.message ? err.message : err,
-                        theme: 'error'
-                    })
-                } finally {
-                    setTimeout(() => {
-                        this.loading.isLoading = false
-                    }, 1000)
-                }
-            },
             /**
              * 获取环境列表
              */
-            async requestList () {
+            async requestList (params = {}) {
+                this.isRequesting = true
                 try {
+                    this.loading.isLoading = true
+                    this.loading.title = this.$t('environment.loadingTitle')
                     const res = await this.$store.dispatch('environment/requestEnvList', {
-                        projectId: this.projectId
+                        projectId: this.projectId,
+                        params
                     })
-
-                    this.envList.splice(0, this.envList.length)
-                    res.forEach(item => {
-                        this.envList.push(item)
-                    })
+                    this.envList = [...res]
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -194,9 +252,11 @@
                         message,
                         theme
                     })
+                } finally {
+                    this.showContent = true
+                    this.isRequesting = false
+                    this.loading.isLoading = false
                 }
-
-                this.showContent = true
             },
             toCreateEnv () {
                 this.$router.push({ name: 'createEnv' })
@@ -267,7 +327,10 @@
              */
             localConvertTime (timestamp) {
                 return convertTime(timestamp * 1000)
-            }
+            },
+            clearFilter () {
+                this.searchValue = []
+            },
         }
     }
 </script>
@@ -276,17 +339,13 @@
     @import './../scss/conf';
 
     .environment-list-wrapper {
-        height: 100%;
-        overflow: hidden;
-        .env-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid $borderWeightColor;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
+        width: 100%;
+        height: calc(100% - 48px);
+        padding: 20px;
+        overflow-y: auto;
+        .sub-view-port {
+            height: calc(100% - 52px);
+            overflow: auto
         }
         .env-item-row {
             cursor: pointer;
@@ -295,6 +354,20 @@
         .handler-text {
             color: $primaryColor;
             cursor: pointer;
+        }
+        .search-input {
+            max-width: 40%;
+            flex: 1;
+            background: #fff;
+            ::placeholder {
+                color: #c4c6cc;
+            }
+        }
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
         }
     }
 </style>

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -46,7 +46,8 @@ class BuildAgentCredentialResourceImpl @Autowired constructor(
         agentId: String,
         secretKey: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -57,6 +58,14 @@ class BuildAgentCredentialResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
+        return Result(
+            credentialService.buildGet(
+                projectId = projectId,
+                buildId = buildId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 }

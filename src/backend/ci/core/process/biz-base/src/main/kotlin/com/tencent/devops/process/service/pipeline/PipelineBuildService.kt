@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,11 +30,13 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -42,6 +44,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -66,6 +69,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
+import com.tencent.devops.process.utils.PIPELINE_CREATE_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_ID
@@ -81,10 +85,12 @@ import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_DISPLAY_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
@@ -105,7 +111,8 @@ class PipelineBuildService(
     private val pipelineUrlBean: PipelineUrlBean,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val client: Client
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -433,7 +440,35 @@ class PipelineBuildService(
             pipelineParamMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] =
                 BuildParameters(key = TraceTag.TRACE_HEADER_DEVOPS_BIZID, value = bizId)
         }
+
+        // 设置展示名称
+        if (TenantUtils.isMultiTenantMode()) {
+            val tenantId = TenantUtils.getTenantIdByEnglishName(pipeline.projectId)
+            pipelineParamMap[PIPELINE_START_USER_DISPLAY_NAME] = BuildParameters(
+                PIPELINE_START_USER_DISPLAY_NAME,
+                getUserDisplayName(pipelineParamMap[PIPELINE_START_USER_NAME]!!.value.toString(), tenantId)
+            )
+            pipelineParamMap[PIPELINE_CREATE_USER_NAME] = BuildParameters(
+                PIPELINE_CREATE_USER_NAME,
+                getUserDisplayName(pipelineParamMap[PIPELINE_CREATE_USER]!!.value.toString(), tenantId)
+            )
+            pipelineParamMap[PIPELINE_UPDATE_USER_NAME] = BuildParameters(
+                PIPELINE_UPDATE_USER_NAME,
+                getUserDisplayName(pipelineParamMap[PIPELINE_UPDATE_USER]!!.value.toString(), tenantId)
+            )
+        } else {
+            pipelineParamMap[PIPELINE_START_USER_DISPLAY_NAME] = pipelineParamMap[PIPELINE_START_USER_NAME]!!
+            pipelineParamMap[PIPELINE_CREATE_USER_NAME] = pipelineParamMap[PIPELINE_CREATE_USER]!!
+            pipelineParamMap[PIPELINE_UPDATE_USER_NAME] = pipelineParamMap[PIPELINE_UPDATE_USER]!!
+        }
 //        return originStartParams
+    }
+
+    private fun getUserDisplayName(userId: String, tenantId: String?): String {
+        return client.get(ServiceDeptResource::class).listUserInfos(
+            memberIds = listOf(userId),
+            tenantId = tenantId
+        ).data?.get(0)?.displayName ?: userId
     }
 
     fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {

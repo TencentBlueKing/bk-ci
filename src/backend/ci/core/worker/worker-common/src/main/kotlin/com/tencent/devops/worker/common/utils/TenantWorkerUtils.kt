@@ -6,12 +6,5 @@ object TenantWorkerUtils {
      */
     fun isMultiTenantMode(projectId: String): Boolean = projectId.contains(".")
 
-    /**
-     * 获取租户id
-     */
-    fun getTenantId(projectId: String): String? = if (isMultiTenantMode(projectId)) {
-        projectId.split(".")[0]
-    } else {
-        null
-    }
+    public const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
 }

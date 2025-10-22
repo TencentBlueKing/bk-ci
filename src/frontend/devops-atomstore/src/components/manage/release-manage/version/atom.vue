@@ -141,8 +141,9 @@
                 >
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布者：') }}</span>
-                        <span>{{ detail.publisher || '--' }}</span>
+                        <bk-user-display-name :user-id="detail.publisher" />
                     </li>
+
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布类型：') }}</span>
                         <span>{{ releaseMap[detail.releaseType] || '--' }}</span>

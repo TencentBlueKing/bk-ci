@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -58,11 +60,13 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwProjectResourceV4 {
 
     @POST
     @Path("/project_create")
     @Operation(summary = "创建项目", tags = ["v4_app_project_create", "v4_user_project_create"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/project_create")
     fun create(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -86,6 +90,7 @@ interface ApigwProjectResourceV4 {
     @PUT
     @Path("/{projectId}")
     @Operation(summary = "修改项目", tags = ["v4_user_project_edit", "v4_app_project_edit"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}")
     fun update(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -112,6 +117,7 @@ interface ApigwProjectResourceV4 {
     @GET
     @Path("/{projectId}")
     @Operation(summary = "获取项目信息", tags = ["v4_user_project_get", "v4_app_project_get"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}")
     fun get(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -133,6 +139,7 @@ interface ApigwProjectResourceV4 {
     @GET
     @Path("/project_list")
     @Operation(summary = "查询所有项目", tags = ["v4_user_project_list", "v4_app_project_list"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/project_list")
     fun list(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -151,7 +158,19 @@ interface ApigwProjectResourceV4 {
         accessToken: String?,
         @Parameter(description = "产品Id,多个Id之间以,分隔", required = true)
         @QueryParam("productIds")
-        productIds: String? = null
+        productIds: String? = null,
+        @Parameter(description = "渠道号,多个Id之间以,分隔", required = true)
+        @QueryParam("channelCodes")
+        channelCodes: String? = null,
+        @Parameter(description = "排序字段(支持PROJECT_NAME、ENGLISH_NAME)", required = true)
+        @QueryParam("sort")
+        sort: ProjectSortType? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页条数(默认10)", required = false, example = "10")
+        @QueryParam("pageSize")
+        pageSize: Int? = 10
     ): Result<List<ProjectVO>>
 
     @GET
@@ -160,6 +179,7 @@ interface ApigwProjectResourceV4 {
         summary = "校验项目名称和项目英文名",
         tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"]
     )
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/project_name_validation")
     fun validate(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -170,6 +190,9 @@ interface ApigwProjectResourceV4 {
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "校验的是项目名称或者项目英文名")
         @QueryParam("validateType")
         validateType: ProjectValidateType,
@@ -184,6 +207,7 @@ interface ApigwProjectResourceV4 {
     @POST
     @Path("/{projectId}/project_user")
     @Operation(summary = "添加指定用户到指定项目用户组", tags = ["v4_app_project_create_users"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}/project_user")
     fun createProjectUser(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

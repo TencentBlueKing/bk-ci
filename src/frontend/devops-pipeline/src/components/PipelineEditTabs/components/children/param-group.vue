@@ -30,7 +30,7 @@
             >
                 <slot name="content">
                     <div
-                        v-for="([key, list], index) in Object.entries(listMap)"
+                        v-for="(key) in sortedCategories"
                         :key="key"
                     >
                         <div class="group-label">
@@ -42,15 +42,16 @@
                             class="bk-param-drag-list"
                             ghost-class="ghost-item"
                             handle=".drag-area"
-                            :list="list"
+                            :list="listMap[key]"
                             :group="{ name: 'bk-param-list', pull: false, put: false }"
                             @change="(event) => triggerSort(event, key, index)"
                         >
                             <div
-                                v-for="(param) in list"
+                                v-for="(param) in listMap[key]"
                                 :key="param.id"
                                 :class="['variable-item', {
-                                    'variable-item-editable': editable
+                                    'variable-item-editable': editable,
+                                    'variable-item-invalid': param.isInvalid
                                 }]"
                                 @click="handleEdit(param.id)"
                             >
@@ -133,8 +134,8 @@
 </template>
 
 <script>
-    import vueDraggable from 'vuedraggable'
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import vueDraggable from 'vuedraggable'
     export default {
         components: {
             vueDraggable
@@ -175,6 +176,10 @@
             listMap: {
                 type: Object,
                 default: () => {}
+            },
+            sortedCategories: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -215,6 +220,7 @@
 
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
+    @import "@/scss/conf.scss";
     .delete-param-popconfrim {
         .tippy-tooltip {
             padding: 6px;
@@ -328,6 +334,9 @@
                             display: block;
                         }
                     }
+                }
+                &.variable-item-invalid {
+                   border-color: $dangerColor;
                 }
                 &:hover {
                     .drag-area {

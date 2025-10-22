@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -129,6 +129,7 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
+import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import com.tencent.devops.process.utils.PipelineVersionUtils.differ
@@ -138,6 +139,8 @@ import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -150,8 +153,6 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 import java.time.LocalDateTime
-import jakarta.ws.rs.NotFoundException
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -199,6 +200,9 @@ class TemplateFacadeService @Autowired constructor(
 
     @Value("\${template.maxErrorReasonLength:200}")
     private val maxErrorReasonLength: Int = 200
+
+    @Value("\${template.emptyPipelineTemplateId:#{null}}")
+    private val emptyPipelineTemplateId: String? = null
 
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
@@ -1228,7 +1232,8 @@ class TemplateFacadeService @Autowired constructor(
             val logoUrl = record[tTemplate.LOGO_URL]
             val categoryStr = record[tTemplate.CATEGORY]
             OptionalTemplate(
-                name = setting?.pipelineName ?: model.name,
+                name = generateI18nTemplateName(templateId = templateId, templateType = type) ?: setting?.pipelineName
+                ?: model.name,
                 templateId = templateId,
                 projectId = templateRecord[tTemplate.PROJECT_ID],
                 version = version,
@@ -2162,6 +2167,7 @@ class TemplateFacadeService @Autowired constructor(
                         pipeline.required = template.required
                         pipeline.desc = template.desc
                         pipeline.constant = template.constant
+                        pipeline.displayCondition = template.displayCondition
                         result.add(pipeline)
                     }
                     return@outside
@@ -2635,6 +2641,15 @@ class TemplateFacadeService @Autowired constructor(
 
     fun enableTemplatePermissionManage(projectId: String): Boolean {
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
+    }
+
+    private fun generateI18nTemplateName(templateId: String, templateType: String): String? {
+        if (templateType == TemplateType.PUBLIC.name && !emptyPipelineTemplateId
+                .isNullOrBlank() && templateId == emptyPipelineTemplateId
+        ) {
+            return I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE)
+        }
+        return null
     }
 
     companion object {

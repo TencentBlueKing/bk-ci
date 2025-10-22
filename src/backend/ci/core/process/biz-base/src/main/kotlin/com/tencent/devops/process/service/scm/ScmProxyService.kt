@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -64,6 +64,7 @@ import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.api.enums.ScmEventType
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
@@ -172,6 +173,25 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         userName = credInfo.username
                     )
                 }
+            }
+            is CodeTGitRepository -> {
+                val credInfo = getCredential(
+                    projectId = projectId,
+                    repository = repo,
+                    getSession = true
+                )
+                return client.get(ServiceScmResource::class).getLatestRevision(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_TGIT,
+                    branchName = branchName,
+                    additionalPath = additionalPath,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = credInfo.privateKey,
+                    region = null,
+                    userName = credInfo.username
+                )
             }
             is CodeGitlabRepository -> {
                 val credInfo = getCredential(projectId, repo)
@@ -681,6 +701,27 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         return repo
     }
 
+    fun addScmWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): Repository {
+        checkRepoID(repositoryConfig)
+        val repository = getRepo(projectId, repositoryConfig)
+        val repo = repository as? ScmGitRepository
+            ?: (repository as? ScmSvnRepository)
+            ?: throw ErrorCodeException(
+                defaultMessage = "ScmRepo",
+                errorCode = ProcessMessageCode.SCM_REPO_INVALID
+            )
+        client.get(ServiceScmRepositoryApiResource::class).registerWebhook(
+            projectId = projectId,
+            eventType = (codeEventType?.convertScmEventType() ?: ScmEventType.PUSH).value,
+            repository = repo
+        )
+        return repo
+    }
+
     private fun convertEvent(codeEventType: CodeEventType?): String? {
         return when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
@@ -831,8 +872,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId, credentialId,
-            encoder.encodeToString(pair.publicKey)
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             throw ErrorCodeException(
@@ -943,4 +986,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun tryGetSession(repository: Repository, credentialType: CredentialType) =
         (repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeSvnRepository) &&
                 (credentialType == CredentialType.USERNAME_PASSWORD)
+
+    private fun CodeEventType.convertScmEventType() = when (this) {
+        CodeEventType.PUSH -> ScmEventType.PUSH
+        CodeEventType.PULL_REQUEST, CodeEventType.MERGE_REQUEST -> ScmEventType.PULL_REQUEST
+        CodeEventType.TAG_PUSH -> ScmEventType.TAG
+        CodeEventType.ISSUES -> ScmEventType.ISSUE
+        CodeEventType.POST_COMMIT -> ScmEventType.POST_COMMIT
+        else -> throw IllegalArgumentException("unknown code event type: $this")
+    }
 }

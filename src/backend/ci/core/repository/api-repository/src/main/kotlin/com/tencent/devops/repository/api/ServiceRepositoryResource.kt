@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -270,4 +271,13 @@ interface ServiceRepositoryResource {
         @QueryParam("repositoryId")
         repositoryId: Long
     ): Result<Boolean>
+
+    @Operation(summary = "根据构建ID获取提交记录")
+    @GET
+    @Path("/{buildId}/commit/get/record")
+    fun getCommit(
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<List<CommitResponse>>
 }

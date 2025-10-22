@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,10 @@
 
 package com.tencent.devops.common.api.util
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
-import java.security.Security
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
@@ -43,6 +41,7 @@ import javax.crypto.spec.SecretKeySpec
 
 object DHUtil {
     private const val KEY_ALGORITHM = "DH"
+    private const val KEY_NO_PADDING_ALGORITHM = "DHNP"
     private const val KEY_PROVIDER = "BC"
     private const val SECRECT_ALGORITHM = "DES"
     // private val KEY_SIZE = 1024
@@ -50,7 +49,7 @@ object DHUtil {
     private val g = BigInteger("1234567890", 16)
 
     init {
-        Security.addProvider(BouncyCastleProvider())
+        BCProviderUtil
     }
 
     fun initKey(): DHKeyPair {
@@ -75,23 +74,40 @@ object DHUtil {
         return DHKeyPair(keyPair.public.encoded, keyPair.private.encoded)
     }
 
-    fun encrypt(data: ByteArray, partAPublicKey: ByteArray, partBPrivateKey: ByteArray): ByteArray {
-        val key = getSecretKey(partAPublicKey, partBPrivateKey)
+    fun encrypt(
+        data: ByteArray,
+        partAPublicKey: ByteArray,
+        partBPrivateKey: ByteArray,
+        padding: Boolean = true
+    ): ByteArray {
+        val key = getSecretKey(partAPublicKey, partBPrivateKey, padding)
         val secretKey = SecretKeySpec(key, SECRECT_ALGORITHM)
         val cipher = Cipher.getInstance(secretKey.algorithm)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey)
         return cipher.doFinal(data)
     }
 
-    fun decrypt(data: ByteArray, partBPublicKey: ByteArray, partAPrivateKey: ByteArray): ByteArray {
-        val key = getSecretKey(partBPublicKey, partAPrivateKey)
+    fun decrypt(
+        data: ByteArray,
+        partBPublicKey: ByteArray,
+        partAPrivateKey: ByteArray,
+        padding: Boolean = true
+    ): ByteArray {
+        val key = getSecretKey(partBPublicKey, partAPrivateKey, padding)
         val secretKey = SecretKeySpec(key, SECRECT_ALGORITHM)
         val cipher = Cipher.getInstance(secretKey.algorithm)
         cipher.init(Cipher.DECRYPT_MODE, secretKey)
         return cipher.doFinal(data)
     }
 
-    private fun getSecretKey(publicKey: ByteArray, privateKey: ByteArray): ByteArray {
+    /**
+     * @param padding 历史兼容升级,插件使用的bcpPro版本可能低于1.46,不会填充密钥,所以需要兼容处理
+     */
+    private fun getSecretKey(
+        publicKey: ByteArray,
+        privateKey: ByteArray,
+        padding: Boolean
+    ): ByteArray {
         // 实例化密钥工厂
         val keyFactory = KeyFactory.getInstance(KEY_ALGORITHM)
         // 初始化公钥
@@ -102,8 +118,13 @@ object DHUtil {
         val pkcs8KeySpec = PKCS8EncodedKeySpec(privateKey)
         // 产生私钥
         val priKey = keyFactory.generatePrivate(pkcs8KeySpec)
+        val keyAgreeAlgorithm = if (padding) {
+            KEY_ALGORITHM
+        } else {
+            KEY_NO_PADDING_ALGORITHM
+        }
         // 实例化
-        val keyAgree = KeyAgreement.getInstance(KEY_ALGORITHM, KEY_PROVIDER)
+        val keyAgree = KeyAgreement.getInstance(keyAgreeAlgorithm, KEY_PROVIDER)
         // 初始化
         keyAgree.init(priKey)
         keyAgree.doPhase(pubKey, true)

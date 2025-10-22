@@ -1,0 +1,49 @@
+[ {
+  "id" : 1,
+  "elementType" : "CodeccCheckAtomDebug",
+  "name" : "Tencentコード分析",
+  "stage" : "開発",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "BEFORE",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-02-28T15:58:26",
+  "updateTime" : "2019-02-28T15:58:26"
+}, {
+  "id" : 3,
+  "elementType" : "jobDevOpsFastPushFile",
+  "name" : "ジョブプラットフォーム-成果物配布",
+  "stage" : "テスト",
+  "availablePosition" : "BEFORE",
+  "defaultPosition" : "BEFORE",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-26T17:11:44"
+}, {
+  "id" : 12,
+  "elementType" : "linuxScript",
+  "name" : "スクリプトタスク（Linux/macOS環境）",
+  "stage" : "開発",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "AFTER",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-25T16:56:26"
+}, {
+  "id" : 13,
+  "elementType" : "windowsScript",
+  "name" : "スクリプトタスク（Windows環境）",
+  "stage" : "開発",
+  "availablePosition" : "BEFORE,AFTER",
+  "defaultPosition" : "AFTER",
+  "enable" : true,
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-03-13T15:17:08",
+  "updateTime" : "2019-03-25T16:56:28"
+} ]

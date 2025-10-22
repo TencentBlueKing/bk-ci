@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,14 +32,17 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TIMESTAMP_SUFFIX
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -132,7 +135,7 @@ class WebhookGrayCompareService @Autowired constructor(
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
                 "compare webhook exception|old not contains all new|" +
-                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add",
+                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
         }
@@ -164,12 +167,20 @@ class WebhookGrayCompareService @Autowired constructor(
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
             // 部分字段存在时效性，无需对比
             oldParams.filter { !IGNORED_PARAM_KEYS.contains(it.key) }.forEach eachParam@{ (key, value) ->
-                if (IGNORED_PARAM_PREFIX.any { key.contains(it) }) {
-                    return@eachParam
-                }
                 val oldValue = value.toString()
-                // 旧值为空字符串, 新值不存在, 直接忽略
-                if (oldValue.isBlank() && !newParams.containsKey(key)) {
+                val skip = when {
+                    // 前缀参数
+                    IGNORED_PARAM_PREFIX.any { key.startsWith(it) } -> true
+                    // 时间戳参数
+                    IGNORED_PARAM_SUFFIX.any { key.endsWith(it) } &&
+                            oldValue == "0" && !newParams.containsKey(key) -> true
+                    // 旧值为空字符串, 新值不存在, 直接忽略
+                    oldValue.isBlank() && !newParams.containsKey(key) -> true
+                    // 旧值因权限失效获取信息失败，新值正常获取, 可忽略
+                    oldValue.isBlank() && newParams[key] != null -> true
+                    else -> false
+                }
+                if (skip) {
                     return@eachParam
                 }
                 if (newParams.containsKey(key)) {
@@ -208,7 +219,8 @@ class WebhookGrayCompareService @Autowired constructor(
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->
@@ -411,11 +423,17 @@ class WebhookGrayCompareService @Autowired constructor(
         private val IGNORED_PARAM_KEYS = listOf(
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP,
-            BK_REPO_GIT_MANUAL_UNLOCK
+            BK_REPO_GIT_MANUAL_UNLOCK,
+            BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION,
+            PIPELINE_GIT_MR_DESC
         )
         // 忽略的前缀参数
-        private val IGNORED_PARAM_PREFIX= listOf(
+        private val IGNORED_PARAM_PREFIX = listOf(
             BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
+        )
+        // 忽略的前缀参数
+        private val IGNORED_PARAM_SUFFIX = listOf(
+            BK_REPO_GIT_WEBHOOK_TIMESTAMP_SUFFIX
         )
     }
 }

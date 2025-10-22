@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -104,8 +104,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
-    override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
-        return Result(envService.listEnvironment(userId, projectId))
+    override fun list(
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?
+    ): Result<List<EnvWithPermission>> {
+        return Result(
+            envService.listEnvironment(
+                userId = userId,
+                projectId = projectId,
+                envName = envName,
+                envType = envType,
+                nodeHashId = nodeHashId
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])

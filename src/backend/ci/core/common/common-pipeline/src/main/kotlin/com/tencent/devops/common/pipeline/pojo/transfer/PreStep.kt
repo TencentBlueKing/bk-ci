@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -59,6 +59,12 @@ data class PreStep(
     @get:Schema(title = "retry-times")
     @JsonProperty("retry-times")
     var retryTimes: Int? = null,
+    @get:Schema(title = "can-pause-before-run")
+    @JsonProperty("can-pause-before-run")
+    var canPauseBeforeRun: Boolean? = null,
+    @get:Schema(title = "pause-notice-receivers")
+    @JsonProperty("pause-notice-receivers")
+    var pauseNoticeReceivers: List<String>? = null,
     var env: Map<String, Any?>? = emptyMap(),
     val run: String? = null,
     val shell: String? = null,

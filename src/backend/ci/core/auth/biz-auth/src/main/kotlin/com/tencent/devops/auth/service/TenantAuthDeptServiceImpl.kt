@@ -2,6 +2,11 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
+import com.tencent.devops.auth.pojo.BkUserInfo
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
+import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -48,6 +53,10 @@ class TenantAuthDeptServiceImpl : DeptService {
         return retrieveUser(userId, tenantId).toVo()
     }
 
+    override fun getUserInfo(userId: String, tenantId: String?): UserAndDeptInfoVo? {
+        return retrieveUser(userId, tenantId).toVo()
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum,
@@ -78,7 +87,8 @@ class TenantAuthDeptServiceImpl : DeptService {
     ): List<String> {
         val activeMembers = listMemberInfos(
             memberIds = memberIds,
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
         ).map { it.name }
         return memberIds.subtract(activeMembers.toSet()).toList()
     }
@@ -86,8 +96,58 @@ class TenantAuthDeptServiceImpl : DeptService {
     override fun isUserDeparted(userId: String, tenantId: String?): Boolean {
         return listMemberInfos(
             memberIds = listOf(userId),
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
         ).isEmpty()
+    }
+
+    override fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): DeptInfoVo {
+        logger.warn("listDeptInfos isn`t support in tenant environment: $searchUserEntity, $tenantId")
+        return DeptInfoVo(count = 0, results = emptyList())
+    }
+
+    override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): BkUserInfoVo {
+        try {
+            return TenantUtils.callApigw(
+                apigwHost = bkApigwUserHost!!,
+                path = BATCH_LOOKUP_DEPARTMENT,
+                params = mapOf(
+                    "page" to (searchUserEntity.page ?: 0),
+                    "page_size" to (searchUserEntity.pageSize ?: 100),
+                ),
+                tenantId = tenantId,
+                method = HttpMethod.GET,
+                respType = ListUserResp::class.java
+            ).toVo()
+        } catch (e: Exception) {
+            logger.error("listUserInfos error: $e")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                defaultMessage = "listUserInfos error, page:${searchUserEntity.page}, pageSize:${searchUserEntity.pageSize}"
+            )
+        }
+    }
+
+    override fun getUserDeptDetails(userId: String, tenantId: String?): BkDeptDetailsVo? {
+        val departmentInfos = listUserDepartment(userId, true, tenantId).data
+        if (departmentInfos.isEmpty()) {
+            val department = departmentInfos[0]
+            return BkDeptDetailsVo(
+                id = department.id,
+                name = department.name,
+                family = department.ancestors.map {
+                    BkUserDeptInfo(
+                        id = it.id.toString(),
+                        name = it.name,
+                        fullName = null
+                    )
+                }
+            )
+        } else {
+            logger.warn("getUserDeptDetails isn`t support in tenant environment: $userId, $tenantId")
+            return null
+        }
+
     }
 
     /**
@@ -209,6 +269,7 @@ class TenantAuthDeptServiceImpl : DeptService {
         const val RETRIEVE_USER = "/api/v3/open/tenant/users/{bk_username}/"
         const val BATCH_QUERY_USER_DISPLAY_INFO = "/api/v3/open/tenant/users/-/display_info/"
         const val BATCH_LOOKUP_DEPARTMENT = "/api/v3/open/tenant/departments/-/lookup/"
+        const val LIST_USER = "/api/v3/open/tenant/users/"
         private val logger = LoggerFactory.getLogger(TenantAuthDeptServiceImpl::class.java)
     }
 
@@ -301,5 +362,31 @@ class TenantAuthDeptServiceImpl : DeptService {
         val id: Int,
         val name: String,
         val organization_path: String? = null
+    )
+
+    data class ListUserResp(
+        val count: Int,
+        val results: List<User>
+    ) {
+        fun toVo(): BkUserInfoVo {
+            val userInfos = results.map {
+                BkUserInfo(
+                    id = 0,
+                    userName = it.bk_username,
+                    displayName = it.display_name,
+                    enabled = it.status == "enabled",
+                    extras = null,
+                    departments = null
+                )
+            }
+            return BkUserInfoVo(count, userInfos)
+        }
+    }
+
+    data class User(
+        val bk_username: String,
+        val full_name: String,
+        val display_name: String,
+        val status: String
     )
 }

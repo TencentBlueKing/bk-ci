@@ -56,9 +56,11 @@
                         >
                             {{ repoInfo.credentialId }}
                         </a>
-                        <span v-else>
-                            {{ repoInfo.userName || curRepo.userName }}
-                        </span>
+                        <bk-user-display-name
+                            v-else
+                            :user-id="repoInfo.userName || curRepo.userName"
+                        >
+                        </bk-user-display-name>
                     </template>
                     <template v-else>
                         <span>
@@ -71,9 +73,11 @@
                         >
                             {{ repoInfo.credentialId }}
                         </a>
-                        <span v-else>
-                            {{ repoInfo.userName || curRepo.userName }}
-                        </span>
+                        
+                        <bk-user-display-name
+                            v-else
+                            :user-id="repoInfo.userName || curRepo.userName"
+                        />
                     </template>
                     <a
                         class="reset-bth"

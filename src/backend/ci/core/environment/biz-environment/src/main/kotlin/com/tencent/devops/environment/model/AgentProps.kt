@@ -9,11 +9,13 @@ import com.tencent.devops.common.api.pojo.agent.AgentErrorExitData
  * @param jdkVersion jdk版本
  * @param dockerInitFileInfo dockerInit文件信息
  * @param exitError agent错误退出信息
+ * @param osVersion 系统版本信息
  */
 data class AgentProps(
     val arch: String,
     val jdkVersion: List<String>,
     val userProps: Map<String, Any>?,
     val dockerInitFileInfo: DockerInitFileInfo?,
-    val exitError: AgentErrorExitData?
+    val exitError: AgentErrorExitData?,
+    val osVersion: String?
 )

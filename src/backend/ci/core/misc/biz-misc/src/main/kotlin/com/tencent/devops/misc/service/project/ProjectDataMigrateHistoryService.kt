@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.misc.service.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.project.ProjectDataMigrateHistoryDao
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
@@ -71,7 +72,7 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
             )
         } else {
             redisOperation.isMember(
-                key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+                key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
                 item = pipelineId
             )
         }

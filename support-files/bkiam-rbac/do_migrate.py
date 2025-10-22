@@ -2,7 +2,7 @@
 """
 TencentBlueKing is pleased to support the open source community by making
 蓝鲸智云-权限中心Python SDK(iam-python-sdk) available.
-Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 Tencent. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at http://opensource.org/licenses/MIT
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
@@ -17,15 +17,16 @@ import argparse
 import json
 import os
 
+import urllib3
 import requests
-
 
 # NOTE: the usage doc https://bk.tencent.com/docs/document/6.0/160/8388
 
 __version__ = "1.0.0"
+# no more useless warning
+urllib3.disable_warnings()
 
-BK_IAM_HOST = os.getenv("BK_IAM_V3_INNER_HOST", "http://bkiam.service.consul:5001")
-USE_APIGATEWAY = os.getenv("BK_IAM_USE_APIGATEWAY", "false").lower() == "true"
+BK_APIGATEWAY_URL = os.getenv("BK_IAM_APIGATEWAY_URL", "https://bkapi.example.com/api/bk-iam/prod/")
 
 APP_CODE = ""
 APP_SECRET = ""
@@ -33,14 +34,9 @@ data_file = ""
 
 
 # =================== load json ===================
-def enable_use_apigateway():
-    global USE_APIGATEWAY
-    USE_APIGATEWAY = True
-
-
 def load_data(filename):
     """
-    解析JSON数据文件
+    解析 JSON 数据文件
     """
     data = {}
     try:
@@ -136,23 +132,24 @@ def http_delete(url, data, headers=None, verify=False, cert=None, timeout=None, 
 
 
 class Client(object):
-    def __init__(self, app_code, app_secret, bk_iam_host):
+    def __init__(self, app_code, app_secret, bk_apigateway_url, bk_tenant_id=""):
         self.app_code = app_code
         self.app_secret = app_secret
-        self.bk_iam_host = bk_iam_host
+        self.bk_apigateway_url = bk_apigateway_url.rstrip("/")
+        self.bk_tenant_id = bk_tenant_id
         self.system_id_set = set()
         self.resource_id_set = set()
         self.action_id_set = set()
 
     # 调用权限中心方法
     def _call_iam_api(self, http_func, path, data):
-        headers = {"X-BK-APP-CODE": self.app_code, "X-BK-APP-SECRET": self.app_secret}
-        if USE_APIGATEWAY:
-            headers = {
-                "X-Bkapi-Authorization": json.dumps({"bk_app_code": self.app_code, "bk_app_secret": self.app_secret}),
-            }
+        headers = {
+            "X-Bkapi-Authorization": json.dumps({"bk_app_code": self.app_code, "bk_app_secret": self.app_secret}),
+        }
+        if self.bk_tenant_id:
+            headers["X-Bk-Tenant-Id"] = self.bk_tenant_id
 
-        url = "{host}{path}".format(host=self.bk_iam_host, path=path)
+        url = "{host}{path}".format(host=self.bk_apigateway_url, path=path)
         ok, _data = http_func(url, data, headers=headers)
         # TODO: add debug here
         if not ok:
@@ -209,7 +206,7 @@ class Client(object):
         "upsert_feature_shield_rules": "update_feature_shield_rules",
         "add_custom_frontend_settings": "add_custom_frontend_settings",
         "update_custom_frontend_settings": "update_custom_frontend_settings",
-        "upsert_custom_frontend_settings": "update_custom_frontend_settings"
+        "upsert_custom_frontend_settings": "update_custom_frontend_settings",
     }
 
     """
@@ -561,13 +558,13 @@ class Client(object):
 # ---------- ping
 
 
-def api_ping(bk_iam_host):
-    url = "{host}{path}".format(host=bk_iam_host, path="/ping")
+def api_ping(bk_apigateway_url):
+    url = "{host}{path}".format(host=bk_apigateway_url, path="/ping")
     ok, data = http_get(url, None, timeout=5)
     return ok, data
 
 
-def do_migrate(data, bk_iam_host=BK_IAM_HOST, app_code=APP_CODE, app_secret=APP_SECRET):
+def do_migrate(data, bk_apigateway_url=BK_APIGATEWAY_URL, app_code=APP_CODE, app_secret=APP_SECRET, bk_tenant_id=""):
     system_id = data.get("system_id")
     if not system_id:
         print("invald json. [system_id] required, and should not be empty")
@@ -580,7 +577,7 @@ def do_migrate(data, bk_iam_host=BK_IAM_HOST, app_code=APP_CODE, app_secret=APP_
 
     print("do migrate")
 
-    client = Client(app_code, app_secret, bk_iam_host)
+    client = Client(app_code, app_secret, bk_apigateway_url, bk_tenant_id=bk_tenant_id)
 
     # 1. query all data of the system
     system_ids, resource_type_ids, action_ids, instance_selection_ids = client.query_all_models(system_id)
@@ -619,11 +616,8 @@ if __name__ == "__main__":
     p.add_argument(
         "-t",
         action="store",
-        dest="bk_iam_host",
-        help=(
-            "bk_iam_host, i.e: http://iam.service.consul;"
-            "you can use bk_apigateway_url here, set with the '--apigateway' "
-        ),
+        dest="bk_apigateway_url",
+        help=("bk_apigateway_url, i.e: http://bkapi.example.com/api/bk-iam/prod/;"),
         required=True,
     )
     p.add_argument(
@@ -635,35 +629,22 @@ if __name__ == "__main__":
     )
     p.add_argument("-a", action="store", dest="app_code", help="app code", required=True)
     p.add_argument("-s", action="store", dest="app_secret", help="app secret", required=True)
-
     p.add_argument(
-        "--apigateway",
-        action="store_true",
-        dest="use_apigateway",
-        help="you can use bk_apigateway_url in '-t', should set this flag",
+        "--bk_tenant_id", action="store", dest="bk_tenant_id", help="blueking tenant id", default="", required=False
     )
+
     args = p.parse_args()
-
-    BK_IAM_HOST = args.bk_iam_host.rstrip("/")
-    USE_APIGATEWAY = args.use_apigateway
-    if USE_APIGATEWAY:
-        print(
-            "use apigateway:",
-            args.use_apigateway,
-            ", please make sure '-t %s' is a valid bk_apigateway_url" % args.bk_iam_host,
-            )
-
-    if not BK_IAM_HOST.startswith("http") :
-        BK_IAM_HOST = "http://%s" % BK_IAM_HOST
 
     data_file = args.json_data_file
     APP_CODE = args.app_code
     APP_SECRET = args.app_secret
+    BK_APIGATEWAY_URL = args.bk_apigateway_url.rstrip("/")
+    bk_tenant_id = args.bk_tenant_id
 
     # test ping
-    ok, _ = api_ping(BK_IAM_HOST)
+    ok, _ = api_ping(BK_APIGATEWAY_URL)
     if not ok:
-        print("iam service is not available: %s" % BK_IAM_HOST)
+        print("iam service is not available: %s" % BK_APIGATEWAY_URL)
         exit(1)
 
     print("start migrate [%s]" % data_file)
@@ -673,7 +654,7 @@ if __name__ == "__main__":
     if not data:
         exit(1)
 
-    ok = do_migrate(data, BK_IAM_HOST, APP_CODE, APP_SECRET)
+    ok = do_migrate(data, BK_APIGATEWAY_URL, APP_CODE, APP_SECRET, bk_tenant_id=bk_tenant_id)
     if not ok:
         print("do migrate [%s] fail" % data_file)
         exit(1)

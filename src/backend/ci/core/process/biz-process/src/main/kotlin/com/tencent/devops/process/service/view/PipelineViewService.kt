@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -797,6 +797,7 @@ class PipelineViewService @Autowired constructor(
             listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
         private const val PROJECT_VIEW_LIMIT = 200
         private const val PERSONAL_VIEW_LIMIT = 100
-        const val PIPELINE_VIEW_NAME_LENGTH_MAX = 32
+        const val PIPELINE_VIEW_NAME_LENGTH_MAX = 64
+        const val YAML_PIPELINE_VIEW_NAME_LENGTH_MAX = 255
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,13 +27,11 @@
 
 package com.tencent.devops.repository.pojo.oauth
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Token模型")
 data class RepositoryScmToken(
-    @get:Schema(title = "鉴权token")
-    @JsonProperty("access_token")
+    @get:Schema(title = "授权用户ID")
     var userId: String = "",
     @get:Schema(title = "代码库类型")
     var scmCode: String = "",
@@ -46,5 +44,7 @@ data class RepositoryScmToken(
     @get:Schema(title = "过期时间")
     val expiresIn: Long = 0L,
     @get:Schema(title = "创建时间")
-    val createTime: Long? = 0L
+    val createTime: Long? = 0L,
+    @get:Schema(title = "蓝盾操作者用户名")
+    var operator: String = ""
 )

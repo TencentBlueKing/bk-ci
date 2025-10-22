@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ExampleObject
@@ -64,6 +65,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v3")
 interface ApigwPipelineResourceV3 {
 
     @Deprecated("Replace with createPipeline")

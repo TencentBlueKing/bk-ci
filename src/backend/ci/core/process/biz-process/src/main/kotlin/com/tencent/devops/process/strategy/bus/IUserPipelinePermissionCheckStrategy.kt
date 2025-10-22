@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,11 +37,13 @@ interface IUserPipelinePermissionCheckStrategy {
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param permission 权限
+     * @param message 错误信息
      */
     fun checkUserPipelinePermission(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        message: String? = null
     )
 }

@@ -19,9 +19,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomVersion from '@/components/manage/release-manage/version/atom.vue'
     import imageVersion from '@/components/manage/release-manage/version/image.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -71,6 +71,10 @@
                     image: this.getImageVersion
                 }
                 const type = this.$route.params.type
+                if (!Object.keys(methodMap).includes(type) || typeof methodMap[type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 const currentMethod = methodMap[type]
                 this.isLoading = true
                 currentMethod().catch((err) => {

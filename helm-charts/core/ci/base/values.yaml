@@ -88,21 +88,21 @@ init:
   plugin:
     enabled: false
     atoms:
-    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.13/checkout_en.zip
+    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.16/checkout_en.zip
       code: checkout
-    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.5/run-v1.0.5.zip
+    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.1.3/run-v1.0.5.zip
       code: run
-    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.6/ci-SubPipelineExec_en.zip
+    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.12/ci-SubPipelineExec_en.zip
       code: SubPipelineExec
-    - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.1/uploadArtifact_en.zip
+    - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.4/uploadArtifact_en.zip
       code: uploadArtifact
-    - url: https://github.com/TencentBlueKing/ci-uploadReport/releases/download/v1.0.1/uploadReport_en.zip
+    - url: https://github.com/TencentBlueKing/ci-uploadReport/releases/download/v1.0.4/uploadReport_en.zip
       code: uploadReport
-    - url: https://github.com/TencentBlueKing/ci-AcrossProjectDistribution/releases/download/v1.1.1/AcrossProjectDistribution_en.zip
+    - url: https://github.com/TencentBlueKing/ci-AcrossProjectDistribution/releases/download/v1.1.4/AcrossProjectDistribution_en.zip
       code: AcrossProjectDistribution
-    - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.2/downloadArtifact_en.zip
+    - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.5/downloadArtifact_en.zip
       code: downloadArtifact
-    - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.13/PerforceSync_en.zip
+    - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.23/PerforceSync_en.zip
       code: PerforceSync
     - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.1.4/CodeCCCheckAtom_en.zip
       code: CodeCCCheckAtom
@@ -1095,9 +1095,9 @@ websocket:
 turbo:
   enabled: false
   image:
-    registry: registry-1.docker.io/bkci
+    registry: bkci
     repository: bkci-turbo
-    tag: 0.0.18
+    tag: 0.0.21
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1

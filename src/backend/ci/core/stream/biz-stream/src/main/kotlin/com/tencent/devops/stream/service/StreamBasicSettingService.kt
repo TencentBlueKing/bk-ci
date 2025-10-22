@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -88,7 +88,7 @@ class StreamBasicSettingService @Autowired constructor(
         if (agentBuilds.isNotOk()) {
             logger.warn(
                 "StreamBasicSettingService|listAgentBuilds|" +
-                    "errors=${agentBuilds.message}"
+                        "errors=${agentBuilds.message}"
             )
             throw RuntimeException("get agent builds list in devops failed, msg: ${agentBuilds.message}")
         }
@@ -292,7 +292,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (newProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 newProjectName = newProjectName.substring(
                     newProjectName.length -
-                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                            StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
                     newProjectName.length
                 )
             }
@@ -303,7 +303,8 @@ class StreamBasicSettingService @Autowired constructor(
                         projectInfo.gitProjectId,
                         streamGitConfig.getScmType()
                     ),
-                    projectName = newProjectName
+                    projectName = newProjectName,
+                    tenantId = null
                 )
             } catch (e: Throwable) {
                 logger.warn("StreamBasicSettingService|updateProjectInfo|error", e)
@@ -404,7 +405,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (deletedProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 deletedProjectName = deletedProjectName.substring(
                     deletedProjectName.length -
-                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH
+                            StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH
                 )
             }
 
@@ -414,12 +415,13 @@ class StreamBasicSettingService @Autowired constructor(
                     projectId.toLong(),
                     streamGitConfig.getScmType()
                 ),
-                projectName = deletedProjectName
+                projectName = deletedProjectName,
+                tenantId = null
             )
         } catch (e: Throwable) {
             logger.warn(
                 "StreamBasicSettingService|checkSameGitProjectName " +
-                    "|update bkci project name error :${e.message}"
+                        "|update bkci project name error :${e.message}"
             )
         }
     }

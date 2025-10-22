@@ -20,7 +20,7 @@ BEGIN
     ALTER TABLE T_TEMPLATE_PIPELINE
         ADD COLUMN `INSTANCE_ERROR_INFO` text null comment '实例化错误信息';
     END IF;
-    
+
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
@@ -55,6 +55,24 @@ BEGIN
                     AND COLUMN_NAME = 'RELEASE_TIME') THEN
     ALTER TABLE T_PIPELINE_RESOURCE_VERSION
         ADD COLUMN RELEASE_TIME TIMESTAMP NULL COMMENT '发布时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                AND COLUMN_NAME = 'ARTIFACT_QUALITY_INFO') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
+        ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext CHARACTER SET utf8mb4 comment '制品质量分析结果' after `ARTIFACT_INFO`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                    AND COLUMN_NAME = 'ARTIFACT_QUALITY_INFO') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY_DEBUG`
+        ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext CHARACTER SET utf8mb4 comment '制品质量分析结果' after `ARTIFACT_INFO`;
     END IF;
 
     COMMIT;

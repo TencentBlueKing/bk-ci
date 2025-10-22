@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,10 +37,8 @@ import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -284,7 +282,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val update = dslContext.update(this)
                 .set(BRANCH_ACTION, BranchVersionAction.INACTIVE.name)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(STATUS.eq(VersionStatus.BRANCH.name))
                 .and(
@@ -316,7 +314,7 @@ class PipelineResourceVersionDao {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.update(this)
                 .set(STATUS, VersionStatus.DELETE.name)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
@@ -510,7 +508,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             return dslContext.update(this)
                 .set(DEBUG_BUILD_ID, debugBuildId)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
                 .execute() == 1
         }
@@ -548,30 +546,9 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
                 .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
-                .execute()
-        }
-    }
-
-    fun updatePipelineModel(
-        dslContext: DSLContext,
-        userId: String,
-        pipelineModelVersion: PipelineModelVersion
-    ) {
-        with(T_PIPELINE_RESOURCE_VERSION) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(pipelineModelVersion.projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineModelVersion.pipelineId))
-            val version = pipelineModelVersion.version
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
-            }
-            dslContext.update(this)
-                .set(MODEL, pipelineModelVersion.model)
-                .set(CREATOR, userId)
-                .where(conditions)
                 .execute()
         }
     }

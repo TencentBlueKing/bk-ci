@@ -1,4 +1,4 @@
-FROM bkci/jdk:0.0.9-jdk17
+FROM bkci/jdk:0.0.10-jdk17
 
 LABEL maintainer="Tencent BlueKing Devops"
 

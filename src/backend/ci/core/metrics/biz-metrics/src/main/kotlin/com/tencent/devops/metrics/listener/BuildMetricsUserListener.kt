@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.listener
 
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.metrics.service.builds.MetricsEventService
 import com.tencent.devops.metrics.service.builds.MetricsUserService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +39,8 @@ import org.springframework.stereotype.Component
 @Component
 @ConditionalOnProperty(name = ["metrics.user.enable"], havingValue = "true", matchIfMissing = false)
 class BuildMetricsUserListener @Autowired constructor(
-    private val metricsUserService: MetricsUserService
+    private val metricsUserService: MetricsUserService,
+    private val metricsEventService: MetricsEventService
 ) : EventListener<PipelineBuildStatusBroadCastEvent> {
 
     companion object {
@@ -46,7 +48,10 @@ class BuildMetricsUserListener @Autowired constructor(
     }
 
     override fun execute(event: PipelineBuildStatusBroadCastEvent) {
-        kotlin.runCatching { metricsUserService.execute(event) }.onFailure {
+        kotlin.runCatching { metricsUserService.metricsExecute(event) }.onFailure {
+            logger.warn("BuildMetricsUserListener error |$event", it)
+        }
+        kotlin.runCatching { metricsEventService.eventExecute(event) }.onFailure {
             logger.warn("BuildMetricsUserListener error |$event", it)
         }
     }

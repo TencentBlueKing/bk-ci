@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,12 +35,14 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import org.slf4j.LoggerFactory
@@ -165,6 +167,29 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             data = data
+        )
+    }
+
+    override fun updateAgentInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        data: UpdateAgentInfo
+    ): Result<Boolean> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|updateAgentInfo|$projectId|$data")
+        return client.get(ServiceThirdPartyAgentResource::class).updateAgentInfo(
+            userId = userId,
+            projectId = projectId,
+            data = data
+        )
+    }
+
+    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|fetchTag|$projectId")
+        return client.get(ServiceThirdPartyAgentResource::class).fetchTag(
+            userId = userId,
+            projectId = projectId
         )
     }
 

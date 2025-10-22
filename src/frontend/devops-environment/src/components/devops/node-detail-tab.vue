@@ -2,7 +2,7 @@
     <div class="node-details-tab">
         <bk-tab
             :active.sync="activeName"
-            :type="currentType"
+            type="card"
             style="margin-top: 20px;"
         >
             <bk-tab-panel
@@ -35,8 +35,6 @@
         data () {
             return {
                 active: 'mission',
-                type: ['card', 'border-card', 'unborder-card'],
-                currentType: 'card',
                 activeName: 'base',
                 menuList: [
                     { name: 'base', label: this.$t('environment.basicInfo') },
@@ -65,6 +63,12 @@
         }
         .bk-tab-section {
             padding: 0;
+        }
+        .bk-tab-label-wrapper {
+            text-align: left;
+        }
+        .bk-tab-content {
+            border-top: none
         }
     }
 </style>

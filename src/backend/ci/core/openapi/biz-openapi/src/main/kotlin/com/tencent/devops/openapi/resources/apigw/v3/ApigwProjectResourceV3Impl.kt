@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -133,6 +133,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String?,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
@@ -141,7 +142,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         return client.get(ServiceProjectResource::class).validate(
             validateType = validateType,
             name = name,
-            projectId = projectId
+            projectId = projectId,
+            tenantId = tenantId
         )
     }
 

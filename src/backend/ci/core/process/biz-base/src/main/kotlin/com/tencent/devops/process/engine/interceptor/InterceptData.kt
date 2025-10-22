@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -58,5 +58,7 @@ data class InterceptData(
     @get:Schema(title = "是否为重试操作", required = false)
     val retry: Boolean? = false,
     @get:Schema(title = "是否为运行中重试", required = true)
-    val retryOnRunningBuild: Boolean = false
+    val retryOnRunningBuild: Boolean = false,
+    @get:Schema(title = "是否允许cancel处理", required = true)
+    val cancelAllowed: Boolean = true
 )

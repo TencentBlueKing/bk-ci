@@ -222,8 +222,8 @@
                             <bk-big-tree
                                 ref="pipelineGroupTree"
                                 :data="pipleinGroupTree"
-                                node-key="id"
                                 :default-expanded-nodes="defaultExpandedNodes"
+                                :options="treeOptions"
                                 :show-icon="false"
                             >
                                 <div
@@ -434,6 +434,11 @@
             ...mapGetters('pipelines', [
                 'groupMap'
             ]),
+            treeOptions () {
+                return {
+                    idKey: 'key'
+                }
+            },
             defaultExpandedNodes () {
                 return this.group?.id ? [this.group?.id] : []
             },
@@ -728,12 +733,14 @@
                         .filter(pipeline => !pipeline.delete || pipeline.viewId === group.id)
                         .map(pipeline => ({
                             id: pipeline.pipelineId,
+                            key: `${groupItem.viewId}-${pipeline.pipelineId}`,
                             name: pipeline.pipelineName,
                             deleted: pipeline.delete,
                             checkable: true
                         }))
                     return {
                         id: groupItem.viewId,
+                        key: groupItem.viewId,
                         name: groupItem.viewName,
                         hasChild: true,
                         checkable: children.length > 0,

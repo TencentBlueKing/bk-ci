@@ -5,9 +5,9 @@
             :options="paramsDragOptions"
         >
             <accordion
+                show-content
                 v-for="(param, index) in globalParams"
                 :key="param.paramIdKey"
-                :show-content="true"
                 :is-error="errors.any(`param-${param.key}`)"
             >
                 <header
@@ -161,23 +161,23 @@
 </template>
 
 <script>
-    import draggable from 'vuedraggable'
-    import { deepCopy } from '@/utils/util'
-    import atomFieldMixin from '../../atomFormField/atomFieldMixin'
-    import DefineParamShow from './show.vue'
-    import Selector from '@/components/atomFormField/Selector'
     import Accordion from '@/components/atomFormField/Accordion'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import { deepCopy } from '@/utils/util'
+    import draggable from 'vuedraggable'
+    import atomFieldMixin from '../../atomFormField/atomFieldMixin'
+    import DefineParamShow from './show.vue'
 
     import {
-        isEnumParam,
-        isMultipleParam,
+        CHECK_DEFAULT_PARAM,
+        CHECK_PARAM_LIST,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
-        CHECK_PARAM_LIST,
-        CHECK_DEFAULT_PARAM,
+        isEnumParam,
+        isMultipleParam,
         STRING
     } from '@/store/modules/atom/paramsConfig'
     

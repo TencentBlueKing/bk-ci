@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
@@ -59,6 +60,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v3")
 interface ApigwQualityResourceV3 {
 
     @Operation(summary = "获取拦截规则列表", tags = ["v3_app_quality_rule_list", "v3_user_quality_rule_list"])

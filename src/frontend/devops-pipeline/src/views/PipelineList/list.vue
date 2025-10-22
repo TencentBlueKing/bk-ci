@@ -88,14 +88,16 @@
                 font-size: 14px;
                 line-height: 26px;
                 margin: 0 0 16px 0;
-                color: #313238;
-                font-weight: normal;
                 > :first-child {
                     margin: 0 8px 0 0;
                 }
                 > span {
                     font-weight: bold;
-
+                    color: #313238;
+                }
+                h5 {
+                    color: #313238;
+                    font-weight: normal;
                 }
             }
             .pipeline-list-main-header {

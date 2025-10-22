@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import {
-  ref,
+  RESOURCE_ACTION,
+  handleProjectManageNoPermission,
+} from '@/utils/permission.js';
+import { InfoBox, Message } from 'bkui-vue';
+import {
   onMounted,
+  ref,
 } from 'vue';
 import {
   useRoute,
@@ -9,13 +14,8 @@ import {
 } from 'vue-router';
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { InfoBox, Message, Popover } from 'bkui-vue';
 import ProjectForm from '@/components/project-form.vue';
-import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
+
 
 const { t } = useI18n();
 const router = useRouter();
@@ -28,13 +28,10 @@ const isLoading = ref(false);
 const isChange = ref(false);
 const btnLoading = ref(false);
 const hasPermission = ref(true)
-const statusDisabledTips = {
-  1: t('新建项目申请审批中，暂不可修改'),
-  4: t('更新项目信息审批中，暂不可修改'),
-};
+
 const currentDialect = ref();
 const isDialectDialog = ref(false);
-
+let initdata;
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http.requestProjectData({
@@ -51,6 +48,7 @@ const fetchProjectData = async () => {
     currentDialect.value = res.properties?.pipelineDialect || 'CLASSIC';
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
+    initdata = JSON.stringify(projectData.value)
   }).catch((err) => {
     if (err.code === 403) {
       hasPermission.value = false
@@ -64,15 +62,19 @@ const fetchProjectData = async () => {
   isLoading.value = false;
 };
 
+const goShow = () => {
+  router.push({
+    path: 'show',
+  });
+}
+
 /**
  * 取消编辑项目
  */
 const handleCancel = () => {
   const onConfirm = () => {
     isChange.value = false;
-    router.push({
-      path: 'show',
-    });
+    goShow()
   };
   if (isChange.value) {
     InfoBox({
@@ -129,9 +131,7 @@ const updateProject = async () => {
       theme: 'success',
       message: t('保存成功'),
     });
-    router.push({
-      path: 'show',
-    });
+    goShow()
   }
   return Promise.resolve(false)
 };
@@ -151,15 +151,37 @@ const showNeedApprovedTips = () => {
   });
 };
 
+const undateMetadata = async (params) => {
+  try {
+    btnLoading.value = true;
+    const res = await http.batchUpdateMetadata(projectData.value.englishName, params)
+    if (res) {
+      Message({
+        theme: 'success',
+        message: t('保存成功'),
+      });
+      goShow()
+    }
+  } catch (err) {
+    console.log(err);
+  } finally {
+    btnLoading.value = false;
+  }
+}
+
 /**
  * 更新项目
  */
-const handleUpdate = () => {
-  if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
-    isDialectDialog.value = true;
-    return
+const handleUpdate = (panel, params) => {
+  if (panel) {
+    undateMetadata(params)
+  } else {
+    if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
+      isDialectDialog.value = true;
+      return
+    }
+    updateConfirm()
   }
-  updateConfirm()
 };
 
 const updateConfirm = async () => {
@@ -180,6 +202,10 @@ const handleClosed = () => {
 
 const initProjectForm = (value) => {
   projectForm.value = value;
+};
+
+const initProjectData = (value) => {
+  Object.assign(projectData.value, value);
 };
 
 const handleNoPermission = () => {
@@ -204,44 +230,14 @@ onMounted(() => {
         type="edit"
         :is-change="isChange"
         :data="projectData"
+        :btnLoading="btnLoading"
         @change="handleFormChange"
-        @initProjectForm="initProjectForm">
+        @initProjectForm="initProjectForm"
+        @handleCancel="handleCancel"
+        @handleUpdate="handleUpdate"
+        @initProjectData="initProjectData"
+      >
       </project-form>
-      <div class="btn-group">
-        <Popover
-          :content="statusDisabledTips[projectData?.approvalStatus]"
-          :disabled="![1, 4].includes(projectData?.approvalStatus)"
-          v-perm="{
-            disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
-            hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
-            permissionData: {
-              projectId: projectCode,
-              resourceType: RESOURCE_TYPE,
-              resourceCode: projectCode,
-              action: RESOURCE_ACTION.EDIT
-            }
-          }"
-        >
-          <span>
-            <bk-button
-              class="btn mr10"
-              :disabled="[1, 4].includes(projectData?.approvalStatus)"
-              theme="primary"
-              :loading="btnLoading"
-              @click="handleUpdate"
-            >
-              {{ t('提交更新') }}
-            </bk-button>
-          </span>
-        </Popover>
-        <bk-button
-          class="btn"
-          :loading="btnLoading"
-          @click="handleCancel"
-        >
-          {{ t('取消') }}
-        </bk-button>
-      </div>
     </section>
     <bk-exception
       v-else
@@ -285,9 +281,11 @@ onMounted(() => {
   .edit-project-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 16px 24px 24px;
+    position: relative;
+    height: calc(100% - 108px);
+    padding: 16px 24px 16px;
     overflow: auto;
+    box-sizing: border-box;
    
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -301,7 +299,9 @@ onMounted(() => {
       height: 8px !important;
     }
     .edit-project-form {
-      width: 100%;
+      width: 1200px;
+      height: 100%;
+      background-color: #FFF;
       flex: 1;
       margin: 0 auto;
       :deep(.bk-form-label) {
@@ -310,10 +310,6 @@ onMounted(() => {
       :deep(.bk-form-content) {
         max-width: 700px;
       }
-    }
-    .btn-group {
-      display: flex;
-      margin: 24px 0;
     }
     .mr10 {
       margin-right: 10px;

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -80,8 +81,26 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String, productIds: String?, tenantId: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId = userId, productIds = productIds, tenantId = tenantId))
+    override fun list(
+        userId: String,
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?,
+        tenantId: String?
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.list(
+                userId = userId,
+                productIds = productIds,
+                channelCodes = channelCodes,
+                sort = sort,
+                page = page,
+                pageSize = pageSize,
+                tenantId = tenantId
+            )
+        )
     }
 
     override fun getAllProject(): Result<List<ProjectVO>> {
@@ -170,9 +189,19 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
     }
 
-    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+    override fun updateProjectName(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        tenantId: String?
+    ): Result<Boolean> {
         return Result(
-            projectService.updateProjectName(userId = userId, projectId = projectCode, projectName = projectName)
+            projectService.updateProjectName(
+                userId = userId,
+                projectId = projectCode,
+                projectName = projectName,
+                tenantId = tenantId
+            )
         )
     }
 
@@ -189,8 +218,13 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getProjectByName(projectName, tenantId))
     }
 
-    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
+    override fun validate(
+        validateType: ProjectValidateType,
+        name: String,
+        projectId: String?,
+        tenantId: String?
+    ): Result<Boolean> {
+        projectService.validate(validateType, name, projectId, tenantId)
         return Result(true)
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,18 +31,36 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 
-class PathCondition : WebhookCondition {
+class PathCondition(
+    val pathType: PathType = PathType.DEFAULT
+) : WebhookCondition {
     override fun match(context: WebhookConditionContext): Boolean {
         with(context.webhookParams) {
+            val (targetIncludePaths, targetExcludePaths) = if (pathType == PathType.SVN) {
+                // SVN路径判读需结合 [关联仓库地址]+[相对路径]
+                val projectRelativePath = WebhookUtils.getRelativePath(sourceRepoUrl ?: "")
+                WebhookUtils.getSvnIncludePaths(
+                    this,
+                    projectRelativePath
+                ) to convert(excludePaths).map { path ->
+                    WebhookUtils.getFullPath(
+                        projectRelativePath = projectRelativePath,
+                        relativeSubPath = path
+                    )
+                }
+            } else {
+                convert(includePaths) to convert(excludePaths)
+            }
             val pathFilter = PathFilterFactory.newPathFilter(
                 PathFilterConfig(
                     pathFilterType = pathFilterType,
                     pipelineId = context.pipelineId,
                     triggerOnPath = context.factParam.changes,
-                    includedPaths = convert(includePaths),
-                    excludedPaths = convert(excludePaths),
+                    includedPaths = targetIncludePaths,
+                    excludedPaths = targetExcludePaths,
                     includedFailedReason = I18Variable(
                         code = WebhookI18nConstants.PATH_NOT_MATCH,
                         params = listOf()
@@ -56,4 +74,9 @@ class PathCondition : WebhookCondition {
             return pathFilter.doFilter(context.response)
         }
     }
+}
+
+enum class PathType {
+    DEFAULT,
+    SVN
 }

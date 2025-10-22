@@ -13,7 +13,8 @@
             </h3>
             <div class="detail-info-row">
                 <h5 class="detail-info">
-                    <span> {{ $t('store.发布者：') }} </span><span>{{ detail.publisher || '-' }}</span>
+                    <span> {{ $t('store.发布者：') }} </span>
+                    <bk-user-display-name :user-id="detail.publisher" />
                 </h5>
                 <h5 class="detail-info">
                     <span> {{ $t('store.版本：') }} </span><span>{{ detail.version || '-' }}</span>

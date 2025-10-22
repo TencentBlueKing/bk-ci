@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -231,6 +231,7 @@ class MarketImageDao @Autowired constructor() {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?,
+        recommendFlag: Boolean? = null,
         tenantId: String?
     ): Result<Record19<String, String, String, Byte, String, String, String, String, String, Byte, String, Boolean,
             Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>> {
@@ -242,7 +243,9 @@ class MarketImageDao @Autowired constructor() {
             dslContext = dslContext,
             tenantId = tenantId
         )
-
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -361,6 +364,7 @@ class MarketImageDao @Autowired constructor() {
         score: Int?,
         // 来源，精确匹配
         imageSourceType: ImageType?,
+        recommendFlag: Boolean? = null,
         // 租户ID
         tenantId: String?
     ): Int {
@@ -372,6 +376,9 @@ class MarketImageDao @Autowired constructor() {
             dslContext = dslContext,
             tenantId = tenantId
         )
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         // 查的是最近已发布版本，一个imageCode只有一条记录
         val baseStep = dslContext.select(
             DSL.count(tImage.ID)

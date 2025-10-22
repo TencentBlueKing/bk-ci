@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -78,6 +79,18 @@ interface ServiceProjectResource {
         @Parameter(description = "userId", required = false)
         @QueryParam("productIds")
         productIds: String? = null,
+        @Parameter(description = "渠道号,多个Id之间以,分隔", required = true)
+        @QueryParam("channelCodes")
+        channelCodes: String? = null,
+        @Parameter(description = "排序字段(支持PROJECT_NAME、ENGLISH_NAME，默认ENGLISH_NAME)", required = true)
+        @QueryParam("sort")
+        sort: ProjectSortType? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @Parameter(description = "每页条数(默认10)", required = false, example = "10")
+        @QueryParam("pageSize")
+        pageSize: Int? = null,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         tenantId: String?
@@ -232,7 +245,10 @@ interface ServiceProjectResource {
         projectCode: String,
         @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
-        projectName: String
+        projectName: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<Boolean>
 
     @PUT
@@ -271,7 +287,10 @@ interface ServiceProjectResource {
         name: String,
         @Parameter(description = "项目ID")
         @QueryParam("english_name")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<Boolean>
 
     @POST

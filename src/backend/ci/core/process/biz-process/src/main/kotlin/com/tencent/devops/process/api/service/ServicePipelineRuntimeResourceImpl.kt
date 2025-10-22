@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILED
+import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.websocket.service.PipelineWebsocketService
@@ -44,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineRuntimeResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val pipelineWebsocketService: PipelineWebsocketService
+    private val pipelineWebsocketService: PipelineWebsocketService,
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService
 ) : ServicePipelineRuntimeResource {
 
     override fun updateArtifactList(
@@ -54,15 +56,21 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         buildId: String,
         artifactoryFileList: List<FileInfo>
     ): Result<BuildHistory> {
+        val artifactQualityList = pipelineArtifactQualityService.getArtifactQualityList(
+            userId = userId,
+            projectId = projectId,
+            artifactoryFileList = artifactoryFileList
+        )
 
         val success = pipelineRuntimeService.updateArtifactList(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            artifactListJsonString = JsonUtil.toJson(artifactoryFileList, formatted = false)
+            artifactListJsonString = JsonUtil.toJson(artifactoryFileList, formatted = false),
+            artifactQualityList = JsonUtil.toJson(artifactQualityList, formatted = false),
         )
-        if (success) {
 
+        if (success) {
             val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
                 ?: throw ErrorCodeException(
                     errorCode = ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -79,7 +87,6 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             )
             return Result(buildHistory)
         }
-
         throw ErrorCodeException(
             errorCode = ERROR_UPDATE_FAILED,
             params = arrayOf(buildId)

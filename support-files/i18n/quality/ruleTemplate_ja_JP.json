@@ -1,0 +1,110 @@
+[ {
+  "id" : 2,
+  "name" : "日常ビルド",
+  "type" : "TEMPLATE",
+  "desc" : "日常ビルドの警告数を制御するため",
+  "stage" : "開発",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T10:56:57",
+  "updateTime" : "2019-04-10T11:03:51",
+  "enable" : true
+}, {
+  "id" : 3,
+  "name" : "バージョンテスト移行",
+  "type" : "TEMPLATE",
+  "desc" : "バージョンテスト移行時の品質管理に用いる",
+  "stage" : "テスト環境のデプロイ",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T10:58:12",
+  "updateTime" : "2019-04-10T11:03:52",
+  "enable" : true
+}, {
+  "id" : 4,
+  "name" : "リリース",
+  "type" : "TEMPLATE",
+  "desc" : "バージョンリリース時の品質管理に用いる",
+  "stage" : "本番環境のデプロイ",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 5,
+  "name" : "セキュリティ関連",
+  "type" : "INDICATOR_SET",
+  "desc" : "Coverityセキュリティルールパッケージと機密情報警告を含む",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:42:27",
+  "updateTime" : "2019-04-10T11:42:33",
+  "enable" : false
+}, {
+  "id" : 6,
+  "name" : "Javaツール仕様",
+  "type" : "INDICATOR_SET",
+  "desc" : "CheckStyleツール仕様",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : false
+}, {
+  "id" : 7,
+  "name" : "C++推奨",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 8,
+  "name" : "Java推奨",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 9,
+  "name" : "Go推奨",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 10,
+  "name" : "Python推奨",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 11,
+  "name" : "JS推奨",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+} ]

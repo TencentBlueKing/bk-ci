@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,20 +29,24 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.auth.api.AuthUserAndDeptApi
+import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.metrics.service.CacheProjectInfoService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
+import java.time.LocalDate
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.time.LocalDate
 
 @Service
 class ProjectBuildSummaryServiceImpl @Autowired constructor(
@@ -96,7 +100,8 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                 logger.info("Project [${projectVO.englishName}] has disabled, skip user count")
                 return
             }
-            if (authUserAndDeptApi.checkUserDeparted(userId)) {
+            val tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+            if (authUserAndDeptApi.checkUserDeparted(userId, tenantId)) {
                 logger.debug("This user does not need to be save, because he has departed|$userId")
                 return
             }
@@ -122,10 +127,32 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     override fun saveProjectUserOperateMetrics(
         userOperateCounterData: UserOperateCounterData
     ) {
-        projectBuildSummaryDao.saveUserOperateCount(
-            dslContext = dslContext,
-            projectUserOperateMetricsData2OperateCount = userOperateCounterData.getUserOperationCountMap()
-        )
+        userOperateCounterData.getUserOperationCountMap().forEach { (projectUserOperateMetricsDataKey, operateCount) ->
+            val projectUserOperateMetricsData = ProjectUserOperateMetricsData.build(
+                projectUserOperateMetricsKey = projectUserOperateMetricsDataKey
+            )
+            JooqUtils.retryWhenDeadLock {
+                try {
+                    projectBuildSummaryDao.saveUserOperateCount(
+                        dslContext = dslContext,
+                        projectUserOperateMetricsData = projectUserOperateMetricsData,
+                        operateCount = operateCount
+                    )
+                } catch (e: DuplicateKeyException) {
+                    if (logger.isDebugEnabled) {
+                        logger.debug(
+                            "save project user operate metrics duplicate {} |{}",
+                            projectUserOperateMetricsDataKey, operateCount
+                        )
+                    }
+                    projectBuildSummaryDao.updateUserOperateCount(
+                        dslContext = dslContext,
+                        projectUserOperateMetricsData = projectUserOperateMetricsData,
+                        operateCount = operateCount
+                    )
+                }
+            }
+        }
     }
 
     override fun getProjectActiveUserCount(

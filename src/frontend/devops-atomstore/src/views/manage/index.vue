@@ -4,7 +4,6 @@
             :bread-crumbs="navList"
             :type="type"
         ></bread-crumbs>
-
         <transition-tab
             :panels="panels"
             @tab-change="tabChange"
@@ -26,9 +25,9 @@
 
 <script>
     import api from '@/api'
-    import { mapGetters } from 'vuex'
-    import transitionTab from '@/components/transition-tab.vue'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import transitionTab from '@/components/transition-tab.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -77,7 +76,9 @@
                         {
                             label: this.$t('store.基本设置'),
                             name: 'setting',
-                            children: [],
+                            children: [
+                                { label: '', name: 'building' },
+                            ],
                             showChildTab: true
                         }
                     ]
@@ -133,6 +134,7 @@
             },
 
             tabChange (tabName) {
+                debugger
                 this.routekey.key = undefined
                 const currentPanel = this.panels.find((panel) => (panel.name === tabName)) || {}
                 const panelChildren = currentPanel.children || []

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,12 +40,14 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -272,7 +274,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        version: Int?,
+        checkPermission: Boolean,
+        includeDraft: Boolean
     ): Result<Model> {
         checkParams(userId, projectId)
         return Result(
@@ -281,7 +286,9 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
-                checkPermission = false
+                version = version,
+                checkPermission = checkPermission,
+                includeDraft = includeDraft
             )
         )
     }
@@ -389,10 +396,18 @@ class ServicePipelineResourceImpl @Autowired constructor(
     override fun getPipelineInfo(
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        archiveFlag: Boolean?
     ): Result<PipelineInfo?> {
         checkProjectId(projectId)
-        return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId))
+        return Result(
+            pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
@@ -679,6 +694,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 userId = userId
             )
         )
+    }
+
+    override fun lockPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+
+        pipelineInfoFacadeService.lockPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            enable = enable
+        )
+        return Result(true)
     }
 
     private fun checkParams(userId: String, projectId: String) {

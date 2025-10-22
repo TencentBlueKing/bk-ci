@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.oauth.Oauth2Url
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.oauth.OauthTokenVo
+import com.tencent.devops.repository.pojo.oauth.OauthUserVo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -82,7 +83,10 @@ interface UserRepositoryOauthResource {
         page: Int? = null,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        @Parameter(description = "需要重置的用户名", required = false)
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = ""
     ): Result<Page<RepoOauthRefVo>>
 
     @DELETE
@@ -94,7 +98,10 @@ interface UserRepositoryOauthResource {
         userId: String,
         @Parameter(description = "授权类型", required = true)
         @QueryParam("scmCode")
-        scmCode: String
+        scmCode: String,
+        @Parameter(description = "需要删除的用户名", required = true)
+        @QueryParam("oauthUserId")
+        oauthUserId: String
     ): Result<Boolean>
 
     @POST
@@ -109,6 +116,21 @@ interface UserRepositoryOauthResource {
         scmCode: String,
         @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
         @QueryParam("redirectUrl")
-        redirectUrl: String
+        redirectUrl: String,
+        @Parameter(description = "需要重置的用户名", required = false)
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = ""
     ): Result<Oauth2Url>
+
+    @GET
+    @Path("/userList")
+    @Operation(summary = "获取用户持有的授权信息")
+    fun oauthUserList(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "授权类型", required = true)
+        @QueryParam("scmCode")
+        scmCode: String
+    ): Result<List<OauthUserVo>>
 }

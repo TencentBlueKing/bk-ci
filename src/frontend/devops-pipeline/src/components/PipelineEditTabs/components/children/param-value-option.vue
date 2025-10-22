@@ -165,7 +165,7 @@
                 :disabled="disabled"
                 :handle-change="handleChange"
                 name="defaultValue"
-                v-validate="{ required: valueRequired }"
+                v-validate.initial="varLengthRule"
                 :data-vv-scope="'pipelineParam'"
                 :click-unfold="true"
                 :placeholder="$t('editPage.defaultValueTips')"
@@ -186,7 +186,7 @@
                 :disabled="disabled"
                 :handle-change="handleChange"
                 name="defaultValue"
-                v-validate="{ required: valueRequired }"
+                v-validate.initial="varLengthRule"
                 :data-vv-scope="'pipelineParam'"
                 :placeholder="$t('editPage.defaultValueTips')"
                 :value="param.defaultValue"
@@ -276,22 +276,22 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
+        getBranchOption,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
-        getBranchOption,
         isArtifactoryParam,
         isBooleanParam,
         isCodelibParam,
@@ -299,16 +299,16 @@
         isFileParam,
         isGitParam,
         isMultipleParam,
+        isRepoParam,
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
-        SUB_PIPELINE_OPTION,
-        isRepoParam
+        SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
     import { mapGetters } from 'vuex'
     import SelectTypeParam from './select-type-param'
-
+    
     const BOOLEAN = [
         {
             value: true,
@@ -362,8 +362,17 @@
         computed: {
             ...mapGetters('atom', [
                 'osList',
-                'getBuildResourceTypeList'
+                'getBuildResourceTypeList',
+                'failIfVariableInvalid'
             ]),
+            varLengthRule () {
+
+                return Object.assign({
+                    required: this.valueRequired
+                }, this.failIfVariableInvalid ? {
+                    max: VAR_MAX_LENGTH
+                } : {})
+            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,
@@ -470,10 +479,10 @@
 
             getCodeUrl (type) {
                 type = type || 'CODE_GIT'
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.$route.params.projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
             getSearchUrl (type) {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+                return `${this.getCodeUrl(type)}&aliasName={keyword}`
             },
             getSearchBranchUrl () {
                 return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue['repo-name']}`

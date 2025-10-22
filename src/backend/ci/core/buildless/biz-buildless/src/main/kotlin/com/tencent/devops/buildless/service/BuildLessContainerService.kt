@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -67,6 +67,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.TimeZone
+import kotlin.streams.toList
 
 /**
  * 无构建环境的docker服务实现
@@ -240,6 +241,24 @@ class BuildLessContainerService(
         }
 
         return timeoutContainerList
+    }
+
+    fun checkContainerRunning(containerId: String): Boolean {
+        try {
+            val containerInfo = httpDockerCli
+                .listContainersCmd()
+                .withStatusFilter(setOf("running"))
+                .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
+                .exec()
+
+            return containerInfo.any {
+                val shortId = if (it.id.length > 12) it.id.substring(0, 12) else it.id
+                shortId == containerId
+            }
+        } catch (e: Exception) {
+            logger.error("===> check container running failed, containerId: $containerId, error msg: $e")
+            return false
+        }
     }
 
     private fun generateEnv(containerName: String, linkPath: String): List<String> {

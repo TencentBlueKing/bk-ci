@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -271,7 +271,7 @@ class BkShardingDataSourceConfiguration {
         // 生成单表规则
         singleRuleConfiguration.tables = listOf("*.*")
         // 设置分片表的路由规则
-        val dataSourceSize = dataSourceConfigs.size
+        val maxDsIndex = dataSourceConfigs.maxOfOrNull { it.index } ?: 0
         val bkTableRuleConfigs = shardingRuleConfig.tables
         val shardingTableRuleConfigs = tableRuleConfigs?.filter { it.broadcastFlag != true }
         if (!shardingTableRuleConfigs.isNullOrEmpty()) {
@@ -279,7 +279,7 @@ class BkShardingDataSourceConfiguration {
                 bkTableRuleConfigs.add(
                     getTableRuleConfiguration(
                         dataSourcePrefixName = dataSourcePrefixName,
-                        dataSourceSize = dataSourceSize,
+                        maxDsIndex = maxDsIndex,
                         tableRuleConfig = shardingTableRuleConfig
                     )
                 )
@@ -334,13 +334,14 @@ class BkShardingDataSourceConfiguration {
     /**
      * 获取分片表规则配置
      * @param dataSourcePrefixName 数据源数量大小
-     * @param dataSourceSize 数据源数量大小
+     * @param maxDsIndex 最大数据源索引值
      * @param tableRuleConfig 数据库表规则配置
+     * @param logicTableSuffixName 数据库表规则配置
      * @return 分片表规则配置
      */
     fun getTableRuleConfiguration(
         dataSourcePrefixName: String,
-        dataSourceSize: Int,
+        maxDsIndex: Int,
         tableRuleConfig: TableRuleConfig,
         logicTableSuffixName: String? = null
     ): ShardingTableRuleConfiguration? {
@@ -348,53 +349,63 @@ class BkShardingDataSourceConfiguration {
         val tableName = tableRuleConfig.name
         val databaseShardingStrategy = tableRuleConfig.databaseShardingStrategy
         val tableShardingStrategy = tableRuleConfig.tableShardingStrategy
-        val lastDsIndex = dataSourceSize - 1
-        val lastTableIndex = tableRuleConfig.shardingNum - 1
+        val maxTableIndex = tableRuleConfig.shardingNum - 1
+
         // 生成逻辑表名称
         val logicTableName = if (logicTableSuffixName.isNullOrBlank()) {
             tableName
         } else {
             "${tableName}_$logicTableSuffixName"
         }
-        val actualDataNodes = if (databaseShardingStrategy != null &&
-            tableShardingStrategy == TableShardingStrategyEnum.SHARDING
-        ) {
-            // 生成分库分表场景下的节点规则
-            if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${dataSourcePrefixName}0.${logicTableName}_\${0..$lastTableIndex}"
-            } else {
-                "$dataSourcePrefixName\${0..$lastDsIndex}.${logicTableName}_\${0..$lastTableIndex}"
+        // 生成实际数据节点
+        val actualDataNodes = when {
+            // 分库分表场景
+            databaseShardingStrategy != null && tableShardingStrategy == TableShardingStrategyEnum.SHARDING -> {
+                if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
+                    "${dataSourcePrefixName}0.${logicTableName}_\${0..$maxTableIndex}"
+                } else {
+                    "$dataSourcePrefixName\${0..$maxDsIndex}.${logicTableName}_\${0..$maxTableIndex}"
+                }
             }
-        } else if (databaseShardingStrategy != null && tableShardingStrategy != TableShardingStrategyEnum.SHARDING) {
-            // 生成分库场景下的节点规则
-            if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${dataSourcePrefixName}0.$logicTableName"
-            } else {
-                "$dataSourcePrefixName\${0..$lastDsIndex}.$logicTableName"
+
+            // 仅分库场景
+            databaseShardingStrategy != null && tableShardingStrategy != TableShardingStrategyEnum.SHARDING -> {
+                if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
+                    "${dataSourcePrefixName}0.$logicTableName"
+                } else {
+                    "$dataSourcePrefixName\${0..$maxDsIndex}.$logicTableName"
+                }
             }
-        } else if (databaseShardingStrategy == null && tableShardingStrategy == TableShardingStrategyEnum.SHARDING) {
-            // 生成分表场景下的节点规则
-            "${dataSourcePrefixName}0.${logicTableName}_\${0..$lastTableIndex}"
-        } else {
-            "${dataSourcePrefixName}0.$logicTableName"
+
+            // 仅分表场景
+            databaseShardingStrategy == null && tableShardingStrategy == TableShardingStrategyEnum.SHARDING -> {
+                "${dataSourcePrefixName}0.${logicTableName}_\${0..$maxTableIndex}"
+            }
+
+            // 默认场景（不分库不分表）
+            else -> "${dataSourcePrefixName}0.$logicTableName"
         }
+
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         logger.info(
             "BkShardingDataSourceConfiguration table:$tableName|databaseShardingStrategy: $databaseShardingStrategy|" +
                     "tableShardingStrategy:$tableShardingStrategy|actualDataNodes:$actualDataNodes "
         )
+
         // 设置表的分库策略
         shardingTableRuleConfig.databaseShardingStrategy = if (databaseShardingStrategy != null) {
             StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
         } else {
             NoneShardingStrategyConfiguration()
         }
+
         // 设置表的分表策略
         shardingTableRuleConfig.tableShardingStrategy = if (tableShardingStrategy != null) {
             StandardShardingStrategyConfiguration(tableShardingField, TABLE_SHARDING_ALGORITHM_NAME)
         } else {
             NoneShardingStrategyConfiguration()
         }
+
         return shardingTableRuleConfig
     }
 }

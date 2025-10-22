@@ -12,11 +12,14 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -27,6 +30,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.constant.ProjectMessageCode
 import java.time.LocalDateTime
@@ -43,7 +47,9 @@ class RbacPermissionResourceMemberService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val dslContext: DSLContext,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val authResourceSyncDao: AuthResourceSyncDao,
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -86,26 +92,29 @@ class RbacPermissionResourceMemberService(
         resourceType: String,
         resourceCode: String
     ): List<BkAuthGroupAndUserList> {
-        val groupId2Members = authResourceGroupMemberDao.listResourceGroupMember(
+        // 已经同步过的项目（启用中的项目），直接从数据库查询，否则调iam接口查询
+        val isSync = authResourceSyncDao.get(dslContext, projectCode) != null
+        val resourceGroups = authResourceGroupDao.listByResourceCode(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
-            resourceCode = resourceCode,
-            minExpiredTime = LocalDateTime.now()
-        ).groupBy { it.iamGroupId }
-        val resourceGroupInfos = authResourceGroupDao.listByRelationId(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            iamGroupIds = groupId2Members.keys.map { it.toString() }
+            resourceCode = resourceCode
         )
-        val result = mutableListOf<BkAuthGroupAndUserList>()
+        return if (isSync) {
+            val groupId2Members = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                minExpiredTime = LocalDateTime.now()
+            ).groupBy { it.iamGroupId }
 
-        groupId2Members.forEach { (groupId, members) ->
-            val userMembers = members.filter { it.memberType == MemberType.USER.type }
-            val deptMembers = members.filter { it.memberType == MemberType.DEPARTMENT.type }
-            val groupName = resourceGroupInfos.firstOrNull { it.relationId.toInt() == groupId }?.groupName
-                ?: return@forEach
-            result.add(
+            resourceGroups.map { groupInfo ->
+                val groupId = groupInfo.relationId.toInt()
+                val groupName = groupInfo.groupName
+                val members = groupId2Members[groupId] ?: emptyList()
+                val userMembers = members.filter { it.memberType == MemberType.USER.type }
+                val deptMembers = members.filter { it.memberType == MemberType.DEPARTMENT.type }
                 BkAuthGroupAndUserList(
                     displayName = groupName,
                     roleId = groupId,
@@ -116,12 +125,18 @@ class RbacPermissionResourceMemberService(
                             id = deptInfo.memberId
                             name = deptInfo.memberName
                         }
-                    },
-                    type = ""
+                    }
                 )
-            )
+            }
+        } else {
+            resourceGroups.map {
+                getMembersUnderGroupByIam(
+                    groupId = it.relationId.toInt(),
+                    groupName = it.groupName,
+                    tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+                )
+            }
         }
-        return result
     }
 
     override fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO {
@@ -166,13 +181,7 @@ class RbacPermissionResourceMemberService(
             offset = limit.offset,
             limit = limit.limit
         )
-
-        // 不查询离职相关信息，防止调用用户管理接口，响应慢
-        if (departedFlag == false) {
-            return SQLPage(count = count, records = records)
-        }
-
-        return SQLPage(count = count, records = addDepartedFlagToMembers(records))
+        return SQLPage(count = count, records = records)
     }
 
     override fun addDepartedFlagToMembers(records: List<ResourceMemberInfo>): List<ResourceMemberInfo> {
@@ -181,7 +190,8 @@ class RbacPermissionResourceMemberService(
         }.map { it.id }
         val departedMembers = if (userMembers.isNotEmpty()) {
             deptService.listDepartedMembers(
-                memberIds = userMembers
+                memberIds = userMembers,
+                tenantId = null
             )
         } else {
             return records
@@ -203,7 +213,8 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean {
-        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId, tenantId)
         ) {
             return true
         }
@@ -220,12 +231,13 @@ class RbacPermissionResourceMemberService(
             groupId = iamGroupId,
             members = listOf(managerMember),
             expiredAt = expiredAt,
-            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+            tenantId = tenantId
         )
 
         val memberDetails = deptService.getMemberInfo(
             memberId = memberId,
-            memberType = ManagerScopesEnum.valueOf(memberType.uppercase())
+            memberType = ManagerScopesEnum.valueOf(memberType.uppercase()),
+            tenantId = tenantId
         )
         with(authResourceGroup) {
             authResourceGroupMemberDao.create(
@@ -240,7 +252,14 @@ class RbacPermissionResourceMemberService(
                 memberType = memberType,
                 expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredAt)
             )
+            BkInternalPermissionCache.invalidateProjectUserGroups(projectCode, memberId)
         }
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
         return true
     }
 
@@ -250,7 +269,7 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         tenantId: String?
     ): Boolean {
-        val membersOfNeedToAdd = members.toMutableList().removeDepartedMembers()
+        val membersOfNeedToAdd = members.toMutableList().removeDepartedMembers(tenantId)
         if (membersOfNeedToAdd.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(membersOfNeedToAdd).expiredAt(expiredAt).build()
@@ -279,10 +298,11 @@ class RbacPermissionResourceMemberService(
             pageSize = 1000
             page = 1
         }
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         val groupMembers = iamV2ManagerService.getRoleGroupMemberV2(
             iamGroupId,
             pageInfoDTO,
-            TenantUtils.getTenantIdByEnglishName(projectCode)
+            tenantId
         ).results
         val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
         val groupDepartmentSet = groupMembers.filter {
@@ -292,7 +312,8 @@ class RbacPermissionResourceMemberService(
         val iamMemberInfos = mutableListOf<ManagerMember>()
         if (!members.isNullOrEmpty()) {
             val departedMembers = deptService.listDepartedMembers(
-                memberIds = members
+                memberIds = members,
+                tenantId = tenantId
             )
             members.filterNot {
                 val isMemberDeparted = departedMembers.contains(it)
@@ -327,7 +348,7 @@ class RbacPermissionResourceMemberService(
                 groupId = iamGroupId,
                 members = iamMemberInfos,
                 expiredAt = expiredTime,
-                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+                tenantId = tenantId
             )
             // 获取对应的资源组
             val authResourceGroup = authResourceGroupDao.get(
@@ -341,7 +362,8 @@ class RbacPermissionResourceMemberService(
             iamMemberInfos.forEach {
                 val memberDetails = deptService.getMemberInfo(
                     memberId = it.id,
-                    memberType = ManagerScopesEnum.valueOf(it.type.uppercase())
+                    memberType = ManagerScopesEnum.valueOf(it.type.uppercase()),
+                    tenantId = tenantId
                 )
                 groupMembersList.add(
                     AuthResourceGroupMember(
@@ -361,7 +383,17 @@ class RbacPermissionResourceMemberService(
                 dslContext = dslContext,
                 groupMembers = groupMembersList
             )
+            BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                projectCode = projectCode,
+                userIds = iamMemberInfos.map { it.id }
+            )
         }
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
         return true
     }
 
@@ -394,18 +426,21 @@ class RbacPermissionResourceMemberService(
         if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
             logger.warn(
                 "The user's validity period in the group exceeds 180 days and does not need to be added!" +
-                    "$projectCode|$iamGroupId|$member"
+                        "$projectCode|$iamGroupId|$member"
             )
             return false
         }
         // 校验用户的部门是否已经加入组，若部门已经加入，则不再添加该用户
         try {
-            val userDeptInfoSet = deptService.getUserDeptInfo(userId = member)
+            val userDeptInfoSet = deptService.getUserDeptInfo(
+                userId = member,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             val isUserBelongGroupByDepartments = groupDepartmentSet.intersect(userDeptInfoSet).isNotEmpty()
             if (isUserBelongGroupByDepartments) {
                 logger.warn(
                     "The department of this user has already been added to the group. No need to join!" +
-                        "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
+                            "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
                 )
                 return false
             }
@@ -458,6 +493,16 @@ class RbacPermissionResourceMemberService(
             iamGroupId = iamGroupId,
             memberIds = allMemberIds
         )
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = allMemberIds
+        )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
         return true
     }
 
@@ -491,12 +536,16 @@ class RbacPermissionResourceMemberService(
         }
     }
 
-    private fun getUsersUnderGroup(groupInfo: V2ManagerRoleGroupInfo, tenantId: String?): BkAuthGroupAndUserList {
+    private fun getMembersUnderGroupByIam(
+        groupId: Int,
+        groupName: String,
+        tenantId: String?
+    ): BkAuthGroupAndUserList {
         val pageInfoDTO = V2PageInfoDTO().apply {
             pageSize = 1000
             page = 1
         }
-        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO, tenantId).results
+        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupId, pageInfoDTO, tenantId).results
 
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
@@ -504,17 +553,16 @@ class RbacPermissionResourceMemberService(
             .partition { it.type == MemberType.USER.type }
 
         return BkAuthGroupAndUserList(
-            displayName = groupInfo.name,
-            roleId = groupInfo.id,
-            roleName = groupInfo.name,
+            displayName = groupName,
+            roleId = groupId,
+            roleName = groupName,
             userIdList = members.map { it.id },
             deptInfoList = deptInfoList.map { memberInfo ->
                 RoleGroupMemberInfo().apply {
                     id = memberInfo.id
                     name = memberInfo.name
                 }
-            },
-            type = ""
+            }
         )
     }
 
@@ -648,7 +696,7 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         tenantId: String?
     ): Boolean {
-        val membersOfNeedToRenewal = members.toMutableList().removeDepartedMembers()
+        val membersOfNeedToRenewal = members.toMutableList().removeDepartedMembers(tenantId)
         if (membersOfNeedToRenewal.isNotEmpty()) {
             iamV2ManagerService.renewalRoleGroupMemberV2(
                 groupId,
@@ -668,28 +716,24 @@ class RbacPermissionResourceMemberService(
         memberIds: List<String>,
         tenantId: String?
     ): Boolean {
-        val membersOfNeedToDelete = if (type == MemberType.USER.type) {
-            memberIds.filterNot { deptService.isUserDeparted(it) }
-        } else {
-            memberIds
-        }
-        if (membersOfNeedToDelete.isNotEmpty()) {
+        if (memberIds.isNotEmpty()) {
             iamV2ManagerService.deleteRoleGroupMemberV2(
                 groupId,
                 type,
-                membersOfNeedToDelete.joinToString(","),
+                memberIds.joinToString(","),
                 tenantId
             )
         }
         return true
     }
 
-    private fun MutableList<ManagerMember>.removeDepartedMembers(): List<ManagerMember> {
+    private fun MutableList<ManagerMember>.removeDepartedMembers(tenantId: String?): List<ManagerMember> {
         val userMemberIds = this.filter { it.type == MemberType.USER.type }.map { it.id }
         if (userMemberIds.isEmpty()) return this
         // 获取离职的人员
         val departedMembers = deptService.listDepartedMembers(
-            memberIds = userMemberIds
+            memberIds = userMemberIds,
+            tenantId = tenantId
         )
         return this.filterNot {
             it.type == MemberType.USER.type &&

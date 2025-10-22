@@ -107,8 +107,8 @@
 <script>
     import { mapActions, mapGetters } from 'vuex'
     import animatedInteger from '../animatedInteger'
-    import commentRate from '../comment-rate'
     import comment from '../comment'
+    import commentRate from '../comment-rate'
     import commentDialog from '../comment/commentDialog.vue'
 
     export default {
@@ -186,7 +186,9 @@
                     page: this.pageIndex,
                     pageSize: this.pageSize
                 }
-
+                if (!Object.keys(this.methodsGenerator.comment).includes(this.type) || typeof this.methodsGenerator.comment[this.type] !== 'function') {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 const getCommentsMethod = this.methodsGenerator.comment[this.type]
                 return getCommentsMethod(postData).then((res) => {
                     const count = res.count || 0
@@ -203,6 +205,9 @@
             },
 
             getScoreDetail () {
+                if (!Object.keys(this.methodsGenerator.scoreDetail).includes(this.type) || typeof this.methodsGenerator.scoreDetail[this.type] !== 'function') {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 const getScoreDetailMethod = this.methodsGenerator.scoreDetail[this.type]
                 return getScoreDetailMethod().then((res) => {
                     const itemList = [

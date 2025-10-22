@@ -271,7 +271,8 @@
                         pageSize: pagination.limit,
                         versionName: this.searchKeyword,
                         includeDraft: this.includeDraft,
-                        buildOnly: this.buildOnly
+                        buildOnly: this.buildOnly,
+                        archiveFlag: this.$route.query.archiveFlag
                     })
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit

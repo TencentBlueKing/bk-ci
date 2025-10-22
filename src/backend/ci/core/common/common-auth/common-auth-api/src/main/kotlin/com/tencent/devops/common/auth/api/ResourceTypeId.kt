@@ -9,6 +9,7 @@ object ResourceTypeId {
     const val CERT = "cert"
     const val ENVIRONMENT = "environment"
     const val ENV_NODE = "env_node"
+    const val ENV_NODE_TAG = "env_node_tag"
     const val RULE = "rule"
     const val QUALITY_GROUP = "quality_group"
     const val REPERTORY = "repertory"

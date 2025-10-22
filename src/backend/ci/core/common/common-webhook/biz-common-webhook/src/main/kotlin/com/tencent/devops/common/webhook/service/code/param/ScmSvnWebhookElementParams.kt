@@ -1,0 +1,75 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 Tencent.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.common.webhook.service.code.param
+
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import org.springframework.stereotype.Service
+
+@Service
+class ScmSvnWebhookElementParams : ScmWebhookElementParams<CodeScmSvnWebHookTriggerElement> {
+
+    override fun elementClass(): Class<CodeScmSvnWebHookTriggerElement> {
+        return CodeScmSvnWebHookTriggerElement::class.java
+    }
+
+    @SuppressWarnings("ComplexMethod")
+    override fun getWebhookElementParams(
+        element: CodeScmSvnWebHookTriggerElement,
+        variables: Map<String, String>
+    ): WebHookParams? {
+        val params = WebHookParams(
+            repositoryConfig = RepositoryConfigUtils.buildWebhookConfig(
+                element = element,
+                variables = variables
+            ).third
+        )
+        with(element.data.input) {
+            params.pathFilterType = pathFilterType
+            params.relativePath = EnvUtils.parseEnv(relativePath ?: "", variables)
+            params.excludeUsers = if (excludeUsers.isNullOrBlank()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(excludeUsers, variables)
+            }
+            params.includeUsers = if (includeUsers.isNullOrBlank()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(includeUsers, variables)
+            }
+            params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
+            params.codeType = CodeType.SVN
+            params.eventType = CodeEventType.POST_COMMIT
+        }
+        return params
+    }
+}

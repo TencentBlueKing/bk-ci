@@ -186,6 +186,20 @@
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
+                    <devops-form-item
+                        :label="$t('quality.详情备注')"
+                        property="prompt"
+                    >
+                        <bk-input
+                            class="meta-prompt-input"
+                            v-model="createForm.logPrompt"
+                            type="textarea"
+                            :row="3"
+                            :maxlength="256"
+                            :placeholder="$t('quality.请输入指标的详情备注信息，在指标检查行的末尾展示，支持超链接')"
+                            name="prompt"
+                        />
+                    </devops-form-item>
                     <bk-form-item :label="$t('quality.使用说明')">
                         <div class="meta-desc">
                             <img
@@ -264,6 +278,7 @@
                     dataType: '',
                     threshold: '',
                     elementType: '',
+                    logPrompt: '',
                     operation: []
                 },
                 metaNameRule: {
@@ -458,6 +473,7 @@
                             name: this.createForm.name,
                             cnName: this.createForm.cnName,
                             desc: this.createForm.desc,
+                            logPrompt: this.createForm.logPrompt,
                             dataType: this.createForm.dataType,
                             operation: this.createForm.operation,
                             threshold: this.createForm.threshold,
@@ -554,7 +570,8 @@
         }
         .create-meta-form {
             padding-top: 20px;
-            .bk-form-input {
+            .bk-form-input,
+            .meta-prompt-input {
                 width: 646px;
             }
             .default-threshlod-item .bk-form-input {

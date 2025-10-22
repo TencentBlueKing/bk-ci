@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import io.swagger.v3.oas.annotations.media.Schema
@@ -74,5 +75,7 @@ data class AppModelDetail(
     @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long? = null,
     @get:Schema(title = "构建信息", required = false)
-    var buildMsg: String? = null
+    var buildMsg: String? = null,
+    @get:Schema(title = "制品质量分析", required = false)
+    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null
 )

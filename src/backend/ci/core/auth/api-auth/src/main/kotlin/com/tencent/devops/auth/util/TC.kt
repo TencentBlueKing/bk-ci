@@ -20,7 +20,7 @@ class TC : ApplicationContextAware, InitializingBean {
     }
 
     override fun afterPropertiesSet() {
-        client = applicationContext!!.getBean<Client>(Client::class.java)
+        client = applicationContext!!.getBean(Client::class.java)
     }
 
     companion object {
@@ -29,7 +29,13 @@ class TC : ApplicationContextAware, InitializingBean {
         /**
          * 用户ID转换名字
          */
-        fun uid2Name(userId: String, tenantId: String?): String {
+        fun uid2Name(userId: String?, tenantId: String?): String {
+            if (userId == null) {
+                return "null"
+            }
+            if (tenantId == null) {
+                return userId
+            }
             val listUserInfos = listUserInfos(listOf(userId), tenantId)
             return if (listUserInfos.isEmpty()) {
                 userId

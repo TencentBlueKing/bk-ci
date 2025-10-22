@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.buildless.controller
 
 import com.tencent.devops.buildless.api.builds.BuildBuildLessMvcResource
+import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.buildless.utils.ThreadPoolName
@@ -39,7 +40,8 @@ import org.springframework.web.context.request.async.DeferredResult
 
 @RestResource
 class BuildBuildLessMvcResourceImpl @Autowired constructor(
-    private val buildLessTaskService: BuildLessTaskService
+    private val buildLessTaskService: BuildLessTaskService,
+    private val buildLessConfig: BuildLessConfig
 ) : BuildBuildLessMvcResource {
 
     override fun claimBuildLessTask(containerId: String): DeferredResult<BuildLessTask?> {
@@ -50,7 +52,11 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
         }
 
         // 异步线程执行业务逻辑
-        ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.CLAIM_TASK.name).submit {
+        ThreadPoolUtils.getInstance().getThreadPool(
+            poolName = ThreadPoolName.CLAIM_TASK.name,
+            corePoolSize = buildLessConfig.maxContainerPool + 10,
+            maxPoolSize = buildLessConfig.maxContainerPool + 10
+        ).submit {
             buildLessTaskService.claimBuildLessTaskDeferred(containerId, deferredResult)
         }
 

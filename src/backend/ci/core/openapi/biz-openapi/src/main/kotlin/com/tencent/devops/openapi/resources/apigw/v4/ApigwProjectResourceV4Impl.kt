@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,6 +38,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -123,12 +124,20 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         userId: String,
         tenantId: String?,
         accessToken: String?,
-        productIds: String?
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
     ): Result<List<ProjectVO>> {
         logger.info("OPENAPI_PROJECT_V4|$userId|list")
         return client.get(ServiceProjectResource::class).list(
             userId = userId,
             productIds = productIds,
+            channelCodes = channelCodes,
+            sort = sort,
+            page = page,
+            pageSize = pageSize,
             tenantId = tenantId
         )
     }
@@ -137,6 +146,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String?,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
@@ -145,7 +155,8 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         return client.get(ServiceProjectResource::class).validate(
             validateType = validateType,
             name = name,
-            projectId = projectId
+            projectId = projectId,
+            tenantId = tenantId
         )
     }
 

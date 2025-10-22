@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
 import com.tencent.devops.common.auth.enums.HandoverChannelCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
@@ -117,7 +118,7 @@ class MigratePermissionHandoverService(
                 } catch (ignore: Exception) {
                     logger.warn(
                         "handover permissions|operate group failed:$projectCode|$resourceCode|$resourceType|" +
-                            "${resourceManagerGroup!!.relationId}|${ignore.message}"
+                                "${resourceManagerGroup!!.relationId}|${ignore.message}"
                     )
                 }
             }
@@ -136,6 +137,7 @@ class MigratePermissionHandoverService(
             }
             val handoverTo = handoverToList.random()
             try {
+                val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
                 permissionManageFacadeService.batchHandoverGroupMembersFromManager(
                     userId = "system",
                     projectCode = projectCode,
@@ -150,7 +152,8 @@ class MigratePermissionHandoverService(
                             id = handoverTo,
                             name = deptService.getMemberInfo(
                                 memberId = handoverTo,
-                                memberType = ManagerScopesEnum.USER
+                                memberType = ManagerScopesEnum.USER,
+                                tenantId = tenantId
                             ).displayName,
                             type = MemberType.USER.type
                         )

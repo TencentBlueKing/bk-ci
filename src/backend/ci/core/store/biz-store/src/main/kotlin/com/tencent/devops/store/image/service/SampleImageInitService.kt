@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,6 +36,10 @@ import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.store.common.constant.DEFAULT_USER_ID
+import com.tencent.devops.store.common.constant.DEMO_PROJECT_CODE
+import com.tencent.devops.store.common.constant.DEMO_PROJECT_DESC
+import com.tencent.devops.store.common.constant.DEMO_PROJECT_NAME
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.pojo.common.PASS
@@ -70,8 +74,8 @@ class SampleImageInitService @Autowired constructor(
 
     @Suppress("ALL")
     fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
-        val projectCode = imageInitRequest?.projectCode ?: "demo"
-        val userId = imageInitRequest?.userId ?: "admin"
+        val projectCode = imageInitRequest?.projectCode ?: DEMO_PROJECT_CODE
+        val userId = imageInitRequest?.userId ?: DEFAULT_USER_ID
         val imageCode = imageInitRequest?.imageCode ?: DEFAULT_IMAGE_CODE
         val ticketId = imageInitRequest?.ticketId
         val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
@@ -95,9 +99,9 @@ class SampleImageInitService @Autowired constructor(
                 val createDemoProjectResult = client.get(ServiceProjectResource::class).createExtSystem(
                     userId = userId,
                     projectInfo = ProjectCreateInfo(
-                        projectName = imageInitRequest?.projectCode ?: "Demo",
+                        projectName = imageInitRequest?.projectCode ?: DEMO_PROJECT_NAME,
                         englishName = projectCode,
-                        description = imageInitRequest?.projectDesc ?: "demo project",
+                        description = imageInitRequest?.projectDesc ?: DEMO_PROJECT_DESC,
                         enabled = false,
                         tenantId = TenantUtils.getTenantId()
                     ),

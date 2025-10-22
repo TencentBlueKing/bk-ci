@@ -28,7 +28,6 @@
         },
         watch: {
             '$route.fullPath' (val) { // 同步地址到蓝盾
-                console.log(val, 'fullPath')
                 this.$syncUrl(val.replace(/^\/pipeline\//, '/'))
             },
             fetchError (error) {

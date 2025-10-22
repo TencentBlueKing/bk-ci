@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -250,8 +250,11 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         authFlag: Boolean,
         queryCacheFlag: Boolean
     ) {
-        val tenantId = TenantWorkerUtils.getTenantId(projectId)
-        val storeProjectId = if (tenantId == null) "bk-store" else "${tenantId}.bk-store"
+        val storeProjectId = if (TenantWorkerUtils.isMultiTenantMode(projectId)) {
+            "${TenantWorkerUtils.DEFAULT_TENANT_ID_FOR_MULTI}.bk-store"
+        } else {
+            "bk-store"
+        }
         val filePath = when (realm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$atomFilePath"
             REALM_BK_REPO -> "/$storeProjectId/plugin/$atomFilePath"

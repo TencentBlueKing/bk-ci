@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -156,5 +156,14 @@ interface StoreReleaseSpecBusService {
         version: String,
         userId: String,
         releaseType: ReleaseTypeEnum? = null
+    )
+
+    /**
+     * 执行新增组件请求后置业务
+     */
+    fun doStorePostCreateBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
     )
 }

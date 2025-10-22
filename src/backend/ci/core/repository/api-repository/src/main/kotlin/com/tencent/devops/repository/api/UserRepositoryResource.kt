@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -225,7 +225,10 @@ interface UserRepositoryResource {
         aliasName: String? = null,
         @Parameter(description = "是否开启pac", required = false)
         @QueryParam("enablePac")
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        @Parameter(description = "代码库类型标识", required = false)
+        @QueryParam("scmCode")
+        scmCode: String? = null
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "删除代码库")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,20 +40,20 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceDeptResourceImpl @Autowired constructor(
     val deptService: DeptService
 ) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
+    override fun getParentDept(userId: String, tenantId: String?): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId, tenantId))
     }
 
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
+    override fun getDeptByName(userId: String, tenantId: String?, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId, tenantId))
     }
 
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(userId, name))
+    override fun getUserInfo(userId: String, tenantId: String?, name: String): Result<UserAndDeptInfoVo?> {
+        return Result(deptService.getUserInfo(name, tenantId))
     }
 
-    override fun checkUserDeparted(name: String): Result<Boolean> {
-        return Result(deptService.isUserDeparted(name))
+    override fun checkUserDeparted(name: String, tenantId: String?): Result<Boolean> {
+        return Result(deptService.isUserDeparted(name, tenantId))
     }
 
     override fun listUserInfos(

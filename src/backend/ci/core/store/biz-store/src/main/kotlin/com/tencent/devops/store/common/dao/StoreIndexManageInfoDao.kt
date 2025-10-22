@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -275,6 +275,20 @@ class StoreIndexManageInfoDao {
             return dslContext.select(STORE_CODE).from(this)
                 .where(INDEX_CODE.eq(indexCode).and(ELEMENT_NAME.eq(elementName)))
                 .fetchInto(String::class.java)
+        }
+    }
+
+    fun getElementDeilByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        indexCode: String,
+        storeType: StoreTypeEnum
+    ): Result<TStoreIndexElementDetailRecord> {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(INDEX_CODE.eq(indexCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetch()
         }
     }
 

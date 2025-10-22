@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.api.builds
 
+import com.tencent.devops.artifactory.pojo.ReportPluginConfig
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -19,4 +20,9 @@ interface BuildArtifactoryConfigResource {
     @GET
     @Path("/realm")
     fun getRealm(): Result<String>
+
+    @Operation(summary = "获取归档报告插件配置")
+    @GET
+    @Path("/report")
+    fun getReportConfig(): Result<ReportPluginConfig>
 }

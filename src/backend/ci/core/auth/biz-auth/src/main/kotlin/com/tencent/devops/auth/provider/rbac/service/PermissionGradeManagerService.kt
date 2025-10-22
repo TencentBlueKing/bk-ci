@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,6 +43,7 @@ import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
+import com.tencent.devops.auth.pojo.ItsmTicketsRevoked
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
@@ -492,13 +493,22 @@ class PermissionGradeManagerService @Autowired constructor(
         }
         // 若itsm还未结束，需要发起撤销
         if (!isItsmTicketFinished(callbackRecord.sn)) {
-            itsmService.cancelItsmApplication(
-                ItsmCancelApplicationInfo(
-                    sn = callbackRecord.sn,
-                    operator = userId,
-                    actionType = CANCEL_ITSM_APPLICATION_ACTION
+            if (TenantUtils.disableEsb()) {
+                itsmService.ticketsRevoked(
+                    ItsmTicketsRevoked(
+                        ticket_id = callbackRecord.sn,
+                        system_id = "bk_iam"
+                    )
                 )
-            )
+            } else {
+                itsmService.cancelItsmApplication(
+                    ItsmCancelApplicationInfo(
+                        sn = callbackRecord.sn,
+                        operator = userId,
+                        actionType = CANCEL_ITSM_APPLICATION_ACTION
+                    )
+                )
+            }
         }
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
         iamV2ManagerService.cancelCallbackApplication(
@@ -515,7 +525,11 @@ class PermissionGradeManagerService @Autowired constructor(
     }
 
     private fun isItsmTicketFinished(sn: String): Boolean {
-        val itsmTicketStatus = itsmService.getItsmTicketStatus(sn)
+        val itsmTicketStatus = if (TenantUtils.disableEsb()) {
+            itsmService.getItsmTicketStatusV2(sn)
+        } else {
+            itsmService.getItsmTicketStatus(sn)
+        }
         return itsmTicketStatus == REVOKE_ITSM_APPLICATION_ACTION ||
                 itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION
     }

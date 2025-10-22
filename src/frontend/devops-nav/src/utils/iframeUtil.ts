@@ -1,6 +1,6 @@
+import store from '@/store'
 import { showLoginPopup } from '@/utils/util'
 import eventBus from './eventBus'
-import store from '@/store'
 interface UrlParam {
     url: string
     refresh: boolean
@@ -17,6 +17,12 @@ function iframeUtil (router: any) {
     }
 
     function onMessage (e) {
+        if (![
+            location.origin
+        ].includes(e.origin)) {
+            console.warn(`Untrusted origin: ${e.origin}`)
+            return
+        }
         parseMessage(e.data)
     }
 

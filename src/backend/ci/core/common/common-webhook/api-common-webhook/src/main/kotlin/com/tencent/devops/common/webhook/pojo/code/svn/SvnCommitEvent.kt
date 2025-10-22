@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,5 +43,18 @@ data class SvnCommitEvent(
     val files: List<SvnCommitEventFile>,
     val commitTime: Long?,
     @JsonProperty("total_files_count")
-    val totalFilesCount: Int?
+    val totalFilesCount: Int?,
+    @JsonProperty("repository")
+    val repository: SvnCommitRepository?
 ) : CodeWebhookEvent
+
+@Suppress("ConstructorParameterNaming")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class SvnCommitRepository(
+    val name: String,
+    val description: String?,
+    @JsonProperty("svn_http_url")
+    val svnHttpUrl: String?,
+    @JsonProperty("svn_ssh_url")
+    val svnSshUrl: String?
+)

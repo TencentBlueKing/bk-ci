@@ -8,6 +8,8 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.WebhookCommit
 
 /**
@@ -26,5 +28,7 @@ data class EventRepositoryCache(
     var serverInfo: P4ServerInfo? = null,
     var githubPrInfo: PullRequestResponse? = null,
     var webhookCommitList: List<WebhookCommit>? = null,
-    var githubCommitInfo: CommitResponse? = null
+    var githubCommitInfo: CommitResponse? = null,
+    var tagInfo: GitTagInfo? = null,
+    var tapdWorkItems: List<TapdWorkItem>? = null
 )

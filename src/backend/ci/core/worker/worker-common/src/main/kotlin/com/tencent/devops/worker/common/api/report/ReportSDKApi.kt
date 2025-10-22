@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.artifactory.pojo.ReportPluginConfig
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -58,7 +59,8 @@ interface ReportSDKApi : WorkerRestApiSDK {
         name: String,
         reportType: String? = ReportTypeEnum.INTERNAL.name,
         reportEmail: ReportEmail? = null,
-        token: String?
+        token: String?,
+        compressed: Boolean = false
     ): Result<Boolean>
 
     /**
@@ -88,4 +90,9 @@ interface ReportSDKApi : WorkerRestApiSDK {
         type: TokenType,
         expireSeconds: Long
     ): String?
+
+    /**
+     * 获取归档报告插件配置
+     */
+    fun getPluginConfig(): Result<ReportPluginConfig>
 }

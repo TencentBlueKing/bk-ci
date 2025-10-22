@@ -3,20 +3,29 @@
         v-model="makeMirrorConf.isShow"
         :width="'640'"
         :close-icon="false"
-        :ext-cls="'make-mirror-dialog'">
+        :ext-cls="'make-mirror-dialog'"
+    >
         <div
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
-            }">
+            }"
+        >
             <div class="info-header">{{ $t('environment.makeMirror') }}</div>
-            <bk-form class="make-mirror-form" v-if="makeMirrorConf.isShow"
+            <bk-form
+                class="make-mirror-form"
+                v-if="makeMirrorConf.isShow"
                 :label-width="100"
                 :model="createForm"
-                form-type="vertical">
-                <devops-form-item :label="$t('environment.mirrorName')" :required="true" :property="'cnName'"
+                form-type="vertical"
+            >
+                <devops-form-item
+                    :label="$t('environment.mirrorName')"
+                    :required="true"
+                    :property="'cnName'"
                     :is-error="errors.has('name')"
-                    :error-msg="errors.first('name')">
+                    :error-msg="errors.first('name')"
+                >
                     <bk-input
                         class="meta-name-input"
                         :placeholder="$t('environment.mirrorNamePlaceholder')"
@@ -26,12 +35,17 @@
                             required: true,
                             max: 128,
                             mirrorName: true
-                        }">
+                        }"
+                    >
                     </bk-input>
                 </devops-form-item>
-                <devops-form-item :label="$t('environment.mirrorTag')" :required="true" :property="'cnName'"
+                <devops-form-item
+                    :label="$t('environment.mirrorTag')"
+                    :required="true"
+                    :property="'cnName'"
                     :is-error="errors.has('mirrorTag')"
-                    :error-msg="errors.first('mirrorTag')">
+                    :error-msg="errors.first('mirrorTag')"
+                >
                     <bk-input
                         class="meta-name-input"
                         :placeholder="$t('environment.mirrorTagPlaceholder')"
@@ -41,12 +55,17 @@
                             required: true,
                             max: 127,
                             mirrorTag: true
-                        }">
+                        }"
+                    >
                     </bk-input>
                 </devops-form-item>
-                <devops-form-item :label="$t('environment.description')" :required="true" :property="'description'"
+                <devops-form-item
+                    :label="$t('environment.description')"
+                    :required="true"
+                    :property="'description'"
                     :is-error="errors.has('mirrorDesc')"
-                    :error-msg="errors.first('mirrorDesc')">
+                    :error-msg="errors.first('mirrorDesc')"
+                >
                     <bk-input
                         class="meta-name-input"
                         :placeholder="$t('environment.descriptionPlaceholder')"
@@ -54,15 +73,28 @@
                         v-model="createForm.description"
                         v-validate="{
                             required: true
-                        }">
+                        }"
+                    >
                     </bk-input>
                 </devops-form-item>
             </bk-form>
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" :disabled="loading.isLoading" @click="confirmFn">{{ $t('environment.comfirm') }}</bk-button>
-                <bk-button theme="default" :disabled="loading.isLoading" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    :disabled="loading.isLoading"
+                    @click="confirmFn"
+                >
+                    {{ $t('environment.confirm') }}
+                </bk-button>
+                <bk-button
+                    theme="default"
+                    :disabled="loading.isLoading"
+                    @click="cancelFn"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
             </div>
         </div>
     </bk-dialog>
@@ -87,7 +119,7 @@
                 },
                 mirrorNameRule: {
                     getMessage: field => this.$t('environment.mirrorNameRule'),
-                    validate: value => /^[a-z0-9]([a-z0-9_.-]*[a-z0-9])*$/.test(value)
+                    validate: value => /^[a-z0-9](?:[a-z0-9_.-]*[a-z0-9])?$/.test(value)
                 },
                 mirrorTagRule: {
                     getMessage: field => this.$t('environment.mirrorTagRule'),

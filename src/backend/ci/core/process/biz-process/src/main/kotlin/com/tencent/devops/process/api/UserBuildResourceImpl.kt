@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -376,7 +376,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debugVersion: Int?
+        debugVersion: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildNum <= 0) {
@@ -389,7 +390,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildNum = buildNum,
                 channelCode = ChannelCode.BS,
-                debugVersion = debugVersion
+                debugVersion = debugVersion,
+                archiveFlag = archiveFlag
             )
         )
     }

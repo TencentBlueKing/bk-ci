@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -19,7 +19,7 @@
 
 import actions from './actions'
 import mutations from './mutations'
-import { nodeTypeMap, nodeStatusMap } from './constants'
+// import { nodeTypeMap, nodeStatusMap } from './constants'
 
 const store = {
     namespaced: true,
@@ -27,10 +27,15 @@ const store = {
         publicDockerList: [],
         customizeDockerList: [],
         nodeDetails: {},
-        nodeTypes: nodeTypeMap,
-        nodeStatus: nodeStatusMap,
+        // nodeTypes: nodeTypeMap,
+        // nodeStatus: nodeStatusMap,
+        nodeTypes: null,
+        nodeStatus: null,
         devCloudVmQuta: {},
-        currentSelectedModel: {}
+        currentSelectedModel: {},
+        nodeTagList: [],
+        nodeCount: {},
+        selectionTagList: []
     },
     getters: {},
     mutations,

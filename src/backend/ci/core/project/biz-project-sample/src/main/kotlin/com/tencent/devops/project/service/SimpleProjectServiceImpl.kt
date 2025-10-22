@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,7 +40,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -57,11 +57,11 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
+import java.io.File
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Suppress("ALL", "UNUSED")
 @Service
@@ -118,7 +118,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(
+            CommonServiceUtils.uploadFileToArtifactories(
                 userId = userId,
                 serviceUrlPrefix = serviceUrlPrefix,
                 file = logoFile,

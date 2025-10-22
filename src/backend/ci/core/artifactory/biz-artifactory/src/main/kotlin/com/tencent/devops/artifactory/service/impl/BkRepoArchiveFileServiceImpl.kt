@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -261,6 +261,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM, REPO_NAME_IMAGE),
             fileNames = listOf(),
             metadata = searchProps.props,
+            qualityMetadata = searchProps.qualityMetadata.map { Pair(it.key, it.value) },
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGE_SIZE
         ).records
@@ -628,7 +629,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         modifiedTimeDesc: Boolean?
     ): Page<FileInfo> {
         val data = bkRepoClient.listFilePage(
-            userId = userId,
+            userId = BKREPO_DEFAULT_USER,
             projectId = projectId,
             repoName = REPO_NAME_CUSTOM,
             path = filePath,
@@ -665,7 +666,6 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -673,7 +673,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val tmpFile = DefaultPathUtils.randomFile()
         return try {
             bkRepoClient.downloadFile(
-                userId = userId,
+                userId = BKREPO_DEFAULT_USER,
                 projectId = projectId,
                 repoName = repoName,
                 fullPath = filePath,
@@ -692,7 +692,6 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -701,7 +700,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val fileNames = mutableListOf<String>()
         do {
             val nodeInfos = bkRepoClient.listFilePage(
-                userId = userId,
+                userId = BKREPO_DEFAULT_USER,
                 projectId = projectId,
                 repoName = repoName,
                 path = filePath,

@@ -16,7 +16,7 @@ const props = defineProps({
 
 const manageTabs = ref([
   {
-    title: t('项目信息'),
+    title: t('项目设置'),
     name: 'show',
   },
   {
@@ -37,7 +37,7 @@ const routeName = computed(()=>route.name);
 const { projectCode } = route.params;
 const projectList = window.parent?.vuexStore?.state?.projectList;
 const projectName = projectList?.find(project => project.projectCode === projectCode)?.projectName || projectCode;
-const activeTab = ref(t('项目信息'));
+const activeTab = ref(t('项目设置'));
 const handleChangeTab = (manageTab: any) => {
   activeTab.value = manageTab.title;
   router.push({
@@ -46,7 +46,7 @@ const handleChangeTab = (manageTab: any) => {
 };
 const initActiveTab = () => {
   const tab = manageTabs.value.find(tab => tab.name === routeName.value);
-  activeTab.value = tab?.title || t('项目信息');
+  activeTab.value = tab?.title || t('项目设置');
 };
 onMounted(() => {
   initActiveTab();

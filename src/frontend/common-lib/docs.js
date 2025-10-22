@@ -22,7 +22,8 @@ const createDocs = (lang, version) => {
         TURBO_GUIDE_DOC: `${commonPrefix}/Services/Turbo/linux-tubo-speed/use_in_linux.md`, // turbo指引文档
         BKAPP_NAV_OPEN_SOURCE_URL: 'https://github.com/TencentBlueKing/bk-ci', // 开源社区
         FEED_BACK_URL: `${DOCS_URL_PREFIX}/s-mart/community/question`, // 问题反馈
-        PAC_GUIDE_DOC: `${commonPrefix}/Services/Pipeline-as-Code/01-quick-start/01-quict-start.md` // PAC快速上手文档
+        PAC_GUIDE_DOC: `${commonPrefix}/Services/Pipeline-as-Code/01-quick-start/01-quict-start.md`, // PAC快速上手文档
+        BUILD_NODE_GUIDE_DOC: `${commonPrefix}/UserGuide/Services/Pools/host-to-bkci.md`, // 环境管理-安装节点失败文档
     }
     const pipelineDocs = {
         ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档

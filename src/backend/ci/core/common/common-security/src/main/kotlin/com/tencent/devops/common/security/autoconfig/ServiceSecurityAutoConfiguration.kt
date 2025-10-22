@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,7 +35,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.Ordered
+import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
 /**
  *
@@ -45,6 +47,10 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ServiceSecurityAutoConfiguration {
+    companion object {
+        const val JWT_MANAGER_SCHEDULER = "jwtManagerScheduler"
+    }
+
     @Value("\${bkci.security.public-key:#{null}}")
     private val publicKey: String? = null
 
@@ -60,4 +66,13 @@ class ServiceSecurityAutoConfiguration {
     @Bean
     @DependsOn("environmentUtil")
     fun jwtManager() = JwtManager(privateKey, publicKey, enable)
+
+    @Bean(name = [JWT_MANAGER_SCHEDULER])
+    fun jwtManagerScheduler(): TaskScheduler {
+        val scheduler = ThreadPoolTaskScheduler()
+        scheduler.poolSize = 1
+        scheduler.setThreadNamePrefix("jwt-scheduler-")
+        scheduler.initialize()
+        return scheduler
+    }
 }

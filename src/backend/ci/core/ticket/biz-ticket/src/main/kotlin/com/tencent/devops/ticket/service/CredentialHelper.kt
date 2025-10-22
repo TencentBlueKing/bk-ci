@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -130,7 +130,8 @@ class CredentialHelper {
     fun encryptCredential(
         aesEncryptedCredential: String?,
         publicKeyByteArray: ByteArray,
-        serverPrivateKeyByteArray: ByteArray
+        serverPrivateKeyByteArray: ByteArray,
+        padding: Boolean
     ): String? {
 
         if (aesEncryptedCredential.isNullOrBlank()) {
@@ -139,7 +140,12 @@ class CredentialHelper {
         try {
             val credential = BkCryptoUtil.decryptSm4OrAes(aesKey, aesEncryptedCredential)
             val credentialEncryptedContent =
-                DHUtil.encrypt(credential.toByteArray(), publicKeyByteArray, serverPrivateKeyByteArray)
+                DHUtil.encrypt(
+                    data = credential.toByteArray(),
+                    partAPublicKey = publicKeyByteArray,
+                    partBPrivateKey = serverPrivateKeyByteArray,
+                    padding = padding
+                )
             return String(Base64.getEncoder().encode(credentialEncryptedContent))
         } catch (ignored: Throwable) {
             throw ignored

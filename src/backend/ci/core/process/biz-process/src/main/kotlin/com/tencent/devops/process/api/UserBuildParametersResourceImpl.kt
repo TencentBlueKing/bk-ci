@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -78,6 +78,14 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                     params = TriggerBuildParamUtils.getBasicBuildParams().map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
                     }.sortedBy { it.name }
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getJobParamName(),
+                    params = TriggerBuildParamUtils.getJobBuildParams()
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getStepParamName(),
+                    params = TriggerBuildParamUtils.getStepBuildParams()
                 )
             )
         )
@@ -116,6 +124,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 pageSize = pageSize,
                 aliasName = aliasName
             ).map { BuildFormValue(it.aliasName, it.aliasName) }
+            .distinctBy { it.key }
         )
     }
 
@@ -257,7 +266,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
-        return result
+        return result.distinct()
     }
 
     override fun buildParamFormProp(
@@ -266,7 +275,8 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pipelineId: String,
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?
     ): Result<List<PipelineBuildParamFormProp>> {
         val buildParamFormProp = pipelineBuildFacadeService.getBuildParamFormProp(
             projectId = projectId,
@@ -274,7 +284,8 @@ class UserBuildParametersResourceImpl @Autowired constructor(
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             userId = userId,
-            version = version
+            version = version,
+            isTemplate = isTemplate
         )
         return Result(buildParamFormProp)
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.CreateProjectVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
@@ -145,6 +146,9 @@ interface UserProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
@@ -198,7 +202,7 @@ interface UserProjectResource {
         @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): Result<Boolean>
+    ): Result<CreateProjectVO>
 
     @PUT
     @Path("/{project_id}")
@@ -279,6 +283,9 @@ interface UserProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "校验的是项目名称或者项目英文名")
         @PathParam("validateType")
         validateType: ProjectValidateType,

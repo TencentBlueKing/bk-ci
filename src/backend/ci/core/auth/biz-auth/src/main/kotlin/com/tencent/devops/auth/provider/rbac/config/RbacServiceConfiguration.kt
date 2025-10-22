@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.config
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
@@ -47,7 +46,6 @@ import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerServi
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
-import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.BkHttpRequestService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -68,18 +66,12 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceTypeDao: AuthResourceTypeDao,
         authActionDao: AuthActionDao,
-        iamV2PolicyService: PolicyService,
-        iamConfiguration: IamConfiguration,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authProjectUserMetricsService: AuthProjectUserMetricsService
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao
     ) = RbacCommonService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
-        policyService = iamV2PolicyService,
-        iamConfiguration = iamConfiguration,
-        authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authUserDailyService = authProjectUserMetricsService
+        authResourceGroupConfigDao = authResourceGroupConfigDao
     )
 
     @Bean
@@ -143,7 +135,8 @@ class RbacServiceConfiguration {
         authResourceDao: AuthResourceDao,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        traceEventDispatcher: TraceEventDispatcher
     ) = AuthResourceService(
         dslContext = dslContext,
         authResourceDao = authResourceDao,

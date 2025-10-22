@@ -6,6 +6,7 @@ import {
   USER_PERFIX,
   OPERATE_CHANNEL,
   PIPELINES_PERFIX,
+  ARTIFACTORY_PERFIX,
 } from './constants';
 import http from './fetch';
 export default {
@@ -316,7 +317,7 @@ export default {
    * 用户移出项目
    */
   removeMemberFromProject (projectId: string, params: any) {
-    return http.put(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject`, params);
+    return http.put(`${IAM_PERFIX}/member/${projectId}/batchRemoveMemberFromProject`, params);
   },
   /**
    * 重置资源授权管理
@@ -338,7 +339,7 @@ export default {
   },
 
   removeMemberFromProjectCheck (projectId: string, params: any) {
-    return http.post(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProjectCheck`, params);
+    return http.post(`${IAM_PERFIX}/member/${projectId}/batchRemoveMemberFromProjectCheck`, params);
   },
   /**
    * 获取资源类型列表
@@ -407,5 +408,35 @@ export default {
       ...params,
     }).toString();
     return http.get(`${PIPELINES_PERFIX}/${projectId}/listInheritedDialectPipelines?${query}`);
+  },
+  /**
+   * 获取项目制品质量元数据标签列表
+   */
+  getMetadataList (projectId : string) {
+    return http.get(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}`);
+  },
+  /**
+   * 创建项目制品质量元数据标签
+   */
+  createdMetadata (projectId : string, params: any) {
+    return http.post(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}`, params);
+  },
+  /**
+   * 更新项目制品质量元数据标签
+   */
+  updateMetadata (projectId : string, labelKey: string, params: any) {
+    return http.put(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/${labelKey}`, params);
+  },
+  /**
+   * 删除项目制品质量元数据标签
+   */
+  deleteMetadata (projectId : string, labelKey: string) {
+    return http.delete(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/${labelKey}`);
+  },
+  /**
+   * 批量保存项目制品质量元数据标签
+   */
+  batchUpdateMetadata(projectId : string, params: any) {
+    return http.post(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/batch`, params);
   },
 };

@@ -204,6 +204,21 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    fun getProjectLevelPermission(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupId: Int
+    ): List<String> {
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.select(ACTION).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.eq(iamGroupId))
+                .and(RELATED_RESOURCE_TYPE.eq(ResourceTypeId.PROJECT))
+                .and(RELATED_RESOURCE_CODE.eq(projectCode))
+                .fetch().map { it.value1() }
+        }
+    }
+
     fun listGroupResourcesWithPermission(
         dslContext: DSLContext,
         projectCode: String,

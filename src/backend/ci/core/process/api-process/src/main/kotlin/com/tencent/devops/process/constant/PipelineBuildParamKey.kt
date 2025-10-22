@@ -19,6 +19,7 @@ object PipelineBuildParamKey {
     const val CI_COMMIT_MESSAGE = "ci.commit_message"
     const val CI_ACTION = "ci.action"
     const val CI_ACTOR = "ci.actor"
+    const val CI_ACTOR_NAME = "ci.actor_name"
 
     // GIT PUSH参数
     const val CI_BEFORE_SHA = "ci.before_sha"
@@ -41,10 +42,12 @@ object PipelineBuildParamKey {
     const val CI_MR_REVIEWERS = "ci.mr_reviewers"
     const val CI_MILESTONE_NAME = "ci.milestone_name"
     const val CI_MILESTONE_ID = "ci.milestone_id"
+    const val CI_TAPD_ISSUES = "ci.mr_tapd_issues"
 
     // GIT TAG参数
     const val CI_COMMIT_AUTHOR = "ci.commit_author"
     const val CI_TAG_FROM = "ci.tag_from"
+    const val CI_TAG_DESC = "ci.tag_desc"
 
     // GIT TAG参数
     const val CI_ISSUE_TITLE = "ci.issue_title"
@@ -79,7 +82,9 @@ object PipelineBuildParamKey {
     const val CI_BUILD_NO = "ci.build-no"
     const val CI_BUILD_NUM = "ci.build_num"
     const val CI_PIPELINE_CREATOR = "ci.pipeline_creator"
+    const val CI_PIPELINE_CREATOR_NAME = "ci.pipeline_creator_name"
     const val CI_PIPELINE_MODIFIER = "ci.pipeline_modifier"
+    const val CI_PIPELINE_MODIFIER_NAME = "ci.pipeline_modifier_name"
     const val CI_PIPELINE_VERSION = "ci.pipeline_version"
     const val CI_PROJECT_ID = "ci.project_id"
     const val CI_PROJECT_NAME = "ci.project_name"
@@ -91,4 +96,24 @@ object PipelineBuildParamKey {
     const val CI_FAILED_TASKNAMES = "ci.failed_tasknames"
     const val CI_FAILED_TASKS = "ci.failed_tasks"
     const val CI_REMARK = "ci.remark"
+
+    // 流水线Step变量
+    const val STEP_NAME = "step.name"
+    const val STEP_ID = "step.id"
+    const val STEP_RETRY_COUNT_MANUAL = "step.retry-count-manual"
+    const val STEP_RETRY_COUNT_AUTO = "step.retry-count-auto"
+    const val STEP_STATUS_TEMPLATE = "steps.<step-id>.status"
+    const val STEP_OUTCOME_TEMPLATE = "steps.<step-id>.outcome"
+
+    // 流水线Job变量
+    const val JOB_NAME = "job.name"
+    const val JOB_ID = "job.id"
+    const val JOB_OS = "job.os"
+    const val JOB_CONTAINER_NETWORK = "job.container.network"
+    const val JOB_CONTAINER_NODE_ALIAS = "job.container.node_alias"
+    const val JOB_STAGE_ID = "job.stage_id"
+    const val JOB_STAGE_NAME = "job.stage_name"
+    const val JOB_INDEX = "job.index"
+    const val JOB_STATUS_TEMPLATE = "jobs.<job-id>.status"
+    const val JOB_OUTCOME_TEMPLATE = "jobs.<job-id>.outcome"
 }

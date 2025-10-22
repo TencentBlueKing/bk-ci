@@ -127,11 +127,13 @@
                         :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
                         target="_blank"
                     >
-                        {{ props.row.authIdentity }}
+                        <bk-user-display-name :user-id="props.row.authIdentity" />
                     </a>
-                    <span v-else>
-                        {{ props.row.authIdentity }}
-                    </span>
+
+                    <bk-user-display-name
+                        v-else
+                        :user-id="props.row.authIdentity"
+                    />
                 </template>
             </bk-table-column>
             <bk-table-column

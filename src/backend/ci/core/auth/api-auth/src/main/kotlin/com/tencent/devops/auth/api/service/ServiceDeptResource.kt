@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,7 +55,10 @@ interface ServiceDeptResource {
     fun getParentDept(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "用户ID", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String?
     ): Result<Int>
 
     @GET
@@ -65,6 +68,9 @@ interface ServiceDeptResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String?,
         @QueryParam("deptName")
         @Parameter(description = "组织名称", required = true)
         deptName: String
@@ -77,6 +83,9 @@ interface ServiceDeptResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String?,
         @QueryParam("name")
         @Parameter(description = "用户名称", required = true)
         name: String
@@ -88,7 +97,10 @@ interface ServiceDeptResource {
     fun checkUserDeparted(
         @QueryParam("name")
         @Parameter(description = "用户名称", required = true)
-        name: String
+        name: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String?
     ): Result<Boolean>
 
     @POST

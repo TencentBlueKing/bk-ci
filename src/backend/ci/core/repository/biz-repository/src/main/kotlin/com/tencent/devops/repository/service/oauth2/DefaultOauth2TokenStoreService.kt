@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,14 +28,20 @@
 package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
+import com.tencent.devops.repository.service.scm.ScmTokenService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 /**
@@ -44,7 +50,9 @@ import org.springframework.stereotype.Service
 @Service
 class DefaultOauth2TokenStoreService(
     private val dslContext: DSLContext,
-    private val repositoryScmTokenDao: RepositoryScmTokenDao
+    private val repositoryScmTokenDao: RepositoryScmTokenDao,
+    @Lazy
+    private val scmTokenService: ScmTokenService
 ) : IOauth2TokenStoreService {
 
     @Value("\${aes.git:#{null}}")
@@ -57,21 +65,19 @@ class DefaultOauth2TokenStoreService(
     }
 
     override fun get(userId: String, scmCode: String): OauthTokenInfo? {
-        return repositoryScmTokenDao.getToken(
+        val scmTokenRecord = repositoryScmTokenDao.getToken(
             dslContext = dslContext,
             userId = userId,
             scmCode = scmCode,
             appType = TokenAppTypeEnum.OAUTH2.name
-        )?.let {
-            OauthTokenInfo(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                tokenType = "",
-                expiresIn = it.expiresIn,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
-                createTime = it.createTime.timestampmilli(),
-                userId = userId,
-                operator = it.operator ?: userId
-            )
+        ) ?: repositoryScmTokenDao.getTokenByOperator(
+            dslContext = dslContext,
+            operator = userId,
+            scmCode = scmCode,
+            appType = TokenAppTypeEnum.OAUTH2.name
+        )
+        return scmTokenRecord?.let {
+            checkExpire(it, userId)
         }
     }
 
@@ -83,7 +89,8 @@ class DefaultOauth2TokenStoreService(
                 appType = TokenAppTypeEnum.OAUTH2.name,
                 accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken),
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
-                expiresIn = expiresIn ?: 0L
+                expiresIn = expiresIn ?: 0L,
+                operator = operator ?: userId
             )
             repositoryScmTokenDao.saveAccessToken(
                 dslContext = dslContext,
@@ -92,11 +99,66 @@ class DefaultOauth2TokenStoreService(
         }
     }
 
-    override fun delete(userId: String, scmCode: String) {
+    override fun delete(userId: String, scmCode: String, username: String) {
+        get(username, scmCode)?.let {
+            // 非OAUTH授权代持人不得删除
+            if (it.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                )
+            }
+        }
         repositoryScmTokenDao.delete(
             dslContext = dslContext,
-            userId = userId,
+            userId = username,
             scmCode = scmCode
         )
+    }
+
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return repositoryScmTokenDao.list(
+            dslContext = dslContext,
+            scmCode = scmCode,
+            operator = userId
+        ).map {
+            checkExpire(it, userId)
+        }
+    }
+
+    /**
+     * 检查是否过期，过期则尝试续期
+     */
+    private fun checkExpire(
+        it: TRepositoryScmTokenRecord,
+        userId: String
+    ): OauthTokenInfo {
+        val oauthTokenInfo = OauthTokenInfo(
+            accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+            tokenType = "",
+            expiresIn = it.expiresIn,
+            refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+            createTime = it.createTime.timestampmilli(),
+            userId = it.userId,
+            operator = it.operator ?: userId,
+            updateTime = it.updateTime.timestampmilli()
+        )
+        return if (scmTokenService.isTokenExpire(it.updateTime.timestamp(), it.expiresIn)) {
+            val refreshToken = scmTokenService.tryRefreshToken(
+                scmCode = it.scmCode,
+                userId = it.userId,
+                appType = TokenAppTypeEnum.OAUTH2
+            )
+            // 刷新成功，返回新值
+            refreshToken?.let {
+                oauthTokenInfo.copy(
+                    accessToken = it.accessToken,
+                    expiresIn = it.expiresIn,
+                    refreshToken = it.refreshToken,
+                    createTime = it.createTime
+                )
+            } ?: oauthTokenInfo
+        } else {
+            oauthTokenInfo
+        }
     }
 }

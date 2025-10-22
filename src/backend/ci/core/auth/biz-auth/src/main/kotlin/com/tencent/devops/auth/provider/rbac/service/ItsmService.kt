@@ -10,6 +10,8 @@ import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
+import com.tencent.devops.auth.pojo.ItsmTicketDetail
+import com.tencent.devops.auth.pojo.ItsmTicketsRevoked
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.auth.service.BkHttpRequestService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -19,13 +21,14 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
-class ItsmService constructor(
+class ItsmService(
     val bkHttpRequestService: BkHttpRequestService
 ) {
 
     @Value("\${itsm.url:#{null}}")
     private val itsmUrlPrefix: String = ""
 
+    @Deprecated("ESB接口下线", replaceWith = ReplaceWith("ticketsRevoked(itsmTicketsRevoked)"))
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
         val itsmResponseDTO: ResponseDTO<List<Any>> = bkHttpRequestService.executeHttpPost(
             url = itsmUrlPrefix + ITSM_APPLICATION_CANCEL_URL_SUFFIX,
@@ -42,6 +45,23 @@ class ItsmService constructor(
         return true
     }
 
+    fun ticketsRevoked(itsmTicketsRevoked: ItsmTicketsRevoked): Boolean {
+        val itsmResponseDTO: ResponseDTO<Any> = bkHttpRequestService.executeHttpPost(
+            url = itsmUrlPrefix + ITSM_TICKETS_REVOKED_URL_SUFFIX,
+            body = itsmTicketsRevoked
+        )
+        if (itsmResponseDTO.message != "success") {
+            logger.warn("tickets revoked failed! $itsmTicketsRevoked")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_ITSM_APPLICATION_CANCEL_FAIL,
+                params = arrayOf(itsmTicketsRevoked.ticket_id),
+                defaultMessage = "tickets revoked failed! ticket_id(${itsmTicketsRevoked.ticket_id})"
+            )
+        }
+        return true
+    }
+
+    @Deprecated("ESB接口下线", replaceWith = ReplaceWith("verifyItsmTicket(\"\")"))
     fun verifyItsmToken(token: String) {
         val param = mapOf("token" to token)
         val itsmResponseDTO: ResponseDTO<Map<*, *>> = bkHttpRequestService.executeHttpPost(
@@ -60,12 +80,39 @@ class ItsmService constructor(
         }
     }
 
+    fun verifyItsmTicket(ticketId: String) {
+        if (getItsmTicketDetail(ticketId) == null) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_ITSM_VERIFY_TOKEN_FAIL,
+                defaultMessage = "verify itsm token failed!"
+            )
+        }
+    }
+
+    @Deprecated("ESB接口下线", replaceWith = ReplaceWith("getItsmTicketStatusV2(\"\")"))
     fun getItsmTicketStatus(sn: String): String {
         val itsmResponseDTO: ResponseDTO<Map<*, *>> =
             bkHttpRequestService.executeHttpGet(
                 url = itsmUrlPrefix + String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn)
             )
         return itsmResponseDTO.data?.get("current_status").toString()
+    }
+
+    fun getItsmTicketStatusV2(ticketId: String): String {
+        val itsmTicketDetail = getItsmTicketDetail(ticketId)
+        return itsmTicketDetail?.status.toString()
+    }
+
+    private fun getItsmTicketDetail(ticketId: String): ItsmTicketDetail? {
+        try {
+            val itsmResponseDTO: ResponseDTO<ItsmTicketDetail> = bkHttpRequestService.executeHttpGet(
+                url = itsmUrlPrefix + String.format(ITSM_TICKET_DETAIL_URL_SUFFIX, ticketId)
+            )
+            return itsmResponseDTO.data
+        } catch (e: Exception) {
+            logger.error("get itsm ticket detail failed, ticketId: $ticketId", e)
+            return null
+        }
     }
 
     @Suppress("LongParameterList")
@@ -84,7 +131,8 @@ class ItsmService constructor(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("projectId").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)).type(TEXT_TYPE).build(),
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
+            ).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("productName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("organization")
@@ -165,10 +213,16 @@ class ItsmService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ItsmService::class.java)
+
+        // ESB 接口参数
         private const val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
         private const val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
         private const val ITSM_TICKET_STATUS_URL_SUFFIX = "/get_ticket_status?sn=%s"
         private const val TEXT_TYPE = "text"
         private const val URL_TYPE = "url"
+
+        // APIGW 接口参数
+        private const val ITSM_TICKETS_REVOKED_URL_SUFFIX = "/api/v1/tickets/revoked/"
+        private const val ITSM_TICKET_DETAIL_URL_SUFFIX = "/api/v1/ticket/detail/?%s"
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,8 +45,16 @@ class Oauth2TokenStoreManager @Autowired constructor(
         getTokenStoreService(scmCode).store(scmCode = scmCode, oauthTokenInfo = oauthTokenInfo)
     }
 
-    fun delete(userId: String, scmCode: String) {
-        getTokenStoreService(scmCode).delete(userId, scmCode)
+    fun delete(userId: String, scmCode: String, username: String) {
+        getTokenStoreService(scmCode).delete(
+            username = username,
+            scmCode = scmCode,
+            userId = userId
+        )
+    }
+
+    fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return getTokenStoreService(scmCode).list(userId, scmCode)
     }
 
     private fun getTokenStoreService(scmCode: String): IOauth2TokenStoreService {

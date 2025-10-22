@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -61,7 +61,7 @@ interface ProjectService {
     /**
      * 校验项目名称/英文名称是否合法
      */
-    fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null)
+    fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null, tenantId: String?)
 
     /**
      * 创建项目信息
@@ -153,7 +153,12 @@ interface ProjectService {
         accessToken: String?
     ): Result<String>
 
-    fun updateProjectName(userId: String, projectId: String/* projectId is englishName */, projectName: String): Boolean
+    fun updateProjectName(
+        userId: String,
+        projectId: String/* projectId is englishName */,
+        projectName: String,
+        tenantId: String?
+    ): Boolean
 
     /**
      * 获取所有项目信息
@@ -178,7 +183,15 @@ interface ProjectService {
         tenantId: String?
     ): Pagination<ProjectByConditionDTO>
 
-    fun list(userId: String, productIds: String? = null, tenantId: String?): List<ProjectVO>
+    fun list(
+        userId: String,
+        productIds: String? = null,
+        channelCodes: String? = null,
+        sort: ProjectSortType? = null,
+        page: Int? = null,
+        pageSize: Int? = null,
+        tenantId: String?
+    ): List<ProjectVO>
 
     fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
 

@@ -1,8 +1,11 @@
 <template>
     <bk-dialog
         v-model="constructToolConf.isShow"
-        :width="'640'"
+        width="1000"
+        :position="dialogPositionConfig"
         :close-icon="false"
+        :title="$t('environment.nodeInfo.importBuildNode')"
+        header-position="left"
     >
         <div
             v-bkloading="{
@@ -14,10 +17,10 @@
                 class="machine-params-form"
                 v-if="hasPermission"
             >
-                <bk-form label-width="80">
+                <bk-form :label-width="160">
                     <bk-form-item
                         required
-                        :label="$t('environment.nodeInfo.model')"
+                        label="OS"
                     >
                         <bk-radio-group v-model="constructImportForm.model">
                             <bk-radio
@@ -57,93 +60,143 @@
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
+                    <bk-form-item
+                        v-if="isWindowOs"
+                        required
+                        :label="$t('environment.nodeInfo.agentInstallMode.label')"
+                    >
+                        <bk-radio-group v-model="constructImportForm.installType">
+                            <bk-radio
+                                v-for="(item, index) in installTypeList"
+                                :key="index"
+                                :value="item.id"
+                                class="install-type-item"
+                                v-bk-tooltips="item.tips"
+                            >
+                                {{ item.label }}
+                            </bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <!-- <bk-form-item
+                        v-if="isWindowOs && installModeAsService"
+                        required
+                        :label="$t('environment.nodeInfo.switchRunningAccount')"
+                        :desc="$t('environment.nodeInfo.switchAccountTips')"
+                    >
+                        <bk-radio-group v-model="constructImportForm.autoSwitchAccount">
+                            <bk-radio
+                                v-for="(item, index) in loginAsUserList"
+                                :key="index"
+                                :value="item.id"
+                            >
+                                {{ item.label }}
+                            </bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item
+                        v-if="isWindowOs && constructImportForm.autoSwitchAccount && installModeAsService"
+                        required
+                        :label="$t('environment.nodeInfo.runAccount')"
+                    >
+                        <div class="run-account-inputs">
+                            <bk-input
+                                v-model="constructImportForm.loginName"
+                                :placeholder="$t('environment.nodeInfo.accountUsernameTips')"
+                                @blur="requestDevCommand"
+                            />
+                            <bk-input
+                                v-model="constructImportForm.loginPassword"
+                                :placeholder="$t('environment.nodeInfo.accountPasswordTips')"
+                                @blur="requestDevCommand"
+                            />
+                        </div>
+                    </bk-form-item> -->
                 </bk-form>
-                <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt') }}:</p>
+                <p class="handler-prompt">
+                    <i18n
+                        tag="span"
+                        path="environment.nodeInfo.executeCommandPrompt"
+                    >
+                        <span style="font-weight: bold;">
+                            {{ $t('environment.nodeInfo.nonSystemPath') }}
+                        </span>
+                    </i18n>
+                </p>
                 <div
                     class="construct-card-item command-tool-card"
-                    v-if="constructImportForm.model !== 'WINDOWS'"
+                    v-if="!isWindowOs"
                 >
+                    <p class="command-title">
+                        {{ $t('environment.nodeInfo.createDirectory') }}
+                    </p>
                     <div class="command-line">
-                        {{ constructImportForm.link || $t('environment.nodeInfo.fetchInstallCommandTips') }}
+                        $ mkdir /data/landun && cd /data/landun
                     </div>
-                    <div
-                        class="copy-button"
-                        v-if="constructImportForm.link"
-                    >
-                        <a
-                            class="text-link copy-command"
+                    <p class="command-title">
+                        {{ $t('environment.nodeInfo.downloadAndInstallAgent') }}
+                    </p>
+                    <div class="command-line">
+                        {{ constructImportForm.link }}
+                        <span
+                            v-if="constructImportForm.link"
                             @click="copyCommand"
                         >
-                            {{ $t('environment.clickToCopy') }}</a>
+                            <Icon
+                                name="copy2"
+                                size="26"
+                                class="copy-icon"
+                            />
+                        </span>
                     </div>
                 </div>
                 <div
                     class="construct-card-item command-tool-card windows-node-card"
-                    v-if="constructImportForm.model === 'WINDOWS'"
+                    v-if="isWindowOs"
                 >
-                    <div
-                        class="command-line"
-                        v-if="constructImportForm.link"
-                    >
-                        1.<a
-                            class="refresh-detail"
-                            :href="constructImportForm.link"
-                        >{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
-                        <br>
-                        2.{{ $t('environment.check') }}【<a
-                            class="refresh-detail"
-                            target="_blank"
-                            :href="installDocsLink"
-                        >{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
-                    </div>
-                    <div
-                        class="command-line"
-                        v-else
-                    >
-                        {{ $t('environment.nodeInfo.fetchInstallCommandTips') }}
-                    </div>
-                </div>
-                <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
-                <div class="construct-card-item connection-node-card">
-                    <p
-                        class="no-connection-node"
-                        v-if="connectNodeDetail.status === 'UN_IMPORT'"
-                    >
-                        {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span
-                            class="refresh-detail"
-                            @click="requetConstructNode"
-                        >{{ $t('environment.clickToRefresh') }}</span>
-                    </p>
-                    <div
-                        class="connected-node-msg"
-                        v-if="['UN_IMPORT_OK','IMPORT_EXCEPTION'].includes(connectNodeDetail.status)"
-                    >
-                        <div class="node-info">
-                            <img
-                                :src="defaultMachineCover"
-                                class="node-icon"
-                            >
-                            <div class="node-msg-intro">
-                                <p class="node-name">{{ connectNodeDetail.hostname }}</p>
-                                <p>
-                                    <span class="agent-status">Agent{{ $t('environment.status') }}：</span>
-                                    <span :class="connectNodeDetail.status === 'UN_IMPORT_OK' ? 'normal-status-node' : 'abnormal-status-node' ">
-                                        {{ connectNodeDetail.status === 'UN_IMPORT_OK' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
-                                    </span>
-                                    <span class="operating-system">{{ $t('environment.nodeInfo.os') }}</span>：
-                                    <span>{{ connectNodeDetail.os }}</span>
-                                </p>
-                            </div>
+                    <template v-if="showRunAccountTips">
+                        <div class="command-line">
+                            {{ $t('environment.nodeInfo.pleaseEnterRunAccount') }}
                         </div>
-                        <!-- <div class="delete-handler"><i class="devops-icon icon-close"></i></div> -->
-                    </div>
+                    </template>
+                    <template v-else>
+                        <div class="command-line">
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip1') }}
+                        </div>
+                        <div class="command-line">
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip2') }}
+                        </div>
+                        <div class="command-line">
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip3') }}
+                        </div>
+                        <div class="command-line">
+                            {{ constructImportForm.link }}
+                            <span
+                                v-if="constructImportForm.link"
+                                @click="copyCommand"
+                            >
+                                <Icon
+                                    name="copy2"
+                                    size="26"
+                                    class="copy-icon"
+                                />
+                            </span>
+                        </div>
+                        <div
+                            class="command-line"
+                            v-if="installModeAsService && !constructImportForm.autoSwitchAccount"
+                        >
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4', ['{agent_id}']) }}
+                        </div>
+                    </template>
                 </div>
-                <p
-                    v-if="isAgent"
-                    class="target-console-tips"
+                <p class="handler-prompt">{{ $t('environment.nodeInfo.installSuccessfullyTips') }}</p>
+                <bk-button
+                    class="mt10"
+                    text
+                    @click="handleToHelpDocument"
                 >
-                    {{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} {{ $t('environment.nodeInfo.checkMails') }}！
-                </p>
+                    {{ $t('environment.nodeInfo.installFailedDocument') }}
+                </bk-button>
             </div>
 
             <empty-tips
@@ -158,16 +211,9 @@
             <div class="footer-handler">
                 <bk-button
                     theme="primary"
-                    :disabled="connectNodeDetail.status === 'UN_IMPORT'"
                     @click="confirmFn"
                 >
-                    {{ constructToolConf.importText }}
-                </bk-button>
-                <bk-button
-                    theme="default"
-                    @click="cancelFn"
-                >
-                    {{ $t('environment.cancel') }}
+                    {{ $t('environment.nodeInfo.close') }}
                 </bk-button>
             </div>
         </div>
@@ -185,21 +231,62 @@
         props: {
             loading: Object,
             constructToolConf: Object,
-            connectNodeDetail: Object,
             constructImportForm: Object,
             emptyTipsConfig: Object,
             gatewayList: Array,
-            requetConstructNode: Function,
             confirmFn: Function,
-            cancelFn: Function,
             hasPermission: Boolean,
             isAgent: Boolean,
-            nodeIp: String
+            nodeIp: String,
+            requestDevCommand: Function
         },
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
                 installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE
+            }
+        },
+        computed: {
+            showRunAccountTips () {
+                const { autoSwitchAccount, loginName, loginPassword, link } = this.constructImportForm
+                return this.installModeAsService && autoSwitchAccount & (!loginName || !loginPassword || !link)
+            },
+            isWindowOs () {
+                return this.constructImportForm.model === 'WINDOWS'
+            },
+            installModeAsService () {
+                return this.constructImportForm.installType === 'SERVICE'
+            },
+            loginAsUserList () {
+                return [
+                    {
+                        id: true,
+                        label: this.$t('environment.nodeInfo.yes')
+                    },
+                    {
+                        id: false,
+                        label: this.$t('environment.nodeInfo.no')
+                    }
+                ]
+            },
+            installTypeList () {
+                return [
+                    {
+                        id: 'SERVICE',
+                        label: this.$t('environment.nodeInfo.agentInstallMode.windowsServices'),
+                        tips: this.$t('environment.nodeInfo.agentInstallMode.widowsTips'),
+                    },
+                    {
+                        id: 'TASK',
+                        label: this.$t('environment.nodeInfo.agentInstallMode.scheduledTasks'),
+                        tips: this.$t('environment.nodeInfo.agentInstallMode.scheduledTasksTips'),
+                    }
+                ]
+            },
+            dialogPositionConfig () {
+                return {
+                    top: this.constructImportForm.model === 'WINDOWS' && this.constructImportForm.link ? '120' : '200'
+                }
             }
         },
         methods: {
@@ -210,6 +297,9 @@
                         message: this.$t('environment.successfullyCopyed')
                     })
                 }
+            },
+            handleToHelpDocument () {
+                window.open(this.BKCI_DOCS?.BUILD_NODE_GUIDE_DOC, '_blank')
             }
         }
     }
@@ -229,31 +319,27 @@
         }
 
         .construct-card-item {
-            display: flex;
-            justify-content: space-between;
             margin-top: 8px;
-            padding: 0 14px;
+            padding: 14px;
             width: 100%;
-            height: 48px;
-            line-height: 48px;
             border: 1px solid $borderColor;
             background-color: $bgHoverColor;
         }
-
-        .command-line {
-            flex: 1;
-            padding-right: 24px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .command-title {
+            text-align: left;
+            color: #b4bac2;
+            margin-bottom: 5px;
         }
-
-        .copy-button {
-            color: $primaryColor;
-
-            a {
-                cursor: pointer;
-            }
+        .command-line {
+            display: flex;
+            align-items: center;
+            padding-right: 12px;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+        .copy-icon {
+            margin-left: 20px;
+            cursor: pointer;
         }
 
         .connection-node-card {
@@ -264,9 +350,6 @@
         .windows-node-card {
             display: inline-block;
             height: 100%;
-            .command-line {
-                line-height: 40px
-            }
         }
 
         .no-connection-node {
@@ -347,5 +430,17 @@
     .devops-empty-tips {
         margin: 68px auto 72px;
         width: auto;
+    }
+    .run-account-inputs {
+        display: flex;
+        width: 85%;
+    }
+</style>
+<style lang="scss">
+    .install-type-item {
+        .bk-radio-text {
+            border-bottom: 1px dashed #979ba5;
+            cursor: pointer;
+        }
     }
 </style>

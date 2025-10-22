@@ -97,7 +97,7 @@
                 if (e.data.atomValue) {
                     console.log(e.data, this.element?.id, 'dataFromIframeAtom')
                     // 如果不含有elementId(旧版本的自定义插件)， 或者elementId与当前id相同，则更新
-                    if (!e.data.elementId || (e.data.elementId && e.data.elementId === this.element?.id)) {
+                    if (this.compareIframeSource(e) || (e.data.elementId && e.data.elementId === this.element?.id)) {
                         this.setPipelineEditing(true)
                         this.handleUpdateWholeAtomInput(e.data.atomValue)
                     } else {
@@ -108,6 +108,9 @@
                 } else if (e.data.iframeHeight) {
                     this.iframeHeight = parseInt(e.data.iframeHeight)
                 }
+            },
+            compareIframeSource (e) {
+                return (!e.data.elementId && e.source.location.href === this.src)
             },
             async getEnvConf () {
                 let env = {}

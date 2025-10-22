@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -307,7 +307,8 @@ object LoggerService {
                 this.uploadQueue.put(
                     logMessage.copy(
                         message = "Printed logs cannot exceed $loggingLineLimit lines. " +
-                            "Please download logs to view."
+                            "Please download logs to view.",
+                        logType = LogType.WARN
                     )
                 )
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL

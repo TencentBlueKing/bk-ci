@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,8 +43,20 @@ class UserGithubResourceImpl @Autowired constructor(
     private val githubOAuthService: GithubOAuthService,
     private val githubTokenService: GithubTokenService
 ) : UserGithubResource {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(githubService.getProject(projectId, userId, repoHashId))
+    override fun getProject(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        oauthUserId: String?
+    ): Result<AuthorizeResult> {
+        return Result(
+            githubService.getProject(
+                projectId = projectId,
+                userId = userId,
+                repoHashId = repoHashId,
+                oauthUserId = oauthUserId
+            )
+        )
     }
 
     override fun deleteToken(userId: String): Result<Boolean> {

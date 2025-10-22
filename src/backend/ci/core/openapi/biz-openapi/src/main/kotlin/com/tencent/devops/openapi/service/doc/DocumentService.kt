@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ALL_MODEL_DATA
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_STATEMENT
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_BODY_PARAMETER
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_CURL_PROMPT
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DISCRIMINATOR_ILLUSTRATE
@@ -128,11 +129,11 @@ class DocumentService {
         checkMetaData: Boolean,
         checkMDData: Boolean,
         polymorphism: Map<String, Map<String, String>> = emptyMap(),
+        swagger: OpenAPI = loadSwagger(),
         outputPath: String? = null,
-        parametersInfo: Map<String, Map<String, SwaggerDocParameterInfo>>? = null
+        parametersInfo: Map<String, Map<String, SwaggerDocParameterInfo>>? = null,
     ): Map<String, SwaggerDocResponse> {
         val response = mutableMapOf<String, SwaggerDocResponse>()
-        val swagger = loadSwagger()
         definitions.putAll(swagger.components.schemas)
         polymorphismMap = polymorphism
         loadAllDefinitions(parametersInfo)
@@ -272,7 +273,11 @@ class DocumentService {
                 loadMarkdown.add(Text(3, getI18n(BK_ALL_MODEL_DATA), "all_model_data"))
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
-                operation.tags.forEach { tag ->
+                loadMarkdown.add(Text(0, getI18n(BK_STATEMENT), "statement"))
+                operation.tags.forEach tag@ { tag ->
+                    if (!tag.contains("user") && !tag.contains("app")) {
+                        return@tag
+                    }
                     val res = SwaggerDocResponse(
                         path = path,
                         httpMethod = httpMethod.name,
@@ -280,11 +285,11 @@ class DocumentService {
                         metaData = if (checkMetaData) loadMarkdown else null
                     )
                     response[tag] = res
-                    if (!outputPath.isNullOrBlank()) {
+                    if (!outputPath.isNullOrBlank() && checkMDData) {
                         FileUtil.outFile(outputPath, "$tag.md", loadMarkdown.joinToString(separator = ""))
                     }
 
-                    if (!outputPath.isNullOrBlank()) {
+                    if (!outputPath.isNullOrBlank() && checkMetaData) {
                         FileUtil.outFile("$outputPath/json", "$tag.json", JsonUtil.toJson(res))
                     }
                 }

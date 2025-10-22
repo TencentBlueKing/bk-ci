@@ -19,6 +19,9 @@ class ThirdCondition(
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?
 ) : WebhookCondition {
     override fun match(context: WebhookConditionContext): Boolean {
+        if (context.webhookParams.enableThirdFilter != true) {
+            return true
+        }
         val sourceWebhook = (webhook.outputs()[BK_REPO_SOURCE_WEBHOOK] as? String)?.takeIf {
             it.isNotBlank()
         } ?: return true

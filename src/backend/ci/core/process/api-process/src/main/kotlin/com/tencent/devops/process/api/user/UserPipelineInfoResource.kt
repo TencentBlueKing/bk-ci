@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -109,7 +109,10 @@ interface UserPipelineInfoResource {
         projectId: String,
         @Parameter(description = "搜索名称")
         @QueryParam("pipelineName")
-        pipelineName: String?
+        pipelineName: String?,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<List<PipelineIdAndName>>
 
     @Operation(summary = "根据流水线ID搜索")
@@ -139,6 +142,9 @@ interface UserPipelineInfoResource {
         projectId: String,
         @Parameter(description = "流水线Id")
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineDetailInfo?>
 }

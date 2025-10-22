@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,7 @@ import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.GitPushHook
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class GitPushHookConverter @Autowired constructor(
@@ -85,6 +86,7 @@ class GitPushHookConverter @Autowired constructor(
         val serverRepo = webhook.repo
         val changeFiles = WebhookConverterUtils.getChangeFiles(webhook.changes)
         val yamlFileEvents = mutableListOf<PipelineYamlFileEvent>()
+        val defaultBranch = serverRepo.defaultBranch!!
         fileTrees.forEach { tree ->
             val filePath = GitActionCommon.getCiFilePath(tree.path)
             val actionType = WebhookConverterUtils.getYamlActionType(filePath = filePath, changeFiles = changeFiles)
@@ -95,7 +97,7 @@ class GitPushHookConverter @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 repository = repository,
-                defaultBranch = serverRepo.defaultBranch,
+                defaultBranch = defaultBranch,
                 actionType = actionType,
                 filePath = filePath,
                 oldFilePath = oldFilePath,
@@ -103,10 +105,10 @@ class GitPushHookConverter @Autowired constructor(
                 blobId = tree.blobId,
                 authRepository = AuthRepository(repository),
                 commit = FileCommit(
-                    commitId = webhook.commit.sha,
-                    commitMsg = webhook.commit.message,
-                    commitTime = webhook.commit.commitTime,
-                    committer = webhook.commit.committer.name
+                    commitId = webhook.commit?.sha ?: "",
+                    commitMsg = webhook.commit?.message ?: "",
+                    commitTime = webhook.commit?.commitTime ?: LocalDateTime.now(),
+                    committer = webhook.commit?.committer?.name ?: ""
                 )
             )
             yamlFileEvents.add(yamlFileEvent)
@@ -119,7 +121,7 @@ class GitPushHookConverter @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 repository = repository,
-                defaultBranch = serverRepo.defaultBranch,
+                defaultBranch = defaultBranch,
                 ref = ref,
                 filePath = filePath,
                 actionType = YamlFileActionType.DELETE,
@@ -151,7 +153,7 @@ class GitPushHookConverter @Autowired constructor(
                 projectId = projectId,
                 eventId = eventId,
                 repository = repository,
-                defaultBranch = serverRepo.defaultBranch,
+                defaultBranch = serverRepo.defaultBranch!!,
                 ref = ref,
                 filePath = filePath,
                 actionType = YamlFileActionType.DELETE,

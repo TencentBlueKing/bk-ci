@@ -16,8 +16,18 @@ class UserPipelineOutputResourceImpl(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        option: PipelineOutputSearchOption?
+        option: PipelineOutputSearchOption?,
+        archiveFlag: Boolean?
     ): Result<List<PipelineOutput>> {
-        return Result(pipelineOutputService.search(userId, projectId, pipelineId, buildId, option))
+        return Result(
+            pipelineOutputService.search(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                option = option,
+                archiveFlag = archiveFlag
+            )
+        )
     }
 }

@@ -252,6 +252,42 @@
     {
       "operation": "upsert_instance_selection",
       "data": {
+        "id": "scc_task_instance",
+        "name": "SCC任务",
+        "name_en": "scc task",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_task"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "scc_scan_schema",
+        "name": "SCC扫描方案",
+        "name_en": "scc scan schema",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "scc_scan_schema"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
         "id": "turbo_plan_instance",
         "name": "编译加速方案",
         "name_en": "turbo plan",

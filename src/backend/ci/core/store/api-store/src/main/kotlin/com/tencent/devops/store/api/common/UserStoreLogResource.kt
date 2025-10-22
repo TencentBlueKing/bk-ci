@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,10 +31,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.web.annotation.IgnoreUserApiPermission
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -54,6 +55,7 @@ interface UserStoreLogResource {
     @Operation(summary = "根据构建ID获取初始化所有日志")
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/")
+    @IgnoreUserApiPermission
     fun getInitLogs(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -84,6 +86,7 @@ interface UserStoreLogResource {
     @Operation(summary = "获取更多日志")
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/more")
+    @IgnoreUserApiPermission
     fun getMoreLogs(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -126,6 +129,7 @@ interface UserStoreLogResource {
     @Operation(summary = "获取某行后的日志")
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/after")
+    @IgnoreUserApiPermission
     fun getAfterLogs(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

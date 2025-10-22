@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -189,7 +189,8 @@ class VariableTransfer {
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
-                props = if (props?.empty() == false) props else null
+                props = if (props?.empty() == false) props else null,
+                ifCondition = it.displayCondition?.ifEmpty { null }
             )
         }
         return if (result.isEmpty()) {
@@ -276,7 +277,8 @@ class VariableTransfer {
                         variable.readonly ?: false
                     },
                     valueNotEmpty = variable.props?.required ?: false,
-                    payload = variable.props?.payload
+                    payload = variable.props?.payload,
+                    displayCondition = variable.ifCondition ?: emptyMap()
                 )
             )
         }

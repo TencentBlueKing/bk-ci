@@ -49,26 +49,32 @@
             return {
                 isLoading: false,
                 rate: 0,
-                comment: '',
-                modifyCommentGenerator: {
-                    atom: (data) => this.requestAtomModifyComment(data),
-                    template: (data) => this.requestTemplateModifyComment(data),
-                    image: (data) => this.requestImageModifyComment(data)
-                },
-                addCommentGenerator: {
-                    atom: (postData) => this.requestAddAtomComment(postData),
-                    template: (postData) => this.requestAddTemplateComment(postData),
-                    image: (postData) => this.requestAddImageComment(postData)
-                },
-                getCommentGenerator: {
-                    atom: () => this.requestAtomUserComment(this.commentId),
-                    template: () => this.requestTemplateUserComment(this.commentId),
-                    image: () => this.requestImageUserComment(this.commentId)
-                }
+                comment: ''
             }
         },
 
         computed: {
+            getCommentGenerator () {
+                return {
+                    atom: this.requestAtomUserComment,
+                    template: this.requestTemplateUserComment,
+                    image: this.requestImageUserComment
+                }
+            },
+            modifyCommentGenerator () {
+                return {
+                    atom: this.requestAtomModifyComment,
+                    template: this.requestTemplateModifyComment,
+                    image: this.requestImageModifyComment
+                }
+            },
+            addCommentGenerator () {
+                return {
+                    atom: this.requestAddAtomComment,
+                    template: this.requestAddTemplateComment,
+                    image: this.requestAddImageComment
+                }
+            },
             type () {
                 return this.$route.params.type
             }
@@ -93,9 +99,14 @@
 
             getComment () {
                 if (this.commentId) {
+
+                    if (!Object.keys(this.getCommentGenerator).includes(this.type) || typeof this.getCommentGenerator[this.type] !== 'function') {
+                        this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                        return Promise.reject(new Error(this.$t('store.typeError')))
+                    }
                     this.isLoading = true
                     const method = this.getCommentGenerator[this.type]
-                    method().then((res) => {
+                    method(this.commentId).then((res) => {
                         this.rate = res.score || 5
                         this.comment = res.commentContent || ''
                     }).catch((err) => {
@@ -149,6 +160,9 @@
                         score: this.rate
                     }
                 }
+                if (!Object.keys(this.modifyCommentGenerator).includes(this.type) || typeof this.modifyCommentGenerator[this.type] !== 'function') {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 return this.modifyCommentGenerator[this.type](data).then(() => ({
                     commentId: this.commentId,
                     commentContent: this.comment,
@@ -165,6 +179,9 @@
                         commentContent: this.comment,
                         score: this.rate
                     }
+                }
+                if (!Object.keys(this.addCommentGenerator).includes(this.type) || typeof this.addCommentGenerator[this.type] !== 'function') {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.addCommentGenerator[this.type](data)
             }

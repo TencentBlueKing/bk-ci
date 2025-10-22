@@ -91,6 +91,7 @@
     import { bus } from '@/utils/bus'
     import { copyText } from '@/utils/util'
     import { mapState } from 'vuex'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         components: {
@@ -99,6 +100,8 @@
         },
         data () {
             return {
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 showContent: false,
                 editable: false,
                 basePrototypeList: [
@@ -144,7 +147,11 @@
         },
         methods: {
             toNodeList () {
-                this.$router.push({ name: 'nodeList' })
+                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE
+                this.$router.push({
+                    name: 'nodeList',
+                    params: { nodeType }
+                })
             },
             async requestNodeDetail () {
                 this.loading.isLoading = true
@@ -279,6 +286,12 @@
                     text-overflow: ellipsis;
                 }
             }
+        }
+
+        .sub-view-port {
+            height: calc(100vh - 158px);
+            overflow: auto;
+            padding: 20px;
         }
     }
 </style>

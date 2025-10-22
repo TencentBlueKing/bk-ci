@@ -1,12 +1,15 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -60,11 +63,6 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
 
     override fun listIamGroupIdsByConditions(
         condition: IamGroupIdsQueryConditionDTO
-    ): List<Int> = emptyList()
-
-    override fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
     ): List<Int> = emptyList()
 
     override fun listResourceGroupMembers(
@@ -148,10 +146,25 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo> = emptyList()
 
+    override fun batchRemoveMemberFromProject(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): BatchRemoveMemberFromProjectResponse = BatchRemoveMemberFromProjectResponse(
+        users = emptyList(),
+        departments = emptyList()
+    )
+
     override fun removeMemberFromProjectCheck(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean = true
+
+    override fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        targetMembers: List<ResourceMemberInfo>
     ): Boolean = true
 
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean = true
@@ -190,5 +203,12 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         request: RemoveMemberFromProjectReq
     ): String {
         return ""
+    }
+
+    override fun getProjectUserDepartmentDistribution(
+        projectCode: String,
+        parentDepartmentId: Int
+    ): List<DepartmentUserCount> {
+        return emptyList()
     }
 }

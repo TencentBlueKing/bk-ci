@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.project.pojo.CreateProjectVO
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
@@ -119,11 +120,11 @@ class UserProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun show(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+    override fun show(userId: String, tenantId: String?, projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(
             projectService.show(
                 userId = userId,
-                englishName = projectId,
+                englishName = TenantUtils.parseEnglishName(tenantId, projectId),
                 accessToken = accessToken
             ) ?: throw OperationException("project $projectId not found")
         )
@@ -146,7 +147,7 @@ class UserProjectResourceImpl @Autowired constructor(
         tenantId: String?,
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?
-    ): Result<Boolean> {
+    ): Result<CreateProjectVO> {
         // 创建项目
         projectCreateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         projectService.create(
@@ -157,7 +158,15 @@ class UserProjectResourceImpl @Autowired constructor(
             projectChannel = ProjectChannelCode.BS
         )
 
-        return Result(true)
+        return Result(
+            CreateProjectVO(
+                status = true,
+                projectId = TenantUtils.parseEnglishName(
+                    tenantId = projectCreateInfo.tenantId,
+                    tenantEnglishName = projectCreateInfo.englishName
+                )
+            )
+        )
     }
 
     @AuditEntry(actionId = PROJECT_EDIT)
@@ -210,11 +219,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun validate(
         userId: String,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
     ): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
+        projectService.validate(validateType, name, projectId, tenantId)
         return Result(true)
     }
 

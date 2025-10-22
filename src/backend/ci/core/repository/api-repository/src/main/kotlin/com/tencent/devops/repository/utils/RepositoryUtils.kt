@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,8 +32,10 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
@@ -130,6 +132,31 @@ object RepositoryUtils {
                 )
             }
             else -> throw IllegalArgumentException("Unknown repository type")
+        }
+    }
+
+    /**
+     * 获取代码库的OAUTH授权用户
+     */
+    fun getOauthUser(repo: Repository) = when (repo) {
+        is CodeGitRepository -> {
+            (repo.authType == RepoAuthType.OAUTH) to repo.userName
+        }
+
+        is CodeTGitRepository -> {
+            (repo.authType == RepoAuthType.OAUTH) to repo.userName
+        }
+
+        is GithubRepository -> {
+            true to repo.userName
+        }
+
+        is ScmGitRepository -> {
+            (repo.authType == RepoAuthType.OAUTH) to repo.userName
+        }
+
+        else -> {
+            false to ""
         }
     }
 }

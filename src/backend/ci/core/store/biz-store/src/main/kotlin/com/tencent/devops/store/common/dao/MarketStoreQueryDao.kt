@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -175,7 +175,7 @@ class MarketStoreQueryDao {
             baseStep = baseStep
         )
 
-        val finalConditions = if (storeType == StoreTypeEnum.DEVX) {
+        val finalConditions = if (storeType == StoreTypeEnum.DEVX && storeInfoQuery.queryTestFlag != true) {
             val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
             val deptCondition = tStoreDeptRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
                 .and(tStoreDeptRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
@@ -219,7 +219,8 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.RECOMMEND_FLAG,
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
-            tStoreBase.CREATE_TIME
+            tStoreBase.CREATE_TIME,
+            tStoreBase.BUS_NUM
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
             .on(

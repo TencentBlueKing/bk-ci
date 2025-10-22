@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,6 +40,9 @@ data class PreTriggerOnV3(
     @get:Schema(title = "repo-name")
     var repoName: String? = null,
     var type: String? = null,
+    @JsonProperty("scm-code")
+    @get:Schema(title = "scm-code")
+    val scmCode: String? = null,
     override val push: Any? = null,
     override val tag: Any? = null,
     override val mr: Any? = null,

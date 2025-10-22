@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,9 +33,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebHookTriggerElementChanger(
@@ -102,7 +105,9 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "是否启用插件")
     val enable: Boolean,
     @get:Schema(title = "跳过WIP")
-    val skipWip: Boolean? = false
+    val skipWip: Boolean? = false,
+    @get:Schema(title = "代码库标识")
+    val scmCode: String? = null
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
         name = data.name,
@@ -248,6 +253,50 @@ data class WebHookTriggerElementChanger(
         includeSourceBranchName = data.includeSourceBranchName,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
+        enable = data.elementEnabled()
+    )
+
+    constructor(data: CodeScmGitWebHookTriggerElement) : this(
+        name = data.name,
+        repositoryHashId = data.data.input.repositoryHashId,
+        branchName = data.data.input.branchName,
+        excludeBranchName = data.data.input.excludeBranchName,
+        pathFilterType = data.data.input.pathFilterType,
+        includePaths = data.data.input.includePaths,
+        excludePaths = data.data.input.excludePaths,
+        includeUsers = WebhookUtils.convert(data.data.input.includeUsers),
+        excludeUsers = WebhookUtils.convert(data.data.input.excludeUsers),
+        eventType = data.data.input.eventType,
+        block = data.data.input.block,
+        repositoryType = data.data.input.repositoryType,
+        repositoryName = data.data.input.repositoryName,
+        tagName = data.data.input.tagName,
+        excludeTagName = data.data.input.excludeTagName,
+        excludeSourceBranchName = data.data.input.excludeSourceBranchName,
+        includeSourceBranchName = data.data.input.includeSourceBranchName,
+        enableCheck = data.data.input.enableCheck,
+        includeMrAction = if (data.data.input.eventType == CodeEventType.MERGE_REQUEST) {
+            // action 统一格式
+            data.data.input.actions
+        } else listOf(),
+        includePushAction = if (data.data.input.eventType == CodeEventType.PUSH) {
+            data.data.input.actions
+        } else listOf(),
+        enable = data.elementEnabled(),
+        scmCode = data.data.input.scmCode
+    )
+
+    constructor(data: CodeScmSvnWebHookTriggerElement) : this(
+        name = data.name,
+        repositoryHashId = data.data.input.repositoryHashId,
+        pathFilterType = data.data.input.pathFilterType,
+        includePaths = data.data.input.relativePath,
+        excludePaths = data.data.input.excludePaths,
+        includeUsers = WebhookUtils.convert(data.data.input.includeUsers),
+        excludeUsers = WebhookUtils.convert(data.data.input.excludeUsers),
+        eventType = data.data.input.eventType,
+        repositoryType = data.data.input.repositoryType,
+        repositoryName = data.data.input.repositoryName,
         enable = data.elementEnabled()
     )
 }

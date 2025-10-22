@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -19,7 +19,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -93,7 +93,7 @@ module.exports = (env = {}, argv) => {
             publicPath: `${isDev ? '' : '__BK_CI_PUBLIC_PATH__'}/console/`,
             templateParameters: {
                 PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__',
-                BK_APIGW_USER_WEB_URL: isDev ? '' : '__BK_APIGW_USER_WEB_URL__'
+                BK_APIGW_USER_WEB_URL: isDev ? '' : '__BK_CI_USER_WEB_APIGW_URL__'
             },
             minify: {
                 removeComments: false

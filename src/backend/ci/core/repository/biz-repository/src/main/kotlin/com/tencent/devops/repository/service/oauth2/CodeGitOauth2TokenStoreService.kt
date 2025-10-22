@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,8 +28,10 @@
 package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
@@ -64,7 +66,8 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
                 userId = userId,
-                operator = it.operator
+                operator = it.operator,
+                updateTime = it.updateTime.timestampmilli()
             )
         }
     }
@@ -76,13 +79,37 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
-                operator = operator
+                operator = operator,
+                oauthUserId = userId
             )
         }
         gitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)
     }
 
-    override fun delete(userId: String, scmCode: String) {
-        gitTokenDao.deleteToken(dslContext = dslContext, userId = userId)
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return gitTokenDao.listToken(dslContext, userId).map {
+            OauthTokenInfo(
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                createTime = it.createTime.timestampmilli(),
+                userId = it.userId,
+                operator = it.operator,
+                updateTime = it.updateTime.timestampmilli()
+            )
+        }
+    }
+
+    override fun delete(userId: String, scmCode: String, username: String) {
+        get(username, scmCode)?.let {
+            // 非OAUTH授权代持人不得删除
+            if (it.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                )
+            }
+        }
+        gitTokenDao.deleteToken(dslContext = dslContext, userId = username)
     }
 }

@@ -246,5 +246,7 @@
     "流水线在执行控制点1之前需满足2的阈值条件，否则将会停在红线位置。": "Before the execution control point {0}, The pipeline needs to meet the threshold condition of {1} ，otherwise it will stop at the Redine position.",
     "请选择": "Please select",
     "等待中": "Waited",
-    "操作建议": "Action Suggest"
+    "操作建议": "Action Suggest",
+    "详情备注": "Details Remarks",
+    "请输入指标的详情备注信息，在指标检查行的末尾展示，支持超链接": "Please enter the detailed remarks information of the indicator and display it at the end of the indicator check line. It supports hyperlinks"
 }

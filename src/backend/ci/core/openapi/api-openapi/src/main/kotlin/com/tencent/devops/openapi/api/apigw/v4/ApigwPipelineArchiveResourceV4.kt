@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -53,6 +54,7 @@ import jakarta.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/archived/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@BkApigwApi(version = "v4")
 interface ApigwPipelineArchiveResourceV4 {
 
     @Operation(summary = "迁移归档流水线数据", tags = ["v4_app_pipeline_archive", "v4_user_pipeline_archive"])

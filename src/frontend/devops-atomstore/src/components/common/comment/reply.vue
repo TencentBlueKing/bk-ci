@@ -8,7 +8,8 @@
             class="comment-photo"
         >
         <h5 class="commenter-info">
-            <span>{{ comment.commenter }}</span><span>{{ comment.commenterDept }}</span>
+            <bk-user-display-name :user-id="comment.commenter" />
+            <span>{{ comment.commenterDept }}</span>
         </h5>
         <p class="comment-content">{{ comment.commentContent }}</p>
         <h5 class="comment-static">
@@ -137,6 +138,11 @@
                 const type = this.$route.params.type
                 const id = this.commentData.commentId
 
+                if (!Object.keys(this.funObj.expandReplys).includes(type) || typeof this.funObj.expandReplys[type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
+
                 return this.funObj.expandReplys[type](id).then((res) => {
                     this.setCommentReplay({ id, newList: res, isAdd: false })
                     this.hadShowMore = true
@@ -146,6 +152,11 @@
             priase () {
                 const type = this.$route.params.type
                 const id = this.commentData.commentId
+
+                if (!Object.keys(this.funObj.priase).includes(type) || typeof this.funObj.priase[type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
 
                 this.funObj.priase[type](id).then((count) => {
                     this.setCommentPraise({ id, count })

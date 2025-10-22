@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.enums.HandoverChannelCode
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvNodeAuthorizationResource
 import com.tencent.devops.process.api.service.ServicePipelineAuthorizationResource
@@ -379,6 +380,7 @@ class PermissionAuthorizationServiceImpl(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     handoverFrom = condition.handoverFrom,
+                    handoverFroms = condition.handoverFroms,
                     fullSelection = true,
                     preCheck = condition.preCheck,
                     handoverChannel = HandoverChannelCode.MANAGER,
@@ -386,13 +388,15 @@ class PermissionAuthorizationServiceImpl(
                     checkPermission = condition.checkPermission
                 )
             )
-            if (!handoverResult[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()) {
+            val handoverFailedResult = handoverResult[ResourceAuthorizationHandoverStatus.FAILED]
+            if (!handoverFailedResult.isNullOrEmpty()) {
                 result.add(
                     ResourceTypeInfoVo(
                         resourceType = resourceType,
                         name = I18nUtil.getCodeLanMessage(
                             messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
-                        )
+                        ),
+                        memberIds = handoverFailedResult.mapNotNull { it.handoverFrom }.distinct()
                     )
                 )
             }
@@ -435,7 +439,8 @@ class PermissionAuthorizationServiceImpl(
         val handoverFromList = resourceAuthorizationList.map { it.handoverFrom ?: "" }.distinct()
         val userId2UserInfo = deptService.listMemberInfos(
             memberIds = handoverFromList,
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = TenantUtils.getTenantIdByEnglishName(resourceAuthorizationList[0].projectCode)
         ).associateBy { it.name }
         resourceAuthorizationList.forEach {
             val handoverFrom = it.handoverFrom ?: ""
@@ -451,7 +456,8 @@ class PermissionAuthorizationServiceImpl(
         val handoverToList = resourceAuthorizationList.map { it.handoverTo ?: "" }.distinct()
         val userId2UserInfo = deptService.listMemberInfos(
             memberIds = handoverToList,
-            memberType = ManagerScopesEnum.USER
+            memberType = ManagerScopesEnum.USER,
+            tenantId = TenantUtils.getTenantIdByEnglishName(resourceAuthorizationList[0].projectCode)
         ).associateBy { it.name }
         resourceAuthorizationList.forEach {
             val handoverTo = it.handoverTo ?: ""

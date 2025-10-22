@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,40 +32,28 @@ import org.junit.jupiter.api.Test
 class JwtManagerTest {
 
     private val publicKeyString: String/*RSA公钥2048bit(PKCS#8)*/ =
-        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA86kLZelXctsgna8vBaRc\n" +
-            "8NerNXIoiiFqH9gge14LuHLI+NjSAbEacDj4fcJ6P8CSfzcMH8tpKvlosfTN9bMh\n" +
-            "GraDbkKa7zPr2DPChZobXoeF+3ClGb2HZTufblzJZ6cgEPfXjeKPFKUdO9VDQZTj\n" +
-            "WAqLapEydwdHJDVDCqtsIWzSbQfVzr9//DtKYeazT39kCnr6nnTz344eIVbvdADH\n" +
-            "xhq8CWrPkETByKgYnYXWdfn1+ly7TSDOUe5MFMnfyjXcrwd3ADptabeskHghc8P7\n" +
-            "lx3Ibq7c3MnE/98bYCXl+ZCo7IY0rfVElto94UvrxxgYPeAi3X+lk8RnmjgHS/5+\n" +
-            "IQIDAQAB"
+        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5plU4eyJ+wS9xF3Xa7OOsrdpo7TnAfRcLMYg8ySPt00vHkuGL8GenvR0Kb" +
+            "mL8F+YKRmKNl/uoDAjq71jWy7SNXF5+5Wi3/A79AUaX0LslL9tx5TZcy/Z1sqi9v+f0R7B186iCo+ZL0ZXqupcH+QqS0CM4UZ5" +
+            "NvABDPBnUHJgVc9Fbfzjo6czR48NRYykpbKp9zbXnvCunSbsV+BxxcorRCynigXBUfL/FZxEWXDiwe8744HNpH16qGMUIMqBuW" +
+            "NPgEVzNE/5O/H6YvhwhAIVHXIBxFaAACJr92V21WzvGr6vE9u7lpTo6Zdykt0Axw6A/P6+OeWEoQ0foEg3fL3jZwIDAQAB"
     private val privateKeyString: String/*RSA私钥2048bit(PKCS#8)*/ =
-        "MIIEwAIBADANBgkqhkiG9w0BAQEFAASCBKowggSmAgEAAoIBAQDzqQtl6Vdy2yCd\n" +
-            "ry8FpFzw16s1ciiKIWof2CB7Xgu4csj42NIBsRpwOPh9wno/wJJ/Nwwfy2kq+Wix\n" +
-            "9M31syEatoNuQprvM+vYM8KFmhteh4X7cKUZvYdlO59uXMlnpyAQ99eN4o8UpR07\n" +
-            "1UNBlONYCotqkTJ3B0ckNUMKq2whbNJtB9XOv3/8O0ph5rNPf2QKevqedPPfjh4h\n" +
-            "Vu90AMfGGrwJas+QRMHIqBidhdZ1+fX6XLtNIM5R7kwUyd/KNdyvB3cAOm1pt6yQ\n" +
-            "eCFzw/uXHchurtzcycT/3xtgJeX5kKjshjSt9USW2j3hS+vHGBg94CLdf6WTxGea\n" +
-            "OAdL/n4hAgMBAAECggEBALHYkgw5q+2WiZDunBi3JmtYT4v8HiDsUMSbgOHq/A0O\n" +
-            "IyiXQXmgphaBTsakG4zK52LZcA0I8GNAli1F7MrIi4Iu83GYRfQQZrVw2iugFxgB\n" +
-            "PUcQqkFGeDvor+7i5NK2Ro58CCZ01lCQT+0rNSL6JJJPaAFJp5b/heqkwaFZC9y8\n" +
-            "X5jPnUJk1Z0VJdrnsqcWf9grCK+irUyhnk0Nq9KAbOBbDBaT9jzcjtxRvSZugmLz\n" +
-            "uJSEcyhjrRM1ciNqixCO3X6iCf2oEApdBKueE0qgVyxgxxqmsWKTVgKGT2qMOZ6y\n" +
-            "FdTiBRIFHKSsl3CU4nHGbNkIS/id5FCDrIipeWsZGAECgYEA/ihTa+CH5LDm7sc3\n" +
-            "M/GthIdKeabIDI/tvkpyA7LyXGBXgxXvLWmxKCU5oFi7s0OROlEL8lUni0m8YLcl\n" +
-            "E7zlvYKwkcTrTKM1GWwHpwY+6GZLFXJ3HDJWE2K1ir7+k3xHGEV7A+H5eF6m3ZSx\n" +
-            "/t9YohzE9WK5MZZP9vKsnMJ7/2ECgYEA9W081Dn/SPP2vCjtG+fd65JaAHrE+dpn\n" +
-            "EYNljOeMzHEMv1yfbT/x4hBjuJRcZreblRRZmd/RHbRNyLQQr3UJBLYqP3rCSGcY\n" +
-            "ABAM9psIbG1NntbJ83JrujApdq4CqBiZ+5Bu9pHc4fF/axUAGxkN2Ess4vJOjEYn\n" +
-            "HjWS+O10tsECgYEAqwH3H160EOv2djMUsZ6rYcCmG7RcZhdxn9f3XwXIjN9GAq1/\n" +
-            "gM7cpGZnn7wUj0mnLdXac/NX6CB0355bFCzFZ/3HUE1vBOHLmI9XlspdCYHKg2PB\n" +
-            "QPedcu23uONJ53J3Y51caABkGtmU7QJfwV4GBQ3WeEU01miM5VvjSJaTWAECgYEA\n" +
-            "y4pc+GVhIs+xwTrv6kTR95zYp60pz00iTZP7lHA0hRj8yXe3gJOXtzSAf4QLXeTI\n" +
-            "U0sdRFAqzcfK+rjbXahiYlXxk9PrbMCTVvn4xkytH79GsITR1+T9Etz+hj6qVV6R\n" +
-            "1eBjJnqyBXCTi+tOuyp8IPW3tD/ghNVpe9RSn7/PHAECgYEA2cc/77XUyPKkakrp\n" +
-            "yiRiB7ulRVP/6naljTLSPJdOy+dD3GUQfCS9MiDxTWPR7dhenjZ0VSpgYqB1nSuS\n" +
-            "wPml0ASz44JZEExii5cNN21wullKmAPmlfeAm7kjTGmu9pQ3NyqruP29OKL3MiB/\n" +
-            "wrWQEX7q1vF+8sB1/KR7+M4YS7E="
+        "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDmmVTh7In7BL3EXddrs46yt2mjtOcB9FwsxiDzJI+3TS8eS4YvwZ" +
+            "6e9HQpuYvwX5gpGYo2X+6gMCOrvWNbLtI1cXn7laLf8Dv0BRpfQuyUv23HlNlzL9nWyqL2/5/RHsHXzqIKj5kvRleq6lwf5CpL" +
+            "QIzhRnk28AEM8GdQcmBVz0Vt/OOjpzNHjw1FjKSlsqn3Ntee8K6dJuxX4HHFyitELKeKBcFR8v8VnERZcOLB7zvjgc2kfXqoYx" +
+            "QgyoG5Y0+ARXM0T/k78fpi+HCEAhUdcgHEVoAAImv3ZXbVbO8avq8T27uWlOjpl3KS3QDHDoD8/r455YShDR+gSDd8veNnAgMB" +
+            "AAECggEACWmKyGnyO9e2szQtXc0Hbw4DdtYkc7T4qi8wGxyL7SxuVus4P+zEP7K0pxtWteoA+PR86rlBsTIl0pW5X3hqxhmqo/" +
+            "U4n7FbkRtAN1Ew/OVPYs0VjxkN6DF/M1u9tzhtKxTZEltIImDZpTVJq1eRzl6FIZDR08c6E8AgR21Tt0zZrk+k/vN5v0jszvcb" +
+            "9svGrKY2FXaCjMY/1vagRcps9MeKLyvOa7w7/7/akqloIgq0RU/3XpuTmesFXXIZD2gwsHqtm1gS0WZ519snSjjVoE5VmdgK9+" +
+            "d7aImpZQhP18hbQTfDSe+gcF+WyNtkm/i9TJUM27a0dFZY09R0wzh3YQKBgQD5S0pP112PTSbHx4ZRMjv/nx//Tj03Q4qsluUR" +
+            "u8JqMwo0O63TXIJSt5Gqs4B3uIbGES5hfq5Fv1DMdzToJfXFwP/64N6ZHyj1aLvpH+poaYdyo0t8b95P5cyS506OYRTj6ezMnu" +
+            "MgZlm/HjdSoWD5XA/Sg9n/7ZZqDbH/rceFlwKBgQDszU0a3ud68gRZypfk1G723ThdqGbne/x3JPHg0BB8t4LTIV1sbG3sZJAq" +
+            "9/TviiQyEFFAdACRgGkmN9jsyZIWLAxUDZyd49Cm96cgMH9t0FfbxLnII2k2MXV8yzdFogGMO7tl22AEzeKUHmdVlsNS3dyBBv" +
+            "Q/N9ZMed5qXpZqsQKBgANzOk0OkvnnvHCpXz+CbXglMKEs6QX5xlKLKBJtwcwMdsiwRsCVGCyi4740C8QcZqkZFcY9pZXLhwe9" +
+            "YpsP423gNOq47/u4ha2XzHn2eh0F0N0SS3omZjI+4OzrjJfF2i8pTqCqVkRdhkJx3ZwkJZ5t2r40GvFCzYEcPWlnc0pzAoGAb7" +
+            "uTNSmWGZnWWbPRJeTiktLhBLgwDeufvWwOQSCLlv1T2mE03rLuzwrIR64FwXzyBTlTzVCu7/iiJKlXTqrxpkqUapidnJZg3lee" +
+            "YP7hMaSLwCO78WZb/3ko0YBljRKbHlsU2kO/s6Sd03vhEC557UDICY2Jc8bZ8+3Q92m4GZECgYEAm5wPgrz+PVBtuCAEHLREHG" +
+            "ec8ggGrIy7W6K3A15+HWR7p7F9GfkxDaZ+X18lf1Bjrjucjz1aDpHA/TtjvvyXPBlgUAI7f54AqhvCztUMLcNxc7mzOuwGh70j" +
+            "/UT8Vtnhar1zpDh8m++9lS1nSfR8SVSyXNRlNspMM6cWyV8CW40="
     private val enable: Boolean = true
 
     @Test

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
@@ -36,6 +37,7 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 
 interface PermissionResourceGroupService {
     /**
@@ -118,4 +120,17 @@ interface PermissionResourceGroupService {
         projectId: String,
         customGroupCreateReq: CustomGroupCreateReq
     ): Int
+
+    fun getByGroupCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: BkAuthGroup
+    ): AuthResourceGroup?
+
+    // 查询用户加入的用户组模板
+    fun listProjectMemberGroupTemplateIds(
+        projectCode: String,
+        memberId: String
+    ): List<String>
 }
