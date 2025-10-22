@@ -44,6 +44,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -69,6 +70,31 @@ class WebhookTriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
+    }
+
+    fun trigger(event: ScmWebhookTriggerEvent) {
+        with(event) {
+            logger.info(
+                "start to trigger webhook trigger|$projectId|$pipelineId|$version|$eventId|${repository.repoHashId}"
+            )
+            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
+                    params = arrayOf(eventId.toString())
+                )
+            val webhook = triggerEvent.eventBody ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
+                params = arrayOf(eventId.toString())
+            )
+            trigger(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                eventId = eventId,
+                repository = repository,
+                webhook = webhook
+            )
+        }
     }
 
     fun trigger(
@@ -170,11 +196,11 @@ class WebhookTriggerBuildService @Autowired constructor(
                     "ref: $ref|blobId: $blobId"
             )
             val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
-                ?: throw throw ErrorCodeException(
+                ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
                     params = arrayOf(eventId.toString())
                 )
-            val webhook = triggerEvent.eventBody ?: throw throw ErrorCodeException(
+            val webhook = triggerEvent.eventBody ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
                 params = arrayOf(eventId.toString())
             )
