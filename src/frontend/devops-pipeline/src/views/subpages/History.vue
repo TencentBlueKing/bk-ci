@@ -81,7 +81,7 @@
         TriggerEvent,
         DelegationPermission
     } from '@/components/PipelineDetailTabs'
-    import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import { ShowVariable } from '@/components/PipelineEditTabs/'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -89,7 +89,6 @@
             BuildHistoryTab,
             TriggerEvent,
             PipelineConfig,
-            AuthorityTab,
             ChangeLog,
             Logo,
             ShowVariable,
@@ -176,15 +175,6 @@
                         title: this.$t('more'),
                         children: [
                             {
-                                title: this.$t('authSetting'),
-                                disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[2],
-                                    disabled: this.isReleaseVersion,
-                                    delay: [300, 0]
-                                },
-                                name: 'permission'
-                            },
-                            {
                                 title: this.$t('delegationPermission'),
                                 name: 'delegation'
                             },
@@ -243,10 +233,6 @@
                         return {
                             component: 'PipelineConfig',
                             showVar: type === 'pipeline'
-                        }
-                    case 'permission':
-                        return {
-                            component: 'AuthorityTab'
                         }
                     case 'versionHistory':
                         return {
