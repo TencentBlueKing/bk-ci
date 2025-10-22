@@ -339,7 +339,7 @@
                                     style="width: 10px; text-align: center;"
                                 >|</b>
                                 <span
-                                    v-if="!latestExecIsStageProgress"
+                                    v-if="!latestExecIsStageProgress || isArchiveView"
                                     class="last-build-msg"
                                 >{{ props.row.lastBuildMsg }}</span>
                                 <span
@@ -607,7 +607,7 @@
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import StageSteps from '@/components/StageSteps'
-    import { convertTime, isShallowEqual, convertMStoString, prettyDateTimeFormat } from '@/utils/util'
+    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 
     export default {
@@ -727,15 +727,6 @@
             },
             projectId () {
                 return this.$route.params.projectId
-            },
-            statusIconMap () {
-                return {
-                    SUCCEED: 'check-circle-shape',
-                    FAILED: 'close-circle-shape',
-                    RUNNING: 'circle-2-1',
-                    PAUSE: 'play-circle-shape',
-                    SKIP: 'redo-arrow'
-                }
             },
             allRenderColumnMap () {
                 return this.selectedTableColumn.reduce((result, item) => {
@@ -861,6 +852,9 @@
             prettyDateTimeFormat,
             latestExecHeader () {
                 const h = this.$createElement
+                if (this.isArchiveView) {
+                    return h('span',this.$t('latestExec'))
+                }
                 return h('div',{style: {
                     display: 'flex',
                     alignItems: 'center',
@@ -969,16 +963,6 @@
                             collation
                         }
                     })
-                }
-            },
-            getStageTooltip (stage) {
-                switch (true) {
-                    case !!stage.elapsed:
-                        return `${stage.name}: ${convertMStoString(stage.elapsed)}`
-                    case stage.status === 'PAUSE':
-                        return this.$t('editPage.toCheck')
-                    case stage.status === 'SKIP':
-                        return this.$t('skipStageDesc')
                 }
             },
             async requestList (query = {}) {

@@ -18,7 +18,7 @@
  */
 
 import { statusAlias } from '@/utils/pipelineStatus'
-import { convertMStoStringByRule, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
+import { convertMStoStringByRule, convertMStoString, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
 import {
@@ -54,6 +54,15 @@ export default {
         ]),
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
+        },
+        statusIconMap () {
+            return {
+                SUCCEED: 'check-circle-shape',
+                FAILED: 'close-circle-shape',
+                RUNNING: 'circle-2-1',
+                PAUSE: 'play-circle-shape',
+                SKIP: 'redo-arrow'
+            }
         }
     },
     methods: {
@@ -116,7 +125,6 @@ export default {
                         duration: this.calcDuration(item),
                         latestBuildUserId: item.lastModifyUser,
                         onlyDraftVersion: isDraft,
-                        latestBuildStageStatus: this.getLatestBuildStageStatus(item),
                         historyRoute: {
                             name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',
                             params: {
@@ -145,6 +153,7 @@ export default {
                             pipelineActions: this.getPipelineActions(item, index),
                             disabled: this.isDisabledPipeline(item),
                             tooltips: this.disabledTips(item),
+                            latestBuildStageStatus: this.getLatestBuildStageStatus(item),
                             released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
                             onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
                         })
@@ -565,6 +574,16 @@ export default {
                     })
                 }
                 return false
+            }
+        },
+        getStageTooltip (stage) {
+            switch (true) {
+                case !!stage.elapsed:
+                    return `${stage.name}: ${convertMStoString(stage.elapsed)}`
+                case stage.status === 'PAUSE':
+                    return this.$t('editPage.toCheck')
+                case stage.status === 'SKIP':
+                    return this.$t('skipStageDesc')
             }
         },
         getLatestBuildStageStatus (item) {
