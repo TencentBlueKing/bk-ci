@@ -29,9 +29,9 @@ package com.tencent.devops.process.dao.`var`
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
 import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupReferInfoRecord
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import org.jooq.DSLContext

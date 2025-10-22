@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_YAML_PUB_VAR_GROUP_ID
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -60,6 +59,7 @@ import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -284,9 +284,9 @@ class ModelTransfer @Autowired constructor(
         yaml.stages = TransferMapper.anyTo(stages)
         val variables = mutableMapOf<String, Any>()
         modelInput.model.handlePublicVarInfo()
-        val publicVarGroupNames = modelInput.model.publicVarGroups
-        if (!publicVarGroupNames.isNullOrEmpty()) {
-            variables[BK_PIPELINE_YAML_PUB_VAR_GROUP_ID] = publicVarGroupNames.map {
+        val publicVarGroups = modelInput.model.publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
                 VariableTemplate(it.groupName, it.versionName)
             }
         }

@@ -28,7 +28,7 @@
 package com.tencent.devops.process.pojo.`var`.dto
 
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线公共变量组关联传输对象")

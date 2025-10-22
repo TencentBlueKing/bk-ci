@@ -96,7 +96,7 @@ class PublicVarDao {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(VAR_NAME.like("%$keyword%"))
+                .and(VAR_NAME.contains(keyword))
                 .fetchInto(String::class.java)
         }
     }
@@ -110,7 +110,7 @@ class PublicVarDao {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(ALIAS.like("%$keyword%"))
+                .and(ALIAS.contains(keyword))
                 .fetchInto(String::class.java)
         }
     }

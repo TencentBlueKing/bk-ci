@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 

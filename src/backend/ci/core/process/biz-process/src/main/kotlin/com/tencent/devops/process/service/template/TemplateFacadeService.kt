@@ -54,6 +54,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -122,7 +123,6 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -144,6 +144,8 @@ import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
+import java.text.MessageFormat
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -154,8 +156,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service

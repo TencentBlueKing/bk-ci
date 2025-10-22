@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.dao.`var`
 
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TPipelinePublicVarReferInfo
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarReferPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository

@@ -25,17 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.api
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserPublicVarGroupHistoryResource
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
+import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class PublicVarGroupRef(
-    @get:Schema(title = "变量组名称", required = true)
-    val groupName: String,
-    @get:Schema(title = "版本号", required = false)
-    val version: Int? = null,
-    @get:Schema(title = "版本名称", required = false)
-    val versionName: String? = null,
-    @get:Schema(title = "回显的历史变量列表", required = false)
-    var variables: List<BuildFormProperty>? = null
-)
+@RestResource
+class UserPublicVarGroupHistoryResourceImpl @Autowired constructor(
+    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+) : UserPublicVarGroupHistoryResource {
+
+    override fun getReleaseHistory(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarReleaseDO>> {
+        return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        ))
+    }
+}

@@ -32,7 +32,6 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -141,22 +140,22 @@ class PublicVarGroupDao {
         }
     }
 
-    fun listGroupsByProjectIdPage(
-        dslContext: DSLContext,
+    /**
+     * 构建变量组查询的公共条件
+     */
+    private fun buildGroupQueryConditions(
         projectId: String,
-        page: Int,
-        pageSize: Int,
         filterByGroupName: String? = null,
         filterByGroupDesc: String? = null,
         filterByUpdater: String? = null,
         groupNames: List<String>? = null
-    ): List<PublicVarGroupPO> {
+    ): List<Condition> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(LATEST_FLAG.eq(true))
 
-            // 添加新的筛选条件
+            // 添加筛选条件
             filterByGroupName?.let {
                 conditions.add(GROUP_NAME.like("%$it%"))
             }
@@ -169,6 +168,29 @@ class PublicVarGroupDao {
             if (!groupNames.isNullOrEmpty()) {
                 conditions.add(GROUP_NAME.`in`(groupNames))
             }
+
+            return conditions
+        }
+    }
+
+    fun listGroupsByProjectIdPage(
+        dslContext: DSLContext,
+        projectId: String,
+        page: Int,
+        pageSize: Int,
+        filterByGroupName: String? = null,
+        filterByGroupDesc: String? = null,
+        filterByUpdater: String? = null,
+        groupNames: List<String>? = null
+    ): List<PublicVarGroupPO> {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            val conditions = buildGroupQueryConditions(
+                projectId = projectId,
+                filterByGroupName = filterByGroupName,
+                filterByGroupDesc = filterByGroupDesc,
+                filterByUpdater = filterByUpdater,
+                groupNames = groupNames
+            )
 
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -188,27 +210,17 @@ class PublicVarGroupDao {
         groupNames: List<String>? = null
     ): Long {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            val condition = DSL.noCondition()
-                .and(PROJECT_ID.eq(projectId))
-                .and(LATEST_FLAG.eq(true))
-
-            // 添加新的筛选条件
-            filterByGroupName?.let {
-                condition.and(GROUP_NAME.like("%$it%"))
-            }
-            filterByGroupDesc?.let {
-                condition.and(DESC.like("%$it%"))
-            }
-            filterByUpdater?.let {
-                condition.and(MODIFIER.like("%$it%"))
-            }
-            if (!groupNames.isNullOrEmpty()) {
-                condition.and(GROUP_NAME.`in`(groupNames))
-            }
+            val conditions = buildGroupQueryConditions(
+                projectId = projectId,
+                filterByGroupName = filterByGroupName,
+                filterByGroupDesc = filterByGroupDesc,
+                filterByUpdater = filterByUpdater,
+                groupNames = groupNames
+            )
 
             return dslContext.selectCount()
                 .from(this)
-                .where(condition)
+                .where(conditions)
                 .fetchOne(0, Long::class.java) ?: 0
         }
     }
@@ -291,6 +303,34 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 原子增量更新引用计数（线程安全）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param countChange 计数变化量（正数表示增加，负数表示减少）
+     * @return 更新的行数
+     */
+    fun incrementReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        countChange: Int
+    ): Int {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(REFER_COUNT.plus(countChange).ge(0)) // 确保不会变成负数
+                .execute()
+        }
+    }
+
     fun updateLatestFlag(
         dslContext: DSLContext,
         projectId: String,
@@ -320,6 +360,31 @@ class PublicVarGroupDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
+                .execute()
+        }
+    }
+
+    /**
+     * 原子增量更新变量组名称的引用计数（线程安全）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param countChange 计数变化量（正数表示增加，负数表示减少）
+     * @return 更新的行数
+     */
+    fun incrementVarGroupNameReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        countChange: Int
+    ): Int {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(REFER_COUNT.plus(countChange).ge(0)) // 确保不会变成负数
                 .execute()
         }
     }

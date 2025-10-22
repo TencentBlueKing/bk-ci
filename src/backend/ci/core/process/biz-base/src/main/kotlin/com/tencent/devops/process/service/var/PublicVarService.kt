@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
@@ -44,7 +45,6 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
@@ -211,10 +211,9 @@ class PublicVarService @Autowired constructor(
         model: Model,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int,
-        viewFlag: Boolean = false
+        referVersion: Int
     ) {
-        val publicVarGroups = model.publicVarGroups
+        val publicVarGroups = model.publicVarGroups?.toMutableList()
         if (publicVarGroups.isNullOrEmpty()) return
         // 筛选出需要更新到最新版本的变量组
         val groupsToUpdate = publicVarGroups.filter {
@@ -234,7 +233,10 @@ class PublicVarService @Autowired constructor(
             referVersion = referVersion
         )
         val params = model.getTriggerContainer().params
-        latestGroupVersionMap.keys.forEach { groupName ->
+        
+        // 为每个变量组处理并设置 variables
+        publicVarGroups.forEach { varGroup ->
+            val groupName = varGroup.groupName
             // 获取变量组最新版本的变量
             val latestGroupVars = latestVars[groupName] ?: emptyList()
             // 获取变量组保存时的版本的变量
@@ -248,16 +250,18 @@ class PublicVarService @Autowired constructor(
                     savedGroupVarNames,
                     latestGroupVarNames
                 )
-                // 处理变量差异
-                processVarGroupDiff(
+                // 处理变量差异并获取已移除的变量
+                val removedVars = processVarGroupDiff(
                     diffResult = diffResult,
                     groupReferInfo = groupReferInfo,
                     latestGroupVars = latestGroupVars,
-                    params = params,
-                    viewFlag = viewFlag
+                    params = params
                 )
+                // 将已移除的变量设置到 variables 中
+                varGroup.variables = removedVars
             }
         }
+        model.publicVarGroups = publicVarGroups
     }
 
     /**
@@ -281,12 +285,14 @@ class PublicVarService @Autowired constructor(
         diffResult: VarGroupDiffResult,
         groupReferInfo: PipelinePublicVarGroupReferPO,
         latestGroupVars: List<BuildFormProperty>,
-        params: MutableList<BuildFormProperty>,
-        viewFlag: Boolean
-    ) {
+        params: MutableList<BuildFormProperty>
+    ): List<BuildFormProperty> {
         val newVarMap = latestGroupVars.associateBy { it.id }
-        val positionInfo = groupReferInfo.positionInfo ?: return
+        val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
         val positionInfoMap = positionInfo.associateBy { it.varName }
+
+        // 获取当前params中的变量名集合
+        val currentParamVarNames = params.map { it.id }.toSet()
 
         // 1. 更新已存在的变量（索引未被移除操作影响，优先处理）
         diffResult.varsToUpdate.forEach { varName ->
@@ -308,38 +314,35 @@ class PublicVarService @Autowired constructor(
         diffResult.varsToAdd.mapNotNull { newVarMap[it] } // 过滤无效变量
             .forEach { params.add(it) }
 
-        if (viewFlag) {
-            // 2. 将被移除的变量标记为已移除，先检查是否存在，不存在才添加到末尾
-            diffResult.varsToRemove.forEach { varName ->
-                positionInfoMap[varName]?.let { pos ->
-                    // 检查变量是否已存在于 params 中
-                    val existingIndex = params.indexOfFirst { it.id == varName }
-                    if (existingIndex < 0) {
-                        // 变量不存在，创建移除标记并添加到末尾
-                        val removedProperty = BuildFormProperty(
-                            id = pos.varName,
-                            required = pos.required,
-                            type = BuildFormPropertyType.STRING,
-                            defaultValue = "",
-                            options = null,
-                            desc = "",
-                            repoHashId = null,
-                            relativePath = null,
-                            scmType = null,
-                            containerType = null,
-                            glob = null,
-                            properties = null,
-                            varGroupName = groupReferInfo.groupName,
-                            varGroupVersion = groupReferInfo.version,
-                            constant = if (pos.type == PublicVarTypeEnum.CONSTANT) true else false,
-                        ).apply {
-                            this.removeFlag = true
-                        }
-                        params.add(removedProperty)
-                    }
+        // 4. 处理groupReferInfo中存在但params中没有的变量（标记为已移除）
+        val removedVars = mutableListOf<BuildFormProperty>()
+        positionInfo.forEach { pos ->
+            // 检查变量是否在当前params中不存在
+            if (pos.varName !in currentParamVarNames) {
+                val removedProperty = BuildFormProperty(
+                    id = pos.varName,
+                    required = pos.required,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = "",
+                    options = null,
+                    desc = "",
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null,
+                    varGroupName = groupReferInfo.groupName,
+                    varGroupVersion = groupReferInfo.version,
+                    constant = if (pos.type == PublicVarTypeEnum.CONSTANT) true else false,
+                ).apply {
+                    this.removeFlag = true
                 }
+                removedVars.add(removedProperty)
             }
         }
+        
+        return removedVars
     }
 
     /**
@@ -383,24 +386,5 @@ class PublicVarService @Autowired constructor(
                 }
             }
         }
-    }
-
-    /**
-     * 更新变量引用计数
-     * @param countChange 计数变化量（正数表示增加，负数表示减少）
-     */
-    fun updateVarReferCounts(
-        projectId: String,
-        groupName: String,
-        version: Int,
-        countChange: Int
-    ) {
-        publicVarDao.updateReferCountByGroup(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            version = version,
-            countChange = countChange
-        )
     }
 }
