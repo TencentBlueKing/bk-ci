@@ -138,6 +138,7 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -187,7 +188,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildRetryService: PipelineBuildRetryService
+    private val pipelineBuildRetryService: PipelineBuildRetryService,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -2897,21 +2899,29 @@ class PipelineBuildFacadeService(
         isTemplate: Boolean?,
         subModel: Model? = null
     ): List<PipelineBuildParamFormProp> {
-        val model = if (isTemplate == true) {
+        val model: Model = if (isTemplate == true) {
             // 模板触发器
-            val templateModelStr = pipelineRepositoryService.getTemplateVersionRecord(
-                templateId = pipelineId,
-                version = version?.toLong()
-            ).template
+            val templateVersion = version?.toLong()
             try {
-                JsonUtil.to(templateModelStr, Model::class.java)
-            } catch (ignored: Exception) {
-                logger.error("parse process($pipelineId) model fail", ignored)
+                pipelineRepositoryService.getTemplateVersionRecord(
+                    templateId = pipelineId,
+                    version = templateVersion
+                ).template?.let {
+                    JsonUtil.to(it, Model::class.java)
+                } ?: (pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = pipelineId,
+                    version = templateVersion!!
+                ) as Model)
+            } catch (e: Exception) {
+                logger.error("parse process($pipelineId) model fail", e) // 记录更具体的错误
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                    params = arrayOf(pipelineId) // 传递模板ID以便于错误定位
                 )
             }
         } else {
+            // 非模板触发器
             subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, version
             ).second.model

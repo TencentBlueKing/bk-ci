@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -72,7 +73,8 @@ class PipelineVersionGenerator constructor(
     private val client: Client,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val stageTagService: StageTagService,
-    private val transferService: PipelineTransferYamlService
+    private val transferService: PipelineTransferYamlService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     /**
@@ -621,9 +623,14 @@ class PipelineVersionGenerator constructor(
                 getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
             }
             val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
+            val pipelineId2Name = pipelineRepositoryService.listPipelineNameByIds(
+                projectId = projectId,
+                pipelineIds = instanceReleaseInfos.map { it.pipelineId }.toSet()
+            )
             return instanceReleaseInfos.map { releaseInfo ->
                 // 新增实例化
-                val resourceOnlyVersion = if (releaseInfo.pipelineId.isEmpty()) {
+                val pipelineId = releaseInfo.pipelineId
+                val resourceOnlyVersion = if (releaseInfo.pipelineId.isEmpty() || pipelineId2Name[pipelineId] == null) {
                     val (versionStatus, branchName) = getInstanceStatusAndBranchName(
                         projectId = projectId,
                         pipelineId = null,
