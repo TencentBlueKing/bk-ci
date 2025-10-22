@@ -42,7 +42,12 @@ class MockPipelineTemplatePermissionService(
     authProjectApi = authProjectApi,
     pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
-    override fun checkPipelineTemplatePermission(userId: String, projectId: String, permission: AuthPermission, templateId: String?): Boolean {
+    override fun checkPipelineTemplatePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        templateId: String?
+    ): Boolean {
         return true
     }
 
