@@ -997,21 +997,7 @@
                         count,
                         current: page
                     })
-                    this.pipelineList = records.map(item => {
-                        const latestBuildStageStatus = item.latestBuildStageStatus
-                            ? item.latestBuildStageStatus.slice(1).map((stage) => ({
-                                ...stage,
-                                tooltip: this.getStageTooltip(stage),
-                                icon: this.statusIconMap[stage.status] || 'circle',
-                                statusCls: stage.status
-                            }))
-                            : null
-                        
-                        return {
-                            ...item,
-                            latestBuildStageStatus
-                        }
-                    })
+                    this.pipelineList = records
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPosGroup, 100)

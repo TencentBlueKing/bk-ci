@@ -116,6 +116,14 @@ export default {
                         duration: this.calcDuration(item),
                         latestBuildUserId: item.lastModifyUser,
                         onlyDraftVersion: isDraft,
+                        latestBuildStageStatus: item.latestBuildStageStatus
+                            ? item.latestBuildStageStatus.slice(1).map((stage) => ({
+                                ...stage,
+                                tooltip: this.getStageTooltip(stage),
+                                icon: this.statusIconMap[stage.status] || 'circle',
+                                statusCls: stage.status
+                            }))
+                            : null,
                         historyRoute: {
                             name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',
                             params: {
