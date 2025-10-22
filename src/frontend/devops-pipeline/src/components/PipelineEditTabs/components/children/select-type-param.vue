@@ -97,7 +97,7 @@
                         key: 'url',
                         label: this.$t('newui.pipelineParam.apiUrl'),
                         placeholder: this.$t('editPage.atomForm.inputTips'),
-                        tips: this.$t('editPage.atomForm.URLTips')
+                        tips: this.$t('editPage.atomForm.URLTips', [`{${this.$t('editPage.atomForm.var')}}`])
                     },
                     {
                         key: 'dataPath',
