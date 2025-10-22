@@ -81,7 +81,10 @@ pipeline:
   version:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
-    spec_channel_max_keep_num: 2    
+    spec_channel_max_keep_num: 2
+  publicVarGroup:
+    pipelineConsoleUrlTemplate: _BK_CI_PIPELINE_CONSOLE_URL_TEMPLATE
+    templateConsoleUrlTemplate: _BK_CI_TEMPLATE_CONSOLE_URL_TEMPLATE
 scm:
   external:
     tGit:
