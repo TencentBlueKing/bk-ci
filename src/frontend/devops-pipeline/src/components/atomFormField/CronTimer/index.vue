@@ -7,8 +7,14 @@
                 :clearable="false"
                 :disabled="disabled"
                 :value="contabObj.peroid.index"
-                @selected="onSelect">
-                <bk-option v-for="item in periodArray" :key="item.index" :id="item.index" :name="item.label">
+                @selected="onSelect"
+            >
+                <bk-option
+                    v-for="item in periodArray"
+                    :key="item.index"
+                    :id="item.index"
+                    :name="item.label"
+                >
 
                 </bk-option>
             </bk-select>
@@ -21,8 +27,14 @@
                 :clearable="false"
                 :disabled="disabled"
                 :value="contabObj.week.index"
-                @selected="onSelect">
-                <bk-option v-for="item in weekArray" :key="item.index" :id="item.index" :name="item.label">
+                @selected="onSelect"
+            >
+                <bk-option
+                    v-for="item in weekArray"
+                    :key="item.index"
+                    :id="item.index"
+                    :name="item.label"
+                >
                 </bk-option>
             </bk-select>
             <span class="desc-divider">的</span>
@@ -34,8 +46,14 @@
                 :clearable="false"
                 :disabled="disabled"
                 :value="contabObj.day.index"
-                @selected="onSelect">
-                <bk-option v-for="item in dayArray" :key="item.index" :id="item.index" :name="item.label">
+                @selected="onSelect"
+            >
+                <bk-option
+                    v-for="item in dayArray"
+                    :key="item.index"
+                    :id="item.index"
+                    :name="item.label"
+                >
                 </bk-option>
             </bk-select>
         </span>
@@ -46,8 +64,14 @@
                 :clearable="false"
                 :disabled="disabled"
                 :value="contabObj.hour.index"
-                @selected="onSelect">
-                <bk-option v-for="item in hourArray" :key="item.index" :id="item.index" :name="item.label">
+                @selected="onSelect"
+            >
+                <bk-option
+                    v-for="item in hourArray"
+                    :key="item.index"
+                    :id="item.index"
+                    :name="item.label"
+                >
                 </bk-option>
             </bk-select>
             <span class="desc-divider">时</span>
@@ -60,8 +84,14 @@
                 :disabled="disabled"
                 :list="minutesArray"
                 :value="contabObj.minute.index"
-                @selected="onSelect">
-                <bk-option v-for="item in minutesArray" :key="item.index" :id="item.index" :name="item.label">
+                @selected="onSelect"
+            >
+                <bk-option
+                    v-for="item in minutesArray"
+                    :key="item.index"
+                    :id="item.index"
+                    :name="item.label"
+                >
                 </bk-option>
             </bk-select>
             <span class="desc-divider">分</span>
@@ -71,7 +101,7 @@
 
 <script>
     import atomFieldMixin from '../atomFieldMixin'
-    import { PERIOD_ARRAY, WEEK_ARRAY, MONTH_ARRAY, DAY_ARRAY, HOUR_ARRAY, MINUTES_ARRAY } from './cronUtils'
+    import { DAY_ARRAY, HOUR_ARRAY, MINUTES_ARRAY, MONTH_ARRAY, PERIOD_ARRAY, WEEK_ARRAY } from './cronUtils'
 
     export default {
         name: 'cron-timer',

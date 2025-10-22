@@ -52,19 +52,18 @@
     height: 100vh;
     color: #222;
     display: flex;
-    max-height: 100vh;
-    padding-bottom: 4vh;
     flex-direction: column;
     overflow: hidden;
+    padding: 0 60px;
     .g-store-body {
-        width: 14.6rem;
-        margin: 16px auto 0;
+        width: calc(100vw - 120px);
+        margin: 0 0 16px 0;
         position: relative;
         flex: 1;
-        height: 0;
+        overflow-y: auto;
     }
     .g-store-route {
-        height: 100%;
+        min-height: 100%;
         box-shadow: 1px 2px 3px 0 rgba(0,0,0,0.05);
     }
 }
@@ -537,5 +536,21 @@ input[disabled="disabled"] {
             border-left: 2px solid #1592ff;
             border-bottom: 2px solid #1592ff;
         }
+    }
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    display: inline-block;
+    border-radius: 4px;
+
+    &.published {
+        background: rgb(203, 240, 218);
+        border: 1px solid rgb(44, 175, 94);
+    }
+    &.offline {
+        background: rgb(255, 230, 230);
+        border: 1px solid rgb(255, 102, 102);
     }
 }

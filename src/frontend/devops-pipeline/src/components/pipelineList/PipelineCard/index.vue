@@ -12,7 +12,7 @@
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId,
-                                resourceType: 'pipeline',
+                                resourceType: RESOURCE_TYPE.PIPELINE,
                                 resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.VIEW
                             }
@@ -74,7 +74,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipeline.pipelineId,
                             action: RESOURCE_ACTION.EDIT
                         }
@@ -89,7 +89,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipeline.pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
@@ -238,7 +238,8 @@
     import { RECENT_USED_VIEW_ID } from '@/store/constants'
     import {
         handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
 
@@ -268,7 +269,8 @@
         },
         data () {
             return {
-                RESOURCE_ACTION
+                RESOURCE_ACTION,
+                RESOURCE_TYPE
             }
         },
         computed: {
