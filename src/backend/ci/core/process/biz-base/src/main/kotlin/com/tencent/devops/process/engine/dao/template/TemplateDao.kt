@@ -344,6 +344,24 @@ class TemplateDao {
         }
     }
 
+    fun getVersionByVersionName(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Long? {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.select(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ID.eq(templateId))
+                .and(VERSION_NAME.eq(versionName))
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
+                .limit(1)
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun getPublicTemplate(
         dslContext: DSLContext
     ): List<String> {

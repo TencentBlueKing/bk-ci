@@ -39,6 +39,7 @@ dependencies {
     api(project(":core:notify:api-notify")) // 消息通知API，考虑移除
     api(project(":core:environment:api-environment")) // Agent复用互斥逻辑，需要从Name拿到Id加互斥锁
     api(project(":core:process:model-process"))
+    api(project(":core:metrics:api-metrics"))
     api("org.springframework.boot:spring-boot-starter-jooq")
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")

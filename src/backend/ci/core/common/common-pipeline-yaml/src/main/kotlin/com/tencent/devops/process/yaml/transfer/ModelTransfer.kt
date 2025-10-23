@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -53,10 +54,12 @@ import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -168,7 +171,9 @@ class ModelTransfer @Autowired constructor(
             pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
-
+        model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
+            PublicVarGroupRef(groupName = it.name, versionName = it.version)
+        }
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         var stageIndex = 1
         stageList.add(modelStage.yaml2TriggerStage(yamlInput, stageIndex++))
@@ -277,7 +282,16 @@ class ModelTransfer @Autowired constructor(
             stages.add(ymlStage)
         }
         yaml.stages = TransferMapper.anyTo(stages)
-        yaml.variables = variableTransfer.makeVariableFromModel(modelInput.model)
+        val variables = mutableMapOf<String, Any>()
+        modelInput.model.handlePublicVarInfo()
+        val publicVarGroups = modelInput.model.publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        variableTransfer.makeVariableFromModel(modelInput.model)?.let { variables.putAll(it) }
+        yaml.variables = if (variables.isEmpty()) null else variables
         val lastStage = modelInput.model.stages.last()
         val finally = if (lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)

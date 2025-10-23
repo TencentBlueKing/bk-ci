@@ -603,10 +603,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             watcher.stop()
 
             var pipelineId: String? = null
+            val triggerContainer = model.getTriggerContainer()
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -708,6 +708,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
+
                 ActionAuditContext.current()
                     .addInstanceInfo(pipelineId, model.name, null, null)
                 success = true

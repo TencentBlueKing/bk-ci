@@ -59,9 +59,13 @@ class VariableTransfer {
     }
 
     fun makeVariableFromModel(model: Model): Map<String, Variable>? {
+        return makeVariableFromBuildParams(model.getTriggerContainer().params, true)
+    }
+
+    fun makeVariableFromBuildParams(params: List<BuildFormProperty>, skipPublicVar: Boolean): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        model.getTriggerContainer().params.forEach {
-            if (it.id in ignoredVariable) return@forEach
+        params.forEach {
+            if (it.id in ignoredVariable || (skipPublicVar && it.varGroupName != null)) return@forEach
             var props = when {
                 // 字符串
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
@@ -230,9 +234,9 @@ class VariableTransfer {
 
     fun makeVariableFromYaml(
         variables: Map<String, Variable>?
-    ): List<BuildFormProperty> {
+    ): MutableList<BuildFormProperty> {
         if (variables.isNullOrEmpty()) {
-            return emptyList()
+            return mutableListOf()
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         variables.forEach { (key, variable) ->
@@ -304,7 +308,7 @@ class VariableTransfer {
                 YAML_NOT_VALID,
                 arrayOf(
                     "The const attribute and the allow-modify-at-startup attribute are mutually exclusive. " +
-                        "If configured at the same time, the verification will fail. variable: $key"
+                            "If configured at the same time, the verification will fail. variable: $key"
                 )
             )
         }
