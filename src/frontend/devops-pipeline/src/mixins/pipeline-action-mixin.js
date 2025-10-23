@@ -18,7 +18,7 @@
  */
 
 import { statusAlias } from '@/utils/pipelineStatus'
-import { convertMStoStringByRule, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
+import { convertMStoStringByRule, convertMStoString, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
 import {
@@ -54,6 +54,15 @@ export default {
         ]),
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
+        },
+        statusIconMap () {
+            return {
+                SUCCEED: 'check-circle-shape',
+                FAILED: 'close-circle-shape',
+                RUNNING: 'circle-2-1',
+                PAUSE: 'play-circle-shape',
+                SKIP: 'redo-arrow'
+            }
         }
     },
     methods: {
@@ -144,6 +153,7 @@ export default {
                             pipelineActions: this.getPipelineActions(item, index),
                             disabled: this.isDisabledPipeline(item),
                             tooltips: this.disabledTips(item),
+                            latestBuildStageStatus: this.getLatestBuildStageStatus(item),
                             released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
                             onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
                         })
@@ -566,6 +576,24 @@ export default {
                 return false
             }
         },
+        getStageTooltip (stage) {
+            switch (true) {
+                case !!stage.elapsed:
+                    return `${stage.name}: ${convertMStoString(stage.elapsed)}`
+                case stage.status === 'PAUSE':
+                    return this.$t('editPage.toCheck')
+                case stage.status === 'SKIP':
+                    return this.$t('skipStageDesc')
+            }
+        },
+        getLatestBuildStageStatus (item) {
+            return item.latestBuildStageStatus ? item.latestBuildStageStatus.slice(1).map((stage) => ({
+                ...stage,
+                tooltip: this.getStageTooltip(stage),
+                icon: this.statusIconMap[stage.status] || 'circle',
+                statusCls: stage.status
+            })) : null
+        },
         updatePipelineStatus (data, isFirst = false) {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
@@ -575,7 +603,8 @@ export default {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
                         duration: this.calcDuration(item),
-                        progress: this.calcProgress(item)
+                        progress: this.calcProgress(item),
+                        latestBuildStageStatus: this.getLatestBuildStageStatus(item)
                     })
                 }
             })

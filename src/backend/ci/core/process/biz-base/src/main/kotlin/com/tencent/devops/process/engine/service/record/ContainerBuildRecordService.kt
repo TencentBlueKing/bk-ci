@@ -111,6 +111,30 @@ class ContainerBuildRecordService(
         )
     }
 
+    fun getLatestRecord(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        executeCount: Int? = null
+    ): BuildRecordContainer? {
+        val finalExecuteCount = fixedExecuteCount(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            queryDslContext = transactionContext
+        )
+        return recordContainerDao.getLatestRecord(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = finalExecuteCount
+        )
+    }
+
     fun batchSave(
         transactionContext: DSLContext?,
         containerList: List<BuildRecordContainer>,

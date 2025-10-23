@@ -32,7 +32,9 @@ class RoutingStrategyService(private val redisOperation: RedisOperation) : Permi
     }
 
     override fun getModeForProject(projectCode: String): RoutingMode {
-        return projectModeCache.get(projectCode) { loadModeFromRedis(projectCode) }!!
+        val mode = projectModeCache.get(projectCode) { loadModeFromRedis(projectCode) }!!
+        logger.info("Get project mode '{}' for project '{}' from cache.", mode, projectCode)
+        return mode
     }
 
     override fun getDefaultMode(): RoutingMode {
@@ -45,7 +47,6 @@ class RoutingStrategyService(private val redisOperation: RedisOperation) : Permi
                     logger.debug("Get default mode '{}' from Redis.", defaultModeName)
                     parseMode(defaultModeName)
                 } else {
-                    logger.warn("No default mode found in Redis. Falling back to NORMAL.")
                     RoutingMode.NORMAL
                 }
             } catch (e: Exception) {

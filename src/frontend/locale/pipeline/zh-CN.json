@@ -1027,6 +1027,8 @@
       "paramKey": "参数key",
       "paramValue": "参数value",
       "inputTips": "请输入",
+      "URLTips": "URL 中可以通过 {0} 的方式引用当前流水线中已定义好的全局变量",
+      "var": "变量名",
       "toArtifactory": "查看仓库",
       "enableUpgrade": "是否启用分批升级",
       "otherChoices": "其它选项",
@@ -1783,5 +1785,7 @@
   "pleaseSaveCurrentEdit": "请先保存当前编辑的参数组合",
   "removeInputParam": "移除入参字段",
   "colon": "：",
-  "paramSetNameNotEmpty": "入参值组合名称不能为空"
+  "paramSetNameNotEmpty": "入参值组合名称不能为空",
+  "showStageProgress": "展示 Stage 进度",
+  "showBuildInfo": "展示构建信息"
 }
