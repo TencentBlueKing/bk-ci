@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.trigger
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
@@ -60,6 +62,8 @@ import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
+import java.text.MessageFormat
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -67,8 +71,6 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -84,6 +86,7 @@ class PipelineTriggerEventService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineTriggerEventService::class.java)
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
+
         // 构建链接
         const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
     }
@@ -202,10 +205,12 @@ class PipelineTriggerEventService @Autowired constructor(
             endTime = endTime,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        ).map {
-            fillEventDetailParam(it)
+        )
+        val id2NameMap = getId2Name(projectId, records)
+        val result = records.map {
+            fillEventDetailParam(it, id2NameMap)
         }
-        return SQLPage(count = count, records = records)
+        return SQLPage(count = count, records = result)
     }
 
     fun listRepoTriggerEvent(
@@ -341,8 +346,10 @@ class PipelineTriggerEventService @Autowired constructor(
             reason = reason,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        ).map {
-            fillEventDetailParam(it)
+        )
+        val id2NameMap = getId2Name(projectId, records)
+        val result = records.map {
+            fillEventDetailParam(it, id2NameMap)
         }
         val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
@@ -352,7 +359,7 @@ class PipelineTriggerEventService @Autowired constructor(
             pipelineName = pipelineName,
             reason = reason
         )
-        return SQLPage(count = count, records = records)
+        return SQLPage(count = count, records = result)
     }
 
     fun replay(
@@ -522,13 +529,28 @@ class PipelineTriggerEventService @Autowired constructor(
      * 事件描述国际化,构建链接,失败详情国际化,触发状态国际化,失败状态国际化
      */
     private fun fillEventDetailParam(
-        eventParam: PipelineTriggerEventVo
+        eventParam: PipelineTriggerEventVo,
+        id2NameMap: Map<String, String>?
     ): PipelineTriggerEventVo {
         return with(eventParam) {
             eventDesc = getI18nEventDesc(eventDesc)
             buildNum = getBuildNumUrl()
             reason = getI18nReason(eventParam.reason)
+            if (id2NameMap != null) {
+                triggerUser = id2NameMap[triggerUser] ?: triggerUser
+            }
             this
+        }
+    }
+
+    private fun getId2Name(projectId: String, records: List<PipelineTriggerEventVo>): Map<String, String>? {
+        return if (TenantUtils.isMultiTenantMode()) {
+            client.get(ServiceDeptResource::class).listUserInfos(
+                memberIds = records.map { it.triggerUser }.distinct(),
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+            ).data?.associate { it.name to it.displayName }
+        } else {
+            null
         }
     }
 }
