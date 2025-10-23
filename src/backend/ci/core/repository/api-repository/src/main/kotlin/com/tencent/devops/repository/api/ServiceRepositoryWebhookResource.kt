@@ -30,7 +30,9 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import com.tencent.devops.repository.pojo.webhook.WebhookData
+import com.tencent.devops.repository.pojo.webhook.WebhookEnrichRequest
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,6 +60,20 @@ interface ServiceRepositoryWebhookResource {
         @Parameter(description = "代码库触发请求", required = true)
         request: WebhookParseRequest
     ): Result<WebhookData?>
+
+    @Operation(summary = "解析webhook数据")
+    @POST
+    @Path("/{projectId}/{repoHashId}/webhookEnrich")
+    fun webhookEnrich(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @Parameter(description = "代码库触发请求", required = true)
+        request: WebhookEnrichRequest
+    ): Result<Webhook>
 
     @Operation(summary = "保存代码库触发事件")
     @POST

@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.trigger.scm
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
@@ -44,8 +46,8 @@ import org.springframework.stereotype.Service
 class PipelineWebHookEventListener @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineYamlService: PipelineYamlService,
-    private val webhookTriggerBuildService: WebhookTriggerBuildService,
-    private val webhookGrayService: WebhookGrayService
+    private val webhookGrayService: WebhookGrayService,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) : WebHookEventListener {
 
     override fun onEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String?) {
@@ -84,13 +86,14 @@ class PipelineWebHookEventListener @Autowired constructor(
                     return@forEach
                 }
             }
-            webhookTriggerBuildService.trigger(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                eventId = eventId,
-                repository = repository,
-                webhook = webhook
+            sampleEventDispatcher.dispatch(
+                ScmWebhookTriggerEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    eventId = eventId,
+                    repository = repository
+                )
             )
         }
     }

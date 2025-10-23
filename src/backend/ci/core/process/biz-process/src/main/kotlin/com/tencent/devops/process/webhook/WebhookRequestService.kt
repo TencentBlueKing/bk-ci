@@ -200,8 +200,7 @@ class WebhookRequestService(
                         eventId = triggerEvent.eventId!!,
                         repository = repository,
                         webhook = it.eventBody!!,
-                        replayPipelineId = pipelineId,
-                        sourceWebhook = repoWebhookRequest.requestBody
+                        replayPipelineId = pipelineId
                     )
                 }
             } else {
