@@ -73,29 +73,60 @@ class JobQuotaBusinessService @Autowired constructor(
         containerHashId: String?,
         channelCode: String = ChannelCode.BS.name
     ): Boolean {
-        val result: Boolean
-        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId, jobType)
+        var message = ""
+        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId, jobType, channelCode)
         try {
             jobQuotaProjectLock.lock()
-            result = checkJobQuotaBase(
+            val jobStatus = getProjectRunningJobStatus(projectId, jobType, channelCode)
+            // 记录一次job并发数据
+            saveJobConcurrency(
                 projectId = projectId,
-                buildId = buildId,
-                containerId = containerId,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                vmType = jobType,
+                runningJobCount = jobStatus.runningJobCount,
+                jobQuotaVmType = jobType,
                 channelCode = channelCode
             )
 
-            // 如果配额没有超限，则记录一条running job
-            if (result) {
+            with(jobStatus) {
+                if (runningJobCount >= jobQuota) {
+                    message = ErrorCodeEnum.JOB_NUM_REACHED_MAX_QUOTA.getErrorMessage(
+                        params = arrayOf(jobType.displayName, "$runningJobCount", "$jobQuota"),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                    return false
+                }
+
+                if (runningJobCount * 100 / jobQuota >= jobThreshold) {
+                    // 如果配额没有超限，则记录一条running job
+                    message = ErrorCodeEnum.JOB_NUM_EXCEED_ALARM_THRESHOLD.getErrorMessage(
+                        params = arrayOf(
+                            jobType.displayName,
+                            "$runningJobCount",
+                            "$jobQuota",
+                            normalizePercentage(jobThreshold.toDouble()),
+                            normalizePercentage(runningJobCount * 100.0 / jobQuota)
+                        ),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                }
+
                 runningJobsDao.insert(dslContext, projectId, jobType, buildId, vmSeqId, executeCount, channelCode)
+                return true
             }
         } finally {
             jobQuotaProjectLock.unlock()
-        }
 
-        return result
+            if (message.isNotEmpty()) {
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = message,
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    containerHashId = containerHashId,
+                    executeCount = executeCount ?: 1,
+                    jobId = null,
+                    stepId = VMUtils.genStartVMTaskId(containerId)
+                )
+            }
+        }
     }
 
     /**
@@ -202,67 +233,6 @@ class JobQuotaBusinessService @Autowired constructor(
         }
     }
 
-    private fun checkJobQuotaBase(
-        projectId: String,
-        buildId: String,
-        containerId: String,
-        containerHashId: String?,
-        executeCount: Int?,
-        vmType: JobQuotaVmType,
-        channelCode: String
-    ): Boolean {
-        val jobStatus = getProjectRunningJobStatus(projectId, vmType, channelCode)
-
-        with(jobStatus) {
-            // 记录一次job并发数据
-            saveJobConcurrency(
-                projectId = projectId,
-                runningJobCount = jobStatus.runningJobCount,
-                jobQuotaVmType = vmType,
-                channelCode = channelCode
-            )
-
-            if (runningJobCount >= jobQuota) {
-                buildLogPrinter.addYellowLine(
-                    buildId = buildId,
-                    message = ErrorCodeEnum.JOB_NUM_REACHED_MAX_QUOTA.getErrorMessage(
-                        params = arrayOf(vmType.displayName, "$runningJobCount", "$jobQuota"),
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ),
-                    tag = VMUtils.genStartVMTaskId(containerId),
-                    containerHashId = containerHashId,
-                    executeCount = executeCount ?: 1,
-                    jobId = null,
-                    stepId = VMUtils.genStartVMTaskId(containerId)
-                )
-                return false
-            }
-
-            if (runningJobCount * 100 / jobQuota >= jobThreshold) {
-                buildLogPrinter.addYellowLine(
-                    buildId = buildId,
-                    message = ErrorCodeEnum.JOB_NUM_EXCEED_ALARM_THRESHOLD.getErrorMessage(
-                        params = arrayOf(
-                            vmType.displayName,
-                            "$runningJobCount",
-                            "$jobQuota",
-                            normalizePercentage(jobThreshold.toDouble()),
-                            normalizePercentage(runningJobCount * 100.0 / jobQuota)
-                        ),
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ),
-                    tag = VMUtils.genStartVMTaskId(containerId),
-                    containerHashId = containerHashId,
-                    executeCount = executeCount ?: 1,
-                    jobId = null,
-                    stepId = VMUtils.genStartVMTaskId(containerId)
-                )
-            }
-
-            return true
-        }
-    }
-
     private fun jobAgentFinish(
         projectId: String,
         pipelineId: String,
@@ -286,8 +256,10 @@ class JobQuotaBusinessService @Autowired constructor(
                         agentStartTime = runningJobsRecord.agentStartTime,
                         channelCode = runningJobsRecord.channelCode
                     )
-                    LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
-                            "Finish time: increase ${duration.toMillis() / 1000} seconds. >>>")
+                    LOG.info(
+                        "$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
+                                "Finish time: increase ${duration.toMillis() / 1000} seconds. >>>"
+                    )
 
                     // 保存构建记录
                     jobQuotaInterface.saveJobQuotaHistory(
@@ -346,9 +318,11 @@ class JobQuotaBusinessService @Autowired constructor(
             value >= 100.0 -> {
                 "100.00"
             }
+
             value <= 0 -> {
                 "0.00"
             }
+
             else -> {
                 String.format("%.2f", value)
             }

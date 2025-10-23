@@ -39,8 +39,16 @@ import java.time.LocalDateTime
 
 @Component
 class JobQuotaRedisUtils {
-    fun getJobQuotaProjectLock(projectId: String, jobType: JobQuotaVmType): RedisLock {
-        return RedisLock(getRedisStringSerializerOperation(), "$JOB_PROJECT_LOCK_KEY$projectId${jobType.name}", 60L)
+    fun getJobQuotaProjectLock(
+        projectId: String,
+        jobType: JobQuotaVmType,
+        channelCode: String
+    ): RedisLock {
+        return RedisLock(
+            redisOperation = getRedisStringSerializerOperation(),
+            lockKey = "$JOB_PROJECT_LOCK_KEY$projectId${jobType.name}$channelCode",
+            expiredTimeInSeconds = 60L
+        )
     }
 
     fun getJobStatisticsLock(): RedisLock {
