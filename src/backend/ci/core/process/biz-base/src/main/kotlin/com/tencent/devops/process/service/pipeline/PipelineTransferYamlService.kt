@@ -61,11 +61,11 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
-import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -89,11 +89,11 @@ import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import java.util.LinkedList
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.LinkedList
 
 @Suppress("ALL")
 @Service
@@ -114,10 +114,23 @@ class PipelineTransferYamlService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTransferYamlService::class.java)
         private const val TEMPLATE_ROOT_FILE = "TEMPLATE_ROOT_FILE"
-        val pipeline_key = listOf("stages", "jobs", "steps", "finally")
+        val pipeline_key = listOf(
+            ITemplateFilter::stages.name,
+            ITemplateFilter::jobs.name,
+            ITemplateFilter::steps.name,
+            ITemplateFilter::finally.name,
+            ITemplateFilter::extends.name
+        )
         val trigger_key = listOf("on")
-        val notice_key = listOf("notices")
-        val setting_key = listOf("concurrency", "name", "version", "label", "desc", "syntax-dialect")
+        val notice_key = listOf(IPreTemplateScriptBuildYamlParser::notices.name)
+        val setting_key = listOf(
+            IPreTemplateScriptBuildYamlParser::concurrency.name,
+            IPreTemplateScriptBuildYamlParser::name.name,
+            IPreTemplateScriptBuildYamlParser::version.name,
+            IPreTemplateScriptBuildYamlParser::label.name,
+            IPreTemplateScriptBuildYamlParser::desc.name,
+            IPreTemplateScriptBuildYamlParser::syntaxDialect.name
+        )
         private const val DEFAULT_REPO_ALIAS_NAME = "self"
     }
 

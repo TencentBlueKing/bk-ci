@@ -145,7 +145,7 @@ object PipelineUtils {
         fixedTriggerContainer: TriggerContainer,
         defaultStageTagId: String?
     ): List<Stage> {
-        val stages = mutableListOf<Stage>()
+        val stages = ArrayList<Stage>()
         val defaultTagIds = if (defaultStageTagId.isNullOrBlank()) emptyList() else listOf(defaultStageTagId)
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
@@ -205,16 +205,11 @@ object PipelineUtils {
         param: List<BuildFormProperty>?,
         instanceFromTemplate: Boolean,
         labels: List<String>? = null,
-        defaultStageTagId: String?,
-        templateId: String? = null,
-        staticViews: List<String> = emptyList()
+        defaultStageTagId: String?
     ): Model {
         val templateTrigger = templateModel.getTriggerContainer()
         val instanceParam = if (templateTrigger.templateParams == null) {
-            BuildPropertyCompatibilityTools.mergeProperties(
-                from = templateTrigger.params,
-                to = param ?: emptyList()
-            )
+            BuildPropertyCompatibilityTools.mergeProperties(templateTrigger.params, param ?: emptyList())
         } else {
             BuildPropertyCompatibilityTools.mergeProperties(
                 from = templateTrigger.params,
@@ -240,9 +235,7 @@ object PipelineUtils {
             desc = "",
             stages = getFixedStages(templateModel, triggerContainer, defaultStageTagId),
             labels = labels ?: templateModel.labels,
-            instanceFromTemplate = instanceFromTemplate,
-            templateId = templateId,
-            staticViews = staticViews
+            instanceFromTemplate = instanceFromTemplate
         )
     }
 

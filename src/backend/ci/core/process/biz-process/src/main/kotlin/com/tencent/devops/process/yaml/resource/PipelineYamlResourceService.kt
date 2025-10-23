@@ -36,7 +36,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
-import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -94,8 +93,6 @@ class PipelineYamlResourceService @Autowired constructor(
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = GitActionCommon.getCiFileName(filePath)
-            val dependencyUpgrade = event.actionType == YamlFileActionType.DEPENDENCY_UPGRADE ||
-                    event.actionType == YamlFileActionType.DEPENDENCY_UPGRADE_AND_TRIGGER
             val pipelineYamlWebhookReq = PipelineYamlWebhookReq(
                 yaml = yaml,
                 yamlFileName = yamlFileName,
@@ -104,8 +101,7 @@ class PipelineYamlResourceService @Autowired constructor(
                 description = commit!!.commitMsg,
                 yamlFileInfo = yamlFileInfo,
                 pullRequestId = pullRequestId,
-                pullRequestUrl = pullRequestUrl,
-                dependencyUpgrade = dependencyUpgrade
+                pullRequestUrl = pullRequestUrl
             )
             return pipelineVersionManager.deployPipeline(
                 userId = userId,

@@ -68,10 +68,10 @@ import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 @Suppress("ComplexMethod")
@@ -325,7 +325,7 @@ class ModelTransfer @Autowired constructor(
         yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
         yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
         yaml.extends = makeExtend(modelInput.model)
-        yaml.finally = makeFinally(modelInput)
+        yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
         yaml.concurrency = makeConcurrency(modelInput)
         yaml.customBuildNum = makeBuildNum(modelInput)
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(getTriggerContainer(modelInput))
@@ -338,6 +338,7 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeStages(modelInput: ModelTransferInput): MutableList<PreStage> {
         val stages = mutableListOf<PreStage>()
+        if (modelInput.fromTemplate()) return mutableListOf()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
             modelInput.aspectWrapper.setModelStage4Model(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -357,6 +358,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeFinally(modelInput: ModelTransferInput): LinkedHashMap<String, Any>? {
+        if (modelInput.fromTemplate()) return LinkedHashMap()
         val lastStage = modelInput.model.stages.lastOrNull()
         val finally = if (lastStage != null && lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -382,7 +384,7 @@ class ModelTransfer @Autowired constructor(
                     variables = templateVariables?.associateBy(
                         { it.key },
                         { PreTemplateVariable(it.value, it.allowModifyAtStartup) }
-                    ),
+                    )?.ifEmpty { null },
                     triggerConfig = triggerConfigs?.filter { it.stepId != null }?.associateBy(
                         { it.stepId!! },
                         {
@@ -392,7 +394,7 @@ class ModelTransfer @Autowired constructor(
                                 variables = it.variables
                             )
                         }
-                    ),
+                    )?.ifEmpty { null },
                     recommendedVersion = recommendedVersion?.let {
                         RecommendedVersion(
                             enabled = it.enabled,
@@ -411,6 +413,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     fun getTriggerContainer(modelInput: ModelTransferInput): TriggerContainer? {
+        if (modelInput.fromTemplate()) return null
         return modelInput.model.stages.firstOrNull()?.containers?.firstOrNull() as TriggerContainer?
     }
 

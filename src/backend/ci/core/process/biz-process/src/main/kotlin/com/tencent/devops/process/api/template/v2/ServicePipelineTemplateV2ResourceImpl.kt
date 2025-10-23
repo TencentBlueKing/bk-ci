@@ -34,8 +34,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgradesEvent
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDetailsResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoResponse
@@ -171,7 +171,7 @@ class ServicePipelineTemplateV2ResourceImpl(
         )
     }
 
-    override fun listLatestReleasedVersions(templateIds: List<String>): Result<List<PipelineVersionSimple>> {
+    override fun listLatestReleasedVersions(templateIds: List<String>): Result<List<PipelineTemplateVersionSimple>> {
         return Result(pipelineTemplateResourceService.listLatestReleasedVersions(templateIds))
     }
 

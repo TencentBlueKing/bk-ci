@@ -21,8 +21,8 @@ BEGIN
                         AND COLUMN_NAME = 'STATUS') THEN
         ALTER TABLE `T_TEMPLATE_PIPELINE`
         ADD `STATUS` varchar(32) default 'UPDATED' not null comment '状态',
-        ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接';
-        ADD `PULL_REQUEST_ID` bigint null comment '合并请求ID'
+        ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接',
+        ADD `PULL_REQUEST_ID` bigint null comment '合并请求ID';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -39,7 +39,7 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
                     AND COLUMN_NAME = 'VERSION_CHANGE') THEN
-    ALTER TABLE T_PIPELINE_BUILD_HISTORY
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
         ADD`VERSION_CHANGE` BIT DEFAULT NULL comment '是否发生版本变更';
     END IF;
 

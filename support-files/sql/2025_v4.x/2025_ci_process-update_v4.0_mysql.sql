@@ -21,8 +21,8 @@ BEGIN
                     AND COLUMN_NAME = 'PAC') THEN
         ALTER TABLE `T_TEMPLATE_INSTANCE_BASE`
         ADD `PAC` bit(1) DEFAULT b'0' COMMENT '是否开启PAC',
-        ADD `TARGET_ACTION` varchar(64) DEFAULT NULL COMMENT '推送代码库操作',
-        ADD `TYPE` varchar(32) DEFAULT 'UPDATE' COMMENT '推送代码库操作',
+        ADD `TARGET_ACTION` varchar(64) DEFAULT NULL COMMENT '代码库分支操作',
+        ADD `TYPE` varchar(32) DEFAULT 'UPDATE' COMMENT '模版实例化类型,CREATE/UPDATE',
         ADD `REPO_HASH_ID` varchar(64) DEFAULT NULL COMMENT '代码库哈希ID',
         ADD `TARGET_BRANCH` varchar(256) DEFAULT NULL COMMENT '代码库分支',
         ADD `PULL_REQUEST_ID` bigint(11) DEFAULT NULL COMMENT '合并请求ID',
@@ -53,7 +53,7 @@ BEGIN
         ADD `ERROR_MESSAGE` text COMMENT '错误信息',
         ADD `FILE_PATH` text COMMENT 'yaml文件路径',
         ADD `TRIGGER_CONFIGS` mediumtext COMMENT '触发器配置',
-        ADD `OVERRIDE_TEMPLATE_FIELD` mediumtext COMMENT '覆盖模版字段';
+        ADD `OVERRIDE_TEMPLATE_FIELD` mediumtext COMMENT '覆盖模版字段',
         ADD `RESET_BUILD_NO` bit default 0 comment '重置实例推荐版本为基准值';
     END IF;
 
@@ -66,26 +66,8 @@ BEGIN
                     AND COLUMN_NAME = 'STATUS') THEN
         ALTER TABLE `T_TEMPLATE_PIPELINE`
         ADD `STATUS` varchar(32) default 'UPDATED' not null comment '状态',
-        ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接';
+        ADD `PULL_REQUEST_URL` varchar(512) null comment '合并请求链接',
         ADD `PULL_REQUEST_ID` bigint null comment '合并请求ID';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
-                    AND COLUMN_NAME = 'DEPENDENT_FILE_PATH') THEN
-         ALTER TABLE `T_PIPELINE_YAML_VERSION`
-            ADD COLUMN `DEPENDENT_FILE_PATH` varchar(512) null  comment '依赖的文件路径';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-              FROM information_schema.COLUMNS
-              WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
-                AND COLUMN_NAME = 'DEPENDENT_BLOB_ID') THEN
-     ALTER TABLE `T_PIPELINE_YAML_VERSION`
-         ADD COLUMN `DEPENDENT_BLOB_ID` varchar(64) null comment '依赖的文件blob_id';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -102,8 +84,28 @@ BEGIN
               WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
                 AND COLUMN_NAME = 'VERSION_CHANGE') THEN
-    ALTER TABLE T_PIPELINE_BUILD_HISTORY
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
         ADD`VERSION_CHANGE` BIT DEFAULT NULL comment '是否发生版本变更';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                AND COLUMN_NAME = 'RESOURCE_ID') THEN
+    ALTER TABLE `T_PIPELINE_YAML_INFO`
+        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
+        ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_VERSION'
+                AND COLUMN_NAME = 'RESOURCE_ID') THEN
+    ALTER TABLE `T_PIPELINE_YAML_VERSION`
+        ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
+        ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
     END IF;
 COMMIT;
 

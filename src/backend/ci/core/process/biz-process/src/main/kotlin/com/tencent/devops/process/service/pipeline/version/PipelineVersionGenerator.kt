@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -160,7 +160,8 @@ class PipelineVersionGenerator constructor(
     fun generateBranchVersion(
         projectId: String,
         pipelineId: String,
-        branchName: String
+        branchName: String,
+        draftResource: PipelineResourceVersion? = null,
     ): PipelineResourceOnlyVersion {
         val releaseResource = pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext,
@@ -189,9 +190,17 @@ class PipelineVersionGenerator constructor(
             pipelineId = pipelineId,
             branchName = branchName
         )
+        val (version, settingVersion) = if (draftResource == null) {
+            Pair(
+                (latestResource?.version ?: releaseResource.version) + 1,
+                latestSetting?.let { it.version + 1 } ?: 1
+            )
+        } else {
+            Pair(draftResource.version, draftResource.settingVersion)
+        }
         return PipelineResourceOnlyVersion(
-            version = (latestResource?.version ?: releaseResource.version) + 1,
-            settingVersion = latestSetting?.let { it.version + 1 } ?: 1,
+            version = version,
+            settingVersion = settingVersion,
             baseVersion = branchResource?.version ?: releaseResource.version,
             baseVersionName = branchResource?.versionName ?: releaseResource.versionName,
             versionName = branchName,
@@ -360,6 +369,7 @@ class PipelineVersionGenerator constructor(
             generateVersionWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                draftResource = draftResource,
                 newModel = draftResource.model,
                 repoHashId = repoHashId,
                 targetAction = targetAction,
@@ -389,6 +399,7 @@ class PipelineVersionGenerator constructor(
     fun generateVersionWithPac(
         projectId: String,
         pipelineId: String,
+        draftResource: PipelineResourceVersion? = null,
         newModel: Model,
         repoHashId: String,
         targetAction: CodeTargetAction?,
@@ -402,6 +413,7 @@ class PipelineVersionGenerator constructor(
                 generateReleaseVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    draftResource = draftResource,
                     newModel = newModel
                 )
             }
@@ -413,7 +425,8 @@ class PipelineVersionGenerator constructor(
                 generateBranchVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branchName = checkoutBranch
+                    branchName = checkoutBranch,
+                    draftResource = draftResource
                 )
             }
 
@@ -434,7 +447,8 @@ class PipelineVersionGenerator constructor(
                 generateBranchVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branchName = pipelineVersionSimple.versionName
+                    branchName = pipelineVersionSimple.versionName,
+                    draftResource = draftResource
                 )
             }
 
@@ -450,13 +464,15 @@ class PipelineVersionGenerator constructor(
                     generateReleaseVersion(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        newModel = newModel
+                        newModel = newModel,
+                        draftResource = draftResource
                     )
                 } else {
                     generateBranchVersion(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        branchName = targetBranch
+                        branchName = targetBranch,
+                        draftResource = draftResource
                     )
                 }
             }
@@ -604,7 +620,6 @@ class PipelineVersionGenerator constructor(
             val defaultBranch = targetAction?.takeIf { enablePac && it == CodeTargetAction.COMMIT_TO_BRANCH }?.let {
                 getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
             }
-
             val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
             return instanceReleaseInfos.map { releaseInfo ->
                 // 新增实例化
@@ -625,14 +640,14 @@ class PipelineVersionGenerator constructor(
                         branchName = branchName,
                     )
                 } else {
-                    val instanceModel = PipelineUtils.instanceModel(
-                        templateModel = templateResource.model as Model,
+                    val instanceModel = TemplateInstanceUtil.instanceModel(
+                        templateResource = templateResource,
                         pipelineName = releaseInfo.pipelineName,
-                        buildNo = releaseInfo.buildNo,
-                        param = releaseInfo.param,
-                        instanceFromTemplate = true,
                         defaultStageTagId = defaultStageTagId,
-                        templateId = templateId
+                        buildNo = releaseInfo.buildNo,
+                        params = releaseInfo.param ?: emptyList(),
+                        triggerConfigs = releaseInfo.triggerConfigs,
+                        overrideTemplateField = releaseInfo.overrideTemplateField
                     )
                     generateInstanceVersion(
                         projectId = projectId,

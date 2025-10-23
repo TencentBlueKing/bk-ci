@@ -25,14 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线版本摘要")
-data class PipelineVersionSimple(
-    @get:Schema(title = "流水线ID", required = true)
+@Schema(title = "流水线模板版本摘要")
+data class PipelineTemplateVersionSimple(
+    @get:Schema(title = "模板ID", required = true)
     val pipelineId: String,
     @get:Schema(title = "流水线创建人", required = true)
     val creator: String,
@@ -46,8 +47,6 @@ data class PipelineVersionSimple(
     val version: Int,
     @get:Schema(title = "流水线版本名称", required = true)
     val versionName: String,
-    @get:Schema(title = "YAML编排版本", required = false)
-    var yamlVersion: String?,
     @get:Schema(title = "是否还有构建记录引用该版本标识", required = false)
     val referFlag: Boolean? = null,
     @get:Schema(title = "关联构建记录总数", required = false)
@@ -60,8 +59,18 @@ data class PipelineVersionSimple(
     val triggerVersion: Int? = null,
     @get:Schema(title = "配置版本号", required = false)
     val settingVersion: Int? = null,
+    @get:Schema(title = "父模板项目ID", required = false)
+    val srcTemplateProjectId: String? = null,
+    @get:Schema(title = "父模板ID", required = false)
+    val srcTemplateId: String? = null,
+    @get:Schema(title = "父模板版本", required = false)
+    var srcTemplateVersionName: String? = null,
+    @get:Schema(title = "父模板版本", required = true)
+    val srcTemplateVersion: Int? = null,
     @get:Schema(title = "草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
+    @get:Schema(title = "分支版本状态", required = false)
+    val branchAction: BranchVersionAction? = null,
     @get:Schema(title = "版本变更说明", required = false)
     val description: String? = null,
     @get:Schema(title = "调试构建ID", required = false)
@@ -71,5 +80,9 @@ data class PipelineVersionSimple(
     @get:Schema(title = "基准版本的版本名称")
     var baseVersionName: String? = null,
     @get:Schema(title = "当前最新正式版本标识", required = false)
-    var latestReleasedFlag: Boolean? = false
+    var latestReleasedFlag: Boolean? = false,
+    @get:Schema(title = "版本排序号", required = false)
+    val number: Int = -1,
+    @get:Schema(title = "是否上架研发商店", required = false)
+    val storeFlag: Boolean? = false
 )

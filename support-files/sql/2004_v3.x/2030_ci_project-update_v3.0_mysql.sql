@@ -81,15 +81,6 @@ BEGIN
         ALTER TABLE T_OPERATIONAL_PRODUCT
             ADD COLUMN `CROS_CHECK` bit(1) DEFAULT NULL COMMENT '是否有效';
     END IF;
-
-    IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_TEMPLATE_INSTANCE_BASE'
-                    AND COLUMN_NAME = 'GRAY') THEN
-    ALTER TABLE `T_TEMPLATE_INSTANCE_BASE` ADD `GRAY` bit(1) DEFAULT b'0' COMMENT '灰度功能';
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

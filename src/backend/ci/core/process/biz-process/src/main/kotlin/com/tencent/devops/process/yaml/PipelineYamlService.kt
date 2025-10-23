@@ -41,6 +41,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -59,8 +60,7 @@ class PipelineYamlService(
     private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
     private val client: Client,
-    private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineYamlDependencyService: PipelineYamlDependencyService
+    private val pipelineInfoDao: PipelineInfoDao
 ) {
 
     companion object {
@@ -96,7 +96,8 @@ class PipelineYamlService(
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = status,
-                userId = userId
+                userId = userId,
+                resourceType = YamlResourceType.PIPELINE
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -110,7 +111,8 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = YamlResourceType.PIPELINE
             )
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
@@ -142,14 +144,10 @@ class PipelineYamlService(
         commitId: String,
         commitTime: LocalDateTime,
         ref: String,
-        version: Int
+        version: Int,
+        resourceType: YamlResourceType
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
-        val dependencyResult = pipelineYamlDependencyService.analyzeVersionDependency(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            pipelineVersion = version
-        )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.save(
@@ -161,7 +159,8 @@ class PipelineYamlService(
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = status,
-                userId = userId
+                userId = userId,
+                resourceType = resourceType
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -176,8 +175,7 @@ class PipelineYamlService(
                 pipelineId = pipelineId,
                 version = version,
                 userId = userId,
-                dependentFilePath = dependencyResult?.dependentFilePath,
-                dependentBlobId = dependencyResult?.dependentBlobId
+                resourceType = resourceType
             )
             pipelineYamlBranchFileDao.save(
                 dslContext = transactionContext,
@@ -188,15 +186,6 @@ class PipelineYamlService(
                 commitId = commitId,
                 blobId = blobId,
                 commitTime = commitTime
-            )
-            pipelineYamlDependencyService.save(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                blobId = blobId,
-                ref = ref,
-                dependencyResult = dependencyResult
             )
         }
     }
@@ -238,7 +227,8 @@ class PipelineYamlService(
                 blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
-                userId = userId
+                userId = userId,
+                resourceType = YamlResourceType.PIPELINE
             )
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
@@ -276,14 +266,10 @@ class PipelineYamlService(
         commitTime: LocalDateTime,
         ref: String,
         defaultBranch: String?,
-        version: Int
+        version: Int,
+        resourceType: YamlResourceType
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
-        val dependencyResult = pipelineYamlDependencyService.analyzeVersionDependency(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            pipelineVersion = version
-        )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.update(
@@ -307,8 +293,7 @@ class PipelineYamlService(
                 pipelineId = pipelineId,
                 version = version,
                 userId = userId,
-                dependentFilePath = dependencyResult?.dependentFilePath,
-                dependentBlobId = dependencyResult?.dependentBlobId
+                resourceType = resourceType
             )
             pipelineYamlBranchFileDao.save(
                 dslContext = transactionContext,
@@ -319,15 +304,6 @@ class PipelineYamlService(
                 commitId = commitId,
                 blobId = blobId,
                 commitTime = commitTime
-            )
-            pipelineYamlDependencyService.save(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                blobId = blobId,
-                ref = ref,
-                dependencyResult = dependencyResult
             )
         }
         if (!defaultBranch.isNullOrBlank()) {
@@ -451,9 +427,7 @@ class PipelineYamlService(
         ref: String? = null,
         commitId: String? = null,
         blobId: String? = null,
-        branchAction: String? = null,
-        dependentFilePath: String? = null,
-        dependentBlobId: String? = null
+        branchAction: String? = null
     ): PipelineYamlVersion? {
         return pipelineYamlVersionDao.getPipelineYamlVersion(
             dslContext = dslContext,
@@ -463,9 +437,7 @@ class PipelineYamlService(
             ref = ref,
             commitId = commitId,
             blobId = blobId,
-            branchAction = branchAction,
-            dependentFilePath = dependentFilePath,
-            dependentBlobId = dependentBlobId
+            branchAction = branchAction
         )
     }
 
@@ -485,13 +457,6 @@ class PipelineYamlService(
                 filePath = filePath,
                 ref = ref,
                 branchAction = branchAction
-            )
-            pipelineYamlDependencyService.delete(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                ref = ref
             )
         }
     }
@@ -646,12 +611,6 @@ class PipelineYamlService(
             )
             pipelineYamlVersionDao.deleteAll(
                 dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath
-            )
-            pipelineYamlDependencyService.delete(
-                transactionContext = transactionContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath

@@ -42,11 +42,13 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
+import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
-import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
+import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineRefInfo
 import com.tencent.devops.process.pojo.template.v2.PTemplateSource2Count
@@ -65,7 +67,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdat
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
@@ -74,7 +75,6 @@ class UserPipelineTemplateV2ResourceImpl(
     private val permissionService: PipelineTemplatePermissionService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val templateFacadeService: PipelineTemplateFacadeService,
-    private val templateInfoService: PipelineTemplateInfoService,
     private val pipelineOperationLogService: PipelineOperationLogService
 ) : UserPipelineTemplateV2Resource {
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_CREATE)
@@ -269,7 +269,7 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<PipelineTemplateDetailsResponse> {
+    ): Result<PipelineTemplateDetailsResponse?> {
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -369,7 +369,7 @@ class UserPipelineTemplateV2ResourceImpl(
         projectId: String,
         templateId: String,
         request: PipelineTemplateResourceCommonCondition
-    ): Result<Page<PipelineVersionSimple>> {
+    ): Result<Page<PipelineTemplateVersionSimple>> {
         logger.info("get template versions {}|{}|{}|{}", userId, projectId, templateId, request)
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -653,6 +653,30 @@ class UserPipelineTemplateV2ResourceImpl(
                 projectId = projectId,
                 templateId = templateId,
                 request = request
+            )
+        )
+    }
+
+    override fun previewTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        highlightType: HighlightType?
+    ): Result<TemplatePreviewDetail> {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        return Result(
+            templateFacadeService.previewTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                highlightType = highlightType
             )
         )
     }

@@ -29,10 +29,13 @@ package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.PipelineTemplateConstant
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
@@ -70,7 +73,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val client: Client,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val versionCreateListeners: List<PTemplateVersionCreatePostProcessor>
+    private val versionCreatePostProcessors: List<PTemplateVersionCreatePostProcessor>,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao
 ) {
 
     /**
@@ -90,6 +95,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 it == VersionStatus.RELEASED || it == VersionStatus.BRANCH
             }?.let { LocalDateTime.now().timestampmilli() }
 
+            if (pTemplateResourceWithoutVersion.model is Model) {
+                (pTemplateResourceWithoutVersion.model as Model).latestVersion = resourceOnlyVersion.version.toInt()
+            }
             val pipelineTemplateResource = PipelineTemplateResource(
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateResourceOnlyVersion = resourceOnlyVersion
@@ -149,6 +157,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         resourceOnlyVersion: PTemplateResourceOnlyVersion
     ) {
         with(context) {
+            if (pTemplateResourceWithoutVersion.model is Model) {
+                (pTemplateResourceWithoutVersion.model as Model).latestVersion = resourceOnlyVersion.version.toInt()
+            }
             val pipelineTemplateResource = PipelineTemplateResource(
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateResourceOnlyVersion = resourceOnlyVersion
@@ -263,6 +274,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         resourceOnlyVersion: PTemplateResourceOnlyVersion
     ) {
         with(context) {
+            if (pTemplateResourceWithoutVersion.model is Model) {
+                (pTemplateResourceWithoutVersion.model as Model).latestVersion = resourceOnlyVersion.version.toInt()
+            }
             val pipelineTemplateResource = PipelineTemplateResource(
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateResourceOnlyVersion = resourceOnlyVersion
@@ -303,6 +317,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         resourceOnlyVersion: PTemplateResourceOnlyVersion
     ) {
         with(context) {
+            if (pTemplateResourceWithoutVersion.model is Model) {
+                (pTemplateResourceWithoutVersion.model as Model).latestVersion = resourceOnlyVersion.version.toInt()
+            }
             val pipelineTemplateResource = PipelineTemplateResource(
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateResourceOnlyVersion = resourceOnlyVersion
@@ -367,7 +384,9 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     ) {
         with(context) {
             operationLogType = OperationLogType.UPDATE_DRAFT_VERSION
-
+            if (pTemplateResourceWithoutVersion.model is Model) {
+                (pTemplateResourceWithoutVersion.model as Model).latestVersion = resourceOnlyVersion.version.toInt()
+            }
             val pipelineTemplateResource = PipelineTemplateResource(
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
                 pTemplateResourceOnlyVersion = resourceOnlyVersion
@@ -662,6 +681,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId
                 )
             )
+            pipelineYamlInfoDao.deleteByPipelineId(context, projectId, templateId)
+            pipelineYamlVersionDao.deleteByPipelineId(context, projectId, templateId)
             if (templateInfo.mode == TemplateType.CONSTRAINT) {
                 client.get(ServiceStoreResource::class).uninstall(
                     storeCode = templateInfo.srcTemplateId!!,
@@ -748,7 +769,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessBeforeVersionCreate(
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,
@@ -763,7 +784,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessInTransactionVersionCreate(
                 transactionContext = transactionContext,
                 context = context,
@@ -778,7 +799,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
-        versionCreateListeners.forEach {
+        versionCreatePostProcessors.forEach {
             it.postProcessAfterVersionCreate(
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,

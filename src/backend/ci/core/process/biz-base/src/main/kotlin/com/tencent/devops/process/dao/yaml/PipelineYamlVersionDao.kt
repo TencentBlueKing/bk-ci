@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -55,8 +56,7 @@ class PipelineYamlVersionDao {
         version: Int,
         commitTime: LocalDateTime,
         userId: String,
-        dependentFilePath: String? = null,
-        dependentBlobId: String? = null,
+        resourceType: YamlResourceType
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
@@ -75,8 +75,8 @@ class PipelineYamlVersionDao {
                 BRANCH_ACTION,
                 CREATOR,
                 CREATE_TIME,
-                DEPENDENT_FILE_PATH,
-                DEPENDENT_BLOB_ID
+                RESOURCE_ID,
+                RESOURCE_TYPE
             ).values(
                 id,
                 projectId,
@@ -91,8 +91,8 @@ class PipelineYamlVersionDao {
                 BranchVersionAction.ACTIVE.name,
                 userId,
                 now,
-                dependentFilePath,
-                dependentBlobId
+                pipelineId,
+                resourceType.name
             ).execute()
         }
     }
@@ -106,9 +106,7 @@ class PipelineYamlVersionDao {
         ref: String? = null,
         commitId: String? = null,
         blobId: String? = null,
-        branchAction: String? = null,
-        dependentFilePath: String? = null,
-        dependentBlobId: String? = null
+        branchAction: String? = null
     ): PipelineYamlVersion? {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             val record = dslContext.selectFrom(this)
@@ -119,12 +117,6 @@ class PipelineYamlVersionDao {
                 .let { if (!commitId.isNullOrBlank()) it.and(COMMIT_ID.eq(ref)) else it }
                 .let { if (!blobId.isNullOrBlank()) it.and(BLOB_ID.eq(blobId)) else it }
                 .let { if (!branchAction.isNullOrBlank()) it.and(BRANCH_ACTION.eq(branchAction)) else it }
-                .let {
-                    if (!dependentFilePath.isNullOrBlank()) it.and(DEPENDENT_FILE_PATH.eq(dependentFilePath)) else it
-                }
-                .let {
-                    if (!dependentBlobId.isNullOrBlank()) it.and(DEPENDENT_BLOB_ID.eq(dependentBlobId)) else it
-                }
                 .orderBy(COMMIT_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -207,6 +199,19 @@ class PipelineYamlVersionDao {
         }
     }
 
+    fun deleteByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun convert(record: TPipelineYamlVersionRecord): PipelineYamlVersion {
         return with(record) {
             PipelineYamlVersion(
@@ -219,6 +224,7 @@ class PipelineYamlVersionDao {
                 pipelineId = pipelineId,
                 version = version,
                 commitTime = commitTime,
+                resourceType = YamlResourceType.valueOf(resourceType)
             )
         }
     }

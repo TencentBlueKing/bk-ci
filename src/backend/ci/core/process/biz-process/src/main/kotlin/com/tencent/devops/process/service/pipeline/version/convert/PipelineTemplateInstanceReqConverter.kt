@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
@@ -149,7 +148,8 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = newPipelineId,
                 channelCode = ChannelCode.BS,
                 pipelineName = pipelineName,
-                pipelineDesc = null
+                pipelineDesc = null,
+                pipelineDisable = pipelineInfo?.locked
             )
 
             // 获取版本状态
@@ -228,8 +228,7 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 templateSettingVersion = templateResource.settingVersion,
-                enablePac = enablePac,
-                overrideTemplateField = overrideTemplateField
+                enablePac = enablePac
             )
             // 转换成yaml
             val newYaml = pipelineVersionGenerator.model2yaml(
@@ -330,8 +329,7 @@ class PipelineTemplateInstanceReqConverter(
         projectId: String,
         pipelineId: String,
         templateSettingVersion: Int,
-        enablePac: Boolean,
-        overrideTemplateField: TemplateInstanceField? = null
+        enablePac: Boolean
     ): PipelineSetting {
         val templateSetting = pipelineTemplateSettingService.get(
             projectId = projectId,
@@ -344,7 +342,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineName = pipelineName
             )
         } else {
-            val setting = pipelineRepositoryService.getSetting(
+            pipelineRepositoryService.getSetting(
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.copy(
@@ -354,11 +352,6 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
                 channelCode = ChannelCode.BS
-            )
-            TemplateInstanceUtil.instanceSetting(
-                templateSetting = templateSetting,
-                setting = setting,
-                overrideTemplateField = overrideTemplateField
             )
         }
         val pacSetting = enablePac.takeIf { it }?.let {

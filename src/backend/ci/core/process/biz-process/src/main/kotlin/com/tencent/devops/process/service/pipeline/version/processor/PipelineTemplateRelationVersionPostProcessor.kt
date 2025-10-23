@@ -33,10 +33,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
-import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +46,6 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService,
     private val templatePipelineDao: TemplatePipelineDao
 ) : PipelineVersionCreatePostProcessor {
 
@@ -63,10 +60,6 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 // 只有在【创建新流水线】或【实例化时】的情况下，T_TEMPLATE_PIPELINE 关联才存储数据
                 createOrUpdateRelation(transactionContext)
             }
-            createOrUpdatePTemplatePipelineVersion(
-                transactionContext = transactionContext,
-                pipelineResourceVersion = pipelineResourceVersion
-            )
         } ?: run {
             if (pipelineInfo == null || pipelineResourceVersion.status == VersionStatus.RELEASED) {
                 unbindRelation(transactionContext)
@@ -137,35 +130,5 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 )
             )
         }
-    }
-
-    private fun PipelineVersionCreateContext.createOrUpdatePTemplatePipelineVersion(
-        transactionContext: DSLContext,
-        pipelineResourceVersion: PipelineResourceVersion,
-    ) {
-        val model = pipelineResourceWithoutVersion.model
-        val template = model.template ?: return
-        pipelineTemplatePipelineVersionService.createOrUpdate(
-            transactionContext = transactionContext,
-            record = PTemplatePipelineVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineVersion = pipelineResourceVersion.version,
-                pipelineVersionName = pipelineResourceVersion.versionName ?: "",
-                instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
-                buildNo = pipelineModelBasicInfo.buildNo,
-                params = pipelineModelBasicInfo.param,
-                refType = templateInstanceBasicInfo!!.refType,
-                inputTemplateId = template.templateId,
-                inputTemplateVersionName = template.templateVersionName,
-                inputTemplateFilePath = template.templatePath,
-                inputTemplateRef = template.templateRef,
-                templateId = templateInstanceBasicInfo.templateId,
-                templateVersion = templateInstanceBasicInfo.templateVersion,
-                templateVersionName = templateInstanceBasicInfo.templateVersionName ?: "",
-                creator = userId,
-                updater = userId
-            )
-        )
     }
 }

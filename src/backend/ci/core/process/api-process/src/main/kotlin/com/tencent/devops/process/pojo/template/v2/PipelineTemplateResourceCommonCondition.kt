@@ -35,6 +35,8 @@ data class PipelineTemplateResourceCommonCondition(
     val templateVersionPairs: List<TemplateVersionPair>? = emptyList(),
     @get:Schema(title = "版本名称", required = false)
     val versionName: String? = null,
+    @get:Schema(title = "模糊搜索-版本名称", required = false)
+    val fuzzyVersionName: String? = null,
     @get:Schema(title = "模板配置发布版本号", required = false)
     val settingVersionNum: Int? = null,
     @get:Schema(title = "模板发布版本号", required = false)

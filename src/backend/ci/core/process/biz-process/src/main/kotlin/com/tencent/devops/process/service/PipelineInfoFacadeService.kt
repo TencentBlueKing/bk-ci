@@ -100,13 +100,10 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.v2.PTemplatePipelineVersion
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
-import com.tencent.devops.process.service.template.v2.PipelineTemplatePipelineVersionService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -119,11 +116,6 @@ import com.tencent.devops.store.api.template.ServiceTemplateResource
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import java.io.File
-import java.io.FileInputStream
-import java.net.URLEncoder
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -132,9 +124,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileInputStream
+import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.util.LinkedList
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @Suppress("ALL")
 @Service
@@ -160,8 +157,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val operationLogService: PipelineOperationLogService,
     private val pipelineAuthorizationService: PipelineAuthorizationService,
     private val auditService: AuditService,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplatePipelineVersionService: PipelineTemplatePipelineVersionService
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -653,25 +649,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                         buildNo = buildNo,
                         param = param,
                         fixTemplateVersion = fixTemplateVersion
-                    )
-                    pipelineTemplatePipelineVersionService.createOrUpdate(
-                        record = PTemplatePipelineVersion(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            pipelineVersion = result.version,
-                            pipelineVersionName = result.versionName ?: "",
-                            instanceType = PipelineInstanceTypeEnum.get(instanceType),
-                            buildNo = buildNo,
-                            params = param,
-                            refType = TemplateRefType.ID,
-                            inputTemplateId = templateId,
-                            inputTemplateVersionName = templateVersionName,
-                            templateId = templateId,
-                            templateVersion = templateVersion,
-                            templateVersionName = templateVersionName,
-                            creator = userId,
-                            updater = userId
-                        )
                     )
                     watcher.stop()
                 }

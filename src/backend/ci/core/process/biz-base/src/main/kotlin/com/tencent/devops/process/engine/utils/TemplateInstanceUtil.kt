@@ -28,6 +28,50 @@ import org.slf4j.LoggerFactory
  *  模板实例工具类
  */
 object TemplateInstanceUtil {
+
+    /**
+     * 通过流水线参数、模板编排和触发器控制生成新Model
+     */
+    @Suppress("ALL")
+    fun instanceModel(
+        templateResource: PipelineTemplateResource,
+        pipelineName: String,
+        defaultStageTagId: String?,
+        buildNo: BuildNo?,
+        params: List<BuildFormProperty>?,
+        triggerConfigs: List<TemplateInstanceTriggerConfig>?,
+        overrideTemplateField: TemplateInstanceField? = null,
+        template: TemplateInstanceDescriptor? = null
+    ): Model {
+        // 前端会把所有的参数都传过来，这里只需要保留流水线自定义的参数,ui方式实例化,参数默认都是自定义
+        // 以下变量为流水线自身的，不跟随模板，会对模板的变量默认值，进行覆盖。
+        val templateVariables = params?.filter {
+            overrideTemplateField?.overrideParam(it.id) ?: true
+        }?.map { TemplateVariable(it) }
+
+        // 前端会把所有的触发器都传过来,这里只需要保留流水线自定义的触发器,ui方式实例化,触发器默认继承模版
+        // 以下触发器配置为流水线自定义的触发器，不跟随模板，会对流水线模板的触发器配置进行覆盖
+        val overrideTemplateTriggerConfigs = triggerConfigs?.filter {
+            it.stepId != null && overrideTemplateField?.overrideTrigger(it.stepId!!) ?: false
+        }
+
+        // 是否覆盖推荐版本号
+        val recommendedVersion = getRecommendedVersion(
+            buildNo = buildNo,
+            params = params ?: emptyList(),
+            overrideTemplateField = overrideTemplateField
+        )
+        return instanceModel(
+            templateResource = templateResource,
+            pipelineName = pipelineName,
+            defaultStageTagId = defaultStageTagId,
+            templateVariables = templateVariables,
+            overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
+            recommendedVersion = recommendedVersion,
+            overrideTemplateField = overrideTemplateField,
+            template = template
+        )
+    }
     /**
      * 通过流水线参数、模板编排和触发器控制生成新Model
      */

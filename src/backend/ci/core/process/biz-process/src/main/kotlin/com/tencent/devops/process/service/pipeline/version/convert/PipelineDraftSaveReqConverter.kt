@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.convert
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
@@ -58,12 +59,12 @@ import org.springframework.stereotype.Service
  * 流水线草稿保存转换器
  */
 @Service
-class PipelineDraftSaveReqConvert(
+class PipelineDraftSaveReqConverter(
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val pipelineResourceFactory: PipelineResourceFactory,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineVersionCommonConvert: PipelineVersionCommonConvert,
+    private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
@@ -133,10 +134,11 @@ class PipelineDraftSaveReqConvert(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
-            return pipelineVersionCommonConvert.convert(
+            return pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
+                channelCode = ChannelCode.BS,
                 version = version,
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,
@@ -157,12 +159,12 @@ class PipelineDraftSaveReqConvert(
         val model = modelAndSetting!!.model
         val triggerContainer = model.getTriggerContainer()
         val overrideTemplateField = model.overrideTemplateField
-        // 前端传过来的参数是模版+流水线自定义的,templateVariables只需要流水线自定义的值
+        // 前端传过来的参数是所有的参数,templateVariables只需要流水线自定义的值
         val templateVariables = triggerContainer.params.filter {
             overrideTemplateField?.overrideParam(it.id) ?: true
         }.map { TemplateVariable(it) }
 
-        // 前端传过来的是所有的模版+流水线自定义的,triggerConfigs只需要流水线自定义的
+        // 前端传过来的是所有的触发器,triggerConfigs只需要保留流水线自定义的
         val triggerConfigs = triggerContainer.elements.filter { element ->
             element.stepId != null && overrideTemplateField?.overrideTrigger(element.stepId!!) ?: false
         }.map { TemplateInstanceTriggerConfig(it) }
@@ -226,6 +228,6 @@ class PipelineDraftSaveReqConvert(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineDraftSaveReqConvert::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineDraftSaveReqConverter::class.java)
     }
 }

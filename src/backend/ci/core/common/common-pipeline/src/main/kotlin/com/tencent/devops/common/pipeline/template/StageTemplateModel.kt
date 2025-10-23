@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "stage模板模型")
 data class StageTemplateModel(
-    @Schema(title = "流水线模型-阶段")
+    @get:Schema(title = "流水线模型-阶段")
     val stages: List<Stage>
 ) : ITemplateModel {
     companion object {

@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.convert
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -45,7 +46,7 @@ import org.springframework.stereotype.Service
 class PipelineYamlWebhookReqConvert @Autowired constructor(
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
-    private val pipelineVersionCommonConvert: PipelineVersionCommonConvert
+    private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineYamlWebhookReq
@@ -69,7 +70,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             }
             logger.info(
                 "Start to convert yaml webhook request|$projectId|$pipelineId|" +
-                        "$branchName|$yamlFileName|$dependencyUpgrade|yaml=$yaml"
+                        "$branchName|$yamlFileName|yaml=$yaml"
             )
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,
@@ -94,14 +95,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 VersionStatus.BRANCH
             }
 
-            val versionAction = if (dependencyUpgrade) {
-                PipelineVersionAction.DEPENDENCY_UPGRADE
+            val versionAction = if (isDefaultBranch) {
+                PipelineVersionAction.CREATE_RELEASE
             } else {
-                if (isDefaultBranch) {
-                    PipelineVersionAction.CREATE_RELEASE
-                } else {
-                    PipelineVersionAction.CREATE_BRANCH
-                }
+                PipelineVersionAction.CREATE_BRANCH
             }
 
             val pipelineAsCodeSettings = modelAndSetting.setting.pipelineAsCodeSettings?.copy(
@@ -114,10 +111,11 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             )
 
-            return pipelineVersionCommonConvert.convert(
+            return pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
+                channelCode = ChannelCode.BS,
                 version = version,
                 model = modelAndSetting.model.copy(
                     name = pipelineName
@@ -132,7 +130,6 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             ).copy(
                 enablePac = true,
                 yamlFileInfo = yamlFileInfo,
-                branchName = branchName,
                 pullRequestUrl = pullRequestUrl,
                 pullRequestId = pullRequestId
             )

@@ -61,8 +61,7 @@ class TemplateInstanceBaseDao {
         repoHashId: String? = null,
         targetBranch: String? = null,
         templateRefType: TemplateRefType? = null,
-        templateRef: String? = null,
-        gray: Boolean
+        templateRef: String? = null
     ) {
         with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
             setOf(
@@ -85,7 +84,6 @@ class TemplateInstanceBaseDao {
                     TARGET_BRANCH,
                     TEMPLATE_REF_TYPE,
                     TEMPLATE_REF,
-                    GRAY
                 ).values(
                     baseId,
                     templateId,
@@ -103,8 +101,7 @@ class TemplateInstanceBaseDao {
                     repoHashId,
                     targetBranch,
                     templateRefType?.name,
-                    templateRef,
-                    gray
+                    templateRef
                 )
                     .onDuplicateKeyUpdate()
                     .set(TEMPLATE_ID, templateId)
@@ -122,7 +119,6 @@ class TemplateInstanceBaseDao {
                     .set(TARGET_BRANCH, targetBranch)
                     .set(TEMPLATE_REF_TYPE, templateRefType?.name)
                     .set(TEMPLATE_REF, templateRef)
-                    .set(GRAY, gray)
                     .execute()
             )
         }
@@ -193,13 +189,11 @@ class TemplateInstanceBaseDao {
         dslContext: DSLContext,
         statusList: List<String>,
         descFlag: Boolean,
-        gray: Boolean,
         page: Int,
         pageSize: Int
     ): Result<TTemplateInstanceBaseRecord>? {
         with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
             val baseStep = dslContext.selectFrom(this).where(STATUS.`in`(statusList))
-            baseStep.and(GRAY.eq(gray))
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {

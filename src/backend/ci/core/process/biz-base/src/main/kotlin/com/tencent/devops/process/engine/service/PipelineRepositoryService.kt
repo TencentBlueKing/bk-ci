@@ -98,6 +98,7 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -177,6 +178,7 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
@@ -1714,6 +1716,8 @@ class PipelineRepositoryService constructor(
                     pipelineSettingDao.delete(transactionContext, projectId, pipelineId)
                     pipelineViewGroupDao.delete(transactionContext, projectId, pipelineId)
                     templatePipelineDao.delete(transactionContext, projectId, pipelineId)
+                    pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
@@ -1759,6 +1763,7 @@ class PipelineRepositoryService constructor(
                 if (archiveFlag != true) {
                     pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
                     pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                     subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
                     pipelineEventDispatcher.dispatch(
                         PipelineDeleteEvent(

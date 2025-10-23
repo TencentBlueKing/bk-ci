@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
@@ -63,7 +64,8 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateInstanceService: PipelineTemplateInstanceService
+    private val pipelineTemplateInstanceService: PipelineTemplateInstanceService,
+    private val sampleEventDispatcher: SampleEventDispatcher,
 ) {
     fun handle(event: PipelineTemplateInstanceEvent) {
         logger.info("consume pipeline template instance event {}", event)
@@ -74,11 +76,12 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         val baseId = event.baseId
         val projectId = event.projectId
         val type = event.templateInstanceType
-        PipelineTemplateInstanceLock(redisOperation, baseId).use { lock ->
+        PipelineTemplateInstanceLock(redisOperation, event.templateId).use { lock ->
             logger.info("start to handle template event {}|,{}", type, event)
             if (!lock.tryLock()) {
                 logger.warn("handle template instance event running ${event.projectId}|${event.baseId}")
-                return@use
+                event.retry()
+                return
             }
             val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
                 dslContext = dslContext,
@@ -113,6 +116,12 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 itemCount = itemCount
             )
         }
+    }
+
+    private fun PipelineTemplateInstanceEvent.retry() {
+        logger.info("template instance|$projectId|$templateId|RETRY_TO_TEMPLATE_INSTANCE_LOCK")
+        this.delayMills = DEFAULT_DELAY
+        sampleEventDispatcher.dispatch(this)
     }
 
     private fun PipelineTemplateInstanceBase.handleTemplateInstanceBase(projectId: String, itemCount: Long) {
@@ -338,5 +347,6 @@ class PipelineTemplateInstanceListener @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateInstanceListener::class.java)
+        private const val DEFAULT_DELAY = 1000
     }
 }

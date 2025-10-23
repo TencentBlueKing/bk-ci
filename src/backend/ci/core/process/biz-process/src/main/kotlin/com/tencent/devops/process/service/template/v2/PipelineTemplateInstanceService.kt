@@ -3,14 +3,17 @@ package com.tencent.devops.process.service.template.v2
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
@@ -23,6 +26,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
@@ -73,7 +77,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val pipelineIdGenerator: PipelineIdGenerator,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val sampleEventDispatcher: SampleEventDispatcher,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineResourceDao: PipelineResourceDao,
@@ -89,7 +93,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
-    private val pipelineInfoService: PipelineInfoService
+    private val pipelineInfoService: PipelineInfoService,
 ) {
     /*同步创建模板实例*/
     fun createTemplateInstances(
@@ -100,6 +104,20 @@ class PipelineTemplateInstanceService @Autowired constructor(
         request: PipelineTemplateInstancesRequest
     ): TemplateOperationRet {
         logger.info("template instance creation start $projectId|$userId|$templateId")
+        val permissionCheck = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId))),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         val instances = request.instanceReleaseInfos
         val successPipelines = mutableListOf<String>()
         val failurePipelines = mutableListOf<String>()
@@ -173,6 +191,20 @@ class PipelineTemplateInstanceService @Autowired constructor(
         logger.info(
             "async template instance creation start $projectId|$userId|$templateId|$version|$request"
         )
+        val permissionCheck = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId))),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         request.instanceReleaseInfos.forEach { instance ->
             if (instance.pipelineName.isBlank()) {
                 throw ErrorCodeException(
@@ -219,8 +251,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 targetBranch = request.targetBranch,
                 description = request.description,
                 templateRefType = request.templateRefType,
-                templateRef = request.templateRef,
-                gray = true
+                templateRef = request.templateRef
             )
             templateInstanceItemDao.createTemplateInstanceItemsV2(
                 dslContext = context,
@@ -231,12 +262,10 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 userId = userId
             )
         }
-        pipelineEventDispatcher.dispatch(
+        sampleEventDispatcher.dispatch(
             PipelineTemplateInstanceEvent(
-                projectId = projectId,
-                source = "PIPELINE_TEMPLATE_INSTANCE_CREATE",
-                pipelineId = "",
                 userId = userId,
+                projectId = projectId,
                 templateId = templateId,
                 baseId = baseId,
                 templateInstanceType = TemplateInstanceType.CREATE
@@ -254,6 +283,26 @@ class PipelineTemplateInstanceService @Autowired constructor(
         request: PipelineTemplateInstancesRequest
     ): String {
         logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version")
+        val permission = AuthPermission.EDIT
+        val canEditMap = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        )
+        val notEditPermissions = request.instanceReleaseInfos.filter {
+            !canEditMap.contains(it.pipelineId)
+        }.map { it.pipelineId }
+        if (notEditPermissions.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    notEditPermissions.joinToString(",")
+                )
+            )
+        }
         val templateResource = pipelineTemplateResourceService.get(
             projectId = projectId,
             templateId = templateId,
@@ -280,8 +329,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 repoHashId = request.repoHashId,
                 targetBranch = request.targetBranch,
                 templateRefType = request.templateRefType,
-                templateRef = request.templateRef,
-                gray = true
+                templateRef = request.templateRef
             )
             templateInstanceItemDao.createTemplateInstanceItemsV2(
                 dslContext = context,
@@ -298,12 +346,10 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 status = TemplatePipelineStatus.UPDATING
             )
         }
-        pipelineEventDispatcher.dispatch(
+        sampleEventDispatcher.dispatch(
             PipelineTemplateInstanceEvent(
-                projectId = projectId,
-                source = "PIPELINE_TEMPLATE_INSTANCE_UPDATE",
-                pipelineId = "",
                 userId = userId,
+                projectId = projectId,
                 templateId = templateId,
                 baseId = baseId,
                 templateInstanceType = TemplateInstanceType.UPDATE
