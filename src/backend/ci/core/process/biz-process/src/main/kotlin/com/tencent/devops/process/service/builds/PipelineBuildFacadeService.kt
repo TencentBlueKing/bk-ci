@@ -2912,7 +2912,7 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     templateId = pipelineId,
                     version = templateVersion!!
-                ) as Model)
+                ).model as Model)
             } catch (e: Exception) {
                 logger.error("parse process($pipelineId) model fail", e) // 记录更具体的错误
                 throw ErrorCodeException(
