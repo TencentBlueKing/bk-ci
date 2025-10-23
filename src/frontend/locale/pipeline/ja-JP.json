@@ -1791,7 +1791,9 @@
   "metadataAttributeValue": "メタデータ属性値",
   "artifactQuality": "アーティファクトの品質",
   "totalArtifactCount": "合計 {0} 個",
-  "noArchivedPipelines": "アーカイブ済みパイプラインがありません。操作不要です",
-  "notParamsTip": "このパ拉メータはもはや入力パラメータではないか削除されました。実行時に渡すことはできません。手動で削除するか、保存後にこのパ拉メータリストから自動的に削除されます。",
-  "validVariableFormat": "有効な変数形式を入力してください"
+  "validVariableFormat": "有効な変数形式を入力してください",
+  "noArchivedPipelines": "アーカイブされたパイプラインは暫定ありません。操作する必要はありません",
+  "notParamsTip": "このパラメータはもはや入力パラメータではないか、削除されています。実行時に再び渡すことはできません。手動で削除するか、保存後に自動的にこのパラメータリストから削除されます。",
+  "showStageProgress": "ステージの進捗を表示",
+  "showBuildInfo": "ビルド情報を表示"
 }
