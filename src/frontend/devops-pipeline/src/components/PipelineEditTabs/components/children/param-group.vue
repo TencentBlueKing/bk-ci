@@ -63,7 +63,7 @@
                                     <bk-button
                                         text
                                         size="small"
-                                        @click="handleUpdate(param.id)"
+                                        @click="handleRemove(param)"
                                     >
                                         {{ $t('publicVar.removeParamInPipeline') }}
                                     </bk-button>
@@ -214,6 +214,11 @@
                 isShow: this.showContent
             }
         },
+        computed: {
+            publicVarGroups () {
+                return this.$store?.state?.atom?.pipeline?.publicVarGroups
+            }
+        },
         watch: {
             showContent (val) {
                 this.isShow = val
@@ -244,6 +249,31 @@
 
             handleViewVarGroup (groupName) {
                 this.$emit('show-group', groupName)
+            },
+            markVariableAsRemove (publicVarGroups, param) {
+                return publicVarGroups.map(group => {
+                    if (group.groupName === param.varGroupName) {
+                        return {
+                            ...group,
+                            variables: group.variables.map(variable => {
+                                if (variable.id === param.id) {
+                                    return {
+                                        ...variable,
+                                        isRemove: true
+                                    }
+                                }
+                                return variable
+                            })
+                        }
+                    }
+                    return group
+                })
+            },
+            handleRemove (param) {
+                const updatedVarGroups = this.markVariableAsRemove(this.publicVarGroups, param)
+                console.log(updatedVarGroups, 'updatedVarGroups')
+                this.$store.dispatch('atom/updatePipelinePublicVarGroups', updatedVarGroups)
+                this.handleUpdate(param.id)
             }
         }
     }

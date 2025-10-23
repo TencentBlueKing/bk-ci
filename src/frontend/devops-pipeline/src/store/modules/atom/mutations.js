@@ -523,7 +523,6 @@ export default {
         return state
     },
     [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
-        console.log(publicVarGroups, 11111111)
         Object.assign(state.pipeline, { publicVarGroups })
         return state
     }
