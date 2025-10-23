@@ -291,33 +291,70 @@ class PublicVarService @Autowired constructor(
         val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
-        // 1. 更新已存在的变量（索引未被移除操作影响，优先处理）
+        // 1. 更新已存在的变量（先检查索引位置是否是同一变量，不是则在params中查找）
         diffResult.varsToUpdate.forEach { varName ->
             positionInfoMap[varName]?.let { pos ->
                 val newVar = newVarMap[varName]
-                if (pos.index >= 0 && pos.index < params.size && newVar != null) {
-                    params[pos.index] = newVar
+                if (newVar != null) {
+                    // 先检查positionInfo记录的索引位置是否是同一变量
+                    if (pos.index >= 0 && pos.index < params.size && params[pos.index].id == varName) {
+                        // 索引位置匹配，直接更新
+                        params[pos.index] = newVar
+                    } else {
+                        // 索引位置不匹配（可能变量顺序被调整），在params中查找实际位置
+                        val actualIndex = params.indexOfFirst { it.id == varName }
+                        if (actualIndex >= 0) {
+                            params[actualIndex] = newVar
+                        }
+                    }
                 }
             }
         }
 
-        // 2. 移除不再存在的变量（按索引降序处理，避免索引偏移）
-        diffResult.varsToRemove.mapNotNull { positionInfoMap[it]?.index } // 过滤无效索引
-            .filter { it >= 0 && it < params.size } // 校验索引有效性
-            .sortedDescending() // 降序排序，确保先删序号大的索引
-            .forEach { params.removeAt(it) }
+        // 2. 移除不再存在的变量（先检查索引位置是否是同一变量，不是则在params中查找）
+        val indicesToRemove = diffResult.varsToRemove.mapNotNull { varName ->
+            val pos = positionInfoMap[varName]
+            if (pos != null) {
+                // 先检查positionInfo记录的索引位置是否是同一变量
+                if (pos.index >= 0 && pos.index < params.size && params[pos.index].id == varName) {
+                    logger.info("processVarGroupDiff will remove var: $varName at saved index: ${pos.index}")
+                    pos.index
+                } else {
+                    // 索引位置不匹配，在params中查找实际位置
+                    val actualIndex = params.indexOfFirst { it.id == varName }
+                    if (actualIndex >= 0) {
+                        logger.info("processVarGroupDiff will remove var: $varName at actual index: $actualIndex (saved index was ${pos.index})")
+                        actualIndex
+                    } else {
+                        logger.warn("processVarGroupDiff var to remove not found in params: $varName")
+                        null
+                    }
+                }
+            } else {
+                null
+            }
+        }.sortedDescending() // 降序排序，确保先删除索引大的
 
-        // 3. 添加新增的变量到末尾
-        diffResult.varsToAdd.mapNotNull { newVarMap[it] } // 过滤无效变量
-            .forEach { params.add(it) }
+        indicesToRemove.forEach { index ->
+            val removedVarName = params[index].id
+            params.removeAt(index)
+            logger.info("processVarGroupDiff removed var: $removedVarName from index: $index")
+        }
 
-        val currentParamVarNames = params.map { it.id }.toSet()
-        // 4. 处理groupReferInfo中存在但params中没有的变量（标记为已移除）
-        val removedVars = mutableListOf<BuildFormProperty>()
-        positionInfo.forEach { pos ->
-            // 检查变量是否在当前params中不存在
-            if (pos.varName !in currentParamVarNames) {
-                val removedProperty = BuildFormProperty(
+        // 3. 添加新增的变量到末尾（先检查是否已存在，避免重复）
+        val currentParamVarIds = params.map { it.id }.toSet()
+        diffResult.varsToAdd
+            .mapNotNull { newVarMap[it] }
+            .filter { it.id !in currentParamVarIds } // 过滤已存在的变量
+            .forEach { newVar ->
+                params.add(newVar)
+                logger.info("processVarGroupDiff added new var: ${newVar.id}")
+            }
+
+        // 4. 使用diffResult.varsToRemove来构建已移除的变量列表
+        val removedVars = diffResult.varsToRemove.mapNotNull { varName ->
+            positionInfoMap[varName]?.let { pos ->
+                BuildFormProperty(
                     id = pos.varName,
                     required = pos.required,
                     type = BuildFormPropertyType.STRING,
@@ -336,10 +373,9 @@ class PublicVarService @Autowired constructor(
                 ).apply {
                     this.removeFlag = true
                 }
-                removedVars.add(removedProperty)
             }
         }
-        
+
         return removedVars
     }
 
