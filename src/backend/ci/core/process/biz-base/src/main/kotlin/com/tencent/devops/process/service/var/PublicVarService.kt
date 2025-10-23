@@ -297,7 +297,7 @@ class PublicVarService @Autowired constructor(
                 val newVar = newVarMap[varName]
                 if (newVar != null) {
                     // 先检查positionInfo记录的索引位置是否是同一变量
-                    if (pos.index >= 0 && pos.index < params.size && params[pos.index].id == varName) {
+                    if (params[pos.index].id == varName) {
                         // 索引位置匹配，直接更新
                         params[pos.index] = newVar
                     } else {
