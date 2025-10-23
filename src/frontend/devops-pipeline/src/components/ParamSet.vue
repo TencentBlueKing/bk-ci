@@ -22,7 +22,6 @@
             >
                 <bk-option-group
                     v-for="group in paramSetGroup"
-                    show-collapse
                     :name="group.name"
                     :key="group.name"
                 >
@@ -35,6 +34,11 @@
                         <span class="param-set-option-content">
                             {{ option.name }}
                             <i
+                                v-if="!option.disableEdit"
+                                v-bk-tooltips="{
+                                    content: $t('manageParamSets'),
+                                    delay: [300, 0]
+                                }"
                                 class="devops-icon icon-cog"
                                 @click.stop="showParamSetManageSlide(option.id)"
                             />
@@ -90,7 +94,7 @@
                             @click="addParamSet"
                             class="param-set-add-button"
                             icon="devops-icon icon-plus"
-                            :disabled="isLoading"
+                            :disabled="isLoading && isEditing"
                         >
                         
                         </bk-button>
@@ -120,16 +124,29 @@
                             </span>
                             <span class="param-set-action-span">
                                 <i
+                                    v-if="!(index === activeSetIndex && isEditing)"
                                     class="devops-icon icon-edit-line"
+                                    v-bk-tooltips="{
+                                        content: $t('edit'),
+                                        delay: [300, 0]
+                                    }"
                                     @click.stop="editParamSet(index)"
                                 />
                                 <i
                                     class="bk-icon icon-copy"
+                                    v-bk-tooltips="{
+                                        content: $t('copy'),
+                                        delay: [300, 0]
+                                    }"
                                     @click.stop="copyParamSet(set)"
                                 />
                                 <i
                                     class="devops-icon icon-delete"
-                                    @click.stop="deleteParamSet(index)"
+                                    v-bk-tooltips="{
+                                        content: $t('delete'),
+                                        delay: [300, 0]
+                                    }"
+                                    @click.stop="beforeDelete(index)"
                                 />
                             </span>
                         </li>
@@ -137,17 +154,22 @@
                 </aside>
                 <article v-bkloading="{ isLoading }">
                     <template v-if="isEditing">
-                        <p class="param-set-edit-name">
-                            <label>{{ $t('paramSetName') }}</label>
+                        <form-field
+                            class="param-set-edit-name"
+                            :label="$t('paramSetName')"
+                            :is-error="isNameError"
+                            :error-msg="$t('paramSetNameNotEmpty')"
+                            required
+                        >
                             <bk-input
                                 v-model="editingSet.name"
+                                @input="isNameError = false"
                             />
-                        </p>
+                        </form-field>
 
                         <h3 class="in-set-param-header">
                             {{ $t('paramList') }}
                             <bk-select
-
                                 multiple
                                 ext-cls="in-set-param-select"
                                 :popover-width="300"
@@ -181,12 +203,14 @@
                         </h3>
                         <div class="param-set-form">
                             <pipeline-params-form
-                                ref="paramsForm"
-                                :param-values="paramsValues"
-                                :handle-param-change="handleParamChange"
-                                :params="editingSet.params"
+                                ref="paramsFormRef"
+                                is-in-param-set
                                 sort-category
                                 sort-category-vertical
+                                :params="editingSet.params"
+                                :param-values="paramsValues"
+                                :handle-param-change="handleParamChange"
+                                @remove-param="handleRemoveParamItem"
                             >
                                 <template
                                     slot="versionParams"
@@ -195,7 +219,7 @@
                                     <renderSortCategoryParams :name="$t('preview.introVersion')">
                                         <template slot="content">
                                             <pipeline-versions-form
-                                                ref="versionParamForm"
+                                                ref="versionParamFormRef"
                                                 :show-baseline="false"
                                                 :handle-version-change="handleVersionChange"
                                                 :version-param-values="versionParamValues"
@@ -223,20 +247,21 @@
                         class="param-set-form"
                         v-else-if="!!activeSet && !isLoading"
                     >
-                        <param-group
-                            v-if="activeSet?.versionParams?.length"
-                            :show-header="false"
-                            :editable="false"
-                            v-bind="versionParamGroupObj"
-                        />
+                        <template v-if="activeSet?.params?.length || activeSet?.versionParams?.length">
+                            <param-group
+                                v-if="activeSet?.versionParams?.length"
+                                :show-header="false"
+                                :editable="false"
+                                v-bind="versionParamGroupObj"
+                            />
 
-                        <param-group
-                            v-if="activeSet?.params?.length"
-                            :show-header="false"
-                            :editable="false"
-                            v-bind="paramGroupObj"
-                        />
-                        
+                            <param-group
+                                v-if="activeSet?.params?.length"
+                                :show-header="false"
+                                :editable="false"
+                                v-bind="paramGroupObj"
+                            />
+                        </template>
                         
                         <bk-exception
                             v-else
@@ -247,7 +272,11 @@
                         </bk-exception>
 
                     </div>
-                    
+                    <bk-exception
+                        v-else-if="searchKeyword && paramSetList?.length === 0 && !isLoading"
+                        type="search-empty"
+                        scene="part"
+                    />
                 </article>
             </div>
         </bk-sideslider>
@@ -255,6 +284,7 @@
 </template>
 
 <script>
+    import FormField from '@/components/AtomPropertyPanel/FormField'
     import ParamGroup from '@/components/PipelineEditTabs/components/children/param-group'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
@@ -272,7 +302,8 @@
             ParamGroup,
             PipelineParamsForm,
             renderSortCategoryParams,
-            PipelineVersionsForm
+            PipelineVersionsForm,
+            FormField
         },
         props: {
             isStartUp: {
@@ -313,6 +344,9 @@
             const isLoading = ref(false)
             const isOperating = ref(false)
             const paramSetSelector = ref(null)
+            const paramsFormRef = ref(null)
+            const isNameError = ref(false)
+            const versionParamFormRef = ref(null)
             const DEFAULT_PARAM_SET = {
                 name: proxy.$t('newParamSet'),
                 params: []
@@ -321,6 +355,7 @@
             const LAST_USED_SET = {
                 id: 'LAST_USED',
                 name: proxy.$t('lastUsedParams'),
+                disableEdit: true,
                 params: props.allParams
             }
 
@@ -414,7 +449,6 @@
             const versionParamGroupObj = computed(() => {
                 return {
                     title: proxy.$t('versionNum'),
-
                     tips: '--',
                     listNum: activeSet.value?.versionParams?.length,
                     listMap: getParamsGroupByLabel(activeSet.value?.versionParams).listMap ?? {},
@@ -541,6 +575,7 @@
                 if (isEditing.value) {
                     return leaveConfirm()
                 }
+                isNameError.value = false
                 return true
             }
 
@@ -607,6 +642,9 @@
             }
 
             async function editParamSet (setIndex) {
+                if (isEditing.value && setIndex === activeSetIndex.value) {
+                    return
+                }
                 await switchManageSet(setIndex)
                 const set = paramSetList.value[setIndex]
                 if (!set) {
@@ -618,6 +656,13 @@
                 isEditing.value = true
             }
             async function copyParamSet (set) {
+                if (isEditing.value) {
+                    proxy.$bkMessage({
+                        theme: 'info',
+                        message: proxy.$t('pleaseSaveCurrentEdit')
+                    })
+                    return
+                }
                 const originSet = proxy.$store.state.atom.paramSets.find(item => item.id === set.id)
                 if (!originSet) {
                     return
@@ -642,6 +687,19 @@
                     editParamSet(0)
                 })
             }
+            async function beforeDelete (setIndex) {
+                const set = paramSetList.value[setIndex]
+                if (!set) {
+                    return
+                }
+                proxy.$bkInfo({
+                    title: proxy.$t('view.deleteViewTips', [set.name]),
+                    confirmFn: () => {
+                        deleteParamSet(setIndex)
+                    }
+                })
+            }
+
             async function deleteParamSet (setIndex) {
                 const set = paramSetList.value[setIndex]
                 if (!set) {
@@ -655,7 +713,17 @@
                         paramSetId: set.id,
                         isNew: set.isNew
                     })
-                    
+                    if (isEditing.value && setIndex === activeSetIndex.value) {
+                        isEditing.value = false
+                        editingSet.value = null
+                        switchManageSet(0)
+                    }
+                    if (!set.isNew) {
+                        proxy.$bkMessage({
+                            theme: 'success',
+                            message: proxy.$t('deleteSuc')
+                        })
+                    }
                 } catch (error) {
                     proxy.$bkMessage({
                         theme: 'error',
@@ -664,11 +732,20 @@
                 } finally {
                     isOperating.value = false
                 }
+                    
             }
 
             function handleCurrentParamSetChange (ids) {
                 editingSet.value.paramIds = ids
                 editingSet.value.params = ids.map(id => editingSet.value.params.find(param => param.id === id) ?? allParamsMap.value[id])
+            }
+
+            function handleRemoveParamItem (paramId) {
+                const index = editingSet.value.paramIds.indexOf(paramId)
+                if (index >= 0) {
+                    editingSet.value.paramIds.splice(index, 1)
+                    editingSet.value.params = editingSet.value.params.filter(param => param.id !== paramId)
+                }
             }
 
             function handleParamChange (paramId, value) {
@@ -702,6 +779,18 @@
                         ],
                         isNew: editingSet.value.isNew
                     }
+                    if (editingSet.value.name === '') {
+                        proxy.$bkMessage({
+                            theme: 'error',
+                            message: proxy.$t('paramSetNameNotEmpty')
+                        })
+                        isNameError.value = true
+                        return
+                    }
+                    const res = await paramsFormRef.value?.$validator.validateAll()
+                    if (!res) {
+                        return
+                    }
                     isLoading.value = true
                     const { data: id } = await dispatch('saveParamSet', {
                         projectId: proxy.$route.params.projectId,
@@ -715,12 +804,18 @@
                     }) : newSet)
                     nextTick(() => {
                         switchManageSet(activeSetIndex.value)
+                        proxy.$bkMessage({
+                            theme: 'success',
+                            message: proxy.$t('saveSuc')
+                        })
                     })
                 } catch (error) {
                     proxy.$bkMessage({
                         theme: 'error',
                         message: error.message
                     })
+                } finally {
+                    isLoading.value = false
                 }
             }
 
@@ -755,6 +850,7 @@
             }
 
             return {
+                LAST_USED_SET,
                 paramSetSelector,
                 isLoading,
                 paramSetList,
@@ -771,9 +867,11 @@
                 editParamSet,
                 copyParamSet,
                 deleteParamSet,
+                beforeDelete,
                 handleParamChange,
                 handleVersionChange,
                 handleCurrentParamSetChange,
+                handleRemoveParamItem,
                 paramsValues,
                 addParamSet,
                 allParamsGroup,
@@ -789,7 +887,10 @@
                 beforeCloseSideSlider,
                 isApplyed,
                 isApplying,
-                handleSearch
+                handleSearch,
+                paramsFormRef,
+                versionParamFormRef,
+                isNameError
             }
         }
     })
@@ -802,13 +903,42 @@
         align-items: center;
         vertical-align: middle;
         margin: 1px 0 0 8px;
+        font-weight: normal;
+        
         .param-set-selector-select {
             width: 300px;
+            border-radius: 2px 0 0 2px;
+            
         }
+
+        .param-set-selector-select,
         .param-set-selector-button {
+            border: 1px solid #C4C6CC;
+            transition: all 0.3s ease;
+            &:hover {
+                border-color: #3A84FF;
+                box-shadow: 0 0 4px rgba(58, 132, 255, .4);
+                z-index: 1;
+                position: relative;
+            }
+            &:focus {
+                border-color: #3A84FF;
+                box-shadow: 0 0 4px rgba(58, 132, 255, .4);
+                z-index: 1;
+                position: relative;
+            }
+        }
+
+        
+        .param-set-selector-button {
+            margin-left: 0px;
+            border-radius: 0 2px 2px 0;
             margin-left: -1px;
         }
+
     }
+
+
     .param-set-option-content {
         display: flex;
         justify-content: space-between;
@@ -829,6 +959,7 @@
         display: flex;
         align-items: center;
         font-size: 16px;
+
         .param-set-desc {
             font-size: 12px;
             align-self: flex-end;
@@ -872,7 +1003,6 @@
             .param-set-manage-list {
                 flex: 1;
                 overflow-y: auto;
-                scrollbar-gutter: stable;
                 margin-top: 8px;
                 > li {
                     display: flex;
@@ -927,12 +1057,17 @@
             flex: 1;
             padding: 16px;
             overflow: hidden;
+            justify-content: center;
+
+            
             .param-set-edit-name {
                 display: flex;
                 flex-direction: column;
                 font-size: 12px;
                 gap: 6px;
                 color: #4D4F56;
+                padding-bottom: 32px;
+                border-bottom: 1px solid #DCDEE5;;
             }
             .in-set-param-header {
                 display: flex;
@@ -940,6 +1075,7 @@
                 align-items: center;
                 font-size: 14px;
                 color: #4D4F56;
+                font-weight: normal;
                 .in-set-param-select {
                     border: 0;
                     box-shadow: none;;
@@ -947,9 +1083,8 @@
             }
             .param-set-form {
                 flex: 1;
-                padding-right: 12px;
                 overflow-y: auto;
-                scrollbar-gutter: stable;
+                font-weight: normal;
                 .bk-form-item {
                     &+.bk-form-item {
                         margin-top: 0 !important;

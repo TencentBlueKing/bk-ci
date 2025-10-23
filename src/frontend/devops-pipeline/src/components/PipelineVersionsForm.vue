@@ -141,6 +141,7 @@
                         <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
                         <p>
                             <vuex-input
+                                class="build-value"
                                 :disabled="(isLockedNo && !isInstance) || isInstance || disabled"
                                 input-type="number"
                                 name="currentBuildNo"

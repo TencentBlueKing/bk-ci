@@ -1779,5 +1779,9 @@
   "newParamSet": "新しいパラメータセット",
   "lastUsedParams": "前回使用したパラメータ値",
   "recentlyUsed": "最近使用した",
-  "paramValueSets": "パラメータ値セット"
+  "paramValueSets": "パラメータ値セット",
+  "pleaseSaveCurrentEdit": "現在編集中のパラメータセットを先に保存してください",
+  "removeInputParam": "入力パラメータフィールドを削除",
+  "colon": ": ",
+  "paramSetNameNotEmpty": "パラメータセット名は空にできません"
 }

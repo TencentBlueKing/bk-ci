@@ -1782,5 +1782,9 @@
   "newParamSet": "New Parameter Set",
   "lastUsedParams": "My Last Used Parameter Values",
   "recentlyUsed": "Recently Used",
-  "paramValueSets": "Parameter Value Sets"
+  "paramValueSets": "Parameter Value Sets",
+  "pleaseSaveCurrentEdit": "Please save the current parameter set first",
+  "removeInputParam": "Remove input parameter field",
+  "colon": ": ",
+  "paramSetNameNotEmpty": "Parameter set name cannot be empty"
 }

@@ -929,3 +929,5 @@ export async function copyToClipboard (text) {
         document.body.removeChild(textArea)
     }
 }
+
+export const COMMON_PARAM_PREFIX = 'COMMON_PARAM_'

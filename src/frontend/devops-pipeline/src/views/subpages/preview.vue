@@ -877,7 +877,7 @@ $header-height: 36px;
         top: 0;
         margin: 0 24px;
         position: sticky;
-        grid-gap: 10px;
+        grid-gap: 8px;
         color: #313238;
         background-color: white;
         z-index: 6;
@@ -899,7 +899,6 @@ $header-height: 36px;
 
         .collapse-trigger-divider {
             display: inline-block;
-            margin: 0 10px;
             color: #DCDEE5;
         }
 

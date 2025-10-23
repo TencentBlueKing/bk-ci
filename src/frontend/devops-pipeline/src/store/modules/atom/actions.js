@@ -1026,7 +1026,12 @@ export default {
         ])
     },
     updateParamSet ({ commit, state }, { isNew, ...paramSet }) {
-        const index = isNew ? 0 : state.paramSets.findIndex(item => item.id === paramSet.id)
+        let index = state.paramSets.findIndex(item => item.id === paramSet.id)
+        if (isNew && index < 0) {
+            index = 0
+            paramSet.isNew = false
+        }
+
         if (index < 0) {
             return
         }

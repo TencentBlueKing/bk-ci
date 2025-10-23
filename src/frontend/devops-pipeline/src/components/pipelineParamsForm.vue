@@ -21,8 +21,8 @@
                             :key="param.id"
                             v-if="param.show"
                             :required="param.required"
-                            :is-error="errors.has('devops' + param.name)"
-                            :error-msg="errors.first('devops' + param.name)"
+                            :is-error="errors.has(param.fieldName)"
+                            :error-msg="errors.first(param.fieldName)"
                             :label="param.label || param.id"
                         >
                             <section class="component-row">
@@ -33,7 +33,7 @@
                                     :show-select-all="true"
                                     :handle-change="handleParamUpdate"
                                     flex
-                                    v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
+                                    v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
                                     :class="{
                                         'is-diff-param': highlightChangedParam && param.isChanged
                                     }"
@@ -43,9 +43,15 @@
                                     :enable-version-control="param.enableVersionControl"
                                     :random-sub-path="param.latestRandomStringInPath"
                                 />
+                                <span
+                                    v-if="isInParamSet"
+                                    class="devops-icon icon-minus-circle remove-param-item-icon"
+                                    v-bk-tooltip="$t('removeInputParam')"
+                                    @click="handleRemoveParamItem(param.id)"
+                                ></span>
                             </section>
                             <span
-                                v-if="!errors.has('devops' + param.name)"
+                                v-if="!errors.has(param.fieldName)"
                                 :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                                 :title="param.desc"
                             >
@@ -60,8 +66,8 @@
                     v-for="param in paramList"
                     :key="param.id"
                     :required="param.required"
-                    :is-error="errors.has('devops' + param.name)"
-                    :error-msg="errors.first('devops' + param.name)"
+                    :is-error="errors.has(param.fieldName)"
+                    :error-msg="errors.first(param.fieldName)"
                     :label="param.label || param.id"
                 >
                     <section class="component-row">
@@ -72,7 +78,7 @@
                             :show-select-all="true"
                             :handle-change="handleParamUpdate"
                             flex
-                            v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
+                            v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
                             :class="{
                                 'is-diff-param': highlightChangedParam && param.isChanged
                             }"
@@ -84,7 +90,7 @@
                         />
                     </section>
                     <span
-                        v-if="!errors.has('devops' + param.name)"
+                        v-if="!errors.has(param.fieldName)"
                         :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                         :title="param.desc"
                     >
@@ -132,7 +138,7 @@
         SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
-    import { isObject } from '@/utils/util'
+    import { COMMON_PARAM_PREFIX, isObject } from '@/utils/util'
 
     export default {
 
@@ -173,9 +179,16 @@
             sortCategoryVertical: {
                 type: Boolean,
                 default: false
+            },
+            isInParamSet: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
+            paramPrefix () {
+                return COMMON_PARAM_PREFIX
+            },
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
@@ -244,6 +257,7 @@
                         ...param,
                         component: this.getParamComponentType(param),
                         name: param.id,
+                        fieldName: this.paramPrefix + param.id,
                         required: param.valueNotEmpty,
                         value: this.paramValues[param.id],
                         ...restParam,
@@ -322,7 +336,7 @@
             },
 
             getParamByName (name) {
-                return this.paramList.find(param => `devops${param.name}` === name)
+                return this.paramList.find(param => param.fieldName === name)
             },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
@@ -333,6 +347,9 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+            handleRemoveParamItem (id)  {
+                this.$emit('remove-param', id)
             }
         }
     }
@@ -355,6 +372,13 @@
         .component-row {
             display: flex;
             position: relative;
+            .remove-param-item-icon {
+                position: absolute;
+                right: 0px;
+                top: -20px;
+                font-size: 14px;
+                cursor: pointer;
+            }
             .metadata-box {
                 position: relative;
                 display: none;
