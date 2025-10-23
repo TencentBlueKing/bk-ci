@@ -138,7 +138,6 @@
                 // 已经被删除的公共变量组变量
                 return this.publicVarGroups.reduce((allVariables, group) => {
                     const variables = group.variables?.filter(param => !param.isRemove) || []
-                    console.log(variables, 123)
                     return allVariables.concat(variables)
                 }, [])
             }
