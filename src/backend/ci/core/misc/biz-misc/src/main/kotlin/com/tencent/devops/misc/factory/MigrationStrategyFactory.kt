@@ -4,6 +4,8 @@ import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.strategy.MigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineAuditResourceMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildLinkedDataMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildParamCombinationDetailMigrationStrategy
+import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildParamCombinationMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildSummaryMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildTemplateAcrossInfoMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineCallbackMigrationStrategy
@@ -19,7 +21,6 @@ import com.tencent.devops.misc.strategy.impl.pipeline.PipelineSettingMigrationSt
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineSettingVersionMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineSubRefMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineTimerBranchMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.pipeline.PipelineTriggerDetailMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineViewGroupMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineWebhookQueueMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.pipeline.PipelineWebhookVersionMigrationStrategy
@@ -35,9 +36,7 @@ import com.tencent.devops.misc.strategy.impl.project.PipelineViewMigrationStrate
 import com.tencent.devops.misc.strategy.impl.project.PipelineViewTopMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.project.PipelineViewUserLastViewMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.project.PipelineViewUserSettingsMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineCallbackHistoryMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineCallbackMigrationStrategy
-import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineTriggerEventMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineYamlBranchFileMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineYamlSyncMigrationStrategy
 import com.tencent.devops.misc.strategy.impl.project.ProjectPipelineYamlViewMigrationStrategy
@@ -56,9 +55,7 @@ class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMig
         PipelineViewTopMigrationStrategy(processDataMigrateDao),
         PipelineViewUserLastViewMigrationStrategy(processDataMigrateDao),
         PipelineViewUserSettingsMigrationStrategy(processDataMigrateDao),
-        ProjectPipelineCallbackHistoryMigrationStrategy(processDataMigrateDao),
         ProjectPipelineCallbackMigrationStrategy(processDataMigrateDao),
-        ProjectPipelineTriggerEventMigrationStrategy(processDataMigrateDao),
         ProjectPipelineYamlBranchFileMigrationStrategy(processDataMigrateDao),
         ProjectPipelineYamlSyncMigrationStrategy(processDataMigrateDao),
         ProjectPipelineYamlViewMigrationStrategy(processDataMigrateDao),
@@ -91,11 +88,12 @@ class MigrationStrategyFactory(private val processDataMigrateDao: ProcessDataMig
         PipelineRecentUseMigrationStrategy(processDataMigrateDao),
         PipelineSubRefMigrationStrategy(processDataMigrateDao),
         PipelineTimerBranchMigrationStrategy(processDataMigrateDao),
-        PipelineTriggerDetailMigrationStrategy(processDataMigrateDao),
         PipelineWebhookQueueMigrationStrategy(processDataMigrateDao),
         PipelineWebhookVersionMigrationStrategy(processDataMigrateDao),
         PipelineYamlInfoMigrationStrategy(processDataMigrateDao),
-        PipelineYamlVersionMigrationStrategy(processDataMigrateDao)
+        PipelineYamlVersionMigrationStrategy(processDataMigrateDao),
+        PipelineBuildParamCombinationMigrationStrategy(processDataMigrateDao),
+        PipelineBuildParamCombinationDetailMigrationStrategy(processDataMigrateDao)
     )
 
     /**
