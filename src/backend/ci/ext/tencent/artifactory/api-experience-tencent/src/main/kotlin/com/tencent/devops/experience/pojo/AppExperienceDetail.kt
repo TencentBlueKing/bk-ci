@@ -81,5 +81,7 @@ data class AppExperienceDetail(
     @get:Schema(title = "应用Scheme", required = false)
     val appScheme: String,
     @get:Schema(title = "上次下载的体验ID", required = true)
-    val lastDownloadHashId: String
+    val lastDownloadHashId: String,
+    @get:Schema(title = "APP名称i18n", required = false)
+    val appNameI18n: String?
 )

@@ -146,7 +146,10 @@ const routes = [
                     {
                         path: 'edit',
                         name: 'templateEdit',
-                        component: templateEdit
+                        component: templateEdit,
+                        meta: {
+                            edit: true
+                        }
                     },
                     {
                         path: 'setting',
@@ -265,7 +268,8 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'PipelineManageList'
+                            to: 'PipelineManageList',
+                            edit: true
                         }
                     },
                     {

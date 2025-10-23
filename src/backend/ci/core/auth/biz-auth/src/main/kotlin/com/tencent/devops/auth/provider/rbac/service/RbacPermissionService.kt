@@ -682,7 +682,7 @@ class RbacPermissionService(
         return result
     }
 
-    private fun buildAuthResourceInstance(
+    fun buildAuthResourceInstance(
         userId: String,
         projectCode: String,
         resourceCode: String,

@@ -253,6 +253,11 @@ class WorkspaceRecordService @Autowired constructor(
                         field = "metadata.media.startTime",
                         value = stopTime,
                         operation = "LTE"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "fullPath",
+                        value = "*.mp4",
+                        operation = "MATCH"
                     )
                 ),
                 relation = "AND"

@@ -56,5 +56,7 @@ data class IndexAppInfoVO(
     @get:Schema(title = "版本体验版本号", required = true)
     val version: String,
     @get:Schema(title = "下载次数", required = true)
-    val downloadTime: Int
+    val downloadTime: Int,
+    @get:Schema(title = "app名称i18n", required = false)
+    val appNameI18n: String?
 )

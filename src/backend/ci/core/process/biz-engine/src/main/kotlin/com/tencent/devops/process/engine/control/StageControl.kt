@@ -149,10 +149,6 @@ class StageControl @Autowired constructor(
                         return // 不再往下运行
                     }
                 }
-            if (actionType.isEnd()) {
-                LOG.warn("ENGINE|$buildId|$source|END_STAGE|$stageId|${buildInfo.status}")
-                return
-            }
         }
 
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
@@ -167,7 +163,7 @@ class StageControl @Autowired constructor(
         // #10082 过滤Agent复用互斥的endJob信息
         val mutexJobs = containers.filter {
             it.controlOption.agentReuseMutex?.endJob == true &&
-                    it.controlOption.agentReuseMutex?.reUseJobId != null
+                it.controlOption.agentReuseMutex?.reUseJobId != null
         }.groupBy { it.controlOption.agentReuseMutex?.reUseJobId!! }
             .mapValues { (_, jobs) -> jobs.size }.ifEmpty { null }?.toMutableMap()
         val stageContext = StageContext(

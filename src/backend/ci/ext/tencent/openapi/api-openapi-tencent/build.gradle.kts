@@ -36,6 +36,7 @@ dependencies {
     api(project(":core:openapi:api-openapi"))
     api(project(":core:store:api-store"))
     api(project(":core:store:api-store"))
+    api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:store:api-store-tencent"))
     api(project(":core:process:api-process"))
     api(project(":ext:tencent:process:api-process-tencent"))

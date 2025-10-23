@@ -111,7 +111,15 @@ class WebIDEService @Autowired constructor(
             if (devcloudInfo.containsKey(it.ip)) {
                 devcloudInfo.remove(it.ip)
                 val ideUrl = "http://dev.devgw.devops.oa.com/webide/$userId/${it.ip}/"
-                val info = IDEInfo(it.ideStatus, it.agentStatus, it.ip, ideUrl, it.ideVersion, it.serverType, it.serverCreateTime)
+                val info = IDEInfo(
+                    it.ideStatus,
+                    it.agentStatus,
+                    it.ip,
+                    ideUrl,
+                    it.ideVersion,
+                    it.serverType,
+                    it.serverCreateTime
+                )
                 ideList.add(info)
             } else {
                 webIDEStatusDao.del(dslContext, userId, it.ip)
@@ -140,19 +148,19 @@ class WebIDEService @Autowired constructor(
     }
 
     private fun updateIdeStatus(ideList: List<IDEInfo>) {
-/*        ideList.forEach {
-            logger.info("try testing url: ${it.ideURL}")
-            val request = Request.Builder()
-                    .url(it.ideURL)
-                    .get()
-                    .build()
-            val client = OkHttpClient.Builder().build().newCall(request)
-            val response = client.execute()
-            val responseContent = response.body()!!.string()
-            logger.info("response succ: ${response.isSuccessful}")
-            logger.info("response code: ${response.code()}")
-            logger.info("response: $responseContent")
-        }*/
+        /*        ideList.forEach {
+                    logger.info("try testing url: ${it.ideURL}")
+                    val request = Request.Builder()
+                            .url(it.ideURL)
+                            .get()
+                            .build()
+                    val client = OkHttpClient.Builder().build().newCall(request)
+                    val response = client.execute()
+                    val responseContent = response.body()!!.string()
+                    logger.info("response succ: ${response.isSuccessful}")
+                    logger.info("response code: ${response.code()}")
+                    logger.info("response: $responseContent")
+                }*/
     }
 
     private fun updateAgentStatus(userID: String, projectID: String, ideList: List<IDEInfo>) {
@@ -205,14 +213,19 @@ class WebIDEService @Autowired constructor(
         }
     }
 
-    fun getAgentInstallLink(userId: String, projectId: String, operationSystem: String, zoneName: String?, initIp: String?): ThirdPartyAgentStaticInfo {
+    fun getAgentInstallLink(
+        userId: String,
+        projectId: String,
+        operationSystem: String,
+        zoneName: String?,
+        initIp: String?
+    ): ThirdPartyAgentStaticInfo {
         val agent = client.get(ServicePreBuildAgentResource::class)
-                .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp, null)
-
-        // client.get(UserThirdPartyAgentResource::class).generateLink(userId, projectId, OS.valueOf(operationSystem), zoneName)
+            .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp, null)
 
         if (agent.isNotOk()) {
-            logger.error("create agent link failed, userId:$userId, projectId:$projectId, opsys:$operationSystem, zoneName:$zoneName")
+            logger.error("create agent link failed, userId:" +
+                    "$userId, projectId:$projectId, opsys:$operationSystem, zoneName:$zoneName")
             throw OperationException("create agent link failed")
         }
         logger.info("create agent link success:${agent.data!!.link}")
@@ -224,10 +237,10 @@ class WebIDEService @Autowired constructor(
         val infoMap = HashMap<String, UserResItem>()
         logger.info(url)
         val request = Request.Builder()
-                .url(url)
-                .headers(makeDevCloudAPIHeaders("10004", "Eeav59x*xFki46B0").toHeaders())
-                .get()
-                .build()
+            .url(url)
+            .headers(makeDevCloudAPIHeaders("10004", "Eeav59x*xFki46B0").toHeaders())
+            .get()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
@@ -261,15 +274,17 @@ class WebIDEService @Autowired constructor(
     }
 
     private fun addNewInfo(userId: String, newItem: IDEInfo) {
-        webIDEStatusDao.create(dslContext,
-                userId,
-                newItem.ip,
-                newItem.serverType,
-                newItem.agentInstanceStatus,
-                newItem.ideInstanceStatus,
-                newItem.ideVersion,
-                newItem.serverCreateTime,
-                "")
+        webIDEStatusDao.create(
+            dslContext,
+            userId,
+            newItem.ip,
+            newItem.serverType,
+            newItem.agentInstanceStatus,
+            newItem.ideInstanceStatus,
+            newItem.ideVersion,
+            newItem.serverCreateTime,
+            ""
+        )
     }
 
     fun setupAgent(userId: String, projectId: String, ip: String): BuildId {
@@ -281,7 +296,8 @@ class WebIDEService @Autowired constructor(
             logger.info("pipeline does not exist, create succ: $pipelineId")
             webIDEStatusDao.updatePipelineId(dslContext, userId, ip, pipelineId)
         }
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(userId, projectId, pipelineId, mapOf(), ChannelCode.BS).data!!.id
+        val buildId = client.get(ServiceBuildResource::class)
+            .manualStartup(userId, projectId, pipelineId, mapOf(), ChannelCode.BS).data!!.id
         logger.info("succ create build, id:$buildId")
         return BuildId(buildId)
     }
@@ -306,15 +322,16 @@ class WebIDEService @Autowired constructor(
         sb.appendln("sleep 2")
         sb.appendln("curl -o bkvscode.tgz 'http://dev.gw.devops.oa.com/webide/bkvscode/bkvscode.tgz'")
         sb.appendln("tar xzvf bkvscode.tgz")
-        sb.appendln("BUILD_ID=dontKillMe nohup ./bkvscode --owner=$userId --id=$id --port=58998 --dev > myout.file 2>&1 & disown")
+        sb.appendln("BUILD_ID=dontKillMe nohup ./bkvscode --owner=$userId " +
+                "--id=$id --port=58998 --dev > myout.file 2>&1 & disown")
 
         val linuxScriptElement = LinuxScriptElement(
-                name = "Script Task",
-                id = "",
-                status = "",
-                scriptType = BuildScriptType.SHELL,
-                script = sb.toString(),
-                continueNoneZero = true
+            name = "Script Task",
+            id = "",
+            status = "",
+            scriptType = BuildScriptType.SHELL,
+            script = sb.toString(),
+            continueNoneZero = true
         )
         return linuxScriptElement
     }
@@ -326,25 +343,28 @@ class WebIDEService @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_MANUAL_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
-            ), "T-1-1-1")
+            ), "T-1-1-1"
+        )
         val params: List<BuildFormProperty> = emptyList()
         val triggerContainer = TriggerContainer(
-                "0",
+            "0",
             MessageUtil.getMessageByLocale(
                 messageCode = BK_BUILD_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
             ),
-                listOf(manualTriggerElement),
-                null,
-                null,
-                null,
-                null,
-                params)
+            listOf(manualTriggerElement),
+            null,
+            null,
+            null,
+            null,
+            params
+        )
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
         val model = createPipelineModel(userId, projectId, agentId, agentIp)
-        val pipeLineId = client.get(ServicePipelineResource::class).create(userId, projectId, model, ChannelCode.BS).data!!.id
+        val pipeLineId =
+            client.get(ServicePipelineResource::class).create(userId, projectId, model, ChannelCode.BS).data!!.id
         logger.info("pipelineId: $pipeLineId")
         return pipeLineId
     }
@@ -358,38 +378,41 @@ class WebIDEService @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_MANUAL_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
-        ), "T-1-1-1")
-        val triggerContainer = TriggerContainer("0",
+            ), "T-1-1-1"
+        )
+        val triggerContainer = TriggerContainer(
+            "0",
             MessageUtil.getMessageByLocale(
                 messageCode = BK_BUILD_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
-            ), listOf(manualTriggerElement))
+            ), listOf(manualTriggerElement)
+        )
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
         val vmContainer = VMBuildContainer(
-                id = "1",
-                name = MessageUtil.getMessageByLocale(
-                    messageCode = BK_BUILD_ENVIRONMENT_LINUX,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                elements = elementList,
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                baseOS = VMBaseOS.LINUX,
-                vmNames = setOf(),
-                maxQueueMinutes = 60,
-                maxRunningMinutes = 900,
-                buildEnv = null,
-                customEnv = null,
-                thirdPartyAgentId = agentId,
-                thirdPartyAgentEnvId = null,
-                thirdPartyWorkspace = null,
-                dockerBuildVersion = null,
-                tstackAgentId = null,
-                dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID, null, null)
+            id = "1",
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_ENVIRONMENT_LINUX,
+                language = I18nUtil.getLanguage(userId)
+            ),
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = VMBaseOS.LINUX,
+            vmNames = setOf(),
+            maxQueueMinutes = 60,
+            maxRunningMinutes = 900,
+            buildEnv = null,
+            customEnv = null,
+            thirdPartyAgentId = agentId,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = null,
+            tstackAgentId = null,
+            dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID, null, null)
         )
         val stage2 = Stage(listOf(vmContainer), "stage-2")
         stageList.add(stage2)

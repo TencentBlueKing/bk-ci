@@ -257,7 +257,8 @@ class OpExperienceResourceImpl @Autowired constructor(
             type = ExperiencePublicType.FROM_EXTERNAL_URL.id,
             externalUrl = externalAdd.externalLink,
             scheme = "",
-            version = ""
+            version = "",
+            appNameI18n = null
         )
 
         return Result(
