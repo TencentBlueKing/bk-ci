@@ -729,11 +729,14 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         referId: String,
         version: Long
     ): String {
-        val template = when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> basePath + pipelinePath
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> basePath + templatePath
+        return when (referType) {
+            PublicVerGroupReferenceTypeEnum.PIPELINE -> {
+                String.format("$basePath/$projectId/${referId}$pipelinePath", version)
+            }
+            PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
+                String.format("$basePath/${projectId}$templatePath", referId, version)
+            }
         }
-        return String.format(template, projectId, referId, version)
     }
 
     /**
