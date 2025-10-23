@@ -1764,5 +1764,7 @@
   "artifactQuality": "制品质量",
   "totalArtifactCount": "共 {0} 个",
   "noArchivedPipelines": "暂无已存档流水线，不用操作",
-  "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。"
+  "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。",
+  "showStageProgress": "展示 Stage 进度",
+  "showBuildInfo": "展示构建信息"
 }
