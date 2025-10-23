@@ -1,5 +1,6 @@
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import { COMMON_PARAM_PREFIX } from '@/utils/util'
     export default {
         name: 'form-field',
         components: {
@@ -110,7 +111,7 @@
                     
                     <div class='bk-form-content'>
                         {$slots.default}
-                        {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
+                        {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg.replaceAll(COMMON_PARAM_PREFIX, '')}</p> : null}
                     </div>
                     {
                         bottomDivider
