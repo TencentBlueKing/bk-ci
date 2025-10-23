@@ -196,7 +196,7 @@
 
 <script setup>
     import { ref, watch, computed, onMounted } from 'vue'
-    import { convertTime } from '@/utils/util'
+    import { convertTime, randomString } from '@/utils/util'
     import {
         ADD_VARIABLE,
         EDIT_VARIABLE,
@@ -438,7 +438,7 @@
     async function handleCopyGroup (data, item) {
         const groupData = {
             ...item.data,
-            groupName: `${item.data.groupName}_copy`,
+            groupName: `${item.data.groupName}_${randomString(4)}`,
             publicVars: await getVariablesByGroupName(item.data.groupName)
         }
         await handleAddGroup(groupData)

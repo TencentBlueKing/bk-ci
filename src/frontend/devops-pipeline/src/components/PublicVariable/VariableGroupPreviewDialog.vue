@@ -26,12 +26,13 @@
                     }"
                     @click="handleToggle(index)"
                 >
-                    <div>
-                        <span class="operate-type">{{ item.operateTitle }}</span>
-                        <span class="var-name">
-                            {{ item.varName }}
-                        </span>
-                    </div>
+                    <span class="operate-type">{{ item.operateTitle }}</span>
+                    <span
+                        class="var-name"
+                        v-bk-overflow-tips
+                    >
+                        {{ item.varName }}
+                    </span>
                 </div>
             </div>
             <div
@@ -48,13 +49,13 @@
                         </span>
                         <template v-if="curVarData?.content?.changes?.alias">
                             <span class="value">
-                                <span class="current-value">{{ curVarData.getChangesByField(curVarData, 'alias')?.oldValue }}</span>
+                                <span class="current-value">{{ curVarData?.getChangesByField(curVarData, 'alias')?.oldValue }}</span>
                                 <Logo
                                     class="arrow-right-icon"
                                     size="18"
                                     name="arrow-right"
                                 />
-                                <span class="after-value">{{ curVarData.getChangesByField(curVarData, 'alias').newValue }}</span>
+                                <span class="after-value">{{ curVarData?.getChangesByField(curVarData, 'alias').newValue }}</span>
                             </span>
                         </template>
                         <template v-else>
@@ -69,13 +70,13 @@
                         </span>
                         <template v-if="curVarData?.content?.changes?.desc">
                             <span class="value">
-                                <span class="current-value">{{ curVarData.getChangesByField(curVarData, 'desc')?.oldValue }}</span>
+                                <span class="current-value">{{ curVarData?.getChangesByField(curVarData, 'desc')?.oldValue }}</span>
                                 <Logo
                                     class="arrow-right-icon"
                                     size="18"
                                     name="arrow-right"
                                 />
-                                <span class="after-value">{{ curVarData.getChangesByField(curVarData, 'desc').newValue }}</span>
+                                <span class="after-value">{{ curVarData?.getChangesByField(curVarData, 'desc').newValue }}</span>
                             </span>
                         </template>
                         <template v-else>
@@ -87,7 +88,7 @@
                     <div class="row-item">
                         <span class="key">
                             <i
-                                v-if="curVarData.type === CONSTANT"
+                                v-if="curVarData.type === CONSTANT && curVarData?.getChangesByField(curVarData, 'defaultValue')?.newValue"
                                 class="bk-icon icon-exclamation-circle-shape tooltips-icon"
                                 v-bk-tooltips="$t('publicVar.changeConstDefaultValueTips')"
                             />
@@ -95,13 +96,13 @@
                         </span>
                         <template v-if="curVarData?.content?.changes?.defaultValue">
                             <span class="value">
-                                <span class="current-value">{{ curVarData.getChangesByField(curVarData, 'defaultValue')?.oldValue }}</span>
+                                <span class="current-value">{{ curVarData?.getChangesByField(curVarData, 'defaultValue')?.oldValue }}</span>
                                 <Logo
                                     class="arrow-right-icon"
                                     size="18"
                                     name="arrow-right"
                                 />
-                                <span class="after-value">{{ curVarData.getChangesByField(curVarData, 'defaultValue').newValue }}</span>
+                                <span class="after-value">{{ curVarData?.getChangesByField(curVarData, 'defaultValue')?.newValue }}</span>
                             </span>
                         </template>
                         <template v-else>
@@ -249,7 +250,7 @@
                 groupName: curVarData.value.groupName,
                 params: {
                     page:1,
-                    pageSize: 2000,
+                    pageSize: 100,
                     varName: curVarData.value.varName,
                     referType: type
                 }
@@ -301,6 +302,8 @@
             .tab-item {
                 position: relative;
                 padding: 12px 28px;
+                display: flex;
+                align-items: center;
                 font-size: 14px;
                 height: 45px;
                 cursor: pointer;
@@ -329,6 +332,10 @@
                     font-size: 12px;
                     padding-left: 16px;
                     color: #979BA5;
+                    max-width: 130px;
+                    display: inline-block;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
         }
@@ -368,7 +375,9 @@
                     color: red;
                 }
                 .key {
-                    display: inline-block;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: space-around;
                     background: #F0F1F5;
                     border-radius: 2px;
                     padding: 4px 8px;

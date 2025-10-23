@@ -148,7 +148,7 @@
     const allProjectVarGroup = ref([]) // 项目下使用的变量组
     const pagination = ref({
         page: 1,
-        pageSize: 2000,
+        pageSize: 100,
         loadEnd: false
     })
 

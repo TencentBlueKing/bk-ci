@@ -178,6 +178,9 @@
         .is-new {
             background-color: #f2fff4 !important;
         }
+        .bk-table-empty-text {
+            padding: 15px 0 !important;
+        }
     }
 }
 </style>

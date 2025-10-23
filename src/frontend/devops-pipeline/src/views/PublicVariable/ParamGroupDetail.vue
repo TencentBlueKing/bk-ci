@@ -159,7 +159,8 @@
     import {
         PROJECT_RESOURCE_ACTION
     } from '@/utils/permission'
-    import { deepClone } from '../../utils/util'
+    import { deepClone, randomString } from '@/utils/util'
+
     import {
         VARIABLE,
         CONSTANT,
@@ -350,15 +351,17 @@
         published.value = false
         publicVarType.value = type
         paramType.value = type === VARIABLE ? 'var' : 'constant'
+        const randomStr = randomString(5)
         sliderEditItem.value = {
             ...data,
-            id: `${data.id}${data.constant ? '_COPY' : '_copy'}`,
+            id: `${data.id}${data.constant ? `_${randomStr.toUpperCase()}` : `_${randomStr}`}`,
             name: `${data.name}_copy`,
             published: false
         }
         paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.addParam') : proxy.$t('publicVar.addConst')
         showAddParamSlider.value = true
     }
+
     function updateEditParma (name, value) {
         sliderEditItem.value[name] = value
     }
@@ -378,8 +381,8 @@
         return `${operateMap[operate]}${typeMap[type]}`
     }
     function getChangesByField (data, field) {
-        if (data?.content?.changes[field]) {
-            return data?.content?.changes[field]
+        if (data?.content?.changes?.[field]) {
+            return data?.content?.changes?.[field]
         }
         return undefined
     }
