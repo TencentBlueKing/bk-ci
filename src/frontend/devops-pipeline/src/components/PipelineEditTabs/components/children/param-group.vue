@@ -87,7 +87,7 @@
                                                 }]"
                                                 v-bk-overflow-tips
                                             >
-                                                {{ param.defaultValue ?? '--' }}
+                                                {{ param.defaultValue === '' ? '--' : (param.defaultValue ?? '--') }}
                                             </span>
                                         </div>
                                         <div
