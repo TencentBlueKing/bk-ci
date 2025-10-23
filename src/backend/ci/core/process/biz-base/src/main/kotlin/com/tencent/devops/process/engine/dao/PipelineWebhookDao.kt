@@ -228,6 +228,22 @@ class PipelineWebhookDao {
         }
     }
 
+    fun countTriggerPipeline(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): Long {
+        with(T_PIPELINE_WEBHOOK) {
+            return dslContext.selectDistinct(PROJECT_ID, PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                .and(EVENT_TYPE.eq(eventType))
+                .and(DELETE.eq(false))
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
     fun updateProjectNameAndTaskId(
         dslContext: DSLContext,
         projectId: String,

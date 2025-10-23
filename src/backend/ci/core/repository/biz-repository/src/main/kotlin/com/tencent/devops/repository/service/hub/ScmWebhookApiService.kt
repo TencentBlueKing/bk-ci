@@ -27,7 +27,7 @@
 
 package com.tencent.devops.repository.service.hub
 
-import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.repository.service.RepositoryScmConfigService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.ScmApiManager
@@ -57,9 +57,11 @@ class ScmWebhookApiService @Autowired constructor(
         return scmProviderManager.webhookParser(properties).parse(request)
     }
 
-    fun webhookEnrich(webhook: Webhook, authRepo: AuthRepository): Webhook {
+    fun webhookEnrich(projectId: String, repoHashId: String, webhook: Webhook): Webhook {
         return invokeApi(
-            authRepository = authRepo
+            projectId = projectId,
+            repositoryType = RepositoryType.ID,
+            repoHashIdOrName = repoHashId
         ) { properties, providerRepository ->
             scmApiManager.webhookEnrich(
                 providerProperties = properties,
