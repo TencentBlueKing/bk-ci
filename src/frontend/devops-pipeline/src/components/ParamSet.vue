@@ -94,9 +94,10 @@
                             @click="addParamSet"
                             class="param-set-add-button"
                             icon="devops-icon icon-plus"
-                            :disabled="isLoading && isEditing"
+                            outline
+                            theme="primary"
+                            :disabled="isLoading || isEditing"
                         >
-                        
                         </bk-button>
                         <bk-input
                             right-icon="bk-icon icon-search"
@@ -625,6 +626,7 @@
             function addParamSet () {
                 const newSet = {
                     ...DEFAULT_PARAM_SET,
+                    name: `${DEFAULT_PARAM_SET.name}_${randomString(6, true)}`,
                     params: [
                         ...(props.isVisibleVersion ? props.allParams.filter(param => allVersionKeyList.includes(param.id)) : [])
                     ],
@@ -986,8 +988,6 @@
                     flex-shrink: 0;
                     width: 32px;
                     height: 32px;
-                    background: #FFFFFF;
-                    border: 1px solid #3A84FF;
                     border-radius: 2px;
                     display: flex;
                     justify-content: center;
@@ -996,7 +996,6 @@
                     i {
                         font-size: 18px;
                         font-weight: bold;
-                        color: #3A84FF;
                     }
                 }
             }
