@@ -126,7 +126,7 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
                 )
             )
         } else {
-            deptInfos!!
+            deptInfos
         }
         templateVisibleDeptService.validateTemplateVisibleDept(
             templateCode = templateCode,
