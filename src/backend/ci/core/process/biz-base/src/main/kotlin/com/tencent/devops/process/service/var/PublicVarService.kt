@@ -291,9 +291,6 @@ class PublicVarService @Autowired constructor(
         val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
-        // 获取当前params中的变量名集合
-        val currentParamVarNames = params.map { it.id }.toSet()
-
         // 1. 更新已存在的变量（索引未被移除操作影响，优先处理）
         diffResult.varsToUpdate.forEach { varName ->
             positionInfoMap[varName]?.let { pos ->
@@ -314,6 +311,7 @@ class PublicVarService @Autowired constructor(
         diffResult.varsToAdd.mapNotNull { newVarMap[it] } // 过滤无效变量
             .forEach { params.add(it) }
 
+        val currentParamVarNames = params.map { it.id }.toSet()
         // 4. 处理groupReferInfo中存在但params中没有的变量（标记为已移除）
         val removedVars = mutableListOf<BuildFormProperty>()
         positionInfo.forEach { pos ->
