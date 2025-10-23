@@ -305,6 +305,7 @@ export default {
         }, 5000)
         container.elements.splice(atomIndex, 1, {
             ...atom,
+            atomCode,
             id: `e-${hashID(32)}`,
             '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
             stepId: randomString(6),
