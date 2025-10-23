@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -235,7 +236,7 @@ class PipelineWebhookDao {
         eventType: String
     ): Long {
         with(T_PIPELINE_WEBHOOK) {
-            return dslContext.selectDistinct(PROJECT_ID, PIPELINE_ID).from(this)
+            return dslContext.select(DSL.countDistinct(PROJECT_ID, PIPELINE_ID)).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_HASH_ID.eq(repositoryHashId))
                 .and(EVENT_TYPE.eq(eventType))
