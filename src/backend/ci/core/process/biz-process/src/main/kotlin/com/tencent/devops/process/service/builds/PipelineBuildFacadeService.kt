@@ -2906,7 +2906,7 @@ class PipelineBuildFacadeService(
                 pipelineRepositoryService.getTemplateVersionRecord(
                     templateId = pipelineId,
                     version = templateVersion
-                ).template?.let {
+                )?.template?.let {
                     JsonUtil.to(it, Model::class.java)
                 } ?: (pipelineTemplateResourceService.get(
                     projectId = projectId,
