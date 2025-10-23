@@ -46,7 +46,7 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PUBLIC_VAR", description = "用户-公共变量")
-@Path("/user/pipeline/public/var")
+@Path("/user/public/var")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPublicVarResource {
