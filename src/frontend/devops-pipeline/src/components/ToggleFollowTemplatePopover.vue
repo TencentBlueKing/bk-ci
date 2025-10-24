@@ -31,7 +31,7 @@
                 v-if="showLabel"
                 class="label-text"
             >
-                {{ props.isFollowTemplate ? $t('template.unfollow') : $t('template.follow') }}
+                {{ props.isFollowTemplate ? $t('template.follow') : $t('template.unfollow') }}
             </span>
         </span>
         <template slot="content">
