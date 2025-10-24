@@ -198,13 +198,16 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch, getters, state }, { projectId, pipelineId, version, archiveFlag }) => {
+    requestPipeline: async ({ commit, dispatch, getters, state }, { projectId, pipelineId, version, archiveFlag, editMode }) => {
         try {
             let url1 = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
             let url2 = `/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`
             if (archiveFlag !== undefined && archiveFlag !== null) {
                 url1 += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
                 url2 += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+            }
+            if (editMode) {
+                url1 += `?editMode=true`
             }
             const [pipelineRes, atomPropRes] = await Promise.all([
                 request.get(url1),
