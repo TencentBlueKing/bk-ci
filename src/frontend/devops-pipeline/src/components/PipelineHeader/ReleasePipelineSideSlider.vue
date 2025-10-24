@@ -787,6 +787,7 @@
         },
         beforeDestroy () {
             this.$store.commit(`templates/${SHOW_TASK_DETAIL}`, false)
+            this.$store.commit(`templates/${SET_RELEASE_ING}`, false)
             window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
