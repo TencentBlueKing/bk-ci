@@ -74,6 +74,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarService: PublicVarService,
     private val publicVarDao: PublicVarDao
 ) {
+    private data class GroupKey(val groupName: String, val version: Int?)
+
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
         // 批量操作相关常量
@@ -645,7 +647,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         publicVarGroupReferDTO: PublicVarGroupReferDTO,
         params: MutableList<BuildFormProperty>
     ): List<PipelinePublicVarGroupReferPO> {
-        data class GroupKey(val groupName: String, val version: Int?)
 
         // 提取非固定版本的变量组变量并记录位置信息
         val dynamicPublicVarWithPositions = params.withIndex()
@@ -702,8 +703,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     private fun createReferRecords(
         publicVarGroupReferDTO: PublicVarGroupReferDTO,
-        dynamicPublicVarWithPositions: Map<*, List<PublicVarPositionPO>>
+        dynamicPublicVarWithPositions: Map<GroupKey, List<PublicVarPositionPO>>
     ): List<PipelinePublicVarGroupReferPO> {
+        
         val currentTime = LocalDateTime.now()
         val segmentIds = client.get(ServiceAllocIdResource::class).batchGenerateSegmentId(
             bizTag = "T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO",
@@ -717,13 +719,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         }
 
         return dynamicPublicVarWithPositions.entries.mapIndexed { index, (groupKey, positionInfos) ->
-            val key = groupKey as Pair<String, Int?>
+            val key = groupKey
             
             PipelinePublicVarGroupReferPO(
                 id = segmentIds[index]!!,
                 projectId = publicVarGroupReferDTO.projectId,
-                groupName = key.first,
-                version = key.second ?: -1,
+                groupName = key.groupName,
+                version = key.version ?: -1,
                 referId = publicVarGroupReferDTO.referId,
                 referName = publicVarGroupReferDTO.referName,
                 referType = publicVarGroupReferDTO.referType,
