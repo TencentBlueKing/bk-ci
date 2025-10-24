@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 class WebhookTriggerParamListener(
     private val buildLogPrinter: BuildLogPrinter,
     private val webhookBuildParameterService: WebhookBuildParameterService
-) : WebhookTriggerListenerSupport() {
+) : WebhookTriggerListener {
     override fun onBuildSuccess(context: WebhookTriggerContext) {
         with(context) {
             if (buildId?.id.isNullOrBlank()) return

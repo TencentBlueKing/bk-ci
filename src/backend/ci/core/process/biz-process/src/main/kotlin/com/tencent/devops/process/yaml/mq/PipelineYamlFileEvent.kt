@@ -31,9 +31,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.process.yaml.pojo.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
+import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -56,6 +60,8 @@ data class PipelineYamlFileEvent(
     val actionType: YamlFileActionType,
     @get:Schema(title = "文件路径", required = true)
     val filePath: String,
+    @get:Schema(title = "文件类型", required = true)
+    val fileType: YamlFileType = YamlFileType.PIPELINE,
     @get:Schema(title = "旧的文件路径,重命名时才有值", required = false)
     val oldFilePath: String? = null,
     @get:Schema(
@@ -73,24 +79,118 @@ data class PipelineYamlFileEvent(
         required = true
     )
     val authRepository: AuthRepository? = null,
-    @get:Schema(title = "文件commit信息,yaml文件有变更时必传", required = true)
+    @Deprecated("使用commitId,commitMsg字段代替,后续需要删除")
+    @get:Schema(title = "文件commit信息,yaml文件有变更时必传", required = false)
     val commit: FileCommit? = null,
+    @get:Schema(title = "提交ID", required = true)
+    val commitId: String? = null,
+    @get:Schema(title = "提交信息", required = true)
+    val commitMsg: String? = null,
+    @get:Schema(title = "提交时间", required = true)
+    val commitTime: LocalDateTime? = null,
+    @get:Schema(title = "提交者", required = true)
+    val committer: String? = null,
 
-    @get:Schema(title = "文件来源于fork仓库", required = true)
+    @get:Schema(title = "文件来源于fork仓库", required = false)
     val fork: Boolean = false,
-    @get:Schema(title = "mr是否已合并", required = true)
+    @get:Schema(title = "合并请求ID", required = false)
+    val pullRequestId: Long? = null,
+    @get:Schema(title = "合并请求连接", required = false)
+    val pullRequestUrl: String? = null,
+    @get:Schema(title = "合并请求编号", required = false)
+    val pullRequestNumber: Int? = null,
+    @get:Schema(title = "mr是否已合并", required = false)
     val merged: Boolean = false,
-    @get:Schema(title = "源分支", required = true)
+    @get:Schema(title = "源分支", required = false)
     val sourceBranch: String? = null,
-    @get:Schema(title = "目标分支", required = true)
+    @get:Schema(title = "目标分支", required = false)
     val targetBranch: String? = null,
-    @get:Schema(title = "源仓库URL", required = true)
-    val sourceUrl: String? = null,
-    @get:Schema(title = "源仓库全名", required = true)
-    val sourceFullName: String? = null
+    @get:Schema(title = "源仓库URL", required = false)
+    val sourceRepoUrl: String? = null,
+    @get:Schema(title = "源仓库全名", required = false)
+    val sourceFullName: String? = null,
+    @get:Schema(title = "目标仓库URL", required = false)
+    val targetRepoUrl: String? = null,
+    @get:Schema(title = "目标仓库全名", required = false)
+    val targetFullName: String? = null,
+    @get:Schema(
+        title = "依赖的文件路径,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentFilePath: String? = null,
+    @get:Schema(
+        title = "依赖的分支,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentRef: String? = null,
+    @get:Schema(
+        title = "依赖的文件blobId,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
+        required = false
+    )
+    val dependentBlobId: String? = null
 ) : IEvent() {
     @JsonIgnore
     val repoHashId = repository.repoHashId!!
+    // 是否是模版
+    @JsonIgnore
+    val isTemplate = GitActionCommon.isTemplateFile(filePath)
+
+    constructor(
+        repository: Repository,
+        yamlDiff: PipelineYamlDiff
+    ): this(
+        userId = yamlDiff.triggerUser,
+        authUser = repository.userName,
+        projectId = yamlDiff.projectId,
+        eventId = yamlDiff.eventId,
+        repository = repository,
+        defaultBranch = yamlDiff.defaultBranch,
+        actionType = yamlDiff.actionType,
+        filePath = yamlDiff.filePath,
+        fileType = yamlDiff.fileType,
+        oldFilePath = yamlDiff.oldFilePath,
+        ref = yamlDiff.ref,
+        blobId = yamlDiff.blobId,
+        // 如果使用fork仓库token,则需要设置触发人的token
+        authRepository = if (yamlDiff.useForkToken) {
+            AuthRepository(
+                scmCode = repository.scmCode,
+                url = repository.url,
+                userName = yamlDiff.triggerUser,
+                auth = UserOauthTokenAuthCred(
+                    userId = yamlDiff.triggerUser
+                )
+            )
+        } else {
+            AuthRepository(repository)
+        },
+        commit = yamlDiff.commitId?.let {
+            FileCommit(
+                commitId = yamlDiff.commitId!!,
+                commitMsg = yamlDiff.commitMsg!!,
+                commitTime = yamlDiff.commitTime!!,
+                committer = yamlDiff.committer!!,
+            )
+        },
+        commitId = yamlDiff.commitId,
+        commitMsg = yamlDiff.commitMsg,
+        commitTime = yamlDiff.commitTime,
+        committer = yamlDiff.committer,
+        fork = yamlDiff.fork,
+        pullRequestId = yamlDiff.pullRequestId,
+        pullRequestNumber = yamlDiff.pullRequestNumber,
+        pullRequestUrl = yamlDiff.pullRequestUrl,
+        merged = yamlDiff.merged,
+        sourceBranch = yamlDiff.sourceBranch,
+        targetBranch = yamlDiff.targetBranch,
+        sourceRepoUrl = yamlDiff.sourceRepoUrl,
+        sourceFullName = yamlDiff.sourceFullName,
+        targetRepoUrl = yamlDiff.targetRepoUrl,
+        targetFullName = yamlDiff.targetFullName,
+        dependentFilePath = yamlDiff.dependentFilePath,
+        dependentRef = yamlDiff.dependentRef,
+        dependentBlobId = yamlDiff.dependentBlobId
+    )
 }
 
 data class FileCommit(
