@@ -93,6 +93,7 @@ class WebhookGrayCompareService @Autowired constructor(
     ) {
         ThreadPoolUtil.submitAction(
             executor = executor,
+            bizIdPrefix = "compare-",
             actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}",
             action = { compareWebhook(scmType, request, matcher) }
         )
@@ -220,7 +221,8 @@ class WebhookGrayCompareService @Autowired constructor(
             name = matcher.getRepoName(),
             repositoryType = scmType,
             yamlPipelineIds = yamlPipelineIds,
-            compatibilityRepoNames = matcher.getCompatibilityRepoName()
+            compatibilityRepoNames = matcher.getCompatibilityRepoName(),
+            eventType = matcher.getEventType().name
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->
