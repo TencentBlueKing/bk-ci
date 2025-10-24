@@ -179,17 +179,27 @@
                 'getTriggerTypeList',
                 'getEventTypeList'
             ]),
+            handleQuery () {
+                return Promise.all(
+                    this.filterData.filter(cur => this.$route.query[cur.id]).map(async cur => {
+                        let valuesText = this.$route.query[cur.id]
+                        if (cur.id === 'triggerUser') {
+                            valuesText = await TenantSingleton.fetchTenantDisplayNames(valuesText)
+                            return {
+                                ...cur,
+                                values: valuesText ?? []
+                            }
+                        }
+                        return {
+                            ...cur,
+                            values: valuesText ? [{ id: valuesText, name: valuesText }] : []
+                        }
+                    })
+                )
+            },
             async init () {
                 try {
-                    this.searchKey = this.filterData.reduce((acc, cur) => {
-                        const valuesText = this.$route.query[cur.id]
-                        if (valuesText) {
-                            acc.push({
-                                ...cur, values: [{ id: valuesText, name: valuesText }]
-                            })
-                        }
-                        return acc
-                    }, [])
+                    this.searchKey = await this.handleQuery()
 
                     const [
                         triggerTypeList,
