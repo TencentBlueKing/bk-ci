@@ -116,14 +116,14 @@ class PublicVarGroupService @Autowired constructor(
             val newVersion = version + 1
             
             // 计算新版本的初始引用计数（包含动态版本引用）
+            // 注意：只统计 version=-1 的动态引用，因为这是新版本
             val newVersionReferCount = if (version != 0) {
-                // 统计所有引用该变量组的 referId 数量（包括 version=-1 的动态引用）
                 publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = dslContext,
                     projectId = projectId,
                     groupName = groupName,
                     referType = null,
-                    version = null // 不指定版本，统计所有引用
+                    version = -1 // 只统计动态版本引用
                 )
             } else {
                 0
@@ -145,17 +145,21 @@ class PublicVarGroupService @Autowired constructor(
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
+            
+            // 在事务外部先更新旧版本的引用计数，避免事务内锁等待
+            if (version != 0) {
+                publicVarGroupReferInfoService.updateSingleGroupReferCount(
+                    context = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = version
+                )
+            }
+            
+            // 事务中只做数据插入和更新操作，不做复杂查询
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
-                    // 先更新旧版本的实际引用计数（只统计明确指定该版本号的引用，排除 version=-1）
-                    publicVarGroupReferInfoService.updateSingleGroupReferCount(
-                        context = context,
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = version
-                    )
-                    
                     // 更新 latest 标志
                     publicVarGroupDao.updateLatestFlag(
                         dslContext = context,
@@ -176,10 +180,12 @@ class PublicVarGroupService @Autowired constructor(
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
                 )
-                
-                // 更新新版本的引用计数（包含动态版本引用）
+            }
+            
+            // 事务提交后再更新新版本的引用计数
+            if (newVersionReferCount > 0) {
                 publicVarGroupReferInfoService.updateSingleGroupReferCount(
-                    context = context,
+                    context = dslContext,
                     projectId = projectId,
                     groupName = groupName,
                     version = newVersion
