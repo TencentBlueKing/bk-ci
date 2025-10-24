@@ -87,6 +87,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_DETAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.process.engine.common.Timeout
@@ -124,6 +125,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayStatus
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -139,6 +141,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -186,7 +189,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildRetryService: PipelineBuildRetryService
+    private val pipelineBuildRetryService: PipelineBuildRetryService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -2695,6 +2699,21 @@ class PipelineBuildFacadeService(
             )
         )
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        val startType = StartType.toStartType(buildInfo.trigger)
+        if (startType == StartType.WEB_HOOK) {
+            pipelineTriggerEventService.getTriggerDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )?.let {
+                pipelineTriggerEventService.replay(
+                    userId = userId,
+                    projectId = projectId,
+                    detailId = it.detailId!!
+                )
+            } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
+            return BuildId("")
+        }
         val buildVars = buildVariableService.getAllVariable(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -2712,7 +2731,6 @@ class PipelineBuildFacadeService(
             }
         }?.toMutableMap() ?: mutableMapOf()
         startParameters.putAll(buildVars)
-        val startType = StartType.toStartType(buildInfo.trigger)
         // 定时触发不存在调试的情况
         val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
             projectId, pipelineId, null
@@ -3007,6 +3025,36 @@ class PipelineBuildFacadeService(
             }
         }
         return parameter
+    }
+
+    fun replayStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): BuildReplayStatus {
+        // 校验是否pipeline跟buildId匹配, 防止误传参数
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        return when (StartType.toStartType(buildInfo.trigger)) {
+            StartType.WEB_HOOK -> {
+                pipelineTriggerEventService.getTriggerDetail(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )?.let{
+                    BuildReplayStatus(true)
+                } ?: BuildReplayStatus(
+                    status = false,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
+                    )
+                )
+            }
+
+            else -> {
+                BuildReplayStatus(true)
+            }
+        }
     }
 
     private fun getBuildManualParams(

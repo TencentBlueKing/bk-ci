@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayStatus
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
@@ -725,4 +726,22 @@ interface UserBuildResource {
         @QueryParam("forceTrigger")
         forceTrigger: Boolean? = false
     ): Result<BuildId>
+
+    @Operation(summary = "指定构建任务的回放状态")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/replay/status")
+    fun replayStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<BuildReplayStatus>
 }

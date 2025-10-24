@@ -475,6 +475,17 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
+    fun getTriggerDetail(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) = pipelineTriggerEventDao.getTriggerDetail(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId
+    )
+
     /**
      * 获取国际化构建事件描述
      */
