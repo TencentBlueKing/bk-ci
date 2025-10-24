@@ -84,7 +84,8 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
-    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) {
     companion object {
         const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
@@ -113,6 +114,21 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
             val newVersion = version + 1
+            
+            // 计算新版本的初始引用计数（包含动态版本引用）
+            val newVersionReferCount = if (version != 0) {
+                // 统计所有引用该变量组的 referId 数量（包括 version=-1 的动态引用）
+                publicVarGroupReferInfoDao.countByGroupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = null,
+                    version = null // 不指定版本，统计所有引用
+                )
+            } else {
+                0
+            }
+            
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP").data ?: 0,
@@ -122,7 +138,7 @@ class PublicVarGroupService @Autowired constructor(
                 versionName = "v$newVersion",
                 latestFlag = true,
                 varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
-                referCount = 0,
+                referCount = newVersionReferCount,
                 desc = publicVarGroupDTO.publicVarGroup.desc,
                 creator = userId,
                 modifier = userId,
@@ -132,6 +148,15 @@ class PublicVarGroupService @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
+                    // 先更新旧版本的实际引用计数（只统计明确指定该版本号的引用，排除 version=-1）
+                    publicVarGroupReferInfoService.updateSingleGroupReferCount(
+                        context = context,
+                        projectId = projectId,
+                        groupName = groupName,
+                        version = version
+                    )
+                    
+                    // 更新 latest 标志
                     publicVarGroupDao.updateLatestFlag(
                         dslContext = context,
                         projectId = projectId,
@@ -150,6 +175,14 @@ class PublicVarGroupService @Autowired constructor(
                         versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
+                )
+                
+                // 更新新版本的引用计数（包含动态版本引用）
+                publicVarGroupReferInfoService.updateSingleGroupReferCount(
+                    context = context,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = newVersion
                 )
             }
         } catch (t: Throwable) {
