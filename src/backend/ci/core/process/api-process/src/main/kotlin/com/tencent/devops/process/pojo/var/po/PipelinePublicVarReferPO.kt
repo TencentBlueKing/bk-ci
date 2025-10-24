@@ -47,6 +47,8 @@ data class PipelinePublicVarReferPO(
     val referId: String,
     @get:Schema(title = "关联类型")
     val referType: PublicVerGroupReferenceTypeEnum,
+    @get:Schema(title = "引用的版本")
+    val referVersion: Int,
     @get:Schema(title = "引用的版本名称")
     val referVersionName: String,
     @get:Schema(title = "创建者")
