@@ -50,7 +50,6 @@
     </section>
 </template>
 <script>
-    import { isObject } from '@/utils/util'
     import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
@@ -60,6 +59,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
+    import { isObject } from '@/utils/util'
     export default {
         components: {
             Selector,

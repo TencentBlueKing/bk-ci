@@ -16,6 +16,7 @@
                             <render-param
                                 v-bind="param"
                                 :param="param"
+                                ref="categoryRenderParam"
                                 :is-exec-preview="isExecPreview"
                                 :disabled="disabled || param.isFollowTemplate"
                                 :show-operate-btn="showOperateBtn"
@@ -37,6 +38,7 @@
                     <render-param
                         v-bind="param"
                         :param="param"
+                        ref="renderParam"
                         :is-exec-preview="isExecPreview"
                         :disabled="disabled || param.isFollowTemplate"
                         :show-operate-btn="showOperateBtn"
@@ -83,7 +85,6 @@
     import { isObject, isShallowEqual } from '@/utils/util'
 
     export default {
-
         components: {
             renderSortCategoryParams,
             renderParam
@@ -334,6 +335,19 @@
                     return !isShallowEqual(prev, current)
                 }
                 return false
+            },
+            async validateAll () {
+                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                for (let i = 0; i < refsList.length; i++) {
+                    const ref = refsList[i]
+                    const res = await ref.$validator?.validateAll?.()
+                    console.log(res, 'validate res')
+                    if (!res) {
+                        return false
+                    }
+                    
+                }
+                return true
             }
         }
     }
