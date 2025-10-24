@@ -152,7 +152,8 @@ class PublicVarGroupService @Autowired constructor(
                     context = dslContext,
                     projectId = projectId,
                     groupName = groupName,
-                    version = version
+                    version = version,
+                    latestFlag = false
                 )
             }
             
@@ -183,12 +184,14 @@ class PublicVarGroupService @Autowired constructor(
             }
             
             // 事务提交后再更新新版本的引用计数
+            // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）的计数
             if (newVersionReferCount > 0) {
                 publicVarGroupReferInfoService.updateSingleGroupReferCount(
                     context = dslContext,
                     projectId = projectId,
                     groupName = groupName,
-                    version = newVersion
+                    version = newVersion,
+                    latestFlag = true
                 )
             }
         } catch (t: Throwable) {

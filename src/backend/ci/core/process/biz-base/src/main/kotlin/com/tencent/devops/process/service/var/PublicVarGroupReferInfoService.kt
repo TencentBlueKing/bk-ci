@@ -117,7 +117,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     context = context,
                     projectId = projectId,
                     groupName = groupName,
-                    version = version
+                    version = version,
+                    latestFlag = false
                 )
             }
         } catch (e: Throwable) {
@@ -129,45 +130,56 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     /**
      * 更新单个变量组的引用计数（线程安全）
      * 注意：REFER_COUNT 字段现在表示实际引用该变量组的 referId 数量（去重后）
+     * @param context 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param latestFlag 是否为最新版本标志，如果为true则查询最新版本
      */
     fun updateSingleGroupReferCount(
         context: DSLContext,
         projectId: String,
         groupName: String,
-        version: Int
+        version: Int,
+        latestFlag: Boolean = false
     ) {
-        logger.info("updateSingleGroupReferCount for group: $groupName, version: $version")
+        logger.info("updateSingleGroupReferCount for group: $groupName, version: $version, latestFlag: $latestFlag")
         try {
-            // 如果 version == -1，表示动态版本，需要查询 latest=true 的版本
-            val actualVersion = if (version == -1) {
-                val latestGroup = publicVarGroupDao.getRecordByGroupName(
+            // 计算实际引用数
+            val actualReferCount = if (latestFlag) {
+                // latestFlag = true：最新版本，统计动态引用（version=-1）+ 明确指定该版本号的引用
+                val dynamicReferCount = publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = context,
                     projectId = projectId,
-                    groupName = groupName
+                    groupName = groupName,
+                    referType = null,
+                    version = -1 // 动态版本引用
                 )
-                if (latestGroup == null) {
-                    return
-                }
-                latestGroup.version
+                val specificReferCount = publicVarGroupReferInfoDao.countByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = null,
+                    version = version // 明确指定该版本号的引用
+                )
+                dynamicReferCount + specificReferCount
             } else {
-                version
+                // latestFlag = false：固定版本，只统计明确指定该版本号的引用
+                publicVarGroupReferInfoDao.countByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = null,
+                    version = version
+                )
             }
-            
-            // 计算实际引用数：统计引用该变量组的唯一 referId 数量
-            val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                referType = null,
-                version = actualVersion
-            )
 
             // 直接更新为实际引用数，而不是增量更新
             publicVarGroupDao.updateReferCount(
                 dslContext = context,
                 projectId = projectId,
                 groupName = groupName,
-                version = actualVersion,
+                version = version, // 更新的是传入的版本号
                 referCount = actualReferCount
             )
 
@@ -176,7 +188,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 context = context,
                 projectId = projectId,
                 groupName = groupName,
-                version = actualVersion,
+                version = version, // 更新的是传入的版本号
                 countChange = actualReferCount
             )
         } catch (e: Throwable) {
@@ -595,7 +607,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                         context = dslContext,
                         projectId = projectId,
                         groupName = groupName,
-                        version = version
+                        version = version,
+                        latestFlag = false
                     )
                 }
             } catch (e: Throwable) {
