@@ -85,6 +85,7 @@
                 :data="data"
                 :index="index"
                 :editable="editable"
+                :global-params="globalParams"
                 @delete="handleDeleteVarGroup"
                 @updateData="handleUpdataVarGroup"
             />

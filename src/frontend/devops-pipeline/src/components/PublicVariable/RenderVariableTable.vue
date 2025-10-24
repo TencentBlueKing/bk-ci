@@ -20,7 +20,23 @@
                     <bk-table-column
                         :label="$t('publicVar.varId')"
                         prop="varName"
-                    />
+                    >
+                        <template slot-scope="{ row }">
+                            <span
+                                :class="['var-name', {
+                                    'is-required': row.buildFormProperty.required
+                                }]"
+                            >
+                                {{ row?.varName }}
+                                <span
+                                    v-if="row.buildFormProperty.readOnly"
+                                    class="read-only"
+                                >
+                                    {{ $t('readonlyParams') }}
+                                </span>
+                            </span>
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('publicVar.varAlias')"
                         prop="alias"
@@ -130,9 +146,6 @@
 <script setup>
     import EmptyException from '@/components/common/exception'
     import {
-        VARIABLE
-    } from '@/store/modules/publicVar/constants'
-    import {
         DEFAULT_PARAM
     } from '@/store/modules/atom/paramsConfig'
     const props = defineProps({
@@ -180,6 +193,28 @@
         }
         .bk-table-empty-text {
             padding: 15px 0 !important;
+        }
+        .var-name.is-required {
+            padding-left: 8px;
+            &::before {
+                content: "* ";
+                color: red;
+                position: absolute;
+                left: 14px;
+                top: 14px;
+            }
+        }
+        .read-only {
+            display: inline-block;
+            margin-right: 4px;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #63656E;
+            background: #F0F1F5;
+            border-radius: 2px;
+            margin: 0 4px 0 -2px;
+            padding: 0 4px;
+            transform: scale(0.83);
         }
     }
 }

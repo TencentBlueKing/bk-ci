@@ -16,7 +16,7 @@
                     <p class="group-desc">{{ data.desc || '--' }}</p>
                 </div>
                 <template v-if="editable">
-                    <div
+                    <!-- <div
                         v-if="hasRefNum"
                         class="delete-icon"
                     >
@@ -24,9 +24,8 @@
                             class="devops-icon icon-minus-circle"
                             v-bk-tooltips="$t('publicVar.hasRefNumTips')"
                         />
-                    </div>
+                    </div> -->
                     <bk-popconfirm
-                        v-else
                         trigger="click"
                         class="delete-icon-popconfirm"
                         :title="$t('publicVar.deleteGroupTitle')"
@@ -83,10 +82,22 @@
         editable: {
             type: Boolean,
             default: true
+        },
+        globalParams: {
+            type: Array,
+            default: () => []
         }
     })
     const isLoading = ref(false)
-    const variableList = computed(() => props.data.variableList)
+    const variableList = computed(() => {
+        return props.data.variableList.map((i) => {
+            return {
+                ...i,
+                // 是否被引用
+                isCited: props.globalParams.find(param => param.id === i?.buildFormProperty?.id)
+            }
+        })
+    })
     const hasRefNum = computed(() => variableList.value.some(i => i.referCount > 0))
     const renderVariableList = computed(() => {
         const requiredParam = variableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
