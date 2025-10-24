@@ -668,7 +668,7 @@
     "currentInstance": "Current Instance",
     "cancelParticipant": "Click to deselect parameter",
     "setParticipant": "Click to set as parameter",
-    "unfollow": "Detach from template",
+    "unfollow": "Unfollow Template",
     "follow": "Sync with template",
     "setFollow": "Click to sync with template",
     "setUnfollow": "Click to unsync from template",
