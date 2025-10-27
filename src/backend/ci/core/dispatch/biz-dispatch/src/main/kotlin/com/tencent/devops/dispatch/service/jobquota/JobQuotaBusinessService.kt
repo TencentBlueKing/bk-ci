@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.service.jobquota
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -37,6 +38,7 @@ import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import com.tencent.devops.dispatch.pojo.JobQuotaProject
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.utils.redis.JobQuotaRedisUtils
@@ -74,18 +76,12 @@ class JobQuotaBusinessService @Autowired constructor(
         channelCode: String = ChannelCode.BS.name
     ): Boolean {
         var message = ""
+        var finalRunningJobCount = 0
         val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId, jobType, channelCode)
         try {
             jobQuotaProjectLock.lock()
             val jobStatus = getProjectRunningJobStatus(projectId, jobType, channelCode)
-            // 记录一次job并发数据
-            saveJobConcurrency(
-                projectId = projectId,
-                runningJobCount = jobStatus.runningJobCount,
-                jobQuotaVmType = jobType,
-                channelCode = channelCode
-            )
-
+            finalRunningJobCount = jobStatus.runningJobCount
             with(jobStatus) {
                 if (runningJobCount >= jobQuota) {
                     message = ErrorCodeEnum.JOB_NUM_REACHED_MAX_QUOTA.getErrorMessage(
@@ -96,7 +92,6 @@ class JobQuotaBusinessService @Autowired constructor(
                 }
 
                 if (runningJobCount * 100 / jobQuota >= jobThreshold) {
-                    // 如果配额没有超限，则记录一条running job
                     message = ErrorCodeEnum.JOB_NUM_EXCEED_ALARM_THRESHOLD.getErrorMessage(
                         params = arrayOf(
                             jobType.displayName,
@@ -109,7 +104,13 @@ class JobQuotaBusinessService @Autowired constructor(
                     )
                 }
 
+                // 刷新redis缓存数据
+                jobQuotaRedisUtils.saveJobConcurrency(projectId, runningJobCount + 1, jobType, channelCode)
+
+                // 如果配额没有超限，则记录一条running job
                 runningJobsDao.insert(dslContext, projectId, jobType, buildId, vmSeqId, executeCount, channelCode)
+                finalRunningJobCount += 1
+
                 return true
             }
         } finally {
@@ -126,6 +127,16 @@ class JobQuotaBusinessService @Autowired constructor(
                     stepId = VMUtils.genStartVMTaskId(containerId)
                 )
             }
+
+            jobQuotaInterface.saveJobConcurrency(
+                JobConcurrencyHistory(
+                    projectId = projectId,
+                    jobConcurrency = finalRunningJobCount,
+                    jobQuotaVmType = jobType,
+                    channelCode = channelCode,
+                    createTime = LocalDateTime.now().format(dateTimeFormatter)
+                )
+            )
         }
     }
 
@@ -176,20 +187,10 @@ class JobQuotaBusinessService @Autowired constructor(
         vmType: JobQuotaVmType,
         channelCode: String
     ): JobQuotaStatus {
-        val jobQuota = jobQuotaManagerService.getProjectQuota(projectId, vmType, channelCode)
+        val jobQuotaStatus = jobQuotaManagerService.getProjectQuotaStatus(projectId, vmType, channelCode)
         val runningJobCount = runningJobsDao.getProjectRunningJobCount(dslContext, projectId, vmType, channelCode)
-        val threshold = jobQuotaManagerService.getSystemQuota(vmType, channelCode)
-        // 目前暂时不用关注构建总耗时，先注释
-        // val runningJobTime = getProjectRunningJobTime(projectId, vmType, channelCode)
 
-        return JobQuotaStatus(
-            jobQuota = jobQuota.runningJobMax,
-            runningJobCount = runningJobCount,
-            jobThreshold = threshold.projectRunningJobThreshold,
-            timeQuota = jobQuota.runningTimeProjectMax.toLong(),
-            runningJobTime = 0,
-            timeThreshold = threshold.projectRunningTimeThreshold
-        )
+        return jobQuotaStatus.copy(runningJobCount = runningJobCount)
     }
 
     /**
@@ -298,19 +299,8 @@ class JobQuotaBusinessService @Autowired constructor(
         runningJobCount: Int,
         jobQuotaVmType: JobQuotaVmType,
         channelCode: String
-    ) {
-        // 刷新redis缓存数据
-        jobQuotaRedisUtils.saveJobConcurrency(projectId, runningJobCount, jobQuotaVmType, channelCode)
+    ){
 
-        jobQuotaInterface.saveJobConcurrency(
-            JobConcurrencyHistory(
-                projectId = projectId,
-                jobConcurrency = runningJobCount + 1,
-                jobQuotaVmType = jobQuotaVmType,
-                channelCode = channelCode,
-                createTime = LocalDateTime.now().format(dateTimeFormatter)
-            )
-        )
     }
 
     private fun normalizePercentage(value: Double): String {

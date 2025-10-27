@@ -102,6 +102,7 @@ class JobQuotaRedisUtils {
         return getRedisStringSerializerOperation().hscan(getDayJobConcurrencyKey(lastWeekDay.name))
     }
 
+    // 记录一天中该项目的并发峰值
     fun saveJobConcurrency(
         projectId: String,
         runningJobCount: Int,
@@ -117,11 +118,11 @@ class JobQuotaRedisUtils {
             projectDayJobConcurrencyKey
         )?.toLongOrNull()
 
-        if (maxConcurrency == null || maxConcurrency < (runningJobCount + 1)) {
+        if (maxConcurrency == null || maxConcurrency < runningJobCount) {
             getRedisStringSerializerOperation().hset(
                 dayJobConcurrencyKey,
                 projectDayJobConcurrencyKey,
-                (runningJobCount + 1).toString()
+                runningJobCount.toString()
             )
         }
     }
@@ -180,7 +181,7 @@ class JobQuotaRedisUtils {
 
         // 判断如果是跨天的构建任务，并发数加一
         if (agentStartTime.dayOfYear != LocalDateTime.now().dayOfYear) {
-            saveJobConcurrency(projectId, 0, jobType, channelCode)
+            saveJobConcurrency(projectId, 1, jobType, channelCode)
         }
 
         getRedisStringSerializerOperation().hIncrBy(
