@@ -119,7 +119,10 @@
                     {{ t("manualCheck") }}
                 </span>
                 <template slot="content">
-                    <p>{{ t("checkUser") }}{{ reviewUsers.join(";") }}</p>
+                    <p>
+                        {{ t("checkUser") }}
+                        <bk-user-display-name :user-id="reviewUsers" />
+                    </p>
                 </template>
             </bk-popover>
             <bk-popover

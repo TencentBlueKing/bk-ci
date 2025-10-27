@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "@blueking/bk-user-display-name": "^1.0.2",
-        "@blueking/bk-user-selector": "0.0.35",
+        "@blueking/bk-user-selector": "0.0.38",
         "@blueking/log": "2.2.3",
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",

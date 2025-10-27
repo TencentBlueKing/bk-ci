@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "dependencies": {
-    "@blueking/bk-user-selector": "0.0.35",
+    "@blueking/bk-user-selector": "0.0.38",
     "echarts": "^5.3.2",
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",

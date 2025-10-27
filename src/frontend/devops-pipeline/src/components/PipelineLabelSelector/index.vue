@@ -90,7 +90,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     export default {
         name: 'PipelineLabelSelector',
         props: {
@@ -171,7 +171,7 @@
              * 跳转到标签管理
              */
             handleGoPipelinesGroup () {
-                window.open(`${window.location.origin}/console/pipeline/${this.projectId}/list/group`, '_blank')
+                window.open(`${window.location.origin}/console/pipeline/${this.projectId}/group`, '_blank')
             },
             handleToggleSelectTagGroup (val) {
                 if (val && !this.tagGroupList.length) {

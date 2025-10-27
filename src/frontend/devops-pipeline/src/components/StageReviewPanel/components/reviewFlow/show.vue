@@ -39,7 +39,11 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     <span class="content-subtitle">{item.name}</span>
-                                    <span class="review-normal"> { this.$t('stageReview.approveBy', [item.operator]) } </span>
+                                    <span class="review-normal">
+                                        <i18n path="stageReview.approveBy">
+                                            <bk-user-display-name user-id={item.operator}></bk-user-display-name>
+                                        </i18n>
+                                    </span>
                                     <span class="review-process"> { this.$t('stageReview.approve') }（{ this.$t('stageReview.approveRes') }） </span>
                                 </p>
                                 <p v-show={paramStr}><span class="mr8 max-width">{ this.$t('stageReview.editVariable') }</span>{paramStr}</p>

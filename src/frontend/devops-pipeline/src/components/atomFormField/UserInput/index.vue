@@ -6,8 +6,10 @@
         :placeholder="placeholder"
         :disabled="disabled"
         draggable
+        allow-create
         :multiple="isMultiple"
         @change="handleUserChange"
+        @paste="handleUserPaste"
     />
 </template>
 
