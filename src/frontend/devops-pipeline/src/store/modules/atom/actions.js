@@ -1010,7 +1010,7 @@ export default {
                 ...state.paramSets.slice(0, pos),
                 {
                     ...state.paramSets[pos],
-                    params: res.data
+                    params: Array.isArray(res.data) ? res.data : []
                 },
                 ...state.paramSets.slice(pos + 1)
             ])

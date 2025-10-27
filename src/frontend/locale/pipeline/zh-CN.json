@@ -263,7 +263,8 @@
     "addConditions": "添加视图条件",
     "typeTips": "项目视图仅能由项目管理员添加、编辑、删除",
     "conditionEmpty": "视图条件不能为空",
-    "deleteViewTips": "是否确认删除 ( {0} ) ? "
+    "deleteViewTips": "确认删除该入参值组合 ( {0} )？" ,
+    "deleteNoticeTips": "删除操作无法撤回，请谨慎操作！"
   },
   "restore": {
     "recycleBin": "回收站",

@@ -263,8 +263,10 @@
     "addConditions": "Add view conditions",
     "typeTips": "Project views can only be added, edited or deleted by administrators",
     "conditionEmpty": "View conditions must be filled",
-    "deleteViewTips": "Delete ( {0} ) ? "
+    "deleteViewTips": "Confirm to delete this parameter value combination ( {0} )?",
+    "deleteNoticeTips": "Deletion cannot be undone, please proceed with caution!"
   },
+
   "restore": {
     "recycleBin": "Recycle Bin",
     "restore": "Restore",

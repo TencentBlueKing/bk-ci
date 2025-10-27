@@ -46,7 +46,7 @@
                                 <span
                                     v-if="isInParamSet"
                                     class="devops-icon icon-minus-circle remove-param-item-icon"
-                                    v-bk-tooltip="$t('removeInputParam')"
+                                    v-bk-tooltips="$t('removeInputParam')"
                                     @click="handleRemoveParamItem(param.id)"
                                 ></span>
                             </section>

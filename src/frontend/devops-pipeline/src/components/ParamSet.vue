@@ -96,7 +96,7 @@
                             icon="devops-icon icon-plus"
                             outline
                             theme="primary"
-                            :disabled="isLoading || isEditing"
+                            :disabled="isLoading || isEditing || !!searchKeyword"
                         >
                         </bk-button>
                         <bk-input
@@ -113,7 +113,7 @@
                     <ul class="param-set-manage-list">
                         <li
                             v-for="(set, index) in paramSetList"
-                            :class="{ active: set.id === activeSet?.id }"
+                            :class="{ active: index === activeSetIndex && set.id === activeSet?.id }"
                             @click="switchManageSet(index)"
                             :key="set.id"
                         >
@@ -126,7 +126,7 @@
                             <span class="param-set-action-span">
                                 <i
                                     v-if="!(index === activeSetIndex && isEditing)"
-                                    class="devops-icon icon-edit-line"
+                                    class="param-set-operate-icon devops-icon icon-edit-line"
                                     v-bk-tooltips="{
                                         content: $t('edit'),
                                         delay: [300, 0]
@@ -134,7 +134,7 @@
                                     @click.stop="editParamSet(index)"
                                 />
                                 <i
-                                    class="bk-icon icon-copy"
+                                    class="param-set-operate-icon bk-icon icon-copy"
                                     v-bk-tooltips="{
                                         content: $t('copy'),
                                         delay: [300, 0]
@@ -142,7 +142,7 @@
                                     @click.stop="copyParamSet(set)"
                                 />
                                 <i
-                                    class="devops-icon icon-delete"
+                                    class="param-set-operate-icon devops-icon icon-delete"
                                     v-bk-tooltips="{
                                         content: $t('delete'),
                                         delay: [300, 0]
@@ -538,6 +538,7 @@
                 activeSetIndex.value = -1
                 isEditing.value = false
                 editingSet.value = null
+                searchKeyword.value = ''
             }
 
             async function switchManageSet (setIndex) {
@@ -585,9 +586,9 @@
                     proxy.$bkInfo({
                         title: proxy.$t('editPage.confirmTitle'),
                         subTitle: proxy.$t('editPage.confirmMsg'),
-                        confirmFn: () => {
+                        confirmFn: async () => {
                             if (isEditing.value && editingSet.value.isNew) {
-                                deleteParamSet(activeSetIndex.value)
+                                await deleteParamSet(activeSetIndex.value)
                             }
                             resolve(true)
                         },
@@ -696,6 +697,9 @@
                 }
                 proxy.$bkInfo({
                     title: proxy.$t('view.deleteViewTips', [set.name]),
+                    subTitle: proxy.$t('view.deleteNoticeTips'),
+                    theme: 'danger',
+                    okText: proxy.$t('delete'),
                     confirmFn: () => {
                         deleteParamSet(setIndex)
                     }
@@ -718,7 +722,6 @@
                     if (isEditing.value && setIndex === activeSetIndex.value) {
                         isEditing.value = false
                         editingSet.value = null
-                        switchManageSet(0)
                     }
                     if (!set.isNew) {
                         proxy.$bkMessage({
@@ -849,6 +852,7 @@
 
             function clear () {
                 paramSetId.value = ''
+                searchKeyword.value = ''
             }
 
             return {
@@ -900,6 +904,7 @@
 
 <style lang="scss" >
     @import "@/scss/mixins/ellipsis";
+    @import "@/scss/conf";
     .param-set-selector {
         display: flex;
         align-items: center;
@@ -1048,6 +1053,17 @@
                         color:  #979BA5;
                     }
                 }
+                .param-set-operate-icon {
+                    &:hover {
+                        color: #3A84FF;
+                    }
+                    &.icon-delete {
+                        cursor: pointer;
+                        &:hover {
+                            color: $dangerColor;
+                        }
+                    }
+                }
             }
         }
         > article {
@@ -1088,6 +1104,13 @@
                     &+.bk-form-item {
                         margin-top: 0 !important;
                     }
+                }
+            }
+            .icon-minus-circle {
+                cursor: pointer;
+                font-size: 16px;
+                &:hover {
+                    color: $dangerColor;
                 }
             }
         }

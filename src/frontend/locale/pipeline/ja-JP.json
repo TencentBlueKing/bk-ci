@@ -263,8 +263,10 @@
     "addConditions": "ビュー条件を追加",
     "typeTips": "プロジェクトビューはプロジェクト管理者のみが追加、編集、削除できます",
     "conditionEmpty": "ビュー条件を入力してください",
-    "deleteViewTips": "本当に削除しますか ( {0} ) ? "
+    "deleteViewTips": "このパラメータ値の組み合わせ ( {0} ) を削除してもよろしいですか？",
+    "deleteNoticeTips": "削除操作は元に戻せません。慎重に操作してください！"
   },
+
   "restore": {
     "recycleBin": "ごみ箱",
     "restore": "復元",
