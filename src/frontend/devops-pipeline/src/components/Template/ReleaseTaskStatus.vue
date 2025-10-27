@@ -213,6 +213,7 @@
             }
         })
         
+        proxy.$store.commit(`templates/${SHOW_TASK_DETAIL}`, false)
         proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
     }
     async function fetchReleaseTaskStatus () {
