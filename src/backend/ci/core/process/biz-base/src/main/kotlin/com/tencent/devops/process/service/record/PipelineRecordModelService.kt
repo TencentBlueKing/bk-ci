@@ -426,6 +426,7 @@ class PipelineRecordModelService @Autowired constructor(
             (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[parentElementJobIndex]
         val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
         finalTaskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
+        finalTaskVarMap[Element::stepId.name] = "" // 为了避免影响父插件，post任务stepId需置为空
         finalTaskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), finalTaskVarMap)
         return finalTaskVarMap
     }
