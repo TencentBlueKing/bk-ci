@@ -537,13 +537,20 @@ class PipelineTriggerEventService @Autowired constructor(
             buildNum = getBuildNumUrl()
             reason = getI18nReason(eventParam.reason)
             if (id2NameMap != null) {
-                triggerUser = id2NameMap[triggerUser] ?: triggerUser
+                val username = id2NameMap[triggerUser] ?: triggerUser
+                if (eventDesc.contains(triggerUser)) {
+                    eventDesc.replace(triggerUser, username)
+                }
+                triggerUser = username
             }
             this
         }
     }
 
     private fun getId2Name(projectId: String, records: List<PipelineTriggerEventVo>): Map<String, String>? {
+        if (records.isEmpty()) {
+            return emptyMap()
+        }
         return if (TenantUtils.isMultiTenantMode()) {
             client.get(ServiceDeptResource::class).listUserInfos(
                 memberIds = records.map { it.triggerUser }.distinct(),
