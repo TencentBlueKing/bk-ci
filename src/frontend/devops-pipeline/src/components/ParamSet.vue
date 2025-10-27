@@ -178,10 +178,14 @@
                                 @change="handleCurrentParamSetChange"
                             >
                                 <template #trigger>
-                                    <span class="text-link">
+                                    <bk-button
+                                        text
+                                        theme="primary"
+                                        class="in-set-param-add-button"
+                                    >
                                         <i class="devops-icon icon-plus-circle" />
                                         {{ $t('addParamField') }}
-                                    </span>
+                                    </bk-button>
 
                                 </template>
                                 <bk-option-group
@@ -1090,10 +1094,14 @@
                 align-items: center;
                 font-size: 14px;
                 color: #4D4F56;
-                font-weight: normal;
+                font-weight: 700;
+                margin-bottom: 0;
                 .in-set-param-select {
                     border: 0;
                     box-shadow: none;;
+                }
+                .in-set-param-add-button {
+                    font-weight: normal;
                 }
             }
             .param-set-form {
