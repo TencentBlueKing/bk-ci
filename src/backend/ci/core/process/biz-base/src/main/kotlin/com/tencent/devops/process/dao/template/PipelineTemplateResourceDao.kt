@@ -248,10 +248,11 @@ class PipelineTemplateResourceDao {
                 UPDATER,
                 CREATED_TIME,
                 UPDATE_TIME,
-                STORE_STATUS
+                STORE_STATUS,
+                NUMBER
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
-                .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc())
+                .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
                 .fetch()
                 .map {
                     PipelineTemplateVersionSimple(
@@ -273,7 +274,8 @@ class PipelineTemplateResourceDao {
                         updater = it.value16(),
                         createTime = it.value17().timestampmilli(),
                         updateTime = it.value18().timestampmilli(),
-                        storeFlag = it.value19() == TemplateStatusEnum.RELEASED.name
+                        storeFlag = it.value19() == TemplateStatusEnum.RELEASED.name,
+                        number = it.value20()
                     )
                 }
         }
