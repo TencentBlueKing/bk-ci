@@ -980,7 +980,7 @@ class PipelineRepositoryService constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                     params = arrayOf(pipelineId)
                 )
-                model.latestVersion = releaseResource.version
+                model.latestVersion = settingVersion
                 val latestVersion = getLatestVersionResource(
                     transactionContext = transactionContext, projectId = projectId,
                     pipelineId = pipelineId, userId = userId, releaseResource = releaseResource,
