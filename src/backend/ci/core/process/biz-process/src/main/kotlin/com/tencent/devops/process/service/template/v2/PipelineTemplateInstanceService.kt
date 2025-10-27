@@ -44,6 +44,7 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceCompareResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceReleaseInfo
@@ -51,6 +52,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequ
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskDetail
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskResult
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedResp
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
@@ -403,76 +405,147 @@ class PipelineTemplateInstanceService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): SQLPage<PipelineTemplateRelatedResp> {
-        val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val pipelineIdsFilterByRepo = repoHashId?.let {
-            pipelineYamlService.getAllYamlPipeline(projectId, repoHashId).map { it.pipelineId }
-        } ?: emptyList()
+        // 1. 参数校验和权限检查
+        if (templateId.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("templateId")
+            )
+        }
 
-        val canEditMap = pipelinePermissionService.getResourceByPermission(
+        // 2. 分页参数转换
+        val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        // 3. 获取用户权限信息
+        val editablePipelines = pipelinePermissionService.getResourceByPermission(
             userId = userId,
             projectId = projectId,
             permission = AuthPermission.EDIT
         )
-        val templatePipelineRecords = pipelineTemplateRelatedService.listSimple(
+
+        // 4. 处理代码库过滤
+        val repoFilteredPipelineIds = repoHashId?.let { repoId ->
+            try {
+                pipelineYamlService.getAllYamlPipeline(projectId, repoId).map { it.pipelineId }
+            } catch (e: Exception) {
+                logger.warn("Failed to get pipelines for repo [$repoId] in project [$projectId]", e)
+                emptyList()
+            }
+        } ?: emptyList()
+
+        // 5. 查询模板关联的流水线记录
+        val pipelineRecords = pipelineTemplateRelatedService.listSimple(
             projectId = projectId,
             templateId = templateId,
             pipelineName = pipelineName,
             updater = updater,
             templateVersion = templateVersion,
             status = status,
-            pipelineIds = pipelineIdsFilterByRepo,
+            pipelineIds = repoFilteredPipelineIds,
             instanceTypeEnum = PipelineInstanceTypeEnum.CONSTRAINT,
             limit = limit,
             offset = offset
         )
-        val count = pipelineTemplateRelatedService.countSimple(
+
+        // 6. 获取总数
+        val totalCount = pipelineTemplateRelatedService.countSimple(
             projectId = projectId,
             templateId = templateId,
             pipelineName = pipelineName,
             updater = updater,
             templateVersion = templateVersion,
             status = status,
-            pipelineIds = pipelineIdsFilterByRepo,
+            pipelineIds = repoFilteredPipelineIds,
             instanceTypeEnum = PipelineInstanceTypeEnum.CONSTRAINT
         )
 
-        val pipelineIds = templatePipelineRecords.map { it.pipelineId }
-        // 获取流水线版本名称
+        // 7. 如果没有数据，直接返回
+        if (pipelineRecords.isEmpty()) {
+            return SQLPage(count = 0L, records = emptyList())
+        }
+
+        // 8. 批量获取流水线相关信息
+        val pipelineIds = pipelineRecords.map { it.pipelineId }
         val pipelineVersionNameMap = pipelineRepositoryService.getLatestVersionNames(
             projectId = projectId,
             pipelineIds = pipelineIds
         )
-        // 获取流水线yaml信息
-        val pipelineYamlInfoList = pipelineYamlService.listByPipelineIds(
-            projectId = projectId,
-            pipelineIds = pipelineIds
-        )
-        val yamlPipelineMap = pipelineYamlInfoList.associateBy { it.pipelineId }
-        // 获取代码库别名
-        val repoHashIds = pipelineYamlInfoList.map { it.repoHashId }.toSet()
-        val repoAliasNameMap = repoHashIds.takeIf { it.isNotEmpty() }?.let {
-            client.get(ServiceRepositoryResource::class)
-                .listRepoByIds(repoHashIds).data?.associateBy({ it.repoHashId!! }, { it.aliasName })
-        } ?: emptyMap()
 
-        val results = templatePipelineRecords.map { record ->
+        val yamlPipelineInfoList = try {
+            pipelineYamlService.listByPipelineIds(
+                projectId = projectId,
+                pipelineIds = pipelineIds
+            )
+        } catch (e: Exception) {
+            logger.warn("Failed to get yaml pipeline info for project [$projectId]", e)
+            emptyList()
+        }
+        val yamlPipelineMap = yamlPipelineInfoList.associateBy { it.pipelineId }
+
+        val repoAliasNameMap = try {
+            val repoHashIds = yamlPipelineInfoList.map { it.repoHashId }.toSet()
+            if (repoHashIds.isNotEmpty()) {
+                client.get(ServiceRepositoryResource::class)
+                    .listRepoByIds(repoHashIds).data?.associateBy(
+                        { it.repoHashId!! },
+                        { it.aliasName }
+                    ) ?: emptyMap()
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get repo alias names for project [$projectId]", e)
+            emptyMap()
+        }
+
+        // 9. 获取模板版本映射（约束模式）
+        val templateVersionMap = try {
+            val templateInfo = pipelineTemplateInfoService.get(projectId, templateId)
+            if (templateInfo.mode == TemplateType.CONSTRAINT) {
+                val templateVersions = pipelineTemplateResourceService.getTemplateVersions(
+                    commonCondition = PipelineTemplateResourceCommonCondition(
+                        projectId = projectId,
+                        templateId = templateId
+                    )
+                )
+                templateVersions.associateBy { it.srcTemplateVersion?.toLong() ?: 0L }
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get template version mapping for constraint template [$projectId|$templateId]", e)
+            emptyMap()
+        }
+
+        // 10. 构建响应数据
+        val results = pipelineRecords.map { record ->
             val yamlPipelineInfo = yamlPipelineMap[record.pipelineId]
+
+            // 计算最终状态
             val finalStatus = when {
                 record.status == null -> TemplatePipelineStatus.UPDATED
                 record.status == TemplatePipelineStatus.UPDATED &&
                     record.version != record.releasedVersion -> TemplatePipelineStatus.PENDING_UPDATE
-
-                else -> record.status
+                else -> record.status!!
             }
+
+            // 获取实际版本信息
+            val targetVersion = templateVersionMap[record.version]
+            val (actualVersion, actualVersionName) = if (targetVersion != null) {
+                Pair(targetVersion.version.toLong(), targetVersion.versionName)
+            } else {
+                Pair(record.version, record.versionName)
+            }
+
             PipelineTemplateRelatedResp(
                 templateId = record.templateId,
                 pipelineId = record.pipelineId,
                 pipelineName = record.pipelineName,
                 pipelineVersion = record.pipelineVersion,
                 pipelineVersionName = pipelineVersionNameMap[record.pipelineId] ?: "init",
-                fromTemplateVersion = record.version,
-                fromTemplateVersionName = record.versionName,
-                canEdit = canEditMap.contains(record.pipelineId),
+                fromTemplateVersion = actualVersion,
+                fromTemplateVersionName = actualVersionName,
+                canEdit = editablePipelines.contains(record.pipelineId),
                 status = finalStatus,
                 enabledPac = yamlPipelineInfo != null,
                 repoHashId = yamlPipelineInfo?.repoHashId,
@@ -483,10 +556,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 updateTime = record.updatedTime
             )
         }
-        return SQLPage(
-            count = count.toLong(),
-            records = results
-        )
+        return SQLPage(count = totalCount.toLong(), records = results)
     }
 
     fun listTemplateInstancesParams(
