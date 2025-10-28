@@ -83,10 +83,12 @@ object JsonSchemaUtil {
             if (line != null && column != null) {
                 "JSON format error at line $line, column $column: ${e.message ?: "Invalid syntax"}"
             } else {
-                "Invalid JSON format. Maybe missing parentheses, commas, quotation marks, or containing illegal characters."
+                "Invalid JSON format. Maybe missing parentheses," +
+                        " commas, quotation marks, or containing illegal characters."
             }
         } catch (e: Throwable) {
-            "Invalid JSON format. Maybe missing parentheses, commas, quotation marks, or containing illegal characters."
+            "Invalid JSON format. Maybe missing parentheses, " +
+                    "commas, quotation marks, or containing illegal characters."
         }
     }
 }
