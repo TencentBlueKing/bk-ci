@@ -10,14 +10,13 @@
         >
             <parameter-input
                 v-for="model in parameter.paramModels"
-
                 :key="model.id"
                 class="input-com"
                 @update-value="(newValue) => updateValue(model, newValue)"
                 :param-values="paramValues"
                 v-bind="model"
             ></parameter-input>
-            <div>
+            <div :class="parameter.paramModels[paramIndex]?.label ? 'label-icon' : ''">
                 <i
                     class="bk-icon icon-plus-circle"
                     @click="plusParam(parameter, paramIndex)"
@@ -180,7 +179,8 @@
         }
         .param-input {
             margin-bottom: 10px;
-            display: grid;
+            margin-right: 10px;
+            display: flex;
             align-items: center;
             grid-gap: 10px;
             grid-auto-flow: column;
@@ -188,6 +188,9 @@
                 min-width: 0;
             }
         }
+    }
+    .label-icon {
+        margin-top: 30px;
     }
     .bk-icon {
         margin-left: 5px;

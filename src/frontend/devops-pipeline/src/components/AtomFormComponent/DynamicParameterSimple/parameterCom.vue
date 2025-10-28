@@ -14,6 +14,17 @@
                     class="bk-icon icon-info-circle label-desc"
                     v-bk-tooltips.top="{ content: desc, allowHTML: false }"
                 />
+                <span
+                    v-if="showTypeSwitcher"
+                    class="change-type"
+                    @click="handleChangeType"
+                >
+                    <bk-icon
+                        type="sort"
+                        class="icon-sort"
+                    />
+                    {{ !isVarInputMode ? $t('fillVariable') : $t('selectPredefinedOption') }}
+                </span>
             </p>
             <bk-input
                 v-if="type === 'input'"
@@ -21,39 +32,58 @@
                 :clearable="!disabled"
                 :disabled="disabled"
                 :value="value"
-                :placeholder="placeholder"
+                :placeholder="placeholder || $t('settings.itemPlaceholder')"
                 @change="(newValue) => $emit('update-value', newValue)"
             />
-            <section
-                v-else
-                class="parameter-select input-main"
+            <enum-input
+                v-else-if="type === 'enum-input' && !isVarInputMode"
+                class="input-main"
+                name="value"
+                :list="list"
+                :disabled="disabled"
+                :value="enumValue"
+                :handle-change="handleEnumChange"
+            />
+            <bk-select
+                v-else-if="type === 'select' && !isVarInputMode"
+                :disabled="disabled"
+                v-model="selectValue"
+                :placeholder="placeholder || $t('selectTips')"
+                @change="(newValue) => $emit('update-value', newValue)"
+                ext-cls="select-custom input-main"
+                ext-popover-cls="select-popover-custom"
+                searchable
             >
-                <bk-select
-                    :disabled="disabled"
-                    v-model="value"
-                    :placeholder="placeholder"
-                    @change="(newValue) => $emit('update-value', newValue)"
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
-                    searchable
+                <bk-option
+                    v-for="option in options"
+                    :key="option.id"
+                    :id="option.id"
+                    :name="option.name"
                 >
-                    <bk-option
-                        v-for="option in options"
-                        :key="option.id"
-                        :id="option.id"
-                        :name="option.name"
-                    >
-                    </bk-option>
-                </bk-select>
-            </section>
+                </bk-option>
+            </bk-select>
+            <bk-input
+                v-else-if="isVarInputMode"
+                class="input-main"
+                :clearable="!disabled"
+                v-model="displayValue"
+                @blur="handleVarBlur"
+                :disabled="disabled"
+                :placeholder="$t('placeholderVar')"
+            ></bk-input>
         </section>
     </section>
 </template>
 
 <script>
     import mixins from '../mixins'
+    import EnumInput from '@/components/atomFormField/EnumInput'
 
     export default {
+        components: {
+            EnumInput,
+        },
+
         mixins: [mixins],
 
         props: {
@@ -80,10 +110,84 @@
             options: {
                 type: Array
             },
+            list: {
+                type: Array,
+                default: () => ([])
+            },
             placeholder: {
                 type: String,
                 default: ''
             }
+        },
+
+        data () {
+            return {
+                isVarInputMode: false,
+                displayValue: '',
+                selectValue: this.value,
+                enumValue: ''
+            }
+        },
+
+        computed: {
+            showTypeSwitcher () {
+                return ['select', 'enum-input'].includes(this.type)
+            }
+        },
+
+        watch: {
+            value: {
+                handler (newValue) {
+                    const isVar = newValue?.isBkVar()
+                    const inList = this.list?.some(i => i.value === newValue)
+
+                    if (this.type === 'enum-input') {
+                        if (newValue ==='' ||  (isVar && !inList)) {
+                            this.isVarInputMode = true
+                            this.displayValue = newValue
+                        } else {
+                            const defaultVal = this.list[0]?.value
+                            this.enumValue = newValue || defaultVal || ''
+                        }
+                    } else {
+                        if (isVar && !inList) {
+                            this.isVarInputMode = true
+                            this.displayValue = newValue
+                        } else {
+                            this.selectValue = this.value
+                        }
+                    }
+                },
+                immediate:true
+            }
+        },
+
+        methods: {
+            handleEnumChange (name, value){
+                this.enumValue = value
+                this.$emit('update-value', value)
+            },
+
+            handleChangeType () {
+                this.isVarInputMode = !this.isVarInputMode
+                if (this.type === 'enum-input' && !this.isVarInputMode) {
+                    const defaultVal = this.list[0]?.value
+                    this.$emit('update-value', defaultVal)
+                } else {
+                    this.displayValue = ''
+                    this.selectValue = this.isMultiple ? [] : ''
+                    this.$emit('update-value', '')
+                }
+            },
+            
+            handleVarBlur (newValue) {
+                if (newValue !== '' && newValue.isBkVar()) {
+                    this.displayValue = newValue
+                } else {
+                    this.displayValue = ''
+                }
+                this.$emit('update-value', this.displayValue)
+            },
         }
     }
 </script>
@@ -113,6 +217,19 @@
             > i {
                 margin-left: 8px;
                 flex-shrink: 0;
+            }
+            .change-type {
+                display: flex;
+                align-items: center;
+                color: #3a84ff;
+                cursor: pointer;
+                .icon-sort::before {
+                    display: inline-block;
+                    transform: rotate(90deg);
+                }
+                .icon-sort {
+                    margin: 0 5px;
+                }
             }
         }
         .input-main {

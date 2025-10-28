@@ -12,6 +12,17 @@
             >
                 <label>
                     {{ label }}
+                    <span
+                        v-if="showTypeSwitcher"
+                        class="change-type"
+                        @click="handleChangeType"
+                    >
+                        <bk-icon
+                            type="sort"
+                            class="icon-sort"
+                        />
+                        {{ !isVarInputMode ? $t('fillVariable') : $t('selectPredefinedOption') }}
+                    </span>
                 </label>
                 <i
                     v-if="desc"
@@ -23,48 +34,61 @@
                 class="input-main"
                 :clearable="!disabled"
                 :value="value"
+                :placeholder="placeholder || $t('settings.itemPlaceholder')"
                 @change="(newValue) => $emit('update-value', newValue)"
                 v-if="type === 'input'"
                 :disabled="disabled"
             ></bk-input>
-            <section
-                v-else
-                class="parameter-select input-main"
-                v-bk-clickoutside="toggleShowList"
+            <enum-input
+                v-else-if="type === 'enum-input' && !isVarInputMode"
+                class="input-main"
+                name="value"
+                :list="list"
+                :disabled="disabled"
+                :value="enumValue"
+                :handle-change="handleEnumChange"
+            />
+            <bk-select
+                v-else-if="type === 'select' && !isVarInputMode"
+                class="input-main"
+                :disabled="disabled"
+                v-model="selectValue"
+                :multiple="isMultiple"
+                :placeholder="placeholder || $t('selectTips')"
+                @clear="handleSelectClear"
+                @change="handleSelectChange"
+                searchable
             >
-                <bk-input
-                    ref="inputItem"
-                    :clearable="!disabled"
-                    :value="displayValue"
-                    :disabled="disabled"
-                    @clear="$emit('update-value', '')"
-                    @blur="handleBlur"
-                    @change="handleInput"
-                    @focus="toggleShowList(true)"
+                <bk-option
+                    v-for="option in paramList"
+                    :key="option.id"
+                    :id="option.id"
+                    :name="option.name"
                 >
-                </bk-input>
-                <ul
-                    v-if="showList && paramList.length"
-                    class="parameter-list"
-                >
-                    <li
-                        v-for="(option, index) in paramList"
-                        :key="index"
-                        @click="chooseOption(option)"
-                        :class="{ 'is-active': isActive(option.id) }"
-                    >
-                        {{ option.name }}
-                    </li>
-                </ul>
-            </section>
+                </bk-option>
+            </bk-select>
+            <bk-input
+                v-else-if="isVarInputMode"
+                class="input-main"
+                :clearable="!disabled"
+                v-model="displayValue"
+                @blur="handleVarBlur"
+                :disabled="disabled"
+                :placeholder="$t('placeholderVar')"
+            ></bk-input>
         </section>
     </section>
 </template>
 
 <script>
     import mixins from '../mixins'
+    import EnumInput from '@/components/atomFormField/EnumInput'
 
     export default {
+        components: {
+            EnumInput,
+        },
+
         mixins: [mixins],
 
         props: {
@@ -125,13 +149,48 @@
                 paramList: [],
                 loading: false,
                 queryKey: [],
+                isVarInputMode: false,
+                enumValue: '',
+                selectValue: null,
                 displayValue: ''
             }
         },
 
+        computed: {
+            showTypeSwitcher () {
+                return ['select', 'enum-input'].includes(this.type)
+            }
+        },
+
         watch: {
-            value (newValue) {
-                this.calcDisplayVal()
+            value: {
+                handler (newValue) {
+                    const isVar = newValue?.isBkVar()
+                    const inList = this.list?.some(i => i.value === newValue)
+
+                    if (this.type === 'enum-input') {
+                        if (newValue ==='' ||  (isVar && !inList)) {
+                            this.isVarInputMode = true
+                            this.displayValue = newValue
+                        } else {
+                            const defaultVal = this.list[0]?.value
+                            this.enumValue = newValue || defaultVal || ''
+                        }
+                    } else {
+                        if (isVar && !inList) {
+                            this.isVarInputMode = true
+                            this.displayValue = newValue
+                        } else {
+                            if (this.isMultiple) {
+                                const valArr = this.value ? this.value.split(',') : []
+                                this.selectValue = valArr
+                            } else {
+                                this.selectValue = this.value
+                            }
+                        }
+                    }
+                },
+                immediate:true
             },
 
             paramValues: {
@@ -151,81 +210,45 @@
         },
 
         methods: {
-            calcDisplayVal () {
-                const findItemName = (id) => {
-                    let tempName
-                    const item = this.paramList.find(x => x.id === id)
-                    if (item) {
-                        tempName = item.name
-                    } else if (typeof id === 'string' && id.isBkVar()) {
-                        tempName = id
-                    }
-                    return tempName
-                }
+            handleSelectClear () {
+                this.selectValue = this.isMultiple ? [] : ''
+                this.$emit('update-value', '')
+            },
 
-                const res = []
-                if (this.isMultiple) {
-                    const valArr = String(this.value || '').split(',')
-                    valArr.forEach((val) => {
-                        const name = findItemName(val)
-                        if (name !== undefined) res.push(name)
-                    })
+            handleSelectChange (value) {
+                const params = this.isMultiple ? value.join(',') : value
+                this.$emit('update-value', params)
+            },
+
+            handleChangeType () {
+                this.isVarInputMode = !this.isVarInputMode
+                if (this.type === 'enum-input' && !this.isVarInputMode) {
+                    const defaultVal = this.list[0]?.value
+                    this.$emit('update-value', defaultVal)
                 } else {
-                    res.push(findItemName(this.value))
+                    this.displayValue = ''
+                    this.selectValue = this.isMultiple ? [] : ''
+                    this.$emit('update-value', '')
                 }
-                this.displayValue = res.join(',')
             },
 
-            chooseOption (option) {
-                if (!this.isMultiple) {
-                    this.$emit('update-value', option.id)
-                    this.$refs.inputItem.$refs.input.blur()
-                    this.toggleShowList()
+            handleVarBlur (newValue) {
+                if (newValue !== '' && newValue.isBkVar()) {
+                    this.displayValue = newValue
                 } else {
-                    const valArr = String(this.value || '').split(',').filter(x => x !== '')
-                    const index = valArr.findIndex(x => x === option.id)
-                    if (index > -1) valArr.splice(index, 1)
-                    else valArr.push(option.id)
-                    this.$emit('update-value', valArr.join(','))
+                    this.displayValue = ''
                 }
+                this.$emit('update-value', this.displayValue)
             },
 
-            toggleShowList (value = false) {
-                value = value === true ? value : false
-                this.showList = value
-            },
-
-            handleInput (value) {
-                this.displayValue = value
-            },
-
-            findItemId (name) {
-                if (name.isBkVar()) return name
-                return this.paramList.find(x => x.name === name)?.id ?? ''
-            },
-
-            handleBlur (value) {
-                if (this.isMultiple) {
-                    const res = [];
-                    (String(value || '').split(',') || []).forEach((val) => {
-                        const tempId = this.findItemId(val)
-                        if (tempId !== '') res.push(tempId)
-                    })
-                    this.$emit('update-value', res.join(','))
-                } else {
-                    this.$emit('update-value', this.findItemId(value))
-                }
-            },
-
-            isActive (id) {
-                const valArr = String(this.value || '').split(',')
-                return valArr.includes(id)
+            handleEnumChange (name, value){
+                this.enumValue = value
+                this.$emit('update-value', value)
             },
 
             initList () {
                 if (this.listType === 'list') {
                     this.paramList = (JSON.parse(JSON.stringify(this.list)) || []).map((item) => ({ id: item[this.paramId], name: item[this.paramName] }))
-                    this.calcDisplayVal()
                     return
                 }
 
@@ -239,7 +262,6 @@
                         const list = this.getResponseData(res, this.dataPath)
                         const data = (list || []).map((item) => ({ id: item[this.paramId], name: item[this.paramName] }))
                         this.paramList.splice(0, this.paramList.length, ...data)
-                        this.calcDisplayVal()
                     }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
                 }
             }
@@ -277,47 +299,17 @@
         .input-main {
             flex: 1;
         }
-    }
-    .parameter-select {
-        position: relative;
-        .parameter-list {
-            position: absolute;
-            top: 32px;
-            left: 0;
-            right: 0;
-            padding: 6px 0;
-            list-style: none;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            line-height: 32px;
-            background: #fff;
-            color: #63656e;
-            overflow: auto;
-            max-height: 216px;
-            min-width: 120px;
-            z-index: 2;
-            li {
-                padding: 0 16px;
-                position: relative;
-                &:hover {
-                    color: #3a84ff;
-                    background-color: #eaf3ff;
-                }
+        .change-type {
+            display: inline-flex;
+            align-items: center;
+            color: #3a84ff;
+            cursor: pointer;
+            .icon-sort::before {
+                display: inline-block;
+                transform: rotate(90deg);
             }
-            .is-active {
-                color: #3a84ff;
-                background-color: #f4f6fa;
-                &:after {
-                    content: '';
-                    position: absolute;
-                    right: 16px;
-                    top: 11px;
-                    height: 7px;
-                    width: 3px;
-                    transform: rotate(45deg);
-                    border-bottom: 1px solid #3a84ff;
-                    border-right: 1px solid #3a84ff;
-                }
+            .icon-sort {
+                margin: 0 5px;
             }
         }
     }
