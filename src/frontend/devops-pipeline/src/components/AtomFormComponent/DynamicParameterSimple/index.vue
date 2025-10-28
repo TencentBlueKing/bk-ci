@@ -17,15 +17,17 @@
                 @update-value="(newValue) => updateValue(model, newValue)"
                 :param-values="paramValues"
             ></parameter-com>
-            <i
-                class="bk-icon icon-plus-circle"
-                @click="plusParam(parameter, paramIndex)"
-            ></i>
-            <i
-                class="bk-icon icon-minus-circle"
-                v-if="curParameters.length > 1"
-                @click="minusParam(paramIndex)"
-            ></i>
+            <div :class="parameter.rowAttributes[paramIndex]?.label ? 'label-icon' : ''">
+                <i
+                    class="bk-icon icon-plus-circle"
+                    @click="plusParam(parameter, paramIndex)"
+                ></i>
+                <i
+                    class="bk-icon icon-minus-circle"
+                    v-if="curParameters.length > 1"
+                    @click="minusParam(paramIndex)"
+                ></i>
+            </div>
         </li>
     </ul>
 </template>
@@ -148,7 +150,8 @@
         }
         .param-com {
             margin-bottom: 10px;
-            display: grid;
+            margin-right: 10px;
+            display: flex;
             align-items: center;
             grid-gap: 10px;
             grid-auto-flow: column;
@@ -161,6 +164,9 @@
         .input-label {
             flex: 1;
         }
+    }
+    .label-icon {
+        margin-top: 30px;
     }
     .bk-icon {
         margin-left: 5px;
