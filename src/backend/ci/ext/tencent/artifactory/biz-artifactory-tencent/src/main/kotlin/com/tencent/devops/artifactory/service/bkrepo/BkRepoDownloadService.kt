@@ -1000,31 +1000,34 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ip: String
+        ip: String,
+        checkDownload: Boolean
     ): AllowDownload {
-        val properties = bkRepoService.getProperties(userId, projectId, artifactoryType, path)
-        val propertyMap = mutableMapOf<String, String>()
-        properties.forEach {
-            propertyMap[it.key] = it.value
-        }
-        val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]
-        try {
-            pipelineService.validatePermission(
-                userId,
-                projectId,
-                pipelineId,
-                AuthPermission.DOWNLOAD,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    params = arrayOf(userId, projectId, pipelineId ?: "")
+        if (checkDownload) {
+            val properties = bkRepoService.getProperties(userId, projectId, artifactoryType, path)
+            val propertyMap = mutableMapOf<String, String>()
+            properties.forEach {
+                propertyMap[it.key] = it.value
+            }
+            val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]
+            try {
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId,
+                    AuthPermission.DOWNLOAD,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId, pipelineId ?: "")
+                    )
                 )
-            )
-        } catch (e: Exception) {
-            logger.warn("user $userId download project $projectId pipeline $pipelineId failed, error: $e")
-            return AllowDownload(
-                false,
-                "用户没有下载该构件的权限,请联系项目管理员处理"
-            )
+            } catch (e: Exception) {
+                logger.warn("user $userId download project $projectId pipeline $pipelineId failed, error: $e")
+                return AllowDownload(
+                    false,
+                    "用户没有下载该构件的权限,请联系项目管理员处理"
+                )
+            }
         }
 
         val (allow, _) = bkRepoClient.allowDownload(

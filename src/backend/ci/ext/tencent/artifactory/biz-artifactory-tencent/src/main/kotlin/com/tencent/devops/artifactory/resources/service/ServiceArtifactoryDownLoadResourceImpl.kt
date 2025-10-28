@@ -155,7 +155,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         realIP: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String
+        path: String,
+        checkDownload: Boolean
     ): Result<AllowDownload> {
         return Result(
             bkRepoDownloadService.allowDownload(
@@ -163,7 +164,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                 projectId = projectId,
                 artifactoryType = artifactoryType,
                 path = path,
-                ip = realIP
+                ip = realIP,
+                checkDownload = checkDownload
             )
         )
     }
