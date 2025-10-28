@@ -24,5 +24,7 @@ data class UserAndDeptInfoVo(
     @get:Schema(title = "水印信息")
     val waterMark: String? = null,
     @get:Schema(title = "是否是项目成员")
-    val belongProjectMember: Boolean? = null
+    val belongProjectMember: Boolean? = null,
+    @get:Schema(title = "是否离职")
+    val departed: Boolean? = null
 )

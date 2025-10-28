@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -24,27 +24,30 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v4
 
-package com.tencent.devops.process.engine.pojo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import com.tencent.devops.openapi.api.apigw.v4.ApigwNotifyResourceV4
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import java.time.LocalDateTime
+@RestResource
+class ApigwNotifyResourceV4Impl @Autowired constructor(
+    private val client: Client
+) : ApigwNotifyResourceV4 {
 
-data class PipelineBuildStage(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val stageId: String,
-    val seq: Int,
-    var status: BuildStatus,
-    var startTime: LocalDateTime? = null,
-    var endTime: LocalDateTime? = null,
-    val cost: Int = 0,
-    var executeCount: Int = 1,
-    val controlOption: PipelineBuildStageControlOption?,
-    var checkIn: StagePauseCheck? = null,
-    var checkOut: StagePauseCheck? = null,
-    val stageIdForUser: String? = null,
-    var name: String? = ""
-)
+    override fun sendWeworkRobotNotify(weworkRobotNotifyMessage: WeworkRobotNotifyMessage): Result<Boolean> {
+        logger.info("OPENAPI_NOTIFY_V4|send wework robot notify|$weworkRobotNotifyMessage")
+        return client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(
+            weworkRobotNotifyMessage = weworkRobotNotifyMessage
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwNotifyResourceV4Impl::class.java)
+    }
+}

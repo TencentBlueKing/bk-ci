@@ -81,16 +81,14 @@ class PipelineYamlFileService @Autowired constructor(
         projectId: String,
         repoHashId: String,
         branch: String,
-        filePath: String,
-        includeDeleted: Boolean = false
+        filePath: String
     ): TPipelineYamlBranchFileRecord? {
         return pipelineYamlBranchFileDao.get(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             branch = branch,
-            filePath = filePath,
-            includeDeleted = includeDeleted
+            filePath = filePath
         )
     }
 

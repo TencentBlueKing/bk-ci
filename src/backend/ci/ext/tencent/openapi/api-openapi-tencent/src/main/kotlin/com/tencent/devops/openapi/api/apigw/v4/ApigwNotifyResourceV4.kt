@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -24,27 +24,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v4
 
-package com.tencent.devops.process.engine.pojo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import java.time.LocalDateTime
+@Tag(name = "OPENAPI_NOTIFY_V4", description = "OPENAPI-通知资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/notify")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface ApigwNotifyResourceV4 {
 
-data class PipelineBuildStage(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val stageId: String,
-    val seq: Int,
-    var status: BuildStatus,
-    var startTime: LocalDateTime? = null,
-    var endTime: LocalDateTime? = null,
-    val cost: Int = 0,
-    var executeCount: Int = 1,
-    val controlOption: PipelineBuildStageControlOption?,
-    var checkIn: StagePauseCheck? = null,
-    var checkOut: StagePauseCheck? = null,
-    val stageIdForUser: String? = null,
-    var name: String? = ""
-)
+    @Operation(
+        summary = "发送企微机器人信息",
+        tags = ["v4_app_wework_robot_notify"]
+    )
+    @POST
+    @Path("/wework_robot")
+    fun sendWeworkRobotNotify(
+        @Parameter(description = "企微机器人信息内容", required = true)
+        weworkRobotNotifyMessage: WeworkRobotNotifyMessage
+    ): Result<Boolean>
+}
