@@ -283,8 +283,8 @@ class RemotedevBkRepoClient @Autowired constructor(
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        val response = doRequest(config, request).resolveResponse<Response<TemporaryTokenCreateResponse>>()
-        return response?.data?.token ?: throw RemoteServiceException("create temporary token failed")
+        val response = doRequest(config, request).resolveResponse<Response<List<TemporaryTokenCreateResponse>>>()
+        return response?.data?.firstOrNull()?.token ?: throw RemoteServiceException("create temporary token failed")
     }
 
     private fun getCommonHeaders(region: BkRepoRegion, userId: String): MutableMap<String, String> {
