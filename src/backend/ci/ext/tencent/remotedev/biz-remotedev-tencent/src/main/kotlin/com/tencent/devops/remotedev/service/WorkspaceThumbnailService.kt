@@ -76,6 +76,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                 workspaceNames = missedWorkspaceNames.toSet(),
                 checkField = listOf(
                     TWorkspace.T_WORKSPACE.NAME,
+                    TWorkspace.T_WORKSPACE.PROJECT_ID,
                     TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
                 )
             ).associateBy { it.workspaceName }
@@ -155,6 +156,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                 workspaceNames = workspaceNames.toSet(),
                 checkField = listOf(
                     TWorkspace.T_WORKSPACE.NAME,
+                    TWorkspace.T_WORKSPACE.PROJECT_ID,
                     TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
                 )
             ).associateBy { it.workspaceName }
