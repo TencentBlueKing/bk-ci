@@ -539,7 +539,7 @@ class PipelineTriggerEventService @Autowired constructor(
             if (id2NameMap != null) {
                 val username = id2NameMap[triggerUser] ?: triggerUser
                 if (eventDesc.contains(triggerUser)) {
-                    eventDesc.replace(triggerUser, username)
+                    eventDesc = eventDesc.replace(triggerUser, username)
                 }
                 triggerUser = username
             }
