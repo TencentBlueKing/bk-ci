@@ -842,10 +842,18 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf(TASK_JSON_NAME, "${ignored.message}")
             )
         }
-        if ((null == taskJsonStr) || !JsonSchemaUtil.validateJson(taskJsonStr)) {
+        if (null == taskJsonStr) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL,
                 params = arrayOf(branch ?: MASTER, TASK_JSON_NAME)
+            )
+        }
+
+        if (!JsonSchemaUtil.validateJson(taskJsonStr)) {
+            val errorMessage = JsonSchemaUtil.getJsonValidationError(taskJsonStr)
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                params = arrayOf(TASK_JSON_NAME, errorMessage)
             )
         }
         return marketAtomCommonService.parseBaseTaskJson(

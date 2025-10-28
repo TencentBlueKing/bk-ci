@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.main.JsonSchemaFactory
@@ -69,6 +70,23 @@ object JsonSchemaUtil {
             true
         } catch (ignore: Throwable) {
             false
+        }
+    }
+
+    fun getJsonValidationError(json: String): String {
+        return try {
+            jsonNodeFromString(json)
+            ""
+        } catch (e: JsonProcessingException) {
+            val line = e.location?.lineNr
+            val column = e.location?.columnNr
+            if (line != null && column != null) {
+                "JSON format error at line $line, column $column: ${e.message ?: "Invalid syntax"}"
+            } else {
+                "Invalid JSON format. Maybe missing parentheses, commas, quotation marks, or containing illegal characters."
+            }
+        } catch (e: Throwable) {
+            "Invalid JSON format. Maybe missing parentheses, commas, quotation marks, or containing illegal characters."
         }
     }
 }
