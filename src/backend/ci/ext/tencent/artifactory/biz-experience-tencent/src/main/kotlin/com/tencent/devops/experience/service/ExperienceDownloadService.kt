@@ -613,7 +613,14 @@ class ExperienceDownloadService @Autowired constructor(
             }
         }
         return client.get(ServiceArtifactoryDownLoadResource::class)
-            .allowDownload(userId, realIP, finalProjectId!!, finalArtifactoryType!!, finalPath!!).data!!
+            .allowDownload(
+                userId = userId,
+                realIP = realIP,
+                projectId = finalProjectId!!,
+                artifactoryType = finalArtifactoryType!!,
+                path = finalPath!!,
+                checkDownload = (experienceHashId == null) // 非体验检查才需要检查下载
+            ).data!!
     }
 
     companion object {
