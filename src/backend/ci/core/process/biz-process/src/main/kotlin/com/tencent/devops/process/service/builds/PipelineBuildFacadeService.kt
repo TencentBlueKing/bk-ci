@@ -2409,8 +2409,9 @@ class PipelineBuildFacadeService(
                 val intervalTime = System.currentTimeMillis() - cancelActionTime
                 var flag = false // 是否强制终止
                 if (intervalTime <= cancelIntervalLimitTime * 1000) {
-                    val alreadyCancelUser =
-                        buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
+                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(
+                        projectId = projectId, buildId = buildId, executeCount = buildInfo.executeCount
+                    )
                     logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                     val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                     throw ErrorCodeException(
