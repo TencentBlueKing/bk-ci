@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.WorkspaceThumbnailService
 import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
@@ -69,7 +70,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val txcService: TxcService,
     private val redisCache: ConfigCacheService,
     private val clientUpgradeService: ClientUpgradeService,
-    private val clientTipsService: ClientTipsService
+    private val clientTipsService: ClientTipsService,
+    private val workspaceThumbnailService: WorkspaceThumbnailService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -204,5 +206,17 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
         return Result(workspaceService.getSignatureStatus(userId, projectId))
+    }
+
+    override fun batchGetThumbnails(userId: String, workspaceNames: List<String>): Result<Map<String, String>> {
+        logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames")
+        
+        // 同步获取截图地址
+        val thumbnails = workspaceThumbnailService.batchGetThumbnails(userId, workspaceNames)
+        
+        // 异步处理截图上传
+        workspaceThumbnailService.processScreenshotUpload(workspaceNames)
+        
+        return Result(thumbnails)
     }
 }

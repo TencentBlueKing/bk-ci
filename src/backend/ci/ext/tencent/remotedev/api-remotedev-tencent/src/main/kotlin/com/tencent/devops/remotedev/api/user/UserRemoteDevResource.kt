@@ -267,4 +267,15 @@ interface UserRemoteDevResource {
         @PathParam("projectId")
         projectId: String
     ): Result<UserSignatureStatusResponse>
+
+    @POST
+    @Path("/thumbnails/batch")
+    @Operation(summary = "批量获取云桌面工作空间的截图缩略图地址")
+    fun batchGetThumbnails(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称列表", required = true)
+        workspaceNames: List<String>
+    ): Result<Map<String, String>>
 }
