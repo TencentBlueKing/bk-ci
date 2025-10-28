@@ -234,7 +234,7 @@ class RemotedevBkRepoClient @Autowired constructor(
             permName = "$repoName-permission",
             projectId = projectId,
             repos = listOf(repoName),
-            includePattern = listOf("**"),
+            includePattern = listOf("/"),
             users = listOf(userId),
             actions = listOf("MANAGE"),
             createBy = userId,
