@@ -34,7 +34,7 @@
                 class="input-main"
                 :clearable="!disabled"
                 :value="value"
-                :placeholder="placeholder || $t('settings.itemPlaceholder')"
+                :placeholder="$t('settings.itemPlaceholder')"
                 @change="(newValue) => $emit('update-value', newValue)"
                 v-if="type === 'input'"
                 :disabled="disabled"
@@ -54,7 +54,7 @@
                 :disabled="disabled"
                 v-model="selectValue"
                 :multiple="isMultiple"
-                :placeholder="placeholder || $t('selectTips')"
+                :placeholder="$t('selectTips')"
                 @clear="handleSelectClear"
                 @change="handleSelectChange"
                 searchable
