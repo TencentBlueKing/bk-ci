@@ -16,6 +16,7 @@
     "dependencies": {
         "@blueking/log": "2.2.3",
         "@blueking/search-select": "0.0.1-beta.2",
+        "@blueking/crontab": "0.0.2-beta.3",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "0.30.0",
         "bk-magic-vue": "2.5.10-beta.12",
