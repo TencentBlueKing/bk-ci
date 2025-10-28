@@ -1307,6 +1307,9 @@ class PipelineRuntimeService @Autowired constructor(
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
             containerVar[Container::startVMTaskSeq.name] = detail.startVMTaskSeq ?: 1
+            detail.jobId?.let { jobId ->
+                containerVar[Container::jobId.name] = jobId
+            }
             build.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
             }
