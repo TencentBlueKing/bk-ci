@@ -225,6 +225,7 @@ abstract class Element(
     }
 
     open fun initTaskVar(): MutableMap<String, Any> = mutableMapOf<String, Any>().apply {
+        put(::name.name, name)
         retryCount?.let { put(::retryCount.name, it) }
         retryCountManual?.let { put(::retryCountManual.name, it) }
         retryCountAuto?.let { put(::retryCountAuto.name, it) }
