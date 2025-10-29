@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import org.junit.jupiter.api.Assertions.assertThrows
 
 class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
 
@@ -170,8 +171,20 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
                 }
             }
 
-            // The 4th call (minimumNumberOfCalls met) should trigger the state transition to OPEN
-            // and immediately fall back to internal
+            // The 4th call meets minimumNumberOfCalls and will transition the state to OPEN, but since
+            // generic exceptions are rethrown, we need to catch it here. The circuit transitions to OPEN after this call.
+            try {
+                decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
+            } catch (_: Exception) {
+                // Ignore expected exception from external call; circuit should be OPEN afterwards
+            }
+
+            assertEquals(
+                io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN,
+                circuitBreakerRegistry.circuitBreaker("AUTH_CIRCUIT_BREAKER").state
+            )
+
+            // Now that the circuit is OPEN, the next call should immediately fall back to internal
             val res = decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
             assertTrue(res, "Should use fallback and return true") // Fallback returns true
 
@@ -356,6 +369,36 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
             assertEquals(
                 io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN,
+                circuitBreakerRegistry.circuitBreaker("AUTH_CIRCUIT_BREAKER").state
+            )
+        }
+
+        @Test
+        fun `generic exception is rethrown and does not fallback when circuit is CLOSED`() {
+            every { routingStrategy.getModeForProject("p") } returns RoutingMode.CIRCUIT_BREAKER
+            // External call throws a generic exception immediately
+            every {
+                rbacPermissionService.validateUserProjectPermission(any(), any(), any())
+            } throws RuntimeException("boom")
+            // Prepare fallback stub; it should NOT be invoked for generic exception in CLOSED state
+            every {
+                bkInternalPermissionService.validateUserResourcePermission(any(), any(), any(), any(), any(), any())
+            } returns true
+
+            val ex = assertThrows(RuntimeException::class.java) {
+                decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
+            }
+            assertEquals("boom", ex.message)
+
+            // Verify fallback is not called
+            verify(exactly = 0) {
+                bkInternalPermissionService.validateUserResourcePermission(
+                    any(), any(), any(), any(), any(), any()
+                )
+            }
+            // Circuit should remain CLOSED because minimumNumberOfCalls(4) not reached
+            assertEquals(
+                CircuitBreaker.State.CLOSED,
                 circuitBreakerRegistry.circuitBreaker("AUTH_CIRCUIT_BREAKER").state
             )
         }
