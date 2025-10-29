@@ -32,6 +32,11 @@
                     >
                         {{ $t('saveDraft') }}
                     </bk-button>
+                    <PipelineEditMoreAction
+                        is-template
+                        :project-id="projectId"
+                        :unique-id="templateId"
+                    />
                     <ReleaseButton
                         :can-release="canRelease && !isEditing"
                         :project-id="projectId"
@@ -49,6 +54,7 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
+    import PipelineEditMoreAction from '@/components/PipelineEditMoreAction'
     import ReleaseButton from '@/components/PipelineHeader/ReleaseButton.vue'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import {
@@ -66,7 +72,8 @@
             TemplateBreadCrumb,
             ReleaseButton,
             ModeSwitch,
-            Edit
+            Edit,
+            PipelineEditMoreAction
         },
         data () {
             return {
@@ -175,7 +182,6 @@
                 }
             },
             async saveTemplateDraft () {
-                const valid = await this.$validator.validate()
                 const pipeline = Object.assign({}, this.pipeline, {
                     name: this.pipelineSetting.pipelineName,
                     stages: [
@@ -183,10 +189,12 @@
                         ...this.pipelineWithoutTrigger.stages
                     ]
                 })
-                if (!valid) {
+                const { inValid, message } = this.checkPipelineInvalid(pipeline.stages, this.pipelineSetting)
+             
+                if (inValid) {
                     this.$showTips({
                         theme: 'error',
-                        message: this.$t('template.versionErrTips')
+                        message
                     })
                     return
                 }
@@ -345,6 +353,7 @@
         .template-edit-wrapper {
             overflow: hidden;
             height: calc(100% - 48px);
+            background-color: #F5F7FA;
         }
     }
 

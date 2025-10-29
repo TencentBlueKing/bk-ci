@@ -46,7 +46,7 @@
 
         <div
             class="container-bottom"
-            :style="{ marginTop: `${offsetData}px` }"
+            :style="{ marginTop: `${offsetData}px`, height: `calc(100% - ${(isAlertTips && editable) ? '89' : '54'}px)` }"
             v-if="!showSlider"
         >
             <param-group
@@ -205,21 +205,21 @@
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
-                        listNum: this.requiredParamList.length,
+                        itemNum: this.requiredParamList.length,
                         listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
-                        listNum: this.constantParamList.length,
+                        itemNum: this.constantParamList.length,
                         listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
-                        listNum: this.otherParamList.length,
+                        itemNum: this.otherParamList.length,
                         listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
@@ -302,11 +302,12 @@
                 // 单选、复选类型， 需要先校验options
                 const optionValid = await this.validParamOptions()
                 this.$validator.validate('pipelineParam.*').then((result) => {
+                    const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
                         if (this.editIndex > -1) {
-                            this.globalParams[this.editIndex] = this.sliderEditItem
+                            this.globalParams[this.editIndex] = param
                         } else {
-                            this.globalParams.push(this.sliderEditItem)
+                            this.globalParams.push(param)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
@@ -372,7 +373,6 @@
         .container-bottom {
             width: 100%;
             position: absolute;
-            height: calc(100% - 89px);
             overflow-y: auto;
         }
         

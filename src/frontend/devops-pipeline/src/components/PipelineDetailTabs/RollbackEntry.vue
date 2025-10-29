@@ -11,9 +11,9 @@
                 disablePermissionApi: typeof hasPermission === 'boolean',
                 permissionData: {
                     projectId: projectId,
-                    resourceType: 'pipeline',
+                    resourceType,
                     resourceCode: rollbackId,
-                    action: RESOURCE_ACTION.EDIT
+                    action: resourceAction
                 }
             }"
             @click.stop="handleClick"
@@ -64,7 +64,9 @@
 
 <script>
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import dayjs from 'dayjs'
@@ -132,6 +134,14 @@
                 hasDraftPipeline: 'atom/hasDraftPipeline',
                 isTemplate: 'atom/isTemplate'
             }),
+            resourceType () {
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
+            },
+            resourceAction () {
+                return this.isTemplate
+                    ? TEMPLATE_RESOURCE_ACTION.EDIT
+                    : RESOURCE_ACTION.EDIT
+            },
             isRollback () {
                 const { baseVersion, releaseVersion } = (this.pipelineInfo ?? {})
                 const isReleaseVersion = this.version === releaseVersion
@@ -180,11 +190,12 @@
                             subTitle: this.$t('templateRollbackBackTips'),
                             confirmFn: () => {
                                 this.$router.push({
-                                    name: 'createInstance',
+                                    name: 'instanceEntry',
                                     params: {
+                                        type: 'upgrade',
                                         projectId: this.projectId,
                                         templateId: this.pipelineInfo?.templateId,
-                                        curVersionId: this.pipelineInfo?.templateVersion
+                                        version: this.pipelineInfo?.templateVersion
                                     },
                                     hash: `#${this.rollbackId}`
                                 })
@@ -233,8 +244,9 @@
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.projectId,
+                        resourceType: this.resourceType,
                         resourceCode: this.rollbackId,
-                        action: this.$permissionResourceAction.EDIT
+                        action: this.resourceAction
                     })
                 } finally {
                     this.loading = false

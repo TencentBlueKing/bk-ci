@@ -4,7 +4,8 @@
             <bk-button
                 v-if="isInstanceCreateType"
                 icon="plus"
-                @click="handleAddInstance"
+                :disabled="!currentVersion || editingIndex > -1"
+                @click="handleShowInstanceCreate"
             >
                 {{ $t('new') }}
             </bk-button>
@@ -29,7 +30,7 @@
                     style="fill:#3c96ff;position:relative;top:2px;"
                 />
                 <span>
-                    {{ $t('template.batchEdit') }}
+                    {{ $t('template.batchEditParams') }}
                 </span>
             </div>
         </div>
@@ -47,13 +48,29 @@
                 @click="handleInstanceClick(instanceIndex)"
             >
                 <template v-if="instanceIndex === editingIndex">
-                    <bk-input
-                        ref="nameInputRef"
-                        v-model="instanceName"
-                        @blur="(value) => handleEnterChangeName(value, instanceIndex)"
-                        @enter="(value) => handleEnterChangeName(value, instanceIndex)"
-                    >
-                    </bk-input>
+                    <div class="edit-input-main">
+                        <bk-input
+                            ref="nameInputRef"
+                            name="pipelineName"
+                            :class="{
+                                'instance-empty-input is-danger': isErrorName || errors.has('pipelineName')
+                            }"
+                            v-validate="{
+                                required: true,
+                                max: 128
+                            }"
+                            :value="instanceName"
+                            @change="checkPipelineName"
+                            @blur="(value) => handleEnterChangeName(value, instanceIndex)"
+                            @enter="(value) => handleEnterChangeName(value, instanceIndex)"
+                        >
+                        </bk-input>
+                        <i
+                            v-if="isErrorName || errors.has('pipelineName')"
+                            class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                            v-bk-tooltips="errors.has('pipelineName') ? errors.first('pipelineName') : $t('template.nameExists')"
+                        />
+                    </div>
                 </template>
                 <template v-else>
                     <div
@@ -77,7 +94,7 @@
                                 :content="$t('template.deleteInstanceContentTips')"
                                 width="288"
                                 trigger="click"
-                                @confirm="handelDeleteInstance(instanceIndex)"
+                                @confirm="handleDeleteInstance(instanceIndex)"
                             >
                                 <bk-icon
                                     type="delete"
@@ -96,63 +113,93 @@
                 </template>
             </li>
         </ul>
+        <instance-pipeline-name
+            :show-instance-create.sync="showInstanceCreate"
+            :pipeline-list="renderInstanceList"
+            @confirm="handleConfirmCreateInstance"
+        />
     </div>
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, onMounted, onBeforeUnmount } from 'vue'
+    import { ref, defineProps, computed, watch, onMounted, onBeforeUnmount } from 'vue'
     import {
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
-        UPDATE_USE_TEMPLATE_SETTING
+        UPDATE_USE_TEMPLATE_SETTING,
+        INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
+    import InstancePipelineName from '@/components/Template/instance-pipeline-name'
     const props = defineProps({
-        isInstanceCreateType: Boolean
+        isEditing: Boolean
     })
     const { proxy } = UseInstance()
     const instanceActiveIndex = ref(0)
-    const editingIndex = ref(null)
+    const editingIndex = ref(-1)
     const nameInputRef = ref(null)
     const newIndex = ref(1)
+    const isErrorName = ref(false)
+    const showInstanceCreate = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
-    const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
-    const currentVersionId = computed(() => proxy?.$route.params?.version)
+    const currentVersion = computed(() => proxy?.$route.params?.version)
+    const pipelineName = computed(() => proxy?.$route.query?.pipelineName)
+    const useTemplateSettings = computed(() => proxy?.$route.query?.useTemplateSettings)
+    const instanceViewType = computed(() => proxy.$route.params?.type)
+    const isInstanceCreateType = computed(() => instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE)
     const renderInstanceList = computed(() => {
         return instanceList.value
     })
-    const instanceName = computed(() => {
-        return renderInstanceList.value[editingIndex.value].pipelineName
-    })
-    const templateTriggerConfigs = computed(() => {
-        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
-            atomCode: i.atomCode,
-            stepId: i.stepId ?? '',
-            disabled: i.additionalOptions?.enable ?? true,
-            cron: i.advanceExpression,
-            variables: i.startParams,
-            name: i.name,
-            version: i.version,
-            isFollowTemplate: false
-        }))
-    })
+    const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const instanceName = computed(() => {
+        return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
+    })
+    watch(() => curTemplateDetail.value, (val) => {
+        if (pipelineName.value) {
+            handleAddInstance()
+            proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, useTemplateSettings.value)
+        }
+    })
+    async function checkPipelineName (newVal) {
+        const curInstanceName = instanceList.value[editingIndex.value]?.pipelineName
+        if (!newVal || curInstanceName === newVal) {
+            isErrorName.value = false
+            return
+        }
+        if (renderInstanceList.value.find(i => i.pipelineName === newVal)) {
+            isErrorName.value = true
+            return
+        }
+        try {
+            isErrorName.value = await proxy.$store.dispatch('pipelines/checkPipelineName', {
+                projectId: projectId.value,
+                pipelineName: newVal.trim()
+            })
+        } catch(e) {
+            console.error(e)
+            isErrorName.value = false
+        }
+    }
     function handleInstanceClick (index) {
-        if (editingIndex.value) return
+        if (editingIndex.value !== -1) return
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
+                ...proxy.$route.query,
                 index: instanceActiveIndex.value + 1
             }
         })
     }
     function handleEnterChangeName (value, index) {
+        if (!value.trim()) return
+        if (isErrorName.value) return
         if (props.isInstanceCreateType && !value) {
             instanceList.value.splice(index, 1)
-            editingIndex.value = null
+            editingIndex.value = -1
             const newIndex = instanceList.value.length - 1
             handleInstanceClick(newIndex)
             instanceActiveIndex.value = newIndex
@@ -162,15 +209,17 @@
         if (!props.isInstanceCreateType && !value) return
         proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
-        editingIndex.value = null
+        editingIndex.value = -1
+        proxy.$emit('update:isEditing', false)
     }
     function handleEditName (index) {
         editingIndex.value = index
         proxy?.$nextTick(() => {
             nameInputRef.value && nameInputRef.value[0]?.focus()
         })
+        proxy.$emit('update:isEditing', true)
     }
-    function handelDeleteInstance (index) {
+    function handleDeleteInstance (index) {
         instanceList.value.splice(index, 1)
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         handleInstanceClick(instanceList.value.length - 1)
@@ -191,9 +240,32 @@
                 templateId: templateId.value
             })
             const list = renderInstanceList.value.map(i => {
+                const triggerElements = res[i.pipelineId]?.triggerElements
+                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? []
                 return {
                     ...i,
-                    ...res[i.pipelineId]
+                    ...res[i.pipelineId],
+                    pipelineName: proxy.$route.query.copyPipelineName || i.pipelineName,
+                    ...(
+                        triggerElements?.length ? {
+                            triggerConfigs: triggerElements.map(trigger => {
+                                return {
+                                    id: trigger.id,
+                                    atomCode: trigger.atomCode,
+                                    stepId: trigger.stepId ?? '',
+                                    disabled: Object.hasOwnProperty.call(trigger?.additionalOptions ?? {}, 'enable') ? !trigger?.additionalOptions?.enable : false,
+                                    cron: trigger.advanceExpression,
+                                    variables: trigger.startParams,
+                                    name: trigger.name,
+                                    version: trigger.version,
+                                    isFollowTemplate: !(overrideTemplateField?.triggerStepIds?.includes(trigger.stepId)),
+                                    isDelete: false,
+                                    isNew: false
+                                }
+                            })
+                        }
+                        : undefined
+                    )
                 }
             })
             list.forEach(item => {
@@ -204,6 +276,7 @@
                 })
                 if (item.buildNo) {
                     proxy.$set(item.buildNo, 'isRequiredParam', item?.buildNo?.required)
+                    proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
@@ -211,54 +284,55 @@
             console.error(e)
         }
     }
-    function handleAddInstance () {
-        if (!curTemplateDetail.value?.params) return
-        const { params, buildNo } = deepClone(curTemplateDetail.value)
+    function handleShowInstanceCreate () {
+        showInstanceCreate.value = true
+    }
+    function handleConfirmCreateInstance (name) {
+        showInstanceCreate.value = false
+        handleAddInstance(name)
+    }
+    function handleAddInstance (name) {
+        const instanceParams = deepClone(curTemplateDetail.value)
         const newInstance = {
-            enablePac: false,
-            param: params.map(p => {
-                return {
-                    ...p,
-                    isRequiredParam: p.required,
-                    isFollowTemplate: false
-                }
-            }),
-            ...(buildNo ? {
-                buildNo: {
-                    ...buildNo,
-                    isRequiredParam: buildNo.required,
-                    isFollowTemplate: false
-                }
-            } : undefined),
-            triggerConfigs: templateTriggerConfigs.value
+            ...instanceParams,
+            pipelineName: name ?? pipelineName.value ?? ''
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
         proxy?.$nextTick(() => {
             const index = instanceList.value.length - 1
             handleInstanceClick(index)
-            handleEditName(index)
-            nameInputRef.value && nameInputRef.value[0]?.focus()
         }, 3000)
     }
-    function init () {
-        if (!props.isInstanceCreateType && !instanceList.value.length) {
+    async function init () {
+        if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
             proxy.$router.push({
                 name: 'TemplateOverview',
                 params: {
                     type: 'instanceList',
-                    version: currentVersionId.value
+                    version: currentVersion.value
                 }
             })
             return
         }
-        if (!props.isInstanceCreateType) {
-            fetchPipelinesDetails()
+        if ([INSTANCE_OPERATE_TYPE.UPGRADE, INSTANCE_OPERATE_TYPE.COPY].includes(instanceViewType.value)) {
+            if (instanceViewType.value === INSTANCE_OPERATE_TYPE.COPY) {
+                const { from, copyPipelineName } = proxy.$route.query
+                proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
+                    {
+                        pipelineName: copyPipelineName?.substring(0, 128),
+                        pipelineId: from
+                    }
+                ])
+            }
+            await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })
         }
+       
     }
     function handleBatchEdit () {
+        if (editingIndex.value > -1) return
         proxy.$emit('batchEdit')
     }
     onMounted(() => {
@@ -280,6 +354,7 @@
         height: 100%;
         font-size: 12px;
         padding: 24px;
+        background-color: #fff;
         .operate {
             display: flex;
             align-items: center;
@@ -314,6 +389,7 @@
             &.editing {
                 padding: 0;
                 font-weight: 400 !important;
+                border: none;
             }
             &.active,
             &:hover {
@@ -327,8 +403,23 @@
                 }
             }
         }
+        .edit-input-main {
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            width: 100%;
+            .tooltips-icon {
+                position: absolute;
+                z-index: 1000;
+                right: 8px;
+                top: 8px;
+                color: #ea3636;
+                cursor: pointer;
+                font-size: 16px;
+            }
+        }
         .pipeline-name {
-            max-width: 55%;
+            max-width: 75%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -353,6 +444,14 @@
                     color: #3A84FF;
                 }
             }
+        }
+    }
+</style>
+
+<style lang="scss">
+    .instance-empty-input {
+        .bk-form-input {
+            border-color: red;
         }
     }
 </style>

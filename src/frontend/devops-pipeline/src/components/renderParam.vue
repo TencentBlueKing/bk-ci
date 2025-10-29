@@ -2,6 +2,7 @@
     <section class="render-param">
         <form-field
             v-bind="param"
+            :required="param.required && isExecPreview"
             :is-error="errors.has('devops' + param.name)"
             :error-msg="errors.first('devops' + param.name)"
             :label="param.label || param.id"
@@ -49,7 +50,6 @@
     </section>
 </template>
 <script>
-    import { isObject } from '@/utils/util'
     import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
@@ -59,6 +59,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
+    import { isObject } from '@/utils/util'
     export default {
         components: {
             Selector,
@@ -100,6 +101,10 @@
             handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
+            },
+            isExecPreview: {
+                type: Boolean,
+                default: true
             }
         },
         methods: {
@@ -152,25 +157,7 @@
     .params-desc-styles {
         margin-top: 32px;
     }
-    .is-diff-param {
-        border-color: #FF9C01 !important;
-    }
-    .is-new-param {
-        background: #EBFAF0 !important;
-    }
-        
     .is-change-param {
         background: #FDF4E8 !important;
-    }
-        
-    .is-delete-param {
-        background: #FFF0F0 !important;
-    }
-    .is-new-param,
-    .is-delete-param,
-    .is-change-param {
-        &:focus {
-            background: #FFF !important;
-        }
     }
 </style>

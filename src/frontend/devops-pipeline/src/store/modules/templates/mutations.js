@@ -1,16 +1,17 @@
-import Vue from 'vue'
 import { deepClone } from '@/utils/util'
+import Vue from 'vue'
 import {
     SET_INSTANCE_LIST,
-    SET_TEMPLATE_DETAIL,
-    UPDATE_INSTANCE_LIST,
-    UPDATE_USE_TEMPLATE_SETTING,
-    SET_RELEASE_ING,
     SET_RELEASE_BASE_ID,
-    SHOW_TASK_DETAIL,
+    SET_RELEASE_ING,
     SET_TASK_DETAIL,
+    SET_TEMPLATE_DETAIL,
+    SHOW_TASK_DETAIL,
+    UPDATE_INSTANCE_LIST,
+    UPDATE_INSTANCE_PAGE_LOADING,
+    UPDATE_TEMPLATE_REF,
     UPDATE_TEMPLATE_REF_TYPE,
-    UPDATE_TEMPLATE_REF
+    UPDATE_USE_TEMPLATE_SETTING
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
@@ -46,5 +47,8 @@ export default {
     },
     [UPDATE_TEMPLATE_REF]: (state, value) => {
         Vue.set(state, 'templateRef', value)
+    },
+    [UPDATE_INSTANCE_PAGE_LOADING]: (state, value) => {
+        Vue.set(state, 'instancePageLoading', value)
     }
 }

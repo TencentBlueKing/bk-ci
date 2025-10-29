@@ -1,13 +1,13 @@
 <template>
     <div
-        class="biz-container pipeline-subpages instance-manage-wrapper"
+        class="pipeline-subpages instance-manage-wrapper"
         v-bkloading="{
             isLoading: isLoading
         }"
     >
         <div
             class="sub-view-port"
-            v-if="showContent && showInstanceList"
+            v-if="showInstanceList"
         >
             <section class="info-header">
                 <bk-popover
@@ -38,10 +38,15 @@
                     @change="handleChange"
                 />
             </section>
-            <section class="instance-table">
+            <section
+                class="instance-table"
+                ref="tableBox"
+            >
                 <bk-table
                     :data="instanceList"
                     size="small"
+                    ext-cls="instance-list"
+                    :max-height="tableHeight"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="pageLimitChange"
@@ -57,6 +62,7 @@
                     <bk-table-column
                         :label="$t('template.pipelineInstanceName')"
                         prop="pipelineName"
+                        :width="250"
                     >
                         <template slot-scope="{ row }">
                             <span
@@ -74,17 +80,11 @@
                     <bk-table-column
                         :label="$t('template.currentVision')"
                         prop="pipelineVersionName"
-                        :width="300"
+                        :width="250"
                     >
                         <template slot-scope="{ row }">
                             <div class="version-wrapper">
                                 {{ row.pipelineVersionName }}
-                                <span
-                                    class="template-version"
-                                    v-if="[TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE, TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED].includes(row.status)"
-                                >
-                                    {{ $t('template.from') }} {{ row.fromTemplateVersionName }}
-                                </span>
 
                                 <template v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE">
                                     <logo
@@ -99,13 +99,27 @@
                                 >
                                     <span class="template-version">
                                         {{ $t('template.Upgrading') }}
-                                        <bk-loading
-                                            class="loading-icon"
-                                            theme="primary"
-                                            mode="spin"
-                                            size="mini"
-                                            is-loading
-                                        />
+                                        <bk-popover
+                                            ext-cls="pull-url-popover"
+                                            :disabled="!row.pullRequestUrl"
+                                        >
+                                            <bk-loading
+                                                class="loading-icon"
+                                                theme="primary"
+                                                mode="spin"
+                                                size="mini"
+                                                is-loading
+                                            />
+                                            <div slot="content">
+                                                <span>{{ $t('template.pleaseMergePullUrl') }}</span>
+                                                <span
+                                                    class="btn-text"
+                                                    @click="HandleMR(row)"
+                                                >
+                                                    {{ $t('template.toHandle') }}
+                                                </span>
+                                            </div>
+                                        </bk-popover>
                                     </span>
                                 </template>
 
@@ -116,7 +130,7 @@
                                         {{ $t('template.UpgradeFailed') }}
                                         <logo
                                             v-bk-tooltips="{
-                                                content: row.instanceErrorInfo
+                                                content: (row?.instanceErrorInfo && JSON.parse(row?.instanceErrorInfo).message) ?? '--'
                                             }"
                                             class="status-failed-icon"
                                             name="circle-alert-filled"
@@ -126,6 +140,12 @@
                                 </template>
                             </div>
                         </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('template.referenceTemplateVersion')"
+                        prop="fromTemplateVersionName"
+                        :width="250"
+                    >
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('template.newestVersion')"
@@ -138,6 +158,7 @@
                     <bk-table-column
                         :label="$t('template.codeRepo')"
                         prop="repoAliasName"
+                        :width="150"
                     >
                         <template slot-scope="{ row }">
                             {{ row.repoAliasName || '--' }}
@@ -152,7 +173,7 @@
                     <bk-table-column
                         :label="$t('lastUpdateTime')"
                         prop="updateTime"
-                        :width="250"
+                        :width="180"
                     >
                         <template slot-scope="{ row }">
                             <span>{{ localConvertTime(row.updateTime) }}</span>
@@ -160,19 +181,12 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
+                        :width="200"
+                        fixed="right"
                     >
                         <template slot-scope="{ row }">
                             <bk-button
-                                class="mr10"
-                                theme="primary"
-                                text
-                                :disabled="!row.canEdit || !!row.pullRequestUrl"
-                                @click="updateInstance(row)"
-                            >
-                                {{ $t('template.updateInstance') }}
-                            </bk-button>
-                            <bk-button
-                                v-if="row.pullRequestUrl"
+                                v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING && row.pullRequestUrl"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -181,20 +195,49 @@
                                 {{ $t('template.handleMR') }}
                             </bk-button>
                             <bk-button
+                                v-else-if="row.status !== TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING"
+                                class="mr10"
+                                theme="primary"
+                                text
+                                v-perm="{
+                                    hasPermission: row.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
+                                        resourceCode: row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                                @click="updateInstance(row)"
+                            >
+                                {{ $t('template.updateInstance') }}
+                            </bk-button>
+                            <bk-button
                                 class="mr10"
                                 theme="primary"
                                 text
                                 @click="copyAsTemplateInstance(row)"
-                                :disabled="!row.canEdit"
+                                v-perm="{
+                                    hasPermission: row.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
+                                        resourceCode: row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
                             >
                                 {{ $t('copy') }}
                             </bk-button>
                             <version-diff-entry
-                                v-if="row.version !== currentVersion"
-                                :version="row.version"
+                                v-if="row.fromTemplateVersion !== currentVersion"
+                                :version="row.pipelineVersion"
                                 :latest-version="currentVersion"
                                 :pipeline-id="row.pipelineId"
-                                type="templateInstance"
+                                :template-id="row.templateId"
+                                instance-compare-with-template
                             />
                         </template>
                     </bk-table-column>
@@ -202,28 +245,27 @@
             </section>
         </div>
         <empty-tips
-            v-if="showContent && !showInstanceList"
-            :title="emptyTipsConfig.title"
-            :desc="emptyTipsConfig.desc"
-            :btns="emptyTipsConfig.btns"
+            v-else
+            v-bind="emptyTipsConfig"
         >
         </empty-tips>
     </div>
 </template>
 
 <script setup>
-    import { computed, ref, watch } from 'vue'
-    import { convertTime } from '@/utils/util'
+    import Logo from '@/components/Logo'
+    import PacTag from '@/components/PacTag'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import emptyTips from '@/components/pipelineList/imgEmptyTips'
+    import UseInstance from '@/hook/useInstance'
     import {
         SET_INSTANCE_LIST,
         TEMPLATE_INSTANCE_PIPELINE_STATUS
     } from '@/store/modules/templates/constants'
-    import PacTag from '@/components/PacTag'
-    import Logo from '@/components/Logo'
-    import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import UseInstance from '@/hook/useInstance'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
+    import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
     const { proxy, showTips, t } = UseInstance()
     const isLoading = ref(false)
@@ -236,19 +278,7 @@
         count: 0,
         limit: 10
     })
-
-    const emptyTipsConfig = ref({
-        title: t('template.instanceEmptyTitle'),
-        desc: t('template.instanceEmptyDesc'),
-        btns: [
-            {
-                theme: 'primary',
-                size: 'normal',
-                handler: () => createInstance(templateId.value, 'create'),
-                text: t('template.addInstance')
-            }
-        ]
-    })
+    
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchValue.value.length))
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateId = computed(() => proxy.$route.params.templateId)
@@ -266,7 +296,29 @@
         const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
         return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
     })
-
+    
+    const emptyTipsConfig = computed(() => ({
+        title: t('template.instanceEmptyTitle'),
+        desc: t('template.instanceEmptyDesc'),
+        hasPermission: pipelineInfo.value?.permissions?.canEdit,
+        disablePermissionApi: true,
+        permissionData: {
+            projectId: projectId.value,
+            resourceType: RESOURCE_TYPE.PROJECT,
+            resourceCode: projectId.value,
+            action: RESOURCE_ACTION.CREATE
+        },
+        btns: [
+            {
+                theme: 'primary',
+                size: 'normal',
+                handler: () => createInstance(templateId.value, 'create'),
+                text: t('template.addInstance')
+            }
+        ]
+    }))
+    const tableHeight = ref('auto')
+    const tableBox = ref(null)
     const searchList = computed(() => {
         const list = [
             {
@@ -297,7 +349,7 @@
                 ]
             },
             {
-                name: proxy.$t('versionNum'),
+                name: proxy.$t('template.referenceTemplateVersion'),
                 id: 'templateVersion',
                 remoteMethod:
                     async (search) => {
@@ -343,6 +395,23 @@
     }, {
         immediate: true
     })
+    watch(() => showInstanceList.value, (nv) => {
+        if (nv) {
+            nextTick(() => {
+                updateTableHeight()
+                window.addEventListener('resize', updateTableHeight)
+            })
+        }
+    }, {
+        immediate: true
+    })
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', updateTableHeight)
+    })
+
+    function updateTableHeight () {
+        tableHeight.value = tableBox.value?.offsetHeight
+    }
 
     async function requestInstanceList () {
         isLoading.value = true
@@ -415,31 +484,20 @@
     
     async function copyAsTemplateInstance (row) {
         try {
-            const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
-                pipelineIds: [row.pipelineId],
-                projectId: projectId.value,
-                templateId: templateId.value
-            })
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
-                {
-                    ...row,
-                    ...res[row.pipelineId],
-                    isRequiredParam: row.required,
-                    pipelineName: (row.pipelineName + '_copy').substring(0, 128),
-                    pipelineId: ''
-                }
-            ])
-    
             proxy.$router.push({
                 name: 'instanceEntry',
                 params: {
                     ...proxy.$route.params,
-                    version: pipelineInfo.value?.releaseVersion,
+                    version: row.fromTemplateVersion,
                     type: 'copy'
+                },
+                query: {
+                    from: row.pipelineId,
+                    copyPipelineName: (row.pipelineName + '_copy').substring(0, 128),
                 }
             })
         } catch (e) {
-            console.err(e)
+            console.error(e)
         }
     }
     function toPipelineHistory (pipelineId) {
@@ -466,7 +524,8 @@
         min-height: 100%;
     }
     .instance-manage-wrapper {
-        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
         .instance-header {
             .bk-button-normal {
                 margin-top: -6px;
@@ -475,9 +534,11 @@
             }
         }
         .sub-view-port {
+            display: flex;
+            flex-direction: column;
             padding: 20px;
-            height: calc(100% - 60px);
-            overflow: auto;
+            height: 100%;
+            overflow: hidden;
         }
         .info-header {
             display: flex;
@@ -509,6 +570,9 @@
             }
         }
         .instance-table {
+            flex: 1;
+            max-height: calc(100% - 52px);
+            overflow: hidden;
             .pipeline-name {
                 color: $primaryColor;
                 cursor: pointer;
@@ -570,5 +634,18 @@
             padding: 0 11px;
             font-size: 12px;
         }
+    }
+    .pull-url-popover {
+        .btn-text {
+            font-size: 12px;
+            color: $primaryColor;
+            cursor: pointer;
+        }
+    }
+    .instance-list.bk-table-enable-row-transition .bk-table-body td {
+        transition: none;
+    }
+    .bk-search-select-theme-theme {
+        max-width: 500px;
     }
 </style>

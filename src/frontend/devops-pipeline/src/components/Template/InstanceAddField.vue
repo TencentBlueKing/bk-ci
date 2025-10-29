@@ -100,6 +100,7 @@
                                 ref="paramsForm"
                                 :handle-param-change="handleParamChange"
                                 :params="renderParamList"
+                                :param-values="paramsValues"
                                 sort-category
                                 :handle-set-parma-required="handleSetParmaRequired"
                             >
@@ -155,12 +156,22 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
+    import { getParamsValuesMap } from '@/utils/util'
+    const props = defineProps({
+        instanceList: Array
+    })
     const { proxy } = UseInstance()
     const selectedData = ref([])
     const activeName = ref(new Set([1, 2, 3]))
-    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
-    const params = ref(curTemplateDetail.value?.params ?? [])
-    const buildNo = ref(curTemplateDetail.value?.buildNo ?? {})
+    const curIndex = computed(() => proxy.$route.query?.index)
+    const curInstance = computed(() => props.instanceList[curIndex.value - 1])
+    const params = ref(curInstance.value?.param.map(p => ({
+        ...p,
+        isChange: false,
+        isNew: false,
+        isDelete: false
+    })) ?? [])
+    const buildNo = ref(curInstance.value?.buildNo ?? {})
     const isVisibleVersion = computed(() => {
         // buildNo.value?.required
         return false
@@ -169,11 +180,14 @@
         return params.value.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
             ...p,
             label: `${p.id}${p.name ? `(${p.name})` : ''}`,
-            defaultValue: '',
+            defaultValue: p.defaultValue,
             readOnlyCheck: false,
             valueNotEmpty: false,
             isRequiredParam: p.required
         }))
+    })
+    const paramsValues = computed(() => {
+        return getParamsValuesMap(paramsList.value, 'defaultValue')
     })
     const versionParams = computed(() => {
         return params.value.filter(p => allVersionKeyList.includes(p.id)).map(p => ({
@@ -306,7 +320,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 14px;
             color: #313238;
             line-height: 22px;
 

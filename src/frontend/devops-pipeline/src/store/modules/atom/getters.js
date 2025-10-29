@@ -21,6 +21,7 @@ import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from 
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
+import { VAR_MAX_LENGTH } from '@/store/constants'
 
 function isSkip (status) {
     return status === 'SKIP'
@@ -67,6 +68,10 @@ export default {
     },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    failIfVariableInvalid: state => {
+        console.log(state?.pipelineSetting?.failIfVariableInvalid)
+        return state?.pipelineSetting?.failIfVariableInvalid ?? false
     },
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
@@ -205,8 +210,8 @@ export default {
 
             stages.forEach((stage, index) => {
                 if (index !== 0 && stage.checkIn) {
-                    const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
-                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                    const { notifyType = [], notifyGroup = [], manualTrigger } = stage && stage.checkIn
+                    if (manualTrigger && notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
                         Vue.set(stage.checkIn, 'isReviewError', true)
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }
@@ -221,7 +226,26 @@ export default {
                 throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.jobLimit') + state.pipelineLimit.jobLimit))
             }
 
+            
+
             const allContainers = getters.getAllContainers(stages)
+            if (allContainers.length > 0 && pipelineSetting?.failIfVariableInvalid) {
+                const invalidList = allContainers[0].params.filter(param => typeof param.defaultValue === 'string' && param.defaultValue.length > VAR_MAX_LENGTH)
+                if (invalidList.length) {
+                    invalidList.forEach(item => {
+                        Vue.set(item, 'isInvalid', true)
+                    })
+                    throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.paramLengthLimitTips', [invalidList[0].id, invalidList[0].defaultValue.length, VAR_MAX_LENGTH]))
+                }
+                
+            } else if (allContainers.length > 0) {
+                allContainers[0].params.forEach(item => {
+                    if (item.isInvalid) {
+                        Vue.set(item, 'isInvalid', false)
+                    }
+                })
+            }
+
 
             // 当前所有插件element
             const elementsMap = allContainers.reduce(function (prev, cur) {
@@ -289,9 +313,13 @@ export default {
         return allElements
     },
     getAllContainers: state => stages => {
-        const allContainers = []
-        stages.map(stage => allContainers.splice(0, 0, ...stage.containers))
-        return allContainers
+        return stages.reduce((acc, stage) => {
+            acc = [
+                ...acc,
+                ...stage.containers
+            ]
+            return acc
+        }, [])
     },
     getStage: state => (stages, stageIndex) => {
         const stage = Array.isArray(stages) ? stages[stageIndex] : null

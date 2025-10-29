@@ -2,13 +2,14 @@
     <bk-sideslider
         :is-show.sync="value"
         :width="1000"
-        :title="$t('template.batchEditInstance')"
+        :title="$t('template.batchEditParams')"
         @shown="showBatchEditSlider"
         @hidden="hideBatchEditSlider"
         ext-cls="batch-edit-side-slider"
     >
         <template slot="content">
             <InstanceAddField
+                :instance-list="instanceList"
                 @confirm="confirmChange"
                 @cancel="hideBatchEditSlider"
             />
@@ -21,7 +22,8 @@
     import InstanceAddField from '@/components/Template/InstanceAddField'
     import UseInstance from '@/hook/useInstance'
     defineProps({
-        value: Boolean
+        value: Boolean,
+        instanceList: Array
     })
     const { proxy } = UseInstance()
     function hideBatchEditSlider () {

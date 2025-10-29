@@ -25,7 +25,7 @@
                         v-bk-overflow-tips
                         class="release-pipeline-new-version"
                     >
-                        {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
+                        {{ $t("releasePipelineVersion",[customVersionName || newReleaseVersionName]) }}
                     </span>
                     <span v-bk-overflow-tips>
                         {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
@@ -85,7 +85,6 @@
                                 :disabled="disabledPacSwitcher"
                                 theme="primary"
                                 name="enablePac"
-                                :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
                                 v-model="releaseParams.enablePac"
                                 @change="handlePacEnableChange"
                             />
@@ -120,13 +119,15 @@
                         error-display-type="normal"
                     >
                         <bk-form-item
-                            v-if="isTemplate && !isTemplateInstanceMode"
+                            v-if="!releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
                             :label="$t('template.customVersionName')"
                             property="customVersionName"
                         >
                             <bk-input
-                                v-model="releaseParams.customVersionName"
-                                :maxlength="50"
+                                v-model="customVersionName"
+                                @blur="handleBlurCustomVersionName"
+                                :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                :maxlength="30"
                             >
                             </bk-input>
                         </bk-form-item>
@@ -248,13 +249,20 @@
                                                     <td>
                                                         <div class="input-cell">
                                                             <span class="instance-name">{{ filePathDir }}</span>
-                                                            <bk-input
-                                                                v-model="item.filePath"
-                                                                :disabled="disabledYamlCodeLib"
-                                                                id="yamlFilePath"
-                                                                placeholder="请输入"
-                                                                @change="(value) => handleChangeFilePath(value, index)"
-                                                            />
+                                                            <div class="file-path-input">
+                                                                <bk-input
+                                                                    v-model="item.filePath"
+                                                                    :disabled="disabledYamlCodeLib"
+                                                                    id="yamlFilePath"
+                                                                    placeholder="请输入"
+                                                                    @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
+                                                                />
+                                                                <i
+                                                                    v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
+                                                                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                                                                    v-bk-tooltips="$t('yamlFilePathErrorTip')"
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -340,6 +348,19 @@
                                     </bk-option>
                                 </bk-select>
                             </bk-form-item>
+                            <bk-form-item
+                                v-if="releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
+                                :label="$t('template.customVersionName')"
+                                property="customVersionName"
+                            >
+                                <bk-input
+                                    v-model="customVersionName"
+                                    @blur="handleBlurCustomVersionName"
+                                    :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                    :maxlength="30"
+                                >
+                                </bk-input>
+                            </bk-form-item>
                         </div>
                     </bk-form>
                     <div
@@ -380,6 +401,11 @@
                     v-if="!releaseParams.enablePac || hasOauth"
                     slot="footer"
                     class="release-pipeline-pac-footer"
+                    :style="{
+                        borderTop: `${isFooterFixed ? '1px solid #dcdee5' : 'none'} !important`,
+                        backgroundColor: `${isFooterFixed ? '#fafbfd' : '#fff'} !important`,
+                        height: `${isFooterFixed ? '47' : '48'}px`
+                    }"
                 >
                     <bk-button
                         theme="primary"
@@ -434,6 +460,7 @@
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
+    import { RESOURCE_TYPE } from '@/utils/permission'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
@@ -499,10 +526,14 @@
                     filePath: '',
                     scmType: '',
                     description: '',
-                    repoHashId: '',
-                    customVersionName: ''
+                    repoHashId: ''
                 },
-                newReleaseVersionNameList: []
+                newReleaseVersionNameList: [],
+                TARGET_ACTION_ENUM,
+                customVersionName: '',
+                currentSidesliderContentHeight: 0,
+                maxSidesliderContentHeight: 0,
+                isFooterFixed: false,
             }
         },
         computed: {
@@ -514,7 +545,7 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'isTemplate']),
             ...mapState('common', ['pacSupportScmTypeList']),
-            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail']),
+            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail', 'templateRefType']),
             filePathDir () {
                 return `.ci/${this.isTemplateInstanceMode ? '' : this.isTemplate ? 'templates/' : ''}`
             },
@@ -529,9 +560,6 @@
             },
             pipelineName () {
                 return this.pipelineSetting?.pipelineName
-            },
-            isTemplatePipeline () {
-                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             isCommitToBranch () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH
@@ -620,14 +648,12 @@
                     targetAction,
                     repoHashId,
                     enablePac,
-                    customVersionName
                 } = this.releaseParams
                 return {
                     targetBranch,
                     targetAction,
                     repoHashId,
-                    enablePac,
-                    customVersionName
+                    enablePac
                 }
             },
             templateInstanceEnablePac () {
@@ -637,7 +663,7 @@
                 return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
             },
             disabledPacSwitcher () {
-                return this.isTemplateInstanceMode ? false : this.pacEnabled || this.isTemplatePipeline
+                return this.isTemplateInstanceMode ? false : this.pacEnabled
             },
             disabledYamlCodeLib () {
                 return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
@@ -647,12 +673,20 @@
                     ...i,
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
+            },
+            isCommitToMaster () {
+                return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
             }
         },
         watch: {
             value (val) {
                 if (val) {
                     this.init()
+                    this.$nextTick()
+                    const winHeight = window.innerHeight
+                    const headerAndFooterHeight = 48 + 52
+                    this.maxSidesliderContentHeight = winHeight - headerAndFooterHeight
+                    this.$nextTick(this.getSidesliderContentHeight)
                 }
             },
             yamlInfo: {
@@ -687,6 +721,7 @@
                     if (val) {
                         this.init()
                     }
+                    this.customVersionName = ''
                 },
                 immediate: true
             },
@@ -719,7 +754,9 @@
             prefetchParams: {
                 deep: true,
                 handler: function (val) {
-                    this.prefetchReleaseVersion(val)
+                    this.$nextTick(() => {
+                        this.prefetchReleaseVersion(val)
+                    })
                 }
             },
             showTaskDetail: {
@@ -732,6 +769,16 @@
                         this.releaseParams.targetAction = this.instanceTaskDetail.targetAction ?? ''
                     }
                 }
+            },
+            'releaseParams.targetAction': {
+                handler: function () {
+                    this.customVersionName = ''
+                }
+            },
+            'releaseParams.targetBranch': {
+                handler: function () {
+                    this.customVersionName = ''
+                }
             }
         },
         mounted () {
@@ -739,6 +786,8 @@
             window.__bk_zIndex_manager.zIndex = 2050
         },
         beforeDestroy () {
+            this.$store.commit(`templates/${SHOW_TASK_DETAIL}`, false)
+            this.$store.commit(`templates/${SET_RELEASE_ING}`, false)
             window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
@@ -757,7 +806,7 @@
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             errorHandler (error) {
-                const resourceType = this.isTemplate ? 'template' : 'pipeline'
+                const resourceType = this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
                 this.handleError(error, {
                     projectId: this.$route.params.projectId,
                     resourceCode: this.$route.params[`${resourceType}Id`],
@@ -765,11 +814,21 @@
                     action: this.$permissionResourceAction.EDIT
                 })
             },
+            getSidesliderContentHeight () {
+                this.currentSidesliderContentHeight = document.querySelector('.bk-sideslider-content')?.offsetHeight
+                this.isFooterFixed = this.currentSidesliderContentHeight >= this.maxSidesliderContentHeight
+            },
             async init () {
                 try {
                     this.isLoading = true
                     const enablePac = this.releaseParams.enablePac
-
+                    if (this.isTemplateInstanceMode && enablePac) {
+                        this.releaseParams.repoHashId = this.instanceList[0]?.repoHashId ?? ''
+                    }
+                    if (this.isTemplateInstanceMode && this.templateRefType === 'PATH') {
+                        this.releaseParams.enablePac = true
+                        this.showPacCodelibSetting = true
+                    }
                     await Promise.all([
                         ...(enablePac
                             ? [
@@ -797,6 +856,7 @@
             },
 
             async prefetchReleaseVersion (params) {
+                if (params.enablePac && !params.repoHashId && !params.targetBranch) return
                 try {
                     const lackTargetAction = params.enablePac && !params.targetAction
                     const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
@@ -812,7 +872,8 @@
                             params: {
                                 ...this.releaseParams,
                                 useTemplateSettings: this.useTemplateSettings,
-                                instanceReleaseInfos: this.instanceList
+                                instanceReleaseInfos: this.instanceList,
+                                customVersionName: this.customVersionName?.trim()
                             }
                         })
                         this.newReleaseVersionNameList = res.data
@@ -821,9 +882,13 @@
                         const newReleaseVersion = await prefetchFn({
                             ...this.$route.params,
                             version: this.version,
-                            ...params
+                            ...params,
+                            customVersionName: this.customVersionName?.trim()
                         })
                         this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
+                        if (!this.customVersionName) {
+                            this.customVersionName = this.newReleaseVersionName
+                        }
                     }
                 } catch (error) {
                     this.errorHandler(error)
@@ -894,11 +959,13 @@
             },
             handlePacEnableChange (val) {
                 this.showPacCodelibSetting = val
+                this.$nextTick(this.getSidesliderContentHeight)
             },
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     try {
                         await this.$refs?.releaseForm?.validate?.()
+                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
                         console.error(e)
@@ -918,7 +985,6 @@
                             scmType,
                             filePath,
                             targetAction,
-                            customVersionName,
                             ...rest
                         } = this.releaseParams
                         const {
@@ -928,7 +994,7 @@
                             version: this.version,
                             params: {
                                 ...rest,
-                                customVersionName,
+                                customVersionName: this.customVersionName?.trim(),
                                 ...(rest.enablePac
                                     ? {
                                         targetAction
@@ -949,7 +1015,7 @@
                         } else {
                             await this.requestPipelineSummary(this.$route.params)
                         }
-
+                        this.customVersionName = ''
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
                             : 'releaseTips'
@@ -1217,12 +1283,18 @@
                     })
                 } finally {
                     this.refreshing = false
+                    this.$nextTick(this.getSidesliderContentHeight)
                 }
             },
             trimCIPrefix (filePath) {
                 return filePath?.startsWith(this.filePathDir)
                     ? filePath?.replace(this.filePathDir, '')
                     : filePath
+            },
+            handleBlurCustomVersionName (val) {
+                if (!val) {
+                    this.customVersionName = this.newReleaseVersionName
+                }
             }
         }
     }
@@ -1231,6 +1303,12 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+
+.release-pipeline-side-slider {
+    .bk-sideslider-footer {
+        border: none;
+    }
+}
 
 .release-pipeline-side-slider-header {
     display: grid;
@@ -1267,7 +1345,6 @@
 }
 
 .release-pipeline-pac-form {
-    height: calc(100vh - 114px);
     overflow: auto;
 
     .release-pac-pipeline-form-header {
@@ -1325,7 +1402,7 @@
 
     .release-pipeline-pac-setting {
         flex: 1;
-        padding: 24px;
+        padding: 24px 24px 0;
         display: flex;
         flex-direction: column;
         grid-gap: 24px;
@@ -1339,7 +1416,9 @@
 
         .pac-pipeline-dest-branch-radio {
             display: flex;
-            margin-bottom: 8px;
+            &:not(:last-child) {
+                margin-bottom: 8px;
+            }
             .bk-radio-text {
                 @include ellipsis();
                 flex: 1;
@@ -1375,7 +1454,8 @@
 }
 
 .release-pipeline-pac-footer {
-    padding: 0 24px;
+    width: 100%;
+    padding: 8px 24px;
 }
 
 .release-info-dialog {
@@ -1650,6 +1730,21 @@
                 }
             }
         }
+    }
+    .file-path-input {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        width: 100%;
+            .tooltips-icon {
+                position: absolute;
+                z-index: 10;
+                right: 8px;
+                top: 8px;
+                color: #ea3636;
+                cursor: pointer;
+                font-size: 16px;
+            }
     }
 }
 </style>

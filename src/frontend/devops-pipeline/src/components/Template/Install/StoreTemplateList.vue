@@ -14,7 +14,8 @@
             <li
                 v-for="(temp, tIndex) in storeTemplate"
                 :class="{
-                    'active': activeTempIndex === tIndex
+                    'active': activeTempIndex === tIndex,
+                    'disabled': temp.installed
                 }"
                 :key="temp.name"
                 @click="selectTemp(temp, tIndex)"
@@ -51,6 +52,13 @@
                     </p>
                 </div>
                 <div
+                    v-if="temp.installed"
+                    class="is-installed"
+                >
+                    {{ $t('newlist.installed') }}
+                </div>
+                <div
+                    v-else
                     class="pipeline-template-status"
                 >
                     <bk-button
@@ -74,9 +82,9 @@
 </template>
 
 <script setup name='StoreTemplateList'>
-    import { ref, computed, onMounted } from 'vue'
-    import UseInstance from '@/hook/useInstance'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
+    import UseInstance from '@/hook/useInstance'
+    import { computed, onMounted, ref } from 'vue'
 
     const emit = defineEmits(['change'])
     const { proxy, bkMessage } = UseInstance()
@@ -102,12 +110,16 @@
                 page: page.value,
                 pageSize: pageSize.value,
                 projectCode: projectId.value,
-                keyword: searchValue.value
+                keyword: searchValue.value,
+                excludeProjectCode: projectId.value
             }
             const res = await proxy.$store.dispatch('common/requestStoreTemplate', param)
-            page.value++
             storeTemplateNum.value = res.data.count || 0
             storeTemplate.value.push(...res.data.records)
+            if (page.value === 1) {
+                activeTempIndex.value = storeTemplate.value.findIndex(temp => !temp.installed)
+            }
+            page.value++
             loadEnd.value = res.data.count <= storeTemplate.value?.length
             emit('change', activeTemp.value)
         } catch (e) {
@@ -127,7 +139,7 @@
         requestMarkTemplates()
     }
     function selectTemp (temp, index) {
-        if (index === activeTempIndex.value) return
+        if (index === activeTempIndex.value || temp.installed) return
         activeTempIndex.value = index
         emit('change', activeTemp.value)
     }
@@ -170,11 +182,10 @@
                 grid-gap: 12px;
                 cursor: pointer;
                 transition: all .3s ease;
-                box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
                 overflow: hidden;
 
                 &:hover {
-                    box-shadow: 0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
                     .pipeline-template-status {
                         display: block;
                     }
@@ -206,6 +217,9 @@
                             left: -12px;
                         }
                     }
+                }
+                &.disabled {
+                    cursor: not-allowed;
                 }
                 .pipeline-template-logo {
                     display: flex;
@@ -241,6 +255,10 @@
                     font-size: 12px;
                     color: #979BA5;
                     align-self: center;
+                }
+                .is-installed {
+                    line-height: 50px;
+                    font-size: 12px;
                 }
             }
         }

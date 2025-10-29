@@ -48,13 +48,13 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.StageIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -83,14 +83,14 @@ class PipelineBuildRetryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildDetailService: PipelineBuildDetailService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val buildVariableService: BuildVariableService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineContainerService: PipelineContainerService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:28}")
@@ -154,8 +154,14 @@ class PipelineBuildRetryService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
 
-            // TODO 重试的model需要被覆盖为上次构建的内容，未来需要替换为RECORD表数据
-            resource.model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
+            resource.model = pipelineBuildRecordService.getRecordModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = buildInfo.version,
+                buildId = buildId,
+                executeCount = buildInfo.executeCount,
+                debug = buildInfo.debug
+            ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 

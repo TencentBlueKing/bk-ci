@@ -78,8 +78,8 @@
                     v-if="offlineData.form"
                     ref="offlineForm"
                     class="offline-template-version-form"
-                    
                     :model="offlineData.form"
+                    :rules="offlineFormRules"
                     v-bkloading="{ isLoading: offlineData.isLoading }"
                 >
                     <bk-form-item
@@ -96,13 +96,12 @@
                     </bk-form-item>
                     <bk-form-item
                         :label="$t('store.下架原因')"
-                        :required="true"
+                        required
                         property="reason"
-                        :rules="[requireRule($t('store.下架原因'))]"
                     >
                         <bk-input
                             type="textarea"
-                            v-model="offlineData.form.reason"
+                            v-model.trim="offlineData.form.reason"
                             :placeholder="$t('store.请输入下架原因')"
                         ></bk-input>
                     </bk-form-item>
@@ -130,7 +129,7 @@
             versionList: Array,
             pagination: Object
         },
-
+        emits: ['pageChanged', 'pageLimitChanged'],
         data () {
             return {
                 offlineData: {
@@ -172,6 +171,17 @@
                     createTime: convertTime(item.createTime)
                     
                 }))
+            },
+            offlineFormRules () {
+                return {
+                    reason: [
+                        {
+                            required: true,
+                            message: this.$t('store.validateMessage', [this.$t('store.下架原因'), this.$t('store.必填项')]),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
             }
         },
 
@@ -187,32 +197,26 @@
                 this.$emit('pageLimitChanged', currentLimit, prevLimit)
             },
 
-            requireRule (name) {
-                return {
-                    required: true,
-                    message: this.$t('store.validateMessage', [name, this.$t('store.必填项')]),
-                    trigger: 'blur'
-                }
-            },
-
             async submitOfflineTemplateVersion () {
                 try {
                     const valid = await this.$refs.offlineForm.validate()
-                    if (!valid) {
-                        throw new Error(this.$t('store.校验失败，请修改再试'))
+                    if (valid) {
+                        const { templateCode, version, reason } = this.offlineData.form
+    
+                        this.offlineData.isLoading = true
+                        await this.offlineTemplate({
+                            templateCode,
+                            version,
+                            reason
+                        })
+                        this.cancelOfflineTemplate()
+                        this.$emit('pageChanged')
                     }
-                    const { templateCode, version, reason } = this.offlineData.form
-
-                    this.offlineData.isLoading = true
-                    await this.offlineTemplate({
-                        templateCode,
-                        version,
-                        reason
-                    })
-                    this.cancelOfflineTemplate()
-                    this.$emit('pageChanged')
                 } catch (err) {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                    this.$bkMessage({
+                        message: err.content || this.$t('store.校验失败，请修改再试'),
+                        theme: 'error'
+                    })
                 } finally {
                     this.offlineData.isLoading = false
                 }
@@ -225,7 +229,12 @@
 
             offline (row) {
                 this.offlineData.show = true
-                this.offlineData.form = row
+                this.offlineData.form = {
+                    versionName: row.versionName,
+                    templateCode: row.templateCode,
+                    version: row.version,
+                    reason: ''
+                }
             },
 
             async online (row) {

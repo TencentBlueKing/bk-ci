@@ -13,12 +13,60 @@
                 slot="trigger"
             >
                 <span @click="goHistory">{{ pipelineName }}</span>
-                <span
-                    class="template-instance-tag"
-                    v-if="instanceFromTemplate"
+                <bk-badge
+                    dot
+                    :visible="!!constraintInfo?.upgradeFlag"
+                    theme="danger"
                 >
-                    {{ $t('constraint') }}
-                </span>
+                    <bk-popover
+                        v-if="instanceFromTemplate"
+                        class="template-instance-tag"
+                        theme="light"
+                        @click.stop=""
+                        :on-show="handleShowPopover"
+                        :on-hide="handleHidePopover"
+                    >
+                    
+                        <span>
+                            {{ $t('constraint') }}
+                        </span>
+                    
+                        <section
+                            slot="content"
+                        >
+                            <p>{{ $t('template.constraintMode') }}</p>
+                            <div
+                                class="constraint-info-area"
+                                v-bkloading="constraintInfoFetching"
+                            >
+                                <p>
+                                    <label>{{ $t('template.name') }}</label>
+                                    <a
+                                        class="text-link"
+                                        target="_blank"
+                                        :href="constraintInfo?.templateDetailsUrl"
+                                    >
+                                        {{ constraintInfo?.templateName ?? '--' }}
+                                    </a>
+                                </p>
+                                <p>
+                                    <label>{{ $t('template.templateVersion') }}</label>
+                                    <span v-bk-overflow-tips="constraintInfo?.templateVersionName">
+                                        {{ constraintInfo?.templateVersionName ?? '--' }}
+                                    </span>
+                                    <a
+                                        v-if="constraintInfo?.upgradeFlag"
+                                        class="text-link"
+                                        target="_blank"
+                                        :href="constraintInfo?.upgradeUrl"
+                                    >
+                                        {{ $t('template.goUpgrade') }}
+                                    </a>
+                                </p>
+                            </div>
+                        </section>
+                    </bk-popover>
+                </bk-badge>
                 <div
                     class="pipeline-pac-indicator"
                     @click.stop.prevent=""
@@ -49,6 +97,9 @@
     import { mapState, mapGetters, mapActions } from 'vuex'
     import PacTag from '@/components/PacTag'
     import { RESOURCE_ACTION } from '@/utils/permission'
+    import {
+        PROCESS_API_URL_PREFIX
+    } from '@/store/constants'
 
     export default {
         components: {
@@ -67,7 +118,10 @@
         data () {
             return {
                 pipelineList: [],
-                currentPipeline: null
+                currentPipeline: null,
+                contraintApiSignal: null,
+                constraintInfo: null,
+                constraintInfoFetching: { isLoading: false, size: 'small' }
             }
         },
         computed: {
@@ -87,6 +141,9 @@
         },
         created () {
             this.fetchPipelineList()
+            if (this.instanceFromTemplate) {
+                this.handleShowPopover()
+            }
         },
         methods: {
             ...mapActions({
@@ -168,12 +225,40 @@
                         ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
                     ]
                     : list
+            },
+            async handleShowPopover () {
+                try {
+                    this.constraintInfoFetching = {
+                        isLoading: true,
+                        size: 'small'
+                    }
+                    this.contraintApiSignal = new AbortController()
+                    const { projectId, pipelineId, version } = this.$route.params
+                    const res = await this.$ajax({
+                        url: `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/pipelines/${pipelineId}/versions/${version ?? this.pipelineInfo?.releaseVersion}/related/info`,
+                        method: 'GET',
+                        signal: this.contraintApiSignal?.signal
+                    })
+                    this.constraintInfo = res.data
+
+                } catch (error) {
+                    console.log(error)
+                } finally {
+                    this.constraintInfoFetching = {
+                        isLoading: false,
+                        size: 'small'
+                    }
+                }
+            },
+            handleHidePopover () {
+                this.contraintApiSignal?.abort()
             }
         }
     }
 </script>
 
 <style lang="scss">
+    @import "@/scss/mixins/ellipsis";
     .template-instance-tag {
         font-size: 12px;
         line-height: 20px;
@@ -182,6 +267,29 @@
         border: 1px solid #DCDEE5;
         border-radius: 2px;
         padding: 0 8px;
+    }
+    .constraint-info-area {
+        background: #F5F7FA;
+        margin-top: 8px;
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        padding: 4px 16px;
+
+        gap: 6px;
+        width: 280px;
+        
+        > p {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            grid-gap: 20px;
+            flex-shrink: 0;
+            > span {
+                @include ellipsis();
+                flex: 1;
+            }
+        }
     }
     .pipeline-name-crumb {
         display: inline-flex;

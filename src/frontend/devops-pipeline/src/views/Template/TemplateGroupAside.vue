@@ -8,7 +8,7 @@
                 :class="['nav-item', { active: item.isActive }]"
                 @click="handleChangeMenu(item.viewId)"
             >
-                <div>
+                <div class="item-name">
                     <Logo
                         :class="item.icon"
                         size="16"
@@ -56,28 +56,28 @@
                 viewId: PIPELINE_TEMPLATE_VIEW_ID,
                 i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
                 icon: 'template-pipeline',
-                activeIcon: 'pipeline-template',
+                activeIcon: 'pipeline-template-aside',
                 countKey: 'PIPELINE'
             }
             // {
             //     viewId: STAGE_TEMPLATE_VIEW_ID,
             //     i18nKey: STAGE_TEMPLATE_VIEW_ID,
             //     icon: 'template-stage',
-            //     activeIcon: 'stage-template',
+            //     activeIcon: 'stage-template-aside',
             //     countKey: 'STAGE'
             // },
             // {
             //     viewId: JOB_TEMPLATE_VIEW_ID,
             //     i18nKey: JOB_TEMPLATE_VIEW_ID,
             //     icon: 'template-job',
-            //     activeIcon: 'job-template',
+            //     activeIcon: 'job-template-aside',
             //     countKey: 'JOB'
             // },
             // {
             //     viewId: STEP_TEMPLATE_VIEW_ID,
             //     i18nKey: STEP_TEMPLATE_VIEW_ID,
             //     icon: 'template-step',
-            //     activeIcon: 'step-template',
+            //     activeIcon: 'step-template-aside',
             //     countKey: 'STEP'
             // }
         ]
@@ -117,7 +117,10 @@
         background: #FFFFFF;
         padding-top: 8px;
         box-shadow: 1px 0 0 0 #EAEBF0, 1px 0 0 0 #DCDEE5;
-
+        .item-name {
+            display: flex;
+            align-items: center;
+        }
         .nav-item {
             display: flex;
             justify-content: space-between;
@@ -146,6 +149,9 @@
         .active{
             background-color: #E1ECFF;
             color: #3A84FF;
+            svg {
+                color: #3A84FF;
+            }
         }
         .item-border {
             border-bottom: 1px solid #DCDEE5;

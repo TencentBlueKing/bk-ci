@@ -13,7 +13,6 @@
                     class="instance-entry-aside"
                 >
                     <bk-button
-                        theme="primary"
                         @click="handleGoBack"
                         outline
                     >
@@ -27,7 +26,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="templateRefTypeById ? !templateVersion : !templateRef"
+                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}
@@ -36,9 +35,7 @@
                 </aside>
             </header>
             <main class="instance-contents">
-                <template-version-selector
-                    :is-instance-create-type="isInstanceCreateViewType"
-                />
+                <template-version-selector />
                 <bk-resize-layout
                     class="instance-contents-layout"
                     :initial-divide="300"
@@ -48,7 +45,7 @@
                 >
                     <InstanceAside
                         slot="aside"
-                        :is-instance-create-type="isInstanceCreateViewType"
+                        :is-editing.sync="isEditing"
                         @batchEdit="handleBatchEdit"
                     />
                     <bk-exception
@@ -79,32 +76,36 @@
         />
         <BatchEditConfig
             v-model="showBatchEdit"
+            :instance-list="instanceList"
             @change="handleBatchChange"
         />
     </section>
 </template>
 
 <script setup name="InstanceEntry">
+    import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
-    import BatchEditConfig from './BatchEditConfig'
     import UseInstance from '@/hook/useInstance'
-    import { computed, onMounted, ref, watch, onBeforeUnmount } from 'vue'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import {
         SET_INSTANCE_LIST,
-        SET_RELEASE_ING,
         SET_RELEASE_BASE_ID,
+        SET_RELEASE_ING,
         UPDATE_TEMPLATE_REF,
-        UPDATE_TEMPLATE_REF_TYPE
+        UPDATE_TEMPLATE_REF_TYPE,
+        INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+    import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
     import TemplateVersionSelector from './TemplateVersionSelector'
-    import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
 
     const { proxy } = UseInstance()
     const isLoading = ref(false)
     const showRelease = ref(false)
     const showBatchEdit = ref(false)
+    const isEditing = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
@@ -113,20 +114,20 @@
     const showTaskDetail = computed(() => proxy.$store?.state?.templates?.showTaskDetail)
     const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version) // 路径上的模板版本号
     const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
-    const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
+    const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === INSTANCE_OPERATE_TYPE.CREATE)
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
 
     const releaseBtnText = computed(() => {
-        const type = proxy.$route.params?.type ?? 'create'
+        const type = proxy.$route.params?.type
         const textMap = {
             copy: proxy.$t('release'),
             create: proxy.$t('release'),
             upgrade: proxy.$t('template.batchUpgrade')
         }
-        return textMap[type]
+        return textMap[type] || proxy.$t('release')
     })
     watch(() => pipeline.value, () => {
         isLoading.value = false
@@ -143,6 +144,15 @@
     }, {
         immediate: true
     })
+
+    onMounted(() => {
+        requestTemplateByVersion()
+    })
+    onBeforeUnmount(() => {
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, null)
+        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, 'ID')
+    })
+
     async function requestTemplateByVersion (version = currentVersionId.value) {
         try {
             await proxy.$store.dispatch('atom/requestPipeline', {
@@ -176,13 +186,44 @@
         
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
-    async function handleReleaseInstance (value) {
-        const fnMap = {
-            create: 'templates/releaseInstance',
-            copy: 'templates/releaseInstance',
-            upgrade: 'templates/updateInstance'
+    function checkInstanceListInValid () {
+        let valid = true
+        let message = ''
+        instanceList.value.forEach(instance => {
+            if (instance?.buildNo?.isRequiredParam) {
+                const buildNoParams = instance.param.filter(i => allVersionKeyList.includes(i.id))
+                valid = buildNoParams.every(i => !(i.defaultValue === null || i.defaultValue === ''))
+                message = valid ? '' : proxy.$t('storeMap.correctPipeline')
+            }
+        })
+        return {
+            valid,
+            message
         }
-        const fn = fnMap[proxy.$route.params?.type]
+    }
+    async function handleReleaseInstance (value) {
+        const type = proxy.$route.params?.type
+        const fnMap = {
+            create: 'releaseInstance',
+            copy: 'releaseInstance',
+            upgrade: 'updateInstance'
+        }
+        const fn = fnMap[type]
+        if (!fn) {
+            proxy.$showTips({
+                theme: 'error',
+                message: proxy.$t(`unknown type, ${type}`)
+            })
+            return
+        }
+        const { valid, message } = checkInstanceListInValid()
+        if (!valid) {
+            proxy.$showTips({
+                theme: 'error',
+                message
+            })
+            throw new Error(message)
+        }
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
@@ -198,19 +239,20 @@
                         ...i,
                         required: i.isRequiredParam
                     })),
+                    resetBuildNo: item?.resetBuildNo ?? false,
                     timerTrigger: item.timerTrigger,
-                    filePath: item.filePath ? `.ci/${item.filePath}` : undefined,
+                    filePath: item.filePath,
                     overrideTemplateField: item.overrideTemplateField,
                     triggerConfigs: item.triggerConfigs
                 }
             })
-            const res = await proxy.$store.dispatch(fn, {
+            const res = await proxy.$store.dispatch(`templates/${fn}`, {
                 projectId: projectId.value,
                 templateId: templateId.value,
                 version: templateVersion.value,
                 params: {
                     templateRefType: templateRefType.value,
-                    templateRef: templateRef.value,
+                    templateRef: templateRef.value?.alias ?? '',
                     useTemplateSettings: useTemplateSettings.value,
                     instanceReleaseInfos,
                     ...value
@@ -237,13 +279,7 @@
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
     }
-    onMounted(() => {
-        requestTemplateByVersion()
-    })
-    onBeforeUnmount(() => {
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF}`, '')
-        proxy.$store.commit(`templates/${UPDATE_TEMPLATE_REF_TYPE}`, 'ID')
-    })
+   
 </script>
 
 <style lang="scss">

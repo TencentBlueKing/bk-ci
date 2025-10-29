@@ -27,6 +27,7 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4.environment
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -37,8 +38,11 @@ import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentResourceV4
 import org.slf4j.LoggerFactory
@@ -216,6 +220,53 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     ): Result<List<NodeWithPermission>> {
         logger.info("OPENAPI_ENVIRONMENT_V4|$userId|third party env2nodes|$projectId|$envHashId|$envName")
         return client.get(ServiceNodeResource::class).thirdPartyEnv2Nodes(userId, projectId, envHashId, envName)
+    }
+
+    override fun fetchNodes(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?,
+        keywords: String?,
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?,
+        data: NodeFetchReq?
+    ): Result<Page<NodeWithPermission>> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|fetch nodes|$projectId|$page|$pageSize|$nodeIp|$displayName|" +
+            "$createdUser|$lastModifiedUser|$keywords|$nodeType|$nodeStatus|$agentVersion|$osName|" +
+            "$latestBuildPipelineId|$latestBuildTimeStart|$latestBuildTimeEnd|$sortType|$collation|$data")
+        return client.get(ServiceNodeResource::class).fetchNodes(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            lastModifiedUser = lastModifiedUser,
+            keywords = keywords,
+            nodeType = nodeType,
+            nodeStatus = nodeStatus,
+            agentVersion = agentVersion,
+            osName = osName,
+            latestBuildPipelineId = latestBuildPipelineId,
+            latestBuildTimeStart = latestBuildTimeStart,
+            latestBuildTimeEnd = latestBuildTimeEnd,
+            sortType = sortType,
+            collation = collation,
+            data = data
+        )
     }
 
     companion object {

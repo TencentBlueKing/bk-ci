@@ -19,6 +19,7 @@
                 <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
             </template>
             <template v-else-if="showPartOfMrPage">
+                <!-- 合并请求：部分成功 -->
                 <template v-if="isPartialSuccess">
                     <span class="part-of-mr" />
                     <i18n
@@ -26,13 +27,14 @@
                         tag="p"
                         path="template.partOfMr.partialSuccessTitle"
                     >
-                        <span class="success bold">{{ releaseRes.successItemNum }}</span>
-                        <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                        <span class="success bold">{{ releaseRes?.successItemNum }}</span>
+                        <span class="failed bold">{{ releaseRes?.failItemNum }}</span>
                     </i18n>
                     <span class="sub-message">
                         {{ $t('template.partOfMr.partialSuccessTip1') }}
                     </span>
                 </template>
+                <!-- 合并请求：全部成功 -->
                 <template v-else>
                     <span class="part-of-mr" />
                     <p class="release-status-title">
@@ -51,6 +53,7 @@
                     </p>
                 </template>
             </template>
+            <!-- 全部成功 -->
             <template v-else-if="showSuccessPage">
                 <i class="bk-icon bk-dialog-mark icon-check-1 release-status-icon success-icon" />
                 <i18n
@@ -58,12 +61,13 @@
                     tag="p"
                     path="template.releaseSuc.title"
                 >
-                    <span class="success bold">{{ releaseRes.successItemNum }}</span>
+                    <span class="success bold">{{ releaseRes?.successItemNum }}</span>
                 </i18n>
                 <p class="sub-message">
                     {{ $t('template.releaseSuc.tips') }}
                 </p>
             </template>
+            <!-- 全部失败 -->
             <template v-else-if="showFailedPage">
                 <i class="bk-icon bk-dialog-mark icon-close release-status-icon failed-icon" />
                 <i18n
@@ -71,7 +75,7 @@
                     tag="p"
                     path="template.releaseFail.title"
                 >
-                    <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                    <span class="failed bold">{{ releaseRes?.failItemNum }}</span>
                 </i18n>
                 <p class="sub-message">
                     {{ $t('template.releaseFail.tips') }}
@@ -84,8 +88,8 @@
                     tag="p"
                     path="template.releasePartialSuccess.title"
                 >
-                    <span class="success bold">{{ releaseRes.successItemNum }}</span>
-                    <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                    <span class="success bold">{{ releaseRes?.successItemNum }}</span>
+                    <span class="failed bold">{{ releaseRes?.failItemNum }}</span>
                 </i18n>
                 <p class="sub-message">
                     {{ $t('template.releasePartialSuccess.tip1') }}
@@ -148,25 +152,25 @@
                     {{ $t('template.partOfMr.tips3') }}
                 </p>
                 <p class="sub-message pending mt20">
-                    ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes.failItemNum]) }}
+                    ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes?.failItemNum]) }}
                 </p>
-                <release-failed-message
-                    class="mt20"
-                    v-if="Object.keys(releaseRes.errorMessages).length"
-                    :data="releaseRes.errorMessages"
-                />
             </template>
+            <release-failed-message
+                class="mt20"
+                v-if="Object.keys(errorMessages)?.length"
+                :data="errorMessages"
+            />
         </section>
     </div>
 </template>
 <script setup>
-    import { ref, computed, watch, onUnmounted } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import {
         RELEASE_STATUS,
         SET_RELEASE_BASE_ID,
         SET_RELEASE_ING
     } from '@/store/modules/templates/constants'
+    import { computed, onUnmounted, ref, watch } from 'vue'
     import ReleaseFailedMessage from './ReleaseFailedMessage'
     defineProps({
         instanceNum: Boolean
@@ -184,6 +188,8 @@
     const showPartOfMrPage = computed(() => !!(releaseRes.value?.pullRequestUrl))
     const currentVersionId = computed(() => proxy?.$route.params?.version)
     const timer = ref(null)
+    const errorMessages = computed(() => releaseRes.value?.errorMessages || {})
+    
     watch(() => releaseBaseId.value, (val) => {
         if (val && showReleasePage.value) {
             fetchReleaseTaskStatus()
@@ -191,6 +197,13 @@
     }, {
         immediate: true
     })
+
+    onUnmounted(() => {
+        proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
+        proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
+        clearTimeout(timer.value)
+    })
+
     function handleToInstanceList () {
         proxy.$router.push({
             name: 'TemplateOverview',
@@ -200,6 +213,7 @@
             }
         })
         
+        proxy.$store.commit(`templates/${SHOW_TASK_DETAIL}`, false)
         proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
     }
     async function fetchReleaseTaskStatus () {
@@ -250,10 +264,13 @@
             console.error(e)
         }
     }
-    onUnmounted(() => {
-        proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
-        clearTimeout(timer.value)
-    })
+
+    async function handleClick () {
+        if (releaseRes.value?.pullRequestUrl) {
+            window.open(releaseRes.value?.pullRequestUrl, '_blank')
+        }
+    }
+    
 </script>
 <style lang="scss">
 .release-status-main {

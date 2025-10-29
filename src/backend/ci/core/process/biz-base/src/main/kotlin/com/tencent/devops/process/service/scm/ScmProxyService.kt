@@ -174,6 +174,25 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 }
             }
+            is CodeTGitRepository -> {
+                val credInfo = getCredential(
+                    projectId = projectId,
+                    repository = repo,
+                    getSession = true
+                )
+                return client.get(ServiceScmResource::class).getLatestRevision(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_TGIT,
+                    branchName = branchName,
+                    additionalPath = additionalPath,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = credInfo.privateKey,
+                    region = null,
+                    userName = credInfo.username
+                )
+            }
             is CodeGitlabRepository -> {
                 val credInfo = getCredential(projectId, repo)
                 return client.get(ServiceScmResource::class).getLatestRevision(
@@ -853,8 +872,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId, credentialId,
-            encoder.encodeToString(pair.publicKey)
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             throw ErrorCodeException(

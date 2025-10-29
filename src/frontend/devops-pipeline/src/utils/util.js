@@ -20,12 +20,12 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import { isBooleanParam, isFileParam } from '@/store/modules/atom/paramsConfig'
 import {
     ALL_TEMPLATE_VIEW_ID,
     TEMPLATE_VIEW_ID_CACHE
 } from '@/store/modules/templates/constants'
 import { v4 as uuidv4 } from 'uuid'
-import { isFileParam } from '@/store/modules/atom/paramsConfig'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -478,12 +478,18 @@ export const hashID = () => {
     const uuid = uuidv4().replace(/-/g, '')
     return uuid
 }
+// 随机字符串
+export const randomString = (len, startWithAplha = false) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-export const randomString = (len) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
     const tempLen = chars.length
     let tempStr = ''
     for (let i = 0; i < len; ++i) {
+        if (i === 0 && startWithAplha) {
+            const alphaChars = chars.replace(/\d/g, '')
+            tempStr += alphaChars.charAt(Math.floor(Math.random() * alphaChars.length))
+            continue
+        }
         tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
     }
     return tempStr
@@ -646,7 +652,13 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
                 latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
             }
         } else {
-            values[param.id] = initValues[param.id] ?? param[valueKey]
+            const val = initValues[param.id] ?? param[valueKey]
+            if (isBooleanParam(param.type)) {
+                values[param.id] = val === 'true' || val === true
+            } else {
+                values[param.id] = val
+            }
+            
         }
         return values
     }, {})

@@ -136,7 +136,7 @@
 
 <script>
     import breadCrumbs from '@/components/bread-crumbs.vue'
-import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -148,7 +148,7 @@ import { mapActions, mapGetters } from 'vuex'
                 type: this.$route.query.type,
                 code: this.$route.query.code,
                 from: this.$route.query.from,
-                name: '',
+                name: this.$route.query.name || '',
                 id: '',
                 installError: false,
                 projectListLoading: false,
@@ -229,11 +229,11 @@ import { mapActions, mapGetters } from 'vuex'
                     template: this.requestTemplateDetail,
                     image: this.requestImageDetailByCode
                 }
-                if (!Object.hasOwnProperty.call(methods, this.type)) {
+                if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
-                return methods[this.type]()
+                return methods[this.type](this.code)
             },
 
             async fetchRelativeProject () {
@@ -305,15 +305,15 @@ import { mapActions, mapGetters } from 'vuex'
                         return
                     }
 
-                const methods = {
-                    atom: this.installAtom,
-                    template: this.installTemplate,
-                    image: this.installImage
-                }
-                if (!Object.hasOwnProperty.call(methods, this.type)) {
-                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
-                    return
-                }
+                    const methods = {
+                        atom: this.installAtom,
+                        template: this.installTemplate,
+                        image: this.installImage
+                    }
+                    if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
+                        this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                        return
+                    }
 
                     this.isLoading = true
                 

@@ -112,6 +112,20 @@ interface ServiceProjectResource {
     ): Result<List<ProjectByConditionDTO>>
 
     @POST
+    @Path("/listProjectDetailsByCondition/{offset}/{limit}")
+    @Operation(summary = "根据条件查询项目")
+    fun listProjectDetailsByCondition(
+        @Parameter(description = "条件迁移项目实体", required = false)
+        projectConditionDTO: ProjectConditionDTO,
+        @Parameter(description = "limit", required = true)
+        @PathParam("limit")
+        limit: Int,
+        @Parameter(description = "offset", required = true)
+        @PathParam("offset")
+        offset: Int
+    ): Result<List<ProjectVO>>
+
+    @POST
     @Path("/")
     @Operation(summary = "查询指定项目，不包括被禁用的项目")
     fun listByProjectCode(

@@ -1,15 +1,10 @@
 <template>
     <section>
-        <bk-collapse
-            v-model="activeName"
-            class="store-template-related info-collapse-panel"
-        >
-            <bk-collapse-item
-                hide-arrow
+        <div class="store-template-related info-collapse-panel">
+            <div
                 v-for="panel in panels"
                 ext-cls="no-animation-collapse"
                 :key="panel.name"
-                :name="panel.name"
             >
                 <header class="pipeline-base-config-panel-header">
                     {{ $t(`template.${panel.name}`) }}
@@ -25,7 +20,7 @@
                         <label class="base-info-block-row-label">
                             {{ $t(`template.${row.key}`) }}
                         </label>
-
+    
                         <span class="base-info-block-row-value">
                             <span v-html="row.value || '--'" />
                             <span
@@ -35,12 +30,13 @@
                                 ({{ row.grayDesc }})
                             </span>
                             <bk-link
-                                v-if="row.link"
+                                v-if="row?.link?.show"
                                 theme="primary"
                                 :href="row.link.url"
                                 target="_blank"
-                                icon="devops-icon icon-jump-link"
+                                :icon="row.link.icon"
                                 icon-placement="right"
+                                @click="row.link.handler"
                             >
                                 {{ row.link.text }}
                             </bk-link>
@@ -56,9 +52,16 @@
                         </span>
                     </p>
                 </div>
-            </bk-collapse-item>
-        </bk-collapse>
+            </div>
+        </div>
         <TemplateUpgradeStrategyDialog ref="upgradeStrategyDialog" />
+        <UpgradeFromStoreDialog
+            v-model="showTemplateUpgradeDialog"
+            :template-id="templateId"
+            :project-id="projectId"
+            @confirm="upgradeTemplate"
+            @cancel="hideUpgradeDialog"
+        />
     </section>
 </template>
 <script>
@@ -67,14 +70,19 @@
     import dayjs from 'dayjs'
     import { computed, defineComponent, ref } from 'vue'
     import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
+    import UpgradeFromStoreDialog from '@/views/Template/List/UpgradeFromStoreDialog.vue'
 
     export default defineComponent({
         components: {
-            TemplateUpgradeStrategyDialog
+            TemplateUpgradeStrategyDialog,
+            UpgradeFromStoreDialog
         },
         setup () {
             const { proxy, t } = useInstance()
             const upgradeStrategyDialog = ref(null)
+            const showTemplateUpgradeDialog = ref(false)
+            const projectId = computed(() => proxy.$route.params.projectId)
+            const templateId = computed(() => proxy.$route.params.templateId)
             const relatedInfo = computed(() => {
                 return proxy.$store.state.atom.pipelineInfo?.pipelineTemplateMarketRelatedInfo ?? {}
             })
@@ -101,7 +109,22 @@
                         rows: [
                             {
                                 key: 'srcMarketTemplateName',
-                                value: srcMarketTemplateName
+                                value: srcMarketTemplateName,
+                                link: {
+                                    show: true,
+                                    url: storeTemplateUrl.value,
+                                    icon: 'devops-icon icon-jump-link'
+                                }
+                            },
+                            {
+                                key: 'srcMarketTemplateLatestVersionName',
+                                value: t('template.latestVersionTitle', [srcMarketTemplateLatestVersionName]),
+                                // grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
+                                link: (srcMarketTemplateLatestVersionName !== latestInstalledVersionName) && (upgradeStrategy === STRATEGY_ENUM.MANUAL) ? {
+                                    show: true,
+                                    text: t('template.install'),
+                                    handler: hanleShowTemplateUpgradeDialog
+                                } : {}
                             },
                             {
                                 key: 'latestInstalledVersionName',
@@ -110,15 +133,6 @@
                                     isAutoUpgrade.value ? '' : `${t('editPage.by')} ${latestInstaller} `,
                                     dayjs(latestInstalledTime).format('YYYY-MM-DD HH:mm:ss')
                                 ])
-                            },
-                            {
-                                key: 'srcMarketTemplateLatestVersionName',
-                                value: t('template.latestVersionTitle', [srcMarketTemplateLatestVersionName]),
-                                grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
-                                link: {
-                                    text: t('template.goStore'),
-                                    url: storeTemplateUrl.value
-                                }
                             }
                         ]
                     },
@@ -131,11 +145,11 @@
                                 grayDesc: t(`template.${upgradeStrategy}-upgradeStrategyDesc`),
                                 handler: showUpgradeStrategyDialog
                             },
-                            {
+                            ...(upgradeStrategy === STRATEGY_ENUM.AUTO ? [{
                                 key: 'settingSyncStrategy',
                                 value: t(`template.${settingSyncStrategy}-SYNC`),
-                                grayDesc: t('template.syncSettingStrategyDesc')
-                            }
+                                grayDesc: settingSyncStrategy === STRATEGY_ENUM.AUTO ? t('template.syncSettingStrategyDesc') : ''
+                            }] : [])
                         ]
                     }
                 ]
@@ -145,13 +159,61 @@
             function showUpgradeStrategyDialog () {
                 upgradeStrategyDialog.value?.show?.()
             }
+
+            function hanleShowTemplateUpgradeDialog () {
+                showTemplateUpgradeDialog.value = true
+            }
+            function upgradeTemplate () {
+
+            }
+            function hideUpgradeDialog () {
+                showTemplateUpgradeDialog.value = false
+            }
+            async function upgradeTemplate (version, done) {
+                try {
+                    await proxy.$store.dispatch('templates/importTemplateFromStore', {
+                        projectId: projectId.value,
+                        templateId: templateId.value,
+                        params: {
+                            marketTemplateId: relatedInfo.value.srcMarketTemplateId,
+                            marketTemplateProjectId: relatedInfo.value.srcMarketProjectId,
+                            marketTemplateVersion: version,
+                            copySettings: true
+                        }
+                    })
+
+                    proxy.$bkMessage({
+                        theme: 'success',
+                        message: t('template.templateUpgradeSuccess')
+                    })
+                    hideUpgradeDialog()
+                    done()
+                    proxy.$store.dispatch('atom/requestTemplateSummary', {
+                        projectId: projectId.value,
+                        templateId: templateId.value
+                    })
+                } catch (error) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                    done()
+                    hideUpgradeDialog()
+                }
+            }
             return {
+                showTemplateUpgradeDialog,
                 upgradeStrategyDialog,
                 showUpgradeStrategyDialog,
+                hanleShowTemplateUpgradeDialog,
+                projectId,
+                templateId,
                 panels,
                 activeName,
                 relatedInfo,
-                storeTemplateUrl
+                storeTemplateUrl,
+                upgradeTemplate,
+                hideUpgradeDialog
             }
         }
     })
@@ -167,4 +229,9 @@
             }
         }
     }
+</style>
+<style lang="scss" scoped>
+.pipeline-base-config-panel-header {
+    margin: 0 10px 18px;
+}
 </style>

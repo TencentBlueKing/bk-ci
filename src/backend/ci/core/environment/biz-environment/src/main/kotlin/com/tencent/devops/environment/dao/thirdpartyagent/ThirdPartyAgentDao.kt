@@ -470,4 +470,27 @@ class ThirdPartyAgentDao {
             (dsl as UpdateConditionStep<*>).and(PROJECT_ID.eq(projectId)).execute()
         }
     }
+
+    fun batchUpdateParallelTaskCount(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: Set<Long>,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?
+    ) {
+        if (parallelTaskCount == null && dockerParallelTaskCount == null) {
+            return
+        }
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.update(this)
+            if (parallelTaskCount != null) {
+                dsl.set(PARALLEL_TASK_COUNT, parallelTaskCount)
+            }
+            if (dockerParallelTaskCount != null) {
+                dsl.set(DOCKER_PARALLEL_TASK_COUNT, dockerParallelTaskCount)
+            }
+            (dsl as UpdateSetMoreStep<*>).where(PROJECT_ID.eq(projectId))
+                .and(ID.`in`(ids)).execute()
+        }
+    }
 }

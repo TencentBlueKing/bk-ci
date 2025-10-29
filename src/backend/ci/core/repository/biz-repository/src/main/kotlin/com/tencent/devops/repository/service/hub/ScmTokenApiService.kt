@@ -67,7 +67,7 @@ class ScmTokenApiService @Autowired constructor(
     fun refresh(
         scmCode: String,
         refreshToken: String
-    ) {
+    ): Oauth2AccessToken {
         return invokeApi(scmCode = scmCode) { providerProperties ->
             scmApiManager.refresh(
                 providerProperties = providerProperties,

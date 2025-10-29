@@ -2,9 +2,10 @@
     <section
         :class="{
             'instance-config-wrapper': true,
-            'has-ref-tips': !templateRefTypeById
+            'has-ref-tips': !templateRefTypeById,
+            'is-create': isInstanceCreateType
         }"
-        v-bkloading="{ isLoading: isLoading }"
+        v-bkloading="{ isLoading: isLoading || instancePageLoading }"
     >
         <bk-alert
             v-if="!templateRefTypeById"
@@ -14,9 +15,21 @@
             <div slot="title">
                 <p>
                     {{ $t('template.notSpecifiedRef.tips1') }}
-                    <span class="doc-btn">
-                        {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
-                    </span>
+                    <bk-popover
+                        placement="top"
+                        width="620"
+                    >
+                        <span class="doc-btn">
+                            {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
+                        </span>
+                        <div slot="content">
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips1') }}</p>
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips2') }}</p>
+                            <p>{{ $t('template.arrangingValueStrategyTips.tips3') }}</p>
+                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips4') }}</p>
+                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips5') }}</p>
+                        </div>
+                    </bk-popover>
                 </p>
                 <p>
                     {{ $t('template.notSpecifiedRef.tips2') }}
@@ -32,7 +45,7 @@
                 </div>
                 <div
                     class="right"
-                    v-if="!isInstanceCreateType && (!!curTemplateVersion || !!templateRef)"
+                    v-if="showCompareParamsNum"
                 >
                     <ul class="params-compare-content">
                         <bk-checkbox
@@ -85,6 +98,7 @@
                                 :param-values="paramsValues"
                                 :handle-param-change="handleParamChange"
                                 :params="paramsList"
+                                :is-exec-preview="false"
                                 sort-category
                                 show-operate-btn
                                 :hide-deleted="hideDeleted"
@@ -103,11 +117,12 @@
                                         show-follow-template-btn
                                         show-set-required-btn
                                         v-bind="versionParams"
+                                        config-type="introVersion"
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
-                                        :handle-set-build-no-required="handleSetBuildNoRequired"
-                                        :is-required-param="curInstance.buildNo.isRequiredParam"
-                                        :is-follow-template="curInstance.buildNo.isFollowTemplate"
+                                        :handle-set-required="handleSetBuildNoRequired"
+                                        :is-required-param="curInstance.buildNo?.isRequiredParam"
+                                        :is-follow-template="curInstance.buildNo?.isFollowTemplate"
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
@@ -115,7 +130,9 @@
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
                                                 is-instance
-                                                :is-reset-build-no="isResetBuildNo"
+                                                :is-init-instance="isInstanceCreateType"
+                                                :is-follow-template="curInstance.buildNo?.isFollowTemplate"
+                                                :reset-build-no="curInstance.resetBuildNo"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
@@ -225,7 +242,7 @@
                     </section>
                 </template>
 
-                <template>
+                <template v-if="curInstance?.triggerConfigs?.length">
                     <section class="params-content-item">
                         <header
                             :class="['params-collapse-trigger', {
@@ -239,13 +256,16 @@
                             />
     
                             {{ $t('template.triggers') }}
+                            <span class="trigger-tips">
+                                {{ $t('template.triggersUpdateTips') }}
+                            </span>
                         </header>
                         <div
                             v-if="activeName.has(4)"
                             class="params-collapse-content"
                         >
                             <renderSortCategoryParams
-                                v-for="(trigger, index) in triggerConfigs"
+                                v-for="(trigger, index) in curInstance?.triggerConfigs"
                                 :key="index"
                                 :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
                                 default-layout
@@ -253,6 +273,7 @@
                                 follow-template-key="trigger"
                                 check-step-id
                                 v-bind="trigger"
+                                config-type="trigger"
                                 :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
                             >
                                 <template slot="content">
@@ -269,7 +290,7 @@
             </div>
         </section>
         <footer
-            v-if="!isLoading"
+            v-if="!isLoading && !instancePageLoading && !isInstanceCreateType"
             class="config-footer"
         >
             <bk-button
@@ -282,18 +303,19 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, defineProps } from 'vue'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import RenderTrigger from '@/components/Template/RenderTrigger.vue'
     import UseInstance from '@/hook/useInstance'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
     import {
         SET_INSTANCE_LIST,
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { computed, defineProps, ref, watch } from 'vue'
+    import { isObject, isShallowEqual } from '@/utils/util'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -302,7 +324,6 @@
     const isLoading = ref(true)
     const paramsList = ref([])
     const paramsValues = ref({})
-    const triggerConfigs = ref([])
     const otherParams = ref([])
     const otherValues = ref({})
     const constantParams = ref([])
@@ -311,48 +332,45 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
-    const isResetBuildNo = ref(false)
+    const instancePageLoading = computed(() => proxy.$store?.state?.templates?.instancePageLoading)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
-    // curTemplate 当前选中的某一个版本的模板数据
-    // templateVersion 选中的模板版本号
+    // curTemplateDetail 当前选中的某一个版本的模板数据
+    // curTemplateVersion 选中的模板版本号
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
+    const showCompareParamsNum = computed(() => {
+        if (props.isInstanceCreateType) return false
+        if (templateRefTypeById.value) {
+            return Object.keys(curTemplateDetail.value)?.length
+        }
+        return Object.keys(curTemplateDetail.value)?.length && !!templateRef.value
+    })
     const curInstance = computed(() => {
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         if (instance?.param) {
             instance.param = instance.param.map(p => {
                 return {
                     ...p,
-                    readOnlyCheck: false // 取消只读参数的禁用逻辑
+                    // readOnlyCheck: false // 取消只读参数的禁用逻辑
                 }
             })
         }
         // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
         let instanceParams, instanceBuildNo, instanceTriggerConfigs
-        if (!props.isInstanceCreateType && instance && (curTemplateVersion.value || templateRef.value)) {
-            if (curTemplateDetail.value?.params) {
+        if (instance && (curTemplateVersion.value || templateRef.value)) {
+            if (curTemplateDetail.value?.param) {
                 instanceParams = compareParams(instance, curTemplateDetail.value)
             }
             if (curTemplateDetail.value?.buildNo) {
                 instanceBuildNo = compareBuild(instance?.buildNo, curTemplateDetail.value.buildNo)
             }
-            if (templateTriggerConfigs.value.length) {
-                const triggerConfigs = instance.triggerElements?.map(i => ({
-                    atomCode: i.atomCode,
-                    stepId: i.stepId ?? '',
-                    disabled: i.additionalOptions?.enable ?? true,
-                    cron: i.advanceExpression,
-                    variables: i.startParams,
-                    name: i.name,
-                    version: i.version,
-                    isFollowTemplate: !(instance?.overrideTemplateField?.triggerStepIds?.includes(i.stepId))
-                }))
-                instanceTriggerConfigs = compareTriggerConfigs(triggerConfigs, templateTriggerConfigs.value)
+            if (curTemplateDetail.value?.triggerConfigs?.length) {
+                instanceTriggerConfigs = compareTriggerConfigs(instance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
             }
         }
         if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
@@ -438,18 +456,6 @@
         }
         return paramsList.value.length
     })
-    const templateTriggerConfigs = computed(() => {
-        return curTemplateDetail.value?.resource?.model?.stages[0]?.containers[0]?.elements?.map(i => ({
-            atomCode: i.atomCode,
-            stepId: i.stepId ?? '',
-            disabled: i.additionalOptions?.enable ?? true,
-            cron: i.advanceExpression,
-            variables: i.startParams,
-            name: i.name,
-            version: i.version,
-            isFollowTemplate: true
-        }))
-    })
     watch(() => activeIndex.value, () => {
         isLoading.value = true
     })
@@ -459,15 +465,21 @@
     }, {
         deep: true
     })
-    watch(() => [curTemplateVersion.value, templateRef.value], () => {
+    watch(() => curTemplateVersion.value, () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
         if (props.isInstanceCreateType) {
+            if (!curTemplateVersion.value) {
+                isLoading.value = false
+            }
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
                 return {
                     ...instance,
-                    param: curTemplateDetail.value.params,
-                    buildNo: curTemplateDetail.value.buildNo
+                    param: curTemplateDetail.value?.param?.map(i => ({
+                        ...i,
+                        isRequiredParam: true
+                    })),
+                    buildNo: curTemplateDetail.value?.buildNo
                 }
             }))
         } else {
@@ -475,45 +487,16 @@
         }
     })
     function compareParams (instance, template) {
-        const instanceParams = instance?.param
-        const templateParams = template?.params
-        const instanceBuildNo = instance?.buildNo
-        const templateBuildNo = template?.buildNo
-
-        // 非入参的参数直接赋值模板配置的入参默认值
-        if (instanceBuildNo?.required && !templateBuildNo?.required) {
-            instanceParams?.forEach(i => {
-                if (allVersionKeyList.includes(i.id)) {
-                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
-                    i.defaultValue = newValue ?? i.defaultValue
-                }
-            })
-        }
-
-        instanceParams?.forEach(i => {
-            // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
-            if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
-                i.defaultValue = newValue ?? i.defaultValue
-            }
-        })
-
+        const instanceParams = instance?.param ?? []
+        const templateParams = template?.param ?? []
         const templateParamsMap = templateParams.reduce((acc, item) => {
             acc[item.id] = item
             return acc
         }, {})
-        for (const item of instanceParams) {
-            const templateParamItem = templateParamsMap[item.id]
-
-            if (!templateParamItem) {
-                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
-                item.isDelete = true
-            } else {
-                // 对比 defaultValue, 如果不同则标记为isChange
-                item.isChange = item.defaultValue !== templateParamItem.defaultValue
-            }
-        }
-
+        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1].param.reduce((acc, item) => {
+            acc[item.id] = item
+            return acc
+        }, {})
         // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
         for (const item of templateParams) {
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
@@ -523,44 +506,108 @@
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
             }
         }
-        
+        instanceParams?.forEach(i => {
+            // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
+            if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
+                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                i.defaultValue = newValue ?? i.defaultValue
+            }
+        })
+        for (const item of instanceParams) {
+            const templateParamItem = templateParamsMap[item.id]
+            const initialInstanceParamItem = initialInstanceParams[item.id]
+           
+            if (!templateParamItem) {
+                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
+                item.isDelete = true
+            } else {
+                // 对比 defaultValue, 如果不相同则标记为isChange
+                // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
+                if (!allVersionKeyList.includes(item.id) && item.isFollowTemplate && item.defaultValue !== templateParamItem.defaultValue) {
+                    item.defaultValue = templateParamItem.defaultValue
+                    item.isChange = true
+                } else {
+                    const templateDefaultValue = allVersionKeyList.includes(item.id) ? Number(templateParamItem.defaultValue) : templateParamItem.defaultValue
+                    const itemDefaultValue = allVersionKeyList.includes(item.id) ? Number(item.defaultValue) : item.defaultValue
+                    item.hasChange = isObject(itemDefaultValue)
+                        ? !isShallowEqual(itemDefaultValue, templateDefaultValue)
+                        : itemDefaultValue !== templateDefaultValue
+                    
+                    if (!item.isNew) {
+                        const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem?.defaultValue) : initialInstanceParamItem?.defaultValue
+                        item.isChange =  isObject(itemDefaultValue)
+                            ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
+                            : itemDefaultValue !== initialInstanceDefaultValue
+                    }
+                }
+                if (!item.required && templateParamItem.required) {
+                    item.required = true
+                    item.isRequiredParam = true
+                }
+            }
+        }
+        // 非入参的参数直接赋值模板配置的入参默认值
+        const instanceBuildNo = instance?.buildNo
+        const templateBuildNo = template?.buildNo
+        if (!instanceBuildNo?.required && templateBuildNo?.required) {
+            instanceParams?.forEach(i => {
+                if (allVersionKeyList.includes(i.id)) {
+                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                    i.defaultValue = newValue ?? i.defaultValue
+                }
+            })
+        }
         return instanceParams
     }
 
     function compareTriggerConfigs (instanceTriggerConfigs, templateTriggerConfigs) {
-        const instanceTriggerMap = new Map(instanceTriggerConfigs.map(item => [item.stepId, item]))
-        const result = templateTriggerConfigs.map(item => {
+        function createTriggerMap (configs) {
+            return new Map(configs?.filter(i => !!i.stepId)?.map(item => [item.stepId, item]))
+        }
+
+        const instanceTriggerMap = createTriggerMap(instanceTriggerConfigs)
+        const templateTriggerMap = createTriggerMap(templateTriggerConfigs)
+
+        const result = templateTriggerConfigs?.filter(i => !!i.stepId)?.reduce((acc, item) => {
             if (!instanceTriggerMap.has(item.stepId)) {
-                return { ...item, isNew: true }
+                acc.push({ ...item, isNew: true })
+            } else {
+                const instanceTrigger = instanceTriggerMap.get(item.stepId)
+                acc.push(instanceTrigger.isFollowTemplate ? { ...instanceTrigger, ...item } : instanceTrigger)
             }
-            const instanceTrigger = instanceTriggerMap.get(item.stepId)
-            return { ...item, ...instanceTrigger }
-        })
+            return acc
+        }, [])
 
-        const templateTriggerMap = new Map(templateTriggerConfigs.map(item => [item.stepId, item]))
-
-        instanceTriggerConfigs.forEach(item => {
+        instanceTriggerConfigs?.filter(i => !!i.stepId).forEach(item => {
             if (!templateTriggerMap.has(item.stepId)) {
                 result.push({ ...item, isDelete: true })
             }
         })
+
         return result
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
-        if (!instanceBuildNo && !!templateBuildNo) {
-            // 将模板的推荐版本号配置覆盖实例推荐版本号
+        if (instanceBuildNo?.isFollowTemplate) {
             return {
                 ...instanceBuildNo,
-                ...templateBuildNo
+                buildNo: templateBuildNo.buildNo
             }
-        }
-        if (instanceBuildNo && templateBuildNo) {
-            return {
-                ...instanceBuildNo,
-                required: templateBuildNo.required
+        } else {
+            if (!instanceBuildNo && !!templateBuildNo) {
+                // 将模板的推荐版本号配置覆盖实例推荐版本号
+                return {
+                    ...instanceBuildNo,
+                    ...templateBuildNo
+                }
             }
+            if (instanceBuildNo && templateBuildNo) {
+                return {
+                    ...instanceBuildNo,
+                    // required: templateBuildNo.required
+                }
+            }
+            return instanceBuildNo
         }
-        return instanceBuildNo
     }
     
     function handleSetParmaRequired (id) {
@@ -577,7 +624,7 @@
     }
     
     function handleUseDefaultValue (id) {
-        const defaultValue = curTemplateDetail.value?.params?.find(i => i.id === id)?.defaultValue
+        const defaultValue = curTemplateDetail.value?.param?.find(i => i.id === id)?.defaultValue
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
@@ -632,22 +679,23 @@
                 ...curInstance.value,
                 buildNo: {
                     ...curInstance.value?.buildNo,
-                    [name]: value
-                }
+                    [name]: value,
+                    currentBuildNo: value
+                },
+                resetBuildNo: true
             }
         })
     }
     function handleCheckChange (value) {
-        isResetBuildNo.value = value
-        if (!value) return
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
                 ...curInstance.value,
                 buildNo: {
                     ...curInstance.value?.buildNo,
-                    currentBuildNo: curInstance.value.buildNo?.buildNo
-                }
+                    currentBuildNo: value ? curInstance.value.buildNo?.buildNo : curInstance.value.buildNo?.currentBuildNo
+                },
+                resetBuildNo: value
             }
         })
     }
@@ -690,6 +738,7 @@
         let target = id, index
         switch (key) {
             case 'introVersion':
+                // 推荐版本号-取消跟随模板，存入overrideTemplateField字段为BK_CI_BUILD_NO
                 target = 'BK_CI_BUILD_NO'
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
@@ -703,13 +752,30 @@
                         },
                         buildNo: {
                             ...curInstance.value?.buildNo,
-                            isFollowTemplate: !curInstance.value.buildNo.isFollowTemplate
+                            isFollowTemplate: !curInstance.value?.buildNo?.isFollowTemplate,
                         }
                     }
                 })
+                if (curInstance.value?.buildNo?.isFollowTemplate) {
+                    proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                        index: activeIndex.value - 1,
+                        value: {
+                            ...curInstance.value,
+                            param: curInstance.value?.param.map(p => {
+                                return {
+                                    ...p,
+                                    defaultValue: allVersionKeyList.includes(p.id)
+                                        ? curTemplateDetail.value.param?.find(t => t.id === p.id)?.defaultValue
+                                        : p.defaultValue
+                                }
+                            })
+                        }
+                    })
+                }
                 break
 
             case 'trigger':
+                const temTriggerValue = curTemplateDetail.value.triggerConfigs?.find(trigger => trigger.stepId === id).disabled
                 const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
                 index = triggerStepIds.indexOf(target)
                 index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
@@ -725,6 +791,7 @@
                         triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
                             return {
                                 ...trigger,
+                                disabled: trigger.stepId === id ? temTriggerValue : trigger.disabled,
                                 isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
                             }
                         })
@@ -732,6 +799,7 @@
                 })
                 break
             case 'param':
+                const temDefaultValue =  curTemplateDetail.value.param?.find(t => t.id === id)?.defaultValue
                 index = paramIds.indexOf(target)
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
                 proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
@@ -744,7 +812,9 @@
                         },
                         param: curInstance.value?.param.map(p => ({
                             ...p,
-                            isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate
+                            defaultValue: p.id === id && !p.isFollowTemplate ? temDefaultValue : p.defaultValue,
+                            isFollowTemplate: p.id === id ? !p.isFollowTemplate : p.isFollowTemplate,
+                            hasChange: false
                         }))
                     }
                 })
@@ -776,7 +846,6 @@
             ...curInstance.value?.buildNo,
             isRequiredParam: curInstance.value?.buildNo?.required ?? false
         } || {}
-        triggerConfigs.value = curInstance.value?.triggerConfigs || []
         getParamsValue()
         setTimeout(() => {
             isLoading.value = false
@@ -790,6 +859,9 @@
         height: calc(100% - 148px);
         &.has-ref-tips {
             height: calc(100% - 188px);
+        }
+        &.is-create {
+            height: calc(100% - 98px);
         }
         .doc-btn {
             color: #3a84ff;
@@ -904,7 +976,12 @@
                         transform: rotate(90deg);
                     }
                 }
-
+                .trigger-tips {
+                    font-size: 12px;
+                    margin-left: 10px;
+                    color: #979BA5;
+                    font-weight: 400;
+                }
                 .icon-angle-right {
                     transition: all 0.3 ease;
                     color: #4D4F56;
@@ -922,5 +999,6 @@
         background: #FFFFFF;
         border: 1px solid #DCDEE5;
         z-index: 100;
+        border-left: none;
     }
 </style>

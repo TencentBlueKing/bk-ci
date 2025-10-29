@@ -49,8 +49,8 @@
                             <div
                                 v-for="(param) in listMap[key]"
                                 :key="param.id"
-                                :class="['variable-item', {
-                                    'variable-item-editable': editable,
+                                :class="['variable-item variable-item-editable', {
+                                    'variable-item-invalid': param.isInvalid,
                                     'is-removed': param?.removeFlag
                                 }]"
                                 @click="handleEdit(param)"
@@ -108,7 +108,7 @@
                                                 class="default-value"
                                                 v-bk-overflow-tips
                                             >
-                                                {{ param.defaultValue ?? '--' }}
+                                                {{ param.defaultValue || '--' }}
                                             </span>
                                         </div>
                                         
@@ -281,6 +281,7 @@
 
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
+    @import "@/scss/conf.scss";
     .delete-param-popconfrim {
         .tippy-tooltip {
             padding: 6px;
@@ -298,7 +299,6 @@
         }
     }
     .bk-param-container {
-        margin-bottom: 16px;
         .var-header {
             display: flex;
             align-items: center;
@@ -394,6 +394,9 @@
                             display: block;
                         }
                     }
+                }
+                &.variable-item-invalid {
+                   border-color: $dangerColor;
                 }
                 &:hover {
                     .drag-area {
@@ -525,6 +528,10 @@
                     }
                 }
             }
+        }
+
+        &:not(:last-child) {
+            margin-bottom: 16px;
         }
     }
 

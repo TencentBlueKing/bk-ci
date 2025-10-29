@@ -117,6 +117,7 @@
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
             :required="valueRequired"
+            :disabled="valueRequired"
             @toggleConstraint="handleToggleConstraint"
         >
             <template #constraint-area="{ props: { isOverride, isTemplateInstance } }">
@@ -311,7 +312,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -335,7 +336,7 @@
     } from '@/store/modules/atom/paramsConfig'
     import { mapGetters, mapState } from 'vuex'
     import SelectTypeParam from './select-type-param'
-
+    
     const BOOLEAN = [
         {
             value: true,
@@ -400,10 +401,19 @@
         computed: {
             ...mapGetters('atom', [
                 'osList',
+                'failIfVariableInvalid'
             ]),
             ...mapState('atom', [
                 'pipeline'
             ]),
+            varLengthRule () {
+
+                return Object.assign({
+                    required: this.valueRequired
+                }, this.failIfVariableInvalid ? {
+                    max: VAR_MAX_LENGTH
+                } : {})
+            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,

@@ -69,6 +69,7 @@
                 default: ''
             },
             templatePipeline: Object,
+            templateVersion: String,
             isTemplate: {
                 type: Boolean,
                 default: false
@@ -174,6 +175,7 @@
             ...mapActions({
                 updatePipelineMode: 'updatePipelineMode',
                 requestTemplatePreview: 'pipelines/requestTemplatePreview',
+                requestTemplatePreviewByVersion: 'templates/requestTemplatePreviewByVersion',
                 templatePreviewDetail: 'templates/templatePreviewDetail'
             }),
             async getTemplatePreviewDetail () {
@@ -183,9 +185,17 @@
                 })
             },
             async getRequestTemplatePreview () {
+                if (this.templateVersion) {
+                    return this.requestTemplatePreviewByVersion({
+                        projectId: this.templatePipeline.projectId,
+                        templateId: this.templatePipeline.templateId,
+                        version: this.templateVersion,
+                        highlightType: this.highlightType
+                    })
+                }
                 return this.requestTemplatePreview({
-                    projectId: this.$route.params.projectId,
-                    templateId: this.templatePipeline.templateId || this.templatePipeline.id,
+                    projectId: this.templatePipeline.projectId,
+                    templateId: this.templatePipeline.templateId,
                     highlightType: this.highlightType
                 })
             },
@@ -202,8 +212,8 @@
                     if (!res.yamlSupported && this.isCodeMode) {
                         this.updatePipelineMode(UI_MODE)
                     } else {
-                        this.templateYaml = this.isTemplate ? res.yamlPreview.yaml : res.templateYaml
-                        this.highlightMarkList = (this.isTemplate ? res.yamlPreview.pipeline : res.highlightMarkList) ?? []
+                        this.templateYaml = this.isTemplate ? res.yamlPreview?.yaml : res.templateYaml
+                        this.highlightMarkList = (this.isTemplate ? res.yamlPreview?.pipeline : res.highlightMarkList) ?? []
                     }
                     this.isYamlSupport = res.yamlSupported
                     this.yamlInvalidMsg = res.yamlInvalidMsg

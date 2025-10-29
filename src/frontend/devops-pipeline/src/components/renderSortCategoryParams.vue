@@ -4,36 +4,19 @@
             <summary class="category-collapse-trigger">
                 <div class="header">
                     {{ name }}
-                    <span
-                        v-if="showFollowTemplateBtn"
-                        :class="['icon-item', {
-                            'is-follow': isFollowTemplate,
-                            'disabled': checkStepId ? !stepId : false
-                        }]"
-                        v-bk-tooltips="{
-                            content: getTooltipMessage,
-                            width: 320
-                        }"
-                        @click.stop="handleChangeFollow"
-                    >
-                        <logo
-                            name="template-mode"
-                            size="12"
-                        />
-                    </span>
-                    <span
-                        v-if="showSetRequiredBtn"
-                        :class="['icon-item', {
-                            'active': isRequiredParam
-                        }]"
-                        v-bk-tooltips=" isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')"
-                        @click="handelChangeBuildNoRequired"
-                    >
-                        <Logo
-                            :name="isRequiredParam ? 'set-param-active' : 'set-param-default'"
-                            size="12"
-                        />
-                    </span>
+                    <ToggleRequiredParamPopover
+                        v-if="showSetRequiredBtn && !isDelete"
+                        is-collapsed
+                        :is-required-param="isRequiredParam"
+                        :handle-change="handelChangeRequired"
+                    />
+                    <ToggleFollowTemplatePopover
+                        v-if="showFollowTemplateBtn && !isDelete"
+                        is-collapsed
+                        :is-follow-template="isFollowTemplate"
+                        :handle-change="handleChangeFollow"
+                        :type="configType"
+                    />
                     <span
                         v-if="statusTagConfig.message"
                         :class="['status-tag ml10', statusTagConfig.theme]"
@@ -55,11 +38,13 @@
 </template>
 
 <script>
-    import Logo from '@/components/Logo'
+    import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
+    import ToggleFollowTemplatePopover from '@/components/ToggleFollowTemplatePopover.vue'
     export default {
         name: 'RenderSortCategoryParams',
         components: {
-            Logo
+            ToggleRequiredParamPopover,
+            ToggleFollowTemplatePopover
         },
         props: {
             followTemplateKey: {
@@ -94,7 +79,7 @@
                 type: Function,
                 default: () => () => {}
             },
-            handleSetBuildNoRequired: {
+            handleSetRequired: {
                 type: Function,
                 default: () => () => {}
             },
@@ -117,24 +102,13 @@
             isChange: {
                 type: Boolean,
                 default: false
+            },
+            configType: {
+                type: String,
+                default: ''
             }
         },
         computed: {
-            getTooltipMessage () {
-                if (this.checkStepId) {
-                    if (this.stepId) {
-                        return this.isFollowTemplate
-                            ? this.$t('template.notFollowTemplateTips')
-                            : this.$t('template.followTemplateTips')
-                    } else {
-                        return this.$t('template.notStepIdTips', [this.name])
-                    }
-                } else {
-                    return this.isFollowTemplate
-                        ? this.$t('template.notFollowTemplateTips')
-                        : this.$t('template.followTemplateTips')
-                }
-            },
             statusTagConfig () {
                 let message, theme
                 if (this.isDelete) {
@@ -154,13 +128,11 @@
         },
         methods: {
             handleChangeFollow (event) {
-                event.preventDefault()
                 if (this.checkStepId && !this.stepId) return
                 this.handleFollowTemplate(this.followTemplateKey)
             },
-            handelChangeBuildNoRequired (event) {
-                event.preventDefault()
-                this.handleSetBuildNoRequired()
+            handelChangeRequired (event) {
+                this.handleSetRequired()
             }
         }
     }
@@ -210,28 +182,5 @@
 
     details:not([open]) .category-collapse-trigger .icon-angle-down {
         transform: rotate(-90deg);
-    }
-    .icon-item {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 2px;
-        background: #EAEBF0;
-        color: #4D4F56;
-        cursor: pointer;
-        margin-left: 8px;
-        z-index: 100;
-        &.is-follow {
-            background: #CDDFFE;
-            color: #3A84FF;
-        }
-        &.active {
-            background: #CDDFFE;
-        }
-        &.disabled {
-            cursor: not-allowed;
-        }
     }
 </style>

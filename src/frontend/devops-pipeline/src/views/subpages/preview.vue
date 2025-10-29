@@ -20,7 +20,7 @@
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
-                build-only
+                :unique-id="pipelineId"
             />
             <i
                 class="bk-icon icon-info-circle"
@@ -532,12 +532,12 @@
                     case 'versionParamForm':
                         return await this.$refs?.versionParamForm?.$validator?.validateAll?.() ?? true
                     case 'paramsForm':
-                        return await this.$refs?.paramsForm?.$validator?.validateAll?.() ?? true
+                        return await this.$refs?.paramsForm?.validateAll?.() ?? true
                     case 'buildForm':
                         return await this.$refs?.buildForm?.$validator?.validateAll?.() ?? true
                     default: {
                         const versionValid = await this.$refs?.versionParamForm?.$validator?.validateAll?.() ?? true
-                        const paramsFormValid = await this.$refs?.paramsForm?.$validator?.validateAll?.() ?? true
+                        const paramsFormValid = await this.$refs?.paramsForm?.validateAll() ?? true
                         const buildFormValid = await this.$refs?.buildForm?.$validator?.validateAll?.() ?? true
                         return versionValid && paramsFormValid && buildFormValid
                     }

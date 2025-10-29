@@ -161,7 +161,7 @@
                     v-if="allRenderColumnMap.operate"
                     :label="$t('store.操作')"
                     width="300"
-                    flxed="right"
+                    fixed="right"
                     class-name="handler-btn"
                 >
                     <template slot-scope="props">
@@ -261,7 +261,7 @@
 </template>
 
 <script>
-    import { TEMPLATE_TABLE_COLUMN_CACHE, templateStatusList } from '@/store/constants'
+    import { STORE_TEMPLATE_TABLE_COLUMN_CACHE, templateStatusList } from '@/store/constants'
     import { debounce } from '@/utils/index'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -438,7 +438,7 @@
                     label: this.$t('store.操作')
                 }
             ]
-            const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
+            const columnsCache = JSON.parse(localStorage.getItem(STORE_TEMPLATE_TABLE_COLUMN_CACHE))
             if (columnsCache) {
                 this.selectedTableColumn = columnsCache.columns
                 this.tableSize = columnsCache.size
@@ -622,7 +622,7 @@
             handleSettingChange ({ fields, size }) {
                 this.selectedTableColumn = fields
                 this.tableSize = size
-                localStorage.setItem(TEMPLATE_TABLE_COLUMN_CACHE, JSON.stringify({
+                localStorage.setItem(STORE_TEMPLATE_TABLE_COLUMN_CACHE, JSON.stringify({
                     columns: fields,
                     size
                 }))

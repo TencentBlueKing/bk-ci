@@ -1,9 +1,10 @@
 <template>
     <bk-table
         v-bkloading="{ isLoading }"
-        :data="data"
+        :data="templateList"
         :size="tableSize"
-        height="100%"
+        :max-height="maxHeight"
+        ext-cls="template-table"
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
@@ -21,14 +22,19 @@
             :key="col.id"
             :prop="col.id"
             :width="col.width"
+            :min-width="col.minWidth"
             :show-overflow-tooltip="col.showOverflowTooltip"
             :sortable="col.sortable"
             :formatter="col.formatter"
+            :fixed="col.id === 'operate' ? 'right' : false"
         >
             <template slot-scope="{ row }">
                 <div
                     v-if="col.id === 'name'"
-                    class="template-name select-text"
+                    :class="['template-name', {
+                        'select-text': row.canView
+                    }]"
+                    v-perm="row.viewPerm"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     <span
@@ -36,6 +42,13 @@
                     >
                         {{ row.name }}
                     </span>
+                    <bk-tag
+                        v-if="row.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING"
+                        theme="success"
+                        class="draft-tag"
+                    >
+                        {{ $t('draft') }}
+                    </bk-tag>
                     <PacTag
                         v-if="row.enablePac"
                         class="pac-code-icon"
@@ -77,7 +90,8 @@
                 <bk-button
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
-                    :disabled="row.instancePipelineCount <= 0"
+                    :disabled="row.instancePipelineCount <= 0 || !row.canView"
+                    v-perm="row.viewPerm"
                     @click="goTemplateOverview(row.overviewParams)"
                 >
                     {{ row.instancePipelineCount }}
@@ -87,14 +101,15 @@
                     v-else-if="col.id === 'operate'"
                     class="template-operate"
                 >
-                    <span
+                    <bk-button
+                        v-if="row.type === 'PIPELINE'"
+                        text
+                        :disabled="row.latestVersionStatus === 'COMMITTING'"
                         @click="goInstanceEntry(row)"
-                        :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
+                        v-perm="row.viewPerm"
                     >
-                        <span v-if="row.type === 'PIPELINE'">
-                            {{ $t('template.instantiate') }}
-                        </span>
-                    </span>
+                        {{ $t('template.instantiate') }}
+                    </bk-button>
                     <ext-menu
                         type="template"
                         :data="row"
@@ -131,14 +146,18 @@
     import {
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
-    import { defineProps, onBeforeMount, ref } from 'vue'
+    import {
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { computed, defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
-
     const { proxy, t } = UseInstance()
     const {
         goTemplateOverview
     } = useTemplateActions()
-    defineProps({
+    const props = defineProps({
         data: {
             type: Array,
             default: () => []
@@ -154,7 +173,11 @@
                 count: 6,
                 limit: 20
             })
-        }
+        },
+        maxHeight: {
+            type: [Number, String],
+            default: 'auto'
+        },
     })
     const emit = defineEmits(['limit-change', 'page-change', 'clear'])
     const tableSize = ref('small')
@@ -162,7 +185,7 @@
         {
             id: 'name',
             label: t('template.name'),
-            width: 220,
+            minWidth: 220,
             disabled: true,
             sortable: true,
             showOverflowTooltip: true
@@ -211,7 +234,8 @@
         {
             id: 'operate',
             disabled: true,
-            label: t('operate')
+            label: t('operate'),
+            width: 96
         }
     ]
     const tableColumnMap = tableColumns.reduce((acc, cur) => {
@@ -219,6 +243,22 @@
         return acc
     }, {})
     const selectedTableColumn = ref([])
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const templateList = computed(() => props.data.map(temp => {
+        return {
+            ...temp,
+            viewPerm: {
+                hasPermission: temp.canView,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: temp.id,
+                    action: TEMPLATE_RESOURCE_ACTION.VIEW
+                }
+            }
+        }
+    }))
 
     onBeforeMount(() => {
         try {
@@ -250,7 +290,7 @@
             name: 'instanceEntry',
             params: {
                 templateId: row.id,
-                version: row.releaseVersion,
+                version: row.releasedVersion,
                 type: 'create'
             }
         })
@@ -309,6 +349,7 @@
     align-items: center;
     grid-gap: 6px;
     height: 36px;
+    line-height: 1;
     .store-source-flag {
         font-size: 0;
     }
@@ -317,25 +358,16 @@
     display: flex;
     align-items: center;
     height: 40px;
-    .action {
-        display: inline-block;
-        text-align: center;
-        min-width: 62px;
-        color: $primaryColor;
-    }
+    grid-gap: 12px;
+}
+
+.template-table.bk-table-enable-row-transition .bk-table-body td {
+    transition: none;
 }
 
 .select-text {
     color: $primaryColor;
     cursor: pointer;
-}
-
-.create-permission {
-    cursor: pointer;
-}
-
-.not-create-permission {
-    cursor: not-allowed;
 }
 
 </style>

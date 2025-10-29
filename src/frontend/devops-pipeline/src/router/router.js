@@ -154,7 +154,10 @@ const routes = [
                     {
                         path: 'edit',
                         name: 'templateEdit',
-                        component: TemplateEdit
+                        component: TemplateEdit,
+                        meta: {
+                            edit: true
+                        }
                     },
                     {
                         path: ':type?',

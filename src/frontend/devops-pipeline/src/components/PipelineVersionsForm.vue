@@ -9,13 +9,16 @@
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
             </label>
             <div class="execute-build-version">
-                <span
+                <form-field
+                    :hide-colon="true"
                     class="execute-build-version-input"
                     v-for="v in renderVersionParamList"
-                    :key="v"
+                    :key="v.id"
+                    :required="v.required"
+                    :is-error="errors.has(v.id)"
                 >
                     <vuex-input
-                        :disabled="disabled"
+                        :disabled="disabled || isFollowTemplate"
                         input-type="number"
                         :name="v.id"
                         :class="{
@@ -29,7 +32,7 @@
                         :value="versionParamValues[v.id]"
                         :handle-change="handleVersionChange"
                     />
-                </span>
+                </form-field>
             </div>
         </bk-form-item>
         <div
@@ -96,6 +99,7 @@
                 <bk-checkbox
                     v-if="isInstance && !isInitInstance"
                     class="instance_reset"
+                    :disabled="disabled"
                     :value="resetBuildNo"
                     @change="handleCheckChange"
                 >
@@ -116,7 +120,7 @@
                         v-else
                     >
                         <vuex-input
-                            :disabled="isPreviewAndLockedNo"
+                            :disabled="isPreviewAndLockedNo || isFollowTemplate || disabled"
                             input-type="number"
                             name="buildNo"
                             placeholder="BK_CI_BUILD_NO"
@@ -152,19 +156,10 @@
                             :handle-change="handleBuildNoChange"
                             :class="{
                                 'is-diff-param': highlightChangedParam && buildNo.isChanged,
-                                'is-change-param': isResetBuildNo
+                                'is-change-param': resetBuildNo
                             }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
-                        <span
-                            v-if="resetBuildNo && isInstance"
-                            class="reset-build-no"
-                        >
-                            <Logo
-                                size="14"
-                                name="arrow-right"
-                            />
-                        </span>
                     </p>
                 </div>
             </div>
@@ -219,7 +214,7 @@
             isInitInstance: Boolean,
             resetBuildNo: Boolean,
             highlightChangedParam: Boolean,
-            isResetBuildNo: Boolean,
+            isFollowTemplate: Boolean,
             versionParamList: {
                 type: Array,
                 default: () => []
@@ -428,26 +423,7 @@
     display: grid;
 }
 
-.is-diff-param {
-    border-color: #FF9C01 !important;
-}
-
-.is-new-param {
-    background: #EBFAF0 !important;
-}
-
 .is-change-param {
     background: #FDF4E8 !important;
-}
-
-.is-delete-param {
-    background: #FFF0F0 !important;
-}
-.is-new-param,
-.is-delete-param,
-.is-change-param {
-    &:focus {
-        background: #FFF !important;
-    }
 }
 </style>

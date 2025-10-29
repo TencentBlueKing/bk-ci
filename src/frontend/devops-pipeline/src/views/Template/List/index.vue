@@ -5,14 +5,14 @@
                 <div class="search-group">
                     <bk-button
                         :theme="'primary'"
-                        :disabled="!hasCreatePermission"
+                        v-perm="addPerm"
                         @click="handleShowCreateTemplateDialog"
                     >
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
                         class="ml10"
-                        :disabled="!hasCreatePermission"
+                        v-perm="addPerm"
                         @click="handleShowInstallTemplateDialog"
                     >
                         {{ $t('template.installOrImportTemplate') }}
@@ -21,15 +21,15 @@
                         <li
                             v-for="(item, idx) in searchTab"
                             :key="idx"
+                            :class="[currentMode === item.countKey ? 'active' : '']"
                         >
                             <p
-                                :class="[currentMode === item.countKey ? 'active' : '']"
                                 v-bk-overflow-tips="{ content: `${$t(item.i18nKey)}${countMap[item.countKey] ?? 0}` }"
                                 @click="handleChangeSearchTab(item.countKey)"
                             >
                                 <Logo
                                     :class="item.icon"
-                                    size="13"
+                                    size="14"
                                     :name="item.icon"
                                 />
                                 <span>{{ $t(item.i18nKey) }}</span>
@@ -41,22 +41,28 @@
                 <search-select
                     class="search-input"
                     :data="filterData"
-                    :placeholder="$t('template.searchPlaceholder')"
+                    :placeholder="filterTips"
                     :values="searchValue"
                     @change="handleSearchChange"
                 >
                 </search-select>
             </div>
-            <template-table
-                ref="selfTemp"
-                :type="templateViewId"
-                :data="tableData"
-                :pagination="pagination"
-                :is-loading="isTableLoading"
-                @limit-change="handlePageLimitChange"
-                @page-change="handlePageChange"
-                @clear="handleClear"
-            />
+            <div
+                ref="tableBox"
+                class="table-box"
+            >
+                <template-table
+                    :type="templateViewId"
+                    :data="tableData"
+                    :max-height="tableHeight"
+                    :pagination="pagination"
+                    :has-create-permission="hasCreatePermission"
+                    :is-loading="isTableLoading"
+                    @limit-change="handlePageLimitChange"
+                    @page-change="handlePageChange"
+                    @clear="handleClear"
+                />
+            </div>
         </div>
 
         <CopyTemplateDialog
@@ -76,7 +82,7 @@
         <UpgradeFromStoreDialog
             v-model="showTemplateUpgradeDialog"
             :template-id="upgradingTemplate?.id"
-            :project-id="upgradingTemplate?.srcTemplateProjectId"
+            :project-id="upgradingTemplate?.projectId"
             @confirm="upgradeTemplate"
             @cancel="hideUpgradeDialog"
         />
@@ -97,7 +103,7 @@
         TEMPLATE_VIEW_ID_MAP
     } from '@/store/modules/templates/constants'
     import {
-        RESOURCE_ACTION,
+        RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
@@ -105,7 +111,7 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import dayjs from 'dayjs'
-    import { computed, onMounted, ref, watch } from 'vue'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
     import TemplateTable from './TemplateTable'
@@ -152,7 +158,17 @@
         {
             name: t('template.source'),
             default: true,
-            id: 'source'
+            id: 'mode',
+            children: [
+                {
+                    id: 'CUSTOMIZE',
+                    name: proxy.$t('template.customize')
+                },
+                {
+                    id: 'CONSTRAINT',
+                    name: proxy.$t('template.store')
+                }
+            ]
         },
         {
             name: t('template.lastModifiedBy'),
@@ -170,12 +186,12 @@
         },
         {
             i18nKey: CUSTOM_SOURCE,
-            icon: 'template-view',
+            icon: 'template-custom',
             countKey: 'custom'
         },
         {
             i18nKey: MARKET_SOURCE,
-            icon: 'template-view',
+            icon: 'is-store',
             countKey: 'market'
         }
     ])
@@ -192,6 +208,21 @@
         acc[filter.id] = filter.values.map(val => val.id).join(',')
         return acc
     }, {}))
+    const filterTips = computed(() => filterData.value.map(item => item.name).join(' / '))
+    const addPerm = computed(() => {
+        return {
+            hasPermission: hasCreatePermission.value,
+            disablePermissionApi: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: RESOURCE_TYPE.TEMPLATE,
+                resourceCode: projectId.value,
+                action: TEMPLATE_RESOURCE_ACTION.CREATE
+            }
+        }
+    })
+    const tableHeight = ref(null)
+    const tableBox = ref(null)
 
     watch(() => searchValue.value, () => {
         fetchTableData()
@@ -200,9 +231,19 @@
         searchValue.value = []
     })
     onMounted(() => {
+        updateTableHeight()
+        window.addEventListener('resize', updateTableHeight)
         searchValue.value = echoQueryParameters()
         hasPipelineTemplatePermission()
     })
+    
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', updateTableHeight)
+    })
+
+    function updateTableHeight () {
+        tableHeight.value = tableBox.value.offsetHeight
+    }
 
     function getFlagTooltips (row) {
         if (row.storeFlag || row.upgradeFlag || row.publishFlag) {
@@ -311,84 +352,70 @@
             }
             fetchTypeCount()
             const res = await proxy.$store.dispatch('templates/getTemplateList', param)
-            tableData.value = (res.records || []).map(item => ({
-                ...item,
-                updateTime: dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
-                typeName: TEMPLATE_TYPE[item.type] ? t(`template.${TEMPLATE_TYPE[item.type]}`) : '--',
-                sourceTooltip: getFlagTooltips(item),
-                overviewParams: {
-                    templateId: item.id,
-                    version: item.releasedVersion
-                },
-                templateActions: [
-                    {
-                        text: t('copy'), // 复制
-                        handler: () => copyTemplate(item),
-                        hasPermission: item.canEdit,
-                        disablePermissionApi: true,
-                        isShow: true,
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'pipeline_template',
-                            resourceCode: projectId.value,
-                            action: RESOURCE_ACTION.CREATE
-                        }
+            tableData.value = (res.records || []).map(item => {
+                const editPerm = {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: item.id,
+                    action: TEMPLATE_RESOURCE_ACTION.EDIT
+                }
+                return {
+                    ...item,
+                    updateTime: dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
+                    typeName: TEMPLATE_TYPE[item.type] ? t(`template.${TEMPLATE_TYPE[item.type]}`) : '--',
+                    sourceTooltip: getFlagTooltips(item),
+                    overviewParams: {
+                        templateId: item.id,
+                        canView: item.canView,
+                        version: item.releasedVersion
                     },
-                    {
-                        text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
-                        handler: () => toRelativeStore(item, item.storeStatus),
-                        hasPermission: item.canEdit,
-                        disablePermissionApi: true,
-                        disable: item.storeFlag && !item.publishFlag,
-                        isShow: item.mode === 'CUSTOMIZE',
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'pipeline_template',
-                            resourceCode: item.id,
-                            action: TEMPLATE_RESOURCE_ACTION.EDIT
+                    templateActions: [
+                        {
+                            text: t('copy'), // 复制
+                            handler: () => copyTemplate(item),
+                            disable: item.latestVersionStatus !== 'RELEASED',
+                            isShow: true,
+                            ...addPerm.value
+                        },
+                        {
+                            text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
+                            handler: () => toRelativeStore(item, item.storeStatus),
+                            hasPermission: item.canEdit,
+                            disablePermissionApi: true,
+                            disable: (item.storeFlag && !item.publishFlag) || item.latestVersionStatus === 'COMMITTING',
+                            isShow: item.mode === 'CUSTOMIZE',
+                            permissionData: editPerm
+                        },
+                        {
+                            text: t('template.convertToCustom'), // 转为自定义
+                            handler: () => convertToCustom(item, fetchTableData),
+                            hasPermission: item.canEdit,
+                            disablePermissionApi: true,
+                            isShow: item.mode === 'CONSTRAINT',
+                            permissionData: editPerm
+                        },
+                        {
+                            text: t('template.export'), // 导出
+                            handler: () => exportTemplate(item),
+                            hasPermission: item.canEdit,
+                            disablePermissionApi: true,
+                            isShow: true,
+                            permissionData: editPerm
+                        },
+                        {
+                            text: item.srcTemplateId ? t('uninstall') : t('delete'),
+                            handler: () => deleteTemplate(item, fetchTableData),
+                            hasPermission: item.canDelete,
+                            disablePermissionApi: true,
+                            isShow: true,
+                            permissionData: {
+                                ...editPerm,
+                                action: TEMPLATE_RESOURCE_ACTION.DELETE
+                            }
                         }
-                    },
-                    {
-                        text: t('template.convertToCustom'), // 转为自定义
-                        handler: () => convertToCustom(item, fetchTableData),
-                        hasPermission: item.canEdit,
-                        disablePermissionApi: true,
-                        isShow: item.mode === 'CONSTRAINT',
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'pipeline_template',
-                            resourceCode: item.id,
-                            action: TEMPLATE_RESOURCE_ACTION.EDIT
-                        }
-                    },
-                    {
-                        text: t('template.export'), // 导出
-                        handler: () => exportTemplate(item),
-                        hasPermission: item.canEdit,
-                        disablePermissionApi: true,
-                        isShow: true,
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'pipeline_template',
-                            resourceCode: item.id,
-                            action: TEMPLATE_RESOURCE_ACTION.EDIT
-                        }
-                    },
-                    {
-                        text: t('delete'),
-                        handler: () => deleteTemplate(item, fetchTableData),
-                        hasPermission: item.canDelete,
-                        disablePermissionApi: true,
-                        isShow: true,
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'pipeline_template',
-                            resourceCode: item.id,
-                            action: TEMPLATE_RESOURCE_ACTION.EDIT
-                        }
-                    }
-                ]
-            }))
+                    ]
+                }
+            })
             pagination.value.count = res.count
         } catch (err) {
             bkMessage({
@@ -415,6 +442,7 @@
     }
     function handleChangeSearchTab (key) {
         currentMode.value = key
+        pagination.value.current = 1
         fetchTableData()
     }
     function handleSearchChange (value) {
@@ -474,6 +502,8 @@
                 theme: 'error',
                 message: error.message || error
             })
+            done()
+            hideUpgradeDialog()
         }
     }
 
@@ -488,6 +518,8 @@
     display: flex;
     box-sizing: border-box;
     border: 1px solid #dcdee5;
+    border-top: 0;
+    border-left: 0;
 
    .template-main {
         width: 100%;
@@ -509,6 +541,7 @@
 
                 .search-tab {
                     display: flex;
+                    align-items: center;
                     padding: 4px;
                     margin-left: 8px;
                     background: #EAEBF0;
@@ -516,8 +549,9 @@
                     border-radius: 2px;
 
                     li{
+                        display: flex;
+                        align-items: center;
                         height: 24px;
-                        line-height: 24px;
                         font-size: 12px;
                         color: #4D4F56;
                         text-align: center;
@@ -525,7 +559,10 @@
                         cursor: pointer;
 
                         p {
+                            display: flex;
+                            align-items: center;
                             padding: 0 12px;
+                            height: 14px;
                             max-width: 120px;
                             overflow: hidden;
                             text-overflow: ellipsis;
@@ -537,13 +574,20 @@
                             color: #979BA5;
                             margin-right: 4px;
                         }
+
+                        &:not(:last-child) p {
+                            border-right: 1px solid #e0e2e8;
+                        }
                     }
 
                     .active {
-                        padding: 0 12px;
                         background-color: #fff;
                         color: $primaryColor;
                         border-radius: 2px;
+
+                        &:not(:last-child) p {
+                            border-right: none;
+                        }
 
                         svg {
                             color: $primaryColor;
@@ -561,6 +605,10 @@
                     color: #c4c6cc;
                 }
             }
+        }
+        .table-box {
+            flex: 1;
+            overflow: hidden;
         }
    }
 }

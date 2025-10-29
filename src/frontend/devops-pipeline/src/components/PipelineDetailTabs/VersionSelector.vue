@@ -95,15 +95,30 @@
                     }]"
                 />
                 <p class="pipeline-version-name">
-                    <span v-bk-overflow-tips>
-                        {{ item.displayName }}
+                    <span>
+                        <span v-bk-overflow-tips>
+                            {{ item.displayName }}
+                        </span>
+                        <i
+                            v-if="isCurrentVersion(item)"
+                            class="pipeline-release-version-tag"
+                        >
+                            {{ $t('latest') }}
+                        </i>
                     </span>
-                    <i
-                        v-if="isCurrentVersion(item)"
-                        class="pipeline-release-version-tag"
+                    <span
+                        v-bk-overflow-tips
+                        class="src-template-version-name"
+                        v-if="item.srcTemplateVersionName"
                     >
-                        {{ $t('latest') }}
-                    </i>
+                        [
+                        <logo
+                            class="main-branch-icon"
+                            size="14"
+                            name="main-branch"
+                        /> {{ item.srcTemplateVersionName }}
+                        ]
+                    </span>
                 </p>
                 <!-- <span class="pipeline-version-main-branch">
                                 [{{ $t('mainBranch') }}]
@@ -135,7 +150,7 @@
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime } from '@/utils/util'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
         emit: ['input', 'change', 'showAllVersion'],
@@ -178,6 +193,14 @@
             buildOnly: {
                 type: Boolean,
                 default: false
+            },
+            isTemplate: {
+                type: Boolean,
+                default: false
+            },
+            uniqueId: {
+                type: [String, Number],
+                required: true
             }
         },
         data () {
@@ -203,14 +226,8 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
-            ...mapGetters('atom', [
-                'isTemplate'
-            ]),
             projectId () {
                 return this.$route.params.projectId
-            },
-            uniqueId () {
-                return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
             },
             // 最新的流水线版本信息
             activeDisplayName () {
@@ -276,7 +293,7 @@
                         },
                         page: nextPage,
                         pageSize: pagination.limit,
-                        versionName: this.searchKeyword,
+                        fuzzyVersionName: this.searchKeyword,
                         includeDraft: this.includeDraft,
                         buildOnly: this.buildOnly,
                         archiveFlag: this.$route.query.archiveFlag
@@ -301,12 +318,16 @@
                         this.versionList = versions
                         const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
                         if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
-                            this.requestPipelineSummary(this.$route.params)
+                            await this.requestPipelineSummary(this.$route.params)
+                            this.switchVersion(this.activeVersion.version)
                         }
+                        
                     } else {
                         this.versionList.push(...versions)
                     }
-                    this.switchVersion(this.value)
+                    if (!this.activeVersion) {
+                        this.switchVersion(this.value)
+                    }
                 } catch (error) {
                     console.log(error)
                 } finally {
@@ -468,11 +489,23 @@
 
         .pipeline-version-name {
             display: flex;
+            justify-content: space-between;
             grid-gap: 8px;
             overflow: hidden;
             > span {
                 font-weight: 700;
                 @include ellipsis();
+            }
+            
+            .src-template-version-name {
+                display: flex;
+                align-items: center;
+                color: #979BA5;
+                font-weight: 400;
+                max-width: 100px;
+            }
+            .main-branch-icon {
+                margin-right: 4px;
             }
         }
     }

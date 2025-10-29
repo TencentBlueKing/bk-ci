@@ -275,18 +275,24 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineSetting(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
+    fun deletePipelineSetting(dslContext: DSLContext, projectId: String, pipelineIds: List<String>? = null) {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId)).apply {
+                pipelineIds?.let { add(PIPELINE_ID.`in`(pipelineIds)) }
+            }
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
+                .where(conditions)
                 .execute()
         }
     }
 
-    fun deletePipelineSettingVersion(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
+    fun deletePipelineSettingVersion(dslContext: DSLContext, projectId: String, pipelineIds: List<String>? = null) {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId)).apply {
+                pipelineIds?.let { add(PIPELINE_ID.`in`(pipelineIds)) }
+            }
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
+                .where(conditions)
                 .execute()
         }
     }

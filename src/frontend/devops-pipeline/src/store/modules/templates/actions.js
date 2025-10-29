@@ -1,10 +1,11 @@
 import {
-    PROCESS_API_URL_PREFIX
-    // STORE_API_URL_PREFIX
+    PROCESS_API_URL_PREFIX,
+    REPOSITORY_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 import {
-    SET_TEMPLATE_DETAIL
+    SET_TEMPLATE_DETAIL,
+    UPDATE_INSTANCE_PAGE_LOADING
 } from './constants'
 const actions = {
     hasPipelineTemplatePermission (_, { projectId, permission }) {
@@ -68,15 +69,6 @@ const actions = {
     requestTemplateVersionList (_, params) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/${params.templateId}/versions`, params).then(response => response.data)
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
-            commit(SET_TEMPLATE_DETAIL, {
-                templateDetail: res.data,
-                templateVersion: version
-            })
-            return res.data
-        })
-    },
     fetchPipelineDetailById ({ commit }, { projectId, templateId, pipelineIds }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines`, pipelineIds).then(res => {
             return res.data
@@ -125,16 +117,80 @@ const actions = {
     fetchReleaseTaskStatus ({ commit }, { projectId, baseId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/result`)
     },
-    // 根据引用查看模版详
-    fetchTemplateByRef ({ commit }, { projectId, templateId, ref }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/ref/details?ref=${ref}`).then(res => {
-            commit(SET_TEMPLATE_DETAIL, {
-                templateDetail: res.data,
-                templateVersion: ''
-            })
+    updateTemplateData ({ commit }, { data, version }) {
+        const { triggerElements, param, buildNo, ...restData } = data
+        const triggerConfigs = triggerElements.map(i => ({
+            atomCode: i.atomCode,
+            stepId: i.stepId ?? '',
+            disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
+            cron: i.advanceExpression,
+            variables: i.startParams,
+            name: i.name,
+            version: i.version,
+            isFollowTemplate: true
+        }))
+        commit(SET_TEMPLATE_DETAIL, {
+            templateDetail: {
+                ...restData,
+                enablePac: false,
+                param: param.map(p => {
+                    return {
+                        ...p,
+                        isRequiredParam: p.required,
+                        isFollowTemplate: false
+                    }
+                }),
+                ...(buildNo ? {
+                    buildNo: {
+                        ...buildNo,
+                        isRequiredParam: buildNo.required,
+                        isFollowTemplate: false
+                    }
+                } : undefined),
+                triggerConfigs
+            },
+            templateVersion: version
+        })
+    },
+    fetchTemplateDetailByVersion ({ commit }, { projectId, templateId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
             return res.data
         })
-    }
+    },
+    fetchTemplateDetailByRef ({ commit }, { projectId, templateId, ref }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/ref/details?ref=${ref}`).then(res => {
+            return res.data
+        })
+    },
+    // 根据模板ID，版本号获取模板配置参数
+    fetchTemplateParamsById ({ commit }, { projectId, templateId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/instanceParamsById?version=${version}`).then(res => {
+            return res.data
+        })
+    },
+    
+    // 根据引用获取模板配置参数
+    fetchTemplateParamsByRef ({ commit }, { projectId, templateId, ref }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/instanceParamsByRef?ref=${ref}`).then(res => {
+            return res.data
+        })
+    },
+    getBranchesListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
+        return ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listBranches?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
+    },
+    getTagsListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
+        return ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listTags?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
+    },
+    updateInstancePageLoading ({ commit} , value) {
+        commit(UPDATE_INSTANCE_PAGE_LOADING, value)
+    },
+    requestTemplatePreviewByVersion (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/preview`, {
+            params
+        }).then(response => {
+            return response.data
+        })
+    },
 }
 
 export default actions

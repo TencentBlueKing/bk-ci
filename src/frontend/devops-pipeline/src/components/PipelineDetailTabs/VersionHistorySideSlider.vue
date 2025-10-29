@@ -92,7 +92,7 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
-                        :width="320"
+                        :width="250"
                         prop="operate"
                         fixed="right"
                     >
@@ -111,7 +111,7 @@
                                 v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
-                                :rollback-id="isTemplate ? $route.params.ptemplateId : $route.params.pipelineId"
+                                :rollback-id="isTemplate ? $route.params.templateId : $route.params.pipelineId"
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-base-version-name="draftBaseVersionName"
@@ -186,7 +186,7 @@
                 return this.pipelineInfo?.releaseVersion
             },
             canEdit () {
-                return this.pipelineInfo?.permissions?.canEdit ?? this.pipelineInfo?.canEdit
+                return this.pipelineInfo?.permissions?.canEdit
             },
             columns () {
                 return [{
@@ -210,7 +210,7 @@
                 }, {
                     prop: 'creator',
                     width: 120,
-                    label: this.$t('creator')
+                    label: this.isTemplate ? this.$t('creator') : this.$t('template.lastModifiedBy')
                 }, {
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),
@@ -222,7 +222,7 @@
                 }, {
                     prop: 'updater',
                     width: 120,
-                    label: this.$t('audit.operator')
+                    label: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator')
                 }]
             },
             filterTips () {
@@ -231,12 +231,13 @@
             filterData () {
                 return [{
                     name: this.$t('version'),
+                    default: true,
                     id: 'versionName'
                 }, {
                     name: this.$t('versionDesc'),
                     id: 'description'
                 }, {
-                    name: this.$t('audit.operator'),
+                    name: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator'),
                     id: 'creator'
                 }]
             },
@@ -416,6 +417,7 @@
                 > span {
                     flex-shrink: 0;
                     font-size: 16px;
+                    line-height: 16px;
                 }
                 &.active-version-name .icon-check-circle {
                     color: #2DCB56;

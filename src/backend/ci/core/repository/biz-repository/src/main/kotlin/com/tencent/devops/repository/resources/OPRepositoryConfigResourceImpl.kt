@@ -25,28 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.pojo.process
+package com.tencent.devops.repository.resources
 
-import com.tencent.devops.misc.lock.MigrationLock
-import io.swagger.v3.oas.annotations.media.Schema
-import org.jooq.DSLContext
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.OPRepositoryConfigResource
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
+import com.tencent.devops.repository.service.RepositoryScmConfigService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "删除迁移数据参数")
-data class DeleteMigrationDataParam(
-    @get:Schema(title = "jooq上下文", required = true)
-    val dslContext: DSLContext,
-    @get:Schema(title = "项目ID", required = true)
-    val projectId: String,
-    @get:Schema(title = "迁移集群名称", required = true)
-    val targetClusterName: String,
-    @get:Schema(title = "迁移数据源名称", required = true)
-    val targetDataSourceName: String,
-    @get:Schema(title = "流水线ID", required = false)
-    val pipelineId: String? = null,
-    @get:Schema(title = "迁移锁", required = false)
-    val migrationLock: MigrationLock? = null,
-    @get:Schema(title = "广播表删除标识", required = false)
-    val broadcastTableDeleteFlag: Boolean? = true,
-    @get:Schema(title = "归档流水线标识", required = false)
-    val archivePipelineFlag: Boolean? = null
-)
+@RestResource
+class OPRepositoryConfigResourceImpl @Autowired constructor(
+    private val repositoryScmConfigService: RepositoryScmConfigService
+) : OPRepositoryConfigResource {
+
+    override fun addDept(
+        userId: String,
+        scmCode: String,
+        deptList: List<RepositoryConfigVisibility>?
+    ): Result<Boolean> {
+        deptList?.let {
+            repositoryScmConfigService.addDept(
+                userId = userId,
+                checkPermission = false,
+                scmCode = scmCode,
+                deptList = it
+            )
+        }
+        return Result(true)
+    }
+
+    override fun deleteDept(
+        scmCode: String,
+        deptList: List<Int>?
+    ): Result<Boolean> {
+        deptList?.let {
+            repositoryScmConfigService.deleteDept(
+                userId = "",
+                checkPermission = false,
+                scmCode = scmCode,
+                deptList = it
+            )
+        }
+        return Result(true)
+    }
+}

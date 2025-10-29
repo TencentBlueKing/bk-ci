@@ -16,7 +16,9 @@
                             <render-param
                                 v-bind="param"
                                 :param="param"
-                                :disabled="disabled"
+                                ref="categoryRenderParam"
+                                :is-exec-preview="isExecPreview"
+                                :disabled="disabled || param.isFollowTemplate"
                                 :show-operate-btn="showOperateBtn"
                                 :handle-set-parma-required="handleSetParmaRequired"
                                 :handle-use-default-value="handleUseDefaultValue"
@@ -36,7 +38,9 @@
                     <render-param
                         v-bind="param"
                         :param="param"
-                        :disabled="disabled"
+                        ref="renderParam"
+                        :is-exec-preview="isExecPreview"
+                        :disabled="disabled || param.isFollowTemplate"
                         :show-operate-btn="showOperateBtn"
                         :handle-set-parma-required="handleSetParmaRequired"
                         :handle-use-default-value="handleUseDefaultValue"
@@ -81,7 +85,6 @@
     import { isObject, isShallowEqual } from '@/utils/util'
 
     export default {
-
         components: {
             renderSortCategoryParams,
             renderParam
@@ -131,6 +134,11 @@
             handleFollowTemplate: {
                 type: Function,
                 default: () => () => {}
+            },
+            isExecPreview: {
+                // 是否为执行预览页面
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -235,7 +243,8 @@
                 })
             },
             paramsListMap () {
-                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+                const list = this.hideDeleted ? this.paramList.filter(i => !i.isDelete) : this.paramList
+                return getParamsGroupByLabel(list)?.listMap ?? {}
             },
             sortedCategories () {
                 return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
@@ -326,6 +335,19 @@
                     return !isShallowEqual(prev, current)
                 }
                 return false
+            },
+            async validateAll () {
+                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                for (let i = 0; i < refsList.length; i++) {
+                    const ref = refsList[i]
+                    const res = await ref.$validator?.validateAll?.()
+                    console.log(res, 'validate res')
+                    if (!res) {
+                        return false
+                    }
+                    
+                }
+                return true
             }
         }
     }

@@ -1,7 +1,7 @@
 <template>
     <div class="template-detail-entry">
         <header>
-            <HistoryHeader />
+            <HistoryHeader class="template-detail-entry-history-header" />
             <ext-menu
                 type="template"
                 :data="pipelineInfo"
@@ -90,18 +90,20 @@
     import UseInstance from '@/hook/useInstance'
     import useTemplateActions from '@/hook/useTemplateActions'
     import {
-        RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { getTemplateCacheViewId } from '@/utils/util'
     import Instance from '@/views/Template/InstanceList'
-    import { computed } from 'vue'
+    import { computed, onMounted } from 'vue'
+    import { RESOURCE_TYPE } from '../../utils/permission'
     import ExtMenu from './List/extMenu'
 
     const {
         copyTemp,
         copyTemplate,
         exportTemplate,
+        toRelativeStore,
+        convertToCustom,
         deleteTemplate,
         copyConfirmHandler,
         copyCancelHandler
@@ -110,6 +112,7 @@
 
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+    const storeStatus = computed(() => proxy.$store?.state?.atom?.storeStatus)
 
     const pipelineHistoryViewable = computed(() => proxy.$store?.getters['atom/pipelineHistoryViewable'])
     const isReleaseVersion = computed(() => proxy.$store?.getters['atom/isReleaseVersion'])
@@ -118,14 +121,14 @@
     const projectId = computed(() => proxy.$route.params.projectId)
     const activeMenuItem = computed(() => proxy.$route.params.type || 'instanceList')
     const activeChild = computed(() => getNavComponent(activeMenuItem.value))
-    const canEdit = computed(() => pipelineInfo.value?.canEdit)
-    const canDelete = computed(() => pipelineInfo.value?.canDelete)
+    const canEdit = computed(() => pipelineInfo.value?.permissions?.canEdit ?? false)
+    const canDelete = computed(() => pipelineInfo.value?.permissions?.canDelete ?? false)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
     const isFromStoreTemplate = computed(() => !!pipelineInfo.value?.pipelineTemplateMarketRelatedInfo)
     const asideNav = computed(() => [
         {
-            title: t('executeInfo'),
+            title: t('template.instanceManage'),
             children: [
                 {
                     title: t('template.instanceList'),
@@ -193,47 +196,70 @@
             }))
         }
     ])
-    const templateActions = computed(() => [
-        {
-            text: t('template.export'), // 导出
-            handler: () => exportTemplate(pipelineInfo.value),
+    const templateActions = computed(() => {
+        const editPerm = {
             hasPermission: canEdit.value,
             disablePermissionApi: true,
-            isShow: true,
             permissionData: {
                 projectId: projectId.value,
-                resourceType: 'pipeline_template',
-                resourceCode: templateId,
-                action: TEMPLATE_RESOURCE_ACTION.EDIT
-            }
-        },
-        {
-            text: t('copy'), // 复制
-            handler: () => copyTemplate(pipelineInfo.value),
-            hasPermission: canEdit.value,
-            disablePermissionApi: true,
-            isShow: true,
-            permissionData: {
-                projectId: projectId.value,
-                resourceType: 'pipeline_template',
-                resourceCode: projectId.value,
-                action: RESOURCE_ACTION.CREATE
-            }
-        },
-        {
-            text: t('delete'),
-            handler: () => deleteTemplate(pipelineInfo.value, goTemplateManageList),
-            hasPermission: canDelete.value,
-            disablePermissionApi: true,
-            isShow: true,
-            permissionData: {
-                projectId: projectId.value,
-                resourceType: 'pipeline_template',
-                resourceCode: templateId,
+                resourceType: RESOURCE_TYPE.TEMPLATE,
+                resourceCode: templateId.value,
                 action: TEMPLATE_RESOURCE_ACTION.EDIT
             }
         }
-    ])
+        return [
+            {
+                text: t('template.export'), // 导出
+                handler: () => exportTemplate(pipelineInfo.value),
+                isShow: true,
+                ...editPerm
+            },
+            {
+                text: t('copy'), // 复制
+                handler: () => copyTemplate({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }),
+                isShow: true,
+                ...editPerm,
+            },
+            {
+                text: t(`template.${pipelineInfo.value.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`),
+                handler: () => toRelativeStore({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, storeStatus.value),
+                disable: (pipelineInfo.value.storeFlag && !pipelineInfo.value.publishFlag) || pipelineInfo.value.latestVersionStatus === 'COMMITTING',
+                isShow: pipelineInfo.value.mode === 'CUSTOMIZE',
+                ...editPerm
+            },
+            {
+                text: t('template.convertToCustom'),
+                handler: () => convertToCustom({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, goTemplateManageList),
+                isShow: pipelineInfo.value.mode === 'CONSTRAINT',
+                ...editPerm
+            },
+            {
+                text: t('delete'),
+                handler: () => deleteTemplate({
+                    ...pipelineInfo.value,
+                    ...pipelineInfo.value?.permissions
+                }, goTemplateManageList),
+                isShow: true,
+                hasPermission: canDelete.value,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPE.TEMPLATE,
+                    resourceCode: templateId.value,
+                    action: TEMPLATE_RESOURCE_ACTION.DELETE
+                }
+            }
+        ]
+    })
 
     function getNavComponent (type) {
         switch (type) {
@@ -281,6 +307,12 @@
         })
     }
 
+    onMounted(() => {
+        if (pipelineInfo.value) {
+            proxy.$updateTabTitle?.(`${pipelineInfo.value.name || ''} | ${proxy.$t('template.template')}`)
+        }
+    })
+
 </script>
 
 <style lang="scss">
@@ -298,7 +330,7 @@
         background: white;
         display: flex;
         align-items: center;
-        padding: 0 24px;
+        padding-right: 24px;
         box-shadow: 0 2px 5px 0 #333c4808;
         border-bottom: 1px solid #eaebf0;
 
@@ -314,6 +346,9 @@
         .template-operate-area {
             margin-left: auto;
             justify-self: flex-end;
+        }
+        .template-detail-entry-history-header {
+            padding-right: 10px;
         }
     }
     .template-detail-entry-aside {

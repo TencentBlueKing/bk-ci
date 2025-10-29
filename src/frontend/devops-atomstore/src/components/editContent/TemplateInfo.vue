@@ -116,6 +116,11 @@
                             :key="option.version"
                             :id="option.version"
                             :name="option.versionName"
+                            :disabled="option.storeFlag"
+                            v-bk-tooltips="{
+                                content: $t('store.已上架至商店'),
+                                disabled: !option.storeFlag
+                            }"
                         >
                         </bk-option>
                     </bk-select>
@@ -128,14 +133,14 @@
                         <bk-radio
                             label="MANUAL"
                             class="mr20 strategy"
-                            v-bk-tooltips="{ content: $t('store.当源模板有新版本时，按需手动发布新版本到商店'), placement: 'top' }"
+                            v-bk-tooltips="{ content: $t('store.MANUAL-upgradeStrategyDesc'), placement: 'top' }"
                         >
                             {{ $t('store.按需手动发布') }}
                         </bk-radio>
                         <bk-radio
                             label="AUTO"
                             class="strategy"
-                            v-bk-tooltips="{ content: $t('store.当源模板有新版本时，新版本自动发布到研发商店'), placement: 'top' }"
+                            v-bk-tooltips="{ content: $t('store.AUTO-upgradeStrategyDesc'), placement: 'top' }"
                         >
                             {{ $t('store.自动发布') }}
                         </bk-radio>
@@ -419,7 +424,7 @@
                     if (newVal) {
                         await this.getVersionList(1)
                         this.$emit('updateTemplateForm', {
-                            templateVersion: this.versionList[0]?.version
+                            templateVersion:  this.versionList.find(item => !item.storeFlag)?.version || ''
                         })
                     }
                 },
@@ -545,8 +550,7 @@
                         templateId: this.templateForm.templateCode,
                         page: nextPage,
                         pageSize: this.versionsPagination.limit,
-                        status: 'RELEASED',
-                        storeFlag: false
+                        status: 'RELEASED'
                     })
 
                     const versions = res.records

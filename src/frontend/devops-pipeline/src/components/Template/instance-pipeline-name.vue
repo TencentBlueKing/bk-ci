@@ -13,7 +13,7 @@
                     isLoading: instanceDialogConfig.loading
                 }"
             >
-                <div class="info-title">{{ $t('template.newPipelineName') }}</div>
+                <div class="info-title">{{ $t('template.createInstance') }}</div>
                 <div class="bk-form create-form">
                     <div class="item-label">{{ $t('pipelineName') }}</div>
                     <input
@@ -24,7 +24,6 @@
                         v-model="pipelineName"
                         v-focus="isFocus()"
                         v-validate="{
-                            required: true,
                             max: 128
                         }"
                         :class="{ 'is-danger': errors.has('pipelineName') }"
@@ -35,6 +34,7 @@
             <div class="form-footer">
                 <bk-button
                     theme="primary"
+                    :disabled="pipelineName.trim() === '' || instanceDialogConfig.isLoading"
                     @click="confirm()"
                 >
                     {{ $t('confirm') }}
@@ -55,7 +55,11 @@
             }
         },
         props: {
-            showInstanceCreate: Boolean
+            showInstanceCreate: Boolean,
+            pipelineList: {
+                type: Array,
+                default: () => []
+            }
         },
         data () {
             return {
@@ -94,7 +98,7 @@
                             pipelineName: this.pipelineName.trim()
                         })
 
-                        if (res || this.$parent.pipelineNameList.some(item => item.pipelineName === this.pipelineName.trim())) {
+                        if (res || this.pipelineList.some(item => item.pipelineName === this.pipelineName.trim())) {
                             message = this.$t('template.nameExists')
                             theme = 'error'
                         } else {
@@ -119,7 +123,7 @@
                 return this.showInstanceCreate
             },
             cancel () {
-                this.$emit('cancel')
+                this.$emit('update:showInstanceCreate', false)
             }
         }
     }

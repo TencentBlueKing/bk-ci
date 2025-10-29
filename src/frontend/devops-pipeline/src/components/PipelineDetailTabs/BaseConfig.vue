@@ -1,21 +1,15 @@
 <template>
-    <bk-collapse
-        class="info-collapse-panel"
-        v-model="activeName"
-    >
-        <bk-collapse-item
-            hide-arrow
-            ext-cls="no-animation-collapse"
+    <div class="info-collapse-panel">
+        <div
             v-for="panel in panels"
             :key="panel.name"
-            :name="panel.name"
+            class="no-animation-collapse"
         >
             <header class="pipeline-base-config-panel-header">
                 {{ $t(panel.name) }}
             </header>
             <div
                 class="base-info-panel-content"
-                slot="content"
             >
                 <p
                     v-for="row in panel.rows"
@@ -63,7 +57,7 @@
                                         class="base-info-block-row-value-label"
                                         @click="goPipelineManageList(row.key, label.id)"
                                     >
-                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
+                                        {{ label.name || label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>
@@ -81,8 +75,8 @@
                     </template>
                 </p>
             </div>
-        </bk-collapse-item>
-    </bk-collapse>
+        </div>
+    </div>
 </template>
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
@@ -129,11 +123,13 @@
                 const { basicInfo } = this
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
+                const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
+                const viewNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
                 return this.isTemplate
                     ? [
                         {
                             key: 'name',
-                            value: basicInfo?.name
+                            value: basicInfo?.pipelineName
                         },
                         {
                             key: 'desc',
@@ -153,7 +149,7 @@
                         },
                         {
                             key: 'createTime',
-                            value: basicInfo?.creatorTime
+                            value: basicInfo?.createTime ? convertTime(basicInfo?.createTime) : '--'
                         }
                     ]
                     : [
@@ -167,7 +163,7 @@
                         },
                         {
                             key: 'pipelineGroup',
-                            value: basicInfo?.viewNames ?? []
+                            value: viewNameList ?? []
                         },
                         {
                             key: 'desc',
@@ -292,4 +288,9 @@
 
 <style lang="scss">
     @import url('@/scss/info-collapsed.scss');
+</style>
+<style lang="scss" scoped>
+.pipeline-base-config-panel-header {
+    margin: 0 10px 18px;
+}
 </style>
