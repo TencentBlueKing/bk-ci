@@ -735,11 +735,11 @@ open class MarketAtomTask : ITask() {
             addMonitorData(monitorData)
         }
         // 对windows市场插件bat启动脚本执行失败进行监控
-        if (BatScriptUtil.retry() > 0) {
+        if (BatScriptUtil.retryTimes() > 0) {
             val extData: MutableMap<String, Any> = getMonitorData()[AtomMonitorData::extData.name]?.let {
                 JsonUtil.toMutableMap(it)
             } ?: mutableMapOf()
-            extData["market-atom-start-bat-auto-retry"] = BatScriptUtil.retry()
+            extData["market-atom-start-bat-auto-retry-times"] = BatScriptUtil.retryTimes()
             addMonitorData(mapOf(AtomMonitorData::extData.name to extData))
             BatScriptUtil.retryClean()
         }

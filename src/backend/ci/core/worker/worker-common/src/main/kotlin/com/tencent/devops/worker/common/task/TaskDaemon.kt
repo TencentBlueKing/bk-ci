@@ -126,11 +126,11 @@ class TaskDaemon(
         }
 
         // 对内置bat脚本执行失败进行监控
-        if (BatScriptUtil.retry() > 0) {
+        if (BatScriptUtil.retryTimes() > 0) {
             val extData: MutableMap<String, Any> = getMonitorData()[AtomMonitorData::extData.name]?.let {
                 JsonUtil.toMutableMap(it)
             } ?: mutableMapOf()
-            extData["task-daemon-bat-auto-retry"] = BatScriptUtil.retry()
+            extData["task-daemon-bat-auto-retry-times"] = BatScriptUtil.retryTimes()
             addMonitorData(mapOf(AtomMonitorData::extData.name to extData))
             BatScriptUtil.retryClean()
         }

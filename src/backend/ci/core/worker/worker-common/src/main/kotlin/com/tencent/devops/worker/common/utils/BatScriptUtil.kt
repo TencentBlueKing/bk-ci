@@ -45,7 +45,7 @@ object BatScriptUtil {
         }
     }
 
-    fun retry(): Int = retryTimes.get()
+    fun retryTimes(): Int = retryTimes.get()
     fun retryClean() = retryTimes.remove()
 
     private const val setEnv = ":setEnv\r\n" +
