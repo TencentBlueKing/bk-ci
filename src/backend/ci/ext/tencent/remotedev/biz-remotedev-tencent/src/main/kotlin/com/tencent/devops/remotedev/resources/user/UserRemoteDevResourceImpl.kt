@@ -208,15 +208,27 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceService.getSignatureStatus(userId, projectId))
     }
 
-    override fun batchGetThumbnails(userId: String, workspaceNames: List<String>): Result<Map<String, String>> {
-        logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames")
-        
+    override fun batchGetThumbnails(
+        userId: String,
+        workspaceNames: List<String>,
+        width: Int,
+        high: Int,
+        jpegQuality: Int
+    ): Result<Map<String, String>> {
+        logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames|width=$width|high=$high|jpegQuality=$jpegQuality")
+
         // 同步获取截图地址
         val thumbnails = workspaceThumbnailService.batchGetThumbnails(userId, workspaceNames)
-        
+
         // 异步处理截图上传
-        workspaceThumbnailService.processScreenshotUpload(workspaceNames)
-        
+        workspaceThumbnailService.processScreenshotUpload(
+            userId = userId,
+            workspaceNames = workspaceNames,
+            width = width,
+            high = high,
+            jpegQuality = jpegQuality
+        )
+
         return Result(thumbnails)
     }
 }

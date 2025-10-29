@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
+import com.tencent.devops.remotedev.pojo.startcloud.FetchDesktopThumbnailReq
 import com.tencent.devops.remotedev.pojo.startcloud.ScreenshotUploadNotifyRequest
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
@@ -102,22 +103,19 @@ class StartCloudClient @Autowired constructor(
     /**
      * 批量通知CDS云桌面后台执行截图上传
      *
-     * @param uploadUrls CGS ID到BkRepo上传地址的映射
+     * @param requests 截图上传请求列表
      */
     fun notifyScreenshotUpload(
-        uploadUrls: Map<String, String>
+        requests: List<FetchDesktopThumbnailReq>
     ) {
-        if (uploadUrls.isEmpty()) {
-            logger.warn("notifyScreenshotUpload: cgsIds is empty")
+        if (requests.isEmpty()) {
+            logger.warn("notifyScreenshotUpload: requests is empty")
             return
         }
 
-        val url = "${config.apiUrl}/openapi/screenshot/upload"
+        val url = "${config.apiUrl}/openapi/desktop_thumbnail/fetch"
         val body = JsonUtil.toJson(
-            ScreenshotUploadNotifyRequest(
-                appName = config.bkciAppName,
-                uploadUrls = uploadUrls
-            ),
+            requests,
             false
         )
         logger.debug("notifyScreenshotUpload request url: $url, body: $body")
@@ -135,7 +133,7 @@ class StartCloudClient @Autowired constructor(
                 errorCode = resp.code
             )
         }
-        logger.info("notify screenshot upload success: cgsIds=${uploadUrls.keys}")
+        logger.info("notify screenshot upload success: cdsIds=${requests.map { it.cdsId }}")
     }
 
     private fun messageRegister(

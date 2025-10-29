@@ -11,6 +11,7 @@ import com.tencent.devops.remotedev.constant.ThumbnailRedisKeys
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.startcloud.FetchDesktopThumbnailReq
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import java.util.concurrent.TimeUnit
@@ -141,8 +142,17 @@ class WorkspaceThumbnailService @Autowired constructor(
      * 异步处理截图上传任务
      *
      * @param workspaceNames 工作空间名称列表
+     * @param width 缩略图宽度
+     * @param high 缩略图高度
+     * @param jpegQuality JPEG图片质量
      */
-    fun processScreenshotUpload(workspaceNames: List<String>) {
+    fun processScreenshotUpload(
+        userId: String,
+        workspaceNames: List<String>,
+        width: Int,
+        high: Int,
+        jpegQuality: Int
+    ) {
         if (workspaceNames.isEmpty()) {
             return
         }
@@ -164,8 +174,8 @@ class WorkspaceThumbnailService @Autowired constructor(
                 )
             ).associateBy { it.workspaceName }
 
-            // 收集所有成功生成的cgsId和uploadUrl
-            val uploadUrls = mutableMapOf<String, String>()
+            // 收集所有成功生成的截图上传请求
+            val uploadRequests = mutableListOf<FetchDesktopThumbnailReq>()
 
             workspaceNames.forEach { workspaceName ->
                 try {
@@ -211,8 +221,17 @@ class WorkspaceThumbnailService @Autowired constructor(
                         token = uploadToken
                     )
 
-                    // 收集cgsId和uploadUrl
-                    uploadUrls[cgsId] = uploadUrl
+                    // 构建截图上传请求对象
+                    val uploadRequest = FetchDesktopThumbnailReq(
+                        userId = userId,
+                        cdsId = cgsId,
+                        width = width,
+                        high = high,
+                        screenId = workspaceName,
+                        jpegQuality = jpegQuality,
+                        jpegUrl = uploadUrl
+                    )
+                    uploadRequests.add(uploadRequest)
 
                     logger.info("prepare screenshot upload success: workspaceName=$workspaceName, cgsId=$cgsId")
                 } catch (e: Exception) {
@@ -221,13 +240,13 @@ class WorkspaceThumbnailService @Autowired constructor(
             }
 
             // 批量通知CDS执行截图上传
-            if (uploadUrls.isNotEmpty()) {
+            if (uploadRequests.isNotEmpty()) {
                 try {
                     startCloudClient.notifyScreenshotUpload(
-                        uploadUrls = uploadUrls
+                        requests = uploadRequests
                     )
                 } catch (e: Exception) {
-                    logger.error("batch notify screenshot upload failed: cgsIds=${uploadUrls.keys}", e)
+                    logger.error("batch notify screenshot upload failed: cdsIds=${uploadRequests.map { it.cdsId }}", e)
                 }
             }
 
@@ -303,21 +322,21 @@ class WorkspaceThumbnailService @Autowired constructor(
         repoName: String
     ) {
         val cacheKey = "${region.name}:$projectId:$repoName"
-        
+
         // 从缓存中获取仓库存在状态，如果缓存未命中则检查并创建
         val repoExists = repoExistCache.get(cacheKey) { key ->
             logger.info("checking repo existence: $key")
-            
+
             val exists = remotedevBkRepoClient.checkRepoExist(
                 region = region,
                 projectId = projectId,
                 repoName = repoName,
                 userId = SYSTEM_USER
             )
-            
+
             if (!exists) {
                 logger.info("repo not exists, create it: projectId=$projectId, repoName=$repoName, region=${region.name}")
-                
+
                 // 创建仓库
                 remotedevBkRepoClient.createRepo(
                     region = region,
@@ -325,7 +344,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     repoName = repoName,
                     userId = SYSTEM_USER
                 )
-                
+
                 // 切换权限模式为STRICT
                 remotedevBkRepoClient.changeRepoToggle(
                     region = region,
@@ -333,7 +352,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     repoName = repoName,
                     userId = SYSTEM_USER
                 )
-                
+
                 // 创建仓库权限
                 remotedevBkRepoClient.createRepoPermission(
                     region = region,
@@ -341,14 +360,14 @@ class WorkspaceThumbnailService @Autowired constructor(
                     repoName = repoName,
                     userId = SYSTEM_USER
                 )
-                
+
                 logger.info("repo created successfully: projectId=$projectId, repoName=$repoName, region=${region.name}")
             }
-            
+
             // 返回true表示仓库已存在（或已创建）
             true
         }
-        
+
         logger.debug("repo exists check result: $cacheKey = $repoExists")
     }
 
@@ -379,7 +398,7 @@ class WorkspaceThumbnailService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceThumbnailService::class.java)
         private const val SYSTEM_USER = "admin"
-        
+
         /**
          * BkRepo仓库存在性缓存
          * Key格式: "region:projectId:repoName"
