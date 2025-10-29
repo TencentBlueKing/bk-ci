@@ -5,6 +5,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.config.BkRepoRegion
+import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.constant.BkRepoConstants
 import com.tencent.devops.remotedev.constant.ThumbnailRedisKeys
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -30,6 +31,7 @@ class WorkspaceThumbnailService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val redisOperation: RedisOperation,
     private val workspaceJoinDao: WorkspaceJoinDao,
+    private val bkRepoConfig: RemoteDevBkRepoConfig,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     @Qualifier("screenshotTaskExecutor")
     private val screenshotTaskExecutor: ThreadPoolTaskExecutor
@@ -105,6 +107,7 @@ class WorkspaceThumbnailService @Autowired constructor(
 
                     // 构建下载URL
                     val downloadUrl = buildDownloadUrl(
+                        host = bkRepoConfig.getRegionConfig(region).url,
                         projectId = workspaceInfo.projectId,
                         repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
                         workspaceName = workspaceName,
@@ -201,6 +204,7 @@ class WorkspaceThumbnailService @Autowired constructor(
 
                     // 构建上传URL
                     val uploadUrl = buildUploadUrl(
+                        host = bkRepoConfig.getRegionConfig(region).url,
                         projectId = workspaceInfo.projectId,
                         repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
                         workspaceName = workspaceName,
@@ -234,6 +238,7 @@ class WorkspaceThumbnailService @Autowired constructor(
     /**
      * 拼接BkRepo临时下载链接
      *
+     * @param host 域名
      * @param projectId 项目ID
      * @param repoName 仓库名称
      * @param workspaceName 工作空间名称
@@ -241,17 +246,19 @@ class WorkspaceThumbnailService @Autowired constructor(
      * @return 完整的下载URL
      */
     private fun buildDownloadUrl(
+        host: String,
         projectId: String,
         repoName: String,
         workspaceName: String,
         token: String
     ): String {
-        return "/generic/temporary/download/$projectId/$repoName/screenshot/$workspaceName.jpg?token=$token"
+        return "$host/generic/temporary/download/$projectId/$repoName/screenshot/$workspaceName.jpg?token=$token"
     }
 
     /**
      * 拼接BkRepo临时上传链接
      *
+     * @param host 域名
      * @param projectId 项目ID
      * @param repoName 仓库名称
      * @param workspaceName 工作空间名称
@@ -259,12 +266,13 @@ class WorkspaceThumbnailService @Autowired constructor(
      * @return 完整的上传URL
      */
     private fun buildUploadUrl(
+        host: String,
         projectId: String,
         repoName: String,
         workspaceName: String,
         token: String
     ): String {
-        return "/generic/temporary/upload/$projectId/$repoName/screenshot/$workspaceName.jpg?token=$token"
+        return "$host/generic/temporary/upload/$projectId/$repoName/screenshot/$workspaceName.jpg?token=$token"
     }
 
     /**
