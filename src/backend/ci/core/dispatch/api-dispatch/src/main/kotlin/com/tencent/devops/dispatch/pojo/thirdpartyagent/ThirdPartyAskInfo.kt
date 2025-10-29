@@ -27,5 +27,6 @@ data class ThirdPartyAskResp(
     val build: ThirdPartyBuildInfo?,
     val upgrade: UpgradeItem?,
     val pipeline: ThirdPartyAgentPipeline?,
-    val debug: ThirdPartyDockerDebugInfo?
+    val debug: ThirdPartyDockerDebugInfo?,
+    val createMod: Boolean?
 )

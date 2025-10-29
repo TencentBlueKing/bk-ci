@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
@@ -72,11 +73,20 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        agentType: AgentType?
     ): Result<ThirdPartyAgentLink> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.generateAgent(userId, projectId, os, zoneName))
+        return Result(
+            thirdPartyAgentService.generateAgent(
+                userId = userId,
+                projectId = projectId,
+                os = os,
+                zoneName = zoneName,
+                agentType = agentType
+            )
+        )
     }
 
     override fun generateBatchInstallLink(
@@ -87,7 +97,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): Result<String> {
         checkUserId(userId)
         checkProjectId(projectId)
@@ -100,7 +111,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
                 loginName = loginName,
                 loginPassword = loginPassword,
                 installType = installType,
-                reInstallId = reInstallId
+                reInstallId = reInstallId,
+                agentType = agentType
             )
         )
     }
@@ -126,13 +138,13 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, os, AgentType.BUILD))
     }
 
     override fun listAgents(userId: String, projectId: String): Result<List<ThirdPartyAgentInfo>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.listAgents(userId, projectId, null))
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, null, AgentType.BUILD))
     }
 
     override fun getAgentStatus(

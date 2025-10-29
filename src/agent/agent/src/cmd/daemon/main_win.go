@@ -39,6 +39,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
@@ -116,6 +117,8 @@ func main() {
 	if err != nil {
 		logs.WithError(err).Error("run agent program error")
 	}
+
+	create.ReleaseMutex()
 }
 
 var GAgentProcess *os.Process = nil

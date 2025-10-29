@@ -11,6 +11,7 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -43,7 +44,8 @@ class BatchInstallAgentService @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -66,7 +68,8 @@ class BatchInstallAgentService @Autowired constructor(
                     AESUtil.encrypt(ASE_SECRET, loginPassword)
                 },
                 installType = installType,
-                reInstallId = reInstallId
+                reInstallId = reInstallId,
+                agentType = agentType
             )
         }
 
@@ -96,7 +99,8 @@ class BatchInstallAgentService @Autowired constructor(
                 AESUtil.encrypt(ASE_SECRET, loginPassword)
             },
             installType = installType,
-            reInstallId = reInstallId
+            reInstallId = reInstallId,
+            agentType = agentType
         )
     }
 
@@ -107,7 +111,8 @@ class BatchInstallAgentService @Autowired constructor(
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?,
-        reInstallId: String?
+        reInstallId: String?,
+        agentType: AgentType?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)
@@ -131,7 +136,8 @@ class BatchInstallAgentService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 os = os,
-                zoneName = zoneName
+                zoneName = zoneName,
+                agentType = agentType
             )
             HashUtil.encodeLongId(agentId)
         } else {
@@ -174,7 +180,8 @@ class BatchInstallAgentService @Autowired constructor(
         projectId: String,
         userId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        agentType: AgentType?
     ): Long {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -186,7 +193,8 @@ class BatchInstallAgentService @Autowired constructor(
             os = os,
             secretKey = SecurityUtil.encrypt(secretKey),
             gateway = gateway,
-            fileGateway = fileGateway
+            fileGateway = fileGateway,
+            agentType = agentType
         )
     }
 

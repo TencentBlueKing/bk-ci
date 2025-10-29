@@ -41,6 +41,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -131,8 +132,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.getPipelineResult(projectId, nodeId, seqId))
     }
 
-    override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
-        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
+    override fun listAgents(
+        userId: String,
+        projectId: String,
+        os: OS,
+        agentType: AgentType?
+    ): Result<List<ThirdPartyAgentInfo>> {
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, os, agentType))
     }
 
     override fun agentTaskStarted(

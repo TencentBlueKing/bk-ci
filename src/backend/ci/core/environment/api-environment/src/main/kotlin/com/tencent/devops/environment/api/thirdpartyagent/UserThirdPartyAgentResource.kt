@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
@@ -91,7 +92,10 @@ interface UserThirdPartyAgentResource {
         os: OS,
         @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
-        zoneName: String?
+        zoneName: String?,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Result<ThirdPartyAgentLink>
 
     @Operation(summary = "生成批量安装链接")
@@ -121,7 +125,10 @@ interface UserThirdPartyAgentResource {
         installType: TPAInstallType?,
         @Parameter(description = "重装使用的AgentHashId", required = false)
         @QueryParam("reInstallId")
-        reInstallId: String?
+        reInstallId: String?,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Result<String>
 
     @Operation(summary = "获取网关列表")

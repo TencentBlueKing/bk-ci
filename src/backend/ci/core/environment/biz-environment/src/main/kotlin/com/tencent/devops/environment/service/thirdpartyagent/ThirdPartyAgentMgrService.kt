@@ -82,6 +82,7 @@ import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
@@ -539,13 +540,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val count = thirdPartyAgentDao.countProjectAgentId(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            agentType = null
         )
         val agentRecord /*map<agent hash id, node hash id>*/ = thirdPartyAgentDao.listProjectAgentId(
             dslContext = dslContext,
             projectId = projectId,
             offset = sqlLimit?.offset ?: 0,
-            limit = sqlLimit?.limit ?: 100
+            limit = sqlLimit?.limit ?: 100,
+            agentType = null
         )
         val agentBuildPage = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
             agentIds = agentRecord.keys.toList()
@@ -624,7 +627,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         userId: String,
         projectId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        agentType: AgentType?
     ): ThirdPartyAgentLink {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -633,7 +637,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             projectId = projectId,
             userId = userId,
-            os = os
+            os = os,
+            agentType = agentType ?: AgentType.BUILD
         )
         val agentRecord: TEnvironmentThirdpartyAgentRecord = if (unimportAgent.isEmpty()) {
             val secretKey = generateSecretKey()
@@ -644,7 +649,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
-                fileGateway = fileGateway
+                fileGateway = fileGateway,
+                agentType = agentType
             )
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
@@ -694,7 +700,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     fun listAgents(
         userId: String,
         projectId: String,
-        os: OS?
+        os: OS?,
+        agentType: AgentType?
     ): List<ThirdPartyAgentInfo> {
 
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
@@ -713,7 +720,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             projectId = projectId,
             nodeIds = canUseNodeIds,
-            os = os
+            os = os,
+            agentType = agentType
         )
         if (agents.isEmpty()) {
             return emptyList()
@@ -929,7 +937,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                            "($sharedProjectId:$sharedEnvId)"
+                                "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -968,12 +976,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -1019,7 +1027,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:$sharedEnvName)"
+                        "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -1433,7 +1441,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
-                language = commonConfig.devopsDefaultLocaleLanguage
+                language = commonConfig.devopsDefaultLocaleLanguage,
+                createMod = nodeRecord.nodeType == NodeType.CREATE.name
             )
         }
         thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
