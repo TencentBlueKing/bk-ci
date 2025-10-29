@@ -315,7 +315,7 @@ export default {
         .then((res) => {
           this.projectList = res.data;
           const project = this.projectList.find(i => i.projectCode === this.projectCode);
-          if (project?.managePermission === false || !/rbac/.test(project?.routerTag)) {
+          if (project && !project?.managePermission) {
             this.curProjectCode = '';
           };
           this.dataLoaded = true
