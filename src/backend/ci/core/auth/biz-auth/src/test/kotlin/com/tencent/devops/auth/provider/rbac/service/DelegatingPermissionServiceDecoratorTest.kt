@@ -172,7 +172,8 @@ class DelegatingPermissionServiceDecoratorTest : BkCiAbstractTest() {
             }
 
             // The 4th call meets minimumNumberOfCalls and will transition the state to OPEN, but since
-            // generic exceptions are rethrown, we need to catch it here. The circuit transitions to OPEN after this call.
+            // generic exceptions are rethrown, we need to catch it here.
+            // The circuit transitions to OPEN after this call.
             try {
                 decorator.validateUserProjectPermission("u", "p", AuthPermission.MANAGE)
             } catch (_: Exception) {
