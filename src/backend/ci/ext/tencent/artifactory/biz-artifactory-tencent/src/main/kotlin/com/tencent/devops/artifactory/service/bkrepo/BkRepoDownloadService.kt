@@ -553,7 +553,8 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int
+        ttl: Int,
+        useWeb: Boolean?
     ): Url {
         logger.info(
             "innerBkrepoDownloadUrl, userId: $userId, projectId: $projectId, " +
@@ -567,7 +568,14 @@ open class BkRepoDownloadService(
             artifactoryType = artifactoryType,
             path = normalizedPath
         )
-        val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
+        val url = bkRepoService.internalDownloadUrl(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath,
+            ttl = ttl,
+            useWeb = useWeb
+        )
         return Url(url)
     }
 
@@ -707,7 +715,7 @@ open class BkRepoDownloadService(
                     "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
         )
         val path = getNormalizePath(argPath, artifactoryType, userId, projectId)
-        val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
+        val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl,)
         val fileDetail = bkRepoClient.getFileDetail(
             userId,
             projectId,

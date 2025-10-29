@@ -123,17 +123,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
-    override fun downloadUrl(
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        userId: String,
-        path: String,
-        ttl: Int,
-        directed: Boolean?
-    ): Result<Url> {
-        TODO("not implemented")
-    }
-
     override fun show(
         userId: String,
         projectId: String,
