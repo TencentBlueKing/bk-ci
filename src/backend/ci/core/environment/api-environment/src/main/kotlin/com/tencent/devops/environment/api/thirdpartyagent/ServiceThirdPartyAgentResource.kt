@@ -42,6 +42,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
@@ -241,7 +242,10 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "操作系统", required = true)
         @PathParam("os")
-        os: OS
+        os: OS,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Result<List<ThirdPartyAgentInfo>>
 
     @Operation(summary = "构建任务已认领")

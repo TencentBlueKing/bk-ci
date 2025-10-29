@@ -31,5 +31,6 @@ enum class EnvType {
     DEV,
     TEST,
     PROD,
-    BUILD
+    BUILD,
+    CREATE
 }

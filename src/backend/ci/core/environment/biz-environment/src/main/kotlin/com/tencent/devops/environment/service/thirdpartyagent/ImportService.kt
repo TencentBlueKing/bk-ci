@@ -52,6 +52,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeTagService
@@ -85,7 +86,7 @@ class ImportService @Autowired constructor(
     /**
      * 利用上一次安装包[agentHashId]的ID来生成新的agent并返回hashId
      */
-    fun generateAgentByOtherAgentId(agentHashId: String): String {
+    fun generateAgentByOtherAgentId(agentHashId: String, agentType: AgentType?): String {
         val lockKey = "lock:tpa:batch:rate:$agentHashId"
         val acquire = simpleRateLimiter.acquire(BU_SIZE, lockKey = lockKey)
         if (!acquire) {
@@ -120,7 +121,8 @@ class ImportService @Autowired constructor(
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
-                fileGateway = fileGateway
+                fileGateway = fileGateway,
+                agentType = agentType
             )
 
             return HashUtil.encodeLongId(id)
@@ -193,7 +195,11 @@ class ImportService @Autowired constructor(
                 name = agentRecord.hostname,
                 osName = agentRecord.os.lowercase(),
                 status = NodeStatus.NORMAL,
-                type = NodeType.THIRDPARTY,
+                type = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    NodeType.CREATE
+                } else {
+                    NodeType.THIRDPARTY
+                },
                 userId = userId,
                 agentVersion = masterVersion
             )

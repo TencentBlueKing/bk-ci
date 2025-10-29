@@ -469,7 +469,7 @@ class NodeTagService @Autowired constructor(
         }
         projects.forEach { projectId ->
             logger.info("refreshInternalNodeTags|add project $projectId")
-            thirdPartyAgentDao.fetchByProjectId(dslContext, projectId).forEach { tpa ->
+            thirdPartyAgentDao.fetchByProjectId(dslContext, projectId, null).forEach { tpa ->
                 editNodeInternalTags(tags, tpa, projectId)
             }
         }

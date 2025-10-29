@@ -28,8 +28,11 @@
 package agent
 
 import (
+	"sync"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 
@@ -95,6 +98,10 @@ func initModules() {
 	imagedebug.Init()
 }
 
+var (
+	checkMutexOnce sync.Once
+)
+
 func doAsk() {
 	// Ask请求
 	exiterror := exitcode.GetAndResetExitError()
@@ -143,6 +150,19 @@ func doAsk() {
 	if err != nil {
 		logs.WithErrorNoStack(err).Error("parse ask resp failed")
 		return
+	}
+
+	// 目前仅支持windows机器
+	if systemutil.IsWindows() && resp.CreateMod != nil {
+		checkMutexOnce.Do(func() {
+			create.UpdateCreateModFlag(*resp.CreateMod)
+			if create.CheckCreateMod() {
+				if !create.CheckOnlyProcess(create.AgentProcess) {
+					logs.Error("create mod not only process, exit")
+					systemutil.ExitProcess(constant.DaemonExitCode)
+				}
+			}
+		})
 	}
 
 	// 执行各类任务

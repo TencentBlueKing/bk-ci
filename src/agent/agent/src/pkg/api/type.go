@@ -246,9 +246,10 @@ type AskEnable struct {
 }
 
 type AskResp struct {
-	Heart    *AgentHeartbeatResponse `json:"heartbeat"`
-	Build    *ThirdPartyBuildInfo    `json:"build"`
-	Upgrade  *UpgradeItem            `json:"upgrade"`
-	Pipeline map[string]any          `json:"pipeline"`
-	Debug    *ImageDebug             `json:"debug"`
+	Heart     *AgentHeartbeatResponse `json:"heartbeat"`
+	Build     *ThirdPartyBuildInfo    `json:"build"`
+	Upgrade   *UpgradeItem            `json:"upgrade"`
+	Pipeline  map[string]any          `json:"pipeline"`
+	Debug     *ImageDebug             `json:"debug"`
+	CreateMod *bool                   `json:"createMod"`
 }

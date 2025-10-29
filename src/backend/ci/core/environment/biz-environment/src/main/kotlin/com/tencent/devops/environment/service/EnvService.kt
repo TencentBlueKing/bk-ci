@@ -80,6 +80,7 @@ import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -433,11 +434,12 @@ class EnvService @Autowired constructor(
                 0
             } else {
                 thirdPartyAgentDao.countAgentByStatusAndOS(
-                    dslContext,
-                    nodeProjectId,
-                    nodeIds,
-                    AgentStatus.IMPORT_OK,
-                    os
+                    dslContext = dslContext,
+                    projectId = nodeProjectId,
+                    nodeIds = nodeIds,
+                    status = AgentStatus.IMPORT_OK,
+                    os = os,
+                    agentType = AgentType.BUILD
                 )
             }
 
@@ -449,7 +451,8 @@ class EnvService @Autowired constructor(
                     projectId = nodeProjectId,
                     nodeIds = nodeIds,
                     status = AgentStatus.IMPORT_EXCEPTION,
-                    os = os
+                    os = os,
+                    agentType = AgentType.BUILD
                 )
             }
 

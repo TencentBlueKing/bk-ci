@@ -31,11 +31,12 @@ enum class NodeType(val typeName: String) {
     CMDB("CMDB"),
     DEVCLOUD("DevCloud虚拟机"),
     THIRDPARTY("第三方构建机"),
+    CREATE("创作流机器"),
     OTHER("其他"),
     UNKNOWN("未知");
 
     companion object {
-        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
+        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name, CREATE.name)
 
         fun getTypeName(nodeType: String): String {
             return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
