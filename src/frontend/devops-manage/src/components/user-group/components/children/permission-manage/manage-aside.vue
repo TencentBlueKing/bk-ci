@@ -487,7 +487,7 @@ async function refresh () {
 
 async function getSyncStatus () {
   try {
-    if (projectId.value) return
+    if (!projectId.value) return
     syncStatus.value = await http.getSyncStatusOfAllMember(projectId.value);
     if (syncStatus.value === 'PENDING') {
       timer.value = setTimeout(() => {

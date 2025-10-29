@@ -251,19 +251,11 @@ onMounted(async () => {
                 <bk-option
                     v-show="!project.hide"
                     :value="project.englishName"
-                    :disabled="['v0', 'v3'].includes(project.routerTag)"
                     :label="project.projectName"
                 >
                   <div
                     class="option-item">
                     {{ project.projectName }}
-                    <i
-                      v-if="['v0', 'v3'].includes(project.routerTag)"
-                      v-bk-tooltips="t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
-                      class="permission-icon permission-icon-edit edit-icon"
-                      @click="handleToProjectManage(project)"
-                    >
-                    </i>
                   </div>
                 </bk-option>
               </div>
