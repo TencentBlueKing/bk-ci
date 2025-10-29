@@ -102,7 +102,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                         fullPathSet = listOf("/screenshot/$workspaceName.jpg"),
                         expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
                         type = BkRepoConstants.TOKEN_TYPE_DOWNLOAD,
-                        userId = userId
+                        userId = SYSTEM_USER
                     )
 
                     // 构建下载URL
