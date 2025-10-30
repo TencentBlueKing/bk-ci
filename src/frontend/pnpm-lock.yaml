@@ -285,7 +285,7 @@ importers:
         version: 0.14.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
@@ -424,13 +424,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -553,13 +553,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -573,8 +573,8 @@ importers:
   devops-atomstore:
     dependencies:
       '@blueking/bk-user-selector':
-        specifier: 0.0.38
-        version: 0.0.38(@blueking/bkui-library@0.0.0-beta.6)
+        specifier: 0.0.39-beta.1
+        version: 0.0.39-beta.1(@blueking/bkui-library@0.0.0-beta.6)
       '@blueking/bkcharts':
         specifier: ^2.0.10
         version: 2.0.10
@@ -704,13 +704,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -721,8 +721,8 @@ importers:
   devops-codelib:
     dependencies:
       '@blueking/bk-user-selector':
-        specifier: 0.0.38
-        version: 0.0.38(@blueking/bkui-library@0.0.0-beta.6)
+        specifier: 0.0.39-beta.1
+        version: 0.0.39-beta.1(@blueking/bkui-library@0.0.0-beta.6)
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -831,13 +831,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^0.23.0
         version: 0.23.1
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -982,13 +982,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -1158,7 +1158,7 @@ importers:
         version: 14.1.0(postcss@7.0.39)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       typescript:
         specifier: ^4.6.3
         version: 4.9.5
@@ -1357,13 +1357,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       ts-loader:
         specifier: ^4.1.0
         version: 4.5.0
@@ -1480,8 +1480,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@blueking/bk-user-selector':
-        specifier: 0.0.38
-        version: 0.0.38(@blueking/bkui-library@0.0.0-beta.6)
+        specifier: 0.0.39-beta.1
+        version: 0.0.39-beta.1(@blueking/bkui-library@0.0.0-beta.6)
       '@blueking/log':
         specifier: 2.2.3
         version: 2.2.3(vue@2.7.16)
@@ -1695,13 +1695,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -1827,8 +1827,8 @@ importers:
   devops-quality:
     dependencies:
       '@blueking/bk-user-selector':
-        specifier: 0.0.38
-        version: 0.0.38(@blueking/bkui-library@0.0.0-beta.6)
+        specifier: 0.0.39-beta.1
+        version: 0.0.39-beta.1(@blueking/bkui-library@0.0.0-beta.6)
       echarts:
         specifier: ^5.3.2
         version: 5.6.0
@@ -1943,13 +1943,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -2287,13 +2287,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -2411,13 +2411,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -2556,13 +2556,13 @@ importers:
         version: 1.92.1
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       style-loader:
         specifier: ^3.3.1
         version: 3.3.4(webpack@5.101.3)
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+        version: 5.3.14(webpack@5.101.3)
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
@@ -3272,8 +3272,8 @@ packages:
   '@blueking/bk-user-display-name@1.0.2':
     resolution: {integrity: sha512-HutBumyW9cQEPD1rby7kJfCdKOZ5T1HHE4icQhuoHGP9rtQoB9NYmEbFdgQvNLVu1EbH4cCtdaaiu8imTzTJlw==}
 
-  '@blueking/bk-user-selector@0.0.38':
-    resolution: {integrity: sha512-ltQOoKC4m8evGc/dT8l2ZW7GQXjLHLu0U5V0KU4X1gtLM4ffPlozw29TMBS92DZzxKFRuTpNyv40RB9lAhTqPw==}
+  '@blueking/bk-user-selector@0.0.39-beta.1':
+    resolution: {integrity: sha512-NC7JWGiDZ5vO1Q3SwhzeTTi/T+KHsq1F0dVSxI2yzr/g8PlaeXJtN5SmaK2CmMzIF2H2BioGKD82/A1kZ/JVbg==}
     engines: {node: '>=18.16.0'}
     peerDependencies:
       '@blueking/bkui-library': ^0.0.0-beta.4
@@ -17396,7 +17396,7 @@ snapshots:
 
   '@blueking/bk-user-display-name@1.0.2': {}
 
-  '@blueking/bk-user-selector@0.0.38(@blueking/bkui-library@0.0.0-beta.6)':
+  '@blueking/bk-user-selector@0.0.39-beta.1(@blueking/bkui-library@0.0.0-beta.6)':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
       lodash: 4.17.21
@@ -19448,12 +19448,12 @@ snapshots:
       postcss-loader: 6.2.1(postcss@8.5.6)(webpack@5.101.3)
       rxjs: 7.8.2
       sass: 1.92.1
-      sass-loader: 12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1))
+      sass-loader: 12.6.0(sass@1.92.1)(webpack@5.101.3)
       source-map-loader: 5.0.0(webpack@5.101.3)
       style-loader: 3.3.4(webpack@5.101.3)
       stylus: 0.59.0
       stylus-loader: 7.1.3(stylus@0.59.0)(webpack@5.101.3)
-      terser-webpack-plugin: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+      terser-webpack-plugin: 5.3.14(webpack@5.101.3)
       ts-loader: 9.5.4(typescript@3.4.5)(webpack@5.101.3)
       tsconfig-paths-webpack-plugin: 4.0.0
       tslib: 2.8.1
@@ -29011,7 +29011,7 @@ snapshots:
       typescript: 5.4.5
       vue: 3.4.38(typescript@4.9.5)
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.21)(vue@3.4.38(typescript@4.9.5))(webpack@5.101.3(webpack-cli@6.0.1))
-      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
+      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
       vue-style-loader: 4.1.3
       webpack: 5.101.3(webpack-cli@6.0.1)
       webpack-bundle-analyzer: 4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -29126,7 +29126,7 @@ snapshots:
       typescript: 5.4.5
       vue: 3.4.38(typescript@4.9.5)
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.21)(vue@3.4.38(typescript@4.9.5))(webpack@5.101.3(webpack-cli@6.0.1))
-      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
+      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
       vue-style-loader: 4.1.3
       webpack: 5.101.3(webpack-cli@6.0.1)
       webpack-bundle-analyzer: 4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -31213,7 +31213,7 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
-  sass-loader@12.6.0(sass@1.92.1)(webpack@5.101.3(webpack-cli@6.0.1)):
+  sass-loader@12.6.0(sass@1.92.1)(webpack@5.101.3):
     dependencies:
       klona: 2.0.6
       neo-async: 2.6.2
@@ -32477,7 +32477,7 @@ snapshots:
     transitivePeerDependencies:
       - bluebird
 
-  terser-webpack-plugin@5.3.14(webpack@5.101.3(webpack-cli@6.0.1)):
+  terser-webpack-plugin@5.3.14(webpack@5.101.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
@@ -33522,9 +33522,9 @@ snapshots:
       clipboard: 2.0.11
       vue: 2.7.16
 
-  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
+  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
     dependencies:
-      vue-loader: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
+      vue-loader: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
     transitivePeerDependencies:
       - '@vue/compiler-sfc'
       - arc-templates
@@ -33586,9 +33586,9 @@ snapshots:
       - webpack
       - whiskers
 
-  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
+  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
     dependencies:
-      vue-loader: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
+      vue-loader: 15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1))
     transitivePeerDependencies:
       - '@vue/compiler-sfc'
       - arc-templates
@@ -33784,7 +33784,7 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
+  vue-loader@15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(lodash@4.17.21)(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
     dependencies:
       '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       css-loader: 6.11.0(webpack@5.101.3(webpack-cli@6.0.1))
@@ -33852,7 +33852,7 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3(webpack-cli@6.0.1)))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
+  vue-loader@15.10.2(@vue/compiler-sfc@3.5.21)(css-loader@6.11.0(webpack@5.101.3))(prettier@3.6.2)(vue-template-compiler@2.7.16)(webpack@5.101.3(webpack-cli@6.0.1)):
     dependencies:
       '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
       css-loader: 6.11.0(webpack@5.101.3(webpack-cli@6.0.1))
@@ -34454,7 +34454,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.3
-      terser-webpack-plugin: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+      terser-webpack-plugin: 5.3.14(webpack@5.101.3)
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     optionalDependencies:
@@ -34488,7 +34488,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.3
-      terser-webpack-plugin: 5.3.14(webpack@5.101.3(webpack-cli@6.0.1))
+      terser-webpack-plugin: 5.3.14(webpack@5.101.3)
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     optionalDependencies:
