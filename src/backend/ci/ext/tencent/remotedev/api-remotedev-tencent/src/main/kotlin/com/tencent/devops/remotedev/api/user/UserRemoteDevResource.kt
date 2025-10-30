@@ -288,6 +288,10 @@ interface UserRemoteDevResource {
         @Parameter(description = "JPEG图片质量", required = false)
         @QueryParam("jpegQuality")
         @DefaultValue("60")
-        jpegQuality: Int
+        jpegQuality: Int,
+        @Parameter(description = "屏幕id", required = false)
+        @QueryParam("screenId")
+        @DefaultValue("0")
+        screenId: Int
     ): Result<Map<String, String>>
 }

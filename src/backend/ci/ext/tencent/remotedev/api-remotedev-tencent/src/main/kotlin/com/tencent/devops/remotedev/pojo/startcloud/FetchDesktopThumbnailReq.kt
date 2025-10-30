@@ -26,7 +26,7 @@ data class FetchDesktopThumbnailReq(
 
     @get:Schema(title = "截图序列ID", required = true)
     @JsonProperty("screen_id")
-    val screenId: String,
+    val screenId: Int,
 
     @get:Schema(title = "JPEG图片质量", required = true)
     @JsonProperty("jpeg_quality")

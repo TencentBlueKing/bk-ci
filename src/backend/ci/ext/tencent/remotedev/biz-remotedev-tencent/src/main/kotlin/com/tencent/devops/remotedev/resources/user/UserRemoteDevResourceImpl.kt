@@ -213,7 +213,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         workspaceNames: List<String>,
         width: Int,
         high: Int,
-        jpegQuality: Int
+        jpegQuality: Int,
+        screenId: Int
     ): Result<Map<String, String>> {
         logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames|width=$width|high=$high|jpegQuality=$jpegQuality")
 
@@ -226,7 +227,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
             workspaceNames = workspaceNames,
             width = width,
             high = high,
-            jpegQuality = jpegQuality
+            jpegQuality = jpegQuality,
+            screenId = screenId
         )
 
         return Result(thumbnails)

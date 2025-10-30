@@ -151,7 +151,8 @@ class WorkspaceThumbnailService @Autowired constructor(
         workspaceNames: List<String>,
         width: Int,
         high: Int,
-        jpegQuality: Int
+        jpegQuality: Int,
+        screenId: Int
     ) {
         if (workspaceNames.isEmpty()) {
             return
@@ -227,7 +228,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                         cdsId = cgsId,
                         width = width,
                         high = high,
-                        screenId = workspaceName,
+                        screenId = screenId,
                         jpegQuality = jpegQuality,
                         jpegUrl = uploadUrl
                     )
