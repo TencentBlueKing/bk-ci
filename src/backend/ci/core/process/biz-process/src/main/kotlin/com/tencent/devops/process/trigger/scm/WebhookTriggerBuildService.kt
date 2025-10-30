@@ -75,7 +75,7 @@ class WebhookTriggerBuildService @Autowired constructor(
     fun trigger(event: ScmWebhookTriggerEvent) {
         with(event) {
             logger.info(
-                "start to trigger webhook trigger|$projectId|$pipelineId|$version|$eventId|${repository.repoHashId}"
+                "start to trigger webhook trigger|$eventId|$projectId|$pipelineId|$version|${repository.repoHashId}"
             )
             val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
                 ?: throw ErrorCodeException(
@@ -180,8 +180,7 @@ class WebhookTriggerBuildService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             logger.error(
-                "Failed to trigger by webhook|" +
-                    "projectId: $projectId|pipelineId: $pipelineId|repoHashId: ${repository.repoHashId}",
+                "Failed to trigger by webhook|$eventId|$projectId|$pipelineId|${repository.repoHashId}",
                 ignored
             )
             webhookTriggerManager.fireError(context, ignored)
@@ -191,9 +190,8 @@ class WebhookTriggerBuildService @Autowired constructor(
     fun yamlTrigger(event: PipelineYamlFileEvent) {
         with(event) {
             logger.info(
-                "[PAC_PIPELINE]|Start to trigger yaml pipeline|eventId:$eventId|" +
-                    "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
-                    "ref: $ref|blobId: $blobId"
+                "[PAC_PIPELINE]|Start to trigger yaml pipeline|$eventId|$projectId|$repoHashId|" +
+                        "$filePath|$ref|$blobId"
             )
             val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
                 ?: throw ErrorCodeException(
@@ -238,16 +236,15 @@ class WebhookTriggerBuildService @Autowired constructor(
                 )
             } ?: run {
                 logger.info(
-                    "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|eventId: $eventId|" +
-                        "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|blobId: $blobId"
+                    "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|$eventId|" +
+                        "$projectId|$repoHashId|$filePath|$blobId"
                 )
                 return
             }
             logger.info(
-                "[PAC_PIPELINE]|find yaml pipeline trigger version|eventId:$eventId|" +
-                    "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
-                    "ref: $ref|blobId: $blobId|" +
-                    "pipelineId: ${pipelineYamlVersion.pipelineId}|version: ${pipelineYamlVersion.version}"
+                "[PAC_PIPELINE]|find yaml pipeline trigger version|$eventId|" +
+                    "$projectId|$repoHashId|$filePath|$ref|$blobId|" +
+                    "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
             )
             trigger(
                 projectId = projectId,
@@ -290,8 +287,7 @@ class WebhookTriggerBuildService @Autowired constructor(
             frequencyLimit = false
         )
         logger.info(
-            "success to trigger by webhook|eventId:${context.eventId}|" +
-                "projectId: $projectId|pipelineId: $pipelineId|version: ${resource.version}"
+            "success to trigger by webhook|${context.eventId}|$projectId|$pipelineId|${resource.version}"
         )
         context.buildId = buildId
         context.startParams = startParams
@@ -322,9 +318,9 @@ class WebhookTriggerBuildService @Autowired constructor(
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
-                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value ?: "")
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
             } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
-                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value ?: "")
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
         return pipelineParamMap
