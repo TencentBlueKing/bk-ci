@@ -224,6 +224,7 @@ class PipelineBuildService(
                 projectVO = projectVO,
                 channelCode = channelCode,
                 isMobile = isMobile,
+                debug = debug,
                 pipelineAuthorizer = if (pipeline.channelCode == ChannelCode.BS) {
                     pipelineRepositoryService.getPipelineOauthUser(
                         projectId = pipeline.projectId,
@@ -345,7 +346,7 @@ class PipelineBuildService(
 //        }
 //        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
 
-        if (debug != true) pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+        pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,
             value = BuildMsgUtils.getBuildMsg(
                 buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
