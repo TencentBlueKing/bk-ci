@@ -13,9 +13,9 @@ import java.util.concurrent.TimeUnit
  * 使用Guava Cache实现，减少数据库查询压力
  */
 object JobProjectQuotaCache {
-    
+
     private val logger = LoggerFactory.getLogger(JobProjectQuotaCache::class.java)
-    
+
     /**
      * 缓存配置：
      * - 最大缓存10000个项目配额
@@ -27,7 +27,7 @@ object JobProjectQuotaCache {
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .expireAfterAccess(5, TimeUnit.MINUTES)
         .build()
-    
+
     /**
      * 生成缓存key
      */
@@ -38,10 +38,10 @@ object JobProjectQuotaCache {
     ): String {
         return "$projectId:${jobQuotaVmType.name}:$channelCode"
     }
-    
+
     /**
      * 获取项目配额，如果缓存不存在则通过loader加载
-     * 
+     *
      * @param projectId 项目ID
      * @param jobQuotaVmType 构建机类型
      * @param channelCode 渠道代码
@@ -55,7 +55,7 @@ object JobProjectQuotaCache {
         loader: () -> JobQuotaStatus
     ): JobQuotaStatus {
         val cacheKey = buildCacheKey(projectId, jobQuotaVmType, channelCode)
-        
+
         return try {
             cache.get(cacheKey) {
                 logger.info("Cache miss for key: $cacheKey, loading from database")
@@ -67,10 +67,10 @@ object JobProjectQuotaCache {
             loader()
         }
     }
-    
+
     /**
      * 手动放入缓存
-     * 
+     *
      * @param projectId 项目ID
      * @param jobQuotaVmType 构建机类型
      * @param channelCode 渠道代码
@@ -86,10 +86,10 @@ object JobProjectQuotaCache {
         cache.put(cacheKey, quota)
         logger.debug("Put project quota into cache, key: $cacheKey")
     }
-    
+
     /**
      * 使指定项目配额缓存失效
-     * 
+     *
      * @param projectId 项目ID
      * @param jobQuotaVmType 构建机类型
      * @param channelCode 渠道代码
@@ -103,10 +103,10 @@ object JobProjectQuotaCache {
         cache.invalidate(cacheKey)
         logger.debug("Invalidate project quota cache, key: $cacheKey")
     }
-    
+
     /**
      * 使指定项目的所有配额缓存失效
-     * 
+     *
      * @param projectId 项目ID
      */
     fun invalidateProject(projectId: String) {

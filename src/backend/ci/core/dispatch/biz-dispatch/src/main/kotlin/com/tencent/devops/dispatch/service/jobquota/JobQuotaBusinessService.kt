@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.service.jobquota
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -38,7 +37,6 @@ import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
-import com.tencent.devops.dispatch.pojo.JobQuotaProject
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.utils.redis.JobQuotaRedisUtils
@@ -292,15 +290,6 @@ class JobQuotaBusinessService @Autowired constructor(
             }
             redisLock.unlock()
         }
-    }
-
-    private fun saveJobConcurrency(
-        projectId: String,
-        runningJobCount: Int,
-        jobQuotaVmType: JobQuotaVmType,
-        channelCode: String
-    ){
-
     }
 
     private fun normalizePercentage(value: Double): String {
