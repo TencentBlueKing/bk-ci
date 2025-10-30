@@ -192,7 +192,7 @@ class WebIDEService @Autowired constructor(
         // val nodeInfoList = client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
         val nodeInfoList = client.get(ServiceThirdPartyAgentResource::class).listAgents(
             userId = userId, projectId = projectId, os = OS.LINUX,
-            agentType = AgentType.CREATE
+            agentType = AgentType.BUILD
         )
         if (nodeInfoList.isNotOk()) {
             logger.error("list user third party node failed")

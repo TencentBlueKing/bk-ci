@@ -130,7 +130,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
             BuildType.THIRD_PARTY_AGENT_ID -> {
                 val agentNodeList = client.get(ServiceThirdPartyAgentResource::class).listAgents(
                     userId = userId, projectId = projectCode, os = containerOS,
-                    agentType = AgentType.CREATE
+                    agentType = AgentType.BUILD
                 ).data // 第三方构建机
                 logger.info("the agentNodeList is :$agentNodeList")
                 containerResourceValue = agentNodeList?.map {
