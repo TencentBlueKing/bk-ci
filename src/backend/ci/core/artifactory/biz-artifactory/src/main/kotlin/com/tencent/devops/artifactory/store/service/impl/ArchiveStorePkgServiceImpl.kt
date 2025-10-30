@@ -156,11 +156,13 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 }
                 val packageFile = File("$storeArchivePath/$pkgLocalPath")
                 val packageFileName = packageFile.name
+                val packageFileInputStream = packageFile.inputStream()
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFileName,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    shaContent = packageFileInputStream.use { ShaUtils.sha1InputStream(it) },
+                    sha256Content = packageFileInputStream.use { ShaUtils.sha256InputStream(it) }
                 )
                 val pkgRepoPath = generatePkgRepoPath(
                     storeCode = storeCode,
@@ -171,6 +173,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 )
                 storePkgEnvInfo.pkgRepoPath = pkgRepoPath
                 storePkgEnvInfo.shaContent = packageFileInfo.shaContent
+                storePkgEnvInfo.sha256Content = packageFileInfo.sha256Content
                 storePkgEnvInfo.pkgName = packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
@@ -215,7 +218,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(PackageFileInfo::shaContent.name to packageFileInfo.shaContent)
+                    props = mapOf(
+                        PackageFileInfo::shaContent.name to packageFileInfo.shaContent,
+                        PackageFileInfo::sha256Content.name to packageFileInfo.shaContent
+                    )
                 )
             }
         }
