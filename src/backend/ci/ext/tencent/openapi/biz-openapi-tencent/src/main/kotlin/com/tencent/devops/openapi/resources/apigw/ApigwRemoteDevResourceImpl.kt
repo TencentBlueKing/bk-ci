@@ -435,9 +435,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).stopWorkspace(userId, workspaceName)
     }
 
-    override fun restartWorkspace(userId: String, workspaceName: String): Result<Boolean> {
-        logger.info("restartWorkspace $userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName)
+    override fun restartWorkspace(userId: String, workspaceName: String, force: Boolean?): Result<Boolean> {
+        logger.info("restartWorkspace $userId|$workspaceName|force=$force")
+        return client.get(ServiceRemoteDevResource::class).restartWorkspace(userId, workspaceName, force)
     }
 
     override fun makeImageByVm(

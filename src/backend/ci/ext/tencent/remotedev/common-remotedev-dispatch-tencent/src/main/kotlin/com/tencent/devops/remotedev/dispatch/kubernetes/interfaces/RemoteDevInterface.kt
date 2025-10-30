@@ -70,7 +70,7 @@ interface RemoteDevInterface {
     /**
      * 重启远程工作空间
      */
-    fun restartWorkspace(userId: String, workspaceName: String): String
+    fun restartWorkspace(userId: String, workspaceName: String, force: Boolean? = null): String
 
     /**
      * 重装工作空间系统

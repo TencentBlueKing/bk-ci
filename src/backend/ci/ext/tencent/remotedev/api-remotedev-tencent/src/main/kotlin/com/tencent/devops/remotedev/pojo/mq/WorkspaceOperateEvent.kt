@@ -51,6 +51,7 @@ data class WorkspaceOperateEvent(
     val live: Boolean? = null,
     val rebuildRemoveOwner: Boolean? = null,
     val specifyTaints: String? = null,
+    val force: Boolean? = null,
     override val workspaceName: String,
     override var delayMills: Int = 0,
     override var retryTime: Int = 0

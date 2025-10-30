@@ -568,8 +568,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun restartWorkspace(userId: String, workspaceName: String): Result<Boolean> {
-        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
+    override fun restartWorkspace(userId: String, workspaceName: String, force: Boolean?): Result<Boolean> {
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName, force)
         return Result(true)
     }
 
