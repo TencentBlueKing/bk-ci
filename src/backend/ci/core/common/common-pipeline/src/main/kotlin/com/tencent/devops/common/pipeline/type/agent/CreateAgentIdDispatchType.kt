@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo
+package com.tencent.devops.common.pipeline.type.agent
 
-import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchType
 
-@Schema(title = "环境信息")
-data class EnvCreateInfo(
-    @get:Schema(title = "环境名称", required = true)
-    val name: String,
-    @get:Schema(title = "环境描述", required = true)
-    val desc: String,
-    @get:Schema(title = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}|创作流环境{CREATE}）", required = true)
-    val envType: EnvType,
-    @get:Schema(title = "环境变量", required = false)
-    val envVars: List<EnvVar>?,
-    @get:Schema(title = "节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
-    val source: NodeSource,
-    @get:Schema(title = "节点 HashId 列表", required = false)
-    val nodeHashIds: List<String>?
-)
+data class CreateAgentIdDispatchType(
+    override var value: String
+) : DispatchType(value) {
+    override fun cleanDataBeforeSave() {
+        this.value = this.value.trim()
+    }
+
+    override fun replaceField(variables: Map<String, String>) {
+    }
+
+    override fun buildType() = BuildType.valueOf(BuildType.CREATE_AGENT_ID.name)
+}

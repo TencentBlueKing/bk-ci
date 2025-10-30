@@ -156,6 +156,7 @@ type AgentHeartbeatResponse struct {
 	Props                   AgentPropsResp    `json:"props"`
 	DockerParallelTaskCount int               `json:"dockerParallelTaskCount"`
 	Language                string            `json:"language"`
+	CreateMod               *bool             `json:"createMod"`
 }
 
 type AgentPropsResp struct {
@@ -246,10 +247,9 @@ type AskEnable struct {
 }
 
 type AskResp struct {
-	Heart     *AgentHeartbeatResponse `json:"heartbeat"`
-	Build     *ThirdPartyBuildInfo    `json:"build"`
-	Upgrade   *UpgradeItem            `json:"upgrade"`
-	Pipeline  map[string]any          `json:"pipeline"`
-	Debug     *ImageDebug             `json:"debug"`
-	CreateMod *bool                   `json:"createMod"`
+	Heart    *AgentHeartbeatResponse `json:"heartbeat"`
+	Build    *ThirdPartyBuildInfo    `json:"build"`
+	Upgrade  *UpgradeItem            `json:"upgrade"`
+	Pipeline map[string]any          `json:"pipeline"`
+	Debug    *ImageDebug             `json:"debug"`
 }

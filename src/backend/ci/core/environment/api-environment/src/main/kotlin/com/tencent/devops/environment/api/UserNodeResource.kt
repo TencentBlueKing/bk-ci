@@ -186,7 +186,7 @@ interface UserNodeResource {
         @Parameter(description = "关键字", required = false)
         @QueryParam("keywords")
         keywords: String?,
-        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
+        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB;创作流: CREATE)", required = false)
         @QueryParam("nodeType")
         nodeType: NodeType?,
         @Parameter(description = "Agent 状态", required = false)

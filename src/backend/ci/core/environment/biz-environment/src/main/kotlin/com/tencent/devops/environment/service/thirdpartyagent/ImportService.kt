@@ -204,7 +204,11 @@ class ImportService @Autowired constructor(
                 agentVersion = masterVersion
             )
 
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
+            val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
+                "CREATE_${agentRecord.ip}"
+            } else {
+                "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
+            }
             nodeDao.insertNodeStringIdAndDisplayName(
                 dslContext = context,
                 id = nodeId,

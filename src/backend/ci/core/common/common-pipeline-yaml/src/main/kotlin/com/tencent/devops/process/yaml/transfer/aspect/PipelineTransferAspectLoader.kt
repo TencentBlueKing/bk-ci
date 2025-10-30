@@ -6,7 +6,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -49,7 +49,7 @@ object PipelineTransferAspectLoader {
                     val job = jp.modelJob()
                     if (job != null && job is VMBuildContainer && job.dispatchType is ThirdPartyAgentDispatch) {
                         when ((job.dispatchType as ThirdPartyAgentDispatch).agentType) {
-                            AgentType.REUSE_JOB_ID -> {
+                            AgentDispatchType.REUSE_JOB_ID -> {
                                 jobsNotCheck[job.jobId!!] = (job.dispatchType as ThirdPartyAgentDispatch).value
                             }
 
