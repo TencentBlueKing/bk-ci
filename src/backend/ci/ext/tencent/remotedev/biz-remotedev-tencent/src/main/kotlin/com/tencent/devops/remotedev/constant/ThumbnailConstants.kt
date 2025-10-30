@@ -4,7 +4,8 @@ package com.tencent.devops.remotedev.constant
  * 缩略图Redis Key常量
  */
 object ThumbnailRedisKeys {
-    const val THUMBNAIL_PREFIX = "remotedev:thumbnail:"
+    const val THUMBNAIL_DOWNLOAD_PREFIX = "remotedev:thumbnail:download:"
+    const val THUMBNAIL_UPLOAD_PREFIX = "remotedev:thumbnail:upload:"
     const val THUMBNAIL_TTL_SECONDS = 600 // 10分钟
 }
 

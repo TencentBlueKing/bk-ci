@@ -53,7 +53,7 @@ class WorkspaceThumbnailService @Autowired constructor(
         logger.info("batch get thumbnails: userId=$userId, workspaceNames=$workspaceNames")
 
         // 步骤1: 批量查询Redis缓存
-        val cacheKeys = workspaceNames.map { ThumbnailCacheKey(it).toRedisKey() }
+        val cacheKeys = workspaceNames.map { ThumbnailCacheKey(it).toDownloadRedisKey() }
         val cachedResults = mutableMapOf<String, String>()
 
         cacheKeys.forEachIndexed { index, key ->
@@ -116,7 +116,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     )
 
                     // 更新缓存
-                    val cacheKey = ThumbnailCacheKey(workspaceName).toRedisKey()
+                    val cacheKey = ThumbnailCacheKey(workspaceName).toDownloadRedisKey()
                     redisOperation.set(
                         key = cacheKey,
                         value = downloadUrl,
@@ -203,15 +203,23 @@ class WorkspaceThumbnailService @Autowired constructor(
                     )
 
                     // 生成上传Token
-                    val uploadToken = remotedevBkRepoClient.createTemporaryAccessToken(
-                        region = region,
-                        projectId = workspaceInfo.projectId,
-                        repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
-                        fullPathSet = listOf("/screenshot/$workspaceName.jpg"),
-                        expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
-                        type = BkRepoConstants.TOKEN_TYPE_ALL,
-                        userId = SYSTEM_USER
-                    )
+                    val cacheKey = ThumbnailCacheKey(workspaceName).toUploadRedisKey()
+                    val uploadToken = redisOperation.get(cacheKey)
+                        ?: remotedevBkRepoClient.createTemporaryAccessToken(
+                            region = region,
+                            projectId = workspaceInfo.projectId,
+                            repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
+                            fullPathSet = listOf("/screenshot/$workspaceName.jpg"),
+                            expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
+                            type = BkRepoConstants.TOKEN_TYPE_ALL,
+                            userId = SYSTEM_USER
+                        ).also {
+                            redisOperation.set(
+                                key = cacheKey,
+                                value = it,
+                                expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS.toLong()
+                            )
+                        }
 
                     // 构建上传URL
                     val uploadUrl = buildUploadUrl(
@@ -444,7 +452,14 @@ data class ThumbnailCacheKey(
     /**
      * 生成Redis Key格式
      */
-    fun toRedisKey(): String {
-        return "${ThumbnailRedisKeys.THUMBNAIL_PREFIX}$workspaceName"
+    fun toDownloadRedisKey(): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_PREFIX}$workspaceName"
+    }
+
+    /**
+     * 生成Redis Key格式
+     */
+    fun toUploadRedisKey(): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_PREFIX}$workspaceName"
     }
 }
