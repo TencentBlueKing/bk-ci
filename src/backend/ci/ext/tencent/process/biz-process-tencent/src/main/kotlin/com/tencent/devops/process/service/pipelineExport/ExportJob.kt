@@ -6,7 +6,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -281,7 +281,7 @@ object ExportJob {
                 ThirdPartyAgentIDDispatchType(
                     displayName = agentId,
                     workspace = workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -290,7 +290,7 @@ object ExportJob {
                     envName = envId,
                     envProjectId = null,
                     workspace = workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = null,
                     reusedInfo = null
                 )
