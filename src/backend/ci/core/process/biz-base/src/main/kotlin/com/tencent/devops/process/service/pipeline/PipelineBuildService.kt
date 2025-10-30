@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
+import com.tencent.devops.process.utils.PIPELINE_BUILD_DEBUG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
@@ -378,6 +379,7 @@ class PipelineBuildService(
 //        pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
         pipelineParamMap[PIPELINE_BUILD_ID] = BuildParameters(PIPELINE_BUILD_ID, buildId, readOnly = true)
+        pipelineParamMap[PIPELINE_BUILD_DEBUG] = BuildParameters(PIPELINE_BUILD_DEBUG, debug ?: false, readOnly = true)
         pipelineParamMap[PIPELINE_BUILD_URL] = BuildParameters(
             key = PIPELINE_BUILD_URL,
             value = pipelineUrlBean.genBuildDetailUrl(
