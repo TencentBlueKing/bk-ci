@@ -535,6 +535,8 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
+        var randomSeed = 1
+        val jobIdSet = mutableSetOf<String>()
         stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
@@ -557,6 +559,8 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
+            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed++, jobIdSet)
+            c.jobId?.let { jobIdSet.add(it) }
             try {
                 when {
                     c.matrixGroupFlag != true -> {
