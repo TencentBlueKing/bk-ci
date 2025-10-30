@@ -96,4 +96,8 @@ data class LinuxScriptElement(
     }
 
     override fun getClassType() = classType
+
+    override fun getInputParamMap(): Map<String, Map<String, Any>> {
+        return mapOf("script" to mapOf("script" to script))
+    }
 }

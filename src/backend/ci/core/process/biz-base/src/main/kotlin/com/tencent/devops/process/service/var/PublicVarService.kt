@@ -35,17 +35,20 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.VarReferenceInfo
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -62,6 +65,7 @@ class PublicVarService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
+    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
 
@@ -419,6 +423,134 @@ class PublicVarService @Autowired constructor(
                     varGroupVersion = null // 清除版本信息
                 }
             }
+        }
+    }
+
+    /**
+     * 更新公共变量引用计数
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param resourceId 资源ID
+     * @param resourceType 资源类型
+     * @param resourceVersion 资源版本
+     * @param publicVarList 公共变量列表
+     * @param allReferences 所有变量引用信息
+     */
+    fun updatePublicVarReferCount(
+        userId: String,
+        projectId: String,
+        resourceId: String,
+        resourceType: String,
+        resourceVersion: Int,
+        publicVarList: List<BuildFormProperty>?,
+        allReferences: List<VarReferenceInfo>
+    ) {
+        if (publicVarList.isNullOrEmpty()) {
+            return
+        }
+
+        try {
+            // 将 allReferences 转换为 Map，方便快速查找
+            val allReferencesMap = allReferences.groupBy { it.varName }
+
+            // 按变量组分组处理
+            val groupedVars = publicVarList.groupBy { it.varGroupName to it.varGroupVersion }
+
+            groupedVars.forEach { (groupInfo, vars) ->
+                val (groupName, version) = groupInfo
+                if (groupName.isNullOrBlank() || version == null) {
+                    return@forEach
+                }
+
+                // 收集该组中在 allReferences 中存在的变量
+                val varsInReferences = vars.filter { varProp ->
+                    allReferencesMap.containsKey(varProp.id)
+                }
+
+                // 先清理该变量组的旧记录（根据 referId、referType、referVersion）
+                publicVarReferInfoDao.deleteByReferIdAndGroup(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    referId = resourceId,
+                    referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType),
+                    groupName = groupName,
+                    referVersion = resourceVersion
+                )
+
+                // 为每个在 allReferences 中的变量创建 PipelinePublicVarReferPO 记录
+                val referPOs = mutableListOf<PipelinePublicVarReferPO>()
+
+                // 批量生成 ID
+                val segmentIds = client.get(ServiceAllocIdResource::class)
+                    .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR_REFER_INFO", varsInReferences.size).data
+                
+                if (segmentIds.isNullOrEmpty()) {
+                    throw ErrorCodeException(
+                        errorCode = ERROR_INVALID_PARAM_,
+                        params = arrayOf("Failed to generate segment IDs")
+                    )
+                }
+
+                varsInReferences.forEachIndexed { index, varProp ->
+                    val varName = varProp.id
+
+                    val now = LocalDateTime.now()
+                    referPOs.add(
+                        PipelinePublicVarReferPO(
+                            id = segmentIds[index]!!,
+                            projectId = projectId,
+                            groupName = groupName,
+                            varName = varName,
+                            version = version,
+                            referId = resourceId,
+                            referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType),
+                            referVersion = resourceVersion,
+                            referVersionName = resourceVersion.toString(),
+                            creator = userId,
+                            modifier = userId,
+                            createTime = now,
+                            updateTime = now
+                        )
+                    )
+                }
+
+                // 批量写入公共变量引用记录（使用 onDuplicateKeyUpdate）
+                if (referPOs.isNotEmpty()) {
+                    publicVarReferInfoDao.batchSave(dslContext, referPOs)
+                }
+
+                // 更新公共变量的引用计数
+                varsInReferences.forEach { varProp ->
+                    val varName = varProp.id
+                    val referCount = allReferencesMap[varName]?.size ?: 0
+
+                    publicVarDao.updateReferCount(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        groupName = groupName,
+                        version = version,
+                        varName = varName,
+                        referCount = referCount
+                    )
+                }
+
+                // 更新不在 allReferences 中的变量引用计数为 0
+                val varsNotInReferences = vars.filter { varProp ->
+                    !allReferencesMap.containsKey(varProp.id)
+                }
+                varsNotInReferences.forEach { varProp ->
+                    publicVarDao.updateReferCount(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        groupName = groupName,
+                        version = version,
+                        varName = varProp.id,
+                        referCount = 0
+                    )
+                }
+            }
+        } catch (e: Throwable) {
+            logger.warn("Error while updating public var refer count", e)
         }
     }
 }

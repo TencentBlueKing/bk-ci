@@ -229,4 +229,8 @@ abstract class Element(
     }
 
     open fun transferSensitiveParam(params: List<String>) {}
+    
+    open fun getInputParamMap(): Map<String, Any> {
+        return emptyMap()
+    }
 }
