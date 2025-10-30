@@ -112,8 +112,8 @@ class BsDownloadServiceImpl @Autowired constructor(
                 userId = downlouadUserId,
                 path = path,
                 ttl = 7200,
-                directed = true
-
+                directed = true,
+                useWeb = false
             ).data?.url
         if (downloadUrl == null) {
             logger.error("Failed to create download connection (resign id={$resignId})")
