@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -206,13 +207,19 @@ class MakeMoneyService @Autowired constructor(
         aMap: MutableMap<String, SaveData>,
         lastDay: LocalDateTime
     ) {
+        // 获取CMDB资产信息
+        val cmdbAssetMap = fetchCmdbAssetInfo()
+        logger.info("save method - fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
+
         use.chunked(99).forEach { chunk ->
             val filter = chunk.filter { name -> name !in a }
-            val res = workspaceDao.limitFetchWorkspace(
+            val workspaces = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = filter.toSet()
-            ).associateBy({ it.name }, {
+            )
+
+            val res = workspaces.associateBy({ it.name }, {
                 SaveData(
                     projectId = it.projectId,
                     projectName = it.projectName,
@@ -223,6 +230,10 @@ class MakeMoneyService @Autowired constructor(
                     machineType = ""
                 )
             })
+
+            // 批量更新COMMISSION_DATE字段（如果为空）
+            // 1. 更新已删除的实例
+            batchUpdateCommissionDateFromRecords(workspaces, cmdbAssetMap)
             // 快照昨天在使用的实例
             aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
@@ -231,6 +242,45 @@ class MakeMoneyService @Autowired constructor(
             res.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
             }
+        }
+    }
+
+    /**
+     * 批量更新工作空间的COMMISSION_DATE字段（如果为空）
+     * 直接使用已查询的工作空间记录，避免重复查询
+     */
+    private fun batchUpdateCommissionDateFromRecords(
+        workspaces: List<TWorkspaceRecord>,
+        cmdbAssetMap: Map<String, String>
+    ) {
+        if (workspaces.isEmpty()) {
+            return
+        }
+
+        try {
+            // 筛选出需要更新的工作空间（COMMISSION_DATE为空且CMDB中有对应数据）
+            val needUpdateList = workspaces.filter { workspace ->
+                workspace.commissionDate.isNullOrBlank() && !cmdbAssetMap[workspace.name].isNullOrBlank()
+            }
+
+            if (needUpdateList.isEmpty()) {
+                logger.info("No workspace needs to update COMMISSION_DATE in current batch")
+                return
+            }
+
+            // 批量更新
+            var updateCount = 0
+            needUpdateList.forEach { workspace ->
+                val commissionDate = cmdbAssetMap[workspace.name]
+                if (!commissionDate.isNullOrBlank()) {
+                    workspaceDao.updateCommissionDate(dslContext, workspace.name, commissionDate)
+                    updateCount++
+                }
+            }
+
+            logger.info("Batch updated COMMISSION_DATE for $updateCount workspaces")
+        } catch (e: Exception) {
+            logger.error("Failed to batch update COMMISSION_DATE", e)
         }
     }
 
@@ -331,7 +381,7 @@ class MakeMoneyService @Autowired constructor(
      * @return Map<String, String> - Key为bk_inst_name（实例名），Value为格式化后的启用日期（YYYY-MM）
      */
     @Suppress("NestedBlockDepth")
-    private fun fetchCmdbAssetInfo(): Map<String, String> {
+    fun fetchCmdbAssetInfo(): Map<String, String> {
         return try {
             logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
             val resultMap = mutableMapOf<String, String>()
@@ -419,10 +469,6 @@ class MakeMoneyService @Autowired constructor(
     }
 
     private fun makeMoneyMonthly(year: Int, month: Int): List<Bill.BillDetail> {
-        // 获取CMDB资产信息
-        val cmdbAssetMap = fetchCmdbAssetInfo()
-        logger.info("fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
-
         val end = LocalDate.of(year, month, 14)
         val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
         val start = end.plusMonths(-1).plusDays(1)
@@ -448,11 +494,13 @@ class MakeMoneyService @Autowired constructor(
                 chunk.toSet()
             ).associateBy { it.workspaceName }
 
-            val workspaceInfo = workspaceDao.limitFetchWorkspace(
+            val workspaceRecords = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = chunk.toSet()
-            ).associateBy({ it.name }, {
+            )
+
+            val workspaceInfo = workspaceRecords.associateBy({ it.name }, {
                 SaveData(
                     projectId = it.projectId,
                     projectName = it.projectName,
@@ -463,13 +511,16 @@ class MakeMoneyService @Autowired constructor(
                     creator = it.creator
                 )
             })
+
+            val workspaceCommissionDateMap = workspaceRecords.associateBy({ it.name }, { it.commissionDate ?: "" })
+
             chunk.forEach { name ->
                 val workspace = workspaceInfo[name]
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
 
-                // 从CMDB数据中匹配硬件成本信息
-                val commissionDate = cmdbAssetMap[name] ?: ""
+                // 从已查询的记录中获取COMMISSION_DATE字段
+                val commissionDate = workspaceCommissionDateMap[name] ?: ""
                 val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
 
                 // 获取机型标识

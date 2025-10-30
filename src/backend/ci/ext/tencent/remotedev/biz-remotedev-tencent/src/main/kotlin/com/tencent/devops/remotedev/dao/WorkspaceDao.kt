@@ -553,6 +553,19 @@ class WorkspaceDao {
         }
     }
 
+    fun updateCommissionDate(
+        dslContext: DSLContext,
+        workspaceName: String,
+        commissionDate: String
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(COMMISSION_DATE, commissionDate)
+                .where(NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
     fun bakWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
