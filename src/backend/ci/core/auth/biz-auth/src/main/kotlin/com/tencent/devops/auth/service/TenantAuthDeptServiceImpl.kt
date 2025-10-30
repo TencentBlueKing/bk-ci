@@ -78,7 +78,7 @@ class TenantAuthDeptServiceImpl : DeptService {
         memberType: ManagerScopesEnum,
         tenantId: String?
     ): List<UserAndDeptInfoVo> {
-        if (memberIds.isEmpty() || tenantId.isNullOrBlank()) {
+        if (memberIds.none { it != "" } || tenantId.isNullOrBlank()) {
             logger.warn("listMemberInfos, memberIds is $memberIds , tenantId is $tenantId")
             return emptyList()
         }
