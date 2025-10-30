@@ -78,6 +78,10 @@ class TenantAuthDeptServiceImpl : DeptService {
         memberType: ManagerScopesEnum,
         tenantId: String?
     ): List<UserAndDeptInfoVo> {
+        if (memberIds.isEmpty() || tenantId.isNullOrBlank()) {
+            logger.warn("listMemberInfos, memberIds is $memberIds , tenantId is $tenantId")
+            return emptyList()
+        }
         return if (memberType == ManagerScopesEnum.USER) {
             batchQueryUserDisplayInfo(memberIds, tenantId).toVos()
         } else {
