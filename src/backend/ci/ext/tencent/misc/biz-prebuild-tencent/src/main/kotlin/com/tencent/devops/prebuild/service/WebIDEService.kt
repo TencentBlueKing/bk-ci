@@ -53,6 +53,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
@@ -189,7 +190,10 @@ class WebIDEService @Autowired constructor(
 
     private fun getAgentInfo(userId: String, projectId: String, ip: String): ThirdPartyAgentInfo {
         // val nodeInfoList = client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
-        val nodeInfoList = client.get(ServiceThirdPartyAgentResource::class).listAgents(userId, projectId, OS.LINUX)
+        val nodeInfoList = client.get(ServiceThirdPartyAgentResource::class).listAgents(
+            userId = userId, projectId = projectId, os = OS.LINUX,
+            agentType = AgentType.CREATE
+        )
         if (nodeInfoList.isNotOk()) {
             logger.error("list user third party node failed")
             throw OperationException("list user third party node failed")

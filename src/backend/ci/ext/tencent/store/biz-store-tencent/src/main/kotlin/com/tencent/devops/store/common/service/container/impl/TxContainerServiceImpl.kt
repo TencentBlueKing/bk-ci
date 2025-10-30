@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.image.api.ServiceDevCloudImageResource
@@ -127,9 +128,10 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 }?.toList()
             }
             BuildType.THIRD_PARTY_AGENT_ID -> {
-                val agentNodeList =
-                    client.get(ServiceThirdPartyAgentResource::class).listAgents(userId, projectCode, containerOS)
-                        .data // 第三方构建机
+                val agentNodeList = client.get(ServiceThirdPartyAgentResource::class).listAgents(
+                    userId = userId, projectId = projectCode, os = containerOS,
+                    agentType = AgentType.CREATE
+                ).data // 第三方构建机
                 logger.info("the agentNodeList is :$agentNodeList")
                 containerResourceValue = agentNodeList?.map {
                     it.displayName
