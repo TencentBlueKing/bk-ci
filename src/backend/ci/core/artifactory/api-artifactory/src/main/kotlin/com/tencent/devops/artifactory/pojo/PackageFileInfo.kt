@@ -38,5 +38,7 @@ data class PackageFileInfo(
     @get:Schema(title = "包文件大小", required = true)
     val packageFileSize: Long,
     @get:Schema(title = "sha摘要值", required = true)
-    val shaContent: String
+    val shaContent: String = "",
+    @get:Schema(title = "sha256摘要值", required = true)
+    val sha256Content: String
 )

@@ -53,6 +53,7 @@ class StoreBaseEnvManageDao {
                 PKG_PATH,
                 TARGET,
                 SHA_CONTENT,
+                SHA256_CONTENT,
                 PRE_CMD,
                 OS_NAME,
                 OS_ARCH,
@@ -73,6 +74,7 @@ class StoreBaseEnvManageDao {
                         storeBaseEnvDataPO.pkgPath,
                         storeBaseEnvDataPO.target,
                         storeBaseEnvDataPO.shaContent,
+                        storeBaseEnvDataPO.sha256Content,
                         storeBaseEnvDataPO.preCmd,
                         storeBaseEnvDataPO.osName,
                         storeBaseEnvDataPO.osArch,
@@ -111,6 +113,11 @@ class StoreBaseEnvManageDao {
                     SHA_CONTENT,
                     DSL.`when`(MySQLDSL.values(SHA_CONTENT).isNotNull, MySQLDSL.values(SHA_CONTENT))
                         .otherwise(SHA_CONTENT)
+                )
+                .set(
+                    SHA_CONTENT,
+                    DSL.`when`(MySQLDSL.values(SHA256_CONTENT).isNotNull, MySQLDSL.values(SHA256_CONTENT))
+                        .otherwise(SHA256_CONTENT)
                 )
                 .set(
                     PRE_CMD,
