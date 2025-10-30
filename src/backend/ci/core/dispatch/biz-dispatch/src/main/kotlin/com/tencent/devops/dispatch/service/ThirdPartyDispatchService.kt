@@ -38,7 +38,8 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -141,7 +142,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 2、先后顺序未知，但是客观上被复用对象先跑完了，就按照绝对复用处理
                 buildByAgentId(
                     dispatchMessage,
-                    dispatchType.copy(displayName = agentId, agentType = AgentType.REUSE_JOB_ID, reusedInfo = null)
+                    dispatchType.copy(displayName = agentId, agentType = AgentDispatchType.REUSE_JOB_ID, reusedInfo = null)
                 )
             }
 
@@ -198,7 +199,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     ThirdPartyAgentIDDispatchType(
                         displayName = agentId,
                         workspace = dispatchType.workspace,
-                        agentType = AgentType.REUSE_JOB_ID,
+                        agentType = AgentDispatchType.REUSE_JOB_ID,
                         dockerInfo = dispatchType.dockerInfo,
                         reusedInfo = null
                     )
@@ -214,6 +215,20 @@ class ThirdPartyDispatchService @Autowired constructor(
                         displayName = originDispatchType.displayName,
                         workspace = originDispatchType.workspace,
                         agentType = originDispatchType.agentType,
+                        dockerInfo = null,
+                        reusedInfo = null
+                    )
+                )
+            }
+
+            is CreateAgentIdDispatchType -> {
+                val originDispatchType = dispatchMessage.event.dispatchType as CreateAgentIdDispatchType
+                buildByAgentId(
+                    dispatchMessage = dispatchMessage,
+                    dispatchType = ThirdPartyAgentIDDispatchType(
+                        displayName = originDispatchType.value,
+                        workspace = null,
+                        agentType = AgentDispatchType.ID,
                         dockerInfo = null,
                         reusedInfo = null
                     )

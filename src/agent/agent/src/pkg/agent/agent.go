@@ -153,9 +153,9 @@ func doAsk() {
 	}
 
 	// 目前仅支持windows机器
-	if systemutil.IsWindows() && resp.CreateMod != nil {
+	if systemutil.IsWindows() && resp.Heart.CreateMod != nil {
 		checkMutexOnce.Do(func() {
-			create.UpdateCreateModFlag(*resp.CreateMod)
+			create.UpdateCreateModFlag(*resp.Heart.CreateMod)
 			if create.CheckCreateMod() {
 				if !create.CheckOnlyProcess(create.AgentProcess) {
 					logs.Error("create mod not only process, exit")
