@@ -53,12 +53,12 @@ class JobQuotaService constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(JobQuotaService::class.java)
-        
+
         // 重试配置常量
         private const val RETRY_TIME = 5
         private const val RETRY_DELTA_MILLIS = 60 * 1000
         private const val RETRY_DELTA_SECONDS = RETRY_DELTA_MILLIS / 1000
-        
+
         // 默认值常量
         private const val DEFAULT_EXECUTE_COUNT = 1
         private const val DEFAULT_VM_SEQ_ID = "1"
@@ -80,7 +80,7 @@ class JobQuotaService constructor(
 
         with(startupEvent) {
             val logPrefix = buildLogPrefix(projectId, jobType!!, buildId, vmSeqId, executeCount)
-            
+
             // 检查并添加运行中的 Job
             val checkResult = checkAndAddRunningJob(
                 projectId = projectId,
@@ -156,7 +156,7 @@ class JobQuotaService constructor(
 
                 retryEvent(startupEvent, dispatchService)
             }
-            
+
             // 阶段 2: 转移到降级队列（第 5 次）
             startupEvent.retryTime == RETRY_TIME -> {
                 logger.warn("$logPrefix Job quota excess. Transferring event to demote queue.")
@@ -172,7 +172,7 @@ class JobQuotaService constructor(
 
                 retryEventInDemoteQueue(startupEvent, demoteQueueRouteKeySuffix, dispatchService)
             }
-            
+
             // 阶段 3: 降级队列中继续重试
             startupEvent.retryTime < maxJobRetry -> {
                 logger.info("$logPrefix DemoteQueue job quota excess. Delay $RETRY_DELTA_MILLIS ms and retry. " +
@@ -189,7 +189,7 @@ class JobQuotaService constructor(
 
                 retryEventInDemoteQueue(startupEvent, demoteQueueRouteKeySuffix, dispatchService)
             }
-            
+
             // 阶段 4: 超过最大重试次数，抛出异常
             else -> {
                 logger.error("$logPrefix Maximum number of retries reached. " +
@@ -240,9 +240,9 @@ class JobQuotaService constructor(
 
         val effectiveVmSeqId = vmSeqId ?: DEFAULT_VM_SEQ_ID
         val effectiveExecuteCount = executeCount ?: DEFAULT_EXECUTE_COUNT
-        
+
         logger.info("Remove running job: [$projectId|$buildId|$effectiveVmSeqId|$effectiveExecuteCount]")
-        
+
         try {
             client.get(ServiceJobQuotaBusinessResource::class).removeRunningJob(
                 projectId = projectId,
@@ -273,9 +273,9 @@ class JobQuotaService constructor(
     ): Boolean? {
         val effectiveExecuteCount = executeCount ?: DEFAULT_EXECUTE_COUNT
         val logPrefix = buildLogPrefix(projectId, vmType, buildId, vmSeqId, effectiveExecuteCount)
-        
+
         logger.info("$logPrefix Start checking job quota.")
-        
+
         return try {
             client.get(ServiceJobQuotaBusinessResource::class).checkAndAddRunningJob(
                 projectId = projectId,
