@@ -25,26 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.auth.service.lock
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import java.time.LocalDateTime
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-data class PipelineBuildStage(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val stageId: String,
-    val seq: Int,
-    var status: BuildStatus,
-    var startTime: LocalDateTime? = null,
-    var endTime: LocalDateTime? = null,
-    val cost: Int = 0,
-    var executeCount: Int = 1,
-    val controlOption: PipelineBuildStageControlOption?,
-    var checkIn: StagePauseCheck? = null,
-    var checkOut: StagePauseCheck? = null,
-    val stageIdForUser: String? = null,
-    var name: String? = ""
-)
+class SyncGroupPermissionLock(redisOperation: RedisOperation, projectCode: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "sync.group.permission.lock.$projectCode",
+        // 12小时，防止服务重启，锁未释放
+        expiredTimeInSeconds = 43200
+    ) {
+    override fun decorateKey(key: String): String {
+        // buildId，key无需加上集群信息前缀来区分
+        return key
+    }
+}

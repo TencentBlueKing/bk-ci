@@ -2433,6 +2433,8 @@ class TemplateFacadeService @Autowired constructor(
     private fun updateModelParam(model: Model) {
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }
+        var randomSeed = 1
+        val jobIdSet = mutableSetOf<String>()
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (stage.name.isNullOrBlank()) stage.name = stage.id
@@ -2450,6 +2452,8 @@ class TemplateFacadeService @Autowired constructor(
                 if (container.containerHashId.isNullOrBlank()) {
                     container.containerHashId = modelContainerIdGenerator.getNextId()
                 }
+                if (container.jobId.isNullOrBlank()) container.jobId = VMUtils.getContainerJobId(randomSeed++, jobIdSet)
+                container.jobId?.let { jobIdSet.add(it) }
                 container.elements.forEach { e ->
                     if (e.id.isNullOrBlank()) {
                         e.id = modelTaskIdGenerator.getNextId()

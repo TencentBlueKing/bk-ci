@@ -99,7 +99,8 @@ class PipelineStatusService(
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0,
             lastBuildFinishCount = lastBuildFinishCount,
             lastBuildTotalCount = lastBuildTotalCount,
-            trigger = buildInfo?.trigger
+            trigger = buildInfo?.trigger,
+            latestBuildStageStatus = buildInfo?.stageStatus
         )
     }
 
