@@ -47,7 +47,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayStatus
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
@@ -652,7 +652,7 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         forceTrigger: Boolean?
-    ): Result<BuildId> {
+    ): Result<BuildReplayResult> {
         return Result(
             pipelineBuildFacadeService.replayBuild(
                 projectId = projectId,
@@ -669,7 +669,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Result<BuildReplayStatus> {
+    ): Result<BuildReplayResult> {
         return Result(
             pipelineBuildFacadeService.replayStatus(
                 projectId = projectId,

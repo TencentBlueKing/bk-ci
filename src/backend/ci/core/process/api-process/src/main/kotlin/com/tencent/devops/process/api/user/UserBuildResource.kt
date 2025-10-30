@@ -43,7 +43,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayStatus
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
@@ -725,7 +725,7 @@ interface UserBuildResource {
         @Parameter(description = "强制触发", required = false)
         @QueryParam("forceTrigger")
         forceTrigger: Boolean? = false
-    ): Result<BuildId>
+    ): Result<BuildReplayResult>
 
     @Operation(summary = "指定构建任务的回放状态")
     @GET
@@ -743,5 +743,5 @@ interface UserBuildResource {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
-    ): Result<BuildReplayStatus>
+    ): Result<BuildReplayResult>
 }
