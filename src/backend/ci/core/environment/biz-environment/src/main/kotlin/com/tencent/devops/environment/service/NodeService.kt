@@ -217,7 +217,7 @@ class NodeService @Autowired constructor(
             null
         } else {
             val t = mutableSetOf<Long>()
-            data.tags?.forEach { tag ->
+            data?.tags?.forEach { tag ->
                 t.addAll(tag.tagValues ?: return@forEach)
             }
             t
