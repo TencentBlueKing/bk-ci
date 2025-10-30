@@ -13,7 +13,7 @@ data class BuildReplayResult(
     @Schema(title = "无效原因")
     val message: String? = null,
     @Schema(title = "回放事件生成的新构建任务构建Id")
-    val buildId: String? = null,
+    val id: String? = null,
     @Schema(title = "回放webhook事件的触发事件id，用于异步获取构建任务Id")
     val eventId: Long? = null
 )

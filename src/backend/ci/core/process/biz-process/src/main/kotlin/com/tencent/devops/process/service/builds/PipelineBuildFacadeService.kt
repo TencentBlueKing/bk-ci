@@ -2781,7 +2781,7 @@ class PipelineBuildFacadeService(
         )
         return BuildReplayResult(
             status = BuildReplayStatus.REPLAY_SUCCESS,
-            buildId = replayBuildId.id
+            id = replayBuildId.id
         )
     }
 
