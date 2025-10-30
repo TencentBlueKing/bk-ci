@@ -641,7 +641,8 @@
     "rePlayInfo1": "1. When replaying, start a new Play with the same trigger parameters and the latest pipeline version.",
     "rePlayInfo2": "2. When replaying, skip trigger detection, and it may not meet the trigger conditions of the latest version.",
     "reBuildInfo1": "1. Rebuilding is to re-execute on the basis of the previous build.",
-    "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time."
+    "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time.",
+    "rePlayFailed": "Replay failed, Please try again."
   },
   "preview": {
     "build": "Build",

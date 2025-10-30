@@ -115,6 +115,7 @@
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
+                :disabled="loading"
                 key="edit"
                 @click="goEdit"
             >
@@ -128,7 +129,7 @@
             >
                 <bk-button
                     :loading="executeStatus"
-                    :disabled="!canManualStartup"
+                    :disabled="!canManualStartup || loading"
                     v-perm="{
                         hasPermission: canExecute,
                         disablePermissionApi: true,
@@ -166,7 +167,12 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
-
+    const PIPELINE_REPLAY_STATUS = {
+        REPLAYING: 'REPLAYING',
+        REPLAY_SUCCESS: 'REPLAY_SUCCESS',
+        CANNOT_REPLAY: 'CANNOT_REPLAY',
+        CAN_REPLAY: 'CAN_REPLAY'
+    }
     export default {
         components: {
             PipelineBreadCrumb,
@@ -174,7 +180,8 @@
         },
         data () {
             return {
-                loading: false
+                loading: false,
+                timesNum: 1
             }
         },
         computed: {
@@ -226,8 +233,20 @@
                 }
             }
         },
+        mounted () {
+            this.fetchPipelineRePlayStatus()
+        },
         methods: {
-            ...mapActions('pipelines', ['requestRetryPipeline', 'requestTerminatePipeline', 'requestRePlayPipeline']),
+            ...mapActions(
+                'pipelines',
+                [
+                    'requestRetryPipeline',
+                    'requestTerminatePipeline',
+                    'requestRePlayPipeline',
+                    'requestPipelineRePlayStatus',
+                    'requestRePlayEventDetail'
+                ]
+            ),
             async handleCancel () {
                 try {
                     this.loading = true
@@ -289,7 +308,7 @@
                     buildId,
                     forceTrigger
                 })
-                if (res && res.id) {
+                if (res?.id && res?.status === PIPELINE_REPLAY_STATUS.REPLAY_SUCCESS) {
                     this.$router.replace({
                         name: 'pipelinesDetail',
                         params: {
@@ -306,7 +325,9 @@
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
                     })
-                } else if (res.code === 2101272) {
+                } else if (res?.eventId && res.status === PIPELINE_REPLAY_STATUS.REPLAYING) {
+                    this.fetchRePlayEventDetail(res.eventId)
+                } else if (res?.code === 2101272) {
                     this.loading = false
                     this.$bkInfo({
                         title: this.$t('history.rePlay'),
@@ -367,6 +388,65 @@
                 this.$router.push({
                     name: 'pipelinesEdit'
                 })
+            },
+
+            async fetchPipelineRePlayStatus () {
+                try {
+                    const res = await this.requestPipelineRePlayStatus({
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        buildId: this.$route.params.buildNo
+                    })
+                } catch (err) {
+                    console.error(err)
+                }
+            },
+            
+            async fetchRePlayEventDetail (eventId) {
+                try {
+                    const res = await this.requestRePlayEventDetail({
+                        projectId: this.projectId,
+                        eventId
+                    })
+                    if (!res.records.length) {
+                        // 用于webhook触发的构建任务轮询获取构建状态（超3次返回为空时，则直接报错重放失败提示）
+                        if (this.timesNum > 3) {
+                            this.timesNum = 1
+                            this.$showTips({
+                                message: this.$t('history.rePlayFailed'),
+                                theme: 'error'
+                            })
+                            return
+                        }
+                        setTimeout(() => {
+                            this.timesNum++
+                            this.fetchRePlayEventDetail(eventId)
+                        }, 5000)
+                    } else {
+                        const successStatus = res.records[0].status === 'SUCCEED'
+                        if (successStatus) {
+                            this.$router.replace({
+                                name: 'pipelinesDetail',
+                                params: {
+                                    ...this.$route.params,
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    buildNo: res?.records[0]?.buildId,
+                                    type: 'executeDetail'
+                                }
+                            })
+                        }
+                        this.$showTips({
+                            message: res.records[0].reason,
+                            theme: successStatus ? 'success': 'error'
+                        })
+                    }
+                    console.log(res, 'requestRePlayEventDetail')
+                } catch (err) {
+                    console.error(err)
+                } finally {
+                    this.loading = false
+                }
             }
         }
     }

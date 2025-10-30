@@ -636,7 +636,8 @@
     "rePlayInfo1": "1. 重放时，以相同的触发参数、最新的流水线编排启动一次新的构建",
     "rePlayInfo2": "2. 重放时，跳过触发器检测，有可能不满足最新版本的触发条件",
     "reBuildInfo1": "1. 重新构建，是在之前的构建基础上重新执行",
-    "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致"
+    "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致",
+    "rePlayFailed": "重放事件失败，请重试"
   },
   "preview": {
     "build": "构建",
