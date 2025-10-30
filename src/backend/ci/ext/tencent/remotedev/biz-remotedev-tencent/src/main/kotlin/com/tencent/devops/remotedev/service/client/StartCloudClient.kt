@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.pojo.startcloud.FetchDesktopThumbnailReq
-import com.tencent.devops.remotedev.pojo.startcloud.ScreenshotUploadNotifyRequest
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
