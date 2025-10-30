@@ -4,7 +4,7 @@
   "private": true,
   "description": "",
   "dependencies": {
-    "@blueking/bk-user-selector": "0.0.38",
+    "@blueking/bk-user-selector": "0.0.39-beta.1",
     "@blueking/bkcharts": "^2.0.10",
     "clipboard": "^2.0.4",
     "codemirror": "5.61.0",
