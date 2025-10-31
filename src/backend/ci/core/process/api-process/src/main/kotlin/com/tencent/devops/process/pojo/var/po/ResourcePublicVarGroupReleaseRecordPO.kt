@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 @Schema(title = "流水线公共变量组发布记录数据")
-data class PipelinePublicVarGroupReleaseRecordPO(
+data class ResourcePublicVarGroupReleaseRecordPO(
     @get:Schema(title = "主键ID")
     val id: Long,
     @get:Schema(title = "项目ID")

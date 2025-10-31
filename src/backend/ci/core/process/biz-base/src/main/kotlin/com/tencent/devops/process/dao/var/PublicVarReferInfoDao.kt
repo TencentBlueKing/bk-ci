@@ -28,8 +28,8 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.model.process.tables.TPipelinePublicVarReferInfo
-import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarReferPO
+import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -38,13 +38,13 @@ class PublicVarReferInfoDao {
 
     fun batchSave(
         dslContext: DSLContext,
-        pipelinePublicVarReferPOs: List<PipelinePublicVarReferPO>
+        pipelinePublicVarReferPOs: List<ResourcePublicVarReferPO>
     ) {
         if (pipelinePublicVarReferPOs.isEmpty()) {
             return
         }
-
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             var insertQuery = dslContext.insertInto(
                 this,
                 ID, PROJECT_ID,
@@ -89,7 +89,7 @@ class PublicVarReferInfoDao {
         referType: PublicVerGroupReferenceTypeEnum,
         referVersionName: String? = null
     ) {
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
                 REFER_ID.eq(referId),
@@ -110,7 +110,7 @@ class PublicVarReferInfoDao {
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum
     ) {
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
@@ -128,7 +128,7 @@ class PublicVarReferInfoDao {
         if (referIds.isEmpty()) {
             return
         }
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.`in`(referIds))
@@ -145,7 +145,7 @@ class PublicVarReferInfoDao {
         referVersionName: String,
         excludedGroupNames: List<String>? = null
     ) {
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
             conditions.add(REFER_ID.eq(referId))
             conditions.add(REFER_TYPE.eq(referType.name))
@@ -167,7 +167,7 @@ class PublicVarReferInfoDao {
         groupName: String,
         referVersion: Int
     ) {
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
@@ -194,7 +194,7 @@ class PublicVarReferInfoDao {
         referType: PublicVerGroupReferenceTypeEnum,
         referVersionName: String? = null
     ): Int {
-        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
                 REFER_ID.eq(referId),

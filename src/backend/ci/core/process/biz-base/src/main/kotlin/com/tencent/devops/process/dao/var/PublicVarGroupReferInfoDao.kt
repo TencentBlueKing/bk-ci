@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
 import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupReferInfoRecord
-import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -87,7 +87,7 @@ class PublicVarGroupReferInfoDao {
         version: Int? = -1,
         page: Int,
         pageSize: Int
-    ): List<PipelinePublicVarGroupReferPO> {
+    ): List<ResourcePublicVarGroupReferPO> {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
@@ -122,7 +122,7 @@ class PublicVarGroupReferInfoDao {
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int? = null
-    ): List<PipelinePublicVarGroupReferPO> {
+    ): List<ResourcePublicVarGroupReferPO> {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildReferConditions(this, projectId, referId, referType, referVersion)
             return dslContext.selectFrom(this)
@@ -148,7 +148,7 @@ class PublicVarGroupReferInfoDao {
         projectId: String,
         referinfos: List<Pair<String, Int>>,
         referType: PublicVerGroupReferenceTypeEnum
-    ): List<PipelinePublicVarGroupReferPO> {
+    ): List<ResourcePublicVarGroupReferPO> {
         if (referinfos.isEmpty()) {
             return emptyList()
         }
@@ -173,7 +173,7 @@ class PublicVarGroupReferInfoDao {
 
     private fun convertPipelinePublicVarGroupReferPO(
         publicVarGroupReferInfoRecord: TPipelinePublicVarGroupReferInfoRecord
-    ) = PipelinePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
+    ) = ResourcePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
         projectId = publicVarGroupReferInfoRecord.projectId,
         groupName = publicVarGroupReferInfoRecord.groupName,
         version = publicVarGroupReferInfoRecord.version,
@@ -301,10 +301,10 @@ class PublicVarGroupReferInfoDao {
 
     fun batchSave(
         dslContext: DSLContext,
-        pipelinePublicVarGroupReferPOs: List<PipelinePublicVarGroupReferPO>
+        resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO>
     ) {
         with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val insertSteps = pipelinePublicVarGroupReferPOs.map { po ->
+            val insertSteps = resourcePublicVarGroupReferPOS.map { po ->
                 dslContext.insertInto(
                     this,
                     ID,
