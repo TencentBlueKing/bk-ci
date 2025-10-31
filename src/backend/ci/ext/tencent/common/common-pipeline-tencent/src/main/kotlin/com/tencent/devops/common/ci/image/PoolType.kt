@@ -90,7 +90,7 @@ enum class PoolType {
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.container && pool.image == null) {
+            if (null == pool.container && pool.image    == null) {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -122,7 +122,8 @@ enum class PoolType {
 
                         else -> null
                     },
-                    hwSpec = dispatcher.performanceConfigId
+                    // 优先使用performanceUid，如果为空则使用performanceConfigId
+                    hwSpec = dispatcher.performanceUid?.takeIf { it.isNotBlank() } ?: dispatcher.performanceConfigId
                 )
             }
             return null
