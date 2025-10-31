@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersi
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
@@ -55,7 +56,8 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer,
     private val templateDao: TemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService
 ) : PipelineTemplateVersionReqConverter {
 
     override fun support(request: PipelineTemplateVersionReq): Boolean {
@@ -97,19 +99,20 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 )
             }
 
-            // v2新版本中，版本名称都是唯一的，若存在重复，需要添加尾缀-1 -2 ...标识
-            val v2CustomVersionName = v1VersionName.let { name ->
-                val existingCount = templateDao.countTemplateVersions(
+            // v2新版本中，版本名称需要唯一：先结合v1计数推断，再以v2实时数据兜底校验
+            val v2CustomVersionName = v1VersionName.let { baseName ->
+                val existingCountInV1 = templateDao.countTemplateVersions(
                     dslContext = dslContext,
                     projectId = projectId,
                     templateId = templateId,
-                    versionName = name
+                    versionName = baseName
                 )
-                if (existingCount > 0) {
-                    "$name-${existingCount + 1}"
+                val preferred = if (existingCountInV1 > 0) {
+                    "$baseName-${existingCountInV1 + 1}"
                 } else {
-                    name
+                    baseName
                 }
+                ensureV2UniqueVersionName(projectId, templateId, preferred)
             }
 
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
@@ -154,6 +157,31 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 pTemplateSettingWithoutVersion = transferResult.templateSetting
             )
         }
+    }
+
+    private fun ensureV2UniqueVersionName(
+        projectId: String,
+        templateId: String,
+        base: String
+    ): String {
+        var name = base
+        var index = 1
+        while (
+            pipelineTemplateResourceService.getLatestResource(
+                projectId = projectId,
+                templateId = templateId,
+                status = VersionStatus.RELEASED,
+                versionName = name
+            ) != null
+        ) {
+            val m = Regex("^(.*?)(-(\\d+))?$").matchEntire(base)!!
+            val plain = m.groupValues[1]
+            val seed = m.groupValues.getOrNull(3)?.toIntOrNull() ?: 1
+            val n = seed + index
+            name = "$plain-$n"
+            index++
+        }
+        return name
     }
 
     companion object {
