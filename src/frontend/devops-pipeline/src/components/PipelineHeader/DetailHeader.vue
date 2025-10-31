@@ -314,7 +314,7 @@
                     buildId,
                     forceTrigger
                 })
-                if (res?.id && res?.status === PIPELINE_REPLAY_STATUS.REPLAY_SUCCESS) {
+                if (res?.id) {
                     this.$router.replace({
                         name: 'pipelinesDetail',
                         params: {
@@ -419,6 +419,7 @@
                         // 用于webhook触发的构建任务轮询获取构建状态（超3次返回为空时，则直接报错重放失败提示）
                         if (this.timesNum > 3) {
                             this.timesNum = 1
+                            this.loading = false
                             this.$showTips({
                                 message: this.$t('history.rePlayFailed'),
                                 theme: 'error'
@@ -451,8 +452,6 @@
                     console.log(res, 'requestRePlayEventDetail')
                 } catch (err) {
                     console.error(err)
-                } finally {
-                    this.loading = false
                 }
             }
         }
