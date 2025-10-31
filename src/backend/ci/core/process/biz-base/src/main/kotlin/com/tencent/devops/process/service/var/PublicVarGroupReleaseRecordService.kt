@@ -38,8 +38,8 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReleaseRecordPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReleaseRecordPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -85,7 +85,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         }
         var index = 0
         val records = releaseRecords.map { releaseRecord ->
-            PipelinePublicVarGroupReleaseRecordPO(
+            ResourcePublicVarGroupReleaseRecordPO(
                 id = segmentIds?.get(index++) ?: 0,
                 projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.first().projectId,
                 groupName = releaseRecord.groupName,

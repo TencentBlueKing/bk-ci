@@ -28,7 +28,7 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.model.process.tables.TPipelinePublicVar
+import com.tencent.devops.model.process.tables.TResourcePublicVar
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import java.time.LocalDateTime
@@ -42,7 +42,7 @@ class PublicVarDao {
         dslContext: DSLContext,
         publicVarGroupPOs: List<PublicVarPO>
     ) {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             if (publicVarGroupPOs.isEmpty()) return
             val batchInsert = dslContext.insertInto(
                 this,
@@ -92,7 +92,7 @@ class PublicVarDao {
         projectId: String,
         keyword: String
     ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -106,7 +106,7 @@ class PublicVarDao {
         projectId: String,
         keyword: String
     ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -120,7 +120,7 @@ class PublicVarDao {
         projectId: String,
         type: String
     ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -136,7 +136,7 @@ class PublicVarDao {
         version: Int,
         varNameList: List<String>? = null
     ): List<PublicVarPO> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             val query = dslContext.selectFrom(this)
                 .where(GROUP_NAME.eq(groupName))
                 .and(PROJECT_ID.eq(projectId))
@@ -171,7 +171,7 @@ class PublicVarDao {
     }
 
     fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
@@ -185,8 +185,8 @@ class PublicVarDao {
         groupName: String,
         version: Int
     ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
-            with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
+            with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
                 return dslContext.select(VAR_NAME).from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(GROUP_NAME.eq(groupName))
@@ -214,7 +214,7 @@ class PublicVarDao {
         varName: String,
         referCount: Int
     ) {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             dslContext.update(this)
                 .set(REFER_COUNT, referCount)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -241,13 +241,68 @@ class PublicVarDao {
         version: Int,
         countChange: Int
     ) {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             dslContext.update(this)
                 .set(REFER_COUNT, REFER_COUNT.plus(countChange))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
                 .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
+    /**
+     * 减少变量引用计数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param varName 变量名
+     */
+    fun decrementReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varName: String
+    ) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
+            dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.minus(1))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
+                .and(REFER_COUNT.gt(0)) // 确保引用计数不会变成负数
+                .execute()
+        }
+    }
+
+    /**
+     * 增加变量引用计数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param varName 变量名
+     */
+    fun incrementReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varName: String
+    ) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
+            dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(1))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
                 .execute()
         }
     }

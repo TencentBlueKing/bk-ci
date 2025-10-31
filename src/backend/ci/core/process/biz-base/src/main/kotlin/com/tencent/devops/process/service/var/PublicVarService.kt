@@ -45,8 +45,8 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
-import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
@@ -283,7 +283,7 @@ class PublicVarService @Autowired constructor(
      */
     private fun processVarGroupDiff(
         diffResult: VarGroupDiffResult,
-        groupReferInfo: PipelinePublicVarGroupReferPO,
+        groupReferInfo: ResourcePublicVarGroupReferPO,
         latestGroupVars: List<BuildFormProperty>,
         params: MutableList<BuildFormProperty>
     ): List<BuildFormProperty> {

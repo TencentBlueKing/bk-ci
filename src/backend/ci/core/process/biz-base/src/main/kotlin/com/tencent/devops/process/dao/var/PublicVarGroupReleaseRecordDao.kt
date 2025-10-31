@@ -29,14 +29,14 @@ package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReleaseRecord
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReleaseRecordPO
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReleaseRecordPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
 class PublicVarGroupReleaseRecordDao {
 
-    fun batchInsert(dslContext: DSLContext, records: List<PipelinePublicVarGroupReleaseRecordPO>) {
+    fun batchInsert(dslContext: DSLContext, records: List<ResourcePublicVarGroupReleaseRecordPO>) {
         if (records.isEmpty()) return
         
         with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
@@ -102,7 +102,7 @@ class PublicVarGroupReleaseRecordDao {
         groupName: String,
         page: Int,
         pageSize: Int
-    ): List<PipelinePublicVarGroupReleaseRecordPO> {
+    ): List<ResourcePublicVarGroupReleaseRecordPO> {
         with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             val offset = (page - 1) * pageSize
             return dslContext.selectFrom(this)
