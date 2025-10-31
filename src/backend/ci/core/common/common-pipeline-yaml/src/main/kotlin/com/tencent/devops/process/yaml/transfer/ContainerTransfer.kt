@@ -310,14 +310,15 @@ class ContainerTransfer @Autowired(required = false) constructor(
         }
 
         /*修正docker配额数据*/
-        if (hwSpec != null && buildType != null) {
-            kotlin.run {
-                val res = transferCache.getDockerResource(userId, projectId, buildType)
-                // hwSpec为0和1时为特殊值，表示默认配置Basic
-                if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
-                    hwSpec = null
-                    return@run
-                }
+        if (hwSpec != null
+            && (hwSpec == "0" || hwSpec == "1" || hwSpec == "2" || hwSpec == "10000")
+            && buildType != null
+        ) {
+            val res = transferCache.getDockerResource(userId, projectId, buildType)
+            // hwSpec为0和1时为特殊值，表示默认配置Basic
+            if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
+                hwSpec = null
+            } else {
                 val hw = res?.dockerResourceOptionsMaps?.find {
                     it.id == hwSpec
                 }
@@ -327,6 +328,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 )
             }
         }
+
         if (JSONObject(this).similar(defaultRunsOn)) {
             return null
         }
