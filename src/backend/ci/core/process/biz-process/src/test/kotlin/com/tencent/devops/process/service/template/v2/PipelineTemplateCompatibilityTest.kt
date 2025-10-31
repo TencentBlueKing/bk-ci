@@ -231,7 +231,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             )
         } returns mockk(relaxed = true)
         every { resourceService.update(any(), any(), any()) } returns 1
-        stubV1CreateTemplate(v1Dao, 200L)
+        stubV1CreateTemplate(v1Dao)
         every { v1SettingDao.saveSetting(any(), any(), any()) } returns 1
 
         val post = PTemplateCompatibilityVersionPostProcessor(
@@ -308,7 +308,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             )
         } returns mockk(relaxed = true)
         every { resourceService.update(any(), any(), any()) } returns 1
-        stubV1CreateTemplate(v1Dao, 100L)
+        stubV1CreateTemplate(v1Dao)
         every { v1SettingDao.saveSetting(any(), any(), any()) } returns 1
 
         val post = PTemplateCompatibilityVersionPostProcessor(
@@ -414,7 +414,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             )
         } returns mockk(relaxed = true)
         every { resourceService.update(any(), any(), any()) } throws RuntimeException("dup key")
-        stubV1CreateTemplate(v1Dao, 101L)
+        stubV1CreateTemplate(v1Dao)
         every { v1SettingDao.saveSetting(any(), any(), any()) } returns 1
 
         val post = PTemplateCompatibilityVersionPostProcessor(
@@ -557,7 +557,7 @@ private fun newSetting(
     updater = userId
 )
 
-private fun stubV1CreateTemplate(v1Dao: TemplateDao, returnVersion: Long) {
+private fun stubV1CreateTemplate(v1Dao: TemplateDao) {
     every {
         v1Dao.createTemplate(
             dslContext = any(),
@@ -576,5 +576,5 @@ private fun stubV1CreateTemplate(v1Dao: TemplateDao, returnVersion: Long) {
             version = any(),
             desc = any()
         )
-    } returns returnVersion
+    } returns 100
 }
