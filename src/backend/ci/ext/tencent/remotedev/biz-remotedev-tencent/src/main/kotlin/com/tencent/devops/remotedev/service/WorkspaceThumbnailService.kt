@@ -46,28 +46,50 @@ class WorkspaceThumbnailService @Autowired constructor(
      * @param workspaceNames 工作空间名称列表
      * @return 工作空间名称到截图下载地址的映射
      */
-    fun batchGetThumbnails(userId: String, workspaceNames: List<String>): Map<String, String> {
+    fun batchGetThumbnails(
+        userId: String,
+        workspaceNames: List<String>,
+        width: Int,
+        high: Int,
+        screenId: Int
+    ): Map<String, String> {
         if (workspaceNames.isEmpty()) {
             return emptyMap()
         }
 
         logger.info("batch get thumbnails: userId=$userId, workspaceNames=$workspaceNames")
 
-        // 步骤1: 批量查询Redis缓存
-        val cacheKeys = workspaceNames.map { ThumbnailCacheKey(userId, it).toDownloadRedisKey() }
         val cachedResults = mutableMapOf<String, String>()
 
-        cacheKeys.forEachIndexed { index, key ->
-            val cachedUrl = redisOperation.get(key)
+        // 第一步： 过滤出相应的分辨率, 从小分辨率到大分辨率有一个渐变效果会体现出来
+        val workspace2Size = workspaceNames.map { workspaceName ->
+            val cacheKey = ThumbnailCacheKey(workspaceName)
+            val maxSize = redisOperation.get(cacheKey.toDownloadLimitRedisKey(userId))
+                ?.split("-")?.let { ScreenSize(it[0].toInt(), it[1].toInt()) }
+            if (maxSize != null && width * high <= maxSize.width * maxSize.high) {
+                return@map Pair(workspaceName, ScreenSize(width, high))
+            }
+            redisOperation.set(
+                key = cacheKey.toDownloadLimitRedisKey(userId),
+                value = "$width-$high",
+                expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_LIMIT_TTL_SECONDS
+            )
+            Pair(workspaceName, maxSize ?: ScreenSize(width, high))
+        }.toMap()
+
+        // 第二步： 过滤出未命中的工作空间
+        workspace2Size.forEach { (workspaceName, size) ->
+            val cacheKey = ThumbnailCacheKey(workspaceName)
+            val cachedUrl = redisOperation.get(cacheKey.toDownloadRedisKey(screenId, size))
             if (!cachedUrl.isNullOrBlank()) {
-                cachedResults[workspaceNames[index]] = cachedUrl
+                cachedResults[workspaceName] = cachedUrl
             }
         }
 
         logger.debug("cache hit: ${cachedResults.size}/${workspaceNames.size}")
 
-        // 步骤2: 为缓存未命中的工作空间生成临时链接
-        val missedWorkspaceNames = workspaceNames.filter { !cachedResults.containsKey(it) }
+        // 第三步: 为缓存未命中的工作空间生成临时链接
+        val missedWorkspaceNames = workspace2Size.filter { !cachedResults.containsKey(it.key) }
         val newResults = mutableMapOf<String, String>()
 
         if (missedWorkspaceNames.isNotEmpty()) {
@@ -77,7 +99,7 @@ class WorkspaceThumbnailService @Autowired constructor(
             // 批量查询工作空间信息（一次性查询所有需要的workspace）
             val workspaceInfoMap = workspaceJoinDao.fetchWindowsWorkspaces(
                 dslContext = dslContext,
-                workspaceNames = missedWorkspaceNames.toSet(),
+                workspaceNames = missedWorkspaceNames.keys.toSet(),
                 checkField = listOf(
                     TWorkspace.T_WORKSPACE.NAME,
                     TWorkspace.T_WORKSPACE.PROJECT_ID,
@@ -85,7 +107,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                 )
             ).associateBy { it.workspaceName }
 
-            missedWorkspaceNames.forEach { workspaceName ->
+            missedWorkspaceNames.forEach { (workspaceName, size) ->
                 try {
                     // 从批量查询结果中获取工作空间信息
                     val workspaceInfo = workspaceInfoMap[workspaceName]
@@ -119,11 +141,12 @@ class WorkspaceThumbnailService @Autowired constructor(
                         projectId = workspaceInfo.projectId,
                         repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
                         workspaceName = workspaceName,
-                        token = token
+                        token = token,
+                        size = size
                     )
 
                     // 更新缓存
-                    val cacheKey = ThumbnailCacheKey(userId, workspaceName).toDownloadRedisKey()
+                    val cacheKey = ThumbnailCacheKey(workspaceName).toDownloadRedisKey(screenId, size)
                     redisOperation.set(
                         key = cacheKey,
                         value = downloadUrl,
@@ -167,6 +190,7 @@ class WorkspaceThumbnailService @Autowired constructor(
 
         screenshotTaskExecutor.submit {
             logger.info("start process screenshot upload: workspaceNames=$workspaceNames")
+            val screenSize = ScreenSize(width, high)
 
             // 预加载zone配置，避免在循环中重复查询数据库
             val zoneConfigs = loadZoneConfigs()
@@ -187,16 +211,16 @@ class WorkspaceThumbnailService @Autowired constructor(
 
             workspaceNames.forEach { workspaceName ->
                 try {
-                    // 2s内同画质只允许上传一次, 低画质忽略，高画质插队
-                    val limitKey = ThumbnailCacheKey(userId, workspaceName, screenId).toLimitRedisKey()
+                    // 2s内同画质只允许上传一次
+                    val limitKey = ThumbnailCacheKey(workspaceName).toUploadLimitRedisKey(screenId, screenSize)
                     val limit = redisOperation.get(limitKey)
-                    if (limit != null && limit.toInt() >= width * high) {
+                    if (limit != null) {
                         return@forEach
                     }
                     redisOperation.set(
                         key = limitKey,
-                        value = (width * high).toString(),
-                        expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_LIMIT_TTL_SECONDS
+                        value = userId,
+                        expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_UPLOAD_LIMIT_TTL_SECONDS
                     )
                     // 从批量查询结果中获取工作空间信息
                     val workspaceInfo = workspaceInfoMap[workspaceName]
@@ -221,7 +245,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     )
 
                     // 生成上传Token
-                    val cacheKey = ThumbnailCacheKey(userId, workspaceName).toUploadRedisKey()
+                    val cacheKey = ThumbnailCacheKey(workspaceName).toUploadRedisKey(screenId, screenSize)
                     val uploadToken = redisOperation.get(cacheKey)
                         ?: remotedevBkRepoClient.createTemporaryAccessToken(
                             region = region,
@@ -245,7 +269,8 @@ class WorkspaceThumbnailService @Autowired constructor(
                         projectId = workspaceInfo.projectId,
                         repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
                         workspaceName = workspaceName,
-                        token = uploadToken
+                        token = uploadToken,
+                        size = screenSize
                     )
 
                     // 构建截图上传请求对象
@@ -296,9 +321,11 @@ class WorkspaceThumbnailService @Autowired constructor(
         projectId: String,
         repoName: String,
         workspaceName: String,
-        token: String
+        token: String,
+        size: ScreenSize
     ): String {
-        return "$host/generic/temporary/download/$projectId/$repoName/screenshot/$workspaceName.jpg?token=$token"
+        return "$host/generic/temporary/download/$projectId/$repoName/screenshot" +
+            "/$workspaceName-${size.width}x${size.high}.jpg?token=$token"
     }
 
     /**
@@ -316,9 +343,11 @@ class WorkspaceThumbnailService @Autowired constructor(
         projectId: String,
         repoName: String,
         workspaceName: String,
-        token: String
+        token: String,
+        size: ScreenSize
     ): String {
-        return "$host/generic/temporary/upload/$projectId/$repoName/screenshot/$workspaceName.jpg?token=$token"
+        return "$host/generic/temporary/upload/$projectId/$repoName/screenshot" +
+            "/$workspaceName-${size.width}x${size.high}.jpg?token=$token"
     }
 
     /**
@@ -461,29 +490,42 @@ private data class ZoneConfigs(
     val specZoneConfig: Map<String, WindowsResourceZoneConfig>
 )
 
+data class ScreenSize(
+    val width: Int,
+    val high: Int
+)
+
 /**
  * 缓存Key数据类
  */
 data class ThumbnailCacheKey(
-    val userId: String,
-    val workspaceName: String,
-    val screenId: Int? = null
+    val workspaceName: String
 ) {
     /**
      * 生成Redis Key格式
      */
-    fun toDownloadRedisKey(): String {
-        return "${ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_PREFIX}$workspaceName:$userId"
+    fun toDownloadRedisKey(screenId: Int, size: ScreenSize): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_PREFIX}$workspaceName-$screenId-${size.width}x${size.high}"
+    }
+
+    /**
+     * 存储10秒内同一个用户+机器的最大分辨率
+     */
+    fun toDownloadLimitRedisKey(userId: String): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_LIMIT_PREFIX}$workspaceName:$userId"
     }
 
     /**
      * 生成Redis Key格式
      */
-    fun toUploadRedisKey(): String {
-        return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_PREFIX}$workspaceName"
+    fun toUploadRedisKey(screenId: Int, size: ScreenSize): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_PREFIX}$workspaceName-$screenId-${size.width}x${size.high}"
     }
 
-    fun toLimitRedisKey(): String {
-        return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_LIMIT_PREFIX}$workspaceName-$screenId"
+    /**
+     * 2秒内同样的屏幕id和分辨率只请求一次
+     */
+    fun toUploadLimitRedisKey(screenId: Int, size: ScreenSize): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_LIMIT_PREFIX}$workspaceName-$screenId-${size.width}x${size.high}"
     }
 }

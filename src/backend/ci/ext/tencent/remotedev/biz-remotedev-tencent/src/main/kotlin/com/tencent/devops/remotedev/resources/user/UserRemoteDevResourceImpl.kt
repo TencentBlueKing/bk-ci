@@ -219,7 +219,13 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames|width=$width|high=$high|jpegQuality=$jpegQuality")
 
         // 同步获取截图地址
-        val thumbnails = workspaceThumbnailService.batchGetThumbnails(userId, workspaceNames)
+        val thumbnails = workspaceThumbnailService.batchGetThumbnails(
+            userId = userId,
+            workspaceNames = workspaceNames,
+            width = width,
+            high = high,
+            screenId = screenId
+        )
 
         // 异步处理截图上传
         workspaceThumbnailService.processScreenshotUpload(
