@@ -30,8 +30,8 @@ package com.tencent.devops.process.dao.`var`
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReferInfo
-import com.tencent.devops.model.process.tables.records.TPipelinePublicVarGroupReferInfoRecord
+import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
+import com.tencent.devops.model.process.tables.records.TResourcePublicVarGroupReferInfoRecord
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import org.jooq.DSLContext
@@ -45,7 +45,7 @@ class PublicVarGroupReferInfoDao {
      * 构建基础查询条件
      */
     private fun buildBaseConditions(
-        table: TPipelinePublicVarGroupReferInfo,
+        table: TResourcePublicVarGroupReferInfo,
         projectId: String
     ) = mutableListOf(table.PROJECT_ID.eq(projectId))
 
@@ -53,7 +53,7 @@ class PublicVarGroupReferInfoDao {
      * 构建引用相关的查询条件
      */
     private fun buildReferConditions(
-        table: TPipelinePublicVarGroupReferInfo,
+        table: TResourcePublicVarGroupReferInfo,
         projectId: String,
         referId: String? = null,
         referType: PublicVerGroupReferenceTypeEnum? = null,
@@ -70,7 +70,7 @@ class PublicVarGroupReferInfoDao {
      * 构建变量组相关的查询条件
      */
     private fun buildGroupConditions(
-        table: TPipelinePublicVarGroupReferInfo,
+        table: TResourcePublicVarGroupReferInfo,
         projectId: String,
         groupName: String? = null,
         version: Int? = null
@@ -88,7 +88,7 @@ class PublicVarGroupReferInfoDao {
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
@@ -112,7 +112,7 @@ class PublicVarGroupReferInfoDao {
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
                 .fetch()
-                .map { convertPipelinePublicVarGroupReferPO(it) }
+                .map { convertResourcePublicVarGroupReferPO(it) }
         }
     }
 
@@ -123,14 +123,14 @@ class PublicVarGroupReferInfoDao {
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int? = null
     ): List<ResourcePublicVarGroupReferPO> {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildReferConditions(this, projectId, referId, referType, referVersion)
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.asc())
                 .fetch()
                 .map {
-                    convertPipelinePublicVarGroupReferPO(it)
+                    convertResourcePublicVarGroupReferPO(it)
                 }
         }
     }
@@ -153,7 +153,7 @@ class PublicVarGroupReferInfoDao {
             return emptyList()
         }
 
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val referConditions = referinfos.map { (referId, referVersion) ->
                 REFER_ID.eq(referId).and(REFER_VERSION.eq(referVersion))
             }
@@ -167,12 +167,12 @@ class PublicVarGroupReferInfoDao {
                 .where(finalCondition)
                 .orderBy(REFER_ID.asc(), CREATE_TIME.asc())
                 .fetch()
-                .map { convertPipelinePublicVarGroupReferPO(it) }
+                .map { convertResourcePublicVarGroupReferPO(it) }
         }
     }
 
-    private fun convertPipelinePublicVarGroupReferPO(
-        publicVarGroupReferInfoRecord: TPipelinePublicVarGroupReferInfoRecord
+    private fun convertResourcePublicVarGroupReferPO(
+        publicVarGroupReferInfoRecord: TResourcePublicVarGroupReferInfoRecord
     ) = ResourcePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
         projectId = publicVarGroupReferInfoRecord.projectId,
         groupName = publicVarGroupReferInfoRecord.groupName,
@@ -201,7 +201,7 @@ class PublicVarGroupReferInfoDao {
         groupName: String? = null,
         referVersionName: String? = null
     ): Int {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildReferConditions(
                 table = this,
                 projectId = projectId,
@@ -226,7 +226,7 @@ class PublicVarGroupReferInfoDao {
         referVersionName: String,
         excludedGroupNames: List<String>? = null
     ) {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildReferConditions(
                 table = this,
                 projectId = projectId,
@@ -250,7 +250,7 @@ class PublicVarGroupReferInfoDao {
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum
     ) {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
@@ -266,7 +266,7 @@ class PublicVarGroupReferInfoDao {
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int? = null
     ) {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val deleteQuery = dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
@@ -288,7 +288,7 @@ class PublicVarGroupReferInfoDao {
         groupName: String,
         referVersion: Int
     ) {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
@@ -303,7 +303,7 @@ class PublicVarGroupReferInfoDao {
         dslContext: DSLContext,
         resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO>
     ) {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val insertSteps = resourcePublicVarGroupReferPOS.map { po ->
                 dslContext.insertInto(
                     this,
@@ -354,7 +354,7 @@ class PublicVarGroupReferInfoDao {
         referType: PublicVerGroupReferenceTypeEnum?,
         version: Int? = -1
     ): Int {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildGroupConditions(this, projectId, groupName, version).apply {
                 referType?.let { add(REFER_TYPE.eq(it.name)) }
             }
@@ -380,7 +380,7 @@ class PublicVarGroupReferInfoDao {
         modifier: String,
         updateTime: java.time.LocalDateTime
     ): Int {
-        with(TPipelinePublicVarGroupReferInfo.T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO) {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildReferConditions(
                 table = this,
                 projectId = projectId,

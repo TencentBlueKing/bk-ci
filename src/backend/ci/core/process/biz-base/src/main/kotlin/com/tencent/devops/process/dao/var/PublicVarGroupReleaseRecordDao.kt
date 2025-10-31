@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.dao.`var`
 
-import com.tencent.devops.model.process.tables.TPipelinePublicVarGroupReleaseRecord
+import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReleaseRecord
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReleaseRecordPO
 import org.jooq.DSLContext
@@ -39,7 +39,7 @@ class PublicVarGroupReleaseRecordDao {
     fun batchInsert(dslContext: DSLContext, records: List<ResourcePublicVarGroupReleaseRecordPO>) {
         if (records.isEmpty()) return
         
-        with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             val insertStep = dslContext.insertInto(
                 this,
                 ID,
@@ -78,7 +78,7 @@ class PublicVarGroupReleaseRecordDao {
     }
 
     fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
-        with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
@@ -87,7 +87,7 @@ class PublicVarGroupReleaseRecordDao {
     }
 
     fun countByGroupName(dslContext: DSLContext, projectId: String, groupName: String): Long {
-        with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -103,7 +103,7 @@ class PublicVarGroupReleaseRecordDao {
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReleaseRecordPO> {
-        with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             val offset = (page - 1) * pageSize
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -112,7 +112,7 @@ class PublicVarGroupReleaseRecordDao {
                 .offset(offset)
                 .limit(pageSize)
                 .fetch { record ->
-                    PipelinePublicVarGroupReleaseRecordPO(
+                    ResourcePublicVarGroupReleaseRecordPO(
                         id = record.id,
                         projectId = record.projectId,
                         groupName = record.groupName,
@@ -137,7 +137,7 @@ class PublicVarGroupReleaseRecordDao {
         page: Int,
         pageSize: Int
     ): List<PublicVarReleaseDO> {
-        with(TPipelinePublicVarGroupReleaseRecord.T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             val offset = (page - 1) * pageSize
             return dslContext.select(
                 GROUP_NAME,
