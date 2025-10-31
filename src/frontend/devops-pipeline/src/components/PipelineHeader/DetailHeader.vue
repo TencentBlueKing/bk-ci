@@ -411,6 +411,7 @@
             
             async fetchRePlayEventDetail (eventId) {
                 try {
+                    this.loading = true
                     const res = await this.requestRePlayEventDetail({
                         projectId: this.projectId,
                         eventId
@@ -444,12 +445,12 @@
                                 }
                             })
                         }
+                        this.loading = false
                         this.$showTips({
                             message: res.records[0].reason,
                             theme: successStatus ? 'success': 'error'
                         })
                     }
-                    console.log(res, 'requestRePlayEventDetail')
                 } catch (err) {
                     console.error(err)
                 }
