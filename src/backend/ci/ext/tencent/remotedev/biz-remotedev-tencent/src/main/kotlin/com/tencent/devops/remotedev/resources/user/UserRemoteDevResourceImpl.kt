@@ -224,7 +224,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         // 异步处理截图上传
         workspaceThumbnailService.processScreenshotUpload(
             userId = userId,
-            workspaceNames = workspaceNames,
+            workspaceNames = thumbnails.keys,
             width = width,
             high = high,
             jpegQuality = jpegQuality,

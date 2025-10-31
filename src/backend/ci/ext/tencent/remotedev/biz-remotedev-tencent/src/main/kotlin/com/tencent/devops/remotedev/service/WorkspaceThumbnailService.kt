@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service
 class WorkspaceThumbnailService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remotedevBkRepoClient: RemotedevBkRepoClient,
+    private val permissionService: PermissionService,
     private val startCloudClient: StartCloudClient,
     private val redisOperation: RedisOperation,
     private val workspaceJoinDao: WorkspaceJoinDao,
@@ -89,7 +90,13 @@ class WorkspaceThumbnailService @Autowired constructor(
                     // 从批量查询结果中获取工作空间信息
                     val workspaceInfo = workspaceInfoMap[workspaceName]
                     if (workspaceInfo == null) {
-                        logger.warn("工作空间不存在: workspaceName=$workspaceName")
+                        logger.warn("workspace not exist: workspaceName=$workspaceName")
+                        return@forEach
+                    }
+
+                    // 检查是否有查看权限
+                    if (!permissionService.hasViewerPermission(userId, workspaceName, workspaceInfo.projectId)) {
+                        logger.warn("user not viewer permission: userId=$userId, workspaceName=$workspaceName")
                         return@forEach
                     }
 
@@ -148,7 +155,7 @@ class WorkspaceThumbnailService @Autowired constructor(
      */
     fun processScreenshotUpload(
         userId: String,
-        workspaceNames: List<String>,
+        workspaceNames: Set<String>,
         width: Int,
         high: Int,
         jpegQuality: Int,
@@ -167,7 +174,7 @@ class WorkspaceThumbnailService @Autowired constructor(
             // 批量查询工作空间信息（一次性查询所有需要的workspace）
             val workspaceInfoMap = workspaceJoinDao.fetchWindowsWorkspaces(
                 dslContext = dslContext,
-                workspaceNames = workspaceNames.toSet(),
+                workspaceNames = workspaceNames,
                 checkField = listOf(
                     TWorkspace.T_WORKSPACE.NAME,
                     TWorkspace.T_WORKSPACE.PROJECT_ID,
