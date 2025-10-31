@@ -127,7 +127,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     redisOperation.set(
                         key = cacheKey,
                         value = downloadUrl,
-                        expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS.toLong()
+                        expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS
                     )
 
                     newResults[workspaceName] = downloadUrl
@@ -187,6 +187,17 @@ class WorkspaceThumbnailService @Autowired constructor(
 
             workspaceNames.forEach { workspaceName ->
                 try {
+                    // 2s内同画质只允许上传一次, 低画质忽略，高画质插队
+                    val limitKey = ThumbnailCacheKey(userId, workspaceName, screenId).toLimitRedisKey()
+                    val limit = redisOperation.get(limitKey)
+                    if (limit != null && limit.toInt() >= width * high) {
+                        return@forEach
+                    }
+                    redisOperation.set(
+                        key = limitKey,
+                        value = (width * high).toString(),
+                        expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_LIMIT_TTL_SECONDS
+                    )
                     // 从批量查询结果中获取工作空间信息
                     val workspaceInfo = workspaceInfoMap[workspaceName]
                     if (workspaceInfo == null) {
@@ -224,7 +235,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                             redisOperation.set(
                                 key = cacheKey,
                                 value = it,
-                                expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS.toLong()
+                                expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS
                             )
                         }
 
@@ -455,7 +466,8 @@ private data class ZoneConfigs(
  */
 data class ThumbnailCacheKey(
     val userId: String,
-    val workspaceName: String
+    val workspaceName: String,
+    val screenId: Int? = null
 ) {
     /**
      * 生成Redis Key格式
@@ -469,5 +481,9 @@ data class ThumbnailCacheKey(
      */
     fun toUploadRedisKey(): String {
         return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_PREFIX}$workspaceName"
+    }
+
+    fun toLimitRedisKey(): String {
+        return "${ThumbnailRedisKeys.THUMBNAIL_UPLOAD_LIMIT_PREFIX}$workspaceName-$screenId"
     }
 }

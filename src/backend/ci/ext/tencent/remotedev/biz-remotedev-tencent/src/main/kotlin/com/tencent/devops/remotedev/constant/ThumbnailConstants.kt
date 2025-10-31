@@ -6,7 +6,9 @@ package com.tencent.devops.remotedev.constant
 object ThumbnailRedisKeys {
     const val THUMBNAIL_DOWNLOAD_PREFIX = "remotedev:thumbnail:download:"
     const val THUMBNAIL_UPLOAD_PREFIX = "remotedev:thumbnail:upload:"
-    const val THUMBNAIL_TTL_SECONDS = 600 // 10分钟
+    const val THUMBNAIL_UPLOAD_LIMIT_PREFIX = "remotedev:thumbnail:limit:" // 2s内同画质只允许上传一次, 低画质忽略，高画质插队
+    const val THUMBNAIL_TTL_SECONDS = 600L // 10分钟
+    const val THUMBNAIL_LIMIT_TTL_SECONDS = 2L // 2秒
 }
 
 /**
