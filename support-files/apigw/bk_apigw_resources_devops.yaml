@@ -3150,6 +3150,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/version/export_all:
+    get:
+      operationId: "v4_app_pipeline_export_all"
+      description: "导出项目下所有用户有编辑权限的流水线"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/version/export_all"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/projects/{projectId}/version/get_version:
     get:
       operationId: "v4_app_pipeline_get_version"
@@ -6560,6 +6581,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/version/export"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/version/export_all:
+    get:
+      operationId: "v4_user_pipeline_export_all"
+      description: "导出项目下所有用户有编辑权限的流水线"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/version/export_all"
           timeout: 30
         enableWebsocket: false
         isPublic: true
