@@ -293,7 +293,6 @@
                         try {
                             this.loading = true
                             await this.retry(type, this.execDetail?.id)
-                            return true
                         } catch (err) {
                             this.handleError(err, {
                                 projectId: this.$route.params.projectId,
@@ -332,7 +331,9 @@
                         theme: 'success'
                     })
                 } else if (res?.eventId && res.status === PIPELINE_REPLAY_STATUS.REPLAYING) {
-                    this.fetchRePlayEventDetail(res.eventId)
+                    // 等待轮询完成
+                    const pollingResult = await this.fetchRePlayEventDetail(res.eventId)
+                    return pollingResult
                 } else if (res?.code === 2101272) {
                     this.loading = false
                     this.$bkInfo({
@@ -343,8 +344,8 @@
                         confirmFn: async () => {
                             try {
                                 this.loading = true
-                                await this.retry('rePlay', buildId, true)
-                                return true
+                                const result = await this.retry('rePlay', buildId, true)
+                                return result
                             } catch (err) {
                                 this.handleError(err, {
                                     projectId: this.$route.params.projectId,
@@ -425,12 +426,11 @@
                                 message: this.$t('history.rePlayFailed'),
                                 theme: 'error'
                             })
-                            return
+                            return true
                         }
-                        setTimeout(() => {
-                            this.timesNum++
-                            this.fetchRePlayEventDetail(eventId)
-                        }, 5000)
+                        await new Promise(resolve => setTimeout(resolve, 5000))
+                        this.timesNum++
+                        return await this.fetchRePlayEventDetail(eventId)
                     } else {
                         const successStatus = res.records[0].status === 'SUCCEED'
                         if (successStatus) {
