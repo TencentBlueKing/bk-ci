@@ -129,7 +129,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                         region = region,
                         projectId = workspaceInfo.projectId,
                         repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
-                        fullPathSet = listOf("/screenshot/$workspaceName.jpg"),
+                        fullPathSet = listOf("/screenshot/$workspaceName-${size.width}x${size.high}.jpg"),
                         expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
                         type = BkRepoConstants.TOKEN_TYPE_DOWNLOAD,
                         userId = SYSTEM_USER
@@ -190,7 +190,7 @@ class WorkspaceThumbnailService @Autowired constructor(
 
         screenshotTaskExecutor.submit {
             logger.info("start process screenshot upload: workspaceNames=$workspaceNames")
-            val screenSize = ScreenSize(width, high)
+            val size = ScreenSize(width, high)
 
             // 预加载zone配置，避免在循环中重复查询数据库
             val zoneConfigs = loadZoneConfigs()
@@ -212,7 +212,7 @@ class WorkspaceThumbnailService @Autowired constructor(
             workspaceNames.forEach { workspaceName ->
                 try {
                     // 2s内同画质只允许上传一次
-                    val limitKey = ThumbnailCacheKey(workspaceName).toUploadLimitRedisKey(screenId, screenSize)
+                    val limitKey = ThumbnailCacheKey(workspaceName).toUploadLimitRedisKey(screenId, size)
                     val limit = redisOperation.get(limitKey)
                     if (limit != null) {
                         return@forEach
@@ -245,13 +245,13 @@ class WorkspaceThumbnailService @Autowired constructor(
                     )
 
                     // 生成上传Token
-                    val cacheKey = ThumbnailCacheKey(workspaceName).toUploadRedisKey(screenId, screenSize)
+                    val cacheKey = ThumbnailCacheKey(workspaceName).toUploadRedisKey(screenId, size)
                     val uploadToken = redisOperation.get(cacheKey)
                         ?: remotedevBkRepoClient.createTemporaryAccessToken(
                             region = region,
                             projectId = workspaceInfo.projectId,
                             repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
-                            fullPathSet = listOf("/screenshot/$workspaceName.jpg"),
+                            fullPathSet = listOf("/screenshot/$workspaceName-${size.width}x${size.high}.jpg"),
                             expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
                             type = BkRepoConstants.TOKEN_TYPE_ALL,
                             userId = SYSTEM_USER
@@ -270,7 +270,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                         repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
                         workspaceName = workspaceName,
                         token = uploadToken,
-                        size = screenSize
+                        size = size
                     )
 
                     // 构建截图上传请求对象
