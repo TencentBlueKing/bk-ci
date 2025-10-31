@@ -18,5 +18,7 @@ data class ScmWebhookTriggerEvent(
     @get:Schema(title = "事件ID", required = true)
     val eventId: Long,
     @get:Schema(title = "代码库", required = true)
-    val repository: Repository
+    val repository: Repository,
+    @get:Schema(title = "webhook请求时间", required = true)
+    val requestTime: Long
 ) : IEvent()

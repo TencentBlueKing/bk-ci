@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.trigger.scm
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -38,6 +39,7 @@ import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线webhook事件监听者
@@ -75,6 +77,7 @@ class PipelineWebHookEventListener @Autowired constructor(
             )
         }
 
+        val requestTime = LocalDateTime.now().timestampmilli()
         triggerPipelines.forEach { (projectId, pipelineId, version) ->
             // 流水线开启PAC,并且代码库开启PAC,在pac监听器处理
             pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
@@ -92,7 +95,8 @@ class PipelineWebHookEventListener @Autowired constructor(
                     pipelineId = pipelineId,
                     version = version,
                     eventId = eventId,
-                    repository = repository
+                    repository = repository,
+                    requestTime = requestTime
                 )
             )
         }

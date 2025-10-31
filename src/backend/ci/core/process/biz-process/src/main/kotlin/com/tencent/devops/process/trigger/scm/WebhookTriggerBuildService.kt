@@ -36,12 +36,14 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
+import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
@@ -52,10 +54,15 @@ import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.Tags
+import io.micrometer.core.instrument.Timer
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class WebhookTriggerBuildService @Autowired constructor(
@@ -65,34 +72,32 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val meterRegistry: MeterRegistry
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
-    }
-
     fun trigger(event: ScmWebhookTriggerEvent) {
         with(event) {
             logger.info(
                 "start to trigger webhook trigger|$eventId|$projectId|$pipelineId|$version|${repository.repoHashId}"
             )
-            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
-                    params = arrayOf(eventId.toString())
-                )
-            val webhook = triggerEvent.eventBody ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
-                params = arrayOf(eventId.toString())
-            )
+            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
+                projectId = projectId, eventId = eventId
+            ) ?: run {
+                logger.info("trigger event not found|$eventId")
+                return
+            }
+            val webhook = triggerEvent.eventBody ?: run {
+                logger.info("webhook event body is empty|$eventId")
+                return
+            }
             trigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
                 eventId = eventId,
                 repository = repository,
-                webhook = webhook
+                webhook = webhook,
+                requestTime = requestTime
             )
         }
     }
@@ -103,9 +108,12 @@ class WebhookTriggerBuildService @Autowired constructor(
         version: Int?,
         eventId: Long,
         repository: Repository,
-        webhook: Webhook
+        webhook: Webhook,
+        requestTime: Long? = null,
+        isYaml: Boolean = false
     ) {
         val context = WebhookTriggerContext(projectId = projectId, pipelineId = pipelineId, eventId = eventId)
+        var status = PipelineTriggerReason.TRIGGER_SUCCESS
         try {
             val pipelineInfo =
                 pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: throw ErrorCodeException(
@@ -175,15 +183,27 @@ class WebhookTriggerBuildService @Autowired constructor(
                 }
             }
             if (failedMatchElements.isNotEmpty()) {
+                status = PipelineTriggerReason.TRIGGER_NOT_MATCH
                 context.failedMatchElements = failedMatchElements
                 webhookTriggerManager.fireMatchFailed(context)
             }
         } catch (ignored: Exception) {
+            status = PipelineTriggerReason.TRIGGER_FAILED
             logger.error(
                 "Failed to trigger by webhook|$eventId|$projectId|$pipelineId|${repository.repoHashId}",
                 ignored
             )
             webhookTriggerManager.fireError(context, ignored)
+        } finally {
+            requestTime?.let {
+                recordWebhookExecuteTime(
+                    name = MeasureConstant.PIPELINE_WEBHOOK_NEW_EXECUTE_TIME,
+                    tags = Tags.of(TAG_STATUS, status.name)
+                        .and(TAG_YAML, isYaml.toString())
+                        .toList(),
+                    requestTime = requestTime
+                )
+            }
         }
     }
 
@@ -252,7 +272,8 @@ class WebhookTriggerBuildService @Autowired constructor(
                 version = pipelineYamlVersion.version,
                 eventId = eventId,
                 repository = repository,
-                webhook = webhook
+                webhook = webhook,
+                isYaml = true
             )
         }
     }
@@ -324,5 +345,24 @@ class WebhookTriggerBuildService @Autowired constructor(
             }
         }
         return pipelineParamMap
+    }
+
+    private fun recordWebhookExecuteTime(
+        name: String,
+        requestTime: Long,
+        tags: List<Tag> = listOf()
+    ) {
+        val timeConsumingMills = System.currentTimeMillis() - requestTime
+        Timer.builder(name)
+            .description("pipeline webhook trigger execution time")
+            .tags(tags)
+            .register(meterRegistry)
+            .record(timeConsumingMills, TimeUnit.MILLISECONDS)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
+        private const val TAG_STATUS = "status"
+        private const val TAG_YAML = "yaml"
     }
 }

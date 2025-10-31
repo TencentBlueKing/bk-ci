@@ -8,4 +8,7 @@ object MeasureConstant {
     const val NAME_PIPELINE_CRON_SCHEDULE_DELAY = "pipeline.cron.schedule.delay"
     // 定时任务触发耗时
     const val NAME_PIPELINE_CRON_EXECUTE_DELAY = "pipeline.cron.execute.delay"
+
+    // webhook触发耗时
+    const val PIPELINE_WEBHOOK_NEW_EXECUTE_TIME = "pipeline.webhook.new.execute.time"
 }
