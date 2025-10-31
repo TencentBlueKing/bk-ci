@@ -131,7 +131,7 @@ class PublicVarGroupService @Autowired constructor(
             
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP").data ?: 0,
+                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0,
                 projectId = projectId,
                 groupName = groupName,
                 version = newVersion,

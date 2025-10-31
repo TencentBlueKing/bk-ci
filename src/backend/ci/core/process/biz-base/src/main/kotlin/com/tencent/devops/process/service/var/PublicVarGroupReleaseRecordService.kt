@@ -72,7 +72,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         // 批量生成ID
         val segmentIds = if (releaseRecords.isNotEmpty()) {
             client.get(ServiceAllocIdResource::class)
-                .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
+                .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
         } else {
             emptyList()
         }

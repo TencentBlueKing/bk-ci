@@ -698,7 +698,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         
         val currentTime = LocalDateTime.now()
         val segmentIds = client.get(ServiceAllocIdResource::class).batchGenerateSegmentId(
-            bizTag = "T_PIPELINE_PUBLIC_VAR_GROUP_REFER_INFO",
+            bizTag = "T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO",
             number = dynamicPublicVarWithPositions.size
         ).data
 

@@ -76,7 +76,7 @@ class PublicVarService @Autowired constructor(
 
         // 批量生成ID
         val segmentIds = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
+            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
         if (segmentIds.isNullOrEmpty()) {
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
